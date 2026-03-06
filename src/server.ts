@@ -3,7 +3,9 @@ import { serveStatic } from "hono/bun";
 import { initEngines } from "./engines/registry";
 import { initPlugins } from "./commands/registry";
 import { initSlotPlugins } from "./slots/registry";
+import { initThemes } from "./themes/registry";
 import pagesRouter from "./routes/pages";
+import themesRouter from "./routes/themes";
 import searchRouter from "./routes/search";
 import commandsRouter from "./routes/commands";
 import suggestRouter from "./routes/suggest";
@@ -26,10 +28,11 @@ app.route("/", suggestRouter);
 app.route("/", extensionsRouter);
 app.route("/", settingsAuthRouter);
 app.route("/", proxyRouter);
+app.route("/", themesRouter);
 
 const port = Number(process.env.DEGOOG_PORT) || 4444;
 
-Promise.all([initEngines(), initPlugins(), initSlotPlugins()]).then(() => {
+Promise.all([initEngines(), initPlugins(), initSlotPlugins(), initThemes()]).then(() => {
   Bun.serve({ port, fetch: app.fetch });
   console.log(`degoog v${pkg.version} running on http://localhost:${port}`);
 });

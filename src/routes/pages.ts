@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import * as cache from "../cache";
 import { getEngineRegistry, getDefaultEngineConfig } from "../engines/registry";
+import { getThemeHtml, getActiveTheme } from "../themes/registry";
 import pkg from "../../package.json";
 
 const router = new Hono();
@@ -17,20 +18,40 @@ function buildOpenSearchXml(origin: string): string {
 </OpenSearchDescription>`;
 }
 
+function themeCssPlaceholder(): string {
+  const theme = getActiveTheme();
+  if (!theme?.manifest.css) return "";
+  return '<link rel="stylesheet" href="/theme/style.css">';
+}
+
 router.get("/", async (c) => {
   const q = c.req.query("q");
   if (q?.trim()) {
     const params = new URLSearchParams(c.req.url.split("?")[1] || "");
     return c.redirect(`/search?${params.toString()}`, 302);
   }
+  const override = await getThemeHtml("index");
+  if (override) {
+    return c.html(override.replaceAll("__APP_VERSION__", pkg.version));
+  }
   const html = await Bun.file("src/public/index.html").text();
-  return c.html(html.replaceAll("__APP_VERSION__", pkg.version));
+  const out = html
+    .replaceAll("__APP_VERSION__", pkg.version)
+    .replace("__THEME_CSS__", themeCssPlaceholder());
+  return c.html(out);
 });
 
-router.get("/search", (c) => c.html(Bun.file("src/public/search.html").text()));
-router.get("/settings", (c) =>
-  c.html(Bun.file("src/public/settings.html").text()),
-);
+router.get("/search", async (c) => {
+  const override = await getThemeHtml("search");
+  if (override) return c.html(override);
+  const html = await Bun.file("src/public/search.html").text();
+  const out = html.replace("__THEME_CSS__", themeCssPlaceholder());
+  return c.html(out);
+});
+router.get("/settings", async (c) => {
+  const html = await Bun.file("src/public/settings.html").text();
+  return c.html(html.replace("__THEME_CSS__", themeCssPlaceholder()));
+});
 
 router.get("/api/engines", (c) => {
   return c.json({

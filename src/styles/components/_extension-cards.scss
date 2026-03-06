@@ -83,6 +83,36 @@
   }
 }
 
+.ext-card-apply {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: $font-family;
+  font-size: $font-size-small;
+  padding: 5px 12px;
+  transition: color $transition-fast, border-color $transition-fast;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: $blue;
+    color: $blue;
+  }
+}
+
+.ext-card-apply:disabled {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+
+.ext-card-active {
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
 .ext-modal-overlay {
   position: fixed;
   inset: 0;

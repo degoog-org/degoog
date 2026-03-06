@@ -2,6 +2,7 @@ import { initTheme } from "./js/theme.js";
 import { initGeneralTab } from "./js/settings/general-tab.js";
 import { initEnginesTab } from "./js/settings/engines-tab.js";
 import { initPluginsTab } from "./js/settings/plugins-tab.js";
+import { initThemesTab } from "./js/settings/themes-tab.js";
 import "./js/settings/modal.js";
 
 const TOKEN_KEY = "degoog-settings-token";
@@ -88,15 +89,22 @@ async function initSettings() {
   initGeneralTab();
 
   try {
-    const res = await fetch("/api/extensions", {
-      headers: getStoredToken() ? { "x-settings-token": getStoredToken() } : {},
-    });
-    const allExtensions = await res.json();
+    const [extRes, themesRes] = await Promise.all([
+      fetch("/api/extensions", {
+        headers: getStoredToken() ? { "x-settings-token": getStoredToken() } : {},
+      }),
+      fetch("/api/themes"),
+    ]);
+    const allExtensions = await extRes.json();
+    const themesData = await themesRes.json();
     await initEnginesTab(allExtensions);
     initPluginsTab(allExtensions);
+    await initThemesTab(themesData, allExtensions.themes ?? []);
   } catch {
     document.getElementById("engines-content").innerHTML = "<p>Failed to load extensions.</p>";
     document.getElementById("plugins-content").innerHTML = "<p>Failed to load extensions.</p>";
+    const themesEl = document.getElementById("themes-content");
+    if (themesEl) themesEl.innerHTML = "<p>Failed to load themes.</p>";
   }
 }
 

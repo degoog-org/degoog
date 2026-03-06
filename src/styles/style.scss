@@ -19,6 +19,12 @@
 }
 
 :root {
+  --primary: #4285f4;
+  --primary-hover: #5a95f5;
+  --primary-rgb: 66, 133, 244;
+  --danger: #ea4335;
+  --warning: #fbbc05;
+  --success: #34a853;
   --bg: #202124;
   --bg-light: #303134;
   --bg-hover: #3c4043;
@@ -40,6 +46,12 @@
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
+    --primary: #4285f4;
+    --primary-hover: #5a95f5;
+    --primary-rgb: 66, 133, 244;
+    --danger: #ea4335;
+    --warning: #fbbc05;
+    --success: #34a853;
     --bg: #fff;
     --bg-light: #f8f9fa;
     --bg-hover: #e8eaed;
@@ -61,6 +73,12 @@
 }
 
 [data-theme="light"] {
+  --primary: #4285f4;
+  --primary-hover: #5a95f5;
+  --primary-rgb: 66, 133, 244;
+  --danger: #ea4335;
+  --warning: #fbbc05;
+  --success: #34a853;
   --bg: #fff;
   --bg-light: #f8f9fa;
   --bg-hover: #e8eaed;
@@ -72,8 +90,8 @@
   --text-link-visited: #681da8;
   --text-cite: #202124;
   --text-snippet: #4d5156;
-  --search-bar-bg: #fff;
-  --search-bar-bg-hover: #fff;
+  --search-bar-bg: #ebebeb;
+  --search-bar-bg-hover: #ebebeb;
   --btn-bg: #f8f9fa;
   --btn-text: #3c4043;
   --overlay-bg: rgba(0, 0, 0, 0.4);
@@ -81,6 +99,12 @@
 }
 
 [data-theme="dark"] {
+  --primary: #8ab4f8;
+  --primary-hover: #a8c7fa;
+  --primary-rgb: 138, 180, 248;
+  --danger: #f28b82;
+  --warning: #fdd663;
+  --success: #81c995;
   --bg: #202124;
   --bg-light: #303134;
   --bg-hover: #3c4043;
@@ -137,7 +161,7 @@ body.has-results #app {
 }
 
 ::selection {
-  background: rgba($blue, 0.3);
+  background: rgba(var(--primary-rgb), 0.3);
 }
 
 ::-webkit-scrollbar {

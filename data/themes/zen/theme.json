@@ -1,0 +1,11 @@
+{
+  "name": "zen",
+  "author": "fccview",
+  "description": "A minimalist calming theme.",
+  "version": "1.0.0",
+  "css": "style.css",
+  "html": {
+    "index": "index.html",
+    "search": "search.html"
+  }
+}

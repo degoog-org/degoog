@@ -21,7 +21,7 @@ export interface ExtensionMeta {
   id: string;
   displayName: string;
   description: string;
-  type: "plugin" | "engine" | "command";
+  type: "plugin" | "engine" | "command" | "theme";
   configurable: boolean;
   settingsSchema: SettingField[];
   settings: Record<string, string>;

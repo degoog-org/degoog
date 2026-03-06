@@ -12,8 +12,8 @@ $header-height: 44px;
 $transition-fast: 0.2s ease;
 $transition-med: 0.3s ease;
 
-$blue: #4285f4;
-$blue-hover: #5a95f5;
-$red: #ea4335;
-$yellow: #fbbc05;
-$green: #34a853;
+$blue: var(--primary);
+$blue-hover: var(--primary-hover);
+$red: var(--danger);
+$yellow: var(--warning);
+$green: var(--success);

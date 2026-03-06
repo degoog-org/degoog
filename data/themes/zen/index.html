@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="degoog is an alternative search engine aggregator.">
+  <meta name="description" content="zen - find what you need peacefully.">
   <link rel="icon" href="/public/favicon/favicon.ico" type="image/x-icon">
-  <link rel="search" type="application/opensearchdescription+xml" title="degoog" href="/opensearch.xml">
-  <title>degoog</title>
+  <link rel="search" type="application/opensearchdescription+xml" title="zen" href="/opensearch.xml">
+  <title>zen</title>
   <link rel="stylesheet" href="/public/style.css">
-  __THEME_CSS__
+  <link rel="stylesheet" href="/theme/style.css">
 </head>
 <body>
   <div id="app">
     <header class="header" id="header">
       <div class="header-right">
         <a href="/settings" class="header-link" id="nav-settings-top" title="Settings">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>
@@ -26,21 +26,21 @@
     <main class="main" id="main-home">
       <div class="logo-container">
         <h1 class="logo">
-          <span class="logo-d">d</span><span class="logo-e">e</span><span class="logo-g1">g</span><span class="logo-o1">o</span><span class="logo-o2">o</span><span class="logo-g2">g</span>
+          <span class="logo-d">z</span><span class="logo-e">e</span><span class="logo-g1">n</span><span class="logo-o1"></span><span class="logo-o2"></span><span class="logo-g2"></span>
         </h1>
       </div>
       <div class="search-container">
         <form action="/search" method="get" id="search-form-home" class="search-form">
           <div class="search-bar" id="search-bar-home">
-            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9aa0a6" stroke-width="2">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"/>
               <path d="M21 21l-4.35-4.35"/>
             </svg>
-            <input type="text" class="search-input" id="search-input" name="q" autocomplete="off" autofocus placeholder="">
+            <input type="text" class="search-input" id="search-input" name="q" autocomplete="off" autofocus placeholder="Find what you need peacefully...">
             <div class="ac-dropdown" id="ac-dropdown-home"></div>
           </div>
           <div class="button-row">
-            <button type="submit" class="search-btn" id="btn-search">degoog Search</button>
+            <button type="submit" class="search-btn" id="btn-search">Search</button>
             <button type="button" class="search-btn lucky-btn" id="btn-lucky">
             <span class="lucky-default">I'm Feeling Lucky</span>
             <div class="lucky-slot">
@@ -62,52 +62,43 @@
     <div class="results-page" id="results-page" style="display:none">
       <div class="results-header">
         <a href="/" class="results-logo">
-          <span class="logo-d">d</span><span class="logo-e">e</span><span class="logo-g1">g</span><span class="logo-o1">o</span><span class="logo-o2">o</span><span class="logo-g2">g</span>
+          <span class="logo-d">z</span><span class="logo-e">e</span><span class="logo-g1">n</span><span class="logo-o1"></span><span class="logo-o2"></span><span class="logo-g2"></span>
         </a>
         <div class="results-search-bar" id="results-search-bar">
-          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9aa0a6" stroke-width="2">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/>
             <path d="M21 21l-4.35-4.35"/>
           </svg>
           <input type="text" class="search-input" id="results-search-input" autocomplete="off">
           <div class="ac-dropdown" id="ac-dropdown-results"></div>
           <button class="search-submit-btn" id="results-search-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#4285f4" stroke="none">
-              <circle cx="11" cy="11" r="8" fill="none" stroke="#4285f4" stroke-width="2"/>
-              <path d="M21 21l-4.35-4.35" stroke="#4285f4" stroke-width="2"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </button>
         </div>
         <a href="/settings" class="header-link settings-gear" id="nav-settings-results" title="Settings">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>
         </a>
       </div>
       <div class="results-tabs" id="results-tabs">
-        <div class="results-tab active" data-type="all">
-          All
-        </div>
-        <div class="results-tab" data-type="images">
-          Images
-        </div>
-        <div class="results-tab" data-type="videos">
-          Videos
-        </div>
-        <div class="results-tab" data-type="news">
-          News
-        </div>
+        <div class="results-tab active" data-type="all">All</div>
+        <div class="results-tab" data-type="images">Images</div>
+        <div class="results-tab" data-type="videos">Videos</div>
+        <div class="results-tab" data-type="news">News</div>
         <div class="tools-wrap" id="tools-bar">
           <button class="tools-toggle" id="tools-toggle" type="button">Any time</button>
           <div class="tools-dropdown" id="tools-dropdown" style="display:none">
             <div class="tools-section">
               <button class="tools-option active" data-time="any">Any time</button>
-              <button class="tools-option" data-time="hour">Hour</button>
-              <button class="tools-option" data-time="day">24 hours</button>
-              <button class="tools-option" data-time="week">Week</button>
-              <button class="tools-option" data-time="month">Month</button>
-              <button class="tools-option" data-time="year">Year</button>
+              <button class="tools-option" data-time="hour">Past hour</button>
+              <button class="tools-option" data-time="day">Past 24 hours</button>
+              <button class="tools-option" data-time="week">Past week</button>
+              <button class="tools-option" data-time="month">Past month</button>
+              <button class="tools-option" data-time="year">Past year</button>
             </div>
           </div>
         </div>
@@ -135,7 +126,6 @@
 
     <footer class="home-footer" id="home-footer">
       <div class="home-footer-bottom">
-         
         <a href="https://github.com/fccview/degoog/releases/tag/__APP_VERSION__" target="_blank" rel="noopener">
           version <span class="home-footer-version">__APP_VERSION__</span>
         </a>
