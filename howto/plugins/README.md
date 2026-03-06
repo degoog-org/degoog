@@ -6,7 +6,7 @@ Plugins live in `data/plugins/` (or `DEGOOG_PLUGINS_DIR`). A module can export a
 
 ## Bang command plugins
 
-Drop plugin modules here to add them to deGoog. Each file may export a **BangCommand** object with:
+Drop plugin modules here to add them to degoog. Each file may export a **BangCommand** object with:
 
 - **`name`** (string) — display name shown in Settings and `!help`
 - **`description`** (string) — short description shown in `!help`

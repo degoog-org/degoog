@@ -190,6 +190,11 @@
   }
 }
 
+textarea.ext-field-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
 .ext-field-desc {
   color: var(--text-secondary);
   font-size: $font-size-small;

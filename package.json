@@ -1,6 +1,6 @@
 {
   "name": "degoog",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "bun run --watch src/server.ts",

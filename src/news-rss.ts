@@ -241,8 +241,9 @@ const PAGE_SIZE = 20;
 export async function searchNews(
   query: string,
   page: number,
+  feedUrls?: string[],
 ): Promise<SearchResult[]> {
-  const urls = await getNewsFeedUrls();
+  const urls = feedUrls ?? (await getNewsFeedUrls());
   if (urls.length === 0) return [];
   const allItems = await fetchAllFeeds(urls);
   const q = query.trim().toLowerCase();

@@ -15,6 +15,9 @@ import { GoogleImagesEngine } from "./google-images";
 import { BingImagesEngine } from "./bing-images";
 import { GoogleVideosEngine } from "./google-videos";
 import { BingVideosEngine } from "./bing-videos";
+import { RssNewsEngine } from "./rss";
+import { BraveNewsEngine } from "./brave-news";
+import { BingNewsEngine } from "./bing-news";
 export type EngineSearchType = "web" | "images" | "videos" | "news";
 
 export interface EngineDefinition {
@@ -87,6 +90,24 @@ const BUILTIN_DEFINITIONS: EngineDefinition[] = [
     searchType: "videos",
     EngineClass: BingVideosEngine,
   },
+  {
+    id: "rss-news",
+    displayName: "RSS Feeds",
+    searchType: "news",
+    EngineClass: RssNewsEngine,
+  },
+  {
+    id: "brave-news",
+    displayName: "Brave News",
+    searchType: "news",
+    EngineClass: BraveNewsEngine,
+  },
+  {
+    id: "bing-news",
+    displayName: "Bing News",
+    searchType: "news",
+    EngineClass: BingNewsEngine,
+  },
 ];
 
 const webIds = BUILTIN_DEFINITIONS.filter((d) => d.searchType === "web").map(
@@ -100,11 +121,12 @@ const builtinMap = Object.fromEntries(
 ) as Record<string, SearchEngine>;
 
 const builtinRegistry = BUILTIN_DEFINITIONS.filter(
-  (d) => d.searchType === "web",
+  (d) => d.searchType === "web" || d.searchType === "news",
 ).map((d) => ({
   id: d.id,
   displayName: d.displayName,
   disabledByDefault: d.disabledByDefault,
+  searchType: d.searchType,
 }));
 
 interface PluginEntry {
@@ -121,15 +143,17 @@ export function getEngineRegistry(): {
   id: string;
   displayName: string;
   disabledByDefault?: boolean;
+  searchType?: EngineSearchType;
 }[] {
   return [
     ...builtinRegistry,
     ...pluginEntries
-      .filter((e) => e.searchType === "web")
+      .filter((e) => e.searchType === "web" || e.searchType === "news")
       .map((e) => ({
         id: e.id,
         displayName: e.displayName,
         disabledByDefault: e.disabledByDefault,
+        searchType: e.searchType,
       })),
   ];
 }
@@ -178,7 +202,7 @@ export function getEnginesForSearchType(
   ];
   const engineMap = getEngineMap();
 
-  if (engineType === "web") {
+  if (engineType === "web" || engineType === "news") {
     const active: SearchEngine[] = [];
     for (const def of allDefinitions) {
       if (config[def.id]) {
@@ -276,6 +300,14 @@ function isSearchEngine(val: unknown): val is SearchEngine {
 }
 
 export async function initEngines(): Promise<void> {
+  for (const def of BUILTIN_DEFINITIONS) {
+    const instance = builtinMap[def.id];
+    if (instance?.configure && instance.settingsSchema?.length) {
+      const stored = await getSettings(def.id);
+      if (Object.keys(stored).length > 0) instance.configure(stored);
+    }
+  }
+
   const { readdir } = await import("fs/promises");
   const { join } = await import("path");
   const { pathToFileURL } = await import("url");

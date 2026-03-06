@@ -1,6 +1,6 @@
 # Custom search engine plugins
 
-Drop engine modules here to add them to deGoog. Each file must export a **SearchEngine** object with:
+Drop engine modules here to add them to degoog. Each file must export a **SearchEngine** object with:
 
 - **`name`** (string) — display name shown in Settings → Engines
 - **`executeSearch(query, page?, timeFilter?)`** (async function) — returns `Promise<SearchResult[]>`

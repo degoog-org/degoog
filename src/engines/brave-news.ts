@@ -1,0 +1,93 @@
+import * as cheerio from "cheerio";
+import type { SearchEngine, SearchResult, TimeFilter } from "../types";
+import { getRandomUserAgent } from "../user-agents";
+
+const TIME_RANGE_MAP: Record<string, string> = {
+  day: "pd",
+  week: "pw",
+  month: "pm",
+  year: "py",
+};
+
+export class BraveNewsEngine implements SearchEngine {
+  name = "Brave News";
+  bangShortcut = "bravenews";
+
+  async executeSearch(
+    query: string,
+    page: number = 1,
+    timeFilter?: TimeFilter,
+  ): Promise<SearchResult[]> {
+    if (!query.trim()) return [];
+
+    const params: Record<string, string> = { q: query };
+    if (page > 1) params.offset = String(page - 1);
+    if (timeFilter && timeFilter !== "any" && TIME_RANGE_MAP[timeFilter]) {
+      params.tf = TIME_RANGE_MAP[timeFilter];
+    }
+
+    const url = `https://search.brave.com/news?${new URLSearchParams(params)}`;
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": getRandomUserAgent(),
+        "Accept-Encoding": "gzip, deflate",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        Cookie:
+          "safesearch=moderate; useLocation=0; country=us; ui_lang=en-us",
+      },
+      redirect: "follow",
+    });
+
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const results: SearchResult[] = [];
+
+    $("div.snippet[data-type='news'], div[data-type='news']").each((_, el) => {
+      const $el = $(el);
+      const linkEl = $el.find("a[href^='http']").first();
+      const href = linkEl.attr("href") ?? "";
+      if (!href) return;
+
+      try {
+        const parsed = new URL(href, "https://search.brave.com");
+        if (parsed.hostname === "search.brave.com") return;
+      } catch {
+        return;
+      }
+
+      const title =
+        $el
+          .find(
+            "span.snippet-title, .snippet-title, div[class*='snippet-title']",
+          )
+          .text()
+          .trim() || linkEl.text().trim();
+      const snippet = $el
+        .find(
+          ".snippet-description, .snippet-content, div[class*='snippet-description']",
+        )
+        .text()
+        .trim();
+      const thumbnail = $el
+        .find("img.thumb, img[src^='http']")
+        .first()
+        .attr("src");
+
+      if (title) {
+        results.push({
+          title,
+          url: href,
+          snippet,
+          source: this.name,
+          ...(thumbnail && thumbnail.startsWith("http")
+            ? { thumbnail }
+            : {}),
+        });
+      }
+    });
+
+    return results;
+  }
+}

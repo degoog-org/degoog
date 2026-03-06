@@ -10,7 +10,7 @@ export interface SearchResult {
 export interface SettingField {
   key: string;
   label: string;
-  type: "text" | "password" | "url" | "toggle";
+  type: "text" | "password" | "url" | "toggle" | "textarea";
   required?: boolean;
   placeholder?: string;
   description?: string;

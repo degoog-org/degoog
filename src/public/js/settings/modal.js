@@ -42,6 +42,21 @@ function renderField(field, currentValue) {
       </div>`;
   }
 
+  if (field.type === "textarea") {
+    return `
+      <div class="ext-field" data-key="${escapeHtml(field.key)}" data-type="textarea" data-secret="${isSecret}" data-was-set="${isSet}">
+        <label class="ext-field-label" for="field-${escapeHtml(field.key)}">${escapeHtml(field.label)}${field.required ? " <span class='ext-required'>*</span>" : ""}</label>
+        <textarea
+          class="ext-field-input ext-field-textarea${configuredClass}"
+          id="field-${escapeHtml(field.key)}"
+          placeholder="${escapeHtml(placeholder)}"
+          rows="6"
+          autocomplete="off"
+        >${escapeHtml(displayValue)}</textarea>
+        ${descHtml}
+      </div>`;
+  }
+
   const inputType = field.type === "password" ? "password" : (field.type === "url" ? "url" : "text");
   return `
     <div class="ext-field" data-key="${escapeHtml(field.key)}" data-type="${escapeHtml(field.type)}" data-secret="${isSecret}" data-was-set="${isSet}">
@@ -72,7 +87,7 @@ function collectValues() {
       return;
     }
 
-    const input = fieldEl.querySelector("input");
+    const input = fieldEl.querySelector("textarea") || fieldEl.querySelector("input");
     const val = input.value.trim();
 
     if (isSecret) {
@@ -99,7 +114,7 @@ export function openModal(ext) {
   });
 
   overlay.style.display = "flex";
-  const firstInput = bodyEl.querySelector("input");
+  const firstInput = bodyEl.querySelector("input, textarea");
   if (firstInput) firstInput.focus();
 }
 

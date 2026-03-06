@@ -10,7 +10,6 @@ import {
   generateAISummary,
   AI_SUMMARY_ID,
 } from "../commands/builtins/ai-summary";
-import { getNewsFeedUrls, setNewsFeedUrls } from "../news-rss";
 import type { ScoredResult, ExtensionMeta } from "../types";
 
 const router = new Hono();
@@ -76,27 +75,6 @@ router.post("/api/extensions/:id/settings", async (c) => {
     if (slotPlugin?.configure) slotPlugin.configure(merged);
   }
 
-  return c.json({ ok: true });
-});
-
-router.get("/api/settings/news-feeds", async (c) => {
-  const urls = await getNewsFeedUrls();
-  return c.json({ urls });
-});
-
-router.post("/api/settings/news-feeds", async (c) => {
-  const body = await c.req.json<{ urls?: string[] }>();
-  const urls = Array.isArray(body.urls) ? body.urls : [];
-  const valid = urls.filter((u) => {
-    if (typeof u !== "string") return false;
-    try {
-      new URL(u);
-      return u.startsWith("http");
-    } catch {
-      return false;
-    }
-  });
-  await setNewsFeedUrls(valid);
   return c.json({ ok: true });
 });
 

@@ -9,12 +9,15 @@ import type {
   KnowledgePanel,
   TimeFilter,
 } from "./types";
-import { getEngineMap, getActiveWebEngines } from "./engines/registry";
+import {
+  getEngineMap,
+  getActiveWebEngines,
+  getEnginesForSearchType,
+} from "./engines/registry";
 import { BingImagesEngine } from "./engines/bing-images";
 import { GoogleImagesEngine } from "./engines/google-images";
 import { BingVideosEngine } from "./engines/bing-videos";
 import { GoogleVideosEngine } from "./engines/google-videos";
-import { searchNews } from "./news-rss";
 
 const MAX_PAGE = 10;
 const ENGINE_TIMEOUT_MS = 10_000;
@@ -120,10 +123,11 @@ export function mergeNewResults(
 
 function getEnginesForType(
   type: SearchType,
-  _config: EngineConfig,
+  config: EngineConfig,
 ): SearchEngine[] {
   if (type === "images") return imageEngines;
   if (type === "videos") return videoEngines;
+  if (type === "news") return getEnginesForSearchType(type, config);
   return [];
 }
 
@@ -262,26 +266,6 @@ export async function search(
 ): Promise<SearchResponse> {
   const start = performance.now();
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
-
-  if (type === "news") {
-    const newsResults = await searchNews(query, p);
-    const totalTime = Math.round(performance.now() - start);
-    const scored = newsResults.map((r, i) => ({
-      ...r,
-      score: Math.max(10 - i, 1),
-      sources: [r.source],
-    }));
-    return {
-      results: scored,
-      atAGlance: null,
-      query,
-      totalTime,
-      type: "news",
-      engineTimings: [{ name: "RSS", time: totalTime, resultCount: scored.length }],
-      relatedSearches: [],
-      knowledgePanel: null,
-    };
-  }
 
   const activeEngines =
     type === "all"
