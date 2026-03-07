@@ -21,6 +21,15 @@ app.use("/public/*.js", async (c, next) => {
   await next();
   c.res.headers.set("Cache-Control", "no-cache");
 });
+app.get("/sw.js", async (c) => {
+  const body = await Bun.file("src/public/sw.js").text();
+  return new Response(body, {
+    headers: {
+      "Content-Type": "application/javascript",
+      "Service-Worker-Allowed": "/",
+    },
+  });
+});
 app.use("/public/*", serveStatic({ root: "src/" }));
 app.route("/", pagesRouter);
 app.route("/", searchRouter);

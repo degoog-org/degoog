@@ -1,6 +1,7 @@
 import { idbGet, idbSet } from "../db.js";
 import { SETTINGS_KEY, THEME_KEY } from "../constants.js";
 import { applyTheme } from "../theme.js";
+import { requestInstallPrompt } from "../installPrompt.js";
 
 export async function initGeneralTab() {
   const themeSelect = document.getElementById("theme-select");
@@ -31,4 +32,9 @@ export async function initGeneralTab() {
       btn.textContent = "Failed";
     }
   });
+
+  const installPromptBtn = document.getElementById("settings-install-prompt");
+  if (installPromptBtn) {
+    installPromptBtn.addEventListener("click", () => requestInstallPrompt());
+  }
 }

@@ -1,4 +1,5 @@
 import { initTheme } from "./js/theme.js";
+import { initInstallPrompt } from "./js/installPrompt.js";
 import { initGeneralTab } from "./js/settings/general-tab.js";
 import { initEnginesTab } from "./js/settings/engines-tab.js";
 import { initPluginsTab } from "./js/settings/plugins-tab.js";
@@ -85,6 +86,7 @@ function initTabs() {
 
 async function initSettings() {
   initTheme();
+  initInstallPrompt();
   initTabs();
   initGeneralTab();
 

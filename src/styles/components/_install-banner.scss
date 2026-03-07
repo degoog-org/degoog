@@ -1,0 +1,88 @@
+#install-banner-root {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.install-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--bg-light);
+  pointer-events: auto;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+
+  &.install-banner-visible {
+    transform: translateY(0);
+  }
+}
+
+.install-banner-text {
+  margin: 0;
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+}
+
+.install-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.install-banner-btn {
+  font-family: $font-family;
+  font-size: $font-size-small;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  transition: background $transition-fast, color $transition-fast;
+}
+
+.install-banner-install {
+  background: $blue;
+  color: #fff;
+
+  &:hover {
+    background: $blue-hover;
+  }
+}
+
+.install-banner-dismiss {
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 8px;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
+.settings-install-prompt {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  font-family: $font-family;
+  font-size: $font-size-base;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background $transition-fast, color $transition-fast, border-color $transition-fast;
+
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+  }
+}
