@@ -231,7 +231,6 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  vertical-align: top;
 }
 
 .store-card-thumb-placeholder {
@@ -272,6 +271,7 @@
   font-size: $font-size-small;
   color: var(--text-secondary);
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
