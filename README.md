@@ -54,6 +54,4 @@ Official fccview store: `https://github.com/fccview/fccview-degoog-extensions`
 
 ## Documentation
 
-Full customisation guide (plugins, themes, engines, store, settings gate, aliases, env): **[documentation/index.html](documentation/index.html)**. Suitable for GitHub Pages.
-
-News search uses RSS: configure feed URLs in **Settings → Engines → News** (one URL per line, Save). Feeds are stored in `data/plugin-settings.json`. Leave empty to use default tech news feeds.
+Full customisation guide (plugins, themes, engines, store, settings gate, aliases, env): **[https://fccview.github.io/degoog](documentation)**. 
