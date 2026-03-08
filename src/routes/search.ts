@@ -10,6 +10,7 @@ import type {
   TimeFilter,
   SearchResponse,
   SlotPanelResult,
+  ScoredResult,
 } from "../types";
 
 const router = new Hono();
@@ -37,16 +38,22 @@ function cacheKey(
 async function runSlotPlugins(
   query: string,
   clientIp?: string,
+  results?: ScoredResult[],
+  options?: { excludePosition?: "at-a-glance" },
 ): Promise<SlotPanelResult[]> {
   const plugins = getSlotPlugins();
   const panels: SlotPanelResult[] = [];
+  const exclude = options?.excludePosition;
   for (const plugin of plugins) {
+    if (exclude && plugin.position === exclude) continue;
     try {
-      const slotSettings = await getSettings(`slot-${plugin.id}`);
+      const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
+      const slotSettings = await getSettings(slotSettingsId);
       if (slotSettings["disabled"] === "true") continue;
       const ok = await Promise.resolve(plugin.trigger(query.trim()));
       if (!ok) continue;
-      const out = await plugin.execute(query, { clientIp });
+      const context = { clientIp, results };
+      const out = await plugin.execute(query, context);
       if (!out.html || !out.html.trim()) continue;
       panels.push({
         id: plugin.id,
@@ -89,7 +96,16 @@ router.get("/api/search", async (c) => {
   }
 
   if (searchType === "all") {
-    response = { ...response, slotPanels: [] };
+    const clientIp =
+      c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ??
+      c.req.header("x-real-ip");
+    const slotPanels = await runSlotPlugins(
+      query.trim(),
+      clientIp ?? undefined,
+      response.results,
+      { excludePosition: "at-a-glance" },
+    );
+    response = { ...response, slotPanels };
   }
 
   return c.json(response);
@@ -101,7 +117,47 @@ router.get("/api/slots", async (c) => {
   const clientIp =
     c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ??
     c.req.header("x-real-ip");
-  const panels = await runSlotPlugins(query.trim(), clientIp);
+  const panels = await runSlotPlugins(query.trim(), clientIp, undefined, {
+    excludePosition: "at-a-glance",
+  });
+  return c.json({ panels });
+});
+
+router.post("/api/slots/glance", async (c) => {
+  let body: { query?: string; results?: ScoredResult[] };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
+  if (!body.query || !Array.isArray(body.results)) {
+    return c.json({ error: "Missing query or results" }, 400);
+  }
+  const clientIp =
+    c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ??
+    c.req.header("x-real-ip");
+  const glancePlugins = getSlotPlugins().filter((p) => p.position === "at-a-glance");
+  const panels: SlotPanelResult[] = [];
+  for (const plugin of glancePlugins) {
+    try {
+      const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
+      const slotSettings = await getSettings(slotSettingsId);
+      if (slotSettings["disabled"] === "true") continue;
+      const ok = await Promise.resolve(plugin.trigger(body.query!.trim()));
+      if (!ok) continue;
+      const out = await plugin.execute(body.query!.trim(), {
+        clientIp: clientIp ?? undefined,
+        results: body.results,
+      });
+      if (!out.html || !out.html.trim()) continue;
+      panels.push({
+        id: plugin.id,
+        title: out.title,
+        html: out.html,
+        position: plugin.position,
+      });
+    } catch {}
+  }
   return c.json({ panels });
 });
 

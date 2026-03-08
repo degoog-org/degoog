@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { join } from "path";
+import { getScriptFolderSource } from "../plugin-assets";
 
 const MIME_TYPES: Record<string, string> = {
   ".js": "application/javascript",
@@ -18,6 +19,7 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 const pluginsDir = process.env.DEGOOG_PLUGINS_DIR ?? join(process.cwd(), "data", "plugins");
+const builtinsDir = join(process.cwd(), "src", "commands", "builtins");
 
 const router = new Hono();
 
@@ -30,7 +32,9 @@ router.get("/plugins/:folder/*", async (c) => {
   const ext = rest.substring(rest.lastIndexOf("."));
   const mime = MIME_TYPES[ext];
   if (!mime) return c.notFound();
-  const filePath = join(pluginsDir, folder, rest);
+  const source = getScriptFolderSource(folder);
+  const rootDir = source === "builtin" ? builtinsDir : pluginsDir;
+  const filePath = join(rootDir, folder, rest);
   const file = Bun.file(filePath);
   if (!(await file.exists())) return c.notFound();
   c.header("Content-Type", mime);

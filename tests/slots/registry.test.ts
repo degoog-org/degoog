@@ -22,4 +22,11 @@ describe("slots registry", () => {
   test("getSlotPluginById returns null for unknown id", () => {
     expect(getSlotPluginById("unknown-slot")).toBeNull();
   });
+
+  test("built-in ai-summary slot has position at-a-glance and settingsId", () => {
+    const slot = getSlotPluginById("ai-summary");
+    expect(slot).not.toBeNull();
+    expect(slot!.position).toBe("at-a-glance");
+    expect(slot!.settingsId).toBe("ai-summary");
+  });
 });

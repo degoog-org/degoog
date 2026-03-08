@@ -16,6 +16,8 @@ export function clearSlotPanels() {
     const el = document.getElementById(id);
     if (el) el.innerHTML = "";
   }
+  const glanceEl = document.getElementById("at-a-glance");
+  if (glanceEl) glanceEl.innerHTML = "";
 }
 
 function renderSlotPanelsInto(panels, clearFirst) {
@@ -25,23 +27,28 @@ function renderSlotPanelsInto(panels, clearFirst) {
     "above-results": document.getElementById("slot-above-results"),
     "below-results": document.getElementById("slot-below-results"),
     sidebar: document.getElementById("slot-sidebar"),
+    "at-a-glance": document.getElementById("at-a-glance"),
   };
   for (const panel of panels) {
     const container = byPosition[panel.position];
     if (!container) continue;
-    const block = document.createElement("div");
-    block.className = "results-slot-panel";
-    if (panel.title) {
-      const titleEl = document.createElement("div");
-      titleEl.className = "results-slot-panel-title";
-      titleEl.textContent = panel.title;
-      block.appendChild(titleEl);
+    if (panel.position === "at-a-glance") {
+      container.innerHTML = panel.html;
+    } else {
+      const block = document.createElement("div");
+      block.className = "results-slot-panel";
+      if (panel.title) {
+        const titleEl = document.createElement("div");
+        titleEl.className = "results-slot-panel-title";
+        titleEl.textContent = panel.title;
+        block.appendChild(titleEl);
+      }
+      const body = document.createElement("div");
+      body.className = "results-slot-panel-body";
+      body.innerHTML = panel.html;
+      block.appendChild(body);
+      container.appendChild(block);
     }
-    const body = document.createElement("div");
-    body.className = "results-slot-panel-body";
-    body.innerHTML = panel.html;
-    block.appendChild(body);
-    container.appendChild(block);
   }
 }
 

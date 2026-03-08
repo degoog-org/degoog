@@ -21,3 +21,5 @@ export const helpCommand: BangCommand = {
     };
   },
 };
+
+export default helpCommand;

@@ -13,12 +13,8 @@ import {
   maskSecrets,
   type SettingValue,
 } from "../plugin-settings";
-import {
-  generateAISummary,
-  AI_SUMMARY_ID,
-} from "../commands/builtins/ai-summary/index";
 import { getAllPluginCss } from "../plugin-assets";
-import type { ScoredResult, ExtensionMeta } from "../types";
+import type { ExtensionMeta } from "../types";
 
 const router = new Hono();
 
@@ -28,7 +24,7 @@ async function getSlotExtensionMeta(): Promise<ExtensionMeta[]> {
   for (const slot of slots) {
     const schema = slot.settingsSchema ?? [];
     if (schema.length === 0) continue;
-    const id = `slot-${slot.id}`;
+    const id = slot.settingsId ?? `slot-${slot.id}`;
     const raw = await getSettings(id);
     const settings = maskSecrets(raw, schema);
     if (raw["disabled"]) settings["disabled"] = raw["disabled"];
@@ -108,8 +104,9 @@ router.post("/api/extensions/:id/settings", async (c) => {
   const commandInstance = getCommandInstanceById(id);
   if (commandInstance?.configure) commandInstance.configure(merged as Record<string, string>);
 
-  if (id.startsWith("slot-")) {
-    const slotPlugin = getSlotPluginById(id.slice(5));
+  const slotMatch = id.startsWith("slot-") ? id.slice(5) : getSlotPlugins().find((s) => (s.settingsId ?? `slot-${s.id}`) === id)?.id;
+  if (slotMatch) {
+    const slotPlugin = getSlotPluginById(slotMatch);
     if (slotPlugin?.configure) slotPlugin.configure(merged as Record<string, string>);
   }
 
@@ -119,21 +116,6 @@ router.post("/api/extensions/:id/settings", async (c) => {
 router.get("/api/plugins/styles.css", (c) => {
   c.header("Content-Type", "text/css");
   return c.body(getAllPluginCss());
-});
-
-router.post("/api/ai/glance", async (c) => {
-  const body = await c.req.json<{ query: string; results: ScoredResult[] }>();
-  if (!body.query || !Array.isArray(body.results)) {
-    return c.json({ error: "Missing query or results" }, 400);
-  }
-
-  const aiSettings = await getSettings(AI_SUMMARY_ID);
-  if (aiSettings["enabled"] !== "true" || aiSettings["disabled"] === "true") {
-    return c.json({ summary: null });
-  }
-
-  const summary = await generateAISummary(body.query, body.results);
-  return c.json({ summary });
 });
 
 export default router;

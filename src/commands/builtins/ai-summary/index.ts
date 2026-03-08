@@ -1,4 +1,4 @@
-import type { SettingField } from "../../../types";
+import type { SettingField, SlotPlugin } from "../../../types";
 import { getSettings, asString } from "../../../plugin-settings";
 
 export const AI_SUMMARY_ID = "ai-summary";
@@ -75,6 +75,14 @@ interface OpenAIChatResponse {
   choices?: { message?: { content?: string } }[];
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export async function generateAISummary(
   query: string,
   results: { title: string; url: string; snippet: string }[],
@@ -122,3 +130,34 @@ export async function generateAISummary(
     return null;
   }
 }
+
+const aiSummarySlot: SlotPlugin = {
+  id: AI_SUMMARY_ID,
+  settingsId: AI_SUMMARY_ID,
+  name: "AI Summary",
+  description:
+    "Replaces At a Glance with a brief AI-generated summary using any OpenAI-compatible provider",
+  position: "at-a-glance",
+  async trigger(): Promise<boolean> {
+    const settings = await getAISummarySettings();
+    return settings.enabled && !!settings.baseUrl && !!settings.model;
+  },
+  async execute(query, context): Promise<{ title?: string; html: string }> {
+    const results = context?.results ?? [];
+    if (results.length === 0) return { html: "" };
+    const summary = await generateAISummary(query, results);
+    if (!summary) return { html: "" };
+    return {
+      html:
+        '<div class="glance-box glance-ai">' +
+        '<div class="glance-snippet">' +
+        escapeHtml(summary) +
+        "</div>" +
+        '<span class="glance-ai-badge">AI Summary</span>' +
+        "</div>",
+    };
+  },
+  settingsSchema: aiSummarySettingsSchema,
+};
+
+export const slot = aiSummarySlot;

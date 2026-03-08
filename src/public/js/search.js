@@ -14,6 +14,15 @@ import {
 } from "./render.js";
 import { hideAcDropdown } from "./autocomplete.js";
 
+function runScriptsInContainer(container) {
+  if (!container) return;
+  container.querySelectorAll("script").forEach((oldScript) => {
+    const script = document.createElement("script");
+    script.textContent = oldScript.textContent;
+    container.appendChild(script);
+  });
+}
+
 function setResultsMeta(metaText, showClearQuery = false) {
   const el = document.getElementById("results-meta");
   if (!el) return;
@@ -30,6 +39,43 @@ function setResultsMeta(metaText, showClearQuery = false) {
   } else {
     el.textContent = metaText;
   }
+}
+
+let commandsCache = null;
+
+if (typeof window !== "undefined") {
+  window.addEventListener("extensions-saved", () => {
+    commandsCache = null;
+  });
+}
+
+function getNaturalLanguageBangQuery(query, commands) {
+  const trimmed = query.trim();
+  if (!trimmed) return null;
+  const lower = trimmed.toLowerCase();
+  const withNatural = commands.filter((c) => c.naturalLanguage && c.id);
+  const firstWordMap = new Map();
+  const phraseList = [];
+  for (const c of withNatural) {
+    const trigger = c.trigger.toLowerCase();
+    firstWordMap.set(trigger, c.trigger);
+    for (const a of c.aliases || []) firstWordMap.set(a.toLowerCase(), c.trigger);
+    for (const p of c.naturalLanguagePhrases || []) {
+      phraseList.push({ phrase: p.toLowerCase(), trigger: c.trigger });
+    }
+  }
+  phraseList.sort((a, b) => b.phrase.length - a.phrase.length);
+  for (const { phrase, trigger } of phraseList) {
+    if (lower === phrase || lower.startsWith(phrase + " ")) {
+      const rest = trimmed.slice(phrase.length).trim();
+      return "!" + trigger + (rest ? " " + rest : "");
+    }
+  }
+  const firstWord = trimmed.split(/\s+/)[0].toLowerCase();
+  const rest = trimmed.slice(firstWord.length).trim();
+  const canonical = firstWordMap.get(firstWord);
+  if (canonical) return "!" + canonical + (rest ? " " + rest : "");
+  return null;
 }
 
 export async function performSearch(query, type, page) {
@@ -73,6 +119,63 @@ export async function performSearch(query, type, page) {
   if (type !== "all") urlParams.set("type", type);
   history.pushState(null, "", `/search?${urlParams.toString()}`);
 
+  let commands = commandsCache;
+  if (!commands) {
+    try {
+      const cmdRes = await fetch("/api/commands", { cache: "no-store" });
+      if (cmdRes.ok) {
+        const body = await cmdRes.json();
+        commands = body.commands || [];
+        commandsCache = commands;
+      }
+    } catch { }
+  }
+  const bangQuery = commands && commands.length ? getNaturalLanguageBangQuery(query, commands) : null;
+
+  if (bangQuery) {
+    try {
+      const [cmdRes, searchRes] = await Promise.all([
+        fetch(`/api/command?q=${encodeURIComponent(bangQuery)}`),
+        fetch(url),
+      ]);
+      const searchData = await searchRes.json();
+      state.currentResults = searchData.results;
+      state.currentData = searchData;
+      const metaText = `About ${searchData.results.length} results (${(searchData.totalTime / 1000).toFixed(2)} seconds)`;
+      setResultsMeta(metaText, type === "news" && query.trim().length > 0);
+      if (type === "all") {
+        renderSidebar(searchData, (q) => performSearch(q));
+        renderSlotPanels(searchData.slotPanels || []);
+        fetchSlotPanels(query);
+      }
+      if (type !== "all") {
+        document.getElementById("at-a-glance").innerHTML = "";
+        document.getElementById("results-sidebar").innerHTML = "";
+      }
+      renderResults(searchData.results);
+
+      const glanceEl = document.getElementById("at-a-glance");
+      if (glanceEl && cmdRes.ok) {
+        const cmdData = await cmdRes.json();
+        if (cmdData.type === "engine" && cmdData.results && cmdData.results.length > 0) {
+          const glance = cmdData.atAGlance && cmdData.atAGlance.snippet
+            ? `<div class="glance-box"><div class="glance-snippet">${escapeHtmlSimple(cmdData.atAGlance.snippet)}</div></div>`
+            : "";
+          glanceEl.innerHTML = `<div class="command-result">${glance}<p class="natural-command-meta">${cmdData.results.length} results from engine</p></div>`;
+        } else if (cmdData.type === "engine") {
+          glanceEl.innerHTML = `<div class="command-result"><p class="natural-command-meta">${cmdData.results.length} results from engine</p></div>`;
+        } else if (cmdData.title !== undefined && cmdData.html !== undefined) {
+          glanceEl.innerHTML = `<div class="command-result">${cmdData.html || ""}</div>`;
+          runScriptsInContainer(glanceEl);
+        }
+      }
+    } catch (err) {
+      document.getElementById("results-meta").textContent = "";
+      document.getElementById("results-list").innerHTML = '<div class="no-results">Search failed. Please try again.</div>';
+    }
+    return;
+  }
+
   try {
     const res = await fetch(url);
     const data = await res.json();
@@ -85,9 +188,9 @@ export async function performSearch(query, type, page) {
 
     if (type === "all") {
       renderSidebar(data, (q) => performSearch(q));
-      fetchAISummary(query, data.results, data.atAGlance);
       renderSlotPanels(data.slotPanels || []);
-      fetchSlotPanels(query);
+      fetchGlancePanels(query, data.results, data.atAGlance);
+      if (!data.slotPanels || data.slotPanels.length === 0) fetchSlotPanels(query);
     }
     if (type !== "all") {
       document.getElementById("at-a-glance").innerHTML = "";
@@ -129,23 +232,6 @@ async function performBangCommand(query, type, page = 1) {
     const res = await fetch(`/api/command?${apiParams.toString()}`);
     if (!res.ok) throw new Error("not found");
     const data = await res.json();
-    if (data.action === "detect_client_ip") {
-      try {
-        const ipRes = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipRes.json();
-        return performBangCommand("!ip " + ipData.ip, type);
-      } catch {
-        document.getElementById("results-meta").textContent = "";
-        document.getElementById("results-list").innerHTML = '<div class="no-results">Could not detect your public IP. Try: <strong>!ip 8.8.8.8</strong></div>';
-        return;
-      }
-    }
-    if (data.action === "run_speedtest") {
-      document.getElementById("results-meta").textContent = "Speed Test";
-      document.getElementById("results-list").innerHTML = renderSpeedtest();
-      runSpeedtest();
-      return;
-    }
     if (data.type === "engine") {
       state.currentResults = data.results;
       state.currentData = data;
@@ -156,7 +242,8 @@ async function performBangCommand(query, type, page = 1) {
       return;
     }
     document.getElementById("results-meta").textContent = data.title;
-    document.getElementById("results-list").innerHTML = data.html;
+    document.getElementById("results-list").innerHTML = data.html || "";
+    runScriptsInContainer(document.getElementById("results-list"));
     if (data.totalPages > 1) {
       renderBangPagination(data.totalPages, data.page, query);
     }
@@ -164,79 +251,6 @@ async function performBangCommand(query, type, page = 1) {
     document.getElementById("results-meta").textContent = "";
     document.getElementById("results-list").innerHTML = '<div class="no-results">Unknown command. Type <strong>!help</strong> for available commands.</div>';
   }
-}
-
-function renderSpeedtest() {
-  return `<div class="command-result command-speedtest">
-    <div class="speedtest-gauges">
-      <div class="speedtest-gauge">
-        <div class="speedtest-value" id="st-download">—</div>
-        <div class="speedtest-label">Download (Mbps)</div>
-        <div class="speedtest-bar"><div class="speedtest-bar-fill" id="st-download-bar"></div></div>
-      </div>
-      <div class="speedtest-gauge">
-        <div class="speedtest-value" id="st-upload">—</div>
-        <div class="speedtest-label">Upload (Mbps)</div>
-        <div class="speedtest-bar"><div class="speedtest-bar-fill" id="st-upload-bar"></div></div>
-      </div>
-      <div class="speedtest-gauge">
-        <div class="speedtest-value" id="st-latency">—</div>
-        <div class="speedtest-label">Latency (ms)</div>
-      </div>
-    </div>
-    <div class="speedtest-status" id="st-status">Starting...</div>
-  </div>`;
-}
-
-async function runSpeedtest() {
-  const status = document.getElementById("st-status");
-  const dlEl = document.getElementById("st-download");
-  const ulEl = document.getElementById("st-upload");
-  const latEl = document.getElementById("st-latency");
-  const dlBar = document.getElementById("st-download-bar");
-  const ulBar = document.getElementById("st-upload-bar");
-  const maxSpeed = 500;
-
-  status.textContent = "Testing latency...";
-  const pings = [];
-  for (let i = 0; i < 5; i++) {
-    const t0 = performance.now();
-    try {
-      await fetch("/api/commands", { cache: "no-store" });
-    } catch {}
-    pings.push(performance.now() - t0);
-  }
-  const latency = Math.round(pings.sort((a, b) => a - b)[Math.floor(pings.length / 2)]);
-  latEl.textContent = latency;
-
-  status.textContent = "Testing download speed...";
-  const dlUrl = "https://speed.cloudflare.com/__down?bytes=25000000";
-  const dlStart = performance.now();
-  try {
-    const res = await fetch(dlUrl, { cache: "no-store" });
-    const blob = await res.blob();
-    const dlTime = (performance.now() - dlStart) / 1000;
-    const dlMbps = ((blob.size * 8) / dlTime / 1e6).toFixed(1);
-    dlEl.textContent = dlMbps;
-    dlBar.style.width = Math.min((dlMbps / maxSpeed) * 100, 100) + "%";
-  } catch {
-    dlEl.textContent = "Error";
-  }
-
-  status.textContent = "Testing upload speed...";
-  const ulData = new Uint8Array(5000000);
-  const ulStart = performance.now();
-  try {
-    await fetch("https://speed.cloudflare.com/__up", { method: "POST", body: ulData, cache: "no-store" });
-    const ulTime = (performance.now() - ulStart) / 1000;
-    const ulMbps = ((ulData.byteLength * 8) / ulTime / 1e6).toFixed(1);
-    ulEl.textContent = ulMbps;
-    ulBar.style.width = Math.min((ulMbps / maxSpeed) * 100, 100) + "%";
-  } catch {
-    ulEl.textContent = "Error";
-  }
-
-  status.textContent = "Complete";
 }
 
 export async function goToPage(pageNum) {
@@ -310,7 +324,7 @@ export async function retryEngine(engineName) {
     if (state.currentType === "all") {
       renderSidebar(state.currentData, (q) => performSearch(q));
     }
-  } catch {}
+  } catch { }
 }
 
 function renderBangPagination(totalPages, activePage, query) {
@@ -378,6 +392,40 @@ function skeletonGlance() {
 
 let glanceAbortController = null;
 
+async function fetchGlancePanels(query, results, fallbackAtAGlance) {
+  if (glanceAbortController) glanceAbortController.abort();
+  glanceAbortController = new AbortController();
+  const signal = glanceAbortController.signal;
+  const glanceEl = document.getElementById("at-a-glance");
+  if (!results || results.length === 0) {
+    if (glanceEl && fallbackAtAGlance) renderAtAGlance(fallbackAtAGlance);
+    return;
+  }
+  if (glanceEl) glanceEl.innerHTML = skeletonGlance();
+  try {
+    const res = await fetch("/api/slots/glance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: query.trim(), results }),
+      signal,
+    });
+    if (signal.aborted) return;
+    const data = await res.json();
+    if (signal.aborted) return;
+    if (!glanceEl) return;
+    if (data.panels && data.panels.length > 0) {
+      for (const panel of data.panels) {
+        if (panel.position === "at-a-glance") glanceEl.innerHTML = panel.html;
+      }
+    } else if (fallbackAtAGlance) {
+      renderAtAGlance(fallbackAtAGlance);
+    }
+  } catch (err) {
+    if (err.name === "AbortError") return;
+    if (glanceEl && fallbackAtAGlance) renderAtAGlance(fallbackAtAGlance);
+  }
+}
+
 async function fetchSlotPanels(query) {
   try {
     const res = await fetch("/api/slots?q=" + encodeURIComponent(query));
@@ -386,38 +434,7 @@ async function fetchSlotPanels(query) {
     if (data.panels && data.panels.length > 0) {
       appendSlotPanels(data.panels);
     }
-  } catch {}
-}
-
-async function fetchAISummary(query, results, fallback) {
-  if (glanceAbortController) glanceAbortController.abort();
-  glanceAbortController = new AbortController();
-  const signal = glanceAbortController.signal;
-
-  try {
-    const res = await fetch("/api/ai/glance", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, results }),
-      signal,
-    });
-    if (signal.aborted) return;
-    const data = await res.json();
-    if (signal.aborted) return;
-    if (data.summary) {
-      const container = document.getElementById("at-a-glance");
-      container.innerHTML = `
-        <div class="glance-box glance-ai">
-          <div class="glance-snippet">${escapeHtmlSimple(data.summary)}</div>
-          <span class="glance-ai-badge">AI Summary</span>
-        </div>`;
-    } else {
-      renderAtAGlance(fallback);
-    }
-  } catch (err) {
-    if (err.name === "AbortError") return;
-    renderAtAGlance(fallback);
-  }
+  } catch { }
 }
 
 function escapeHtmlSimple(str) {

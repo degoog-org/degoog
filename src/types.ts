@@ -68,7 +68,11 @@ export interface KnowledgePanel {
   facts?: Record<string, string>;
 }
 
-export type SlotPanelPosition = "above-results" | "below-results" | "sidebar";
+export type SlotPanelPosition =
+  | "above-results"
+  | "below-results"
+  | "sidebar"
+  | "at-a-glance";
 
 export interface SlotPanelResult {
   id: string;
@@ -89,15 +93,21 @@ export interface SearchResponse {
   slotPanels?: SlotPanelResult[];
 }
 
+export interface SlotPluginContext {
+  clientIp?: string;
+  results?: ScoredResult[];
+}
+
 export interface SlotPlugin {
   id: string;
   name: string;
   description: string;
   position: SlotPanelPosition;
+  settingsId?: string;
   trigger: (query: string) => boolean | Promise<boolean>;
   execute(
     query: string,
-    context?: { clientIp?: string },
+    context?: SlotPluginContext,
   ): Promise<{ title?: string; html: string }>;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, string>): void;
@@ -123,6 +133,7 @@ export interface BangCommand {
   description: string;
   trigger: string;
   aliases?: string[];
+  naturalLanguagePhrases?: string[];
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, string>): void;
   isConfigured?(): Promise<boolean>;

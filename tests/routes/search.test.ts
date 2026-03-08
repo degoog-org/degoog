@@ -28,4 +28,31 @@ describe("routes/search", () => {
     const res = await searchRouter.request("http://localhost/api/lucky");
     expect(res.status).toBe(400);
   });
+
+  test("POST /api/slots/glance without body returns 400", async () => {
+    const req = new Request("http://localhost/api/slots/glance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    const res = await searchRouter.request(req);
+    expect(res.status).toBe(400);
+  });
+
+  test("POST /api/slots/glance with query and results returns 200 and panels", async () => {
+    const req = new Request("http://localhost/api/slots/glance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: "test",
+        results: [
+          { title: "T", url: "https://example.com", snippet: "S", score: 1, sources: ["x"] },
+        ],
+      }),
+    });
+    const res = await searchRouter.request(req);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual(expect.objectContaining({ panels: expect.any(Array) }));
+  });
 });

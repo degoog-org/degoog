@@ -168,3 +168,5 @@ export const jellyfinCommand: BangCommand = {
     }
   },
 };
+
+export default jellyfinCommand;

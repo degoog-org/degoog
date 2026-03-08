@@ -14,11 +14,17 @@ beforeAll(async () => {
 });
 
 describe("routes/commands", () => {
-  test("GET /api/commands returns 200 and array", async () => {
+  test("GET /api/commands returns 200 and commands with naturalLanguage", async () => {
     const res = await commandsRouter.request("http://localhost/api/commands");
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
+    expect(body).toEqual(expect.objectContaining({ commands: expect.any(Array) }));
+    expect(body.commands.length).toBeGreaterThan(0);
+    expect(body.commands[0]).toEqual(expect.objectContaining({
+      trigger: expect.any(String),
+      name: expect.any(String),
+      naturalLanguage: expect.any(Boolean),
+    }));
   });
 
   test("GET /api/command without q returns 400", async () => {

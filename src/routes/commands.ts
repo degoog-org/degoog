@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { matchBangCommand, getFilteredCommandRegistry } from "../commands/registry";
+import { matchBangCommand, getCommandsApiResponse } from "../commands/registry";
 import { searchSingleEngine } from "../search";
 import { getSettings } from "../plugin-settings";
 import type { SearchType, TimeFilter } from "../types";
@@ -7,7 +7,7 @@ import type { SearchType, TimeFilter } from "../types";
 const router = new Hono();
 
 router.get("/api/commands", async (c) => {
-  return c.json(await getFilteredCommandRegistry());
+  return c.json(await getCommandsApiResponse());
 });
 
 router.get("/api/command", async (c) => {

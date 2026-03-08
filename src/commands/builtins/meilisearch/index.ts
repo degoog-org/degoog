@@ -192,3 +192,5 @@ export const meilisearchCommand: BangCommand = {
     }
   },
 };
+
+export default meilisearchCommand;

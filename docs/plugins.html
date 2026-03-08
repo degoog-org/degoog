@@ -28,7 +28,7 @@
 
     <main>
       <h2>What plugins are</h2>
-      <p>Plugins live in <code>data/plugins/</code> (or <code>DEGOOG_PLUGINS_DIR</code>). Each plugin is a <strong>folder</strong> with an entry file. One plugin can expose several capabilities: a bang command, a slot, search bar actions, HTTP routes, and/or request middleware.</p>
+      <p>Plugins live in <code>data/plugins/</code> (or <code>DEGOOG_PLUGINS_DIR</code>). The core also loads plugins from <code>src/commands/builtins/</code> using the <strong>same folder structure and rules</strong> (see <a href="contributing.html">Contributing</a>). Each plugin is a <strong>folder</strong> with an entry file. One plugin can expose several capabilities: a bang command, a slot, search bar actions, HTTP routes, and/or request middleware.</p>
 
       <h2>Folder structure</h2>
       <pre><code>data/plugins/
@@ -68,7 +68,7 @@
       <pre><code>{ title: string, html: string, totalPages?: number }</code></pre>
       <p><strong>CommandContext</strong> (second argument to execute):</p>
       <pre><code>{ clientIp?: string, page?: number }</code></pre>
-      <p><strong>Optional:</strong> <code>aliases</code> (string[] — extra triggers), <code>settingsSchema</code> and <code>configure(settings)</code> for Settings → Plugins, <code>init(ctx)</code>, <code>isConfigured()</code> (async, return false to hide from <code>!help</code> until configured).</p>
+      <p><strong>Optional:</strong> <code>aliases</code> (string[] — extra triggers), <code>naturalLanguagePhrases</code> (string[] — phrases that trigger this command without <code>!</code> when natural language is on in Settings), <code>settingsSchema</code> and <code>configure(settings)</code> for Settings → Plugins, <code>init(ctx)</code>, <code>isConfigured()</code> (async, return false to hide from <code>!help</code> until configured).</p>
       <p><strong>SettingField</strong> (for settingsSchema):</p>
       <pre><code>{
   key: string,
@@ -96,12 +96,20 @@
       <p>Slots inject panels into the search results page when the query matches. Export <code>slot</code> or <code>slotPlugin</code> (same module can also export a bang command):</p>
       <ul>
         <li><strong>id</strong>, <strong>name</strong> — Unique id and display name.</li>
-        <li><strong>position</strong> — <code>"above-results"</code>, <code>"below-results"</code>, or <code>"sidebar"</code>.</li>
-        <li><strong>trigger(query)</strong> — Return true if the slot should show for this query (e.g. keyword or regex).</li>
-        <li><strong>execute(query, context)</strong> (async) — Returns <code>{ title?: string, html: string }</code>.</li>
+        <li><strong>position</strong> — <code>"above-results"</code>, <code>"below-results"</code>, <code>"sidebar"</code>, or <code>"at-a-glance"</code>.</li>
+        <li><strong>trigger(query)</strong> — Return true (or a Promise that resolves true) if the slot should show for this query.</li>
+        <li><strong>execute(query, context)</strong> (async) — Returns <code>{ title?: string, html: string }</code>. <code>context</code> has <code>clientIp?</code> and, for <code>at-a-glance</code> slots only, <code>results?</code> (the search results array).</li>
       </ul>
-      <p>Optional: <code>settingsSchema</code>, <code>configure(settings)</code>, <code>init(ctx)</code>. Settings are stored under <code>slot-&lt;id&gt;</code>. Multiple slots can match the same query; all are shown.</p>
+      <p>Optional: <strong>settingsId</strong> (string) — Key under which settings are stored in <code>plugin-settings.json</code>. Default is <code>slot-&lt;id&gt;</code>. Use <code>settingsId</code> to keep an existing settings key (e.g. <code>settingsId: "ai-summary"</code>).</p>
+      <p>Optional: <code>settingsSchema</code>, <code>configure(settings)</code>, <code>init(ctx)</code>. Multiple slots can match the same query; all are shown.</p>
+
+      <h3 id="at-a-glance-slot">At a glance slot</h3>
+      <p>Slots with <code>position: "at-a-glance"</code> fill the <strong>At a glance</strong> block above the search results (the snippet that would otherwise show the top result). Use this for summaries, AI-generated blurbs, or other content that benefits from the search result list.</p>
+      <p><strong>Behaviour:</strong> The search response is not delayed by at-a-glance slots. The client shows results immediately and fetches at-a-glance content in a separate request (<code>POST /api/slots/glance</code> with body <code>{ query, results }</code>). Your <code>execute(query, context)</code> receives <code>context.results</code> so you can use the result list (e.g. for an AI summary). Until the glance request returns, an animated placeholder is shown; if no panel is returned (e.g. disabled or error), the default “first result” glance is shown.</p>
+      <p><strong>Example (built-in):</strong> AI Summary is a slot in <code>src/commands/builtins/ai-summary/</code> with <code>position: "at-a-glance"</code> and <code>settingsId: "ai-summary"</code>. When enabled, it calls an OpenAI-compatible API with the query and result snippets and replaces the glance with a short AI summary.</p>
+
       <p><strong>Example from the official store:</strong> <a href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/tmdb-slot" class="external" target="_blank" rel="noopener">TMDb (imdb-slot)</a> — slot plugin that shows movie/TV details above search results.</p>
+      <p><strong>Slot API:</strong> <code>GET /api/slots?q=&lt;query&gt;</code> returns panels for above-results, below-results, and sidebar (at-a-glance slots are excluded so the search response is fast). <code>POST /api/slots/glance</code> with body <code>{ query, results }</code> returns only at-a-glance panels; the client calls this after the search response to fill the glance without blocking results.</p>
 
       <h2>Search bar actions</h2>
       <p>Plugins can add buttons or links next to the search bar (home and results). Export <code>searchBarActions</code> — an array of objects with this shape:</p>

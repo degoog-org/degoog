@@ -57,22 +57,26 @@ export function initPluginsTab(allExtensions) {
   const container = document.getElementById("plugins-content");
   if (!container) return;
 
-  const configurable = allExtensions.plugins.filter((p) => p.configurable);
-  const simple = allExtensions.plugins.filter((p) => !p.configurable);
+  const custom = allExtensions.plugins.filter(
+    (p) => p.id.startsWith("plugin-") || p.id.startsWith("slot-"),
+  );
+  const builtin = allExtensions.plugins.filter(
+    (p) => !p.id.startsWith("plugin-") && !p.id.startsWith("slot-"),
+  );
 
   let html = "";
 
-  if (configurable.length > 0) {
-    html += `<div class="ext-group"><h3 class="ext-group-label">Configurable</h3><div class="ext-cards">`;
-    for (const plugin of configurable) {
+  if (custom.length > 0) {
+    html += `<div class="ext-group"><h3 class="ext-group-label">Plugins</h3><div class="ext-cards">`;
+    for (const plugin of custom) {
       html += renderPluginCard(plugin);
     }
     html += `</div></div>`;
   }
 
-  if (simple.length > 0) {
-    html += `<div class="ext-group"><h3 class="ext-group-label">Built-in Commands</h3><div class="ext-cards">`;
-    for (const plugin of simple) {
+  if (builtin.length > 0) {
+    html += `<div class="ext-group"><h3 class="ext-group-label">Built-in commands</h3><div class="ext-cards">`;
+    for (const plugin of builtin) {
       html += renderPluginCard(plugin);
     }
     html += `</div></div>`;

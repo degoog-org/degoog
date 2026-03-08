@@ -27,9 +27,15 @@
     </nav>
 
     <main>
-      <h2>Adding a built-in bang command</h2>
-      <p>Built-in commands live in <code>src/commands/builtins/</code>. Each command is a folder (e.g. <code>help</code>, <code>weather</code>, <code>jellyfin</code>) with an <code>index.ts</code> (or <code>index.js</code>) that exports a <strong>BangCommand</strong> object — same contract as <a href="plugins.html#bang-commands">plugin bang commands</a> (name, description, trigger, execute, optional settingsSchema, configure, init, isConfigured, aliases).</p>
-      <p>Register the command in <code>src/commands/registry.ts</code> in the <code>BUILTIN_COMMANDS</code> array: add an entry with <code>id</code>, <code>trigger</code>, <code>displayName</code>, and <code>instance</code> (the command object).</p>
+      <h2>Built-in plugins (commands and slots)</h2>
+      <p>Built-ins live in <code>src/commands/builtins/</code> and use the <strong>same folder structure and discovery</strong> as <a href="plugins.html">plugins</a> in <code>data/plugins/</code>. Each built-in is a folder (e.g. <code>help</code>, <code>ip</code>, <code>ai-summary</code>) with:</p>
+      <ul>
+        <li><code>index.js</code> or <code>index.ts</code> — entry point (required).</li>
+        <li>Optional: <code>template.html</code>, <code>style.css</code>, <code>script.js</code> (loaded and served like plugin assets).</li>
+      </ul>
+      <p>Export a <strong>BangCommand</strong> (as <code>export default</code> or <code>export const command</code>) for bang commands — same contract as <a href="plugins.html#bang-commands">plugin bang commands</a> (name, description, trigger, execute, optional settingsSchema, configure, init, isConfigured, aliases, naturalLanguagePhrases). The core scans <code>src/commands/builtins/</code> at startup; no separate registration array.</p>
+      <p>Export a <strong>slot</strong> (as <code>slot</code> or <code>slotPlugin</code>) for slot plugins — e.g. the built-in AI Summary is a slot with <code>position: "at-a-glance"</code>. See <a href="plugins.html#at-a-glance-slot">At a glance slot</a>.</p>
+      <p>Scripts from built-in folders are served at <code>/plugins/&lt;folderName&gt;/script.js</code> (same URL shape as user plugins); the core resolves the path from <code>src/commands/builtins/</code>.</p>
 
       <h2>Adding a built-in engine</h2>
       <p>Built-in engines are registered in <code>src/engines/</code>. Follow the same <strong>SearchEngine</strong> contract as <a href="engines.html">custom engines</a> (name, executeSearch, optional bangShortcut, settingsSchema, configure). Add the engine to the registry so it appears in Settings → Engines and in search.</p>
