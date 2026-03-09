@@ -59,3 +59,5 @@ Full customisation guide (plugins, themes, engines, store, settings gate, aliase
 ## Little shoutout
 
 This project would have never existed if the amazing [searxng](https://github.com/searxng/searxng) developers hadn't had the idea first. This is my take on a heavily customisable search aggregrator, it's meant to be a more modular lighter alternative, you can add as much as you want to it, but the core will stay as simple as it gets.
+
+[![Star History Chart](https://api.star-history.com/image?repos=fccview/degoog&type=date&legend=top-left)](https://www.star-history.com/?repos=fccview%2Fdegoog&type=date&legend=top-left)
