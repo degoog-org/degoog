@@ -105,9 +105,7 @@ export async function initThemes(): Promise<void> {
 
         if (manifest.settingsSchema?.length) {
           const stored = await getSettings(settingsId(entry.name));
-          if (Object.keys(stored).length > 0) {
-            // themes don't have configure() but settings are available via API
-          }
+          if (Object.keys(stored).length > 0) { }
         }
 
         themes.push(theme);
@@ -121,7 +119,6 @@ export async function initThemes(): Promise<void> {
 
   activeThemeId = await loadActiveThemeId();
 
-  // clear active if theme no longer exists
   if (activeThemeId && !themes.find((t) => t.id === activeThemeId)) {
     activeThemeId = null;
     await saveActiveThemeId(null);
