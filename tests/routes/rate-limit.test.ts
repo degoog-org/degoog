@@ -1,17 +1,32 @@
-import { describe, test, expect, beforeAll, mock } from "bun:test";
+import { describe, test, expect, beforeAll, beforeEach, afterEach, mock } from "bun:test";
 import { clearRateLimitState } from "../../src/server/rate-limit";
 
 let rateLimitRouter: {
   request: (req: Request | string) => Response | Promise<Response>;
 };
 
+let _savedLogger: string | undefined;
+
 beforeAll(async () => {
   const mod = await import("../../src/server/routes/rate-limit");
   rateLimitRouter = mod.default;
 });
 
+beforeEach(() => {
+  _savedLogger = process.env.LOGGER;
+  process.env.LOGGER = "debug";
+});
+
+afterEach(() => {
+  if (_savedLogger !== undefined) process.env.LOGGER = _savedLogger;
+  else delete process.env.LOGGER;
+});
+
 describe("routes/rate-limit", () => {
   test("GET /api/rate-limit/test when rate limit disabled returns 200 with rateLimitEnabled false", async () => {
+    mock.module("../../src/server/plugin-settings", () => ({
+      getSettings: async () => ({}) as Record<string, string>,
+    }));
     const res = await rateLimitRouter.request(
       "http://localhost/api/rate-limit/test",
     );
