@@ -32,7 +32,15 @@ export class RedditEngine implements SearchEngine {
     const url = `https://www.reddit.com/search.json?${params.toString()}`;
     const doFetch = context?.fetch ?? fetch;
     const response = await doFetch(url, {
-      headers: { "User-Agent": getRandomUserAgent() },
+      headers: {
+        "User-Agent": getRandomUserAgent(),
+        Accept: "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
+      },
     });
     const data = (await response.json()) as {
       data: {
