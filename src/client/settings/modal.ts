@@ -1,4 +1,4 @@
-import { renderField, initRssUrlList } from "./modal-fields";
+import { renderField, initUrlList } from "./modal-fields";
 import type { ExtensionMeta } from "../types";
 
 const overlay = document.getElementById("ext-modal-overlay");
@@ -64,7 +64,7 @@ export function openModal(ext: ExtensionMeta): void {
     bodyEl.innerHTML = ext.settingsSchema
       .map((field) => renderField(field, String(ext.settings[field.key] ?? ""), ext))
       .join("");
-    initRssUrlList(bodyEl);
+    initUrlList(bodyEl);
     bodyEl.querySelectorAll<HTMLElement>(".ext-field-input--configured").forEach((input) => {
       input.addEventListener("focus", () => input.classList.remove("ext-field-input--configured"), {
         once: true,

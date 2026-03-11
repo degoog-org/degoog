@@ -17,7 +17,7 @@ const _parseUrlListValue = (raw: string | string[] | undefined, defaultUrls: str
   }
 };
 
-const _renderRssUrlListField = (field: SettingField, ext: ExtensionMeta): string => {
+const _renderUrlListField = (field: SettingField, ext: ExtensionMeta): string => {
   const defaultUrls = ext.defaultFeedUrls ?? [];
   const urls = _parseUrlListValue(ext.settings[field.key] as string | string[] | undefined, defaultUrls);
   const descHtml = field.description
@@ -45,7 +45,7 @@ const _renderRssUrlListField = (field: SettingField, ext: ExtensionMeta): string
     </div>`;
 };
 
-export function initRssUrlList(container: HTMLElement): void {
+export function initUrlList(container: HTMLElement): void {
   const field = container.querySelector<HTMLElement>(".ext-field[data-type='urllist']");
   if (!field) return;
   const listEl = field.querySelector<HTMLElement>(".ext-field-urllist");
@@ -135,7 +135,7 @@ export const renderField = (field: SettingField, currentValue: string, ext: Exte
     : "";
 
   if (field.type === "urllist") {
-    return _renderRssUrlListField(field, ext);
+    return _renderUrlListField(field, ext);
   }
 
   if (field.type === "toggle") {

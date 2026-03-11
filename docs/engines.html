@@ -71,7 +71,7 @@
       <p>When users enable a proxy for search (Settings → General), all engine requests can go through that proxy. For your engine to be proxy-correct:</p>
       <ol>
         <li><strong>Use the injected fetch.</strong> Implement <code>executeSearch(query, page?, timeFilter?, context)</code> and use <code>context.fetch</code> for every outbound HTTP request. If you use global <code>fetch</code>, your requests will not use the user’s proxy.</li>
-        <li><strong>Declare outgoing hostnames.</strong> Export a named <code>outgoingHosts</code> array of hostname strings (no protocol or path). Those hostnames are added to the proxy allowlist so your engine works when the proxy is on. Use <code>["*"]</code> only if your engine fetches from arbitrary user-configured URLs (e.g. RSS feeds).</li>
+        <li><strong>Declare outgoing hostnames.</strong> Export a named <code>outgoingHosts</code> array of hostname strings (no protocol or path). Those hostnames are added to the proxy allowlist so your engine works when the proxy is on. Use <code>["*"]</code> only if your engine fetches from arbitrary user-configured URLs.</li>
       </ol>
       <p>Example (semantically correct for proxies):</p>
       <pre><code>export const outgoingHosts = ["www.example.com", "example.com"];
@@ -104,8 +104,6 @@ export default class MyEngine {
         <li>Return an empty array from <code>executeSearch</code> when required settings are missing so the engine contributes no results.</li>
       </ol>
 
-      <h2>News</h2>
-      <p>News search is not an engine type: the News tab uses RSS feeds configured in <strong>Settings → Engines → News</strong>. Feed URLs are stored in <code>data/plugin-settings.json</code>.</p>
     </main>
   </div>
 </body>

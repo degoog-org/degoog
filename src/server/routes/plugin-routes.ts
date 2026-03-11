@@ -1,10 +1,19 @@
 import { Hono } from "hono";
 import { findPluginRoute } from "../extensions/plugin-routes/registry";
+import { getSettings } from "../plugin-settings";
+import { getPluginSettingsIds } from "../plugin-assets";
 
 const router = new Hono();
 
 router.all("/api/plugin/:pluginId/*", async (c) => {
   const pluginId = c.req.param("pluginId");
+  const settingsIds = getPluginSettingsIds(pluginId);
+  for (const sid of settingsIds) {
+    const settings = await getSettings(sid);
+    if (settings["disabled"] === "true") {
+      return c.json({ error: "This plugin is disabled" }, 403);
+    }
+  }
   const pathPrefix = `/api/plugin/${pluginId}`;
   const pathname = c.req.path;
   const suffix = pathname.startsWith(pathPrefix)

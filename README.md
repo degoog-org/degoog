@@ -4,7 +4,7 @@
   <h1 align="center">degoog</h1><br/>
 </p>
 
-Search aggregator that queries multiple engines and shows results in one place. You can add custom search engines, bang-command plugins, and slot plugins (query-triggered panels above/below results or in the sidebar). News search uses configurable RSS feeds. The dream would be to eventually have a user made marketplace for plugins/engines.
+Search aggregator that queries multiple engines and shows results in one place. You can add custom search engines, bang-command plugins, and slot plugins (query-triggered panels above/below results or in the sidebar). The dream would be to eventually have a user made marketplace for plugins/engines.
 
 **Still in beta.** Not intended for production use yet.
 
