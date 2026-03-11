@@ -9,7 +9,8 @@ import {
   getActiveTheme,
   getActiveThemeDataAttrs,
 } from "../extensions/themes/registry";
-import { getAllPluginCss, getPluginScriptFolders } from "../plugin-assets";
+import { getAllPluginCss, getPluginScriptFolders, getPluginSettingsIds } from "../plugin-assets";
+import { getSettings } from "../plugin-settings";
 import { shouldServeSettingsGate, getSettingsTokenFromRequest, validateSettingsToken } from "./settings-auth";
 import { isPublicInstance } from "../public-instance";
 import pkg from "../../../package.json";
@@ -34,12 +35,19 @@ function themeCssPlaceholder(): string {
   return `<link rel="stylesheet" href="/theme/style.css?v=${pkg.version}">`;
 }
 
-function pluginAssetsPlaceholder(): string {
+async function pluginAssetsPlaceholder(): Promise<string> {
   const v = pkg.version;
   const parts: string[] = [];
   if (getAllPluginCss())
     parts.push(`<link rel="stylesheet" href="/api/plugins/styles.css?v=${v}">`);
   for (const folder of getPluginScriptFolders()) {
+    const settingsIds = getPluginSettingsIds(folder);
+    let disabled = false;
+    for (const sid of settingsIds) {
+      const settings = await getSettings(sid);
+      if (settings["disabled"] === "true") { disabled = true; break; }
+    }
+    if (disabled) continue;
     parts.push(
       `<script type="module" src="/plugins/${folder}/script.js?v=${v}"><\/script>`,
     );
@@ -54,7 +62,7 @@ async function buildPage(filename: string): Promise<string> {
     .replaceAll("__APP_VERSION__", pkg.version)
     .replace("__THEME_CSS__", themeCssPlaceholder())
     .replace("__THEME_ATTRS__", themeAttrs)
-    .replace("__PLUGIN_ASSETS__", pluginAssetsPlaceholder());
+    .replace("__PLUGIN_ASSETS__", await pluginAssetsPlaceholder());
 }
 
 router.get("/", async (c) => {

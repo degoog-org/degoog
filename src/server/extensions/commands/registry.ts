@@ -106,7 +106,7 @@ async function loadCommandsFromRoot(
       const hasScript = await stat(join(entryPath, "script.js")).catch(
         () => null,
       );
-      if (hasScript?.isFile()) registerPluginScript(entry, source);
+      if (hasScript?.isFile()) registerPluginScript(entry, source, id);
 
       if (instance.init) {
         const ctx: PluginContext = {

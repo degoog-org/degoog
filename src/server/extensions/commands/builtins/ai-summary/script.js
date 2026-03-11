@@ -11,7 +11,7 @@
   }
 
   function buildResultsContext() {
-    const items = document.querySelectorAll("#results-list .result");
+    const items = document.querySelectorAll("#results-list .result-item");
     const out = [];
     let i = 0;
     for (const el of items) {
@@ -26,6 +26,25 @@
     }
     return out.join("\n\n");
   }
+
+  const _renderMarkdown = (md) => {
+    const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    let html = esc(md);
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => "<pre><code>" + code.trimEnd() + "</code></pre>");
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    html = html.replace(/^(\s*)[*-] (.+)$/gm, "$1<li>$2</li>");
+    html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, "<ul>$1</ul>");
+    html = html.replace(/^(\d+)\. (.+)$/gm, "<li>$2</li>");
+    html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, (m) => m.startsWith("<ul>") ? m : "<ol>" + m + "</ol>");
+    html = html.replace(/\n{2,}/g, "</p><p>");
+    html = "<p>" + html + "</p>";
+    html = html.replace(/<p>\s*(<pre>|<ul>|<ol>)/g, "$1");
+    html = html.replace(/(<\/pre>|<\/ul>|<\/ol>)\s*<\/p>/g, "$1");
+    html = html.replace(/<p>\s*<\/p>/g, "");
+    return html;
+  };
 
   function autoResize(textarea) {
     textarea.style.height = "auto";
@@ -108,7 +127,7 @@
         history.push({ role: "assistant", content: data.reply });
         const replyDiv = document.createElement("div");
         replyDiv.className = "glance-ai-reply";
-        replyDiv.textContent = data.reply;
+        replyDiv.innerHTML = _renderMarkdown(data.reply);
         messagesEl.appendChild(replyDiv);
       } else {
         const errDiv = document.createElement("div");

@@ -1,38 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Store repositories — Degoog docs</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <h1><a href="index.html">Degoog</a> — Store repositories</h1>
-      <p>Git repos users add in Settings → Store to install plugins, themes, and engines.</p>
-    </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Store repositories — Degoog docs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1><a href="index.html">Degoog</a> — Store repositories</h1>
+        <p>
+          Git repos users add in Settings → Store to install plugins, themes,
+          and engines.
+        </p>
+      </header>
 
-    <nav class="doc-nav">
-      <h2>Docs</h2>
-      <ul>
-        <li><a href="index.html">Overview</a></li>
-        <li><a href="plugins.html">Plugins</a></li>
-        <li><a href="themes.html">Themes</a></li>
-        <li><a href="engines.html">Search engines</a></li>
-        <li><a href="store.html">Store repositories</a></li>
-        <li><a href="aliases.html">Aliases</a></li>
-        <li><a href="env.html">Environment variables</a></li>
-      </ul>
-    </nav>
+      <nav class="doc-nav">
+        <div class="doc-search-wrap">
+          <label for="doc-search-input" class="doc-search-label">Search</label>
+          <input
+            type="search"
+            id="doc-search-input"
+            class="doc-search"
+            placeholder="Search docs..."
+            autocomplete="off"
+          />
+          <button
+            type="button"
+            class="doc-search-clear"
+            aria-label="Clear search"
+            style="display: none"
+          >
+            Clear
+          </button>
+          <span class="doc-search-count"></span>
+        </div>
+        <h2>Docs</h2>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="plugins.html">Plugins</a></li>
+          <li><a href="themes.html">Themes</a></li>
+          <li><a href="engines.html">Search engines</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="aliases.html">Aliases</a></li>
+          <li><a href="env.html">Environment</a></li>
+          <li><a href="styling.html">Styling</a></li>
+        </ul>
+      </nav>
 
-    <main>
-      <h2>What a store repo is</h2>
-      <p>A <strong>store repo</strong> is a git repository that users add in <strong>Settings → Store</strong>. Once added, they can browse and install your plugins, themes, and engines from the Store tab without copying files by hand.</p>
+      <main>
+        <h2>What a store repo is</h2>
+        <p>
+          A <strong>store repo</strong> is a git repository that users add in
+          <strong>Settings → Store</strong>. Once added, they can browse and
+          install your plugins, themes, and engines from the Store tab without
+          copying files by hand.
+        </p>
 
-      <h2>Repo structure</h2>
-      <p>Your repo must follow this layout:</p>
-      <pre><code>my-degoog-repo/
+        <h2>Repo structure</h2>
+        <p>Your repo must follow this layout:</p>
+        <pre><code>my-degoog-repo/
   package.json       # required — lists all items
   plugins/
     my-plugin/
@@ -49,11 +77,20 @@
     my-engine/
       index.js       # same format as data/engines/
       ...</code></pre>
-      <p>Plugin, theme, and engine folders use the <strong>same format</strong> as when installed in <code>data/plugins</code>, <code>data/themes</code>, and <code>data/engines</code>. No extra packaging.</p>
+        <p>
+          Plugin, theme, and engine folders use the
+          <strong>same format</strong> as when installed in
+          <code>data/plugins</code>, <code>data/themes</code>, and
+          <code>data/engines</code>. No extra packaging.
+        </p>
 
-      <h2>package.json (required)</h2>
-      <p>At the <strong>root</strong> of the repo, add a <code>package.json</code> that lists every item you want to appear in the Store:</p>
-      <pre><code>{
+        <h2>package.json (required)</h2>
+        <p>
+          At the <strong>root</strong> of the repo, add a
+          <code>package.json</code>
+          that lists every item you want to appear in the Store:
+        </p>
+        <pre><code>{
   "name": "my-degoog-repo",
   "description": "Short description of your collection",
   "author": "YourName",
@@ -77,37 +114,98 @@
   "engines": [],
   "repo-image": "logo.png"
 }</code></pre>
-      <ul>
-        <li><strong>repo-image</strong> (optional) — Path to an image file in the repo root (e.g. <code>logo.png</code>) or a full URL. Shown next to your repo in Settings → Store.</li>
-        <li><strong>path</strong> — Folder path inside the repo (e.g. <code>plugins/my-plugin</code>).</li>
-        <li><strong>name</strong>, <strong>description</strong>, <strong>version</strong> — Shown on the Store card.</li>
-        <li><strong>type</strong> (plugins only) — <code>"command"</code>, <code>"slot"</code>, or <code>"searchBar"</code>; optional. Used for Store display so users see what kind of plugin it is.</li>
-      </ul>
-      <p>Only items listed here appear in the Store. Paths must match real folders.</p>
+        <ul>
+          <li>
+            <strong>repo-image</strong> (optional) — Path to an image file in
+            the repo root (e.g. <code>logo.png</code>) or a full URL. Shown next
+            to your repo in Settings → Store.
+          </li>
+          <li>
+            <strong>path</strong> — Folder path inside the repo (e.g.
+            <code>plugins/my-plugin</code>).
+          </li>
+          <li>
+            <strong>name</strong>, <strong>description</strong>,
+            <strong>version</strong> — Shown on the Store card.
+          </li>
+          <li>
+            <strong>type</strong> (plugins only) — <code>"command"</code>,
+            <code>"slot"</code>, <code>"searchBar"</code>, or
+            <code>"search-result-tab"</code>; optional. Used for Store display.
+          </li>
+          <li>
+            <strong>dependencies</strong> (optional) — Array of URLs (e.g. to an
+            engine). When the item is installed, those are offered as
+            dependencies.
+          </li>
+        </ul>
+        <p>
+          Only items listed here appear in the Store. Paths must match real
+          folders.
+        </p>
 
-      <h2>Optional: author.json and screenshots</h2>
-      <p>Inside any <strong>plugin</strong>, <strong>theme</strong>, or <strong>engine</strong> folder you can add:</p>
-      <ul>
-        <li><strong>author.json</strong> — Overrides the repo author for this item:</li>
-      </ul>
-      <pre><code>{
+        <h2>Optional: author.json and screenshots</h2>
+        <p>
+          Inside any <strong>plugin</strong>, <strong>theme</strong>, or
+          <strong>engine</strong> folder you can add:
+        </p>
+        <ul>
+          <li>
+            <strong>author.json</strong> — Overrides the repo author for this
+            item:
+          </li>
+        </ul>
+        <pre><code>{
   "name": "Author Name",
   "url": "https://github.com/username",
   "avatar": "https://example.com/avatar.png"
 }</code></pre>
-      <ul>
-        <li><strong>screenshots/</strong> — Image files (e.g. <code>1.png</code>, <code>preview.png</code>). The first one is the Store card thumbnail; all are shown in the lightbox when the user clicks the image.</li>
-      </ul>
+        <ul>
+          <li>
+            <strong>screenshots/</strong> — Image files (e.g.
+            <code>1.png</code>, <code>preview.png</code>). The first is the
+            Store card thumbnail; all are shown in the lightbox when the user
+            clicks the image.
+          </li>
+        </ul>
 
-      <h2>Publish and share</h2>
-      <ol>
-        <li>Push the repo to GitHub (or any git host).</li>
-        <li>Copy the <strong>clone URL</strong> (e.g. <code>https://github.com/you/my-degoog-repo.git</code>).</li>
-        <li>Tell users: <strong>Settings → Store → Add</strong>, then paste the URL.</li>
-      </ol>
-      <p>Users add the repo once; they can then install, uninstall, and refresh from the Store. When a user refreshes a repo, any already-installed items are automatically updated to the latest version from the repo.</p>
-      <p><strong>Official example:</strong> <a href="https://github.com/fccview/fccview-degoog-extensions" class="external" target="_blank" rel="noopener">fccview-degoog-extensions</a> — clone URL <code>https://github.com/fccview/fccview-degoog-extensions.git</code>. Add it in Settings → Store to install Weather, themes, and other extensions.</p>
-    </main>
-  </div>
-</body>
+        <h2>Publish and share</h2>
+        <ol>
+          <li>Push the repo to GitHub (or any git host).</li>
+          <li>
+            Copy the <strong>clone URL</strong> (e.g.
+            <code>https://github.com/you/my-degoog-repo.git</code>).
+          </li>
+          <li>
+            Tell users: <strong>Settings → Store → Add</strong>, then paste the
+            URL.
+          </li>
+        </ol>
+        <p>
+          Users add the repo once; they can then install, uninstall, and refresh
+          from the Store. When a user refreshes a repo, already-installed items
+          are updated to the latest version from the repo.
+        </p>
+        <p>
+          <strong>Official example:</strong>
+          <a
+            href="https://github.com/fccview/fccview-degoog-extensions"
+            class="external"
+            target="_blank"
+            rel="noopener"
+            >fccview-degoog-extensions</a
+          >
+          — clone URL
+          <code>https://github.com/fccview/fccview-degoog-extensions.git</code>.
+          Add it in Settings → Store to install Weather, themes, and other
+          extensions.
+        </p>
+      </main>
+    </div>
+    <script
+      src="https://code.jquery.com/jquery-4.0.0.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="docs.js"></script>
+  </body>
 </html>

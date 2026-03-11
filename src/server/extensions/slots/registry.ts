@@ -1,7 +1,7 @@
 import { join } from "path";
 import type { SlotPlugin, SlotPanelPosition, PluginContext } from "../../types";
 import { getSettings } from "../../plugin-settings";
-import { addPluginCss, registerPluginScript } from "../../plugin-assets";
+import { addPluginCss, registerPluginScript, registerPluginSettingsId } from "../../plugin-assets";
 import { debug } from "../../logger";
 
 let slotPlugins: SlotPlugin[] = [];
@@ -79,7 +79,8 @@ async function loadSlotsFromRoot(
       const hasScript = await stat(join(entryPath, "script.js")).catch(
         () => null,
       );
-      if (hasScript?.isFile()) registerPluginScript(entry, source);
+      if (hasScript?.isFile()) registerPluginScript(entry, source, slotSettingsId);
+      registerPluginSettingsId(entry, slotSettingsId);
 
       if (slot.init) {
         const ctx: PluginContext = {

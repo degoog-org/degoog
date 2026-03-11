@@ -1,402 +1,503 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Plugins — Degoog docs</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <h1><a href="index.html">Degoog</a> — Plugins</h1>
-      <p>Bang commands, slots, search result tabs, search bar actions, routes, and middleware.</p>
-    </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plugins — Degoog docs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1><a href="index.html">Degoog</a> — Plugins</h1>
+        <p>
+          Bang commands, slots, search result tabs, search bar actions, routes,
+          and middleware.
+        </p>
+      </header>
 
-    <nav class="doc-nav">
-      <h2>Docs</h2>
-      <ul>
-        <li><a href="index.html">Overview</a></li>
-        <li><a href="plugins.html">Plugins</a></li>
-        <li><a href="themes.html">Themes</a></li>
-        <li><a href="engines.html">Search engines</a></li>
-        <li><a href="store.html">Store repositories</a></li>
-        <li><a href="aliases.html">Aliases</a></li>
-        <li><a href="env.html">Environment variables</a></li>
-      </ul>
-    </nav>
+      <nav class="doc-nav">
+        <div class="doc-search-wrap">
+          <label for="doc-search-input" class="doc-search-label">Search</label>
+          <input
+            type="search"
+            id="doc-search-input"
+            class="doc-search"
+            placeholder="Search docs..."
+            autocomplete="off"
+          />
+          <button
+            type="button"
+            class="doc-search-clear"
+            aria-label="Clear search"
+            style="display: none"
+          >
+            Clear
+          </button>
+          <span class="doc-search-count"></span>
+        </div>
+        <h2>Docs</h2>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="plugins.html">Plugins</a></li>
+          <li><a href="themes.html">Themes</a></li>
+          <li><a href="engines.html">Search engines</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="aliases.html">Aliases</a></li>
+          <li><a href="env.html">Environment</a></li>
+          <li><a href="styling.html">Styling</a></li>
+        </ul>
+      </nav>
 
-    <main>
-      <h2>What plugins are</h2>
-      <p>Plugins live in <code>data/plugins/</code> (or <code>DEGOOG_PLUGINS_DIR</code>). The core also loads plugins from <code>src/commands/builtins/</code> using the <strong>same folder structure and rules</strong> (see <a href="contributing.html">Contributing</a>). Each plugin is a <strong>folder</strong> with an entry file. One plugin can expose several capabilities: a bang command, a slot, search bar actions, HTTP routes, and/or request middleware.</p>
+      <main>
+        <h2>What plugins are</h2>
+        <p>
+          Plugins live in <code>data/plugins/</code> (or
+          <code>DEGOOG_PLUGINS_DIR</code>). Each plugin is a
+          <strong>folder</strong>
+          with an entry file. One plugin can expose several capabilities: a bang
+          command, a slot, search bar actions, HTTP routes, and/or request
+          middleware.
+        </p>
 
-      <h2>Folder structure</h2>
-      <pre><code>data/plugins/
+        <h2>Folder structure</h2>
+        <pre><code>data/plugins/
   my-plugin/
     index.js        # required — entry point
     template.html   # optional
     style.css       # optional
-    script.js       # optional</code></pre>
-      <p>The entry file must be <code>index.js</code>, <code>index.ts</code>, <code>index.mjs</code>, or <code>index.cjs</code>.</p>
+    script.js       # optional
+    card.html       # optional — read via ctx.readFile()
+    author.json     # optional — for Store display</code></pre>
+        <p>
+          The entry file must be <code>index.js</code>, <code>index.ts</code>,
+          <code>index.mjs</code>, or <code>index.cjs</code>.
+        </p>
 
-      <h3>Asset files</h3>
-      <ul>
-        <li><strong>template.html</strong> — HTML fragment for your plugin output. Use <code>{{placeholders}}</code> and replace them in <code>execute()</code>. Injected into search results, not a full page.</li>
-        <li><strong>style.css</strong> — Loaded and served when the plugin is active. Use class names scoped to your plugin to avoid conflicts.</li>
-        <li><strong>script.js</strong> — Client-side JavaScript, loaded automatically.</li>
-      </ul>
-      <p>You can add other files and read them at runtime via <code>ctx.readFile("filename")</code> in <code>init(ctx)</code>.</p>
+        <h3>Asset files</h3>
+        <ul>
+          <li>
+            <strong>template.html</strong> — HTML fragment for your plugin
+            output. Use <code>{{placeholders}}</code> and replace them in
+            <code>execute()</code>. Injected into search results, not a full
+            page.
+          </li>
+          <li>
+            <strong>style.css</strong> — Loaded when the plugin is active. Use
+            class names scoped to your plugin to avoid conflicts. See
+            <a href="styling.html">Styling</a> for CSS variables.
+          </li>
+          <li>
+            <strong>script.js</strong> — Client-side JavaScript, loaded
+            automatically.
+          </li>
+        </ul>
+        <p>
+          Add other files and read them at runtime via
+          <code>ctx.readFile("filename")</code> in <code>init(ctx)</code>.
+        </p>
 
-      <h3>Plugin context and init()</h3>
-      <p>The system calls your optional <code>init(ctx)</code> once at startup, before <code>configure()</code>. The context provides:</p>
-      <pre><code>init(ctx) {
+        <h3>Plugin context and init()</h3>
+        <p>
+          The system calls your optional <code>init(ctx)</code> once at startup,
+          before <code>configure()</code>. The context provides:
+        </p>
+        <pre><code>init(ctx) {
   // ctx.template — contents of template.html (or "")
   // ctx.dir      — absolute path to the plugin folder
   // ctx.readFile — async function to read any file from your plugin folder
 }</code></pre>
-      <p>Use <code>ctx.readFile</code> to load extra files beyond <code>template.html</code>. For example, a plugin with both a command template and a separate card template:</p>
-      <pre><code>let template = "";
-let cardTemplate = "";
+        <p>
+          Example: a plugin with both a command template and a separate card
+          template (e.g.
+          <a
+            href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/rss"
+            class="external"
+            target="_blank"
+            rel="noopener"
+            >RSS</a
+          >
+          uses <code>card.html</code> via
+          <code>ctx.readFile("card.html")</code>).
+        </p>
 
-export default {
-  async init(ctx) {
-    template = ctx.template;               // loads template.html
-    cardTemplate = await ctx.readFile("card.html");  // loads card.html
-  },
-  // ...
-};</code></pre>
+        <h2 id="bang-commands">Bang commands</h2>
+        <p>
+          Bang commands run when the user types
+          <code>!trigger something</code> in the search bar. Export a single
+          object (as <code>export default</code> or
+          <code>export const command</code>) with:
+        </p>
+        <ul>
+          <li>
+            <strong>name</strong>, <strong>description</strong> — For Settings
+            and <code>!help</code>.
+          </li>
+          <li>
+            <strong>trigger</strong> — The word after <code>!</code> (e.g.
+            <code>"weather"</code> → <code>!weather</code>).
+          </li>
+          <li>
+            <strong>execute(args, context)</strong> (async) —
+            <code>args</code> is the text after the trigger. Return an object
+            with <code>title</code> (string) and <code>html</code> (string);
+            optional <code>totalPages</code> (number).
+          </li>
+        </ul>
+        <p>
+          Second argument to <code>execute</code>: <code>context</code> may have
+          <code>clientIp</code>, <code>page</code>.
+        </p>
+        <p>
+          Optional: <code>aliases</code> (array of extra triggers),
+          <code>naturalLanguagePhrases</code> (array of phrases that trigger
+          without <code>!</code> when natural language is on in Settings),
+          <code>settingsSchema</code> and <code>configure(settings)</code>,
+          <code>init(ctx)</code>, <code>isConfigured()</code> (async; return
+          false to hide from <code>!help</code> until configured).
+        </p>
+        <p>
+          For <code>settingsSchema</code>, each field has <code>key</code>,
+          <code>label</code>, <code>type</code> (<code>text</code>,
+          <code>password</code>, <code>url</code>, <code>toggle</code>,
+          <code>textarea</code>, <code>select</code>, <code>urllist</code>), and
+          optional <code>required</code>, <code>placeholder</code>,
+          <code>description</code>, <code>secret</code> (never sent to browser).
+          For <code>select</code>, add <code>options</code> (array of strings).
+        </p>
+        <h3>How settings work</h3>
+        <ol>
+          <li>
+            Declare <code>settingsSchema</code> — a Configure button appears in
+            Settings → Plugins.
+          </li>
+          <li>
+            User saves; values go to
+            <code>data/plugin-settings.json</code> under
+            <code>plugin-&lt;folderName&gt;</code>.
+          </li>
+          <li>
+            <code>configure(settings)</code> is called after save and on server
+            restart if settings exist.
+          </li>
+          <li>
+            Use <code>isConfigured()</code> to return false when required
+            settings are missing — the command is then hidden from
+            <code>!help</code>.
+          </li>
+          <li>
+            Users can disable any plugin with the toggle in Settings → Plugins;
+            disabled plugins are hidden from <code>!help</code> and return an
+            error when invoked.
+          </li>
+        </ol>
+        <p><strong>Examples from the official store:</strong></p>
+        <ul>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/weather"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Weather</a
+            >
+            — bang command with template, styles, settings (default city,
+            Fahrenheit), aliases, naturalLanguagePhrases.
+          </li>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/define"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Define</a
+            >,
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/qr"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >QR</a
+            >,
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/time"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Time</a
+            >,
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/password"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Password</a
+            >
+            — command-only plugins.
+          </li>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/jellyfin"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Jellyfin</a
+            >,
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/meilisearch"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Meilisearch</a
+            >
+            — search your own backend via a bang command.
+          </li>
+        </ul>
 
-      <h2 id="bang-commands">Bang commands</h2>
-      <p>Bang commands run when the user types <code>!trigger something</code> in the search bar. Export a single object (as <code>export default</code> or <code>export const command</code>) with:</p>
-      <ul>
-        <li><strong>name</strong> (string) — Display name in Settings and <code>!help</code>.</li>
-        <li><strong>description</strong> (string) — Short description for <code>!help</code>.</li>
-        <li><strong>trigger</strong> (string) — The word after <code>!</code> (e.g. <code>"weather"</code> → <code>!weather</code>).</li>
-        <li><strong>execute(args, context)</strong> (async) — <code>args</code> is the text after the trigger. Return a <code>CommandResult</code>.</li>
-      </ul>
-      <p><strong>CommandResult</strong> shape:</p>
-      <pre><code>{ title: string, html: string, totalPages?: number }</code></pre>
-      <p><strong>CommandContext</strong> (second argument to execute):</p>
-      <pre><code>{ clientIp?: string, page?: number }</code></pre>
-      <p><strong>Optional:</strong> <code>aliases</code> (string[] — extra triggers), <code>naturalLanguagePhrases</code> (string[] — phrases that trigger this command without <code>!</code> when natural language is on in Settings), <code>settingsSchema</code> and <code>configure(settings)</code> for Settings → Plugins, <code>init(ctx)</code>, <code>isConfigured()</code> (async, return false to hide from <code>!help</code> until configured).</p>
-      <p><strong>SettingField</strong> (for settingsSchema):</p>
-      <pre><code>{
-  key: string,
-  label: string,
-  type: "text" | "password" | "url" | "toggle" | "textarea" | "urllist",
-  required?: boolean,
-  placeholder?: string,
-  description?: string,
-  secret?: boolean   // never sent to browser; server-side only
-}</code></pre>
-      <h3>How settings work</h3>
-      <ol>
-        <li>Declare <code>settingsSchema</code> — a Configure button appears in Settings → Plugins.</li>
-        <li>User saves the form; values go to <code>data/plugin-settings.json</code> under <code>plugin-&lt;folderName&gt;</code>.</li>
-        <li><code>configure(settings)</code> is called after save and on server restart if settings exist.</li>
-        <li>Use <code>isConfigured()</code> to return false when required settings are missing — the command is then hidden from <code>!help</code>.</li>
-        <li>Users can disable any plugin with the toggle in Settings → Plugins; disabled plugins are hidden from <code>!help</code> and return an error when invoked.</li>
-      </ol>
-      <p><strong>Examples from the official store:</strong></p>
-      <ul>
-        <li><a href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/weather" class="external" target="_blank" rel="noopener">Weather</a> — bang command with template, styles, and settings (default city, Fahrenheit).</li>
-      </ul>
+        <h2>Slot plugins</h2>
+        <p>
+          Slots inject panels into the search results page when the query
+          matches. Export <code>slot</code> or <code>slotPlugin</code> (same
+          module can also export a bang command):
+        </p>
+        <ul>
+          <li>
+            <strong>id</strong>, <strong>name</strong> — Unique id and display
+            name.
+          </li>
+          <li>
+            <strong>position</strong> — <code>"above-results"</code>,
+            <code>"below-results"</code>, <code>"sidebar"</code>, or
+            <code>"at-a-glance"</code>.
+          </li>
+          <li>
+            <strong>trigger(query)</strong> — Return true (or a Promise that
+            resolves true) if the slot should show for this query.
+          </li>
+          <li>
+            <strong>execute(query, context)</strong> (async) — Return
+            <code>{ title?: string, html: string }</code>. Return
+            <code>{ html: "" }</code> to show nothing. <code>context</code> has
+            <code>clientIp</code> and, for <code>at-a-glance</code> slots only,
+            <code>results</code> (the search results array).
+          </li>
+        </ul>
+        <p>
+          Optional: <strong>settingsId</strong> — Key under which settings are
+          stored (default <code>slot-&lt;id&gt;</code>). Optional:
+          <code>settingsSchema</code>, <code>configure(settings)</code>,
+          <code>init(ctx)</code>. Multiple slots can match the same query; all
+          are shown.
+        </p>
+        <h3 id="at-a-glance-slot">At a glance slot</h3>
+        <p>
+          Slots with <code>position: "at-a-glance"</code> fill the
+          <strong>At a glance</strong> block above the search results. The
+          search response is not delayed: the client shows results immediately
+          and fetches at-a-glance content in a separate request (<code
+            >POST /api/slots/glance</code
+          >
+          with body <code>{ query, results }</code>). Your
+          <code>execute(query, context)</code> receives
+          <code>context.results</code> so you can use the result list (e.g. for
+          an AI summary).
+        </p>
+        <p><strong>Examples from the official store:</strong></p>
+        <ul>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/tmdb-slot"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >TMDb</a
+            >
+            — slot above results, movie/TV details, secret API key in settings.
+          </li>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/math-slot"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Math</a
+            >,
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/github-slot"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >GitHub</a
+            >
+            — slots above results.
+          </li>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/rss"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >RSS</a
+            >
+            — slot with feed URLs in settings, <code>card.html</code> via
+            <code>ctx.readFile()</code>.
+          </li>
+        </ul>
+        <p>
+          <strong>Slot API:</strong> <code>GET /api/slots?q=&lt;query&gt;</code>
+          returns panels for above-results, below-results, sidebar.
+          <code>POST /api/slots/glance</code> with body
+          <code>{ query, results }</code> returns only at-a-glance panels.
+        </p>
 
-      <h2>Slot plugins</h2>
-      <p>Slots inject panels into the search results page when the query matches. Export <code>slot</code> or <code>slotPlugin</code> (same module can also export a bang command):</p>
-      <ul>
-        <li><strong>id</strong>, <strong>name</strong> — Unique id and display name.</li>
-        <li><strong>position</strong> — <code>"above-results"</code>, <code>"below-results"</code>, <code>"sidebar"</code>, or <code>"at-a-glance"</code>.</li>
-        <li><strong>trigger(query)</strong> — Return true (or a Promise that resolves true) if the slot should show for this query.</li>
-        <li><strong>execute(query, context)</strong> (async) — Returns <code>{ title?: string, html: string }</code>. <code>context</code> has <code>clientIp?</code> and, for <code>at-a-glance</code> slots only, <code>results?</code> (the search results array).</li>
-      </ul>
-      <p>Optional: <strong>settingsId</strong> (string) — Key under which settings are stored in <code>plugin-settings.json</code>. Default is <code>slot-&lt;id&gt;</code>. Use <code>settingsId</code> to keep an existing settings key (e.g. <code>settingsId: "ai-summary"</code>).</p>
-      <p>Optional: <code>settingsSchema</code>, <code>configure(settings)</code>, <code>init(ctx)</code>. Multiple slots can match the same query; all are shown.</p>
+        <h2 id="search-result-tabs">Search result tabs</h2>
+        <p>
+          Search result tabs add entries to the tab bar (e.g. “Web”, “Images”).
+          Export <code>tab</code> or <code>searchResultTab</code> from a plugin
+          folder. Same folder structure as other plugins.
+        </p>
+        <p>
+          <strong>Required:</strong> <strong>id</strong>, <strong>name</strong>.
+          Provide <strong>either</strong> <strong>engineType</strong> (string:
+          <code>web</code>, <code>images</code>, <code>videos</code>,
+          <code>news</code>, or a custom type from
+          <a href="engines.html">engines</a>) <strong>or</strong>
+          <strong>executeSearch(query, page?, context?)</strong> (async)
+          returning
+          <code
+            >{ results: Array&lt;{ title, url, snippet, source, thumbnail?,
+            duration? }&gt;, totalPages?: number }</code
+          >.
+        </p>
+        <p>
+          Optional: <strong>icon</strong>, <strong>settingsId</strong>,
+          <strong>settingsSchema</strong>, <strong>configure(settings)</strong>,
+          <strong>init(ctx)</strong>. When distributing via the Store, use
+          <code>type: "search-result-tab"</code> in
+          <code>package.json</code> and <strong>dependencies</strong> (array of
+          URLs) if the tab needs an engine (e.g. File tab depends on Internet
+          Archive engine). See <a href="store.html">Store</a>.
+        </p>
+        <p>
+          <strong>API:</strong> <code>GET /api/search-tabs</code> returns the
+          tab list;
+          <code
+            >GET
+            /api/tab-search?tab=&lt;id&gt;&amp;q=&lt;query&gt;&amp;page=&lt;n&gt;</code
+          >
+          runs the tab’s search.
+        </p>
 
-      <h3 id="at-a-glance-slot">At a glance slot</h3>
-      <p>Slots with <code>position: "at-a-glance"</code> fill the <strong>At a glance</strong> block above the search results (the snippet that would otherwise show the top result). Use this for summaries, AI-generated blurbs, or other content that benefits from the search result list.</p>
-      <p><strong>Behaviour:</strong> The search response is not delayed by at-a-glance slots. The client shows results immediately and fetches at-a-glance content in a separate request (<code>POST /api/slots/glance</code> with body <code>{ query, results }</code>). Your <code>execute(query, context)</code> receives <code>context.results</code> so you can use the result list (e.g. for an AI summary). Until the glance request returns, an animated placeholder is shown; if no panel is returned (e.g. disabled or error), the default “first result” glance is shown.</p>
-      <p><strong>Example (built-in):</strong> AI Summary is a slot in <code>src/commands/builtins/ai-summary/</code> with <code>position: "at-a-glance"</code> and <code>settingsId: "ai-summary"</code>. When enabled, it calls an OpenAI-compatible API with the query and result snippets and replaces the glance with a short AI summary.</p>
+        <h2>Search bar actions</h2>
+        <p>
+          Plugins can add buttons next to the search bar. Export
+          <code>searchBarActions</code> — an array of objects with
+          <strong>id</strong>, <strong>label</strong>, <strong>type</strong>:
+          <code>"navigate"</code> (open URL; provide <code>url</code>),
+          <code>"bang"</code> (fill bar with <code>!trigger </code>; provide
+          <code>trigger</code>), or <code>"custom"</code> (your
+          <code>script.js</code> listens for
+          <code>search-bar-action</code> event with
+          <code>detail: { actionId, inputId, input }</code>). Optional:
+          <strong>icon</strong> (image URL).
+        </p>
 
-      <p><strong>Example from the official store:</strong> <a href="https://github.com/fccview/fccview-degoog-extensions/tree/main/plugins/tmdb-slot" class="external" target="_blank" rel="noopener">TMDb (imdb-slot)</a> — slot plugin that shows movie/TV details above search results.</p>
-      <p><strong>Slot API:</strong> <code>GET /api/slots?q=&lt;query&gt;</code> returns panels for above-results, below-results, and sidebar (at-a-glance slots are excluded so the search response is fast). <code>POST /api/slots/glance</code> with body <code>{ query, results }</code> returns only at-a-glance panels; the client calls this after the search response to fill the glance without blocking results.</p>
+        <h2>Plugin routes</h2>
+        <p>
+          Plugins can expose HTTP endpoints under
+          <code>/api/plugin/&lt;folderName&gt;/...</code>. Export
+          <code>routes</code> — array of
+          <code>{ method, path, handler(req) }</code>. <code>method</code>:
+          <code>get</code>, <code>post</code>, <code>put</code>,
+          <code>delete</code>, <code>patch</code>. <code>path</code> is the
+          segment after the plugin id. <code>handler</code> receives the
+          standard <code>Request</code> and returns <code>Response</code> or
+          <code>Promise&lt;Response&gt;</code>. Routes are available as soon as
+          the plugin is loaded; <code>script.js</code> can call them with
+          <code>fetch("/api/plugin/my-plugin/...")</code>.
+        </p>
 
-      <h2 id="search-result-tabs">Search result tabs</h2>
-      <p>Search result tabs add entries to the tab bar on the search results page (e.g. “Web”, “Images”, “Videos”). Export <code>tab</code> or <code>searchResultTab</code> (or <code>default.tab</code>) from a plugin folder. Same folder structure as other plugins: <code>index.js</code>/<code>index.ts</code>/<code>index.mjs</code>/<code>index.cjs</code>, optional <code>template.html</code>, <code>style.css</code>, <code>script.js</code>.</p>
-      <p><strong>Required:</strong> <strong>id</strong> (string), <strong>name</strong> (string). You must provide <strong>either</strong> <strong>engineType</strong> (string) or <strong>executeSearch(query, page?, context?)</strong> (async).</p>
-      <ul>
-        <li><strong>engineType</strong> — An existing type (<code>web</code>, <code>images</code>, <code>videos</code>, <code>news</code>, or a custom type from <a href="engines.html">engines</a>). The tab runs the same engines as that type and shows their results.</li>
-        <li><strong>executeSearch</strong> — Return <code>Promise&lt;{ results: SearchResult[]; totalPages?: number }&gt;</code>. <code>SearchResult</code> shape: <code>{ title, url, snippet, source, thumbnail?, duration? }</code>. <code>context</code> has <code>clientIp?</code>.</li>
-      </ul>
-      <p>Optional: <strong>icon</strong>, <strong>settingsId</strong> (default <code>tab-&lt;id&gt;</code>), <strong>settingsSchema</strong>, <strong>configure(settings)</strong>, <strong>init(ctx)</strong>. If the user disables the plugin in Settings → Plugins (<code>disabled: "true"</code> under <code>settingsId</code>), the tab is hidden.</p>
-      <p><strong>Engine-type tab:</strong></p>
-      <pre><code>export const tab = {
-  id: "my-web",
-  name: "My Web",
-  engineType: "web",
-};</code></pre>
-      <p><strong>Custom search tab:</strong></p>
-      <pre><code>export const tab = {
-  id: "docs",
-  name: "Docs",
-  async executeSearch(query, page = 1) {
-    const res = await fetch(`https://docs.example.com/api/search?q=${encodeURIComponent(query)}&page=${page}`);
-    const data = await res.json();
-    return {
-      results: data.items.map((item) =&gt; ({
-        title: item.title,
-        url: item.url,
-        snippet: item.excerpt || "",
-        source: "Docs",
-      })),
-      totalPages: data.totalPages || 1,
-    };
-  },
-};</code></pre>
-      <p><strong>API:</strong> <code>GET /api/search-tabs</code> returns the tab list; <code>GET /api/tab-search?tab=&lt;id&gt;&amp;q=&lt;query&gt;&amp;page=&lt;n&gt;</code> runs the tab’s search and returns <code>{ results, totalPages, page }</code>. Engine-type tabs use id <code>engine:&lt;type&gt;</code> unless a plugin registers that <code>engineType</code>, in which case the plugin’s <code>id</code> is used.</p>
+        <h2>Request middleware</h2>
+        <p>
+          Middleware lets a plugin hook into specific request flows. Export
+          <code>middleware</code> — object with <strong>id</strong>,
+          <strong>name</strong>, <strong>handle(req, context)</strong>.
+          <code>context</code> can include
+          <code>{ route: "settings-auth" }</code> etc. Return a
+          <code>Response</code>, <code>{ redirect: url }</code>, or
+          <code>null</code> to continue. The app uses middleware for the
+          <strong>settings gate</strong>. To select a plugin for the gate, use
+          “Use as settings gate” in that plugin’s Configure in Settings →
+          Plugins; that sets <code>middleware.settingsGate</code> in
+          <code>plugin-settings.json</code> to
+          <code>plugin:&lt;folderName&gt;</code>.
+        </p>
 
-      <h2>Search bar actions</h2>
-      <p>Plugins can add buttons or links next to the search bar (home and results). Export <code>searchBarActions</code> — an array of objects with this shape:</p>
-      <ul>
-        <li><strong>id</strong> (string) — Unique id for the action.</li>
-        <li><strong>label</strong> (string) — Button text. Can be overridden by plugin settings: if your plugin has a <code>buttonLabel</code> (or similar) key in <code>settingsSchema</code>, that value is used when the user configures it.</li>
-        <li><strong>type</strong> — <code>"navigate"</code> (open URL), <code>"bang"</code> (fill bar with <code>!trigger </code>), or <code>"custom"</code> (your <code>script.js</code> listens for <code>search-bar-action</code> event).</li>
-        <li>For <code>navigate</code>: <strong>url</strong>. For <code>bang</code>: <strong>trigger</strong>. Optional: <strong>icon</strong> (image URL).</li>
-      </ul>
-      <p>For <code>custom</code>, the core dispatches a <code>search-bar-action</code> CustomEvent with <code>detail: { actionId, inputId, input }</code>. Your script can open a modal, file picker, or call your plugin route.</p>
+        <h2>Settings gate (login flow)</h2>
+        <p>
+          Settings can be protected with a password
+          (<code>DEGOOG_SETTINGS_PASSWORDS</code>) or a
+          <strong>middleware plugin</strong>: when the user opens Settings, they
+          go through your plugin’s flow (e.g. OIDC, magic link), then back to
+          Settings with a session token.
+        </p>
+        <h3>What your middleware must do</h3>
+        <ul>
+          <li>
+            <strong>route "settings-auth"</strong> — Return JSON with
+            <code>required: true</code>, <code>valid: false</code>,
+            <code>loginUrl</code>.
+          </li>
+          <li>
+            <strong>route "settings-auth-callback"</strong> — After auth, return
+            <code>{ redirect: "/settings" }</code>. The app issues a session
+            token and redirects with <code>?token=...</code>.
+          </li>
+          <li>
+            <strong>route "settings-auth-post"</strong> — If you don’t support
+            password POST, return 400 or similar.
+          </li>
+        </ul>
+        <p>
+          Expose a <code>GET /login</code> route that redirects to
+          <code>/api/settings/auth/callback?returnTo=/settings</code>. Clear
+          <code>degoog-settings-token</code> in Session Storage to test.
+        </p>
 
-      <h3>Search bar action examples</h3>
-      <pre><code>// in index.js
-export const searchBarActions = [
-  { id: "open-docs", label: "Docs", type: "navigate", url: "https://docs.example.com" },
-  { id: "quick-note", label: "Note", type: "custom", icon: "https://example.com/icon.svg" },
-];</code></pre>
-      <pre><code>// in script.js — handle the custom action
-document.addEventListener("search-bar-action", function (e) {
-  if (e.detail.actionId === "quick-note") {
-    var query = e.detail.input; // current search bar text
-    fetch("/api/plugin/my-plugin/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: query }),
-    });
-  }
-});</code></pre>
-
-      <h2>Plugin-registered routes</h2>
-      <p>Plugins can expose HTTP endpoints under <code>/api/plugin/&lt;folderName&gt;/...</code>. Export <code>routes</code> — an array of route objects:</p>
-      <pre><code>{ method: "get"|"post"|"put"|"delete"|"patch", path: string, handler(req) }</code></pre>
-      <p><code>path</code> is the segment after the plugin id (e.g. <code>"search"</code> → <code>/api/plugin/my-plugin/search</code>). <code>handler</code> receives the standard <code>Request</code> and returns <code>Response</code> or <code>Promise&lt;Response&gt;</code>.</p>
-
-      <h3>Route examples</h3>
-      <p><strong>GET route returning JSON:</strong></p>
-      <pre><code>export const routes = [
-  {
-    method: "get",
-    path: "/status",
-    handler: async (req) => {
-      const url = new URL(req.url);
-      const id = url.searchParams.get("id") || "";
-      return new Response(
-        JSON.stringify({ ok: true, id }),
-        { headers: { "Content-Type": "application/json" } },
-      );
-    },
-  },
-];</code></pre>
-      <p>Accessible at <code>GET /api/plugin/my-plugin/status?id=123</code>.</p>
-
-      <p><strong>POST route with a request body:</strong></p>
-      <pre><code>{
-  method: "post",
-  path: "/save",
-  handler: async (req) => {
-    const body = await req.json();
-    // body is whatever the client sent
-    return new Response(JSON.stringify({ saved: true }), {
-      headers: { "Content-Type": "application/json" },
-    });
-  },
-}</code></pre>
-
-      <p><strong>Server-Sent Events (streaming):</strong></p>
-      <pre><code>{
-  method: "get",
-  path: "/stream",
-  handler: async () => {
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        controller.enqueue(encoder.encode("event: msg\ndata: \"hello\"\n\n"));
-        controller.close();
-      },
-    });
-    return new Response(stream, {
-      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
-    });
-  },
-}</code></pre>
-
-      <p>Routes are available as soon as the plugin is loaded. Your <code>script.js</code> can call them with <code>fetch("/api/plugin/my-plugin/...")</code>.</p>
-
-      <h2>Request middleware</h2>
-      <p>Middleware lets a plugin hook into specific request flows. Export <code>middleware</code> — object with <strong>id</strong>, <strong>name</strong>, and <strong>handle(req, context)</strong>. <code>context</code> can include <code>{ route: "settings-auth" }</code> etc. Return:</p>
-      <ul>
-        <li><code>Response</code> — the core returns it to the client.</li>
-        <li><code>{ redirect: url }</code> — the core may redirect (e.g. on settings callback it also issues a session token and appends it to the redirect URL).</li>
-        <li><code>null</code> — the core continues with default behaviour.</li>
-      </ul>
-      <p>The core uses middleware for the <strong>settings gate</strong> (who can open Settings). To select a plugin for the gate, use the “Use as settings gate” toggle in that plugin’s Configure in Settings → Plugins; that sets <code>middleware.settingsGate</code> in <code>plugin-settings.json</code> to <code>plugin:&lt;folderName&gt;</code>.</p>
-
-      <h3>Middleware example</h3>
-      <pre><code>export const middleware = {
-  id: “my-auth”,
-  name: “My Auth Gate”,
-  handle(req, context) {
-    if (context.route === “settings-auth”) {
-      return new Response(JSON.stringify({
-        required: true,
-        valid: false,
-        loginUrl: “/api/plugin/my-auth/login”,
-      }), { headers: { “Content-Type”: “application/json” } });
-    }
-    if (context.route === “settings-auth-callback”) {
-      return { redirect: “/settings” };
-    }
-    return null; // let the core handle it
-  },
-};</code></pre>
-
-      <h2>Settings gate (login flow)</h2>
-      <p>By default, Settings can be protected with a password (<code>DEGOOG_SETTINGS_PASSWORDS</code>). Alternatively, a <strong>middleware plugin</strong> can be the settings gate: when the user opens Settings, they are sent through your plugin’s flow (e.g. OIDC, magic link), then back to Settings with a session token.</p>
-      <h3>How to enable it</h3>
-      <ol>
-        <li>Add a plugin that exports <code>middleware</code> and implements the settings-auth routes below.</li>
-        <li>In Settings → Plugins, open <strong>Configure</strong> for that plugin.</li>
-        <li>Turn on <strong>“Use as settings gate”</strong> and save.</li>
-      </ol>
-      <h3>What your middleware must do</h3>
-      <ul>
-        <li><strong>route "settings-auth"</strong> — Return a JSON response with <code>required: true</code>, <code>valid: false</code>, and <code>loginUrl: "https://..."</code> (e.g. your plugin’s login page).</li>
-        <li><strong>route "settings-auth-callback"</strong> — After the user has authenticated, return <code>{ redirect: "/settings" }</code>. The core issues a session token and redirects the user to that URL with <code>?token=...</code>.</li>
-        <li><strong>route "settings-auth-post"</strong> — If you don’t support password-style POST, return a 400 or similar <code>Response</code>.</li>
-      </ul>
-      <p>Your plugin can expose a <code>GET /login</code> route that shows a page and redirects the browser to <code>/api/settings/auth/callback?returnTo=/settings</code>. The core then attaches the token and sends the user to Settings.</p>
-      <h3>How to verify it works</h3>
-      <p>Clear the settings token: DevTools → Application → Session Storage → remove <code>degoog-settings-token</code>. Open Settings. You should be redirected to your plugin’s login, then back to the full Settings page.</p>
-
-      <h2>Example: minimal plugin</h2>
-      <p>Folder: <code>data/plugins/greeting/</code> with <code>index.js</code>, <code>template.html</code>, <code>style.css</code>.</p>
-      <p><strong>index.js</strong></p>
-      <pre><code>let template = "";
+        <h2>Example: minimal bang command</h2>
+        <p>
+          Folder: <code>data/plugins/greeting/</code> with
+          <code>index.js</code>, <code>template.html</code>,
+          <code>style.css</code>.
+        </p>
+        <pre><code>let template = "";
 
 export default {
   name: "Greeting",
   description: "Say hello",
   trigger: "hello",
-
-  init(ctx) {
-    template = ctx.template;
-  },
-
+  init(ctx) { template = ctx.template; },
   async execute(args) {
     const name = args.trim() || "world";
     const html = template.replace("{{name}}", name);
     return { title: "Hello", html };
   },
 };</code></pre>
-      <p><strong>template.html</strong></p>
-      <pre><code>&lt;div class="command-result greeting"&gt;
+        <p><strong>template.html</strong></p>
+        <pre><code>&lt;div class="command-result greeting"&gt;
   &lt;h3 class="greeting-title"&gt;Hello, {{name}}!&lt;/h3&gt;
 &lt;/div&gt;</code></pre>
-      <p><strong>style.css</strong></p>
-      <pre><code>.greeting-title {
-  color: var(--text-primary);
-  font-size: 1.5rem;
-}</code></pre>
-
-      <h2>Example: plugin with routes, settings, and client script</h2>
-      <p>A bookmarks plugin that stores links and shows them via a bang command. Folder: <code>data/plugins/bookmarks/</code>.</p>
-      <p><strong>index.js</strong></p>
-      <pre><code>let template = "";
-let items = [];
-
-const command = {
-  name: "Bookmarks",
-  description: "Save and search bookmarks",
-  trigger: "bm",
-
-  settingsSchema: [
-    { key: "maxResults", label: "Max results", type: "text", placeholder: "10" },
-  ],
-
-  init(ctx) {
-    template = ctx.template;
-  },
-
-  configure(settings) {
-    // settings.maxResults is a string
-  },
-
-  async execute(args) {
-    const q = args.trim().toLowerCase();
-    const filtered = q
-      ? items.filter((b) => b.title.toLowerCase().includes(q))
-      : items.slice(0, 20);
-    const html = filtered.length
-      ? filtered.map((b) => template
-          .replace(/\{\{(\w+)\}\}/g, (_, k) => ({ title: b.title, url: b.url })[k] || "")
-        ).join("")
-      : "&lt;p&gt;No bookmarks found.&lt;/p&gt;";
-    return { title: "Bookmarks", html };
-  },
-};
-
-const routes = [
-  {
-    method: "get",
-    path: "/list",
-    handler: async () => {
-      return new Response(JSON.stringify(items), {
-        headers: { "Content-Type": "application/json" },
-      });
-    },
-  },
-  {
-    method: "post",
-    path: "/add",
-    handler: async (req) => {
-      const body = await req.json();
-      items.push({ title: body.title, url: body.url });
-      return new Response(JSON.stringify({ ok: true }), {
-        headers: { "Content-Type": "application/json" },
-      });
-    },
-  },
-];
-
-export default command;
-export { routes };</code></pre>
-      <p><strong>template.html</strong></p>
-      <pre><code>&lt;div class="result-item"&gt;
-  &lt;a class="result-title" href="{{url}}" target="_blank"&gt;{{title}}&lt;/a&gt;
-&lt;/div&gt;</code></pre>
-      <p><strong>script.js</strong> (client-side — adds a search bar action button)</p>
-      <pre><code>document.addEventListener("search-bar-action", function (e) {
-  if (e.detail.actionId !== "save-bookmark") return;
-  var input = e.detail.input;
-  if (!input) return;
-  fetch("/api/plugin/bookmarks/add", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title: document.title, url: input }),
-  });
-});</code></pre>
-      <p>The search bar button is registered in <code>index.js</code> by also exporting <code>searchBarActions</code>:</p>
-      <pre><code>export const searchBarActions = [
-  { id: "save-bookmark", label: "Save", type: "custom" },
-];</code></pre>
-    </main>
-  </div>
-</body>
+        <p>
+          <strong>style.css</strong> — use
+          <code>var(--text-primary)</code> etc.; see
+          <a href="styling.html">Styling</a>.
+        </p>
+      </main>
+    </div>
+    <script
+      src="https://code.jquery.com/jquery-4.0.0.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="docs.js"></script>
+  </body>
 </html>

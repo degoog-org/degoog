@@ -1,85 +1,152 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aliases — Degoog docs</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <h1><a href="index.html">Degoog</a> — Bang command aliases</h1>
-      <p>Custom <code>!alias</code> → <code>!command</code> mappings.</p>
-    </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aliases — Degoog docs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1><a href="index.html">Degoog</a> — Bang command aliases</h1>
+        <p>Custom <code>!alias</code> → <code>!command</code> mappings.</p>
+      </header>
 
     <nav class="doc-nav">
+      <div class="doc-search-wrap">
+        <label for="doc-search-input" class="doc-search-label">Search</label>
+        <input type="search" id="doc-search-input" class="doc-search"
+               placeholder="Search docs..." autocomplete="off">
+        <button type="button" class="doc-search-clear" aria-label="Clear search"
+                style="display:none">Clear</button>
+        <span class="doc-search-count"></span>
+      </div>
       <h2>Docs</h2>
       <ul>
         <li><a href="index.html">Overview</a></li>
         <li><a href="plugins.html">Plugins</a></li>
         <li><a href="themes.html">Themes</a></li>
         <li><a href="engines.html">Search engines</a></li>
-        <li><a href="store.html">Store repositories</a></li>
+        <li><a href="store.html">Store</a></li>
         <li><a href="aliases.html">Aliases</a></li>
-        <li><a href="env.html">Environment variables</a></li>
+        <li><a href="env.html">Environment</a></li>
+        <li><a href="styling.html">Styling</a></li>
       </ul>
     </nav>
 
-    <main>
-      <h2>Setup</h2>
-      <ol>
-        <li>Create <code>data/aliases.json</code> (or set <code>DEGOOG_ALIASES_FILE</code> to another path).</li>
-        <li>Edit the file with your aliases:</li>
-      </ol>
-      <pre><code>{
+      <main>
+        <h2>Setup</h2>
+        <ol>
+          <li>
+            Create <code>data/aliases.json</code> (or set
+            <code>DEGOOG_ALIASES_FILE</code> to another path).
+          </li>
+          <li>Edit the file with your aliases:</li>
+        </ol>
+        <pre><code>{
   "jelly": "jellyfin",
   "search": "meili",
   "id": "uuid"
 }</code></pre>
-      <p>Each <strong>key</strong> is the alias (what the user types after <code>!</code>). Each <strong>value</strong> is the target command trigger. So <code>!jelly</code> runs the same command as <code>!jellyfin</code>.</p>
-      <ol start="3">
-        <li>Restart the server. Aliases are loaded at startup.</li>
-      </ol>
+        <p>
+          Each <strong>key</strong> is the alias (what the user types after
+          <code>!</code>). Each <strong>value</strong> is the target command
+          trigger. So <code>!jelly</code> runs the same command as
+          <code>!jellyfin</code>.
+        </p>
+        <ol start="3">
+          <li>Restart the server. Aliases are loaded at startup.</li>
+        </ol>
 
-      <h2>Rules</h2>
-      <ul>
-        <li>Aliases cannot override existing command triggers or built-in aliases.</li>
-        <li>User-defined aliases show up in <code>!help</code> next to their target command.</li>
-      </ul>
+        <h2>Rules</h2>
+        <ul>
+          <li>
+            Aliases cannot override existing command triggers or built-in
+            aliases.
+          </li>
+          <li>
+            User-defined aliases show up in <code>!help</code> next to their
+            target command.
+          </li>
+        </ul>
 
-      <h2>Built-in command aliases</h2>
-      <p>Some commands ship with aliases defined in their source:</p>
-      <table>
-        <thead>
-          <tr><th>Command</th><th>Aliases</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>!jellyfin</code></td><td><code>!jf</code></td></tr>
-          <tr><td><code>!meili</code></td><td><code>!ms</code></td></tr>
-        </tbody>
-      </table>
+        <h2>Built-in command aliases</h2>
+        <p>Some commands ship with aliases defined in their source:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Aliases</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>!jellyfin</code></td>
+              <td><code>!jf</code></td>
+            </tr>
+            <tr>
+              <td><code>!meili</code></td>
+              <td><code>!ms</code></td>
+            </tr>
+          </tbody>
+        </table>
 
-      <h2>Engine shortcuts</h2>
-      <p>Search engines can define a <code>bangShortcut</code> so users can search that engine only:</p>
-      <table>
-        <thead>
-          <tr><th>Shortcut</th><th>Engine</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>!g</code></td><td>Google</td></tr>
-          <tr><td><code>!b</code></td><td>Bing</td></tr>
-          <tr><td><code>!ddg</code></td><td>DuckDuckGo</td></tr>
-          <tr><td><code>!brave</code></td><td>Brave Search</td></tr>
-          <tr><td><code>!w</code></td><td>Wikipedia</td></tr>
-          <tr><td><code>!r</code></td><td>Reddit</td></tr>
-        </tbody>
-      </table>
-      <p>Example: <code>!g linux kernel</code> searches only Google for “linux kernel”.</p>
+        <h2>Engine shortcuts</h2>
+        <p>
+          Search engines can define a <code>bangShortcut</code> so users can
+          search that engine only:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Shortcut</th>
+              <th>Engine</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>!g</code></td>
+              <td>Google</td>
+            </tr>
+            <tr>
+              <td><code>!b</code></td>
+              <td>Bing</td>
+            </tr>
+            <tr>
+              <td><code>!ddg</code></td>
+              <td>DuckDuckGo</td>
+            </tr>
+            <tr>
+              <td><code>!brave</code></td>
+              <td>Brave Search</td>
+            </tr>
+            <tr>
+              <td><code>!w</code></td>
+              <td>Wikipedia</td>
+            </tr>
+            <tr>
+              <td><code>!r</code></td>
+              <td>Reddit</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Example: <code>!g linux kernel</code> searches only Google for “linux
+          kernel”.
+        </p>
 
-      <h2>Custom path</h2>
-      <p>Set <code>DEGOOG_ALIASES_FILE</code> to load aliases from a different location, e.g. <code>/etc/degoog/aliases.json</code>.</p>
-    </main>
-  </div>
-</body>
+        <h2>Custom path</h2>
+        <p>
+          Set <code>DEGOOG_ALIASES_FILE</code> to load aliases from a different
+          location, e.g. <code>/etc/degoog/aliases.json</code>.
+        </p>
+      </main>
+    </div>
+    <script
+      src="https://code.jquery.com/jquery-4.0.0.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="docs.js"></script>
+  </body>
 </html>

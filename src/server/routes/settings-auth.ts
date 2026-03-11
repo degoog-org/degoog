@@ -183,7 +183,15 @@ router.post("/api/settings/general", async (c) => {
     return c.json({ error: "Invalid JSON" }, 400);
   }
   const existing = await getSettings(DEGOOG_SETTINGS_ID);
-  const allowed = ["proxyEnabled", "proxyUrls"];
+  const allowed = [
+    "proxyEnabled",
+    "proxyUrls",
+    "rateLimitEnabled",
+    "rateLimitBurstWindow",
+    "rateLimitBurstMax",
+    "rateLimitLongWindow",
+    "rateLimitLongMax",
+  ];
   const updates: Record<string, string> = {};
   for (const key of allowed) {
     if (key in body && typeof body[key] === "string") {

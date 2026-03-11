@@ -200,3 +200,148 @@ th {
 .external::after {
   content: " ↗";
 }
+
+.doc-search-wrap {
+  position: relative;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.doc-search-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--doc-muted);
+  flex: 0 0 auto;
+}
+
+.doc-search {
+  flex: 1 1 12rem;
+  min-width: 10rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--doc-border);
+  border-radius: 6px;
+  background: var(--doc-bg);
+  color: var(--doc-text);
+}
+
+.doc-search:focus {
+  outline: none;
+  border-color: var(--doc-link);
+}
+
+.doc-search-clear {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--doc-border);
+  border-radius: 6px;
+  background: var(--doc-sidebar-bg);
+  color: var(--doc-text);
+  cursor: pointer;
+}
+
+.doc-search-clear:hover {
+  background: var(--doc-border);
+}
+
+.doc-search-count {
+  font-size: 0.85rem;
+  color: var(--doc-muted);
+}
+
+.doc-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  max-height: 20rem;
+  overflow-y: auto;
+  background: var(--doc-sidebar-bg);
+  border: 1px solid var(--doc-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.doc-search-results-loading {
+  display: block;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: var(--doc-muted);
+}
+
+.doc-search-results-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+.doc-search-results-list li {
+  margin: 0;
+}
+
+.doc-search-results-list a {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: var(--doc-text);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.doc-search-results-list a:hover {
+  background: var(--doc-border);
+  color: var(--doc-link);
+}
+
+.doc-search-result-title {
+  display: block;
+}
+
+.doc-search-snippet {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--doc-muted);
+  padding: 0.25rem 1rem 0.5rem;
+  line-height: 1.35;
+}
+
+.doc-search-snippet mark {
+  padding: 0 0.1em;
+}
+
+mark {
+  background: rgba(0, 102, 204, 0.25);
+  color: inherit;
+  padding: 0 0.1em;
+  border-radius: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  mark {
+    background: rgba(110, 179, 247, 0.3);
+  }
+}
+
+h2[id] {
+  scroll-margin-top: 1rem;
+}
+
+.section-anchor {
+  font-size: 0.85rem;
+  margin-left: 0.25rem;
+  color: var(--doc-muted);
+  text-decoration: none;
+}
+
+.section-anchor:hover {
+  color: var(--doc-link);
+}
+
+nav a.active {
+  font-weight: 600;
+  color: var(--doc-link-hover);
+}

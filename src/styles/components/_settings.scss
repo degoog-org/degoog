@@ -283,6 +283,53 @@
   }
 }
 
+.settings-rate-limit-wrap {
+  margin-top: 12px;
+}
+
+.settings-rate-limit-desc {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.settings-rate-limit-options {
+  margin-top: 12px;
+}
+
+.settings-rate-limit-defaults {
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.settings-rate-limit-options .settings-proxy-urls-label {
+  margin-top: 10px;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.settings-rate-limit-input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  margin-top: 6px;
+  font-family: $font-family;
+  font-size: $font-size-base;
+  color: var(--text-primary);
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: $primary;
+  }
+}
+
 .settings-auth-gate {
   flex: 1;
   display: flex;

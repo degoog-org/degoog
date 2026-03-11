@@ -39,6 +39,25 @@ export async function initGeneralTab(
   const proxyUrls = document.getElementById(
     "settings-proxy-urls",
   ) as HTMLTextAreaElement | null;
+  const rateLimitEnabled = document.getElementById(
+    "settings-rate-limit-enabled",
+  ) as HTMLInputElement | null;
+  const rateLimitOptions = document.getElementById(
+    "settings-rate-limit-options",
+  );
+  const rateLimitBurstWindow = document.getElementById(
+    "settings-rate-limit-burst-window",
+  ) as HTMLInputElement | null;
+  const rateLimitBurstMax = document.getElementById(
+    "settings-rate-limit-burst-max",
+  ) as HTMLInputElement | null;
+  const rateLimitLongWindow = document.getElementById(
+    "settings-rate-limit-long-window",
+  ) as HTMLInputElement | null;
+  const rateLimitLongMax = document.getElementById(
+    "settings-rate-limit-long-max",
+  ) as HTMLInputElement | null;
+
   if (proxyEnabled && proxyUrlsWrap && proxyUrls) {
     try {
       const res = await fetch("/api/settings/general", {
@@ -48,16 +67,63 @@ export async function initGeneralTab(
         const data = (await res.json()) as {
           proxyEnabled?: string;
           proxyUrls?: string;
+          rateLimitEnabled?: string;
+          rateLimitBurstWindow?: string;
+          rateLimitBurstMax?: string;
+          rateLimitLongWindow?: string;
+          rateLimitLongMax?: string;
         };
         proxyEnabled.checked = data.proxyEnabled === "true";
         proxyUrls.value = data.proxyUrls ?? "";
         proxyUrlsWrap.style.display = proxyEnabled.checked ? "block" : "none";
+        if (rateLimitEnabled && rateLimitOptions) {
+          rateLimitEnabled.checked = data.rateLimitEnabled === "true";
+          rateLimitOptions.style.display = rateLimitEnabled.checked
+            ? "block"
+            : "none";
+        }
+        if (rateLimitBurstWindow)
+          rateLimitBurstWindow.value = data.rateLimitBurstWindow ?? "";
+        if (rateLimitBurstMax) rateLimitBurstMax.value = data.rateLimitBurstMax ?? "";
+        if (rateLimitLongWindow)
+          rateLimitLongWindow.value = data.rateLimitLongWindow ?? "";
+        if (rateLimitLongMax) rateLimitLongMax.value = data.rateLimitLongMax ?? "";
       }
     } catch {}
     proxyEnabled.addEventListener("change", () => {
       proxyUrlsWrap.style.display = proxyEnabled?.checked ? "block" : "none";
     });
   }
+  if (rateLimitEnabled && rateLimitOptions) {
+    rateLimitEnabled.addEventListener("change", () => {
+      rateLimitOptions.style.display = rateLimitEnabled.checked
+        ? "block"
+        : "none";
+    });
+  }
+
+  const _rateLimitPayload = (): Record<string, string> => {
+    const payload: Record<string, string> = {
+      rateLimitEnabled: rateLimitEnabled?.checked ? "true" : "false",
+    };
+    if (
+      rateLimitEnabled?.checked &&
+      rateLimitBurstWindow &&
+      rateLimitBurstMax &&
+      rateLimitLongWindow &&
+      rateLimitLongMax
+    ) {
+      const bw = rateLimitBurstWindow.value.trim();
+      const bm = rateLimitBurstMax.value.trim();
+      const lw = rateLimitLongWindow.value.trim();
+      const lm = rateLimitLongMax.value.trim();
+      if (bw) payload.rateLimitBurstWindow = bw;
+      if (bm) payload.rateLimitBurstMax = bm;
+      if (lw) payload.rateLimitLongWindow = lw;
+      if (lm) payload.rateLimitLongMax = lm;
+    }
+    return payload;
+  };
 
   document
     .getElementById("settings-save")
@@ -78,6 +144,7 @@ export async function initGeneralTab(
             body: JSON.stringify({
               proxyEnabled: proxyEnabled.checked ? "true" : "false",
               proxyUrls: proxyUrls.value.trim(),
+              ..._rateLimitPayload(),
             }),
           });
         } catch {}

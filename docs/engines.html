@@ -1,112 +1,211 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Search engines — Degoog docs</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <h1><a href="index.html">Degoog</a> — Search engines</h1>
-      <p>Custom search backends (web, images, video).</p>
-    </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Search engines — Degoog docs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1><a href="index.html">Degoog</a> — Search engines</h1>
+        <p>Custom search backends (web, images, video).</p>
+      </header>
 
-    <nav class="doc-nav">
-      <h2>Docs</h2>
-      <ul>
-        <li><a href="index.html">Overview</a></li>
-        <li><a href="plugins.html">Plugins</a></li>
-        <li><a href="themes.html">Themes</a></li>
-        <li><a href="engines.html">Search engines</a></li>
-        <li><a href="store.html">Store repositories</a></li>
-        <li><a href="aliases.html">Aliases</a></li>
-        <li><a href="env.html">Environment variables</a></li>
-      </ul>
-    </nav>
+      <nav class="doc-nav">
+        <div class="doc-search-wrap">
+          <label for="doc-search-input" class="doc-search-label">Search</label>
+          <input
+            type="search"
+            id="doc-search-input"
+            class="doc-search"
+            placeholder="Search docs..."
+            autocomplete="off"
+          />
+          <button
+            type="button"
+            class="doc-search-clear"
+            aria-label="Clear search"
+            style="display: none"
+          >
+            Clear
+          </button>
+          <span class="doc-search-count"></span>
+        </div>
+        <h2>Docs</h2>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="plugins.html">Plugins</a></li>
+          <li><a href="themes.html">Themes</a></li>
+          <li><a href="engines.html">Search engines</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="aliases.html">Aliases</a></li>
+          <li><a href="env.html">Environment</a></li>
+          <li><a href="styling.html">Styling</a></li>
+        </ul>
+      </nav>
 
-    <main>
-      <h2>Where engines live</h2>
-      <p>Custom engines live in <code>data/engines/</code> (or <code>DEGOOG_ENGINES_DIR</code>). Each file (or folder with an entry file, depending on how the app loads them) exports a <strong>SearchEngine</strong> object.</p>
+      <main>
+        <h2>Where engines live</h2>
+        <p>
+          Custom engines live in <code>data/engines/</code> (or
+          <code>DEGOOG_ENGINES_DIR</code>). Each engine is a file or folder with
+          an entry file that exports an object or class with
+          <strong>name</strong> and <strong>executeSearch</strong>.
+        </p>
 
-      <h2>SearchEngine contract</h2>
-      <p><strong>Required:</strong></p>
-      <ul>
-        <li><strong>name</strong> (string) — Display name in Settings → Engines.</li>
-        <li><strong>executeSearch(query, page?, timeFilter?, context?)</strong> (async) — Returns <code>Promise&lt;SearchResult[]&gt;</code>. The optional <code>context</code> provides <code>context.fetch</code>; use it for all outbound HTTP requests so the engine respects the user’s proxy setting (Settings → General).</li>
-      </ul>
-      <p><strong>SearchResult</strong> shape:</p>
-      <pre><code>{
-  title: string,
-  url: string,
-  snippet: string,
-  source: string,
-  thumbnail?: string,
-  duration?: string
-}</code></pre>
-      <p><strong>Optional:</strong></p>
-      <ul>
-        <li><strong>bangShortcut</strong> (string) — Enables <code>!shortcut query</code> to search this engine only (e.g. <code>bangShortcut: "ex"</code> → <code>!ex linux</code>).</li>
-        <li><strong>settingsSchema</strong> (SettingField[]) — Configurable fields; they appear in Settings → Engines with a Configure modal.</li>
-        <li><strong>configure(settings)</strong> — Called on startup (if settings exist) and when the user saves in the UI.</li>
-      </ul>
-      <p><strong>SettingField</strong> (same as plugins):</p>
-      <pre><code>{
-  key: string,
-  label: string,
-  type: "text" | "password" | "url" | "toggle" | "textarea" | "urllist",
-  required?: boolean,
-  placeholder?: string,
-  description?: string,
-  secret?: boolean
-}</code></pre>
+        <h2>Engine contract</h2>
+        <p><strong>Required:</strong></p>
+        <ul>
+          <li><strong>name</strong> — Display name in Settings → Engines.</li>
+          <li>
+            <strong>executeSearch(query, page?, timeFilter?, context)</strong>
+            (async) — Return a Promise of an array of results. Each result is an
+            object with <code>title</code>, <code>url</code>,
+            <code>snippet</code>, <code>source</code>, and optional
+            <code>thumbnail</code>, <code>duration</code>. The
+            <code>context</code> argument provides <code>context.fetch</code>;
+            use it for all outbound HTTP requests so the engine respects the
+            user’s proxy (Settings → General).
+          </li>
+        </ul>
+        <p><strong>Optional:</strong></p>
+        <ul>
+          <li>
+            <strong>bangShortcut</strong> — Enables
+            <code>!shortcut query</code> to search this engine only (e.g.
+            <code>bangShortcut: "ecosia"</code> → <code>!ecosia linux</code>).
+          </li>
+          <li>
+            <strong>settingsSchema</strong>,
+            <strong>configure(settings)</strong> — Same as plugins. Configure
+            button in Settings → Engines; values in
+            <code>data/plugin-settings.json</code>.
+          </li>
+        </ul>
+        <p>
+          SettingField shape: <code>key</code>, <code>label</code>,
+          <code>type</code> (text, password, url, toggle, textarea, select,
+          urllist), and optional <code>required</code>,
+          <code>placeholder</code>, <code>description</code>,
+          <code>secret</code>, <code>options</code> (for select).
+        </p>
 
-      <h2>Non-web search types</h2>
-      <p>To export an images or video engine, add a named <code>type</code> export:</p>
-      <pre><code>export const type = "images";  // or "videos" or "web" (default)</code></pre>
-      <p>Using a type that does not yet exist (e.g. <code>"books"</code>) creates a <strong>new tab</strong> on the search results page for that type. The tab appears in the tab bar and, when selected, runs all engines that export that type.</p>
+        <h2>Search types</h2>
+        <p>
+          Export a named <code>type</code>: <code>"web"</code> (default),
+          <code>"images"</code>, <code>"videos"</code>, <code>"news"</code>, or
+          a custom string (e.g. <code>"books"</code>). A custom type creates a
+          new tab on the search results page; when selected, all engines with
+          that type run.
+        </p>
 
-      <h2>Proxies (proxy-friendly engines)</h2>
-      <p>When users enable a proxy for search (Settings → General), all engine requests can go through that proxy. For your engine to be proxy-correct:</p>
-      <ol>
-        <li><strong>Use the injected fetch.</strong> Implement <code>executeSearch(query, page?, timeFilter?, context)</code> and use <code>context.fetch</code> for every outbound HTTP request. If you use global <code>fetch</code>, your requests will not use the user’s proxy.</li>
-        <li><strong>Declare outgoing hostnames.</strong> Export a named <code>outgoingHosts</code> array of hostname strings (no protocol or path). Those hostnames are added to the proxy allowlist so your engine works when the proxy is on. Use <code>["*"]</code> only if your engine fetches from arbitrary user-configured URLs (e.g. RSS feeds).</li>
-      </ol>
-      <p>Example (semantically correct for proxies):</p>
-      <pre><code>export const outgoingHosts = ["www.example.com", "example.com"];
+        <h2>Proxies</h2>
+        <p>
+          When users enable a proxy for search, engine requests can go through
+          it. For your engine to work with the proxy:
+        </p>
+        <ol>
+          <li>
+            Use <code>context.fetch</code> for every outbound HTTP request (not
+            global <code>fetch</code>).
+          </li>
+          <li>
+            Export <strong>outgoingHosts</strong> — array of hostname strings
+            (no protocol or path). Those hostnames are added to the proxy
+            allowlist. Use <code>["*"]</code> only if the engine fetches from
+            arbitrary user-configured URLs.
+          </li>
+        </ol>
+        <pre><code>export const outgoingHosts = ["www.example.com", "example.com"];
 
 export default class MyEngine {
   name = "My Search";
   async executeSearch(query, page = 1, _timeFilter, context) {
     const url = `https://www.example.com/search?q=${encodeURIComponent(query)}`;
     const doFetch = context?.fetch ?? fetch;
-    const response = await doFetch(url, {
-      headers: { "User-Agent": "my-engine/1.0" },
-    });
+    const response = await doFetch(url, { headers: { "User-Agent": "my-engine/1.0" } });
     const html = await response.text();
-    // ... parse and return results
+    // parse and return array of { title, url, snippet, source, ... }
   }
 }</code></pre>
-      <p>Always use <code>const doFetch = context?.fetch ?? fetch;</code> then <code>doFetch(url, opts)</code> so that when <code>context</code> is provided (it is when the app runs your engine), requests go through the user’s proxy when enabled.</p>
 
-      <h2>Setup</h2>
-      <p>Create <code>data/engines/</code> (or set <code>DEGOOG_ENGINES_DIR</code>). You can add either a single file (e.g. <code>my-engine.js</code>) or a folder with <code>index.js</code> (or .ts, .mjs, .cjs). The engine id is derived from the filename (without extension) or folder name, with an <code>engine-</code> prefix (e.g. <code>my-engine.js</code> or <code>my-engine/index.js</code> → id <code>engine-my-engine</code>).</p>
+        <h2>Setup</h2>
+        <p>
+          Create <code>data/engines/</code> (or set
+          <code>DEGOOG_ENGINES_DIR</code>). Add a single file (e.g.
+          <code>my-engine.js</code>) or a folder with <code>index.js</code> (or
+          .ts, .mjs, .cjs). The engine id is the filename or folder name with an
+          <code>engine-</code> prefix (e.g. <code>ecosia/index.js</code> →
+          <code>engine-ecosia</code>).
+        </p>
 
-      <h2>Distributing via Store</h2>
-      <p>When distributing an engine via a <a href="store.html">store repository</a>, add a <code>screenshots/</code> folder inside the engine folder for the Store card thumbnail and lightbox.</p>
+        <h2>How settings work</h2>
+        <ol>
+          <li>
+            Declare <code>settingsSchema</code> — Configure appears in Settings
+            → Engines.
+          </li>
+          <li>
+            User saves; values stored in <code>data/plugin-settings.json</code>.
+          </li>
+          <li>
+            <code>configure(settings)</code> is called after save and on restart
+            if settings exist.
+          </li>
+          <li>
+            Return an empty array from <code>executeSearch</code> when required
+            settings are missing.
+          </li>
+        </ol>
 
-      <h2>How settings work</h2>
-      <ol>
-        <li>Declare <code>settingsSchema</code> — a Configure button appears in Settings → Engines.</li>
-        <li>User saves; values are stored in <code>data/plugin-settings.json</code>.</li>
-        <li><code>configure(settings)</code> is called after save and on server restart if settings exist.</li>
-        <li>Return an empty array from <code>executeSearch</code> when required settings are missing so the engine contributes no results.</li>
-      </ol>
-
-      <h2>News</h2>
-      <p>News search is not an engine type: the News tab uses RSS feeds configured in <strong>Settings → Engines → News</strong>. Feed URLs are stored in <code>data/plugin-settings.json</code>.</p>
-    </main>
-  </div>
-</body>
+        <h2>Examples from the official store</h2>
+        <ul>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/engines/ecosia"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Ecosia</a
+            >
+            — web engine with <code>outgoingHosts</code>,
+            <code>bangShortcut</code>, uses <code>context.fetch</code>.
+          </li>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/engines/startpage"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Startpage</a
+            >
+            — web engine with optional Anonymous View settings.
+          </li>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/engines/internet-archive"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Internet Archive</a
+            >
+            — file-type engine; can be used as a dependency by the File tab
+            plugin.
+          </li>
+        </ul>
+        <p>
+          When distributing via the <a href="store.html">Store</a>, add a
+          <code>screenshots/</code> folder in the engine folder for the Store
+          card.
+        </p>
+      </main>
+    </div>
+    <script
+      src="https://code.jquery.com/jquery-4.0.0.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="docs.js"></script>
+  </body>
 </html>

@@ -1,0 +1,7 @@
+services:
+  docs:
+    image: nginx:alpine
+    ports:
+      - "4446:80"
+    volumes:
+      - ./docs:/usr/share/nginx/html:ro

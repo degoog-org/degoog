@@ -179,7 +179,7 @@ const aiSummarySlot: SlotPlugin = {
     if (!summary) return { html: "" };
     return {
       html:
-        '<div class="glance-box glance-ai">' +
+        '<div class="glance-ai">' +
         '<div class="glance-ai-messages">' +
         '<div class="glance-snippet">' +
         escapeHtml(summary) +

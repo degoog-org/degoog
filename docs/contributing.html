@@ -1,45 +1,150 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Contributing — Degoog docs</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <h1><a href="index.html">Degoog</a> — Contributing</h1>
-      <p>Adding built-in plugins and engines to the codebase.</p>
-    </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Contributing — Degoog docs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1><a href="index.html">Degoog</a> — Contributing</h1>
+        <p>
+          PR rules, coding standards, and adding built-in plugins or engines.
+        </p>
+      </header>
 
-    <nav class="doc-nav">
-      <h2>Docs</h2>
-      <ul>
-        <li><a href="index.html">Overview</a></li>
-        <li><a href="plugins.html">Plugins</a></li>
-        <li><a href="themes.html">Themes</a></li>
-        <li><a href="engines.html">Search engines</a></li>
-        <li><a href="store.html">Store repositories</a></li>
-        <li><a href="aliases.html">Aliases</a></li>
-        <li><a href="env.html">Environment variables</a></li>
-      </ul>
-    </nav>
+      <nav class="doc-nav">
+        <div class="doc-search-wrap">
+          <label for="doc-search-input" class="doc-search-label">Search</label>
+          <input
+            type="search"
+            id="doc-search-input"
+            class="doc-search"
+            placeholder="Search docs..."
+            autocomplete="off"
+          />
+          <button
+            type="button"
+            class="doc-search-clear"
+            aria-label="Clear search"
+            style="display: none"
+          >
+            Clear
+          </button>
+          <span class="doc-search-count"></span>
+        </div>
+        <h2>Docs</h2>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="plugins.html">Plugins</a></li>
+          <li><a href="themes.html">Themes</a></li>
+          <li><a href="engines.html">Search engines</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="aliases.html">Aliases</a></li>
+          <li><a href="env.html">Environment</a></li>
+          <li><a href="styling.html">Styling</a></li>
+        </ul>
+      </nav>
 
-    <main>
-      <h2>Built-in plugins (commands and slots)</h2>
-      <p>Built-ins live in <code>src/commands/builtins/</code> and use the <strong>same folder structure and discovery</strong> as <a href="plugins.html">plugins</a> in <code>data/plugins/</code>. Each built-in is a folder (e.g. <code>help</code>, <code>ip</code>, <code>ai-summary</code>) with:</p>
-      <ul>
-        <li><code>index.js</code> or <code>index.ts</code> — entry point (required).</li>
-        <li>Optional: <code>template.html</code>, <code>style.css</code>, <code>script.js</code> (loaded and served like plugin assets).</li>
-      </ul>
-      <p>Export a <strong>BangCommand</strong> (as <code>export default</code> or <code>export const command</code>) for bang commands — same contract as <a href="plugins.html#bang-commands">plugin bang commands</a> (name, description, trigger, execute, optional settingsSchema, configure, init, isConfigured, aliases, naturalLanguagePhrases). The core scans <code>src/commands/builtins/</code> at startup; no separate registration array.</p>
-      <p>Export a <strong>slot</strong> (as <code>slot</code> or <code>slotPlugin</code>) for slot plugins — e.g. the built-in AI Summary is a slot with <code>position: "at-a-glance"</code>. See <a href="plugins.html#at-a-glance-slot">At a glance slot</a>.</p>
-      <p>Scripts from built-in folders are served at <code>/plugins/&lt;folderName&gt;/script.js</code> (same URL shape as user plugins); the core resolves the path from <code>src/commands/builtins/</code>.</p>
+      <main>
+        <h2>Repo rules (CONTRIBUTING.md)</h2>
+        <p>
+          The project root <code>CONTRIBUTING.md</code> defines the basics: fork
+          <code>develop</code>, branch off it, and open pull requests against
+          <code>develop</code>. For customisation and third-party extensions,
+          see the rest of this documentation. For adding built-in engines or
+          bang commands, follow the patterns in the codebase (see below). If you
+          use AI, have your code reviewed and ensure it meets the coding
+          standards and is not overly engineered.
+        </p>
 
-      <h2>Adding a built-in engine</h2>
-      <p>Built-in engines are registered in <code>src/engines/</code>. Follow the same <strong>SearchEngine</strong> contract as <a href="engines.html">custom engines</a> (name, executeSearch, optional bangShortcut, settingsSchema, configure). Add the engine to the registry so it appears in Settings → Engines and in search.</p>
-    </main>
-  </div>
-</body>
+        <h2>Coding standards</h2>
+        <p>
+          These are summarised from <code>CONTRIBUTING.md</code>. Follow them so
+          contributions stay consistent.
+        </p>
+        <ul>
+          <li>
+            <strong>Functions that return a value</strong> — use arrow functions
+            (e.g. <code>const getX = () => value</code>,
+            <code>const map = (x) => x.id</code>).
+          </li>
+          <li>
+            <strong>Functions that do not return</strong> (side-effect only) —
+            use regular <code>function</code> declarations (e.g.
+            <code>function init() { ... }</code>).
+          </li>
+          <li>
+            <strong>Internal / private helpers</strong> — prepend with
+            <code>_</code> (e.g. <code>_parseQuery</code>,
+            <code>_formatDate</code>). This applies to functions or symbols that
+            are not part of the public API of a module.
+          </li>
+          <li>
+            <strong>CSS</strong> — Reuse existing app classes where possible so
+            plugins and themes match the UI. See
+            <a href="styling.html">Styling</a>
+            for a list of classes and variables. Prefer CSS variables (e.g.
+            <code>var(--text-primary)</code>, <code>var(--bg-light)</code>) so
+            themes and light/dark mode work.
+          </li>
+          <li>
+            <strong>Structure</strong> — Keep everything modular. Follow the
+            current folder structure: one folder per plugin (with
+            <code>index.js</code>/<code>index.ts</code>, optional
+            <code>template.html</code>, <code>style.css</code>,
+            <code>script.js</code>); engines as single files or one folder per
+            engine under the engines directory.
+          </li>
+        </ul>
+
+        <h2>Built-in plugins (commands and slots)</h2>
+        <p>
+          Built-ins live in
+          <code>src/server/extensions/commands/builtins/</code>. Each built-in
+          is a <strong>folder</strong> (e.g. <code>help</code>, <code>ip</code>,
+          <code>ai-summary</code>) with the same structure as
+          <a href="plugins.html">plugins</a> in <code>data/plugins/</code>:
+        </p>
+        <ul>
+          <li>
+            <code>index.js</code> or <code>index.ts</code> — entry point
+            (required).
+          </li>
+          <li>
+            Optional: <code>template.html</code>, <code>style.css</code>,
+            <code>script.js</code>.
+          </li>
+        </ul>
+        <p>
+          Export a bang command (as <code>export default</code> or
+          <code>export const command</code>) or a <code>slot</code> /
+          <code>slotPlugin</code> — same contract as
+          <a href="plugins.html#bang-commands">plugin bang commands</a> and
+          <a href="plugins.html#at-a-glance-slot">slot plugins</a>. The app
+          scans <code>src/server/extensions/commands/builtins/</code> at
+          startup.
+        </p>
+
+        <h2>Built-in engines</h2>
+        <p>
+          Built-in engines live in
+          <code>src/server/extensions/engines/</code> as TypeScript (or
+          JavaScript) files or folders. Use the same contract as
+          <a href="engines.html">custom engines</a>: <code>name</code>,
+          <code>executeSearch</code>, optional <code>bangShortcut</code>,
+          <code>settingsSchema</code>, <code>configure</code>,
+          <code>outgoingHosts</code>. Register the engine in the registry so it
+          appears in Settings → Engines and in search.
+        </p>
+      </main>
+    </div>
+    <script
+      src="https://code.jquery.com/jquery-4.0.0.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="docs.js"></script>
+  </body>
 </html>

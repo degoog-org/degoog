@@ -1,6 +1,7 @@
 import { escapeHtml } from "../utils/dom";
 import { renderAtAGlance, appendSlotPanels } from "./render-slots";
 import { skeletonGlance } from "./skeleton";
+import { runScriptsInContainer } from "./search-helpers";
 import type { ScoredResult, SlotPanel } from "../types";
 
 let glanceAbortController: AbortController | null = null;
@@ -31,9 +32,18 @@ export async function fetchGlancePanels(
     if (signal.aborted) return;
     if (!glanceEl) return;
     if (data.panels && data.panels.length > 0) {
-      for (const panel of data.panels) {
-        if (panel.position === "at-a-glance") glanceEl.innerHTML = panel.html;
+      const glancePanels = data.panels.filter((p) => p.position === "at-a-glance");
+      const parts: string[] = [];
+      for (const panel of glancePanels) {
+        const titleHtml = panel.title
+          ? `<div class="results-slot-panel-title">${escapeHtml(panel.title)}</div>`
+          : "";
+        parts.push(
+          `<div class="results-slot-panel">${titleHtml}<div class="results-slot-panel-body">${panel.html}</div></div>`,
+        );
       }
+      glanceEl.innerHTML = parts.join("");
+      runScriptsInContainer(glanceEl);
     } else if (fallbackAtAGlance) {
       renderAtAGlance(fallbackAtAGlance);
     }

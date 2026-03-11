@@ -1,62 +1,163 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Themes — Degoog docs</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <h1><a href="index.html">Degoog</a> — Themes</h1>
-      <p>Override look and optionally the home/search HTML.</p>
-    </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Themes — Degoog docs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1><a href="index.html">Degoog</a> — Themes</h1>
+        <p>Override look and optionally the home/search HTML.</p>
+      </header>
 
-    <nav class="doc-nav">
-      <h2>Docs</h2>
-      <ul>
-        <li><a href="index.html">Overview</a></li>
-        <li><a href="plugins.html">Plugins</a></li>
-        <li><a href="themes.html">Themes</a></li>
-        <li><a href="engines.html">Search engines</a></li>
-        <li><a href="store.html">Store repositories</a></li>
-        <li><a href="aliases.html">Aliases</a></li>
-        <li><a href="env.html">Environment variables</a></li>
-      </ul>
-    </nav>
+      <nav class="doc-nav">
+        <div class="doc-search-wrap">
+          <label for="doc-search-input" class="doc-search-label">Search</label>
+          <input
+            type="search"
+            id="doc-search-input"
+            class="doc-search"
+            placeholder="Search docs..."
+            autocomplete="off"
+          />
+          <button
+            type="button"
+            class="doc-search-clear"
+            aria-label="Clear search"
+            style="display: none"
+          >
+            Clear
+          </button>
+          <span class="doc-search-count"></span>
+        </div>
+        <h2>Docs</h2>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="plugins.html">Plugins</a></li>
+          <li><a href="themes.html">Themes</a></li>
+          <li><a href="engines.html">Search engines</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="aliases.html">Aliases</a></li>
+          <li><a href="env.html">Environment</a></li>
+          <li><a href="styling.html">Styling</a></li>
+        </ul>
+      </nav>
 
-    <main>
-      <h2>Where themes live</h2>
-      <p>Themes live in <code>data/themes/</code> (or <code>DEGOOG_THEMES_DIR</code>). Each theme is a <strong>folder</strong> named by its id (e.g. <code>1999</code>, <code>zen</code>), containing at least a <code>theme.json</code> manifest.</p>
+      <main>
+        <h2>Where themes live</h2>
+        <p>
+          Themes live in <code>data/themes/</code> (or
+          <code>DEGOOG_THEMES_DIR</code>). Each theme is a
+          <strong>folder</strong> named by its id (e.g. <code>zen</code>,
+          <code>catpuccin</code>), containing at least a
+          <code>theme.json</code> manifest.
+        </p>
 
-      <h2>Theme manifest (theme.json)</h2>
-      <p><strong>Required:</strong></p>
-      <ul>
-        <li><strong>name</strong> (string) — Display name in Settings → Themes.</li>
-      </ul>
-      <p><strong>Optional:</strong></p>
-      <ul>
-        <li><strong>author</strong>, <strong>description</strong>, <strong>version</strong> — Shown on the theme card.</li>
-        <li><strong>css</strong> (string) — Path to the stylesheet relative to the theme folder (e.g. <code>style.css</code> or <code>style.scss</code>). SCSS is compiled at load. When the theme is active this file is served at <code>/theme/style.css</code>.</li>
-        <li><strong>html</strong> (object) — Full HTML overrides. Keys: <code>index</code>, <code>search</code>. Value is the filename in the theme folder (e.g. <code>"index": "index.html"</code>). When the theme is active, that file is served instead of the built-in home or search page.</li>
-        <li><strong>settingsSchema</strong> (array) — Same shape as plugin SettingFields (key, label, type: text | password | url | toggle | textarea, etc.). If present, a Configure button appears on the theme card; values are stored in <code>data/plugin-settings.json</code> under <code>theme-&lt;theme-id&gt;</code>.</li>
-      </ul>
+        <h2>Theme manifest (theme.json)</h2>
+        <p><strong>Required:</strong></p>
+        <ul>
+          <li><strong>name</strong> — Display name in Settings → Themes.</li>
+        </ul>
+        <p><strong>Optional:</strong></p>
+        <ul>
+          <li>
+            <strong>author</strong>, <strong>description</strong>,
+            <strong>version</strong> — Shown on the theme card.
+          </li>
+          <li>
+            <strong>css</strong> — Path to the stylesheet relative to the theme
+            folder (e.g. <code>style.css</code> or <code>style.scss</code>).
+            SCSS is compiled at load. When the theme is active this file is
+            served at <code>/theme/style.css</code>.
+          </li>
+          <li>
+            <strong>html</strong> — Object with keys <code>index</code>,
+            <code>search</code>. Value is the filename in the theme folder (e.g.
+            <code>"index": "index.html"</code>). When the theme is active, that
+            file is served instead of the built-in home or search page. Custom
+            HTML can use placeholders: <code>__THEME_CSS__</code>,
+            <code>__THEME_ATTRS__</code>, <code>__PLUGIN_ASSETS__</code>,
+            <code>__APP_VERSION__</code>.
+          </li>
+          <li>
+            <strong>settingsSchema</strong> — Same shape as plugin
+            SettingFields. If present, a Configure button appears on the theme
+            card; values are stored in
+            <code>data/plugin-settings.json</code> under
+            <code>theme-&lt;theme-id&gt;</code>. Theme settings can be exposed
+            as <code>data-*</code> attributes on <code>&lt;html&gt;</code> via
+            <code>dataAttrsFromSettings</code> in theme.json.
+          </li>
+        </ul>
 
-      <h2>Setup</h2>
-      <p>Create <code>data/themes/</code> (or set <code>DEGOOG_THEMES_DIR</code>). Each theme is a subfolder, e.g. <code>data/themes/my-theme/</code>, with:</p>
-      <ul>
-        <li><strong>theme.json</strong> (required)</li>
-        <li><strong>style.css</strong> or <strong>style.scss</strong> (optional) — Use the same CSS variables as the app (<code>--bg</code>, <code>--text-primary</code>, <code>--text-link</code>, etc.) so light/dark mode work. See the app’s main styles for the variable set.</li>
-        <li><strong>index.html</strong>, <strong>search.html</strong> (optional) — Only used if listed under <code>html</code> in theme.json.</li>
-      </ul>
-      <p>The theme id is the folder name.</p>
+        <h2>Setup</h2>
+        <p>
+          Create <code>data/themes/</code> (or set
+          <code>DEGOOG_THEMES_DIR</code>). Each theme is a subfolder, e.g.
+          <code>data/themes/my-theme/</code>, with:
+        </p>
+        <ul>
+          <li><strong>theme.json</strong> (required)</li>
+          <li>
+            <strong>style.css</strong> or <strong>style.scss</strong> (optional)
+            — Use the app’s CSS variables so light/dark mode work. See
+            <a href="styling.html">Styling</a> for the full list.
+          </li>
+          <li>
+            <strong>index.html</strong>, <strong>search.html</strong> (optional)
+            — Only used if listed under <code>html</code> in theme.json.
+          </li>
+        </ul>
+        <p>The theme id is the folder name.</p>
 
-      <h2>Applying a theme</h2>
-      <p>Settings → Themes → choose a theme → <strong>Apply</strong>. The active theme id is stored in <code>data/plugin-settings.json</code> as <code>theme.active</code> (e.g. <code>"theme": { "active": "1999" }</code>).</p>
+        <h2>Applying a theme</h2>
+        <p>
+          Settings → Themes → choose a theme → <strong>Apply</strong>. The
+          active theme id is stored in <code>data/plugin-settings.json</code> as
+          <code>theme.active</code>.
+        </p>
 
-      <p><strong>Example:</strong> <a href="https://github.com/fccview/fccview-degoog-extensions/tree/main/themes/zen" class="external" target="_blank" rel="noopener">Official zen theme</a>.</p>
-    </main>
-  </div>
-</body>
+        <h2>Examples from the official store</h2>
+        <ul>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/themes/zen"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Zen</a
+            >
+            — minimalist theme with <code>theme.json</code> (<code>css</code>,
+            <code>html.index</code>, <code>html.search</code>), style.css,
+            index.html, search.html overrides.
+          </li>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/themes/catpuccin"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Catppuccin</a
+            >,
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/themes/pokemon"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Pokemon</a
+            >
+            — themes with variants/settings.
+          </li>
+        </ul>
+      </main>
+    </div>
+    <script
+      src="https://code.jquery.com/jquery-4.0.0.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="docs.js"></script>
+  </body>
 </html>

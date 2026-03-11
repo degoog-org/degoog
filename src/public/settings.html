@@ -78,6 +78,29 @@
           </div>
         </section>
 
+        <section class="settings-section" id="settings-section-rate-limit">
+          <h2 class="settings-section-heading">Rate limit</h2>
+          <p class="settings-desc">Limit requests per IP to protect the instance and upstream engines.</p>
+          <div class="settings-rate-limit-wrap" id="settings-rate-limit-wrap">
+            <label class="settings-proxy-toggle-wrap">
+              <input type="checkbox" id="settings-rate-limit-enabled" class="settings-proxy-toggle" aria-label="Enable rate limiting">
+              <span class="toggle-slider"></span>
+              <span class="settings-proxy-toggle-label">Enable rate limiting</span>
+            </label>
+            <div class="settings-rate-limit-options" id="settings-rate-limit-options" style="display:none">
+              <p class="settings-rate-limit-defaults">Defaults: 15 requests per 20s, 150 per 10 min per IP.</p>
+              <label for="settings-rate-limit-burst-window" class="settings-proxy-urls-label">Burst window (seconds)</label>
+              <input type="number" id="settings-rate-limit-burst-window" class="settings-rate-limit-input" min="1" max="3600" placeholder="20">
+              <label for="settings-rate-limit-burst-max" class="settings-proxy-urls-label">Burst max requests</label>
+              <input type="number" id="settings-rate-limit-burst-max" class="settings-rate-limit-input" min="1" max="1000" placeholder="15">
+              <label for="settings-rate-limit-long-window" class="settings-proxy-urls-label">Long window (seconds)</label>
+              <input type="number" id="settings-rate-limit-long-window" class="settings-rate-limit-input" min="1" max="3600" placeholder="600">
+              <label for="settings-rate-limit-long-max" class="settings-proxy-urls-label">Long max requests</label>
+              <input type="number" id="settings-rate-limit-long-max" class="settings-rate-limit-input" min="1" max="1000" placeholder="150">
+            </div>
+          </div>
+        </section>
+
         <section class="settings-section">
           <h2 class="settings-section-heading">Install app</h2>
           <p class="settings-desc">Add degoog to your home screen. If your browser did not show the install prompt, use this to try again.</p>

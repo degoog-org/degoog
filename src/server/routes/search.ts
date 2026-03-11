@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import * as cache from "../cache";
 import { search, searchSingleEngine, mergeNewResults } from "../search";
 import {
@@ -14,6 +14,7 @@ import {
 import { getSettings } from "../plugin-settings";
 import { getClientIp } from "../utils/request";
 import { outgoingFetch } from "../outgoing";
+import { checkRateLimit } from "../rate-limit";
 import type {
   EngineConfig,
   SearchType,
@@ -23,7 +24,27 @@ import type {
   ScoredResult,
 } from "../types";
 
+const DEGOOG_SETTINGS_ID = "degoog-settings";
 const router = new Hono();
+
+const _applyRateLimit = async (c: Context): Promise<Response | null> => {
+  const settings = await getSettings(DEGOOG_SETTINGS_ID);
+  const opts: Record<string, string> = {};
+  for (const [k, v] of Object.entries(settings)) {
+    opts[k] = typeof v === "string" ? v : Array.isArray(v) ? (v[0] ?? "") : "";
+  }
+  if (opts.rateLimitEnabled !== "true") return null;
+  const ip = getClientIp(c) ?? "unknown";
+  const result = checkRateLimit(ip, opts);
+  if (!result.allowed && result.retryAfterSec !== undefined) {
+    return c.json(
+      { error: "Too many requests" },
+      429,
+      { "Retry-After": String(result.retryAfterSec) },
+    );
+  }
+  return null;
+};
 
 function parseEngineConfig(query: URLSearchParams): EngineConfig {
   const registry = getEngineRegistry();
@@ -77,6 +98,8 @@ async function runSlotPlugins(
 }
 
 router.get("/api/search", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
   const searchType = (c.req.query("type") || "all") as SearchType;
   let query = c.req.query("q") ?? "";
   if (typeof query !== "string") query = "";
@@ -120,6 +143,8 @@ router.get("/api/search", async (c) => {
 });
 
 router.get("/api/slots", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
   const query = c.req.query("q");
   if (!query || !query.trim()) return c.json({ panels: [] });
   const clientIp = getClientIp(c);
@@ -130,6 +155,8 @@ router.get("/api/slots", async (c) => {
 });
 
 router.post("/api/slots/glance", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
   let body: { query?: string; results?: ScoredResult[] };
   try {
     body = await c.req.json();
@@ -168,6 +195,8 @@ router.post("/api/slots/glance", async (c) => {
 });
 
 router.get("/api/search/retry", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
   const query = c.req.query("q");
   const engineName = c.req.query("engine");
   if (!query || !engineName)
@@ -225,6 +254,8 @@ router.get("/api/search/retry", async (c) => {
 });
 
 router.post("/api/ai-chat", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
   let body: { messages?: { role: string; content: string }[] };
   try {
     body = await c.req.json();
@@ -294,6 +325,8 @@ router.get("/api/search-tabs", async (c) => {
 });
 
 router.get("/api/tab-search", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
   const tabId = c.req.query("tab");
   const query = c.req.query("q");
   if (!tabId || !query?.trim())

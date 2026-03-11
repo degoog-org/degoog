@@ -6,13 +6,23 @@ async function getSuggestions(query: string): Promise<string[]> {
   if (!query.trim()) return [];
   const encoded = encodeURIComponent(query);
   const [googleRes, ddgRes] = await Promise.allSettled([
-    fetch(`https://suggestqueries.google.com/complete/search?client=firefox&q=${encoded}`).then((r) => r.json()),
-    fetch(`https://duckduckgo.com/ac/?q=${encoded}&type=list`).then((r) => r.json()),
+    fetch(
+      `https://suggestqueries.google.com/complete/search?client=firefox&q=${encoded}`,
+    )
+      .then((r) => r.arrayBuffer())
+      .then((buf) => JSON.parse(new TextDecoder("iso-8859-1").decode(buf))),
+    fetch(`https://duckduckgo.com/ac/?q=${encoded}&type=list`).then((r) =>
+      r.json(),
+    ),
   ]);
   const googleSuggestions: string[] =
-    googleRes.status === "fulfilled" ? (googleRes.value as [unknown, string[]])[1] || [] : [];
+    googleRes.status === "fulfilled"
+      ? (googleRes.value as [unknown, string[]])[1] || []
+      : [];
   const ddgSuggestions: string[] =
-    ddgRes.status === "fulfilled" ? (ddgRes.value as [unknown, string[]])[1] || [] : [];
+    ddgRes.status === "fulfilled"
+      ? (ddgRes.value as [unknown, string[]])[1] || []
+      : [];
 
   const seen = new Set<string>();
   const merged: string[] = [];

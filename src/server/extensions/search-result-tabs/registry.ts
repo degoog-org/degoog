@@ -1,7 +1,7 @@
 import { join } from "path";
 import type { SearchResultTab, PluginContext } from "../../types";
 import { getSettings } from "../../plugin-settings";
-import { addPluginCss, registerPluginScript } from "../../plugin-assets";
+import { addPluginCss, registerPluginScript, registerPluginSettingsId } from "../../plugin-assets";
 import { debug } from "../../logger";
 
 let tabPlugins: SearchResultTab[] = [];
@@ -51,7 +51,8 @@ async function loadTabsFromRoot(rootDir: string, source: "plugin" | "builtin"): 
       const css = await readFile(join(entryPath, "style.css"), "utf-8").catch(() => "");
       if (css) addPluginCss(tabSettingsId, css);
       const hasScript = await stat(join(entryPath, "script.js")).catch(() => null);
-      if (hasScript?.isFile()) registerPluginScript(entry, source);
+      if (hasScript?.isFile()) registerPluginScript(entry, source, tabSettingsId);
+      registerPluginSettingsId(entry, tabSettingsId);
 
       if (tab.init) {
         const ctx: PluginContext = {

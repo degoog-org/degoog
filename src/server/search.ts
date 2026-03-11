@@ -96,7 +96,8 @@ async function fetchRelatedSearches(query: string): Promise<string[]> {
     const res = await fetch(
       `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`,
     );
-    const data = (await res.json()) as [string, string[]];
+    const buf = await res.arrayBuffer();
+    const data = JSON.parse(new TextDecoder("iso-8859-1").decode(buf)) as [string, string[]];
     return (data[1] || [])
       .filter((s: string) => s.toLowerCase() !== query.toLowerCase())
       .slice(0, 8);
