@@ -23,7 +23,7 @@ import {
   type SettingValue,
 } from "../utils/plugin-settings";
 import { getPluginCssIds, getPluginCssById } from "../utils/plugin-assets";
-import type { ExtensionMeta } from "../types";
+import { ExtensionStoreType, type ExtensionMeta } from "../types";
 
 const router = new Hono();
 
@@ -41,7 +41,7 @@ async function getSlotExtensionMeta(): Promise<ExtensionMeta[]> {
       id,
       displayName: slot.name,
       description: slot.description,
-      type: "plugin",
+      type: ExtensionStoreType.Plugin,
       configurable: true,
       settingsSchema: schema,
       settings,

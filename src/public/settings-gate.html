@@ -1,99 +1,125 @@
-<!DOCTYPE html>
-<html lang="en"__THEME_ATTRS__>
-<head>
-  <script>
-    (function () {
-      var r = document.documentElement;
-      var t = localStorage.getItem("theme");
-      if (t === "light") r.setAttribute("data-theme", "light");
-      else if (t === "dark") r.setAttribute("data-theme", "dark");
-      else { var m = window.matchMedia("(prefers-color-scheme: dark)"); r.setAttribute("data-theme", m.matches ? "dark" : "light"); }
-      try {
-        var req = indexedDB.open("degoog", 2);
-        req.onsuccess = function () {
-          try {
-            var db = req.result;
-            if (!db.objectStoreNames.contains("settings")) return;
-            var tx = db.transaction("settings", "readonly");
-            var store = tx.objectStore("settings");
-            var get = store.get("theme");
-            get.onsuccess = function () {
-              var v = get.result;
-              if (v === "light") r.setAttribute("data-theme", "light");
-              else if (v === "dark") r.setAttribute("data-theme", "dark");
-              else { var m2 = window.matchMedia("(prefers-color-scheme: dark)"); r.setAttribute("data-theme", m2.matches ? "dark" : "light"); }
-            };
-          } catch (e) {}
-        };
-      } catch (e) {}
-    })();
-  </script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="degoog search settings.">
-  <link rel="icon" href="/public/favicon/favicon.ico?v=__APP_VERSION__" type="image/x-icon">
-  <link rel="manifest" href="/public/favicon/site.webmanifest?v=__APP_VERSION__">
-  <title>Settings – degoog</title>
-  <link rel="stylesheet" href="/public/style.css?v=__APP_VERSION__">
-  __THEME_CSS__
-</head>
-<body class="settings-page-body">
-  <div class="settings-page">
-    <header class="settings-page-header">
-      <a href="/" class="settings-page-back">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        Back
-      </a>
-      <h1 class="settings-page-title">Settings</h1>
-    </header>
-    <div class="settings-auth-gate">
-      <div class="settings-auth-gate-inner">
-        <p class="settings-auth-desc">Enter the password to access settings.</p>
-        <form class="settings-auth-form" id="settings-auth-form" autocomplete="off">
-          <input
-            class="settings-auth-input"
-            type="password"
-            id="settings-auth-input"
-            placeholder="Password"
-            autocomplete="current-password"
-            autofocus
+<!doctype html>
+<html lang="en" __THEME_ATTRS__>
+  <head>
+    <script>
+      (function () {
+        var r = document.documentElement;
+        var t = localStorage.getItem("theme");
+        if (t === "light") r.setAttribute("data-theme", "light");
+        else if (t === "dark") r.setAttribute("data-theme", "dark");
+        else {
+          var m = window.matchMedia("(prefers-color-scheme: dark)");
+          r.setAttribute("data-theme", m.matches ? "dark" : "light");
+        }
+        try {
+          var req = indexedDB.open("degoog", 2);
+          req.onsuccess = function () {
+            try {
+              var db = req.result;
+              if (!db.objectStoreNames.contains("settings")) return;
+              var tx = db.transaction("settings", "readonly");
+              var store = tx.objectStore("settings");
+              var get = store.get("theme");
+              get.onsuccess = function () {
+                var v = get.result;
+                if (v === "light") r.setAttribute("data-theme", "light");
+                else if (v === "dark") r.setAttribute("data-theme", "dark");
+                else {
+                  var m2 = window.matchMedia("(prefers-color-scheme: dark)");
+                  r.setAttribute("data-theme", m2.matches ? "dark" : "light");
+                }
+              };
+            } catch (e) {}
+          };
+        } catch (e) {}
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="degoog search settings." />
+    <link
+      rel="icon"
+      href="/public/favicon/favicon.ico?v=__APP_VERSION__"
+      type="image/x-icon"
+    />
+    <link
+      rel="manifest"
+      href="/public/favicon/site.webmanifest?v=__APP_VERSION__"
+    />
+    <title>Settings – degoog</title>
+    <link rel="stylesheet" href="/public/style.css?v=__APP_VERSION__" />
+    __THEME_CSS__
+  </head>
+  <body class="settings-page-body">
+    <div class="settings-page">
+      <header class="settings-page-header">
+        <a onclick="window.history.back()" class="settings-page-back">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
           >
-          <button class="settings-auth-submit" type="submit">Unlock</button>
-        </form>
-        <p class="settings-auth-error" id="settings-auth-error"></p>
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Back
+        </a>
+        <h1 class="settings-page-title">Settings</h1>
+      </header>
+      <div class="settings-auth-gate">
+        <div class="settings-auth-gate-inner">
+          <p class="settings-auth-desc">
+            Enter the password to access settings.
+          </p>
+          <form
+            class="settings-auth-form"
+            id="settings-auth-form"
+            autocomplete="off"
+          >
+            <input
+              class="settings-auth-input"
+              type="password"
+              id="settings-auth-input"
+              placeholder="Password"
+              autocomplete="current-password"
+              autofocus
+            />
+            <button class="settings-auth-submit" type="submit">Unlock</button>
+          </form>
+          <p class="settings-auth-error" id="settings-auth-error"></p>
+        </div>
       </div>
     </div>
-  </div>
-  <script>
-    (function () {
-      const TOKEN_KEY = "degoog-settings-token";
-      const form = document.getElementById("settings-auth-form");
-      const errorEl = document.getElementById("settings-auth-error");
-      form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const password = document.getElementById("settings-auth-input").value;
-        errorEl.textContent = "";
-        try {
-          const res = await fetch("/api/settings/auth", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ password }),
-            credentials: "same-origin"
-          });
-          const data = await res.json();
-          if (data.ok && data.token) {
-            sessionStorage.setItem(TOKEN_KEY, data.token);
-            window.location.reload();
-          } else {
-            errorEl.textContent = "Incorrect password.";
+    <script>
+      (function () {
+        const TOKEN_KEY = "degoog-settings-token";
+        const form = document.getElementById("settings-auth-form");
+        const errorEl = document.getElementById("settings-auth-error");
+        form.addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const password = document.getElementById("settings-auth-input").value;
+          errorEl.textContent = "";
+          try {
+            const res = await fetch("/api/settings/auth", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ password }),
+              credentials: "same-origin",
+            });
+            const data = await res.json();
+            if (data.ok && data.token) {
+              sessionStorage.setItem(TOKEN_KEY, data.token);
+              window.location.reload();
+            } else {
+              errorEl.textContent = "Incorrect password.";
+            }
+          } catch {
+            errorEl.textContent = "Something went wrong. Please try again.";
           }
-        } catch {
-          errorEl.textContent = "Something went wrong. Please try again.";
-        }
-      });
-    })();
-  </script>
-</body>
+        });
+      })();
+    </script>
+  </body>
 </html>

@@ -1,4 +1,4 @@
-import type { SearchBarAction, ExtensionMeta } from "../../types";
+import { type SearchBarAction, type ExtensionMeta, ExtensionStoreType } from "../../types";
 import {
   getSettings,
   isDisabled,
@@ -123,7 +123,7 @@ export async function getSearchBarActionExtensionMeta(): Promise<
       id,
       displayName: name,
       description,
-      type: "plugin",
+      type: ExtensionStoreType.Plugin,
       configurable: true,
       settingsSchema: schema,
       settings,

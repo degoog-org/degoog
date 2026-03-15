@@ -7,6 +7,12 @@ export interface SearchResult {
   duration?: string;
 }
 
+export enum ExtensionStoreType {
+  Plugin = "plugin",
+  Theme = "theme",
+  Engine = "engine",
+}
+
 export interface SettingField {
   key: string;
   label: string;
@@ -22,7 +28,7 @@ export interface ExtensionMeta {
   id: string;
   displayName: string;
   description: string;
-  type: "plugin" | "engine" | "command" | "theme";
+  type: ExtensionStoreType | "command";
   configurable: boolean;
   settingsSchema: SettingField[];
   settings: Record<string, string | string[]>;

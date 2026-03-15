@@ -1,162 +1,348 @@
-<!DOCTYPE html>
-<html lang="en"__THEME_ATTRS__>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="degoog search settings.">
-  <link rel="icon" href="/public/favicon/favicon.ico?v=__APP_VERSION__" type="image/x-icon">
-  <link rel="manifest" href="/public/favicon/site.webmanifest?v=__APP_VERSION__">
-  <title>Settings – degoog</title>
-  <script>
-    (function(){var t=localStorage.getItem("theme");var r=document.documentElement;if(t==="light")r.setAttribute("data-theme","light");else if(t==="dark")r.setAttribute("data-theme","dark");else{var m=window.matchMedia("(prefers-color-scheme: dark)");r.setAttribute("data-theme",m.matches?"dark":"light");}})();
-  </script>
-  <link rel="stylesheet" href="/public/style.css?v=__APP_VERSION__">
-  __THEME_CSS__
-</head>
-<body class="settings-page-body">
-  <div class="settings-page">
-    <header class="settings-page-header">
-      <a href="/" class="settings-page-back">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        Back
-      </a>
-      <h1 class="settings-page-title">Settings</h1>
-    </header>
+<!doctype html>
+<html lang="en" __THEME_ATTRS__>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="degoog search settings." />
+    <link
+      rel="icon"
+      href="/public/favicon/favicon.ico?v=__APP_VERSION__"
+      type="image/x-icon"
+    />
+    <link
+      rel="manifest"
+      href="/public/favicon/site.webmanifest?v=__APP_VERSION__"
+    />
+    <title>Settings – degoog</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("theme");
+        var r = document.documentElement;
+        if (t === "light") r.setAttribute("data-theme", "light");
+        else if (t === "dark") r.setAttribute("data-theme", "dark");
+        else {
+          var m = window.matchMedia("(prefers-color-scheme: dark)");
+          r.setAttribute("data-theme", m.matches ? "dark" : "light");
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="/public/style.css?v=__APP_VERSION__" />
+    __THEME_CSS__
+  </head>
+  <body class="settings-page-body">
+    <div class="settings-page">
+      <header class="settings-page-header">
+        <a onclick="window.history.back()" class="settings-page-back">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Back
+        </a>
+        <h1 class="settings-page-title">Settings</h1>
+      </header>
 
-    <div class="settings-tab-select-wrap">
-      <label for="settings-tab-select" class="settings-tab-select-label">Section</label>
-      <select id="settings-tab-select" class="settings-tab-select" aria-label="Settings section">
-        <option value="general">General</option>
-        <option value="engines">Engines</option>
-        <option value="plugins">Plugins</option>
-        <option value="themes">Themes</option>
-        <option value="store">Store</option>
-      </select>
+      <div class="settings-tab-select-wrap">
+        <label for="settings-tab-select" class="settings-tab-select-label"
+          >Section</label
+        >
+        <select
+          id="settings-tab-select"
+          class="settings-tab-select"
+          aria-label="Settings section"
+        >
+          <option value="general">General</option>
+          <option value="engines">Engines</option>
+          <option value="plugins">Plugins</option>
+          <option value="themes">Themes</option>
+          <option value="store">Store</option>
+        </select>
+      </div>
+
+      <nav
+        class="settings-tabs-nav"
+        id="settings-tabs-nav"
+        aria-label="Settings sections"
+      >
+        <button
+          class="settings-tab-btn active"
+          data-tab="general"
+          type="button"
+        >
+          General
+        </button>
+        <button class="settings-tab-btn" data-tab="engines" type="button">
+          Engines
+        </button>
+        <button class="settings-tab-btn" data-tab="plugins" type="button">
+          Plugins
+        </button>
+        <button class="settings-tab-btn" data-tab="themes" type="button">
+          Themes
+        </button>
+        <button class="settings-tab-btn" data-tab="store" type="button">
+          Store
+        </button>
+      </nav>
+
+      <main class="settings-page-main">
+        <div class="settings-tab-panel active" id="tab-general">
+          <section class="settings-section">
+            <h2 class="settings-section-heading">Appearance</h2>
+            <p class="settings-desc">Choose your preferred theme.</p>
+            <div class="theme-select-wrap">
+              <select id="theme-select" class="theme-select">
+                <option value="system">System default</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <h2 class="settings-section-heading">Cache</h2>
+            <p class="settings-desc">Clear stored search results.</p>
+            <button
+              class="btn btn--secondary settings-cache-clear"
+              id="settings-cache-clear"
+              type="button"
+            >
+              Clear search cache
+            </button>
+          </section>
+
+          <section class="settings-section" id="settings-section-proxy">
+            <h2 class="settings-section-heading">Proxy</h2>
+            <p class="settings-desc">
+              Use proxies for server-side search requests. One URL per line;
+              requests rotate through the list.
+            </p>
+            <label class="settings-proxy-toggle-wrap">
+              <input
+                type="checkbox"
+                id="settings-proxy-enabled"
+                class="settings-proxy-toggle"
+                aria-label="Use proxy for search"
+              />
+              <span class="toggle-slider"></span>
+              <span class="settings-proxy-toggle-label"
+                >Use proxy for search</span
+              >
+            </label>
+            <div
+              class="settings-proxy-urls-wrap"
+              id="settings-proxy-urls-wrap"
+              style="display: none"
+            >
+              <label for="settings-proxy-urls" class="settings-proxy-urls-label"
+                >Proxy URLs (one per line)</label
+              >
+              <textarea
+                id="settings-proxy-urls"
+                class="settings-proxy-urls"
+                rows="4"
+                placeholder="http://proxy1:8080&#10;socks5://proxy2:1080"
+              ></textarea>
+            </div>
+          </section>
+
+          <section class="settings-section" id="settings-section-rate-limit">
+            <h2 class="settings-section-heading">Rate limit</h2>
+            <p class="settings-desc">
+              Limit requests per IP to protect the instance and upstream
+              engines.
+            </p>
+            <div class="settings-rate-limit-wrap" id="settings-rate-limit-wrap">
+              <label class="settings-proxy-toggle-wrap">
+                <input
+                  type="checkbox"
+                  id="settings-rate-limit-enabled"
+                  class="settings-proxy-toggle"
+                  aria-label="Enable rate limiting"
+                />
+                <span class="toggle-slider"></span>
+                <span class="settings-proxy-toggle-label"
+                  >Enable rate limiting</span
+                >
+              </label>
+              <div
+                class="settings-rate-limit-options"
+                id="settings-rate-limit-options"
+                style="display: none"
+              >
+                <p class="settings-rate-limit-defaults">
+                  Defaults: 15 requests per 20s, 150 per 10 min per IP.
+                </p>
+                <label
+                  for="settings-rate-limit-burst-window"
+                  class="settings-proxy-urls-label"
+                  >Burst window (seconds)</label
+                >
+                <input
+                  type="number"
+                  id="settings-rate-limit-burst-window"
+                  class="settings-rate-limit-input"
+                  min="1"
+                  max="3600"
+                  placeholder="20"
+                />
+                <label
+                  for="settings-rate-limit-burst-max"
+                  class="settings-proxy-urls-label"
+                  >Burst max requests</label
+                >
+                <input
+                  type="number"
+                  id="settings-rate-limit-burst-max"
+                  class="settings-rate-limit-input"
+                  min="1"
+                  max="1000"
+                  placeholder="15"
+                />
+                <label
+                  for="settings-rate-limit-long-window"
+                  class="settings-proxy-urls-label"
+                  >Long window (seconds)</label
+                >
+                <input
+                  type="number"
+                  id="settings-rate-limit-long-window"
+                  class="settings-rate-limit-input"
+                  min="1"
+                  max="3600"
+                  placeholder="600"
+                />
+                <label
+                  for="settings-rate-limit-long-max"
+                  class="settings-proxy-urls-label"
+                  >Long max requests</label
+                >
+                <input
+                  type="number"
+                  id="settings-rate-limit-long-max"
+                  class="settings-rate-limit-input"
+                  min="1"
+                  max="1000"
+                  placeholder="150"
+                />
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <h2 class="settings-section-heading">Install app</h2>
+            <p class="settings-desc">
+              Add degoog to your home screen. If your browser did not show the
+              install prompt, use this to try again.
+            </p>
+            <button
+              class="btn btn--secondary settings-install-prompt"
+              id="settings-install-prompt"
+              type="button"
+            >
+              Show install prompt
+            </button>
+          </section>
+
+          <div class="settings-page-actions">
+            <button class="settings-save" id="settings-save" type="button">
+              Save
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-tab-panel" id="tab-engines">
+          <div id="engines-content"></div>
+        </div>
+
+        <div class="settings-tab-panel" id="tab-plugins">
+          <div id="plugins-content"></div>
+        </div>
+
+        <div class="settings-tab-panel" id="tab-themes">
+          <div id="themes-content"></div>
+        </div>
+        <div class="settings-tab-panel" id="tab-store">
+          <div id="store-content"></div>
+        </div>
+      </main>
     </div>
 
-    <nav class="settings-tabs-nav" id="settings-tabs-nav" aria-label="Settings sections">
-      <button class="settings-tab-btn active" data-tab="general" type="button">General</button>
-      <button class="settings-tab-btn" data-tab="engines" type="button">Engines</button>
-      <button class="settings-tab-btn" data-tab="plugins" type="button">Plugins</button>
-      <button class="settings-tab-btn" data-tab="themes" type="button">Themes</button>
-      <button class="settings-tab-btn" data-tab="store" type="button">Store</button>
-    </nav>
-
-    <main class="settings-page-main">
-      <div class="settings-tab-panel active" id="tab-general">
-        <section class="settings-section">
-          <h2 class="settings-section-heading">Appearance</h2>
-          <p class="settings-desc">Choose your preferred theme.</p>
-          <div class="theme-select-wrap">
-            <select id="theme-select" class="theme-select">
-              <option value="system">System default</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </div>
-        </section>
-
-        <section class="settings-section">
-          <h2 class="settings-section-heading">Cache</h2>
-          <p class="settings-desc">Clear stored search results.</p>
-          <button class="btn btn--secondary settings-cache-clear" id="settings-cache-clear" type="button">Clear search cache</button>
-        </section>
-
-        <section class="settings-section" id="settings-section-proxy">
-          <h2 class="settings-section-heading">Proxy</h2>
-          <p class="settings-desc">Use proxies for server-side search requests. One URL per line; requests rotate through the list.</p>
-          <label class="settings-proxy-toggle-wrap">
-            <input type="checkbox" id="settings-proxy-enabled" class="settings-proxy-toggle" aria-label="Use proxy for search">
-            <span class="toggle-slider"></span>
-            <span class="settings-proxy-toggle-label">Use proxy for search</span>
-          </label>
-          <div class="settings-proxy-urls-wrap" id="settings-proxy-urls-wrap" style="display:none">
-            <label for="settings-proxy-urls" class="settings-proxy-urls-label">Proxy URLs (one per line)</label>
-            <textarea id="settings-proxy-urls" class="settings-proxy-urls" rows="4" placeholder="http://proxy1:8080&#10;socks5://proxy2:1080"></textarea>
-          </div>
-        </section>
-
-        <section class="settings-section" id="settings-section-rate-limit">
-          <h2 class="settings-section-heading">Rate limit</h2>
-          <p class="settings-desc">Limit requests per IP to protect the instance and upstream engines.</p>
-          <div class="settings-rate-limit-wrap" id="settings-rate-limit-wrap">
-            <label class="settings-proxy-toggle-wrap">
-              <input type="checkbox" id="settings-rate-limit-enabled" class="settings-proxy-toggle" aria-label="Enable rate limiting">
-              <span class="toggle-slider"></span>
-              <span class="settings-proxy-toggle-label">Enable rate limiting</span>
-            </label>
-            <div class="settings-rate-limit-options" id="settings-rate-limit-options" style="display:none">
-              <p class="settings-rate-limit-defaults">Defaults: 15 requests per 20s, 150 per 10 min per IP.</p>
-              <label for="settings-rate-limit-burst-window" class="settings-proxy-urls-label">Burst window (seconds)</label>
-              <input type="number" id="settings-rate-limit-burst-window" class="settings-rate-limit-input" min="1" max="3600" placeholder="20">
-              <label for="settings-rate-limit-burst-max" class="settings-proxy-urls-label">Burst max requests</label>
-              <input type="number" id="settings-rate-limit-burst-max" class="settings-rate-limit-input" min="1" max="1000" placeholder="15">
-              <label for="settings-rate-limit-long-window" class="settings-proxy-urls-label">Long window (seconds)</label>
-              <input type="number" id="settings-rate-limit-long-window" class="settings-rate-limit-input" min="1" max="3600" placeholder="600">
-              <label for="settings-rate-limit-long-max" class="settings-proxy-urls-label">Long max requests</label>
-              <input type="number" id="settings-rate-limit-long-max" class="settings-rate-limit-input" min="1" max="1000" placeholder="150">
-            </div>
-          </div>
-        </section>
-
-        <section class="settings-section">
-          <h2 class="settings-section-heading">Install app</h2>
-          <p class="settings-desc">Add degoog to your home screen. If your browser did not show the install prompt, use this to try again.</p>
-          <button class="btn btn--secondary settings-install-prompt" id="settings-install-prompt" type="button">Show install prompt</button>
-        </section>
-
-        <div class="settings-page-actions">
-          <button class="settings-save" id="settings-save" type="button">Save</button>
+    <div class="ext-modal-overlay" id="ext-modal-overlay" style="display: none">
+      <div class="ext-modal" id="ext-modal" role="dialog" aria-modal="true">
+        <div class="ext-modal-header">
+          <h2 class="ext-modal-title" id="ext-modal-title"></h2>
+          <button
+            class="ext-modal-close"
+            id="ext-modal-close"
+            type="button"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="ext-modal-body" id="ext-modal-body"></div>
+        <div class="ext-modal-footer">
+          <span class="ext-modal-status" id="ext-modal-status"></span>
+          <button class="settings-save" id="ext-modal-save" type="button">
+            Save
+          </button>
         </div>
       </div>
+    </div>
 
-      <div class="settings-tab-panel" id="tab-engines">
-        <div id="engines-content"></div>
-      </div>
-
-      <div class="settings-tab-panel" id="tab-plugins">
-        <div id="plugins-content"></div>
-      </div>
-
-      <div class="settings-tab-panel" id="tab-themes">
-        <div id="themes-content"></div>
-      </div>
-      <div class="settings-tab-panel" id="tab-store">
-        <div id="store-content"></div>
-      </div>
-    </main>
-  </div>
-
-  <div class="ext-modal-overlay" id="ext-modal-overlay" style="display:none">
-    <div class="ext-modal" id="ext-modal" role="dialog" aria-modal="true">
-      <div class="ext-modal-header">
-        <h2 class="ext-modal-title" id="ext-modal-title"></h2>
-        <button class="ext-modal-close" id="ext-modal-close" type="button" aria-label="Close">&times;</button>
-      </div>
-      <div class="ext-modal-body" id="ext-modal-body"></div>
-      <div class="ext-modal-footer">
-        <span class="ext-modal-status" id="ext-modal-status"></span>
-        <button class="settings-save" id="ext-modal-save" type="button">Save</button>
+    <div
+      class="ext-modal-overlay"
+      id="confirm-modal-overlay"
+      style="display: none"
+    >
+      <div
+        class="ext-modal"
+        id="confirm-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-modal-title"
+      >
+        <div class="ext-modal-header">
+          <h2 class="ext-modal-title" id="confirm-modal-title">Confirm</h2>
+          <button
+            class="ext-modal-close"
+            id="confirm-modal-close"
+            type="button"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="ext-modal-body" id="confirm-modal-body"></div>
+        <div class="ext-modal-footer">
+          <button
+            class="btn btn--secondary"
+            id="confirm-modal-cancel"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn btn--primary"
+            id="confirm-modal-confirm"
+            type="button"
+          >
+            Confirm
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="ext-modal-overlay" id="confirm-modal-overlay" style="display:none">
-    <div class="ext-modal" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
-      <div class="ext-modal-header">
-        <h2 class="ext-modal-title" id="confirm-modal-title">Confirm</h2>
-        <button class="ext-modal-close" id="confirm-modal-close" type="button" aria-label="Close">&times;</button>
-      </div>
-      <div class="ext-modal-body" id="confirm-modal-body"></div>
-      <div class="ext-modal-footer">
-        <button class="btn btn--secondary" id="confirm-modal-cancel" type="button">Cancel</button>
-        <button class="btn btn--primary" id="confirm-modal-confirm" type="button">Confirm</button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="/public/settings-page.js?v=__APP_VERSION__"></script>
-</body>
+    <script
+      type="module"
+      src="/public/settings-page.js?v=__APP_VERSION__"
+    ></script>
+  </body>
 </html>

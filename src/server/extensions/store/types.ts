@@ -1,3 +1,5 @@
+import type { ExtensionStoreType } from "../../types";
+
 export interface RepoInfo {
   url: string;
   localPath: string;
@@ -13,7 +15,7 @@ export interface StoreItem {
   repoUrl: string;
   repoSlug: string;
   repoName: string;
-  type: "plugin" | "theme" | "engine";
+  type: ExtensionStoreType;
   path: string;
   name: string;
   description: string;
@@ -33,7 +35,7 @@ export interface StoreItem {
 
 export interface InstalledItem {
   repoUrl: string;
-  type: "plugin" | "theme" | "engine";
+  type: ExtensionStoreType;
   itemPath: string;
   installedAs: string;
   installedAt: string;

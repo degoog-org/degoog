@@ -8,7 +8,8 @@ import {
   asString,
 } from "../../utils/plugin-settings";
 import { debug } from "../../utils/logger";
-import type { SettingField, ExtensionMeta } from "../../types";
+import { type SettingField, type ExtensionMeta, ExtensionStoreType } from "../../types";
+
 
 const THEME_SETTINGS_ID = "theme";
 
@@ -179,7 +180,7 @@ export async function getThemeExtensionMeta(): Promise<ExtensionMeta[]> {
       id: settingsId(theme.id),
       displayName: theme.manifest.name,
       description: theme.manifest.description ?? "Custom theme",
-      type: "theme",
+      type: ExtensionStoreType.Theme,
       configurable: schema.length > 0,
       settingsSchema: schema,
       settings: maskedSettings,

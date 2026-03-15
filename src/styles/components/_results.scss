@@ -175,8 +175,8 @@
   font-size: $font-size-small;
   color: var(--text-secondary);
 
-  @media (min-width: 768px) { padding: 10px 20px 0; }
-  @media (min-width: 1200px) { padding: 10px 150px 0; }
+  @media (min-width: 768px) { padding: 10px 20px }
+  @media (min-width: 1200px) { padding: 10px 150px }
 }
 
 

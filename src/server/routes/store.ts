@@ -20,6 +20,7 @@ import {
   resolveScreenshotPath,
   resolveRepoAssetPath,
 } from "../extensions/store/repo-manager";
+import { ExtensionStoreType } from "../types";
 
 const router = new Hono();
 
@@ -27,10 +28,9 @@ function getStoreToken(c: Context): string | undefined {
   return c.req.header("x-settings-token") ?? c.req.query("token");
 }
 
-const VALID_TYPES = ["plugin", "theme", "engine"] as const;
-type ItemType = (typeof VALID_TYPES)[number];
+const VALID_TYPES: ExtensionStoreType[] = Object.values(ExtensionStoreType);
 
-function isValidType(type: string): type is ItemType {
+function isValidType(type: string): type is ExtensionStoreType {
   return (VALID_TYPES as readonly string[]).includes(type);
 }
 
@@ -241,13 +241,17 @@ router.get(
     if (!(await validateSettingsToken(getStoreToken(c))))
       return c.json({ error: "Unauthorized" }, 401);
     const repoSlug = c.req.param("repoSlug");
-    const type = c.req.param("type");
+    const typeParam = c.req.param("type");
+    if (!isValidType(typeParam)) {
+      return c.json({ error: "Invalid type" }, 400);
+    }
+    const type = typeParam;
     const item = c.req.param("item");
     const filename = c.req.param("filename");
     const itemPath =
-      type === "plugin"
+      type === ExtensionStoreType.Plugin
         ? `plugins/${item}`
-        : type === "theme"
+        : type === ExtensionStoreType.Theme
           ? `themes/${item}`
           : `engines/${item}`;
     const resolved = resolveScreenshotPath(repoSlug, itemPath, filename);

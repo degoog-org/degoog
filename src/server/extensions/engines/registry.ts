@@ -1,8 +1,9 @@
-import type {
-  SearchEngine,
-  SearchType,
-  EngineConfig,
-  ExtensionMeta,
+import {
+  type SearchEngine,
+  type SearchType,
+  type EngineConfig,
+  type ExtensionMeta,
+  ExtensionStoreType,
 } from "../../types";
 import {
   getSettings,
@@ -323,7 +324,7 @@ export async function getEngineExtensionMeta(): Promise<ExtensionMeta[]> {
       id: def.id,
       displayName: def.displayName,
       description: `${def.searchType} search engine`,
-      type: "engine",
+      type: ExtensionStoreType.Engine,
       configurable: schema.length > 0,
       settingsSchema: schema,
       settings: maskedSettings,
