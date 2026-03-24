@@ -14,4 +14,5 @@ export const state: AppState = {
   currentTimeFilter: "any",
   mediaLoading: false,
   currentBangQuery: "",
+  openInNewTab: false,
 };
