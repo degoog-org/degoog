@@ -1,5 +1,6 @@
 import type {
   SearchEngine,
+  ImageFilters,
   SearchResult,
   TimeFilter,
   EngineContext,
@@ -23,6 +24,75 @@ interface GoogleImageResult {
   };
 }
 
+function buildGoogleImageTbs(
+  timeFilter?: TimeFilter,
+  imageFilters?: ImageFilters,
+): string | null {
+  const parts: string[] = [];
+  const timeTbs = resolveGoogleTbs(timeFilter);
+  if (timeTbs) parts.push(timeTbs);
+
+  if (imageFilters) {
+    const sizeMap: Record<string, string> = {
+      icon: "isz:i",
+      medium: "isz:m",
+      large: "isz:l",
+      wallpaper: "isz:lt,islt:xga",
+    };
+    const colorMap: Record<string, string> = {
+      color: "ic:color",
+      grayscale: "ic:gray",
+      transparent: "ic:trans",
+      red: "ic:specific,isc:red",
+      orange: "ic:specific,isc:orange",
+      yellow: "ic:specific,isc:yellow",
+      green: "ic:specific,isc:green",
+      teal: "ic:specific,isc:teal",
+      blue: "ic:specific,isc:blue",
+      purple: "ic:specific,isc:purple",
+      pink: "ic:specific,isc:pink",
+      white: "ic:specific,isc:white",
+      gray: "ic:specific,isc:gray",
+      black: "ic:specific,isc:black",
+      brown: "ic:specific,isc:brown",
+    };
+    const typeMap: Record<string, string> = {
+      photo: "itp:photo",
+      clipart: "itp:clipart",
+      lineart: "itp:lineart",
+      gif: "itp:animated",
+    };
+    const layoutMap: Record<string, string> = {
+      square: "iar:s",
+      wide: "iar:w",
+      tall: "iar:t",
+    };
+    const licenseMap: Record<string, string> = {
+      "any-cc": "sur:fc",
+      commercial: "sur:fmc",
+      share: "sur:f",
+    };
+
+    if (imageFilters.size !== "any" && sizeMap[imageFilters.size]) {
+      parts.push(sizeMap[imageFilters.size]);
+    }
+    if (imageFilters.color !== "any" && colorMap[imageFilters.color]) {
+      parts.push(colorMap[imageFilters.color]);
+    }
+    if (imageFilters.type !== "any" && typeMap[imageFilters.type]) {
+      parts.push(typeMap[imageFilters.type]);
+    }
+    if (imageFilters.layout !== "any" && layoutMap[imageFilters.layout]) {
+      parts.push(layoutMap[imageFilters.layout]);
+    }
+    if (imageFilters.license !== "any" && licenseMap[imageFilters.license]) {
+      parts.push(licenseMap[imageFilters.license]);
+    }
+  }
+
+  return parts.length > 0 ? parts.join(",") : null;
+}
+
 export class GoogleImagesEngine implements SearchEngine {
   name = "Google Images";
 
@@ -40,7 +110,7 @@ export class GoogleImagesEngine implements SearchEngine {
       async: `_fmt:json,p:1,ijn:${ijn}`,
     });
 
-    const tbs = resolveGoogleTbs(timeFilter);
+    const tbs = buildGoogleImageTbs(timeFilter, context?.imageFilters);
     if (tbs) params.set("tbs", tbs);
 
     const ua = getRandomGsaAgent();
@@ -78,6 +148,9 @@ export class GoogleImagesEngine implements SearchEngine {
           snippet: item.result?.site_title || "",
           source: this.name,
           thumbnail,
+          imageUrl: item.original_image?.url || "",
+          imageWidth: item.original_image?.width,
+          imageHeight: item.original_image?.height,
         });
       }
     }

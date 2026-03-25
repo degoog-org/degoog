@@ -7,9 +7,19 @@ import { initTabs } from "./tabs/tabs";
 import { initMediaPreview } from "./media/media-preview";
 import { initTheme } from "../utils/theme";
 import { initTimeFilter } from "../utils/time-filter";
+import {
+  applyImageFiltersToState,
+  getDefaultImageFilters,
+  initImageFilters,
+  parseImageFiltersFromParams,
+} from "../utils/image-filters";
 
 import { initInstallPrompt } from "../utils/install-prompt";
 import { initSearchBarActions } from "../utils/search-bar-actions";
+import { idbGet } from "../utils/db";
+import { IMAGE_PREVIEW_MODE_KEY } from "../constants";
+import { state } from "../state";
+import type { ImagePreviewMode } from "../types";
 
 function _copyToClipboard(text: string, onSuccess: () => void): void {
   const el = document.createElement("textarea");
@@ -27,7 +37,7 @@ function _copyToClipboard(text: string, onSuccess: () => void): void {
   }
 }
 
-export function init(): void {
+export async function init(): Promise<void> {
   const searchInput = document.getElementById(
     "search-input",
   ) as HTMLInputElement | null;
@@ -71,7 +81,13 @@ export function init(): void {
   initMediaPreview();
   void initTheme();
   initTimeFilter();
+  initImageFilters();
   initInstallPrompt();
+
+  const storedPreviewMode = await idbGet<ImagePreviewMode>(
+    IMAGE_PREVIEW_MODE_KEY,
+  );
+  state.imagePreviewMode = storedPreviewMode === "center" ? "center" : "side";
 
   document.body.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLElement>(".uuid-copy");
@@ -101,6 +117,12 @@ export function init(): void {
   const q = params.get("q");
   const type = params.get("type") || "all";
   const page = parseInt(params.get("page") ?? "1", 10) || 1;
+  state.currentTimeFilter = params.get("time") || "any";
+  applyImageFiltersToState(
+    type === "images"
+      ? parseImageFiltersFromParams(params)
+      : getDefaultImageFilters(),
+  );
   if (q) {
     if (searchInput) searchInput.value = q;
     if (type.startsWith("tab:")) {

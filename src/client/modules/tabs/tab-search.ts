@@ -12,6 +12,7 @@ import { escapeHtml, cleanUrl } from "../../utils/dom";
 import { faviconUrl, proxyImageUrl } from "../../utils/url";
 import { buildPaginationHtml } from "../../utils/pagination";
 import { SlotPanelPosition, type ScoredResult, type SearchResponse } from "../../types";
+import { syncImageToolsBar } from "../../utils/image-filters";
 
 export async function performTabSearch(
   query: string,
@@ -27,6 +28,7 @@ export async function performTabSearch(
 
   showResults();
   setActiveTab(`tab:${tabId}`);
+  syncImageToolsBar();
   closeMediaPreview();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));

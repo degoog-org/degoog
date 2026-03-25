@@ -28,6 +28,7 @@ import {
 } from "./search-utils";
 import { skeletonResults, skeletonGlance } from "../animations/skeleton";
 import { SlotPanelPosition, type Command, type SearchResponse, type ScoredResult } from "../types";
+import { getDefaultImageFilters, syncImageToolsBar } from "./image-filters";
 
 let commandsCache: Command[] | null = null;
 
@@ -93,6 +94,9 @@ export async function performSearch(
   state.imageLastPage = MAX_PAGE;
   state.videoPage = 1;
   state.videoLastPage = MAX_PAGE;
+  if (resolvedType !== "images") {
+    state.currentImageFilters = getDefaultImageFilters();
+  }
   destroyMediaObserver();
 
   const engines = await getEngines();
@@ -100,6 +104,7 @@ export async function performSearch(
 
   showResults();
   setActiveTab(resolvedType);
+  syncImageToolsBar();
   closeMediaPreview();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));
@@ -128,6 +133,19 @@ export async function performSearch(
 
   const urlParams = new URLSearchParams({ q: query });
   if (resolvedType !== "all") urlParams.set("type", resolvedType);
+  if (state.currentTimeFilter && state.currentTimeFilter !== "any") {
+    urlParams.set("time", state.currentTimeFilter);
+  }
+  if (resolvedType === "images") {
+    const filters = state.currentImageFilters;
+    if (filters.size !== "any") urlParams.set("imgSize", filters.size);
+    if (filters.color !== "any") urlParams.set("imgColor", filters.color);
+    if (filters.type !== "any") urlParams.set("imgType", filters.type);
+    if (filters.layout !== "any") urlParams.set("imgLayout", filters.layout);
+    if (filters.license !== "any") {
+      urlParams.set("imgLicense", filters.license);
+    }
+  }
   history.pushState(null, "", `/search?${urlParams.toString()}`);
 
   const commands = await _fetchCommands();
@@ -247,6 +265,7 @@ async function _performBangCommand(
   page = 1,
 ): Promise<void> {
   showResults();
+  syncImageToolsBar();
   closeMediaPreview();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));
@@ -273,6 +292,9 @@ async function _performBangCommand(
 
   const urlParams = new URLSearchParams({ q: query });
   if (page > 1) urlParams.set("page", String(page));
+  if (state.currentTimeFilter && state.currentTimeFilter !== "any") {
+    urlParams.set("time", state.currentTimeFilter);
+  }
   history.pushState(null, "", `/search?${urlParams.toString()}`);
 
   try {
@@ -408,6 +430,16 @@ export async function retryEngine(engineName: string): Promise<void> {
   }
   if (state.currentTimeFilter && state.currentTimeFilter !== "any") {
     params.set("time", state.currentTimeFilter);
+  }
+  if (state.currentType === "images") {
+    const filters = state.currentImageFilters;
+    if (filters.size !== "any") params.set("imgSize", filters.size);
+    if (filters.color !== "any") params.set("imgColor", filters.color);
+    if (filters.type !== "any") params.set("imgType", filters.type);
+    if (filters.layout !== "any") params.set("imgLayout", filters.layout);
+    if (filters.license !== "any") {
+      params.set("imgLicense", filters.license);
+    }
   }
 
   try {

@@ -1,10 +1,19 @@
-import { describe, test, expect } from "bun:test";
-import {
-  aggregateAndScore,
-  mergeNewResults,
-  resolveEngine,
-} from "../../src/server/search";
+import { describe, test, expect, mock, beforeAll } from "bun:test";
 import type { SearchResult, ScoredResult } from "../../src/server/types";
+
+let aggregateAndScore: typeof import("../../src/server/search").aggregateAndScore;
+let mergeNewResults: typeof import("../../src/server/search").mergeNewResults;
+let resolveEngine: typeof import("../../src/server/search").resolveEngine;
+
+beforeAll(async () => {
+  mock.module("cheerio", () => ({
+    load: () => ({})
+  }));
+  const mod = await import("../../src/server/search");
+  aggregateAndScore = mod.aggregateAndScore;
+  mergeNewResults = mod.mergeNewResults;
+  resolveEngine = mod.resolveEngine;
+});
 
 const result = (
   url: string,
@@ -66,6 +75,21 @@ describe("search", () => {
       expect(out.length).toBe(1);
       expect(out[0].snippet).toBe("much longer snippet");
     });
+
+    test("preserves image metadata when merging same URL", () => {
+      const r1 = {
+        ...result("https://x.com", "E1"),
+        imageUrl: "https://img.example/full.jpg",
+        imageWidth: 1600,
+        imageHeight: 900,
+      };
+      const r2 = result("https://x.com", "E2");
+      const out = aggregateAndScore([[r1], [r2]]);
+      expect(out.length).toBe(1);
+      expect(out[0].imageUrl).toBe("https://img.example/full.jpg");
+      expect(out[0].imageWidth).toBe(1600);
+      expect(out[0].imageHeight).toBe(900);
+    });
   });
 
   describe("mergeNewResults", () => {
@@ -89,6 +113,33 @@ describe("search", () => {
       const newResults = [result("https://a.com", "E2")];
       const out = mergeNewResults(existing, newResults);
       expect(out[0].url).toBe("https://a.com");
+    });
+
+    test("keeps existing image metadata when merging new results", () => {
+      const existing = [
+        scored(
+          {
+            ...result("https://a.com", "E1"),
+            imageUrl: "https://img.example/existing.jpg",
+            imageWidth: 800,
+            imageHeight: 600,
+          },
+          5,
+          ["E1"],
+        ),
+      ];
+      const newResults = [
+        {
+          ...result("https://a.com", "E2"),
+          imageUrl: "https://img.example/new.jpg",
+          imageWidth: 1200,
+          imageHeight: 900,
+        },
+      ];
+      const out = mergeNewResults(existing, newResults);
+      expect(out[0].imageUrl).toBe("https://img.example/existing.jpg");
+      expect(out[0].imageWidth).toBe(800);
+      expect(out[0].imageHeight).toBe(600);
     });
   });
 

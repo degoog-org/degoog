@@ -18,6 +18,7 @@ export class BingImagesEngine implements SearchEngine {
   ): Promise<SearchResult[]> {
     const first = (page - 1) * 60;
     let url = `https://www.bing.com/images/search?q=${encodeURIComponent(query)}&count=60&first=${first}`;
+    const qft: string[] = [];
     if (timeFilter && timeFilter !== "any") {
       const freshMap: Record<string, string> = {
         hour: "Hour",
@@ -26,8 +27,67 @@ export class BingImagesEngine implements SearchEngine {
         month: "Month",
         year: "Year",
       };
-      if (freshMap[timeFilter])
-        url += `&qft=+filterui:age-lt${freshMap[timeFilter].toLowerCase()}`;
+      if (freshMap[timeFilter]) {
+        qft.push(`filterui:age-lt${freshMap[timeFilter].toLowerCase()}`);
+      }
+    }
+    const filters = context?.imageFilters;
+    if (filters?.size && filters.size !== "any") {
+      const sizeMap: Record<string, string> = {
+        icon: "filterui:imagesize-small",
+        medium: "filterui:imagesize-medium",
+        large: "filterui:imagesize-large",
+        wallpaper: "filterui:imagesize-wallpaper",
+      };
+      if (sizeMap[filters.size]) qft.push(sizeMap[filters.size]);
+    }
+    if (filters?.color && filters.color !== "any") {
+      const colorMap: Record<string, string> = {
+        color: "filterui:color2-FGcls_COLOR",
+        grayscale: "filterui:color2-FGcls_GRAY",
+        transparent: "filterui:photo-transparent",
+        red: "filterui:color2-FGcls_RED",
+        orange: "filterui:color2-FGcls_ORANGE",
+        yellow: "filterui:color2-FGcls_YELLOW",
+        green: "filterui:color2-FGcls_GREEN",
+        teal: "filterui:color2-FGcls_TEAL",
+        blue: "filterui:color2-FGcls_BLUE",
+        purple: "filterui:color2-FGcls_PURPLE",
+        pink: "filterui:color2-FGcls_PINK",
+        white: "filterui:color2-FGcls_WHITE",
+        gray: "filterui:color2-FGcls_GRAY",
+        black: "filterui:color2-FGcls_BLACK",
+        brown: "filterui:color2-FGcls_BROWN",
+      };
+      if (colorMap[filters.color]) qft.push(colorMap[filters.color]);
+    }
+    if (filters?.type && filters.type !== "any") {
+      const typeMap: Record<string, string> = {
+        photo: "filterui:photo-photo",
+        clipart: "filterui:photo-clipart",
+        lineart: "filterui:photo-lineart",
+        gif: "filterui:photo-animatedgif",
+      };
+      if (typeMap[filters.type]) qft.push(typeMap[filters.type]);
+    }
+    if (filters?.layout && filters.layout !== "any") {
+      const layoutMap: Record<string, string> = {
+        square: "filterui:aspect-square",
+        wide: "filterui:aspect-wide",
+        tall: "filterui:aspect-tall",
+      };
+      if (layoutMap[filters.layout]) qft.push(layoutMap[filters.layout]);
+    }
+    if (filters?.license && filters.license !== "any") {
+      const licenseMap: Record<string, string> = {
+        "any-cc": "filterui:license-L2_L3_L4_L5_L6_L7",
+        commercial: "filterui:license-L2_L3_L4_L5",
+        share: "filterui:license-L2_L3_L6",
+      };
+      if (licenseMap[filters.license]) qft.push(licenseMap[filters.license]);
+    }
+    if (qft.length > 0) {
+      url += `&qft=${encodeURIComponent(qft.map((entry) => `+${entry}`).join(" "))}`;
     }
     const doFetch = context?.fetch ?? fetch;
     const response = await doFetch(url, {
@@ -60,6 +120,19 @@ export class BingImagesEngine implements SearchEngine {
             snippet: data.desc || "",
             source: this.name,
             thumbnail: data.turl,
+            imageUrl: data.murl,
+            imageWidth:
+              typeof data.mw === "number"
+                ? data.mw
+                : typeof data.imgw === "number"
+                  ? data.imgw
+                  : undefined,
+            imageHeight:
+              typeof data.mh === "number"
+                ? data.mh
+                : typeof data.imgh === "number"
+                  ? data.imgh
+                  : undefined,
           });
         }
       } catch {}

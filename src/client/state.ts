@@ -12,6 +12,14 @@ export const state: AppState = {
   videoPage: 1,
   videoLastPage: 10,
   currentTimeFilter: "any",
+  currentImageFilters: {
+    size: "any",
+    color: "any",
+    type: "any",
+    layout: "any",
+    license: "any",
+  },
   mediaLoading: false,
   currentBangQuery: "",
+  imagePreviewMode: "side",
 };

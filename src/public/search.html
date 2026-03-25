@@ -235,6 +235,70 @@
             </div>
           </div>
         </div>
+        <div class="image-tools-bar" id="image-tools-bar" hidden>
+          <label class="image-tools-field">
+            <span>Size</span>
+            <select id="image-filter-size">
+              <option value="any">Any size</option>
+              <option value="icon">Icon</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+              <option value="wallpaper">Wallpaper</option>
+            </select>
+          </label>
+          <label class="image-tools-field">
+            <span>Color</span>
+            <select id="image-filter-color">
+              <option value="any">All colors</option>
+              <option value="color">Full color</option>
+              <option value="grayscale">Black and white</option>
+              <option value="transparent">Transparent</option>
+              <option value="red">Red</option>
+              <option value="orange">Orange</option>
+              <option value="yellow">Yellow</option>
+              <option value="green">Green</option>
+              <option value="teal">Teal</option>
+              <option value="blue">Blue</option>
+              <option value="purple">Purple</option>
+              <option value="pink">Pink</option>
+              <option value="white">White</option>
+              <option value="gray">Gray</option>
+              <option value="black">Black</option>
+              <option value="brown">Brown</option>
+            </select>
+          </label>
+          <label class="image-tools-field">
+            <span>Type</span>
+            <select id="image-filter-type">
+              <option value="any">All types</option>
+              <option value="photo">Photo</option>
+              <option value="clipart">Clip art</option>
+              <option value="lineart">Line art</option>
+              <option value="gif">GIF</option>
+            </select>
+          </label>
+          <label class="image-tools-field">
+            <span>Layout</span>
+            <select id="image-filter-layout">
+              <option value="any">All layouts</option>
+              <option value="square">Square</option>
+              <option value="wide">Wide</option>
+              <option value="tall">Tall</option>
+            </select>
+          </label>
+          <label class="image-tools-field">
+            <span>License</span>
+            <select id="image-filter-license">
+              <option value="any">Any license</option>
+              <option value="any-cc">Creative Commons</option>
+              <option value="commercial">Commercial use</option>
+              <option value="share">Sharing allowed</option>
+            </select>
+          </label>
+          <button class="image-tools-clear" id="image-filter-clear" type="button">
+            Reset
+          </button>
+        </div>
         <div class="results-meta" id="results-meta"></div>
         <div class="results-layout">
           <div class="results-main">
@@ -308,6 +372,63 @@
               </button>
             </div>
             <div class="media-preview-info" id="media-preview-info"></div>
+          </div>
+        </div>
+          <div class="media-lightbox" id="media-lightbox" aria-hidden="true">
+          <div class="media-lightbox-backdrop" id="media-lightbox-backdrop"></div>
+          <div class="media-lightbox-dialog" role="dialog" aria-modal="true">
+            <button
+              class="media-lightbox-close"
+              id="media-lightbox-close"
+              type="button"
+              aria-label="Close image viewer"
+            >
+              &times;
+            </button>
+            <div class="media-lightbox-stage" id="media-lightbox-stage">
+              <button
+                class="media-lightbox-nav media-lightbox-prev"
+                id="media-lightbox-prev"
+                type="button"
+                aria-label="Previous image"
+              >
+                &#8249;
+              </button>
+              <img
+                class="media-lightbox-img"
+                id="media-lightbox-img"
+                src=""
+                alt=""
+                draggable="false"
+              />
+              <button
+                class="media-lightbox-nav media-lightbox-next"
+                id="media-lightbox-next"
+                type="button"
+                aria-label="Next image"
+              >
+                &#8250;
+              </button>
+              <div class="media-lightbox-zoom" id="media-lightbox-zoom">
+                <button
+                  class="media-lightbox-zoom-btn"
+                  id="media-lightbox-zoom-out"
+                  type="button"
+                  aria-label="Zoom out"
+                >
+                  -
+                </button>
+                <button
+                  class="media-lightbox-zoom-btn"
+                  id="media-lightbox-zoom-in"
+                  type="button"
+                  aria-label="Zoom in"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div class="media-lightbox-info" id="media-lightbox-info"></div>
           </div>
         </div>
       </div>

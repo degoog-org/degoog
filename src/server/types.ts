@@ -5,6 +5,53 @@ export interface SearchResult {
   source: string;
   thumbnail?: string;
   duration?: string;
+  imageUrl?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+}
+
+export type ImageSizeFilter =
+  | "any"
+  | "icon"
+  | "medium"
+  | "large"
+  | "wallpaper";
+export type ImageColorFilter =
+  | "any"
+  | "color"
+  | "grayscale"
+  | "transparent"
+  | "red"
+  | "orange"
+  | "yellow"
+  | "green"
+  | "teal"
+  | "blue"
+  | "purple"
+  | "pink"
+  | "white"
+  | "gray"
+  | "black"
+  | "brown";
+export type ImageTypeFilter =
+  | "any"
+  | "photo"
+  | "clipart"
+  | "lineart"
+  | "gif";
+export type ImageLayoutFilter = "any" | "square" | "wide" | "tall";
+export type ImageLicenseFilter =
+  | "any"
+  | "any-cc"
+  | "commercial"
+  | "share";
+
+export interface ImageFilters {
+  size: ImageSizeFilter;
+  color: ImageColorFilter;
+  type: ImageTypeFilter;
+  layout: ImageLayoutFilter;
+  license: ImageLicenseFilter;
 }
 
 export enum ExtensionStoreType {
@@ -47,6 +94,7 @@ export type EngineFetch = (
 
 export interface EngineContext {
   fetch: EngineFetch;
+  imageFilters?: ImageFilters;
 }
 
 export interface SearchEngine {

@@ -8,6 +8,7 @@ import type {
   EngineTiming,
   KnowledgePanel,
   TimeFilter,
+  ImageFilters,
 } from "./types";
 import {
   getEngineMap,
@@ -52,6 +53,15 @@ const _mergeIntoMap = (
       }
       if (r.thumbnail && !existing.thumbnail) {
         existing.thumbnail = r.thumbnail;
+      }
+      if (r.imageUrl && !existing.imageUrl) {
+        existing.imageUrl = r.imageUrl;
+      }
+      if (r.imageWidth && !existing.imageWidth) {
+        existing.imageWidth = r.imageWidth;
+      }
+      if (r.imageHeight && !existing.imageHeight) {
+        existing.imageHeight = r.imageHeight;
       }
     } else {
       urlMap.set(normalized, {
@@ -190,6 +200,7 @@ export const searchSingleEngine = async (
   query: string,
   page: number = 1,
   timeFilter: TimeFilter = "any",
+  imageFilters?: ImageFilters,
 ): Promise<{ results: SearchResult[]; timing: EngineTiming }> => {
   const engine = resolveEngine(engineName);
   if (!engine) {
@@ -200,7 +211,7 @@ export const searchSingleEngine = async (
   }
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
   const t0 = performance.now();
-  const engineContext = { fetch: outgoingFetch };
+  const engineContext = { fetch: outgoingFetch, imageFilters };
   try {
     const results = await _withTimeout(
       engine.executeSearch(query, p, timeFilter, engineContext),
@@ -226,6 +237,7 @@ export const search = async (
   type: SearchType = "all",
   page: number = 1,
   timeFilter: TimeFilter = "any",
+  imageFilters?: ImageFilters,
 ): Promise<SearchResponse> => {
   const start = performance.now();
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
@@ -250,7 +262,7 @@ export const search = async (
 
   const engineStarts = activeEngines.map(() => performance.now());
 
-  const engineContext = { fetch: outgoingFetch };
+  const engineContext = { fetch: outgoingFetch, imageFilters };
   const settled = await Promise.allSettled(
     activeEngines.map(async (engine, i) => {
       engineStarts[i] = performance.now();

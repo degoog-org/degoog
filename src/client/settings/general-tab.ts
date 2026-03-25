@@ -1,8 +1,9 @@
 import { idbGet, idbSet } from "../utils/db";
-import { THEME_KEY } from "../constants";
+import { IMAGE_PREVIEW_MODE_KEY, THEME_KEY } from "../constants";
 import { applyTheme } from "../utils/theme";
 import { requestInstallPrompt } from "../utils/install-prompt";
 import { authHeaders, jsonHeaders } from "../utils/request";
+import type { ImagePreviewMode } from "../types";
 
 export async function initThemeSelectOnly(): Promise<void> {
   const themeSelect = document.getElementById(
@@ -30,6 +31,18 @@ export async function initGeneralTab(
   if (themeSelect) {
     const saved = await idbGet<string>(THEME_KEY);
     themeSelect.value = saved || "system";
+  }
+
+  const imagePreviewModeSelect = document.getElementById(
+    "image-preview-mode",
+  ) as HTMLSelectElement | null;
+  if (imagePreviewModeSelect) {
+    const savedMode = await idbGet<ImagePreviewMode>(IMAGE_PREVIEW_MODE_KEY);
+    imagePreviewModeSelect.value = savedMode === "center" ? "center" : "side";
+    imagePreviewModeSelect.addEventListener("change", async () => {
+      const value = imagePreviewModeSelect.value === "center" ? "center" : "side";
+      await idbSet(IMAGE_PREVIEW_MODE_KEY, value);
+    });
   }
 
   const proxyEnabled = document.getElementById(
@@ -137,6 +150,11 @@ export async function initGeneralTab(
           localStorage.setItem(THEME_KEY, value);
         } catch {}
         applyTheme(value);
+      }
+      if (imagePreviewModeSelect) {
+        const value =
+          imagePreviewModeSelect.value === "center" ? "center" : "side";
+        await idbSet(IMAGE_PREVIEW_MODE_KEY, value);
       }
       if (proxyEnabled && proxyUrls) {
         try {

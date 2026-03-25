@@ -9,6 +9,7 @@ import {
 } from "../../src/client/constants";
 import { state } from "../../src/client/state";
 import { initTimeFilter } from "../../src/client/utils/time-filter";
+import { initImageFilters } from "../../src/client/utils/image-filters";
 
 describe("public/constants", () => {
   test("DB_NAME is string", () => {
@@ -36,11 +37,17 @@ describe("public/state", () => {
     expect(state).toHaveProperty("currentType", "all");
     expect(state).toHaveProperty("currentPage", 1);
     expect(state).toHaveProperty("currentTimeFilter", "any");
+    expect(state).toHaveProperty("currentImageFilters");
+    expect(state).toHaveProperty("imagePreviewMode", "side");
   });
 });
 
 describe("public/timeFilter", () => {
   test("initTimeFilter is function", () => {
     expect(typeof initTimeFilter).toBe("function");
+  });
+
+  test("initImageFilters is function", () => {
+    expect(typeof initImageFilters).toBe("function");
   });
 });

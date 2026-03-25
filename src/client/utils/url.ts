@@ -33,5 +33,13 @@ export const buildSearchUrl = (
   if (state.currentTimeFilter && state.currentTimeFilter !== "any") {
     params.set("time", state.currentTimeFilter);
   }
+  if (type === "images") {
+    const filters = state.currentImageFilters;
+    if (filters.size !== "any") params.set("imgSize", filters.size);
+    if (filters.color !== "any") params.set("imgColor", filters.color);
+    if (filters.type !== "any") params.set("imgType", filters.type);
+    if (filters.layout !== "any") params.set("imgLayout", filters.layout);
+    if (filters.license !== "any") params.set("imgLicense", filters.license);
+  }
   return `/api/search?${params.toString()}`;
 };

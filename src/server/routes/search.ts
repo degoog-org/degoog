@@ -19,6 +19,7 @@ import {
   SLOT_POSITION_SETTING_KEY,
   SlotPanelPosition,
   type EngineConfig,
+  type ImageFilters,
   type SlotPluginContext,
   type SearchType,
   type TimeFilter,
@@ -63,9 +64,65 @@ function cacheKey(
   type: SearchType,
   page: number,
   timeFilter: TimeFilter = "any",
+  imageFilters?: ImageFilters,
 ): string {
   const q = query.trim().toLowerCase();
-  return `${q}|${JSON.stringify(engines)}|${type}|${page}|${timeFilter}`;
+  return `${q}|${JSON.stringify(engines)}|${type}|${page}|${timeFilter}|${JSON.stringify(imageFilters ?? null)}`;
+}
+
+function parseImageFilters(query: URLSearchParams): ImageFilters {
+  const read = <T extends string>(
+    name: string,
+    fallback: T,
+    allowed: readonly T[],
+  ): T => {
+    const value = query.get(name);
+    return allowed.includes((value ?? fallback) as T)
+      ? ((value ?? fallback) as T)
+      : fallback;
+  };
+
+  return {
+    size: read("imgSize", "any", [
+      "any",
+      "icon",
+      "medium",
+      "large",
+      "wallpaper",
+    ]),
+    color: read("imgColor", "any", [
+      "any",
+      "color",
+      "grayscale",
+      "transparent",
+      "red",
+      "orange",
+      "yellow",
+      "green",
+      "teal",
+      "blue",
+      "purple",
+      "pink",
+      "white",
+      "gray",
+      "black",
+      "brown",
+    ]),
+    type: read("imgType", "any", [
+      "any",
+      "photo",
+      "clipart",
+      "lineart",
+      "gif",
+    ]),
+    layout: read("imgLayout", "any", ["any", "square", "wide", "tall"]),
+    license: read("imgLicense", "any", [
+      "any",
+      "any-cc",
+      "commercial",
+      "share",
+    ]),
+  };
 }
 
 async function runSlotPlugins(
@@ -125,14 +182,29 @@ router.get("/api/search", async (c) => {
     Math.min(10, Math.floor(Number(c.req.query("page"))) || 1),
   );
   const timeFilter = (c.req.query("time") || "any") as TimeFilter;
-  const key = cacheKey(query, engines, searchType, page, timeFilter);
+  const imageFilters = parseImageFilters(new URL(c.req.url).searchParams);
+  const key = cacheKey(
+    query,
+    engines,
+    searchType,
+    page,
+    timeFilter,
+    imageFilters,
+  );
 
   const cached = cache.get(key);
   let response: SearchResponse;
   if (cached) {
     response = cached;
   } else {
-    response = await search(query, engines, searchType, page, timeFilter);
+    response = await search(
+      query,
+      engines,
+      searchType,
+      page,
+      timeFilter,
+      imageFilters,
+    );
     const ttl = cache.hasFailedEngines(response)
       ? cache.SHORT_TTL_MS
       : searchType === "news"
@@ -223,14 +295,23 @@ router.get("/api/search/retry", async (c) => {
     Math.min(10, Math.floor(Number(c.req.query("page"))) || 1),
   );
   const timeFilter = (c.req.query("time") || "any") as TimeFilter;
+  const imageFilters = parseImageFilters(new URL(c.req.url).searchParams);
 
   const { results: newResults, timing } = await searchSingleEngine(
     engineName,
     query,
     page,
     timeFilter,
+    imageFilters,
   );
-  const key = cacheKey(query, engines, searchType, page, timeFilter);
+  const key = cacheKey(
+    query,
+    engines,
+    searchType,
+    page,
+    timeFilter,
+    imageFilters,
+  );
   const cached = cache.get(key);
 
   if (cached) {

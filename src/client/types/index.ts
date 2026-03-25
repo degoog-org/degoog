@@ -5,7 +5,56 @@ export interface SearchResult {
   source: string;
   thumbnail?: string;
   duration?: string;
+  imageUrl?: string;
+  imageWidth?: number;
+  imageHeight?: number;
 }
+
+export type ImageSizeFilter =
+  | "any"
+  | "icon"
+  | "medium"
+  | "large"
+  | "wallpaper";
+export type ImageColorFilter =
+  | "any"
+  | "color"
+  | "grayscale"
+  | "transparent"
+  | "red"
+  | "orange"
+  | "yellow"
+  | "green"
+  | "teal"
+  | "blue"
+  | "purple"
+  | "pink"
+  | "white"
+  | "gray"
+  | "black"
+  | "brown";
+export type ImageTypeFilter =
+  | "any"
+  | "photo"
+  | "clipart"
+  | "lineart"
+  | "gif";
+export type ImageLayoutFilter = "any" | "square" | "wide" | "tall";
+export type ImageLicenseFilter =
+  | "any"
+  | "any-cc"
+  | "commercial"
+  | "share";
+
+export interface ImageFilters {
+  size: ImageSizeFilter;
+  color: ImageColorFilter;
+  type: ImageTypeFilter;
+  layout: ImageLayoutFilter;
+  license: ImageLicenseFilter;
+}
+
+export type ImagePreviewMode = "side" | "center";
 
 export interface ScoredResult extends SearchResult {
   score: number;
@@ -74,8 +123,10 @@ export interface AppState {
   videoPage: number;
   videoLastPage: number;
   currentTimeFilter: string;
+  currentImageFilters: ImageFilters;
   mediaLoading: boolean;
   currentBangQuery: string;
+  imagePreviewMode: ImagePreviewMode;
 }
 
 export type SettingFieldType =
