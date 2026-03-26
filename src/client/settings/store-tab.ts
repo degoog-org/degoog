@@ -366,7 +366,8 @@ export async function initStoreTab(
     const typeLabel = storeItemTypeLabel(item);
     const subLabel = storeItemSubtypeLabel(item);
     const heroUrls = storeItemScreenshotUrls(item, getToken);
-    const heroHtml = heroUrls.length
+    const hasHeroImage = heroUrls.length > 0;
+    const heroHtml = hasHeroImage
       ? `<img class="store-detail-hero-img" src="${escapeHtml(heroUrls[0])}" alt="${escapeHtml(item.name)}">`
       : `<div class="store-detail-hero-placeholder"><span class="store-detail-hero-placeholder-kicker">${escapeHtml(typeLabel)}</span><span class="store-detail-hero-placeholder-title">${escapeHtml(item.repoName)}</span></div>`;
     const author = item.author
@@ -383,7 +384,7 @@ export async function initStoreTab(
 
     return `
       <div class="store-detail-panel" data-detail-key="${escapeHtml(detailKey)}">
-        <div class="store-detail-hero">${heroHtml}</div>
+        <div class="store-detail-hero ${hasHeroImage ? "store-detail-hero--image" : "store-detail-hero--placeholder"}">${heroHtml}</div>
         <div class="store-detail-copy">
           <div class="store-detail-heading-row">
             <div class="store-detail-heading-copy">
