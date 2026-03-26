@@ -86,10 +86,10 @@
 
 .media-preview-panel {
   position: fixed;
-  top: 16px;
+  top: var(--media-preview-panel-top, 16px);
   right: 16px;
   width: min(420px, calc(100vw - 32px));
-  height: calc(100dvh - 32px);
+  height: var(--media-preview-panel-height, calc(100dvh - 32px));
   padding: 68px 18px 18px;
   box-sizing: border-box;
   background: var(--bg);
@@ -105,7 +105,7 @@
   transform: translateX(calc(100% + 32px));
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
     opacity $transition-fast;
-  overflow: hidden;
+  overflow: visible;
   overscroll-behavior: contain;
   z-index: 340;
   isolation: isolate;
@@ -179,6 +179,7 @@
   border-radius: 22px;
   overflow: hidden;
   flex: 0 0 auto;
+  z-index: 1;
 }
 
 .media-preview-nav {
@@ -233,6 +234,12 @@
   padding: 22px;
   border-radius: 22px;
   cursor: zoom-in;
+  opacity: 1;
+  transition: opacity $transition-fast;
+
+  &.is-loading {
+    opacity: 0.62;
+  }
 
   @media (max-width: 767px) {
     max-height: 40vh;
@@ -260,7 +267,10 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: visible;
   padding: 2px 4px 0 2px;
+  position: relative;
+  z-index: 4;
 
   @media (max-width: 767px) {
     padding: 0 2px;
@@ -374,7 +384,7 @@
   transform: translateY(-6px);
   pointer-events: none;
   transition: opacity $transition-fast, transform $transition-fast;
-  z-index: 3;
+  z-index: 12;
 
   @media (max-width: 767px) {
     min-width: min(240px, calc(100vw - 48px));

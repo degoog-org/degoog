@@ -5,11 +5,11 @@ import { openMediaPreview, registerAppendMediaCards } from "../media/media";
 import { setupRetryLinks } from "./render-sidebar";
 import type { ScoredResult, EngineTiming } from "../../types";
 
-const _getImageColumnCount = (): number => {
-  const w = window.innerWidth;
-  if (w <= 800) return 3;
-  if (w <= 1100) return 4;
-  if (w <= 1400) return 5;
+const _getImageColumnCount = (width: number): number => {
+  if (width <= 520) return 2;
+  if (width <= 760) return 3;
+  if (width <= 980) return 4;
+  if (width <= 1180) return 5;
   return 6;
 };
 
@@ -21,7 +21,9 @@ const _shortestColumn = (columns: HTMLElement[]): HTMLElement =>
   });
 
 function _ensureImageColumns(grid: HTMLElement): void {
-  const count = _getImageColumnCount();
+  const count = _getImageColumnCount(
+    Math.max(grid.getBoundingClientRect().width, window.innerWidth),
+  );
   const existing = grid.querySelectorAll(".image-column").length;
   if (existing === count) return;
 
@@ -52,6 +54,7 @@ function _handleResize(): void {
 }
 
 let _resizeListenerAdded = false;
+let _layoutListenerAdded = false;
 
 export function appendMediaCards(
   grid: HTMLElement,
@@ -90,6 +93,10 @@ export function appendMediaCards(
     if (!_resizeListenerAdded) {
       window.addEventListener("resize", _handleResize);
       _resizeListenerAdded = true;
+    }
+    if (!_layoutListenerAdded) {
+      window.addEventListener("degoog-media-layout", _handleResize);
+      _layoutListenerAdded = true;
     }
   } else {
     const fragment = document.createDocumentFragment();
