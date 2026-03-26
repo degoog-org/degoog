@@ -69,6 +69,8 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
+  opacity: 1;
   font-family: $font-family;
   padding: 14px 44px 14px 16px;
   cursor: pointer;
@@ -223,6 +225,8 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
+  opacity: 1;
   font-size: $font-size-base;
   font-family: $font-family;
   padding: 8px 12px;

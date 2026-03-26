@@ -2,6 +2,7 @@ import { state } from "../../state";
 import { getEngines } from "../../utils/engines";
 import { buildSearchUrl, proxyImageUrl } from "../../utils/url";
 import { escapeHtml, cleanHostname } from "../../utils/dom";
+import { getVideoEmbedUrl } from "../../utils/video-embed";
 import type { ScoredResult } from "../../types";
 
 let mediaObserver: IntersectionObserver | null = null;
@@ -24,8 +25,12 @@ let dragStartY = 0;
 let pointerOriginX = 0;
 let pointerOriginY = 0;
 let lightboxCloseTimer: ReturnType<typeof setTimeout> | null = null;
+let lightboxDidDrag = false;
+let lightboxSuppressStageClickUntil = 0;
+let lightboxImageRequestToken = 0;
 
 const LIGHTBOX_CLOSE_MS = 180;
+const LIGHTBOX_DRAG_THRESHOLD = 6;
 const MIN_LIGHTBOX_SCALE = 0.75;
 const MAX_LIGHTBOX_SCALE = 6;
 export function registerAppendMediaCards(
@@ -120,8 +125,10 @@ export function openMediaPreview(
   currentCardSelector = cardSelector;
   _selectCard(idx, cardSelector);
 
-  if (_canUseImageLightbox(item) &&
-      (options.forceLightbox || state.imagePreviewMode === "center")) {
+  if (
+    _canUseLightbox(item) &&
+    (options.forceLightbox || state.imagePreviewMode === "center")
+  ) {
     _closeSidePanel();
     _openMediaLightbox(item);
     return;
@@ -158,7 +165,7 @@ export function closeMediaPreview(): void {
 
 export function openCurrentMediaLightbox(): void {
   const item = _getCurrentItem();
-  if (!item || !_canUseImageLightbox(item)) return;
+  if (!item || !_canUseLightbox(item)) return;
   _openMediaLightbox(item);
 }
 
@@ -166,6 +173,13 @@ export function closeMediaLightbox(
   options: { immediate?: boolean; preserveSelection?: boolean } = {},
 ): void {
   const lightbox = document.getElementById("media-lightbox");
+  const stage = document.getElementById("media-lightbox-stage");
+  const img = document.getElementById(
+    "media-lightbox-img",
+  ) as HTMLImageElement | null;
+  const video = document.getElementById(
+    "media-lightbox-video",
+  ) as HTMLIFrameElement | null;
   if (!lightbox?.classList.contains("open")) {
     if (!options.preserveSelection && !_isSidePanelOpen()) _clearCardSelection();
     return;
@@ -177,8 +191,19 @@ export function closeMediaLightbox(
   }
 
   const finish = (): void => {
-    lightbox.classList.remove("open", "closing");
+    lightboxImageRequestToken += 1;
+    lightbox.classList.remove("open", "closing", "media-lightbox--video");
     lightbox.setAttribute("aria-hidden", "true");
+    stage?.classList.remove("is-loading");
+    img?.classList.remove("is-loading");
+    if (img) {
+      img.hidden = false;
+      img.removeAttribute("src");
+    }
+    if (video) {
+      video.hidden = true;
+      video.src = "";
+    }
     _unlockBodyScroll();
     if (!options.preserveSelection && !_isSidePanelOpen()) {
       _clearCardSelection();
@@ -204,6 +229,7 @@ export function isMediaLightboxOpen(): boolean {
 }
 
 export function zoomMediaLightbox(delta: number): void {
+  if (!_isImageLightboxOpen()) return;
   const nextScale = Math.min(
     MAX_LIGHTBOX_SCALE,
     Math.max(MIN_LIGHTBOX_SCALE, lightboxScale + delta),
@@ -222,28 +248,56 @@ export function startMediaLightboxDrag(
   dragStartY = lightboxY;
   pointerOriginX = event.clientX;
   pointerOriginY = event.clientY;
+  lightboxDidDrag = false;
   target.setPointerCapture(event.pointerId);
   target.classList.add("dragging");
 }
 
 export function updateMediaLightboxDrag(event: PointerEvent): void {
   if (activePointerId !== event.pointerId) return;
+  if (
+    !lightboxDidDrag &&
+    Math.hypot(event.clientX - pointerOriginX, event.clientY - pointerOriginY) >=
+      LIGHTBOX_DRAG_THRESHOLD
+  ) {
+    lightboxDidDrag = true;
+  }
   lightboxX = dragStartX + (event.clientX - pointerOriginX);
   lightboxY = dragStartY + (event.clientY - pointerOriginY);
   _applyLightboxTransform();
 }
 
 export function endMediaLightboxDrag(target?: HTMLElement): void {
+  if (lightboxDidDrag) {
+    lightboxSuppressStageClickUntil = Date.now() + 220;
+  }
   _stopDrag();
   target?.classList.remove("dragging");
 }
 
-export async function runMediaAction(action: string): Promise<void> {
+export function shouldSuppressMediaLightboxStageClick(): boolean {
+  if (lightboxSuppressStageClickUntil <= Date.now()) return false;
+  lightboxSuppressStageClickUntil = 0;
+  return true;
+}
+
+export async function runMediaAction(
+  action: string,
+  trigger?: HTMLElement,
+): Promise<void> {
   const item = _getCurrentItem();
   if (!item) return;
 
+  if (action === "big-screen") {
+    if (_canUseLightbox(item)) {
+      _closeSidePanel();
+      _openMediaLightbox(item);
+    }
+    return;
+  }
   if (action === "share") {
     await _copyDestinationUrl(item.url);
+    _flashCopiedState(trigger);
     return;
   }
   if (action === "download") {
@@ -253,6 +307,10 @@ export async function runMediaAction(action: string): Promise<void> {
   if (action === "open-image") {
     const rawUrl = _getRawImageUrl(item);
     if (rawUrl) window.open(rawUrl, "_blank", "noopener");
+    return;
+  }
+  if (action === "open-video") {
+    window.open(item.url, "_blank", "noopener");
   }
 }
 
@@ -270,25 +328,44 @@ function _renderSidePreview(item: ScoredResult): void {
   const img = document.getElementById(
     "media-preview-img",
   ) as HTMLImageElement | null;
+  const video = document.getElementById(
+    "media-preview-video",
+  ) as HTMLIFrameElement | null;
   const info = document.getElementById("media-preview-info");
+  const videoEmbedUrl = _getVideoEmbedPreviewUrl(item);
 
   if (img) {
-    img.src = _getPreviewImageUrl(item);
-    img.alt = item.title;
+    img.hidden = !!videoEmbedUrl;
+    if (videoEmbedUrl) {
+      img.removeAttribute("src");
+    } else {
+      img.src = _getPreviewImageUrl(item);
+      img.alt = item.title;
+    }
+  }
+  if (video) {
+    video.hidden = !videoEmbedUrl;
+    video.src = videoEmbedUrl;
+    video.title = item.title;
   }
   if (info) info.innerHTML = _buildPreviewInfoHtml(item, "panel");
 
+  panel?.classList.toggle("media-preview-panel--video", !!videoEmbedUrl);
   panel?.classList.add("open");
   _updateNavButtons();
 }
 
 function _openMediaLightbox(item: ScoredResult): void {
   const lightbox = document.getElementById("media-lightbox");
+  const stage = document.getElementById("media-lightbox-stage");
   const img = document.getElementById(
     "media-lightbox-img",
   ) as HTMLImageElement | null;
+  const video = document.getElementById(
+    "media-lightbox-video",
+  ) as HTMLIFrameElement | null;
   const info = document.getElementById("media-lightbox-info");
-  if (!lightbox || !img || !info) return;
+  if (!lightbox || !stage || !img || !video || !info) return;
 
   if (lightboxCloseTimer) {
     clearTimeout(lightboxCloseTimer);
@@ -300,11 +377,51 @@ function _openMediaLightbox(item: ScoredResult): void {
   lightbox.setAttribute("aria-hidden", "false");
   _lockBodyScroll();
 
-  img.src = _getPreviewImageUrl(item);
-  img.alt = item.title;
   info.innerHTML = _buildPreviewInfoHtml(item, "lightbox");
-  _resetLightboxTransform();
   _updateNavButtons();
+
+  const videoEmbedUrl = _getVideoEmbedLightboxUrl(item);
+  if (videoEmbedUrl) {
+    lightbox.classList.add("media-lightbox--video");
+    stage.classList.remove("is-loading");
+    img.classList.remove("is-loading");
+    img.hidden = true;
+    img.removeAttribute("src");
+    video.hidden = false;
+    video.src = videoEmbedUrl;
+    video.title = item.title;
+    _resetLightboxTransform();
+    return;
+  }
+
+  lightbox.classList.remove("media-lightbox--video");
+  video.hidden = true;
+  video.src = "";
+  img.hidden = false;
+  img.alt = item.title;
+  _resetLightboxTransform();
+
+  const previewUrl = _getPreviewImageUrl(item);
+  const requestToken = ++lightboxImageRequestToken;
+
+  stage.classList.add("is-loading");
+  img.classList.add("is-loading");
+  img.removeAttribute("src");
+
+  const preloader = new Image();
+  preloader.decoding = "async";
+  const applyImage = (): void => {
+    if (requestToken !== lightboxImageRequestToken) return;
+    img.src = previewUrl;
+    img.alt = item.title;
+    img.classList.remove("is-loading");
+    stage.classList.remove("is-loading");
+    _resetLightboxTransform();
+  };
+
+  preloader.addEventListener("load", applyImage, { once: true });
+  preloader.addEventListener("error", applyImage, { once: true });
+  preloader.src = previewUrl;
 }
 
 function _buildPreviewInfoHtml(
@@ -315,13 +432,15 @@ function _buildPreviewInfoHtml(
   const dimensionsHtml = dimensions
     ? `<span class="media-preview-dimensions">${escapeHtml(dimensions)}</span>`
     : "";
-  const relatedHtml =
-    state.currentType === "images"
-      ? _buildRelatedImagesHtml(variant)
+  const durationHtml =
+    item.duration && _isVideoResult()
+      ? `<span class="media-preview-dimensions">${escapeHtml(item.duration)}</span>`
       : "";
+  const relatedHtml =
+    _isImageResult() || _isVideoResult() ? _buildRelatedMediaHtml(variant) : "";
 
   const actionsHtml =
-    state.currentType === "images"
+    _isImageResult()
       ? `
         <div class="media-preview-actions">
           <a class="media-preview-visit" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">Visit page</a>
@@ -337,6 +456,24 @@ function _buildPreviewInfoHtml(
           </div>
         </div>
       `
+      : _isVideoResult()
+        ? `
+        <div class="media-preview-actions">
+          <a class="media-preview-visit" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">Visit page</a>
+          <button class="media-action-btn" type="button" data-action="share">Share</button>
+          ${
+            variant === "panel" && _canUseVideoLightbox(item)
+              ? '<button class="media-action-btn" type="button" data-action="big-screen">Big screen</button>'
+              : ""
+          }
+          <div class="media-action-menu-wrap">
+            <button class="media-action-btn media-action-btn--icon media-menu-toggle" type="button" aria-label="More actions">⋯</button>
+            <div class="media-action-menu">
+              <button class="media-action-menu-item" type="button" data-action="open-video">Open video in new tab</button>
+            </div>
+          </div>
+        </div>
+      `
       : `<a class="media-preview-visit" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">Visit page</a>`;
 
   return `
@@ -345,6 +482,7 @@ function _buildPreviewInfoHtml(
       <a class="media-preview-link" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">${escapeHtml(cleanHostname(item.url))}</a>
       <div class="media-preview-meta">
         ${dimensionsHtml}
+        ${durationHtml}
         ${item.snippet ? `<span class="media-preview-site">${escapeHtml(item.snippet)}</span>` : ""}
       </div>
       ${actionsHtml}
@@ -353,13 +491,14 @@ function _buildPreviewInfoHtml(
   `;
 }
 
-function _buildRelatedImagesHtml(variant: "panel" | "lightbox"): string {
-  const related = _getRelatedImages();
+function _buildRelatedMediaHtml(variant: "panel" | "lightbox"): string {
+  const related = _getRelatedMedia();
   if (related.length === 0) return "";
+  const heading = _isVideoResult() ? "More videos" : "More relevant images";
 
   return `
     <div class="media-related media-related--${variant}">
-      <div class="media-related-heading">More relevant images</div>
+      <div class="media-related-heading">${heading}</div>
       <div class="media-related-grid">
         ${related
           .map(
@@ -385,9 +524,14 @@ function _buildRelatedImagesHtml(variant: "panel" | "lightbox"): string {
   `;
 }
 
-function _getRelatedImages(): Array<{ item: ScoredResult; idx: number }> {
+function _getRelatedMedia(): Array<{ item: ScoredResult; idx: number }> {
   const related: Array<{ item: ScoredResult; idx: number }> = [];
-  if (state.currentType !== "images" || currentMediaIdx < 0) return related;
+  if (
+    (state.currentType !== "images" && state.currentType !== "videos") ||
+    currentMediaIdx < 0
+  ) {
+    return related;
+  }
 
   for (let offset = 1; related.length < 8; offset++) {
     const beforeIdx = currentMediaIdx - offset;
@@ -428,7 +572,8 @@ function _buildDimensionsLabel(item: ScoredResult): string {
 }
 
 function _getPreviewImageUrl(item: ScoredResult): string {
-  return proxyImageUrl(_getRawImageUrl(item)) || "";
+  const rawUrl = _isImageResult() ? _getRawImageUrl(item) : item.thumbnail || "";
+  return proxyImageUrl(rawUrl) || "";
 }
 
 function _getRawImageUrl(item: ScoredResult): string {
@@ -440,8 +585,48 @@ function _getCurrentItem(): ScoredResult | null {
   return state.currentResults[currentMediaIdx] ?? null;
 }
 
+function _getVideoEmbedPreviewUrl(item: ScoredResult): string {
+  const embedUrl = _getResolvedVideoEmbedUrl(item);
+  return embedUrl ? _appendEmbedParams(embedUrl, "rel=0") : "";
+}
+
+function _getVideoEmbedLightboxUrl(item: ScoredResult): string {
+  const embedUrl = _getResolvedVideoEmbedUrl(item);
+  return embedUrl ? _appendEmbedParams(embedUrl, "autoplay=1&rel=0") : "";
+}
+
+function _appendEmbedParams(url: string, params: string): string {
+  return `${url}${url.includes("?") ? "&" : "?"}${params}`;
+}
+
+function _getResolvedVideoEmbedUrl(item: ScoredResult): string | null {
+  if (!_isVideoResult()) return null;
+  return getVideoEmbedUrl(item.url);
+}
+
 function _canUseImageLightbox(item: ScoredResult): boolean {
-  return state.currentType === "images" && !!_getRawImageUrl(item);
+  return _isImageResult() && !!_getRawImageUrl(item);
+}
+
+function _canUseVideoLightbox(item: ScoredResult): boolean {
+  return _isVideoResult() && !!_getResolvedVideoEmbedUrl(item);
+}
+
+function _canUseLightbox(item: ScoredResult): boolean {
+  return _canUseImageLightbox(item) || _canUseVideoLightbox(item);
+}
+
+function _isImageResult(): boolean {
+  return state.currentType === "images";
+}
+
+function _isVideoResult(): boolean {
+  return state.currentType === "videos";
+}
+
+function _isImageLightboxOpen(): boolean {
+  const lightbox = document.getElementById("media-lightbox");
+  return !lightbox?.classList.contains("media-lightbox--video");
 }
 
 function _selectCard(idx: number, selector: string): void {
@@ -542,6 +727,13 @@ const _findColumnTarget = (
 
 function _closeSidePanel(): void {
   document.getElementById("media-preview-panel")?.classList.remove("open");
+  const video = document.getElementById(
+    "media-preview-video",
+  ) as HTMLIFrameElement | null;
+  if (video) {
+    video.hidden = true;
+    video.src = "";
+  }
 }
 
 function _isSidePanelOpen(): boolean {
@@ -567,6 +759,7 @@ function _resetLightboxTransform(): void {
 
 function _stopDrag(): void {
   activePointerId = null;
+  lightboxDidDrag = false;
   document
     .getElementById("media-lightbox-stage")
     ?.classList.remove("dragging");
@@ -604,6 +797,26 @@ async function _copyDestinationUrl(url: string): Promise<void> {
   } finally {
     document.body.removeChild(el);
   }
+}
+
+function _flashCopiedState(trigger?: HTMLElement): void {
+  if (!trigger || !(trigger instanceof HTMLButtonElement)) return;
+  if (trigger.dataset.copyTimer) {
+    window.clearTimeout(Number(trigger.dataset.copyTimer));
+  }
+
+  const previousLabel = trigger.dataset.copyLabel || trigger.textContent || "Share";
+  trigger.dataset.copyLabel = previousLabel;
+  trigger.textContent = "Copied";
+  trigger.classList.add("is-copied");
+
+  const timer = window.setTimeout(() => {
+    trigger.textContent = previousLabel;
+    trigger.classList.remove("is-copied");
+    delete trigger.dataset.copyTimer;
+  }, 1400);
+
+  trigger.dataset.copyTimer = String(timer);
 }
 
 async function _downloadCurrentImage(item: ScoredResult): Promise<void> {

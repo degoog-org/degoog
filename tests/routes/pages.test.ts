@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test";
+import { hasRequiredSearchThemeNodes } from "../../src/server/routes/pages";
 
 let pagesRouter: {
   request: (req: Request | string) => Response | Promise<Response>;
@@ -28,5 +29,26 @@ describe("routes/pages", () => {
     const res = await pagesRouter.request("http://localhost/search");
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toContain("text/html");
+  });
+
+  test("search theme compatibility requires the image tools, preview panel, and lightbox nodes", () => {
+    expect(
+      hasRequiredSearchThemeNodes(
+        `
+          <div id="image-tools-bar"></div>
+          <aside id="media-preview-panel"></aside>
+          <div id="media-lightbox"></div>
+        `,
+      ),
+    ).toBe(true);
+
+    expect(
+      hasRequiredSearchThemeNodes(
+        `
+          <main>Theme override</main>
+          <div id="image-tools-bar"></div>
+        `,
+      ),
+    ).toBe(false);
   });
 });

@@ -329,107 +329,205 @@
               data-position="below-sidebar"
             ></div>
           </aside>
-          <div class="media-preview-panel" id="media-preview-panel">
-            <button class="media-preview-close" id="media-preview-close">
-              &times;
-            </button>
-            <div class="media-preview-img-wrap">
-              <button
-                class="media-preview-nav media-preview-prev"
-                id="media-preview-prev"
-              >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </button>
-              <img
-                class="media-preview-img"
-                id="media-preview-img"
-                src=""
-                alt=""
-              />
-              <button
-                class="media-preview-nav media-preview-next"
-                id="media-preview-next"
-              >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <polyline points="9 6 15 12 9 18" />
-                </svg>
-              </button>
-            </div>
-            <div class="media-preview-info" id="media-preview-info"></div>
-          </div>
         </div>
-          <div class="media-lightbox" id="media-lightbox" aria-hidden="true">
-          <div class="media-lightbox-backdrop" id="media-lightbox-backdrop"></div>
-          <div class="media-lightbox-dialog" role="dialog" aria-modal="true">
-            <button
-              class="media-lightbox-close"
-              id="media-lightbox-close"
-              type="button"
-              aria-label="Close image viewer"
+      </div>
+    </div>
+    <div class="media-overlay-root" id="media-overlay-root">
+      <div class="media-preview-panel" id="media-preview-panel">
+        <button
+          class="media-preview-close"
+          id="media-preview-close"
+          type="button"
+          aria-label="Close preview panel"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+        <div class="media-preview-img-wrap">
+          <button
+            class="media-preview-nav media-preview-prev"
+            id="media-preview-prev"
+            type="button"
+            aria-label="Previous image"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
             >
-              &times;
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <img
+            class="media-preview-img"
+            id="media-preview-img"
+            src=""
+            alt=""
+          />
+          <iframe
+            class="media-preview-video"
+            id="media-preview-video"
+            src=""
+            title=""
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            hidden
+          ></iframe>
+          <button
+            class="media-preview-nav media-preview-next"
+            id="media-preview-next"
+            type="button"
+            aria-label="Next image"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="9 6 15 12 9 18" />
+            </svg>
+          </button>
+        </div>
+        <div class="media-preview-info" id="media-preview-info"></div>
+      </div>
+
+      <div class="media-lightbox" id="media-lightbox" aria-hidden="true">
+        <div
+          class="media-lightbox-backdrop"
+          id="media-lightbox-backdrop"
+        ></div>
+        <div class="media-lightbox-dialog" role="dialog" aria-modal="true">
+          <button
+            class="media-lightbox-close"
+            id="media-lightbox-close"
+            type="button"
+            aria-label="Close media viewer"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+          <div class="media-lightbox-stage" id="media-lightbox-stage">
+            <button
+              class="media-lightbox-nav media-lightbox-prev"
+              id="media-lightbox-prev"
+              type="button"
+              aria-label="Previous image"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
             </button>
-            <div class="media-lightbox-stage" id="media-lightbox-stage">
-              <button
-                class="media-lightbox-nav media-lightbox-prev"
-                id="media-lightbox-prev"
-                type="button"
-                aria-label="Previous image"
+            <img
+              class="media-lightbox-img"
+              id="media-lightbox-img"
+              src=""
+              alt=""
+              draggable="false"
+            />
+            <iframe
+              class="media-lightbox-video"
+              id="media-lightbox-video"
+              src=""
+              title=""
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              hidden
+            ></iframe>
+            <button
+              class="media-lightbox-nav media-lightbox-next"
+              id="media-lightbox-next"
+              type="button"
+              aria-label="Next image"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
               >
-                &#8249;
-              </button>
-              <img
-                class="media-lightbox-img"
-                id="media-lightbox-img"
-                src=""
-                alt=""
-                draggable="false"
-              />
+                <polyline points="9 6 15 12 9 18" />
+              </svg>
+            </button>
+            <div class="media-lightbox-zoom" id="media-lightbox-zoom">
               <button
-                class="media-lightbox-nav media-lightbox-next"
-                id="media-lightbox-next"
+                class="media-lightbox-zoom-btn"
+                id="media-lightbox-zoom-out"
                 type="button"
-                aria-label="Next image"
+                aria-label="Zoom out"
               >
-                &#8250;
+                <svg
+                  class="media-lightbox-zoom-icon"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="10.5" cy="10.5" r="6.5"></circle>
+                  <path d="M16 16l4 4"></path>
+                  <path d="M8 10.5h5"></path>
+                </svg>
               </button>
-              <div class="media-lightbox-zoom" id="media-lightbox-zoom">
-                <button
-                  class="media-lightbox-zoom-btn"
-                  id="media-lightbox-zoom-out"
-                  type="button"
-                  aria-label="Zoom out"
+              <button
+                class="media-lightbox-zoom-btn"
+                id="media-lightbox-zoom-in"
+                type="button"
+                aria-label="Zoom in"
+              >
+                <svg
+                  class="media-lightbox-zoom-icon"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
-                  -
-                </button>
-                <button
-                  class="media-lightbox-zoom-btn"
-                  id="media-lightbox-zoom-in"
-                  type="button"
-                  aria-label="Zoom in"
-                >
-                  +
-                </button>
-              </div>
+                  <circle cx="10.5" cy="10.5" r="6.5"></circle>
+                  <path d="M16 16l4 4"></path>
+                  <path d="M10.5 8v5"></path>
+                  <path d="M8 10.5h5"></path>
+                </svg>
+              </button>
             </div>
-            <div class="media-lightbox-info" id="media-lightbox-info"></div>
           </div>
+          <div class="media-lightbox-info" id="media-lightbox-info"></div>
         </div>
       </div>
     </div>

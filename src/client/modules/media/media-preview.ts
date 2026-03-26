@@ -7,6 +7,7 @@ import {
   openCurrentMediaLightbox,
   openRelatedMedia,
   runMediaAction,
+  shouldSuppressMediaLightboxStageClick,
   startMediaLightboxDrag,
   updateMediaLightboxDrag,
   zoomMediaLightbox,
@@ -59,12 +60,13 @@ export function initMediaPreview(): void {
     zoomMediaLightbox(event.deltaY < 0 ? 0.15 : -0.15);
   });
   lightboxStage?.addEventListener("click", (event) => {
-    const target = event.target as HTMLElement;
-    if (target.closest("#media-lightbox-img")) return;
-    if (target.closest(".media-lightbox-zoom")) return;
+    if (!isMediaLightboxOpen()) return;
+    if (shouldSuppressMediaLightboxStageClick()) return;
+    if (event.target !== lightboxStage) return;
     closeMediaLightbox();
   });
   lightboxStage?.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
     const target = event.target as HTMLElement;
     if (!target.closest("#media-lightbox-img")) return;
     startMediaLightboxDrag(event, lightboxStage as HTMLElement);
@@ -92,7 +94,7 @@ export function initMediaPreview(): void {
     const actionBtn = target.closest<HTMLElement>("[data-action]");
     if (actionBtn?.dataset.action) {
       event.preventDefault();
-      void runMediaAction(actionBtn.dataset.action);
+      void runMediaAction(actionBtn.dataset.action, actionBtn);
       _closeMenus();
       return;
     }

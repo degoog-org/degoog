@@ -9,6 +9,7 @@
     "stop": "kill $(lsof -t -i:4444)",
     "start": "bun run src/server/index.ts",
     "start:dev": "DEGOOG_PORT=4445 bun run src/server/index.ts --debug",
+    "test:site": "powershell -ExecutionPolicy Bypass -File scripts/test-site.ps1",
     "develop": "yarn build:watch; yarn run stop; yarn run start:dev",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/ tests/",

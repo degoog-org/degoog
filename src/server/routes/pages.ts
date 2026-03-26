@@ -24,6 +24,11 @@ import { isPublicInstance } from "../utils/public-instance";
 import pkg from "../../../package.json";
 
 const router = new Hono();
+const REQUIRED_SEARCH_THEME_IDS = [
+  "image-tools-bar",
+  "media-preview-panel",
+  "media-lightbox",
+];
 
 function buildOpenSearchXml(origin: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -79,6 +84,16 @@ async function buildPage(filename: string): Promise<string> {
   return applyPagePlaceholders(html);
 }
 
+export function hasRequiredSearchThemeNodes(html: string): boolean {
+  return REQUIRED_SEARCH_THEME_IDS.every((id) =>
+    new RegExp(`id=(["'])${_escapeRegExp(id)}\\1`).test(html),
+  );
+}
+
+function _escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 router.get("/", async (c) => {
   const q = c.req.query("q");
   if (q?.trim()) {
@@ -94,7 +109,9 @@ router.get("/", async (c) => {
 
 router.get("/search", async (c) => {
   const override = await getThemeHtml("search");
-  if (override) return c.html(await applyPagePlaceholders(override));
+  if (override && hasRequiredSearchThemeNodes(override)) {
+    return c.html(await applyPagePlaceholders(override));
+  }
   return c.html(await buildPage("search.html"));
 });
 
