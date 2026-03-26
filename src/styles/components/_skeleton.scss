@@ -55,6 +55,48 @@
   }
 }
 
+.skeleton-image-grid {
+  display: flex;
+  gap: 4px;
+  padding: 16px 0;
+
+  .image-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+}
+
+.skeleton-video-grid {
+  column-count: 4;
+  column-gap: 8px;
+  padding: 16px 0;
+
+  @media (max-width: 1400px) { column-count: 3; }
+  @media (max-width: 800px) { column-count: 2; }
+}
+
+.skeleton-media-card {
+  @extend %skeleton-base;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.skeleton-video-card {
+  break-inside: avoid;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.skeleton-media-thumb {
+  @extend %skeleton-base;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
 .skeleton-glance {
   display: flex;
   flex-direction: column;

@@ -6,7 +6,7 @@ import { initLuckyAnimation } from "../animations/lucky-animation";
 import { initTabs } from "./tabs/tabs";
 import { initMediaPreview } from "./media/media-preview";
 import { initTheme } from "../utils/theme";
-import { initTimeFilter } from "../utils/time-filter";
+import { initOptionsDropdown } from "../utils/time-filter";
 import {
   applyImageFiltersToState,
   getDefaultImageFilters,
@@ -17,7 +17,10 @@ import {
 import { initInstallPrompt } from "../utils/install-prompt";
 import { initSearchBarActions } from "../utils/search-bar-actions";
 import { idbGet } from "../utils/db";
-import { IMAGE_PREVIEW_MODE_KEY } from "../constants";
+import {
+  IMAGE_PREVIEW_MODE_KEY,
+  OPEN_IN_NEW_TAB_KEY,
+} from "../constants";
 import { state } from "../state";
 import type { ImagePreviewMode } from "../types";
 
@@ -80,14 +83,16 @@ export async function init(): Promise<void> {
   initTabs();
   initMediaPreview();
   void initTheme();
-  initTimeFilter();
+  initOptionsDropdown();
   initImageFilters();
   initInstallPrompt();
 
-  const storedPreviewMode = await idbGet<ImagePreviewMode>(
-    IMAGE_PREVIEW_MODE_KEY,
-  );
+  const [storedPreviewMode, storedOpenInNewTab] = await Promise.all([
+    idbGet<ImagePreviewMode>(IMAGE_PREVIEW_MODE_KEY),
+    idbGet<boolean>(OPEN_IN_NEW_TAB_KEY),
+  ]);
   state.imagePreviewMode = storedPreviewMode === "center" ? "center" : "side";
+  state.openInNewTab = storedOpenInNewTab ?? false;
 
   document.body.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLElement>(".uuid-copy");
@@ -118,6 +123,9 @@ export async function init(): Promise<void> {
   const type = params.get("type") || "all";
   const page = parseInt(params.get("page") ?? "1", 10) || 1;
   state.currentTimeFilter = params.get("time") || "any";
+  state.customDateFrom = params.get("dateFrom") || "";
+  state.customDateTo = params.get("dateTo") || "";
+  state.currentLanguage = params.get("lang") || "";
   applyImageFiltersToState(
     type === "images"
       ? parseImageFiltersFromParams(params)

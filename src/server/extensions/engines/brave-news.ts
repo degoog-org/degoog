@@ -28,9 +28,20 @@ export class BraveNewsEngine implements SearchEngine {
 
     const params: Record<string, string> = { q: query };
     if (page > 1) params.offset = String(page - 1);
-    if (timeFilter && timeFilter !== "any" && TIME_RANGE_MAP[timeFilter]) {
+    if (
+      timeFilter &&
+      timeFilter !== "any" &&
+      timeFilter !== "custom" &&
+      TIME_RANGE_MAP[timeFilter]
+    ) {
       params.tf = TIME_RANGE_MAP[timeFilter];
     }
+
+    const lang = context?.lang;
+    const cookie =
+      lang && lang !== "en"
+        ? `safesearch=moderate; useLocation=0; country=${lang}; ui_lang=${lang}-${lang}`
+        : "safesearch=moderate; useLocation=0; country=us; ui_lang=en-us";
 
     const url = `https://search.brave.com/news?${new URLSearchParams(params)}`;
     const doFetch = context?.fetch ?? fetch;
@@ -40,8 +51,11 @@ export class BraveNewsEngine implements SearchEngine {
         "Accept-Encoding": "gzip, deflate",
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        Cookie: "safesearch=moderate; useLocation=0; country=us; ui_lang=en-us",
+        "Accept-Language":
+          context?.buildAcceptLanguage?.() ||
+          process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
+          "en-US,en;q=0.9",
+        Cookie: cookie,
       },
       redirect: "follow",
     });

@@ -3,6 +3,24 @@ import { proxyImageUrl } from "../../utils/url";
 import { retryEngine } from "../../utils/search-actions";
 import type { SearchResponse, SlotPanel } from "../../types";
 
+export const setupRetryLinks = (container: HTMLElement): void => {
+  container.querySelectorAll<HTMLElement>(".engine-retry-link").forEach((link) => {
+    link.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const engineName = link.dataset.engine;
+      if (!engineName) return;
+      link.classList.add("retrying");
+      link.textContent = "retrying...";
+      try {
+        await retryEngine(engineName);
+      } catch {}
+      link.classList.remove("retrying");
+      link.textContent = "retry";
+    });
+  });
+};
+
 const _sidebarAccordion = (title: string, content: string): string =>
   `<div class="sidebar-panel sidebar-accordion">
     <button class="sidebar-accordion-toggle" type="button">
@@ -85,23 +103,7 @@ export function renderSidebar(
       .forEach((el) => el.classList.add("open"));
   }
 
-  sidebar
-    .querySelectorAll<HTMLElement>(".engine-retry-link")
-    .forEach((link) => {
-      link.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const engineName = link.dataset.engine;
-        if (!engineName) return;
-        link.classList.add("retrying");
-        link.textContent = "retrying...";
-        try {
-          await retryEngine(engineName);
-        } catch {}
-        link.classList.remove("retrying");
-        link.textContent = "retry";
-      });
-    });
+  setupRetryLinks(sidebar);
 
   sidebar
     .querySelectorAll<HTMLElement>(".related-search-link")

@@ -6,6 +6,28 @@ const router = new Hono();
 
 const PROXY_FETCH_TIMEOUT_MS = 15_000;
 
+const CONTENT_TYPE_EXT: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/gif": ".gif",
+  "image/webp": ".webp",
+  "image/svg+xml": ".svg",
+  "image/avif": ".avif",
+  "image/x-icon": ".ico",
+};
+
+const getProxyFilename = (originalUrl: string, contentType: string): string => {
+  try {
+    const pathname = new URL(originalUrl).pathname;
+    const basename = pathname.split("/").filter(Boolean).pop() || "";
+    if (basename && /\.\w{2,5}$/.test(basename)) return basename;
+    const ext = CONTENT_TYPE_EXT[contentType] ?? ".jpg";
+    return basename ? basename + ext : "image" + ext;
+  } catch {
+    return "image" + (CONTENT_TYPE_EXT[contentType] ?? ".jpg");
+  }
+};
+
 const PROXY_TIMEOUT_MS = 10_000;
 const MAX_CONTENT_LENGTH = 10 * 1024 * 1024;
 const ALLOWED_CONTENT_TYPES = [
@@ -42,7 +64,16 @@ router.get("/api/proxy/image", async (c) => {
   if (authId) {
     const stored = await getSettings(authId);
     const apiKey = asString(stored["apiKey"]);
-    if (apiKey) headers["X-Emby-Token"] = apiKey;
+    const serverUrl = asString(stored["url"]);
+    const headerName = asString(stored["headerName"]);
+    if (apiKey && serverUrl && headerName && /^[A-Za-z0-9-]+$/.test(headerName)) {
+      try {
+        const serverHost = new URL(serverUrl).hostname;
+        if (parsed.hostname === serverHost) {
+          headers[headerName] = apiKey;
+        }
+      } catch {}
+    }
   }
 
   const controller = new AbortController();
@@ -78,6 +109,7 @@ router.get("/api/proxy/image", async (c) => {
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=86400",
       "X-Content-Type-Options": "nosniff",
+      "Content-Disposition": `inline; filename="${getProxyFilename(url, contentType)}"`,
     });
   } catch {
     clearTimeout(timeout);

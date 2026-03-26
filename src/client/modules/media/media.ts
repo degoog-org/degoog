@@ -428,6 +428,9 @@ function _buildPreviewInfoHtml(
   item: ScoredResult,
   variant: "panel" | "lightbox",
 ): string {
+  const targetAttrs = state.openInNewTab
+    ? ' target="_blank" rel="noreferrer noopener"'
+    : ' rel="noreferrer"';
   const dimensions = _buildDimensionsLabel(item);
   const dimensionsHtml = dimensions
     ? `<span class="media-preview-dimensions">${escapeHtml(dimensions)}</span>`
@@ -436,6 +439,10 @@ function _buildPreviewInfoHtml(
     item.duration && _isVideoResult()
       ? `<span class="media-preview-dimensions">${escapeHtml(item.duration)}</span>`
       : "";
+  const enginesHtml =
+    item.sources?.length
+      ? `<div class="media-preview-engines">${item.sources.map((source) => `<span class="result-engine-tag">${escapeHtml(source)}</span>`).join("")}</div>`
+      : "";
   const relatedHtml =
     _isImageResult() || _isVideoResult() ? _buildRelatedMediaHtml(variant) : "";
 
@@ -443,7 +450,7 @@ function _buildPreviewInfoHtml(
     _isImageResult()
       ? `
         <div class="media-preview-actions">
-          <a class="media-preview-visit" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">Visit page</a>
+          <a class="media-preview-visit" href="${escapeHtml(item.url)}"${targetAttrs}>Visit page</a>
           <button class="media-action-btn" type="button" data-action="share">Share</button>
           <button class="media-action-btn" type="button" data-action="download">Download</button>
           <div class="media-action-menu-wrap">
@@ -459,7 +466,7 @@ function _buildPreviewInfoHtml(
       : _isVideoResult()
         ? `
         <div class="media-preview-actions">
-          <a class="media-preview-visit" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">Visit page</a>
+          <a class="media-preview-visit" href="${escapeHtml(item.url)}"${targetAttrs}>Visit page</a>
           <button class="media-action-btn" type="button" data-action="share">Share</button>
           ${
             variant === "panel" && _canUseVideoLightbox(item)
@@ -474,12 +481,13 @@ function _buildPreviewInfoHtml(
           </div>
         </div>
       `
-      : `<a class="media-preview-visit" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">Visit page</a>`;
+      : `<a class="media-preview-visit" href="${escapeHtml(item.url)}"${targetAttrs}>Visit page</a>`;
 
   return `
     <div class="media-preview-copy">
       <h3 class="media-preview-title">${escapeHtml(item.title)}</h3>
-      <a class="media-preview-link" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer">${escapeHtml(cleanHostname(item.url))}</a>
+      <a class="media-preview-link" href="${escapeHtml(item.url)}"${targetAttrs}>${escapeHtml(cleanHostname(item.url))}</a>
+      ${enginesHtml}
       <div class="media-preview-meta">
         ${dimensionsHtml}
         ${durationHtml}

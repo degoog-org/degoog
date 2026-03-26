@@ -19,7 +19,11 @@ export const state: AppState = {
     layout: "any",
     license: "any",
   },
+  customDateFrom: "",
+  customDateTo: "",
+  currentLanguage: "",
   mediaLoading: false,
   currentBangQuery: "",
   imagePreviewMode: "side",
+  openInNewTab: false,
 };

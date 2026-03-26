@@ -129,6 +129,35 @@
           and engines.
         </p>
 
+        <h2>Use as your browser's default search engine</h2>
+        <p>
+          Any browser that supports custom search engines can use degoog.
+          Replace <code>https://your-instance</code> with your actual instance URL.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Search URL</td>
+              <td><code>https://your-instance/search?q=%s</code></td>
+            </tr>
+            <tr>
+              <td>Suggestions URL</td>
+              <td><code>https://your-instance/api/suggest/opensearch?q=%s</code></td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Browsers that support
+          <a href="https://developer.mozilla.org/en-US/docs/Web/OpenSearch" class="external" target="_blank" rel="noopener">OpenSearch</a>
+          can detect degoog automatically — right-clicking the search bar on your instance will offer to add it.
+        </p>
+
         <h2>Extension types</h2>
         <ul>
           <li>

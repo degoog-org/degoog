@@ -8,7 +8,7 @@ import {
   MAX_PAGE,
 } from "../../src/client/constants";
 import { state } from "../../src/client/state";
-import { initTimeFilter } from "../../src/client/utils/time-filter";
+import { initOptionsDropdown } from "../../src/client/utils/time-filter";
 import { initImageFilters } from "../../src/client/utils/image-filters";
 
 describe("public/constants", () => {
@@ -43,8 +43,8 @@ describe("public/state", () => {
 });
 
 describe("public/timeFilter", () => {
-  test("initTimeFilter is function", () => {
-    expect(typeof initTimeFilter).toBe("function");
+  test("initOptionsDropdown is function", () => {
+    expect(typeof initOptionsDropdown).toBe("function");
   });
 
   test("initImageFilters is function", () => {

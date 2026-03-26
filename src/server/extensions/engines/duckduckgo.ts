@@ -18,12 +18,14 @@ export class DuckDuckGoEngine implements SearchEngine {
     context?: EngineContext,
   ): Promise<SearchResult[]> {
     const offset = ((page || 1) - 1) * 30;
+    const lang = context?.lang;
     const params = new URLSearchParams({ q: query });
     if (offset > 0) {
       params.set("s", String(offset));
       params.set("dc", String(offset + 1));
     }
-    if (timeFilter && timeFilter !== "any") {
+    if (lang && lang !== "en") params.set("kl", `${lang}-${lang}`);
+    if (timeFilter && timeFilter !== "any" && timeFilter !== "custom") {
       const dfMap: Record<string, string> = {
         hour: "h",
         day: "d",
@@ -40,7 +42,10 @@ export class DuckDuckGoEngine implements SearchEngine {
         "User-Agent": getRandomUserAgent(),
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Language":
+          context?.buildAcceptLanguage?.() ||
+          process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
+          "en-US,en;q=0.9",
         "Accept-Encoding": "gzip, deflate, br",
         Referer: "https://duckduckgo.com/",
         "Sec-Fetch-Dest": "document",

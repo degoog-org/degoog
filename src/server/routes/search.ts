@@ -58,16 +58,31 @@ function parseEngineConfig(query: URLSearchParams): EngineConfig {
   return config;
 }
 
+const DEFAULT_LANGUAGES = [
+  "af","am","ar","az","be","bg","bn","bs","ca","cs",
+  "cy","da","de","el","en","eo","es","et","eu","fa",
+  "fi","fr","ga","gl","gu","he","hi","hr","hu","hy",
+  "id","is","it","ja","ka","kk","km","kn","ko","ku",
+  "ky","lb","lo","lt","lv","mk","ml","mn","mr","ms",
+  "my","ne","nl","no","or","pa","pl","ps","pt","ro",
+  "ru","sd","si","sk","sl","so","sq","sr","st","sv",
+  "sw","ta","te","tg","th","tk","tl","tr","uk","ur",
+  "uz","vi","xh","yi","yo","zh","zu",
+];
+
 function cacheKey(
   query: string,
   engines: EngineConfig,
   type: SearchType,
   page: number,
   timeFilter: TimeFilter = "any",
+  lang = "",
+  dateFrom = "",
+  dateTo = "",
   imageFilters?: ImageFilters,
 ): string {
   const q = query.trim().toLowerCase();
-  return `${q}|${JSON.stringify(engines)}|${type}|${page}|${timeFilter}|${JSON.stringify(imageFilters ?? null)}`;
+  return `${q}|${JSON.stringify(engines)}|${type}|${page}|${timeFilter}|${lang}|${dateFrom}|${dateTo}|${JSON.stringify(imageFilters ?? null)}`;
 }
 
 function parseImageFilters(query: URLSearchParams): ImageFilters {
@@ -182,6 +197,9 @@ router.get("/api/search", async (c) => {
     Math.min(10, Math.floor(Number(c.req.query("page"))) || 1),
   );
   const timeFilter = (c.req.query("time") || "any") as TimeFilter;
+  const lang = c.req.query("lang") || "";
+  const dateFrom = c.req.query("dateFrom") || "";
+  const dateTo = c.req.query("dateTo") || "";
   const imageFilters = parseImageFilters(new URL(c.req.url).searchParams);
   const key = cacheKey(
     query,
@@ -189,6 +207,9 @@ router.get("/api/search", async (c) => {
     searchType,
     page,
     timeFilter,
+    lang,
+    dateFrom,
+    dateTo,
     imageFilters,
   );
 
@@ -203,6 +224,9 @@ router.get("/api/search", async (c) => {
       searchType,
       page,
       timeFilter,
+      lang,
+      dateFrom,
+      dateTo,
       imageFilters,
     );
     const ttl = cache.hasFailedEngines(response)
@@ -295,6 +319,9 @@ router.get("/api/search/retry", async (c) => {
     Math.min(10, Math.floor(Number(c.req.query("page"))) || 1),
   );
   const timeFilter = (c.req.query("time") || "any") as TimeFilter;
+  const lang = c.req.query("lang") || "";
+  const dateFrom = c.req.query("dateFrom") || "";
+  const dateTo = c.req.query("dateTo") || "";
   const imageFilters = parseImageFilters(new URL(c.req.url).searchParams);
 
   const { results: newResults, timing } = await searchSingleEngine(
@@ -302,6 +329,9 @@ router.get("/api/search/retry", async (c) => {
     query,
     page,
     timeFilter,
+    lang,
+    dateFrom,
+    dateTo,
     imageFilters,
   );
   const key = cacheKey(
@@ -310,6 +340,9 @@ router.get("/api/search/retry", async (c) => {
     searchType,
     page,
     timeFilter,
+    lang,
+    dateFrom,
+    dateTo,
     imageFilters,
   );
   const cached = cache.get(key);
@@ -535,6 +568,19 @@ router.get("/api/tab-search", async (c) => {
       500,
     );
   }
+});
+
+router.get("/api/settings/languages", async (c) => {
+  const settings = await getSettings(DEGOOG_SETTINGS_ID);
+  if (asString(settings["languagesEnabled"] ?? "") !== "true") {
+    return c.json({ languages: DEFAULT_LANGUAGES });
+  }
+  const raw = asString(settings["languages"] ?? "");
+  const codes = raw
+    .split(/[\n,]/)
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => /^[a-z]{2,3}$/.test(s));
+  return c.json({ languages: codes.length > 0 ? codes : DEFAULT_LANGUAGES });
 });
 
 export default router;

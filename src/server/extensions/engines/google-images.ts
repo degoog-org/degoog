@@ -6,7 +6,10 @@ import type {
   EngineContext,
 } from "../../types";
 import { getRandomGsaAgent } from "../../utils/user-agents";
-import { resolveGoogleTbs } from "../../utils/google-helpers";
+import {
+  resolveGoogleCustomDateTbs,
+  resolveGoogleTbs,
+} from "../../utils/google-utils";
 
 interface GoogleImageResult {
   result?: {
@@ -27,9 +30,14 @@ interface GoogleImageResult {
 function buildGoogleImageTbs(
   timeFilter?: TimeFilter,
   imageFilters?: ImageFilters,
+  dateFrom?: string,
+  dateTo?: string,
 ): string | null {
   const parts: string[] = [];
-  const timeTbs = resolveGoogleTbs(timeFilter);
+  const timeTbs =
+    timeFilter === "custom"
+      ? resolveGoogleCustomDateTbs(dateFrom, dateTo)
+      : resolveGoogleTbs(timeFilter);
   if (timeTbs) parts.push(timeTbs);
 
   if (imageFilters) {
@@ -110,8 +118,14 @@ export class GoogleImagesEngine implements SearchEngine {
       async: `_fmt:json,p:1,ijn:${ijn}`,
     });
 
-    const tbs = buildGoogleImageTbs(timeFilter, context?.imageFilters);
+    const tbs = buildGoogleImageTbs(
+      timeFilter,
+      context?.imageFilters,
+      context?.dateFrom,
+      context?.dateTo,
+    );
     if (tbs) params.set("tbs", tbs);
+    if (context?.lang) params.set("hl", context.lang);
 
     const ua = getRandomGsaAgent();
     const doFetch = context?.fetch ?? fetch;
@@ -121,6 +135,10 @@ export class GoogleImagesEngine implements SearchEngine {
         headers: {
           "User-Agent": ua,
           Accept: "*/*",
+          "Accept-Language":
+            context?.buildAcceptLanguage?.() ||
+            process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
+            "en-US,en;q=0.9",
           Cookie: "CONSENT=YES+",
         },
       },
@@ -148,7 +166,7 @@ export class GoogleImagesEngine implements SearchEngine {
           snippet: item.result?.site_title || "",
           source: this.name,
           thumbnail,
-          imageUrl: item.original_image?.url || "",
+          imageUrl: item.original_image?.url || thumbnail,
           imageWidth: item.original_image?.width,
           imageHeight: item.original_image?.height,
         });

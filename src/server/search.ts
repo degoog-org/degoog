@@ -8,6 +8,7 @@ import type {
   EngineTiming,
   KnowledgePanel,
   TimeFilter,
+  EngineContext,
   ImageFilters,
 } from "./types";
 import {
@@ -195,11 +196,33 @@ export const resolveEngine = (engineName: string): SearchEngine | null => {
   return null;
 };
 
+const _buildAcceptLanguage = (lang?: string): string => {
+  if (!lang || lang === "en") return "en-US,en;q=0.9";
+  return `${lang},${lang}-${lang.toUpperCase()};q=0.9,en;q=0.8`;
+};
+
+const _makeEngineContext = (
+  lang?: string,
+  dateFrom?: string,
+  dateTo?: string,
+  imageFilters?: ImageFilters,
+): EngineContext => ({
+  fetch: outgoingFetch,
+  imageFilters,
+  lang: lang || undefined,
+  dateFrom: dateFrom || undefined,
+  dateTo: dateTo || undefined,
+  buildAcceptLanguage: () => _buildAcceptLanguage(lang),
+});
+
 export const searchSingleEngine = async (
   engineName: string,
   query: string,
   page: number = 1,
   timeFilter: TimeFilter = "any",
+  lang?: string,
+  dateFrom?: string,
+  dateTo?: string,
   imageFilters?: ImageFilters,
 ): Promise<{ results: SearchResult[]; timing: EngineTiming }> => {
   const engine = resolveEngine(engineName);
@@ -211,7 +234,12 @@ export const searchSingleEngine = async (
   }
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
   const t0 = performance.now();
-  const engineContext = { fetch: outgoingFetch, imageFilters };
+  const engineContext = _makeEngineContext(
+    lang,
+    dateFrom,
+    dateTo,
+    imageFilters,
+  );
   try {
     const results = await _withTimeout(
       engine.executeSearch(query, p, timeFilter, engineContext),
@@ -237,6 +265,9 @@ export const search = async (
   type: SearchType = "all",
   page: number = 1,
   timeFilter: TimeFilter = "any",
+  lang?: string,
+  dateFrom?: string,
+  dateTo?: string,
   imageFilters?: ImageFilters,
 ): Promise<SearchResponse> => {
   const start = performance.now();
@@ -261,8 +292,12 @@ export const search = async (
   }
 
   const engineStarts = activeEngines.map(() => performance.now());
-
-  const engineContext = { fetch: outgoingFetch, imageFilters };
+  const engineContext = _makeEngineContext(
+    lang,
+    dateFrom,
+    dateTo,
+    imageFilters,
+  );
   const settled = await Promise.allSettled(
     activeEngines.map(async (engine, i) => {
       engineStarts[i] = performance.now();

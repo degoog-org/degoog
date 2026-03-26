@@ -95,6 +95,10 @@ export type EngineFetch = (
 export interface EngineContext {
   fetch: EngineFetch;
   imageFilters?: ImageFilters;
+  lang?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  buildAcceptLanguage?: () => string;
 }
 
 export interface SearchEngine {
@@ -111,7 +115,7 @@ export interface SearchEngine {
 }
 
 export type SearchType = "all" | "images" | "videos" | "news";
-export type TimeFilter = "any" | "hour" | "day" | "week" | "month" | "year";
+export type TimeFilter = "any" | "hour" | "day" | "week" | "month" | "year" | "custom";
 
 export interface EngineTiming {
   name: string;

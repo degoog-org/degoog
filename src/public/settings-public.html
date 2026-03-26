@@ -11,7 +11,7 @@
     />
     <link
       rel="manifest"
-      href="/public/favicon/site.webmanifest?v=__APP_VERSION__"
+      href="/public/favicon/site.webmanifest" crossorigin="use-credentials"
     />
     <title>Settings – degoog</title>
     <script>
@@ -35,7 +35,23 @@
   <body class="settings-page-body">
     <div class="settings-page">
       <header class="settings-page-header">
-        <a href="/" onclick="window.history.back()" class="settings-page-back">
+        <a
+          href="/"
+          onclick="
+            event.preventDefault();
+            try {
+              if (
+                document.referrer &&
+                new URL(document.referrer).origin === location.origin
+              ) {
+                history.back();
+                return;
+              }
+            } catch (e) {}
+            location.href = '/';
+          "
+          class="settings-page-back"
+        >
           <svg
             width="24"
             height="24"
@@ -62,6 +78,22 @@
               <option value="dark">Dark</option>
             </select>
           </div>
+        </section>
+
+        <section class="settings-section">
+          <h2 class="settings-section-heading">Search Options</h2>
+          <label class="settings-toggle-wrap" style="margin-top: 1rem">
+            <input
+              type="checkbox"
+              id="settings-open-new-tab"
+              class="settings-toggle"
+              aria-label="Open result links in new tab"
+            />
+            <span class="toggle-slider"></span>
+            <span class="settings-toggle-label"
+              >Open result links in new tab</span
+            >
+          </label>
         </section>
 
         <section class="settings-section">

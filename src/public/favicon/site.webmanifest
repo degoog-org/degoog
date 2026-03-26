@@ -9,12 +9,12 @@
   "background_color": "#202124",
   "icons": [
     {
-      "src": "/public/favicon/icon-192.png",
+      "src": "/public/favicon/pwa.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/public/favicon/icon-512.png",
+      "src": "/public/favicon/pwa.png",
       "sizes": "512x512",
       "type": "image/png"
     }

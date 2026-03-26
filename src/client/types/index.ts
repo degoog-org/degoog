@@ -124,9 +124,13 @@ export interface AppState {
   videoLastPage: number;
   currentTimeFilter: string;
   currentImageFilters: ImageFilters;
+  customDateFrom: string;
+  customDateTo: string;
+  currentLanguage: string;
   mediaLoading: boolean;
   currentBangQuery: string;
   imagePreviewMode: ImagePreviewMode;
+  openInNewTab: boolean;
 }
 
 export type SettingFieldType =

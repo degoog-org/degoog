@@ -1,3 +1,23 @@
+const _mediaHeights = ["140px", "100px", "175px", "115px", "155px", "90px", "135px", "105px"];
+
+export const skeletonImageGrid = (cols = 4, rows = 6): string => {
+  let hi = 0;
+  const columns = Array.from({ length: cols }, (_, ci) =>
+    `<div class="image-column">${Array.from({ length: rows }, () => {
+      const h = _mediaHeights[(hi++ + ci * 2) % _mediaHeights.length];
+      return `<div class="skeleton-media-card" style="height:${h}"></div>`;
+    }).join("")}</div>`
+  ).join("");
+  return `<div class="skeleton-image-grid">${columns}</div>`;
+};
+
+export const skeletonVideoGrid = (count = 12): string => {
+  const items = Array.from({ length: count }, () =>
+    `<div class="skeleton-video-card"><div class="skeleton-media-thumb"></div></div>`
+  ).join("");
+  return `<div class="skeleton-video-grid">${items}</div>`;
+};
+
 const _skeletonCard = (): string =>
   `<div class="skeleton-card">
     <div class="skeleton-line skeleton-line--url"></div>

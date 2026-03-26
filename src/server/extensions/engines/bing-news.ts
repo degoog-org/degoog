@@ -27,9 +27,16 @@ export class BingNewsEngine implements SearchEngine {
     if (!query.trim()) return [];
 
     const offset = (page - 1) * 10;
+    const lang = context?.lang;
     const params = new URLSearchParams({ q: query, form: "NSBABR" });
+    if (lang) params.set("setlang", lang);
     if (offset > 0) params.set("first", String(offset + 1));
-    if (timeFilter && timeFilter !== "any" && TIME_RANGE_MAP[timeFilter]) {
+    if (
+      timeFilter &&
+      timeFilter !== "any" &&
+      timeFilter !== "custom" &&
+      TIME_RANGE_MAP[timeFilter]
+    ) {
       params.set("qft", TIME_RANGE_MAP[timeFilter]);
     }
 
@@ -40,7 +47,10 @@ export class BingNewsEngine implements SearchEngine {
         "User-Agent": getRandomUserAgent(),
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Language":
+          context?.buildAcceptLanguage?.() ||
+          process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
+          "en-US,en;q=0.9",
       },
       redirect: "follow",
     });

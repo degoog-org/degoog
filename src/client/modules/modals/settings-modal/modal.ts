@@ -1,4 +1,6 @@
 import { renderField, initUrlList } from "./modal-fields";
+import { getStoredToken } from "../../settings/settings";
+import { jsonHeaders } from "../../../utils/request";
 import type { ExtensionMeta } from "../../../types";
 
 const overlay = document.getElementById("ext-modal-overlay");
@@ -111,7 +113,7 @@ async function _save(): Promise<void> {
       `/api/extensions/${encodeURIComponent(currentExt.id)}/settings`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: jsonHeaders(getStoredToken),
         body: JSON.stringify(values),
       },
     );
