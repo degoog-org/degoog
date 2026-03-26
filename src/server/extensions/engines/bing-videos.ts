@@ -4,11 +4,28 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
 
 export class BingVideosEngine implements SearchEngine {
   name = "Bing Videos";
+  safeSearch: string = "off";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "moderate", "strict"],
+      description: "Filter explicit content from video results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -20,6 +37,7 @@ export class BingVideosEngine implements SearchEngine {
     const lang = context?.lang;
     let url = `https://www.bing.com/videos/search?q=${encodeURIComponent(query)}&count=40&first=${first}`;
     if (lang) url += `&setlang=${lang}`;
+    if (this.safeSearch !== "off") url += `&adlt=${this.safeSearch}`;
     if (timeFilter && timeFilter !== "any" && timeFilter !== "custom") {
       const freshMap: Record<string, string> = {
         hour: "Hour",

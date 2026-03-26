@@ -4,12 +4,29 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
 
 export class BingEngine implements SearchEngine {
   name = "Bing";
   bangShortcut = "b";
+  safeSearch: string = "off";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "moderate", "strict"],
+      description: "Filter explicit content from search results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -21,6 +38,7 @@ export class BingEngine implements SearchEngine {
     const lang = context?.lang;
     let url = `https://www.bing.com/search?q=${encodeURIComponent(query)}&count=50&first=${first}`;
     if (lang) url += `&setlang=${lang}`;
+    if (this.safeSearch !== "off") url += `&adlt=${this.safeSearch}`;
     if (timeFilter && timeFilter !== "any" && timeFilter !== "custom") {
       const freshMap: Record<string, string> = {
         hour: "Hour",

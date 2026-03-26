@@ -4,6 +4,7 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
 
@@ -15,8 +16,8 @@ const TIME_RANGE_MAP: Record<string, string> = {
   year: "py",
 };
 
-function buildCookieString(lang?: string): string {
-  const parts = ["safesearch=moderate", "useLocation=0", "summarizer=0"];
+function buildCookieString(lang?: string, safeSearch: string = "moderate"): string {
+  const parts = [`safesearch=${safeSearch}`, "useLocation=0", "summarizer=0"];
   if (lang && lang !== "en") {
     parts.push(`country=${lang}`, `ui_lang=${lang}-${lang}`);
   } else {
@@ -28,6 +29,22 @@ function buildCookieString(lang?: string): string {
 export class BraveEngine implements SearchEngine {
   name = "Brave Search";
   bangShortcut = "brave";
+  safeSearch: string = "moderate";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "moderate", "strict"],
+      description: "Filter explicit content from search results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -63,7 +80,7 @@ export class BraveEngine implements SearchEngine {
           context?.buildAcceptLanguage?.() ||
           process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
           "en-US,en;q=0.9",
-        Cookie: buildCookieString(context?.lang),
+        Cookie: buildCookieString(context?.lang, this.safeSearch),
       },
       redirect: "follow",
     });

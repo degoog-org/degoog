@@ -4,12 +4,34 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
+
+const DDG_SAFE_SEARCH_MAP: Record<string, string> = {
+  moderate: "-2",
+  strict: "1",
+};
 
 export class DuckDuckGoEngine implements SearchEngine {
   name = "DuckDuckGo";
   bangShortcut = "ddg";
+  safeSearch: string = "off";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "moderate", "strict"],
+      description: "Filter explicit content from search results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -25,6 +47,7 @@ export class DuckDuckGoEngine implements SearchEngine {
       params.set("dc", String(offset + 1));
     }
     if (lang && lang !== "en") params.set("kl", `${lang}-${lang}`);
+    if (DDG_SAFE_SEARCH_MAP[this.safeSearch]) params.set("kp", DDG_SAFE_SEARCH_MAP[this.safeSearch]);
     if (timeFilter && timeFilter !== "any" && timeFilter !== "custom") {
       const dfMap: Record<string, string> = {
         hour: "h",

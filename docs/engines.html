@@ -214,6 +214,40 @@
   }
 }</code></pre>
 
+        <h2>Safe Search</h2>
+        <p>
+          Built-in engines (Brave, Brave News, Google, Bing, DuckDuckGo) expose a
+          <strong>Safe Search</strong> dropdown in Settings → Engines. The default keeps
+          existing behaviour — Brave/Brave News default to <code>moderate</code>, the rest
+          default to <code>off</code>. Users can raise or lower the filter per engine.
+        </p>
+        <p>
+          Custom engines can add the same setting by including a <code>select</code> field in
+          <code>settingsSchema</code> and applying the value in <code>executeSearch</code>:
+        </p>
+        <pre><code>settingsSchema = [
+  {
+    key: "safeSearch",
+    label: "Safe Search",
+    type: "select",
+    options: ["off", "moderate", "strict"],
+    description: "Filter explicit content from search results.",
+  },
+];
+
+safeSearch = "moderate";
+
+configure(settings) {
+  if (typeof settings.safeSearch === "string") {
+    this.safeSearch = settings.safeSearch;
+  }
+}
+
+async executeSearch(query, page = 1, timeFilter, context) {
+  const params = new URLSearchParams({ q: query, safesearch: this.safeSearch });
+  // ...
+}</code></pre>
+
         <h2>Proxies</h2>
         <p>
           When users enable a proxy for search, engine requests can go through

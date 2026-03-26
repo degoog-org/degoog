@@ -4,6 +4,7 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomGsaAgent } from "../../utils/user-agents";
 import {
@@ -15,6 +16,22 @@ import {
 export class GoogleEngine implements SearchEngine {
   name = "Google";
   bangShortcut = "g";
+  safeSearch: string = "off";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "on"],
+      description: "Filter explicit content from search results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -40,6 +57,7 @@ export class GoogleEngine implements SearchEngine {
         ? resolveGoogleCustomDateTbs(context?.dateFrom, context?.dateTo)
         : resolveGoogleTbs(timeFilter);
     if (tbs) params.set("tbs", tbs);
+    if (this.safeSearch === "on") params.set("safe", "active");
 
     const url = `https://www.google.com/search?${params.toString()}`;
     const doFetch = context?.fetch ?? fetch;

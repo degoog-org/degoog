@@ -4,6 +4,7 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
 
@@ -17,6 +18,22 @@ const TIME_RANGE_MAP: Record<string, string> = {
 export class BraveNewsEngine implements SearchEngine {
   name = "Brave News";
   bangShortcut = "bravenews";
+  safeSearch: string = "moderate";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "moderate", "strict"],
+      description: "Filter explicit content from search results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -40,8 +57,8 @@ export class BraveNewsEngine implements SearchEngine {
     const lang = context?.lang;
     const cookie =
       lang && lang !== "en"
-        ? `safesearch=moderate; useLocation=0; country=${lang}; ui_lang=${lang}-${lang}`
-        : "safesearch=moderate; useLocation=0; country=us; ui_lang=en-us";
+        ? `safesearch=${this.safeSearch}; useLocation=0; country=${lang}; ui_lang=${lang}-${lang}`
+        : `safesearch=${this.safeSearch}; useLocation=0; country=us; ui_lang=en-us`;
 
     const url = `https://search.brave.com/news?${new URLSearchParams(params)}`;
     const doFetch = context?.fetch ?? fetch;

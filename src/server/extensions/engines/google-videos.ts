@@ -5,6 +5,7 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomGsaAgent } from "../../utils/user-agents";
 import {
@@ -35,6 +36,22 @@ const _durationFromScope = (
 
 export class GoogleVideosEngine implements SearchEngine {
   name = "Google Videos";
+  safeSearch: string = "off";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "on"],
+      description: "Filter explicit content from video results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -60,6 +77,7 @@ export class GoogleVideosEngine implements SearchEngine {
         ? resolveGoogleCustomDateTbs(context?.dateFrom, context?.dateTo)
         : resolveGoogleTbs(timeFilter);
     if (tbs) params.set("tbs", tbs);
+    if (this.safeSearch === "on") params.set("safe", "active");
 
     const doFetch = context?.fetch ?? fetch;
     const response = await doFetch(
