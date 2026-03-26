@@ -20,11 +20,17 @@
 .logo-g2 { color: $danger; }
 
 .results-logo {
-  font-size: 22px;
+  font-size: 40px;
   font-weight: 400;
   font-family: 'Product Sans', $font-family;
   text-decoration: none;
   letter-spacing: -1px;
   flex-shrink: 0;
   padding-right: 20px;
+  align-self: center;
+
+  @media (min-width: 767px) {
+    font-size: 30px;
+    margin-top: -5px;
+  }
 }

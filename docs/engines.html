@@ -89,8 +89,33 @@
           <code>type</code> (text, password, url, toggle, textarea, select,
           urllist), and optional <code>required</code>,
           <code>placeholder</code>, <code>description</code>,
-          <code>secret</code>, <code>options</code> (for select).
+          <code>secret</code>, <code>options</code> (for select),
+          <code>default</code>.
         </p>
+        <p>
+          Mark sensitive fields (API keys, tokens) with <code>secret: true</code>. The UI will never
+          expose the saved value — it shows a <code>Set</code> / <code>Not set</code> indicator
+          instead. On save, if the field value equals the sentinel <code>"__SET__"</code> the
+          existing stored value is preserved, so a page reload never overwrites a key the user
+          already entered.
+        </p>
+
+        <h2>HTTP method</h2>
+        <p>
+          Engines are not limited to GET requests. Since you control the fetch call inside
+          <code>executeSearch</code>, you can use any method (POST, etc.) and set any headers or
+          body your API requires. A GraphQL engine using POST looks like:
+        </p>
+        <pre><code>async executeSearch(query, page = 1, _timeFilter, context) {
+  const doFetch = context?.fetch ?? fetch;
+  const response = await doFetch("https://graphql.example.com", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: MY_QUERY, variables: { search: query, page } }),
+  });
+  const data = await response.json();
+  // parse and return array of { title, url, snippet, source }
+}</code></pre>
 
         <h2>Search types</h2>
         <p>
@@ -100,6 +125,128 @@
           new tab on the search results page; when selected, all engines with
           that type run.
         </p>
+
+        <h2>Language &amp; time filters</h2>
+        <p>
+          When a user picks a language or time filter in the search UI, those
+          values are passed to every engine via the <code>context</code>
+          argument. Reading them is optional — engines that ignore them simply
+          return unfiltered results.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>context.lang</code></td>
+              <td><code>string | undefined</code></td>
+              <td>
+                ISO 639-1 language code chosen by the user (e.g.
+                <code>"en"</code>, <code>"de"</code>, <code>"it"</code>).
+                <code>undefined</code> means no language filter was selected.
+              </td>
+            </tr>
+            <tr>
+              <td><code>context.buildAcceptLanguage()</code></td>
+              <td><code>() =&gt; string</code></td>
+              <td>
+                Returns a ready-to-use <code>Accept-Language</code> header
+                value derived from <code>context.lang</code> (e.g.
+                <code>"it,en;q=0.9"</code>). Falls back to
+                <code>"en,en-US;q=0.9"</code> when no lang is set. Pass it
+                directly to your <code>fetch</code> headers.
+              </td>
+            </tr>
+            <tr>
+              <td><code>context.dateFrom</code></td>
+              <td><code>string | undefined</code></td>
+              <td>
+                Start of a custom date range in <code>YYYY-MM-DD</code> format.
+                Only set when <code>timeFilter === "custom"</code>.
+              </td>
+            </tr>
+            <tr>
+              <td><code>context.dateTo</code></td>
+              <td><code>string | undefined</code></td>
+              <td>
+                End of a custom date range in <code>YYYY-MM-DD</code> format.
+                Only set when <code>timeFilter === "custom"</code>.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The <code>timeFilter</code> parameter passed to
+          <code>executeSearch</code> is one of: <code>"any"</code>,
+          <code>"hour"</code>, <code>"day"</code>, <code>"week"</code>,
+          <code>"month"</code>, <code>"year"</code>, <code>"custom"</code>.
+          For <code>"custom"</code>, read <code>context.dateFrom</code> /
+          <code>context.dateTo</code>.
+        </p>
+        <pre><code>export default class MyEngine {
+  name = "My Search";
+
+  async executeSearch(query, page = 1, timeFilter, context) {
+    const lang = context?.lang;
+    const acceptLang = context?.buildAcceptLanguage?.() ?? "en,en-US;q=0.9";
+    const doFetch = context?.fetch ?? fetch;
+
+    const params = new URLSearchParams({ q: query });
+
+    if (lang) params.set("lang", lang);
+
+    if (timeFilter === "day") params.set("when", "24h");
+    else if (timeFilter === "week") params.set("when", "7d");
+    else if (timeFilter === "custom" && context?.dateFrom) {
+      params.set("from", context.dateFrom);
+      if (context.dateTo) params.set("to", context.dateTo);
+    }
+
+    const res = await doFetch(`https://example.com/search?${params}`, {
+      headers: { "Accept-Language": acceptLang },
+    });
+    // parse and return array of { title, url, snippet, source }
+  }
+}</code></pre>
+
+        <h2>Safe Search</h2>
+        <p>
+          Built-in engines (Brave, Brave News, Google, Bing, DuckDuckGo) expose a
+          <strong>Safe Search</strong> dropdown in Settings → Engines. The default keeps
+          existing behaviour — Brave/Brave News default to <code>moderate</code>, the rest
+          default to <code>off</code>. Users can raise or lower the filter per engine.
+        </p>
+        <p>
+          Custom engines can add the same setting by including a <code>select</code> field in
+          <code>settingsSchema</code> and applying the value in <code>executeSearch</code>:
+        </p>
+        <pre><code>settingsSchema = [
+  {
+    key: "safeSearch",
+    label: "Safe Search",
+    type: "select",
+    options: ["off", "moderate", "strict"],
+    description: "Filter explicit content from search results.",
+  },
+];
+
+safeSearch = "moderate";
+
+configure(settings) {
+  if (typeof settings.safeSearch === "string") {
+    this.safeSearch = settings.safeSearch;
+  }
+}
+
+async executeSearch(query, page = 1, timeFilter, context) {
+  const params = new URLSearchParams({ q: query, safesearch: this.safeSearch });
+  // ...
+}</code></pre>
 
         <h2>Proxies</h2>
         <p>

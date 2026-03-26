@@ -235,19 +235,19 @@
   }
 }
 
-.settings-proxy-toggle-wrap {
+.settings-toggle-wrap {
   display: flex;
   align-items: center;
   gap: 12px;
   cursor: pointer;
   margin-top: 8px;
 
-  .settings-proxy-toggle {
+  .settings-toggle {
     display: none;
   }
 }
 
-.settings-proxy-toggle-label {
+.settings-toggle-label {
   font-size: $font-size-base;
   color: var(--text-primary);
 }

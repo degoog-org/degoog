@@ -4,6 +4,7 @@ export interface SearchResult {
   snippet: string;
   source: string;
   thumbnail?: string;
+  imageUrl?: string;
   duration?: string;
 }
 
@@ -74,8 +75,12 @@ export interface AppState {
   videoPage: number;
   videoLastPage: number;
   currentTimeFilter: string;
+  customDateFrom: string;
+  customDateTo: string;
+  currentLanguage: string;
   mediaLoading: boolean;
   currentBangQuery: string;
+  openInNewTab: boolean;
 }
 
 export type SettingFieldType =

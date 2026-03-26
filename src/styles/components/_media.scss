@@ -1,3 +1,74 @@
+.img-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  &.open {
+    display: block;
+  }
+}
+
+.img-lightbox-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+}
+
+.img-lightbox-close {
+  @include button-reset;
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  z-index: 2;
+  font-size: 32px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.7);
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+.img-lightbox-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.img-lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  transform-origin: center center;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.media-engine-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-basis: 100%;
+  gap: 6px;
+  padding: 4px 0 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.media-engine-tag--miss {
+  opacity: 0.5;
+}
+
 .image-grid {
   display: flex;
   gap: 4px;
@@ -110,7 +181,6 @@
     z-index: 200;
     border-left: none;
     border-top: 1px solid var(--border);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
     border-radius: 16px 16px 0 0;
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -120,6 +190,7 @@
       min-width: 0 !important;
       border-left: none;
       transform: translateY(0);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
     }
   }
 }
@@ -225,18 +296,22 @@
   margin-bottom: 12px;
 }
 
-.media-preview-visit {
-  display: inline-block;
-  padding: 8px 16px;
-  background: $primary;
-  color: #fff;
-  border-radius: 20px;
-  text-decoration: none;
-  font-size: $font-size-base;
+.media-preview-engines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
 
-  &:hover {
-    background: $primary-hover;
-  }
+.media-preview-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.media-preview-visit,
+.media-preview-download {
+  text-decoration: none;
 }
 
 .video-grid {

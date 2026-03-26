@@ -27,19 +27,75 @@ Search aggregator that queries multiple engines and shows results in one place. 
 
 ## Run
 
-**Create a data folder and make sure it has the right user permissions**
+By default the app will run on port `4444`, please check the [documentation](https://fccview.github.io/degoog/env.html) for a comprehensive list of env variables and various nuances.
 
 ```bash
+mkdir -p ./data
+sudo chown -R 1000:1000 ./data
+```
+
+<details>
+<summary>Docker Compose</summary>
+
+```yaml
 services:
   degoog:
     image: ghcr.io/fccview/degoog:latest
     volumes:
       - ./data:/app/data
-    user: "1000:1000"
     ports:
       - "4444:4444"
     restart: unless-stopped
 ```
+
+</details>
+
+<details>
+<summary>Inline podman</summary>
+
+```bash
+podman run -d --name degoog -p 4444:4444 -v ./data:/app/data --user 1000:1000 --security-opt label=disable --restart unless-stopped ghcr.io/fccview/degoog:latest
+```
+
+</details>
+
+<details>
+<summary>Inline docker</summary>
+
+```bash
+docker run -d --name degoog -p 4444:4444 -v ./data:/app/data --user "1000:1000" --restart unless-stopped ghcr.io/fccview/degoog:latest
+```
+
+</details>
+
+<details>
+<summary>Run natively</summary>
+
+You'll need a `.env` file for your env variables and the following required dependencies:
+
+- [bun](https://bun.sh)
+- [git](https://git-scm.com)
+
+```bash
+git clone https://github.com/fccview/degoog.git
+cd degoog
+bun install
+bun run build
+bun run start
+```
+
+**note**: If HTTPS requests fail with certificate errors, install the `ca-certificates` package
+
+</details>
+
+<details>
+<summary>Proxmox VE Script</summary>
+
+The community Proxmox script exists, but it is currently marked as in development and not recommended for production use:
+
+https://proxmox-scripts.com/posts/degoog
+
+</details>
 
 <p align="center">
   <br />
@@ -71,5 +127,14 @@ Full customisation guide (plugins, themes, engines, store, settings gate, aliase
 ## Little shoutout
 
 This project would have never existed if the amazing [searxng](https://github.com/searxng/searxng) developers hadn't had the idea first. This is my take on a heavily customisable search aggregrator, it's meant to be a more modular lighter alternative, you can add as much as you want to it, but the core will stay as simple as it gets.
+
+Alternatives are what make the internet a fun place, let me share a few other aggregators you may want to try out, the beauty of open source is that there's no competition (or at least there shouldn't be, none of us do this shit for money after all).
+
+| name       | repo                                 |
+| :--------- | :----------------------------------- |
+| searxng    | https://github.com/searxng/searxng   |
+| 4get       | https://git.lolcat.ca/lolcat/4get    |
+| OmniSearch | https://git.bwaaa.monster/omnisearch |
+| LibreY     | https://github.com/Ahwxorg/LibreY    |
 
 [![Star History Chart](https://api.star-history.com/image?repos=fccview/degoog&type=date&legend=top-left)](https://www.star-history.com/?repos=fccview%2Fdegoog&type=date&legend=top-left)

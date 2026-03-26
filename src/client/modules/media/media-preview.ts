@@ -1,6 +1,8 @@
 import { closeMediaPreview, navigateMediaPreview } from "./media";
+import { initLightbox } from "./lightbox";
 
 export function initMediaPreview(): void {
+  initLightbox();
   document.getElementById("media-preview-close")?.addEventListener("click", closeMediaPreview);
   document.getElementById("media-preview-prev")?.addEventListener("click", () => navigateMediaPreview(-1));
   document.getElementById("media-preview-next")?.addEventListener("click", () => navigateMediaPreview(1));

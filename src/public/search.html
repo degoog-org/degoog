@@ -14,7 +14,7 @@
     />
     <link
       rel="manifest"
-      href="/public/favicon/site.webmanifest?v=__APP_VERSION__"
+      href="/public/favicon/site.webmanifest" crossorigin="use-credentials"
     />
     <link
       rel="search"
@@ -215,23 +215,48 @@
           <div class="results-tab" data-type="news">News</div>
           <div class="tools-wrap" id="tools-bar">
             <button class="tools-toggle" id="tools-toggle" type="button">
-              Any time
+              Options
             </button>
             <div
               class="tools-dropdown"
               id="tools-dropdown"
               style="display: none"
             >
-              <div class="tools-section">
-                <button class="tools-option active" data-time="any">
-                  Any time
-                </button>
-                <button class="tools-option" data-time="hour">Hour</button>
-                <button class="tools-option" data-time="day">24 hours</button>
-                <button class="tools-option" data-time="week">Week</button>
-                <button class="tools-option" data-time="month">Month</button>
-                <button class="tools-option" data-time="year">Year</button>
+              <button class="tools-menu-item" data-menu="time" type="button">
+                <span class="tools-menu-label">Time</span>
+                <span class="tools-menu-value" id="tools-time-val">Any time</span>
+                <svg class="tools-menu-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <button class="tools-menu-item" data-menu="lang" type="button">
+                <span class="tools-menu-label">Language</span>
+                <span class="tools-menu-value" id="tools-lang-val">Any</span>
+                <svg class="tools-menu-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+            <div class="tools-submenu" id="tools-submenu-time" style="display: none">
+              <button class="tools-option active" data-time="any">Any time</button>
+              <button class="tools-option" data-time="hour">Hour</button>
+              <button class="tools-option" data-time="day">24 hours</button>
+              <button class="tools-option" data-time="week">Week</button>
+              <button class="tools-option" data-time="month">Month</button>
+              <button class="tools-option" data-time="year">Year</button>
+              <button class="tools-option" data-time="custom">Custom...</button>
+              <div class="tools-custom-date" id="tools-custom-date" style="display: none">
+                <input type="date" id="tools-date-from" class="tools-date-input" />
+                <span class="tools-date-sep">to</span>
+                <input type="date" id="tools-date-to" class="tools-date-input" />
+                <button type="button" class="tools-date-apply" id="tools-date-apply">Apply</button>
               </div>
+            </div>
+            <div class="tools-submenu" id="tools-submenu-lang" style="display: none">
+              <input
+                type="text"
+                class="tools-lang-filter"
+                id="tools-lang-filter"
+                placeholder="Filter languages..."
+                autocomplete="off"
+              />
+              <div class="tools-lang-list" id="tools-lang-list"></div>
             </div>
           </div>
         </div>
@@ -310,6 +335,13 @@
             <div class="media-preview-info" id="media-preview-info"></div>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="img-lightbox" id="img-lightbox">
+      <div class="img-lightbox-bg" id="img-lightbox-bg"></div>
+      <button class="img-lightbox-close" id="img-lightbox-close">&times;</button>
+      <div class="img-lightbox-wrap" id="img-lightbox-wrap">
+        <img class="img-lightbox-img" id="img-lightbox-img" src="" alt="">
       </div>
     </div>
     <script type="module" src="/public/app.js?v=__APP_VERSION__"></script>

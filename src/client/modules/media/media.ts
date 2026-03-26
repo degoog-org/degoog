@@ -2,6 +2,7 @@ import { state } from "../../state";
 import { getEngines } from "../../utils/engines";
 import { buildSearchUrl, proxyImageUrl } from "../../utils/url";
 import { escapeHtml, cleanHostname } from "../../utils/dom";
+import { openLightbox } from "./lightbox";
 import type { ScoredResult } from "../../types";
 
 let mediaObserver: IntersectionObserver | null = null;
@@ -110,12 +111,37 @@ export function openMediaPreview(
   currentMediaIdx = idx;
   currentCardSelector = cardSelector;
 
-  if (img) img.src = proxyImageUrl(item.thumbnail || "") || "";
+  const previewSrc = item.imageUrl || item.thumbnail || "";
+  if (img) {
+    img.src = proxyImageUrl(previewSrc) || "";
+    img.style.cursor = "zoom-in";
+    img.onclick = () => {
+      const src = img.src;
+      if (src) openLightbox(src);
+    };
+  }
   if (info) {
+    const target = state.openInNewTab ? ' target="_blank" rel="noopener"' : "";
+    const engines = item.sources?.length
+      ? `<div class="media-preview-engines">${item.sources.map((s) => `<span class="result-engine-tag">${escapeHtml(s)}</span>`).join("")}</div>`
+      : "";
+    const downloadUrl = previewSrc ? proxyImageUrl(previewSrc) : "";
+    const downloadFilename = (() => {
+      try {
+        const p = new URL(previewSrc).pathname;
+        return p.split("/").filter(Boolean).pop() || "image";
+      } catch {
+        return "image";
+      }
+    })();
     info.innerHTML = `
       <h3 class="media-preview-title">${escapeHtml(item.title)}</h3>
-      <a class="media-preview-link" href="${escapeHtml(item.url)}" target="_blank">${escapeHtml(cleanHostname(item.url))}</a>
-      <a class="media-preview-visit" href="${escapeHtml(item.url)}" target="_blank">Visit page</a>
+      <a class="media-preview-link" href="${escapeHtml(item.url)}"${target}>${escapeHtml(cleanHostname(item.url))}</a>
+      ${engines}
+      <div class="media-preview-actions">
+        <a class="btn btn--primary media-preview-visit" href="${escapeHtml(item.url)}"${target}>Visit page</a>
+        ${downloadUrl ? `<a class="btn btn--secondary media-preview-download" href="${escapeHtml(downloadUrl)}" download="${escapeHtml(downloadFilename)}">Download</a>` : ""}
+      </div>
     `;
   }
 

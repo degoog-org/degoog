@@ -44,7 +44,7 @@
     />
     <link
       rel="manifest"
-      href="/public/favicon/site.webmanifest?v=__APP_VERSION__"
+      href="/public/favicon/site.webmanifest" crossorigin="use-credentials"
     />
     <title>Settings – degoog</title>
     <link rel="stylesheet" href="/public/style.css?v=__APP_VERSION__" />
@@ -53,7 +53,23 @@
   <body class="settings-page-body">
     <div class="settings-page">
       <header class="settings-page-header">
-        <a onclick="window.history.back()" class="settings-page-back">
+        <a
+          href="/"
+          onclick="
+            event.preventDefault();
+            try {
+              if (
+                document.referrer &&
+                new URL(document.referrer).origin === location.origin
+              ) {
+                history.back();
+                return;
+              }
+            } catch (e) {}
+            location.href = '/';
+          "
+          class="settings-page-back"
+        >
           <svg
             width="24"
             height="24"

@@ -35,7 +35,10 @@ export class RedditEngine implements SearchEngine {
       headers: {
         "User-Agent": getRandomUserAgent(),
         Accept: "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Language":
+          context?.buildAcceptLanguage?.() ||
+          process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
+          "en-US,en;q=0.9",
         "Accept-Encoding": "gzip, deflate, br",
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",

@@ -33,5 +33,12 @@ export const buildSearchUrl = (
   if (state.currentTimeFilter && state.currentTimeFilter !== "any") {
     params.set("time", state.currentTimeFilter);
   }
+  if (state.currentTimeFilter === "custom") {
+    if (state.customDateFrom) params.set("dateFrom", state.customDateFrom);
+    if (state.customDateTo) params.set("dateTo", state.customDateTo);
+  }
+  if (state.currentLanguage) {
+    params.set("lang", state.currentLanguage);
+  }
   return `/api/search?${params.toString()}`;
 };

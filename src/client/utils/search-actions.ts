@@ -15,6 +15,7 @@ import {
   renderSlotPanels,
   clearSlotPanels,
 } from "../modules/renderer/render";
+import { renderMediaEngineBar } from "../modules/renderer/render-media";
 import { hideAcDropdown } from "./autocomplete";
 import {
   setResultsMeta,
@@ -26,7 +27,7 @@ import {
   fetchSlotPanels,
   buildCommandGlanceHtml,
 } from "./search-utils";
-import { skeletonResults, skeletonGlance } from "../animations/skeleton";
+import { skeletonResults, skeletonGlance, skeletonImageGrid, skeletonVideoGrid } from "../animations/skeleton";
 import { SlotPanelPosition, type Command, type SearchResponse, type ScoredResult } from "../types";
 
 let commandsCache: Command[] | null = null;
@@ -107,17 +108,28 @@ export async function performSearch(
     "results-search-input",
   ) as HTMLInputElement | null;
   if (resultsInput) resultsInput.value = query;
+  const layout = document.querySelector<HTMLElement>(".results-layout");
+  if (resolvedType === "images" || resolvedType === "videos") {
+    layout?.classList.add("media-mode");
+  } else {
+    layout?.classList.remove("media-mode");
+  }
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Searching...";
-  const useSkeleton = resolvedType === "all" || resolvedType === "news";
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl)
     glanceEl.innerHTML = resolvedType === "all" ? skeletonGlance() : "";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    resultsList.innerHTML = useSkeleton
-      ? skeletonResults()
-      : '<div class="loading-dots"><span></span><span></span><span></span></div>';
+    if (resolvedType === "all" || resolvedType === "news") {
+      resultsList.innerHTML = skeletonResults();
+    } else if (resolvedType === "images") {
+      resultsList.innerHTML = skeletonImageGrid();
+    } else if (resolvedType === "videos") {
+      resultsList.innerHTML = skeletonVideoGrid();
+    } else {
+      resultsList.innerHTML = skeletonResults();
+    }
   }
   const pagination = document.getElementById("pagination");
   if (pagination) pagination.innerHTML = "";
@@ -151,6 +163,7 @@ export async function performSearch(
     const isMediaType = resolvedType === "images" || resolvedType === "videos";
     if (isMediaType) {
       if (glanceEl) glanceEl.innerHTML = "";
+      renderMediaEngineBar(data.engineTimings ?? []);
       if (sidebar) sidebar.innerHTML = "";
     } else {
       const sidebarTop =
@@ -200,6 +213,7 @@ async function _performSearchWithBang(
     const isMediaType = type === "images" || type === "videos";
     if (isMediaType) {
       if (glanceEl) glanceEl.innerHTML = "";
+      renderMediaEngineBar(searchData.engineTimings ?? []);
       if (sidebar) sidebar.innerHTML = "";
     } else {
       const sidebarTop =
@@ -346,14 +360,19 @@ function _renderBangPagination(
 
 export async function goToPage(pageNum: number): Promise<void> {
   if (pageNum === state.currentPage) return;
-  const useSkeleton =
-    state.currentType === "all" || state.currentType === "news";
   const resultsList = document.getElementById("results-list");
   const pagination = document.getElementById("pagination");
-  if (resultsList)
-    resultsList.innerHTML = useSkeleton
-      ? skeletonResults()
-      : '<div class="loading-dots"><span></span><span></span><span></span></div>';
+  if (resultsList) {
+    if (state.currentType === "all" || state.currentType === "news") {
+      resultsList.innerHTML = skeletonResults();
+    } else if (state.currentType === "images") {
+      resultsList.innerHTML = skeletonImageGrid();
+    } else if (state.currentType === "videos") {
+      resultsList.innerHTML = skeletonVideoGrid();
+    } else {
+      resultsList.innerHTML = skeletonResults();
+    }
+  }
   if (pagination) pagination.innerHTML = "";
   const engines = await getEngines();
   const url = buildSearchUrl(
@@ -439,7 +458,9 @@ export async function retryEngine(engineName: string): Promise<void> {
 
     const isMediaType =
       state.currentType === "images" || state.currentType === "videos";
-    if (!isMediaType && state.currentData) {
+    if (isMediaType && state.currentData) {
+      renderMediaEngineBar(state.currentData.engineTimings ?? []);
+    } else if (state.currentData) {
       const sidebarTop =
         state.currentData.slotPanels?.filter(
           (p) => p.position === SlotPanelPosition.KnowledgePanel,

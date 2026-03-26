@@ -62,11 +62,11 @@ export function renderResults(results: ScoredResult[]): void {
         <img class="result-favicon" src="${faviconUrl(r.url)}" alt="" width="26" height="26" onerror="this.style.display='none'">
         <cite class="result-cite">${escapeHtml(cleanUrl(r.url))}</cite>
       </div>
-      <a class="result-title" href="${escapeHtml(r.url)}">${escapeHtml(r.title)}</a>
+      <a class="result-title" href="${escapeHtml(r.url)}"${state.openInNewTab ? ' target="_blank" rel="noopener"' : ""}>${escapeHtml(r.title)}</a>
       <p class="result-snippet">${escapeHtml(r.snippet)}</p>
       <div class="result-engines">${r.sources.map((s) => `<span class="result-engine-tag">${escapeHtml(s)}</span>`).join("")}</div>`;
       if (thumbBlock) {
-        return `<div class="result-item"><div class="result-item-inner"><div class="result-body">${body}</div>${thumbBlock}</div></div>`;
+        return `<div class="result-item"><div class="result-item-inner">${thumbBlock}<div class="result-body">${body}</div></div></div>`;
       }
       return `<div class="result-item">${body}</div>`;
     })

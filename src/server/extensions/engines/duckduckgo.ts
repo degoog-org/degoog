@@ -4,12 +4,34 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
+
+const DDG_SAFE_SEARCH_MAP: Record<string, string> = {
+  moderate: "-2",
+  strict: "1",
+};
 
 export class DuckDuckGoEngine implements SearchEngine {
   name = "DuckDuckGo";
   bangShortcut = "ddg";
+  safeSearch: string = "off";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "moderate", "strict"],
+      description: "Filter explicit content from search results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -18,12 +40,15 @@ export class DuckDuckGoEngine implements SearchEngine {
     context?: EngineContext,
   ): Promise<SearchResult[]> {
     const offset = ((page || 1) - 1) * 30;
+    const lang = context?.lang;
     const params = new URLSearchParams({ q: query });
     if (offset > 0) {
       params.set("s", String(offset));
       params.set("dc", String(offset + 1));
     }
-    if (timeFilter && timeFilter !== "any") {
+    if (lang && lang !== "en") params.set("kl", `${lang}-${lang}`);
+    if (DDG_SAFE_SEARCH_MAP[this.safeSearch]) params.set("kp", DDG_SAFE_SEARCH_MAP[this.safeSearch]);
+    if (timeFilter && timeFilter !== "any" && timeFilter !== "custom") {
       const dfMap: Record<string, string> = {
         hour: "h",
         day: "d",
@@ -40,7 +65,10 @@ export class DuckDuckGoEngine implements SearchEngine {
         "User-Agent": getRandomUserAgent(),
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Language":
+          context?.buildAcceptLanguage?.() ||
+          process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
+          "en-US,en;q=0.9",
         "Accept-Encoding": "gzip, deflate, br",
         Referer: "https://duckduckgo.com/",
         "Sec-Fetch-Dest": "document",

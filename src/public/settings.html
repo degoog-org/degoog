@@ -11,7 +11,7 @@
     />
     <link
       rel="manifest"
-      href="/public/favicon/site.webmanifest?v=__APP_VERSION__"
+      href="/public/favicon/site.webmanifest" crossorigin="use-credentials"
     />
     <title>Settings – degoog</title>
     <script>
@@ -32,7 +32,23 @@
   <body class="settings-page-body">
     <div class="settings-page">
       <header class="settings-page-header">
-        <a onclick="window.history.back()" class="settings-page-back">
+        <a
+          href="/"
+          onclick="
+            event.preventDefault();
+            try {
+              if (
+                document.referrer &&
+                new URL(document.referrer).origin === location.origin
+              ) {
+                history.back();
+                return;
+              }
+            } catch (e) {}
+            location.href = '/';
+          "
+          class="settings-page-back"
+        >
           <svg
             width="24"
             height="24"
@@ -117,23 +133,71 @@
             </button>
           </section>
 
+          <section class="settings-section">
+            <h2 class="settings-section-heading">Search Options</h2>
+
+            <label class="settings-toggle-wrap" style="margin-top: 1rem">
+              <input
+                type="checkbox"
+                id="settings-open-new-tab"
+                class="settings-toggle"
+                aria-label="Open result links in new tab"
+              />
+              <span class="toggle-slider"></span>
+              <span class="settings-toggle-label"
+                >Open result links in new tab</span
+              >
+            </label>
+          </section>
+
+          <section class="settings-section">
+            <h2 class="settings-section-heading">Search language</h2>
+            <p class="settings-desc">
+              Change the search languages in the search options dropdown. When
+              disabled, all ~90 built-in languages are shown.
+            </p>
+            <label class="settings-toggle-wrap">
+              <input
+                type="checkbox"
+                id="settings-languages-enabled"
+                class="settings-toggle"
+                aria-label="Change search languages"
+              />
+              <span class="toggle-slider"></span>
+              <span class="settings-toggle-label">Change search languages</span>
+            </label>
+            <div
+              class="settings-proxy-urls-wrap"
+              id="settings-languages-wrap"
+              style="display: none"
+            >
+              <label for="settings-languages" class="settings-proxy-urls-label"
+                >Language codes (one per line)</label
+              >
+              <textarea
+                id="settings-languages"
+                class="settings-proxy-urls"
+                rows="5"
+                placeholder="en&#10;it&#10;de&#10;fr&#10;es"
+              ></textarea>
+            </div>
+          </section>
+
           <section class="settings-section" id="settings-section-proxy">
             <h2 class="settings-section-heading">Proxy</h2>
             <p class="settings-desc">
               Use proxies for server-side search requests. One URL per line;
               requests rotate through the list.
             </p>
-            <label class="settings-proxy-toggle-wrap">
+            <label class="settings-toggle-wrap">
               <input
                 type="checkbox"
                 id="settings-proxy-enabled"
-                class="settings-proxy-toggle"
+                class="settings-toggle"
                 aria-label="Use proxy for search"
               />
               <span class="toggle-slider"></span>
-              <span class="settings-proxy-toggle-label"
-                >Use proxy for search</span
-              >
+              <span class="settings-toggle-label">Use proxy for search</span>
             </label>
             <div
               class="settings-proxy-urls-wrap"
@@ -159,17 +223,15 @@
               engines.
             </p>
             <div class="settings-rate-limit-wrap" id="settings-rate-limit-wrap">
-              <label class="settings-proxy-toggle-wrap">
+              <label class="settings-toggle-wrap">
                 <input
                   type="checkbox"
                   id="settings-rate-limit-enabled"
-                  class="settings-proxy-toggle"
+                  class="settings-toggle"
                   aria-label="Enable rate limiting"
                 />
                 <span class="toggle-slider"></span>
-                <span class="settings-proxy-toggle-label"
-                  >Enable rate limiting</span
-                >
+                <span class="settings-toggle-label">Enable rate limiting</span>
               </label>
               <div
                 class="settings-rate-limit-options"

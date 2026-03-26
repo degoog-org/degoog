@@ -4,11 +4,28 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
 
 export class BingVideosEngine implements SearchEngine {
   name = "Bing Videos";
+  safeSearch: string = "off";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "moderate", "strict"],
+      description: "Filter explicit content from video results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -17,8 +34,11 @@ export class BingVideosEngine implements SearchEngine {
     context?: EngineContext,
   ): Promise<SearchResult[]> {
     const first = (page - 1) * 40;
+    const lang = context?.lang;
     let url = `https://www.bing.com/videos/search?q=${encodeURIComponent(query)}&count=40&first=${first}`;
-    if (timeFilter && timeFilter !== "any") {
+    if (lang) url += `&setlang=${lang}`;
+    if (this.safeSearch !== "off") url += `&adlt=${this.safeSearch}`;
+    if (timeFilter && timeFilter !== "any" && timeFilter !== "custom") {
       const freshMap: Record<string, string> = {
         hour: "Hour",
         day: "Day",
@@ -35,7 +55,10 @@ export class BingVideosEngine implements SearchEngine {
         "User-Agent": getRandomUserAgent(),
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Language":
+          context?.buildAcceptLanguage?.() ||
+          process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
+          "en-US,en;q=0.9",
         "Accept-Encoding": "gzip, deflate, br",
         "Sec-Fetch-Dest": "document",
         "Sec-Fetch-Mode": "navigate",

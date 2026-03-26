@@ -20,7 +20,8 @@ self.addEventListener("fetch", (event) => {
   const sameOrigin = url.origin === self.location.origin;
   const isPublicAsset =
     event.request.method === "GET" && url.pathname.startsWith("/public/");
-  if (!sameOrigin || !isPublicAsset) return;
+  const isManifest = url.pathname.endsWith(".webmanifest");
+  if (!sameOrigin || !isPublicAsset || isManifest) return;
 
   event.respondWith(
     fetch(event.request)
@@ -30,6 +31,6 @@ self.addEventListener("fetch", (event) => {
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         return res;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => caches.match(event.request).then((r) => r || new Response("", { status: 503 })))
   );
 });

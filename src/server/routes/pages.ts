@@ -98,6 +98,7 @@ router.get("/search", async (c) => {
   return c.html(await buildPage("search.html"));
 });
 
+router.get("/settings/", (c) => c.redirect("/settings", 301));
 router.get("/settings", async (c) => {
   if (isPublicInstance())
     return c.html(await buildPage("settings-public.html"));

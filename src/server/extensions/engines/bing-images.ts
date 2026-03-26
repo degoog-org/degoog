@@ -4,11 +4,28 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
 
 export class BingImagesEngine implements SearchEngine {
   name = "Bing Images";
+  safeSearch: string = "off";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "moderate", "strict"],
+      description: "Filter explicit content from image results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -17,8 +34,11 @@ export class BingImagesEngine implements SearchEngine {
     context?: EngineContext,
   ): Promise<SearchResult[]> {
     const first = (page - 1) * 60;
+    const lang = context?.lang;
     let url = `https://www.bing.com/images/search?q=${encodeURIComponent(query)}&count=60&first=${first}`;
-    if (timeFilter && timeFilter !== "any") {
+    if (lang) url += `&setlang=${lang}`;
+    if (this.safeSearch !== "off") url += `&adlt=${this.safeSearch}`;
+    if (timeFilter && timeFilter !== "any" && timeFilter !== "custom") {
       const freshMap: Record<string, string> = {
         hour: "Hour",
         day: "Day",
@@ -35,7 +55,10 @@ export class BingImagesEngine implements SearchEngine {
         "User-Agent": getRandomUserAgent(),
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Language":
+          context?.buildAcceptLanguage?.() ||
+          process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
+          "en-US,en;q=0.9",
         "Accept-Encoding": "gzip, deflate, br",
         "Sec-Fetch-Dest": "document",
         "Sec-Fetch-Mode": "navigate",
@@ -60,6 +83,7 @@ export class BingImagesEngine implements SearchEngine {
             snippet: data.desc || "",
             source: this.name,
             thumbnail: data.turl,
+            imageUrl: data.murl,
           });
         }
       } catch {}

@@ -3,9 +3,13 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomGsaAgent } from "../../utils/user-agents";
-import { resolveGoogleTbs } from "../../utils/google-helpers";
+import {
+  resolveGoogleTbs,
+  resolveGoogleCustomDateTbs,
+} from "../../utils/google-utils";
 
 interface GoogleImageResult {
   result?: {
@@ -25,6 +29,22 @@ interface GoogleImageResult {
 
 export class GoogleImagesEngine implements SearchEngine {
   name = "Google Images";
+  safeSearch: string = "off";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "on"],
+      description: "Filter explicit content from image results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -40,8 +60,13 @@ export class GoogleImagesEngine implements SearchEngine {
       async: `_fmt:json,p:1,ijn:${ijn}`,
     });
 
-    const tbs = resolveGoogleTbs(timeFilter);
+    const tbs =
+      timeFilter === "custom"
+        ? resolveGoogleCustomDateTbs(context?.dateFrom, context?.dateTo)
+        : resolveGoogleTbs(timeFilter);
     if (tbs) params.set("tbs", tbs);
+    if (context?.lang) params.set("hl", context.lang);
+    if (this.safeSearch === "on") params.set("safe", "active");
 
     const ua = getRandomGsaAgent();
     const doFetch = context?.fetch ?? fetch;
@@ -51,6 +76,10 @@ export class GoogleImagesEngine implements SearchEngine {
         headers: {
           "User-Agent": ua,
           Accept: "*/*",
+          "Accept-Language":
+            context?.buildAcceptLanguage?.() ||
+            process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
+            "en-US,en;q=0.9",
           Cookie: "CONSENT=YES+",
         },
       },
@@ -78,6 +107,7 @@ export class GoogleImagesEngine implements SearchEngine {
           snippet: item.result?.site_title || "",
           source: this.name,
           thumbnail,
+          imageUrl: item.original_image?.url || thumbnail,
         });
       }
     }

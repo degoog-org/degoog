@@ -2,7 +2,8 @@ import { state } from "../../state";
 import { escapeHtml, cleanHostname } from "../../utils/dom";
 import { proxyImageUrl } from "../../utils/url";
 import { openMediaPreview, registerAppendMediaCards } from "../media/media";
-import type { ScoredResult } from "../../types";
+import { setupRetryLinks } from "./render-sidebar";
+import type { ScoredResult, EngineTiming } from "../../types";
 
 const _getImageColumnCount = (): number => {
   const w = window.innerWidth;
@@ -144,4 +145,22 @@ export function renderVideoGrid(
     grid = container.querySelector<HTMLElement>(".video-grid")!;
   }
   appendMediaCards(grid, results, "video");
+}
+
+export function renderMediaEngineBar(timings: EngineTiming[]): void {
+  const el = document.getElementById("results-meta");
+  if (!el) return;
+  el.querySelector(".media-engine-bar")?.remove();
+  if (!timings.length) return;
+  const tags = timings
+    .map((et) => {
+      const hit = et.resultCount > 0;
+      return `<span class="result-engine-tag${hit ? "" : " media-engine-tag--miss"}">${escapeHtml(et.name)} · ${et.resultCount} <a class="engine-retry-link" data-engine="${escapeHtml(et.name)}">retry</a></span>`;
+    })
+    .join("");
+  const bar = document.createElement("div");
+  bar.className = "media-engine-bar";
+  bar.innerHTML = tags;
+  el.appendChild(bar);
+  setupRetryLinks(bar);
 }

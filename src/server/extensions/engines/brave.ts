@@ -4,6 +4,7 @@ import type {
   SearchResult,
   TimeFilter,
   EngineContext,
+  SettingField,
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
 
@@ -15,20 +16,35 @@ const TIME_RANGE_MAP: Record<string, string> = {
   year: "py",
 };
 
-function buildCookieString(): string {
-  const parts = [
-    "safesearch=moderate",
-    "useLocation=0",
-    "summarizer=0",
-    "country=us",
-    "ui_lang=en-us",
-  ];
+function buildCookieString(lang?: string, safeSearch: string = "moderate"): string {
+  const parts = [`safesearch=${safeSearch}`, "useLocation=0", "summarizer=0"];
+  if (lang && lang !== "en") {
+    parts.push(`country=${lang}`, `ui_lang=${lang}-${lang}`);
+  } else {
+    parts.push("country=us", "ui_lang=en-us");
+  }
   return parts.join("; ");
 }
 
 export class BraveEngine implements SearchEngine {
   name = "Brave Search";
   bangShortcut = "brave";
+  safeSearch: string = "moderate";
+  settingsSchema: SettingField[] = [
+    {
+      key: "safeSearch",
+      label: "Safe Search",
+      type: "select",
+      options: ["off", "moderate", "strict"],
+      description: "Filter explicit content from search results.",
+    },
+  ];
+
+  configure(settings: Record<string, string | string[]>): void {
+    if (typeof settings.safeSearch === "string") {
+      this.safeSearch = settings.safeSearch;
+    }
+  }
 
   async executeSearch(
     query: string,
@@ -43,7 +59,12 @@ export class BraveEngine implements SearchEngine {
     if (page > 1) {
       args.offset = String(page - 1);
     }
-    if (timeFilter && timeFilter !== "any" && TIME_RANGE_MAP[timeFilter]) {
+    if (
+      timeFilter &&
+      timeFilter !== "any" &&
+      timeFilter !== "custom" &&
+      TIME_RANGE_MAP[timeFilter]
+    ) {
       args.tf = TIME_RANGE_MAP[timeFilter];
     }
     const url = `${BASE_URL}search?${new URLSearchParams(args).toString()}`;
@@ -55,8 +76,11 @@ export class BraveEngine implements SearchEngine {
         "Accept-Encoding": "gzip, deflate",
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        Cookie: buildCookieString(),
+        "Accept-Language":
+          context?.buildAcceptLanguage?.() ||
+          process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE ||
+          "en-US,en;q=0.9",
+        Cookie: buildCookieString(context?.lang, this.safeSearch),
       },
       redirect: "follow",
     });
