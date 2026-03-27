@@ -2,6 +2,7 @@ import { escapeHtml } from "../../utils/dom";
 import { proxyImageUrl } from "../../utils/url";
 import { retryEngine } from "../../utils/search-actions";
 import type { SearchResponse, SlotPanel } from "../../types";
+import { state } from "../../state";
 
 export const setupRetryLinks = (container: HTMLElement): void => {
   container.querySelectorAll<HTMLElement>(".engine-retry-link").forEach((link) => {
@@ -60,7 +61,7 @@ export function renderSidebar(
     html += _sidebarAccordion(kp.title, kpContent);
   }
 
-  if (data.engineTimings && data.engineTimings.length > 0) {
+  if (state.displayEnginePerformance && data.engineTimings && data.engineTimings.length > 0) {
     let statsContent = "";
     const maxTime = Math.max(...data.engineTimings.map((e) => e.time));
     data.engineTimings.forEach((et) => {

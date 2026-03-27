@@ -81,6 +81,7 @@ export interface AppState {
   mediaLoading: boolean;
   currentBangQuery: string;
   openInNewTab: boolean;
+  displayEnginePerformance: boolean;
 }
 
 export type SettingFieldType =

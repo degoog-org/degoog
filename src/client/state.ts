@@ -18,4 +18,5 @@ export const state: AppState = {
   mediaLoading: false,
   currentBangQuery: "",
   openInNewTab: false,
+  displayEnginePerformance: true,
 };

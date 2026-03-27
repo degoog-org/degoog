@@ -20,7 +20,7 @@ export const idbGet = async <T>(key: string): Promise<T | null> => {
       const tx = db.transaction(STORE_NAME, "readonly");
       const store = tx.objectStore(STORE_NAME);
       const req = store.get(key);
-      req.onsuccess = () => resolve((req.result as T) || null);
+      req.onsuccess = () => resolve((req.result as T) ?? null);
       req.onerror = () => reject(req.error);
     });
   } catch {
