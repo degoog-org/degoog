@@ -85,7 +85,6 @@ export async function initGeneralTab(
     openInNewTab.checked = saved || false;
   }
 
-  // Engine performance toggle
   const displayEnginePerformance = document.getElementById(
     "display-engine-performance",
   ) as HTMLInputElement | null;
@@ -94,7 +93,6 @@ export async function initGeneralTab(
     displayEnginePerformance.checked = saved ?? true;
   }
 
-  // Search suggestions toggle
   const displaySearchSuggestions = document.getElementById(
     "display-search-suggestions",
   ) as HTMLInputElement | null;
@@ -234,14 +232,12 @@ export async function initGeneralTab(
       if (openInNewTab) {
         await idbSet(OPEN_IN_NEW_TAB_KEY, openInNewTab.checked);
       }
-      // Save engine performance setting
       if (displayEnginePerformance) {
         await idbSet(
           DISPLAY_ENGINE_PERFORMANCE,
           displayEnginePerformance.checked,
         );
       }
-      // Save search suggestion setting
       if (displaySearchSuggestions) {
         await idbSet(
           DISPLAY_SEARCH_SUGGESTIONS,
