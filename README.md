@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/public/images/degoog-logo.png" alt="Degoog Logo" width="100"> 
+  <img src="src/public/images/degoog-logo.png" alt="Degoog Logo" width="100">
   <br />
   <h1 align="center">degoog</h1><br/>
 </p>
@@ -56,6 +56,40 @@ services:
 ```bash
 podman run -d --name degoog -p 4444:4444 -v ./data:/app/data --user 1000:1000 --security-opt label=disable --restart unless-stopped ghcr.io/fccview/degoog:latest
 ```
+
+</details>
+
+<details>
+<summary>Podman Quadlet Container File</summary>
+
+```yaml
+[Unit]
+Description=Degoog selfhosted search aggregator
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image=ghcr.io/fccview/degoog:latest
+AutoUpdate=registry
+ContainerName=degoog
+Environment=TZ=<Country/City>
+Environment=PUID=1000
+Environment=PGID=1000
+# Environment=DEGOOG_PUBLIC_INSTANCE=true # Add if public
+UIDMap=+%U:@%U
+Volume=<Path to config>:/app/data:Z
+PublishPort=4444:4444
+Network=degoog
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+</details>
+
 
 </details>
 
