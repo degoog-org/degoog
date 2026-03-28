@@ -104,6 +104,7 @@ export interface SettingField {
   description?: string;
   secret?: boolean;
   options?: string[];
+  default?: string;
   advanced?: boolean;
 }
 
