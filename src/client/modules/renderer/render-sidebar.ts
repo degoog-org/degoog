@@ -2,23 +2,26 @@ import { escapeHtml } from "../../utils/dom";
 import { proxyImageUrl } from "../../utils/url";
 import { retryEngine } from "../../utils/search-actions";
 import type { SearchResponse, SlotPanel } from "../../types";
+import { state } from "../../state";
 
 export const setupRetryLinks = (container: HTMLElement): void => {
-  container.querySelectorAll<HTMLElement>(".engine-retry-link").forEach((link) => {
-    link.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const engineName = link.dataset.engine;
-      if (!engineName) return;
-      link.classList.add("retrying");
-      link.textContent = "retrying...";
-      try {
-        await retryEngine(engineName);
-      } catch {}
-      link.classList.remove("retrying");
-      link.textContent = "retry";
+  container
+    .querySelectorAll<HTMLElement>(".engine-retry-link")
+    .forEach((link) => {
+      link.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const engineName = link.dataset.engine;
+        if (!engineName) return;
+        link.classList.add("retrying");
+        link.textContent = "retrying...";
+        try {
+          await retryEngine(engineName);
+        } catch {}
+        link.classList.remove("retrying");
+        link.textContent = "retry";
+      });
     });
-  });
 };
 
 const _sidebarAccordion = (title: string, content: string): string =>
@@ -60,7 +63,11 @@ export function renderSidebar(
     html += _sidebarAccordion(kp.title, kpContent);
   }
 
-  if (data.engineTimings && data.engineTimings.length > 0) {
+  if (
+    state.displayEnginePerformance &&
+    data.engineTimings &&
+    data.engineTimings.length > 0
+  ) {
     let statsContent = "";
     const maxTime = Math.max(...data.engineTimings.map((e) => e.time));
     data.engineTimings.forEach((et) => {
@@ -79,7 +86,11 @@ export function renderSidebar(
     html += _sidebarAccordion("Engine Performance", statsContent);
   }
 
-  if (data.relatedSearches && data.relatedSearches.length > 0) {
+  if (
+    state.displaySearchSuggestions &&
+    data.relatedSearches &&
+    data.relatedSearches.length > 0
+  ) {
     let relContent = "";
     data.relatedSearches.forEach((term) => {
       relContent += `<a class="related-search-link" data-query="${escapeHtml(term)}">${escapeHtml(term)}</a>`;

@@ -1,5 +1,10 @@
 import { idbGet, idbSet } from "../utils/db";
-import { THEME_KEY, OPEN_IN_NEW_TAB_KEY } from "../constants";
+import {
+  THEME_KEY,
+  OPEN_IN_NEW_TAB_KEY,
+  DISPLAY_ENGINE_PERFORMANCE,
+  DISPLAY_SEARCH_SUGGESTIONS,
+} from "../constants";
 import { applyTheme } from "../utils/theme";
 import { requestInstallPrompt } from "../utils/install-prompt";
 import { authHeaders, jsonHeaders } from "../utils/request";
@@ -31,6 +36,34 @@ export async function initAppearanceSettings(): Promise<void> {
       await idbSet(OPEN_IN_NEW_TAB_KEY, openInNewTab.checked);
     });
   }
+
+  const displayEnginePerformance = document.getElementById(
+    "display-engine-performance",
+  ) as HTMLInputElement | null;
+  if (displayEnginePerformance) {
+    const saved = await idbGet<boolean>(DISPLAY_ENGINE_PERFORMANCE);
+    displayEnginePerformance.checked = saved || false;
+    displayEnginePerformance.addEventListener("change", async () => {
+      await idbSet(
+        DISPLAY_ENGINE_PERFORMANCE,
+        displayEnginePerformance.checked,
+      );
+    });
+  }
+
+  const displaySearchSuggestions = document.getElementById(
+    "display-search-suggestions",
+  ) as HTMLInputElement | null;
+  if (displaySearchSuggestions) {
+    const saved = await idbGet<boolean>(DISPLAY_SEARCH_SUGGESTIONS);
+    displaySearchSuggestions.checked = saved || false;
+    displaySearchSuggestions.addEventListener("change", async () => {
+      await idbSet(
+        DISPLAY_SEARCH_SUGGESTIONS,
+        displaySearchSuggestions.checked,
+      );
+    });
+  }
 }
 
 export async function initGeneralTab(
@@ -50,6 +83,22 @@ export async function initGeneralTab(
   if (openInNewTab) {
     const saved = await idbGet<boolean>(OPEN_IN_NEW_TAB_KEY);
     openInNewTab.checked = saved || false;
+  }
+
+  const displayEnginePerformance = document.getElementById(
+    "display-engine-performance",
+  ) as HTMLInputElement | null;
+  if (displayEnginePerformance) {
+    const saved = await idbGet<boolean>(DISPLAY_ENGINE_PERFORMANCE);
+    displayEnginePerformance.checked = saved ?? true;
+  }
+
+  const displaySearchSuggestions = document.getElementById(
+    "display-search-suggestions",
+  ) as HTMLInputElement | null;
+  if (displaySearchSuggestions) {
+    const saved = await idbGet<boolean>(DISPLAY_SEARCH_SUGGESTIONS);
+    displaySearchSuggestions.checked = saved ?? true;
   }
 
   const proxyEnabled = document.getElementById(
@@ -105,7 +154,9 @@ export async function initGeneralTab(
         };
         if (languagesEnabled && languagesWrap) {
           languagesEnabled.checked = data.languagesEnabled === "true";
-          languagesWrap.style.display = languagesEnabled.checked ? "block" : "none";
+          languagesWrap.style.display = languagesEnabled.checked
+            ? "block"
+            : "none";
         }
         if (languagesTextarea) languagesTextarea.value = data.languages ?? "";
         proxyEnabled.checked = data.proxyEnabled === "true";
@@ -180,6 +231,18 @@ export async function initGeneralTab(
       }
       if (openInNewTab) {
         await idbSet(OPEN_IN_NEW_TAB_KEY, openInNewTab.checked);
+      }
+      if (displayEnginePerformance) {
+        await idbSet(
+          DISPLAY_ENGINE_PERFORMANCE,
+          displayEnginePerformance.checked,
+        );
+      }
+      if (displaySearchSuggestions) {
+        await idbSet(
+          DISPLAY_SEARCH_SUGGESTIONS,
+          displaySearchSuggestions.checked,
+        );
       }
       if (proxyEnabled && proxyUrls) {
         try {
