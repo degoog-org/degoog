@@ -139,9 +139,7 @@ const builtinMap = Object.fromEntries(
   BUILTIN_DEFINITIONS.map((d) => [d.id, new d.EngineClass()]),
 ) as Record<string, SearchEngine>;
 
-const builtinRegistry = BUILTIN_DEFINITIONS.filter(
-  (d) => d.searchType === "web" || d.searchType === "news",
-).map((d) => ({
+const builtinRegistry = BUILTIN_DEFINITIONS.map((d) => ({
   id: d.id,
   displayName: d.displayName,
   disabledByDefault: d.disabledByDefault,
@@ -251,18 +249,14 @@ export function getEnginesForSearchType(
   ];
   const engineMap = getEngineMap();
 
-  if (engineType === "web" || engineType === "news") {
-    const active: SearchEngine[] = [];
-    for (const def of allDefinitions) {
-      if (config[def.id]) {
-        const instance = engineMap[def.id];
-        if (instance) active.push(instance);
-      }
+  const active: SearchEngine[] = [];
+  for (const def of allDefinitions) {
+    if (config[def.id]) {
+      const instance = engineMap[def.id];
+      if (instance) active.push(instance);
     }
-    return active;
   }
-
-  return allDefinitions.map((d) => engineMap[d.id]).filter(Boolean);
+  return active;
 }
 
 export const getActiveWebEngines = async (
