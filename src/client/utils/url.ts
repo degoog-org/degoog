@@ -24,7 +24,7 @@ export const buildSearchUrl = (
   for (const [key, val] of Object.entries(engines)) {
     params.set(key, String(val));
   }
-  if (type && type !== "all") {
+  if (type && type !== "web") {
     params.set("type", type);
   }
   if (page != null && page > 1) {

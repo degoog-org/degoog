@@ -1,6 +1,7 @@
 import { getSettings } from "./plugin-settings";
 import { debug } from "./logger";
 import { isSocksProxy, fetchViaSocks } from "./socks-fetch";
+import { fetchViaHttpProxy } from "./http-proxy-fetch";
 
 export interface OutgoingFetchOptions {
   method?: string;
@@ -89,12 +90,11 @@ export async function outgoingFetch(
     });
   }
 
-  return fetch(url, {
+  return fetchViaHttpProxy(url, proxyUrl, {
     method,
     redirect,
     signal,
     headers,
     body: body ?? undefined,
-    proxy: proxyUrl,
-  } as BunFetchRequestInit);
+  });
 }

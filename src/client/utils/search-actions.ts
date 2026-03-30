@@ -56,7 +56,7 @@ export async function performSearch(
   type?: string,
   page?: number,
 ): Promise<void> {
-  const resolvedType = type || state.currentType || "all";
+  const resolvedType = type || state.currentType || "web";
   if (!query.trim()) return;
 
   if (resolvedType.startsWith("tab:")) {
@@ -69,7 +69,7 @@ export async function performSearch(
     const prefix = prefixMatch[1].toLowerCase();
     const actualQuery = prefixMatch[2].trim();
     if (actualQuery) {
-      if (prefix !== "all" && BUILTIN_SEARCH_TYPES.has(prefix)) {
+      if (prefix !== "web" && BUILTIN_SEARCH_TYPES.has(prefix)) {
         return performSearch(actualQuery, prefix, page);
       }
       const { getPluginTabIds } = await import("../modules/tabs/tabs");
@@ -118,10 +118,10 @@ export async function performSearch(
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl)
-    glanceEl.innerHTML = resolvedType === "all" ? skeletonGlance() : "";
+    glanceEl.innerHTML = resolvedType === "web" ? skeletonGlance() : "";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    if (resolvedType === "all" || resolvedType === "news") {
+    if (resolvedType === "web" || resolvedType === "news") {
       resultsList.innerHTML = skeletonResults();
     } else if (resolvedType === "images") {
       resultsList.innerHTML = skeletonImageGrid();
@@ -139,7 +139,7 @@ export async function performSearch(
   document.title = `${query} - degoog`;
 
   const urlParams = new URLSearchParams({ q: query });
-  if (resolvedType !== "all") urlParams.set("type", resolvedType);
+  if (resolvedType !== "web") urlParams.set("type", resolvedType);
   history.pushState(null, "", `/search?${urlParams.toString()}`);
 
   const commands = await _fetchCommands();
@@ -171,7 +171,7 @@ export async function performSearch(
       renderSidebar(data, (q) => void performSearch(q), {
         sidebarTopPanels: sidebarTop,
       });
-      if (resolvedType === "all") {
+      if (resolvedType === "web") {
         renderSlotPanels(data.slotPanels || []);
         void fetchGlancePanels(query, data.results, data.atAGlance);
         if (!data.slotPanels || data.slotPanels.length === 0)
@@ -221,7 +221,7 @@ async function _performSearchWithBang(
       renderSidebar(searchData, (q) => void performSearch(q), {
         sidebarTopPanels: sidebarTop,
       });
-      if (type === "all") {
+      if (type === "web") {
         renderSlotPanels(searchData.slotPanels || []);
         void fetchSlotPanels(query);
       } else {
@@ -352,7 +352,7 @@ function _renderBangPagination(
       e.preventDefault();
       const pageNum = parseInt(el.dataset.page ?? "0", 10);
       if (pageNum >= 1 && pageNum <= totalPages) {
-        void _performBangCommand(query, "all", pageNum);
+        void _performBangCommand(query, "web", pageNum);
       }
     });
   });
@@ -363,7 +363,7 @@ export async function goToPage(pageNum: number): Promise<void> {
   const resultsList = document.getElementById("results-list");
   const pagination = document.getElementById("pagination");
   if (resultsList) {
-    if (state.currentType === "all" || state.currentType === "news") {
+    if (state.currentType === "web" || state.currentType === "news") {
       resultsList.innerHTML = skeletonResults();
     } else if (state.currentType === "images") {
       resultsList.innerHTML = skeletonImageGrid();
@@ -393,7 +393,7 @@ export async function goToPage(pageNum: number): Promise<void> {
       renderAtAGlance(data.atAGlance);
     }
     if (
-      state.currentType === "all" &&
+      state.currentType === "web" &&
       data.slotPanels &&
       data.slotPanels.length > 0
     ) {
@@ -419,7 +419,7 @@ export async function retryEngine(engineName: string): Promise<void> {
   for (const [key, val] of Object.entries(engines)) {
     params.set(key, String(val));
   }
-  if (state.currentType && state.currentType !== "all") {
+  if (state.currentType && state.currentType !== "web") {
     params.set("type", state.currentType);
   }
   if (state.currentPage > 1) {
@@ -450,7 +450,7 @@ export async function retryEngine(engineName: string): Promise<void> {
       if (resultsMeta)
         resultsMeta.textContent = `About ${data.results.length} results (${((state.currentData?.totalTime ?? 0) / 1000).toFixed(2)} seconds)`;
 
-      if (state.currentType === "all" && state.currentData?.atAGlance) {
+      if (state.currentType === "web" && state.currentData?.atAGlance) {
         renderAtAGlance(state.currentData.atAGlance);
       }
       renderResults(data.results);

@@ -69,7 +69,7 @@ export interface SearchEngine {
   ): Promise<SearchResult[]>;
 }
 
-export type SearchType = "all" | "images" | "videos" | "news";
+export type SearchType = "web" | "images" | "videos" | "news";
 export type TimeFilter = "any" | "hour" | "day" | "week" | "month" | "year" | "custom";
 
 export interface EngineTiming {

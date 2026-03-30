@@ -116,7 +116,7 @@ export function init(): void {
 
   const params = new URLSearchParams(window.location.search);
   const q = params.get("q");
-  const type = params.get("type") || "all";
+  const type = params.get("type") || "web";
   const page = parseInt(params.get("page") ?? "1", 10) || 1;
   if (q) {
     if (searchInput) searchInput.value = q;

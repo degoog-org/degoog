@@ -128,7 +128,7 @@ async function runSlotPlugins(
 router.get("/api/search", async (c) => {
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
-  const searchType = (c.req.query("type") || "all") as SearchType;
+  const searchType = (c.req.query("type") || "web") as SearchType;
   let query = c.req.query("q") ?? "";
   if (typeof query !== "string") query = "";
   if (!query.trim())
@@ -159,7 +159,7 @@ router.get("/api/search", async (c) => {
     cache.set(key, response, ttl);
   }
 
-  if (searchType === "all") {
+  if (searchType === "web") {
     const clientIp = getClientIp(c);
     const slotPanels = await runSlotPlugins(
       query.trim(),
@@ -235,7 +235,7 @@ router.get("/api/search/retry", async (c) => {
     return c.json({ error: "Missing 'q' or 'engine' parameter" }, 400);
 
   const engines = parseEngineConfig(new URL(c.req.url).searchParams);
-  const searchType = (c.req.query("type") || "all") as SearchType;
+  const searchType = (c.req.query("type") || "web") as SearchType;
   const page = Math.max(
     1,
     Math.min(10, Math.floor(Number(c.req.query("page"))) || 1),
@@ -320,10 +320,10 @@ router.get("/api/lucky", async (c) => {
   if (!query) return c.json({ error: "Missing query parameter 'q'" }, 400);
 
   const engines = parseEngineConfig(new URL(c.req.url).searchParams);
-  const key = cacheKey(query, engines, "all", 1);
+  const key = cacheKey(query, engines, "web", 1);
   let response = cache.get(key);
   if (!response) {
-    response = await search(query, engines, "all", 1);
+    response = await search(query, engines, "web", 1);
     cache.set(key, response);
   }
   if (response.results.length > 0) return c.redirect(response.results[0].url);

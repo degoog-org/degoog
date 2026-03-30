@@ -245,7 +245,7 @@ export const searchSingleEngine = async (
 export const search = async (
   query: string,
   config: EngineConfig,
-  type: SearchType = "all",
+  type: SearchType = "web",
   page: number = 1,
   timeFilter: TimeFilter = "any",
   lang?: string,
@@ -256,7 +256,7 @@ export const search = async (
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
 
   const rawActiveEngines =
-    type === "all"
+    type === "web"
       ? await getActiveWebEngines(config)
       : getEnginesForSearchType(type, config).map((instance) => ({
           instance,
@@ -314,12 +314,12 @@ export const search = async (
 
   const scored = scoreResults(allResults);
   const atAGlance =
-    type === "all" && scored.length > 0 && scored[0].snippet ? scored[0] : null;
+    type === "web" && scored.length > 0 && scored[0].snippet ? scored[0] : null;
 
   let relatedSearches: string[] = [];
   let knowledgePanel: KnowledgePanel | null = null;
 
-  if (type === "all" && p === 1) {
+  if (type === "web" && p === 1) {
     [relatedSearches, knowledgePanel] = await Promise.all([
       _withTimeout(_fetchRelatedSearches(query), ENGINE_TIMEOUT_MS).catch(
         () => [],

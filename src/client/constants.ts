@@ -9,7 +9,7 @@ export const DISPLAY_SEARCH_SUGGESTIONS = "display_search_suggestions";
 export const PER_PAGE = 10;
 export const MAX_PAGE = 10;
 export const BUILTIN_SEARCH_TYPES = new Set([
-  "all",
+  "web",
   "images",
   "videos",
   "news",

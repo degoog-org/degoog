@@ -195,7 +195,7 @@ export function getEngineMap(): Record<string, SearchEngine> {
 function engineSearchTypeFromSearchType(
   type: SearchType,
 ): EngineSearchType | null {
-  if (type === "all") return "web";
+  if (type === "web") return "web";
   if (type === "images" || type === "videos" || type === "news") return type;
   return null;
 }

@@ -29,7 +29,7 @@ export function renderResults(results: ScoredResult[]): void {
 
   if (results.length === 0) {
     container.innerHTML = '<div class="no-results">No results found.</div>';
-    if (state.currentType === "all" || state.currentType === "news") {
+    if (state.currentType === "web" || state.currentType === "news") {
       renderPagination(MAX_PAGE, state.currentPage);
     }
     return;
@@ -72,7 +72,7 @@ export function renderResults(results: ScoredResult[]): void {
     })
     .join("");
 
-  if (state.currentType === "all" || state.currentType === "news") {
+  if (state.currentType === "web" || state.currentType === "news") {
     renderPagination(MAX_PAGE, state.currentPage);
   }
 }
