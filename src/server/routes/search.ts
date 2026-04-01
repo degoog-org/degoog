@@ -1,6 +1,14 @@
 import { Hono, type Context } from "hono";
 import * as cache from "../utils/cache";
-import { search, searchSingleEngine, scoreResults, mergeNewResults, fetchRelatedSearches, fetchKnowledgePanel } from "../search";
+import {
+  search,
+  searchSingleEngine,
+  scoreResults,
+  mergeNewResults,
+  fetchRelatedSearches,
+  fetchKnowledgePanel,
+  createSearchEngineContext,
+} from "../search";
 import {
   getEngineRegistry,
   getEnginesForCustomType,
@@ -231,8 +239,9 @@ router.get("/api/search/stream", async (c) => {
   const rawActiveEngines =
     searchType === "web"
       ? await getActiveWebEngines(engines)
-      : getEnginesForType(searchType, engines).map((instance) => ({
-          instance,
+      : getEnginesForType(searchType, engines).map((e) => ({
+          id: e.id,
+          instance: e.instance,
           score: 1,
         }));
 
@@ -263,7 +272,7 @@ router.get("/api/search/stream", async (c) => {
         );
       }
 
-      const enginePromises = rawActiveEngines.map(async ({ instance, score }) => {
+      const enginePromises = rawActiveEngines.map(async ({ instance, score, id }) => {
         const engineName = instance.name;
         let attempt = 0;
         let lastTiming: EngineTiming = { name: engineName, time: 0, resultCount: 0 };
@@ -271,7 +280,7 @@ router.get("/api/search/stream", async (c) => {
         while (attempt <= (autoRetry ? maxRetries : 0)) {
           const isRetry = attempt > 0;
           const { results, timing } = await searchSingleEngine(
-            engineName,
+            id,
             query,
             page,
             timeFilter,
@@ -595,10 +604,10 @@ router.get("/api/tab-search", async (c) => {
 
     if (engineType) {
       const engines = getEnginesForCustomType(engineType);
-      const engineContext = { fetch: outgoingFetch };
       const outcomes = await Promise.all(
-        engines.map(async (e) => {
+        engines.map(async ({ id, instance: e }) => {
           const start = performance.now();
+          const engineContext = createSearchEngineContext(id);
           try {
             const value = await e.executeSearch(
               query.trim(),

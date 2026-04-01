@@ -277,6 +277,14 @@ export default class MyEngine {
     // parse and return array of { title, url, snippet, source, ... }
   }
 }</code></pre>
+        <p>
+          Every engine also has an <strong>Outgoing HTTP client</strong> control
+          under <strong>Advanced</strong> in Settings → Engines (Configure).
+          It is stored per engine: <code>fetch</code> (default), system
+          <code>curl</code>, or <code>auto</code> (retry with curl after certain
+          error statuses). Custom engines should still use
+          <code>context.fetch</code> so that setting is applied automatically.
+        </p>
 
         <h2>Setup</h2>
         <p>

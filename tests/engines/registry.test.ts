@@ -36,7 +36,7 @@ describe("engines registry", () => {
     const config: Record<string, boolean> = { duckduckgo: true, google: false };
     const engines = getEnginesForSearchType("web", config);
     expect(engines.length).toBeGreaterThan(0);
-    expect(engines.some((e) => e.name === "DuckDuckGo")).toBe(true);
+    expect(engines.some((e) => e.instance.name === "DuckDuckGo")).toBe(true);
   });
 
   test("getEnginesForSearchType returns array for images type", () => {

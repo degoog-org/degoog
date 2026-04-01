@@ -75,6 +75,7 @@ You'll need a `.env` file for your env variables and the following required depe
 
 - [bun](https://bun.sh)
 - [git](https://git-scm.com)
+- [curl](https://curl.se)
 
 ```bash
 git clone https://github.com/fccview/degoog.git

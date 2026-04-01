@@ -122,7 +122,9 @@ export function openMediaPreview(
   const isVideo = cardSelector === ".video-card";
   const previewSrc = item.imageUrl || item.thumbnail || "";
 
-  const imgWrap = document.querySelector<HTMLElement>(".media-preview-img-wrap");
+  const imgWrap = document.querySelector<HTMLElement>(
+    ".media-preview-img-wrap",
+  );
   imgWrap?.querySelector(".media-preview-embed")?.remove();
 
   const embedUrl = isVideo ? _getEmbedUrl(item.url) : null;
@@ -289,7 +291,9 @@ export function navigateMediaPreview(direction: -1 | 1): void {
 export function closeMediaPreview(): void {
   document.getElementById("media-preview-panel")?.classList.remove("open");
   document.querySelector(".media-preview-embed")?.remove();
-  const img = document.getElementById("media-preview-img") as HTMLImageElement | null;
+  const img = document.getElementById(
+    "media-preview-img",
+  ) as HTMLImageElement | null;
   if (img) img.style.display = "";
   document
     .querySelectorAll<HTMLElement>(".image-card, .video-card")

@@ -121,6 +121,10 @@ router.post("/api/extensions/:id/settings", async (c) => {
 
   const schemaKeys = new Set(ext.settingsSchema.map((f) => f.key));
   schemaKeys.add("disabled");
+  if (ext.type === ExtensionStoreType.Engine) {
+    schemaKeys.add("score");
+    schemaKeys.add("outgoingTransport");
+  }
   const filtered: Record<string, SettingValue> = {};
   for (const [key, value] of Object.entries(body)) {
     if (!schemaKeys.has(key)) continue;
