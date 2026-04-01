@@ -7,8 +7,10 @@ import {
 import { initEnginesTab } from "../../settings/engines-tab";
 import { initPluginsTab } from "../../settings/plugins-tab";
 import { initThemesTab } from "../../settings/themes-tab";
+import { initServerTab } from "../../settings/server-tab";
 import { initStoreTab } from "../../settings/store-tab";
 import "../modals/settings-modal/modal";
+import { SETTINGS_TABS } from "../../../shared/settings-tabs";
 import type { AllExtensions } from "../../types";
 
 declare global {
@@ -99,7 +101,7 @@ function _switchSettingsTab(value: string, updateUrl = true): void {
     .querySelectorAll<HTMLElement>(".settings-tab-panel")
     .forEach((p) => p.classList.remove("active"));
   document.getElementById(`tab-${value}`)?.classList.add("active");
-  document.querySelectorAll<HTMLElement>(".settings-tab-btn").forEach((b) => {
+  document.querySelectorAll<HTMLElement>(".settings-nav-item").forEach((b) => {
     b.classList.toggle("active", b.dataset.tab === value);
   });
   const select = document.getElementById(
@@ -119,7 +121,7 @@ function _initTabs(): void {
   ) as HTMLSelectElement | null;
   const nav = document.getElementById("settings-tabs-nav");
   select?.addEventListener("change", () => _switchSettingsTab(select.value));
-  nav?.querySelectorAll<HTMLElement>(".settings-tab-btn").forEach((btn) => {
+  nav?.querySelectorAll<HTMLElement>(".settings-nav-item").forEach((btn) => {
     btn.addEventListener("click", () =>
       _switchSettingsTab(btn.dataset.tab ?? "general"),
     );
@@ -129,8 +131,7 @@ function _initTabs(): void {
   const match = path.match(/^\/settings\/(\w+)$/);
   if (match) {
     const tab = match[1];
-    const validTabs = ["general", "engines", "plugins", "themes", "store"];
-    if (validTabs.includes(tab)) {
+    if ((SETTINGS_TABS as readonly string[]).includes(tab)) {
       _switchSettingsTab(tab, false);
     }
   }
@@ -140,7 +141,8 @@ async function _initSettings(): Promise<void> {
   void initTheme();
   initInstallPrompt();
   _initTabs();
-  void initGeneralTab(getStoredToken);
+  void initGeneralTab();
+  void initServerTab(getStoredToken);
 
   try {
     const [extRes, themesRes] = await Promise.all([

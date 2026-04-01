@@ -3,7 +3,6 @@
 }
 
 .settings-page {
-  max-width: 640px;
   margin: 0 auto;
   padding: 24px 20px 48px;
   display: flex;
@@ -11,7 +10,7 @@
   min-height: 100vh;
 
   @media (min-width: 768px) {
-    min-width: 800px;
+    max-width: 960px;
     padding: 40px 32px 64px;
   }
 }
@@ -45,20 +44,23 @@
   margin: 0;
 }
 
-.settings-tab-select-wrap {
-  margin-bottom: 28px;
+.settings-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 
-  @media (min-width: 769px) {
-    display: none;
+  @media (min-width: 768px) {
+    flex-direction: row;
+    gap: 32px;
   }
 }
 
-.settings-tab-select-label {
-  display: block;
-  font-size: $font-size-small;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
+.settings-nav-mobile {
+  margin-bottom: 24px;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
 }
 
 .settings-tab-select {
@@ -85,36 +87,41 @@
   }
 }
 
-.settings-tabs-nav {
+.settings-nav {
   display: none;
-  gap: 4px;
-  border-bottom: 1px solid var(--border-light);
-  margin-bottom: 28px;
 
-  @media (min-width: 769px) {
+  @media (min-width: 768px) {
     display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 180px;
+    gap: 2px;
+    position: sticky;
+    top: 40px;
+    align-self: flex-start;
   }
 }
 
-.settings-tab-btn {
+.settings-nav-item {
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-radius: 8px;
   color: var(--text-secondary);
   cursor: pointer;
   font-family: $font-family;
   font-size: $font-size-base;
-  margin-bottom: -1px;
-  padding: 10px 16px;
-  transition: color $transition-fast, border-color $transition-fast;
+  padding: 10px 14px;
+  text-align: left;
+  transition: color $transition-fast, background $transition-fast;
 
   &:hover {
     color: var(--text-primary);
+    background: var(--bg-light);
   }
 
   &.active {
-    border-bottom-color: $primary;
     color: var(--text-primary);
+    background: var(--bg-hover);
     font-weight: 500;
   }
 }
@@ -130,11 +137,17 @@
 .settings-page-main {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
 .settings-section {
   padding: 24px 0;
   border-bottom: 1px solid var(--border-light);
+
+  &:first-of-type {
+    padding-top: 0;
+  }
 
   &:last-of-type {
     border-bottom: none;
@@ -260,7 +273,7 @@
   display: block;
   font-size: $font-size-small;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin: 6px 0;
 }
 
 .settings-proxy-urls {

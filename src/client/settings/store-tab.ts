@@ -355,26 +355,24 @@ export async function initStoreTab(
     const catalogSection = container.querySelector<HTMLElement>(
       ".store-catalog-section",
     );
-    const typeTabs =
-      catalogSection?.querySelector<HTMLElement>(".store-type-tabs");
-    const subtypeWrap = catalogSection?.querySelector<HTMLElement>(
-      ".store-subtype-wrap",
+    const typeSelect = catalogSection?.querySelector<HTMLSelectElement>(
+      ".store-filter-type",
     );
-    const subtypeTabs = catalogSection?.querySelector<HTMLElement>(
-      ".store-subtype-tabs",
+    const subtypeSelect = catalogSection?.querySelector<HTMLSelectElement>(
+      ".store-filter-subtype",
     );
     const grid = catalogSection?.querySelector<HTMLElement>(
       ".store-catalog-grid",
     );
 
-    if (typeTabs) {
+    if (typeSelect) {
       const typeCounts = {
         all: items.length,
         plugin: items.filter((i) => i.type === "plugin").length,
         theme: items.filter((i) => i.type === "theme").length,
         engine: items.filter((i) => i.type === "engine").length,
       };
-      typeTabs.innerHTML = [
+      typeSelect.innerHTML = [
         { id: "all", label: "All", count: typeCounts.all },
         { id: "plugin", label: "Plugins", count: typeCounts.plugin },
         { id: "theme", label: "Themes", count: typeCounts.theme },
@@ -382,58 +380,48 @@ export async function initStoreTab(
       ]
         .map(
           (t) =>
-            `<button class="btn store-type-tab ${typeFilter === t.id ? "active" : ""}" type="button" data-type="${escapeHtml(t.id)}">${escapeHtml(t.label)} <span class="store-tab-count">${t.count}</span></button>`,
+            `<option value="${escapeHtml(t.id)}" ${typeFilter === t.id ? "selected" : ""}>${escapeHtml(t.label)} (${t.count})</option>`,
         )
         .join("");
-      typeTabs
-        .querySelectorAll<HTMLButtonElement>(".store-type-tab")
-        .forEach((btn) => {
-          btn.addEventListener("click", () => {
-            typeFilter = btn.dataset.type || "all";
-            subtypeFilter = "all";
-            render();
-          });
-        });
+      typeSelect.onchange = () => {
+        typeFilter = typeSelect.value;
+        subtypeFilter = "all";
+        render();
+      };
     }
 
     const subtypes = collectSubtypes(items, typeFilter);
-    if (subtypeWrap) {
+    if (subtypeSelect) {
       if (subtypes.length === 0) {
-        subtypeWrap.classList.add("store-subtype-wrap--hidden");
-        if (subtypeTabs) subtypeTabs.innerHTML = "";
+        subtypeSelect.style.display = "none";
+        subtypeSelect.innerHTML = "";
       } else {
-        subtypeWrap.classList.remove("store-subtype-wrap--hidden");
-        if (subtypeTabs) {
-          const filteredForType = items.filter((i) => i.type === typeFilter);
-          subtypeTabs.innerHTML = [
-            { id: "all", label: "All", count: filteredForType.length },
-            ...subtypes.map((id) => ({
-              id,
-              label:
-                typeFilter === "plugin"
-                  ? pluginTypeLabel(id)
-                  : engineTypeLabel(id),
-              count: filteredForType.filter(
-                (i) =>
-                  (typeFilter === "plugin" && i.pluginType === id) ||
-                  (typeFilter === "engine" && i.engineType === id),
-              ).length,
-            })),
-          ]
-            .map(
-              (t) =>
-                `<button class="btn store-subtype-tab ${subtypeFilter === t.id ? "active" : ""}" type="button" data-subtype="${escapeHtml(t.id)}">${escapeHtml(t.label)} <span class="store-tab-count">${t.count}</span></button>`,
-            )
-            .join("");
-          subtypeTabs
-            .querySelectorAll<HTMLButtonElement>(".store-subtype-tab")
-            .forEach((btn) => {
-              btn.addEventListener("click", () => {
-                subtypeFilter = btn.dataset.subtype || "all";
-                render();
-              });
-            });
-        }
+        subtypeSelect.style.display = "";
+        const filteredForType = items.filter((i) => i.type === typeFilter);
+        subtypeSelect.innerHTML = [
+          { id: "all", label: "All", count: filteredForType.length },
+          ...subtypes.map((id) => ({
+            id,
+            label:
+              typeFilter === "plugin"
+                ? pluginTypeLabel(id)
+                : engineTypeLabel(id),
+            count: filteredForType.filter(
+              (i) =>
+                (typeFilter === "plugin" && i.pluginType === id) ||
+                (typeFilter === "engine" && i.engineType === id),
+            ).length,
+          })),
+        ]
+          .map(
+            (t) =>
+              `<option value="${escapeHtml(t.id)}" ${subtypeFilter === t.id ? "selected" : ""}>${escapeHtml(t.label)} (${t.count})</option>`,
+          )
+          .join("");
+        subtypeSelect.onchange = () => {
+          subtypeFilter = subtypeSelect.value;
+          render();
+        };
       }
     }
 
@@ -658,12 +646,10 @@ export async function initStoreTab(
         <h2 class="settings-section-heading">Catalog</h2>
         <button class="btn btn--primary store-btn-update-all" type="button" style="display:none">Update all</button>
       </div>
-      <div class="store-catalog-search-wrap">
-        <input type="text" class="store-search-input" placeholder="Search name, description, repo, author…" id="store-search-input">
-      </div>
-      <div class="store-type-tabs" role="tablist"></div>
-      <div class="store-subtype-wrap store-subtype-wrap--hidden">
-        <div class="store-subtype-tabs" role="tablist"></div>
+      <div class="store-filter-bar">
+        <input type="text" class="store-search-input" placeholder="Search…" id="store-search-input">
+        <select class="store-filter-select store-filter-type" aria-label="Filter by type"></select>
+        <select class="store-filter-select store-filter-subtype" aria-label="Filter by sub-type" style="display:none"></select>
       </div>
       <div class="store-catalog-grid"></div>
     </section>

@@ -24,6 +24,7 @@ import {
   validateSettingsToken,
 } from "./settings-auth";
 import { isPublicInstance } from "../utils/public-instance";
+import { SETTINGS_TABS } from "../../shared/settings-tabs";
 import pkg from "../../../package.json";
 
 const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
@@ -192,8 +193,7 @@ router.get("/settings", async (c) => {
 router.get("/settings/:tab", async (c) => {
   if (isPublicInstance()) return c.redirect("/settings", 302);
   const tab = c.req.param("tab");
-  const validTabs = ["general", "engines", "plugins", "themes", "store"];
-  if (!validTabs.includes(tab)) {
+  if (!(SETTINGS_TABS as readonly string[]).includes(tab)) {
     return c.redirect("/settings", 302);
   }
   if (await shouldServeSettingsGate(c)) {

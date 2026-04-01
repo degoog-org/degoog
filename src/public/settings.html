@@ -34,7 +34,10 @@
       type="font/ttf"
       crossorigin
     />
-    <link rel="stylesheet" href="/public/themes/degoog-theme/style.css?v=__APP_VERSION__" />
+    <link
+      rel="stylesheet"
+      href="/public/themes/degoog-theme/style.css?v=__APP_VERSION__"
+    />
     __THEME_CSS__
   </head>
   <body class="settings-page-body">
@@ -72,368 +75,388 @@
         <h1 class="settings-page-title">Settings</h1>
       </header>
 
-      <div class="settings-tab-select-wrap">
-        <label for="settings-tab-select" class="settings-tab-select-label"
-          >Section</label
+      <div class="settings-layout">
+        <div class="settings-nav-mobile">
+          <select
+            id="settings-tab-select"
+            class="settings-tab-select"
+            aria-label="Settings section"
+          >
+            <option value="general">General</option>
+            <option value="server">Server</option>
+            <option value="engines">Engines</option>
+            <option value="plugins">Plugins</option>
+            <option value="themes">Themes</option>
+            <option value="store">Store</option>
+          </select>
+        </div>
+
+        <nav
+          class="settings-nav"
+          id="settings-tabs-nav"
+          aria-label="Settings sections"
         >
-        <select
-          id="settings-tab-select"
-          class="settings-tab-select"
-          aria-label="Settings section"
-        >
-          <option value="general">General</option>
-          <option value="engines">Engines</option>
-          <option value="plugins">Plugins</option>
-          <option value="themes">Themes</option>
-          <option value="store">Store</option>
-        </select>
-      </div>
+          <button
+            class="settings-nav-item active"
+            data-tab="general"
+            type="button"
+          >
+            General
+          </button>
+          <button class="settings-nav-item" data-tab="server" type="button">
+            Server
+          </button>
+          <button class="settings-nav-item" data-tab="engines" type="button">
+            Engines
+          </button>
+          <button class="settings-nav-item" data-tab="plugins" type="button">
+            Plugins
+          </button>
+          <button class="settings-nav-item" data-tab="themes" type="button">
+            Themes
+          </button>
+          <button class="settings-nav-item" data-tab="store" type="button">
+            Store
+          </button>
+        </nav>
 
-      <nav
-        class="settings-tabs-nav"
-        id="settings-tabs-nav"
-        aria-label="Settings sections"
-      >
-        <button
-          class="settings-tab-btn active"
-          data-tab="general"
-          type="button"
-        >
-          General
-        </button>
-        <button class="settings-tab-btn" data-tab="engines" type="button">
-          Engines
-        </button>
-        <button class="settings-tab-btn" data-tab="plugins" type="button">
-          Plugins
-        </button>
-        <button class="settings-tab-btn" data-tab="themes" type="button">
-          Themes
-        </button>
-        <button class="settings-tab-btn" data-tab="store" type="button">
-          Store
-        </button>
-      </nav>
-
-      <main class="settings-page-main">
-        <div class="settings-tab-panel active" id="tab-general">
-          <section class="settings-section">
-            <h2 class="settings-section-heading">Appearance</h2>
-            <p class="settings-desc">Choose your preferred theme.</p>
-            <div class="theme-select-wrap">
-              <select id="theme-select" class="theme-select">
-                <option value="system">System default</option>
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-              </select>
-            </div>
-          </section>
-
-          <section class="settings-section">
-            <h2 class="settings-section-heading">Cache</h2>
-            <p class="settings-desc">Clear stored search results.</p>
-            <button
-              class="btn btn--secondary settings-cache-clear"
-              id="settings-cache-clear"
-              type="button"
-            >
-              Clear search cache
-            </button>
-          </section>
-
-          <section class="settings-section">
-            <h2 class="settings-section-heading">Search Options</h2>
-
-            <label class="settings-toggle-wrap" style="margin-top: 1rem">
-              <input
-                type="checkbox"
-                id="settings-open-new-tab"
-                class="settings-toggle"
-                aria-label="Open result links in new tab"
-              />
-              <span class="toggle-slider"></span>
-              <span class="settings-toggle-label"
-                >Open result links in new tab</span
-              >
-            </label>
-
-            <label class="settings-toggle-wrap" style="margin-top: 1rem">
-              <input
-                type="checkbox"
-                id="display-engine-performance"
-                class="settings-toggle"
-                aria-label="Display engine performance"
-              />
-              <span class="toggle-slider"></span>
-              <span class="settings-toggle-label"
-                >Display engine performance</span
-              >
-            </label>
-
-            <label class="settings-toggle-wrap" style="margin-top: 1rem">
-              <input
-                type="checkbox"
-                id="display-search-suggestions"
-                class="settings-toggle"
-                aria-label="Display search suggestions"
-              />
-              <span class="toggle-slider"></span>
-              <span class="settings-toggle-label"
-                >Display search suggestions</span
-              >
-            </label>
-          </section>
-
-          <section class="settings-section">
-            <h2 class="settings-section-heading">Search language</h2>
-            <p class="settings-desc">
-              Change the search languages in the search options dropdown. When
-              disabled, all ~90 built-in languages are shown.
-            </p>
-            <label class="settings-toggle-wrap">
-              <input
-                type="checkbox"
-                id="settings-languages-enabled"
-                class="settings-toggle"
-                aria-label="Change search languages"
-              />
-              <span class="toggle-slider"></span>
-              <span class="settings-toggle-label">Change search languages</span>
-            </label>
-            <div
-              class="settings-proxy-urls-wrap"
-              id="settings-languages-wrap"
-              style="display: none"
-            >
-              <label for="settings-languages" class="settings-proxy-urls-label"
-                >Language codes (one per line)</label
-              >
-              <textarea
-                id="settings-languages"
-                class="settings-proxy-urls"
-                rows="5"
-                placeholder="en&#10;it&#10;de&#10;fr&#10;es"
-              ></textarea>
-            </div>
-          </section>
-
-          <section class="settings-section" id="settings-section-proxy">
-            <h2 class="settings-section-heading">Proxy</h2>
-            <p class="settings-desc">
-              Use proxies for server-side search requests. One URL per line;
-              requests rotate through the list.
-            </p>
-            <label class="settings-toggle-wrap">
-              <input
-                type="checkbox"
-                id="settings-proxy-enabled"
-                class="settings-toggle"
-                aria-label="Use proxy for search"
-              />
-              <span class="toggle-slider"></span>
-              <span class="settings-toggle-label">Use proxy for search</span>
-            </label>
-            <div
-              class="settings-proxy-urls-wrap"
-              id="settings-proxy-urls-wrap"
-              style="display: none"
-            >
-              <label for="settings-proxy-urls" class="settings-proxy-urls-label"
-                >Proxy URLs (one per line)</label
-              >
-              <textarea
-                id="settings-proxy-urls"
-                class="settings-proxy-urls"
-                rows="4"
-                placeholder="http://proxy1:8080&#10;socks5://proxy2:1080"
-              ></textarea>
-              <button
-                class="btn btn--secondary proxy-test-btn"
-                id="settings-proxy-test"
-                type="button"
-              >
-                Test proxy connection
-              </button>
-              <div class="proxy-test-result" id="settings-proxy-test-result" hidden></div>
-            </div>
-          </section>
-
-          <section class="settings-section" id="settings-section-rate-limit">
-            <h2 class="settings-section-heading">Rate limit</h2>
-            <p class="settings-desc">
-              Limit requests per IP to protect the instance and upstream
-              engines.
-            </p>
-            <div class="settings-rate-limit-wrap" id="settings-rate-limit-wrap">
-              <label class="settings-toggle-wrap">
-                <input
-                  type="checkbox"
-                  id="settings-rate-limit-enabled"
-                  class="settings-toggle"
-                  aria-label="Enable rate limiting"
-                />
-                <span class="toggle-slider"></span>
-                <span class="settings-toggle-label">Enable rate limiting</span>
-              </label>
-              <div
-                class="settings-rate-limit-options"
-                id="settings-rate-limit-options"
-                style="display: none"
-              >
-                <p class="settings-rate-limit-defaults">
-                  Defaults: 15 requests per 20s, 150 per 10 min per IP.
-                </p>
-                <label
-                  for="settings-rate-limit-burst-window"
-                  class="settings-proxy-urls-label"
-                  >Burst window (seconds)</label
-                >
-                <input
-                  type="number"
-                  id="settings-rate-limit-burst-window"
-                  class="settings-rate-limit-input"
-                  min="1"
-                  max="3600"
-                  placeholder="20"
-                />
-                <label
-                  for="settings-rate-limit-burst-max"
-                  class="settings-proxy-urls-label"
-                  >Burst max requests</label
-                >
-                <input
-                  type="number"
-                  id="settings-rate-limit-burst-max"
-                  class="settings-rate-limit-input"
-                  min="1"
-                  max="1000"
-                  placeholder="15"
-                />
-                <label
-                  for="settings-rate-limit-long-window"
-                  class="settings-proxy-urls-label"
-                  >Long window (seconds)</label
-                >
-                <input
-                  type="number"
-                  id="settings-rate-limit-long-window"
-                  class="settings-rate-limit-input"
-                  min="1"
-                  max="3600"
-                  placeholder="600"
-                />
-                <label
-                  for="settings-rate-limit-long-max"
-                  class="settings-proxy-urls-label"
-                  >Long max requests</label
-                >
-                <input
-                  type="number"
-                  id="settings-rate-limit-long-max"
-                  class="settings-rate-limit-input"
-                  min="1"
-                  max="1000"
-                  placeholder="150"
-                />
+        <main class="settings-page-main">
+          <div class="settings-tab-panel active" id="tab-general">
+            <section class="settings-section">
+              <h2 class="settings-section-heading">Appearance</h2>
+              <p class="settings-desc">Choose your preferred theme.</p>
+              <div class="theme-select-wrap">
+                <select id="theme-select" class="theme-select">
+                  <option value="system">System default</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
               </div>
-            </div>
-          </section>
+            </section>
 
-          <section class="settings-section" id="settings-section-streaming">
-            <h2 class="settings-section-heading">Streaming results</h2>
-            <p class="settings-desc">
-              Load results progressively as each engine responds instead of
-              waiting for all engines to finish. This is an experimental
-              feature.
-            </p>
-            <label class="settings-toggle-wrap">
-              <input
-                type="checkbox"
-                id="settings-streaming-enabled"
-                class="settings-toggle"
-                aria-label="Enable streaming results (experimental)"
-              />
-              <span class="toggle-slider"></span>
-              <span class="settings-toggle-label"
-                >Enable streaming results (experimental)</span
-              >
-            </label>
-            <div
-              class="settings-streaming-options"
-              id="settings-streaming-options"
-              style="display: none"
-            >
-              <label class="settings-toggle-wrap" style="margin-top: 0.75rem">
+            <section class="settings-section">
+              <h2 class="settings-section-heading">Search Options</h2>
+
+              <label class="settings-toggle-wrap" style="margin-top: 1rem">
                 <input
                   type="checkbox"
-                  id="settings-streaming-auto-retry"
+                  id="settings-open-new-tab"
                   class="settings-toggle"
-                  aria-label="Auto-retry failed engines"
+                  aria-label="Open result links in new tab"
                 />
                 <span class="toggle-slider"></span>
                 <span class="settings-toggle-label"
-                  >Auto-retry failed engines</span
+                  >Open result links in new tab</span
+                >
+              </label>
+
+              <label class="settings-toggle-wrap" style="margin-top: 1rem">
+                <input
+                  type="checkbox"
+                  id="display-engine-performance"
+                  class="settings-toggle"
+                  aria-label="Display engine performance"
+                />
+                <span class="toggle-slider"></span>
+                <span class="settings-toggle-label"
+                  >Display engine performance</span
+                >
+              </label>
+
+              <label class="settings-toggle-wrap" style="margin-top: 1rem">
+                <input
+                  type="checkbox"
+                  id="display-search-suggestions"
+                  class="settings-toggle"
+                  aria-label="Display search suggestions"
+                />
+                <span class="toggle-slider"></span>
+                <span class="settings-toggle-label"
+                  >Display search suggestions</span
+                >
+              </label>
+            </section>
+
+            <section class="settings-section">
+              <h2 class="settings-section-heading">Install app</h2>
+              <p class="settings-desc">
+                Add degoog to your home screen. If your browser did not show the
+                install prompt, use this to try again.
+              </p>
+              <button
+                class="btn btn--secondary settings-install-prompt"
+                id="settings-install-prompt"
+                type="button"
+              >
+                Show install prompt
+              </button>
+            </section>
+          </div>
+
+          <div class="settings-tab-panel" id="tab-engines">
+            <div id="engines-content"></div>
+          </div>
+
+          <div class="settings-tab-panel" id="tab-plugins">
+            <div id="plugins-content"></div>
+          </div>
+
+          <div class="settings-tab-panel" id="tab-themes">
+            <div id="themes-content"></div>
+          </div>
+          <div class="settings-tab-panel" id="tab-server">
+            <section class="settings-section">
+              <h2 class="settings-section-heading">Cache</h2>
+              <p class="settings-desc">Clear stored search results.</p>
+              <button
+                class="btn btn--secondary settings-cache-clear"
+                id="settings-cache-clear"
+                type="button"
+              >
+                Clear search cache
+              </button>
+            </section>
+
+            <section class="settings-section" id="settings-section-streaming">
+              <h2 class="settings-section-heading">Streaming results</h2>
+              <p class="settings-desc">
+                Load results progressively as each engine responds instead of
+                waiting for all engines to finish. This is an experimental
+                feature.
+              </p>
+              <label class="settings-toggle-wrap">
+                <input
+                  type="checkbox"
+                  id="settings-streaming-enabled"
+                  class="settings-toggle"
+                  aria-label="Enable streaming results (experimental)"
+                />
+                <span class="toggle-slider"></span>
+                <span class="settings-toggle-label"
+                  >Enable streaming results (experimental)</span
                 >
               </label>
               <div
-                class="settings-streaming-retry-wrap"
-                id="settings-streaming-retry-wrap"
+                class="settings-streaming-options"
+                id="settings-streaming-options"
+                style="display: none"
+              >
+                <label class="settings-toggle-wrap" style="margin-top: 0.75rem">
+                  <input
+                    type="checkbox"
+                    id="settings-streaming-auto-retry"
+                    class="settings-toggle"
+                    aria-label="Auto-retry failed engines"
+                  />
+                  <span class="toggle-slider"></span>
+                  <span class="settings-toggle-label"
+                    >Auto-retry failed engines</span
+                  >
+                </label>
+                <div
+                  class="settings-streaming-retry-wrap"
+                  id="settings-streaming-retry-wrap"
+                  style="display: none"
+                >
+                  <label
+                    for="settings-streaming-max-retries"
+                    class="settings-proxy-urls-label"
+                    >Max retries per engine</label
+                  >
+                  <input
+                    type="number"
+                    id="settings-streaming-max-retries"
+                    class="settings-rate-limit-input"
+                    min="1"
+                    max="5"
+                    placeholder="2"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section class="settings-section">
+              <h2 class="settings-section-heading">Search language</h2>
+              <p class="settings-desc">
+                Change the search languages in the search options dropdown. When
+                disabled, all ~90 built-in languages are shown.
+              </p>
+              <label class="settings-toggle-wrap">
+                <input
+                  type="checkbox"
+                  id="settings-languages-enabled"
+                  class="settings-toggle"
+                  aria-label="Change search languages"
+                />
+                <span class="toggle-slider"></span>
+                <span class="settings-toggle-label"
+                  >Change search languages</span
+                >
+              </label>
+              <div
+                class="settings-proxy-urls-wrap"
+                id="settings-languages-wrap"
                 style="display: none"
               >
                 <label
-                  for="settings-streaming-max-retries"
+                  for="settings-languages"
                   class="settings-proxy-urls-label"
-                  >Max retries per engine</label
+                  >Language codes (one per line)</label
                 >
-                <input
-                  type="number"
-                  id="settings-streaming-max-retries"
-                  class="settings-rate-limit-input"
-                  min="1"
-                  max="5"
-                  placeholder="2"
-                />
+                <textarea
+                  id="settings-languages"
+                  class="settings-proxy-urls"
+                  rows="5"
+                  placeholder="en&#10;it&#10;de&#10;fr&#10;es"
+                ></textarea>
               </div>
+            </section>
+
+            <section class="settings-section" id="settings-section-proxy">
+              <h2 class="settings-section-heading">Proxy</h2>
+              <p class="settings-desc">
+                Use proxies for server-side search requests. One URL per line;
+                requests rotate through the list.
+              </p>
+              <label class="settings-toggle-wrap">
+                <input
+                  type="checkbox"
+                  id="settings-proxy-enabled"
+                  class="settings-toggle"
+                  aria-label="Use proxy for search"
+                />
+                <span class="toggle-slider"></span>
+                <span class="settings-toggle-label">Use proxy for search</span>
+              </label>
+              <div
+                class="settings-proxy-urls-wrap"
+                id="settings-proxy-urls-wrap"
+                style="display: none"
+              >
+                <label
+                  for="settings-proxy-urls"
+                  class="settings-proxy-urls-label"
+                  >Proxy URLs (one per line)</label
+                >
+                <textarea
+                  id="settings-proxy-urls"
+                  class="settings-proxy-urls"
+                  rows="4"
+                  placeholder="http://proxy1:8080&#10;socks5://proxy2:1080"
+                ></textarea>
+                <button
+                  class="btn btn--secondary proxy-test-btn"
+                  id="settings-proxy-test"
+                  type="button"
+                >
+                  Test proxy connection
+                </button>
+                <div
+                  class="proxy-test-result"
+                  id="settings-proxy-test-result"
+                  hidden
+                ></div>
+              </div>
+            </section>
+
+            <section class="settings-section" id="settings-section-rate-limit">
+              <h2 class="settings-section-heading">Rate limit</h2>
+              <p class="settings-desc">
+                Limit requests per IP to protect the instance and upstream
+                engines.
+              </p>
+              <div
+                class="settings-rate-limit-wrap"
+                id="settings-rate-limit-wrap"
+              >
+                <label class="settings-toggle-wrap">
+                  <input
+                    type="checkbox"
+                    id="settings-rate-limit-enabled"
+                    class="settings-toggle"
+                    aria-label="Enable rate limiting"
+                  />
+                  <span class="toggle-slider"></span>
+                  <span class="settings-toggle-label"
+                    >Enable rate limiting</span
+                  >
+                </label>
+                <div
+                  class="settings-rate-limit-options"
+                  id="settings-rate-limit-options"
+                  style="display: none"
+                >
+                  <p class="settings-rate-limit-defaults">
+                    Defaults: 15 requests per 20s, 150 per 10 min per IP.
+                  </p>
+                  <label
+                    for="settings-rate-limit-burst-window"
+                    class="settings-proxy-urls-label"
+                    >Burst window (seconds)</label
+                  >
+                  <input
+                    type="number"
+                    id="settings-rate-limit-burst-window"
+                    class="settings-rate-limit-input"
+                    min="1"
+                    max="3600"
+                    placeholder="20"
+                  />
+                  <label
+                    for="settings-rate-limit-burst-max"
+                    class="settings-proxy-urls-label"
+                    >Burst max requests</label
+                  >
+                  <input
+                    type="number"
+                    id="settings-rate-limit-burst-max"
+                    class="settings-rate-limit-input"
+                    min="1"
+                    max="1000"
+                    placeholder="15"
+                  />
+                  <label
+                    for="settings-rate-limit-long-window"
+                    class="settings-proxy-urls-label"
+                    >Long window (seconds)</label
+                  >
+                  <input
+                    type="number"
+                    id="settings-rate-limit-long-window"
+                    class="settings-rate-limit-input"
+                    min="1"
+                    max="3600"
+                    placeholder="600"
+                  />
+                  <label
+                    for="settings-rate-limit-long-max"
+                    class="settings-proxy-urls-label"
+                    >Long max requests</label
+                  >
+                  <input
+                    type="number"
+                    id="settings-rate-limit-long-max"
+                    class="settings-rate-limit-input"
+                    min="1"
+                    max="1000"
+                    placeholder="150"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <div class="settings-page-actions">
+              <button class="settings-save" id="settings-save" type="button">
+                Save
+              </button>
             </div>
-          </section>
-
-          <section class="settings-section">
-            <h2 class="settings-section-heading">Install app</h2>
-            <p class="settings-desc">
-              Add degoog to your home screen. If your browser did not show the
-              install prompt, use this to try again.
-            </p>
-            <button
-              class="btn btn--secondary settings-install-prompt"
-              id="settings-install-prompt"
-              type="button"
-            >
-              Show install prompt
-            </button>
-          </section>
-
-          <div class="settings-page-actions">
-            <button class="settings-save" id="settings-save" type="button">
-              Save
-            </button>
           </div>
-        </div>
 
-        <div class="settings-tab-panel" id="tab-engines">
-          <div id="engines-content"></div>
-        </div>
-
-        <div class="settings-tab-panel" id="tab-plugins">
-          <div id="plugins-content"></div>
-        </div>
-
-        <div class="settings-tab-panel" id="tab-themes">
-          <div id="themes-content"></div>
-        </div>
-        <div class="settings-tab-panel" id="tab-store">
-          <div id="store-content"></div>
-        </div>
-      </main>
+          <div class="settings-tab-panel" id="tab-store">
+            <div id="store-content"></div>
+          </div>
+        </main>
+      </div>
     </div>
 
     <div class="ext-modal-overlay" id="ext-modal-overlay" style="display: none">

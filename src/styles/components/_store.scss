@@ -179,14 +179,18 @@
   margin-bottom: 12px;
 }
 
-.store-catalog-search-wrap {
+.store-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 16px;
 }
 
 .store-search-input {
   appearance: none;
   -webkit-appearance: none;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   background: var(--search-bar-bg);
   border: 0;
   border-radius: $search-bar-radius;
@@ -206,63 +210,25 @@
   }
 }
 
-.store-type-tabs,
-.store-subtype-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.store-type-tab,
-.store-subtype-tab {
+.store-filter-select {
   appearance: none;
   -webkit-appearance: none;
   background: var(--bg-light);
-  border: 0;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: none;
-  color: var(--text-secondary);
-  cursor: pointer;
+  color: var(--text-primary);
   font-family: $font-family;
   font-size: $font-size-small;
-  padding: 8px 12px;
-  transition: background $transition-fast, color $transition-fast;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  padding: 8px 32px 8px 12px;
+  cursor: pointer;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
 
-  &:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-  }
-
-  &.active {
-    background: var(--bg-hover);
-    font-weight: 600;
-  }
-
-  &:focus-visible {
-    outline: 2px solid $primary;
-    outline-offset: 2px;
-  }
-}
-
-.store-tab-count {
-  font-size: $font-size-small;
-  color: var(--text-secondary);
-  background: var(--bg-light);
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 20px;
-  text-align: center;
-}
-
-.store-subtype-wrap {
-  margin-bottom: 16px;
-
-  &.store-subtype-wrap--hidden {
-    display: none;
+  &:focus {
+    border-color: $primary;
   }
 }
 

@@ -1,6 +1,6 @@
 import { state } from "../state";
 import { MAX_PAGE } from "../constants";
-import { showResults, setActiveTab } from "./navigation";
+import { setActiveTab } from "./navigation";
 import { getEngines } from "./engines";
 import { buildSearchUrl } from "./url";
 import {
@@ -75,7 +75,6 @@ export async function performStreamingSearch(
   const url = buildSearchUrl(query, engines, type, 1);
   const streamUrl = url.replace("/api/search?", "/api/search/stream?");
 
-  showResults();
   setActiveTab(type);
   closeMediaPreview();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));

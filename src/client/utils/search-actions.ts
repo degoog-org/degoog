@@ -1,6 +1,6 @@
 import { state } from "../state";
 import { MAX_PAGE, BUILTIN_SEARCH_TYPES } from "../constants";
-import { showResults, setActiveTab } from "./navigation";
+import { setActiveTab } from "./navigation";
 import { getEngines } from "./engines";
 import { buildSearchUrl } from "./url";
 import { buildPaginationHtml } from "./pagination";
@@ -123,7 +123,7 @@ export async function performSearch(
   const engines = await getEngines();
   const url = buildSearchUrl(query, engines, resolvedType, 1);
 
-  showResults();
+
   setActiveTab(resolvedType);
   closeMediaPreview();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
@@ -271,7 +271,7 @@ async function _performBangCommand(
   _type: string,
   page = 1,
 ): Promise<void> {
-  showResults();
+
   closeMediaPreview();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));

@@ -1,5 +1,5 @@
 import { state } from "../../state";
-import { showResults, setActiveTab } from "../../utils/navigation";
+import { setActiveTab } from "../../utils/navigation";
 import { fetchSlotPanels } from "../../utils/search-utils";
 import {
   clearSlotPanels,
@@ -25,7 +25,6 @@ export async function performTabSearch(
   state.currentPage = page;
   destroyMediaObserver();
 
-  showResults();
   setActiveTab(`tab:${tabId}`);
   closeMediaPreview();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
