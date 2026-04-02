@@ -133,7 +133,10 @@ export const fetchKnowledgePanel = async (
     const res = await outgoingFetch(
       `https://en.wikipedia.org/w/api.php?${params.toString()}`,
       {
-        headers: { "Api-User-Agent": "degoog/1.0" },
+        headers: {
+          "User-Agent": "degoog/1.0 (+https://github.com/fccview/degoog)",
+          "Api-User-Agent": "degoog/1.0 (+https://github.com/fccview/degoog)",
+        },
       },
     );
     const data = (await res.json()) as {
