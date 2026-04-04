@@ -77,6 +77,11 @@ export const dynamicImportTranslationFiles = async (
   return translations;
 };
 
+/**
+ * Creates a translator function with the provided translations and locale management.
+ * @param translations An object containing translations for multiple languages.
+ * @returns A translator function that can be used to retrieve translations based on keys and variables, along with methods to manage locale and access translations.
+ */
 export const createTranslator = (translations: TranslationRecord) => {
   let locale = "en";
 
@@ -119,15 +124,11 @@ export const createTranslator = (translations: TranslationRecord) => {
       if (typeof value !== "string" || !vars) return String(value);
 
       if (Array.isArray(vars)) {
-        return vars.reduce<string>(
-          (str, v) => str.replace(/\{[^}]+\}/, String(v)),
-          value,
-        );
+        let i = 0;
+        return value.replace(/\{[^}]+\}/g, () => String(vars[i++]));
       } else {
-        return Object.entries(vars).reduce(
-          (str, [k, v]) =>
-            str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v)),
-          value,
+        return value.replace(/\{([^}]+)\}/g, (match, p1) =>
+          p1 in vars ? String(vars[p1]) : match,
         );
       }
     },
