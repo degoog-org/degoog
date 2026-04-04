@@ -1,15 +1,23 @@
-<div class="results-tab active" data-type="web">Web</div>
-<div class="results-tab" data-type="images">Images</div>
-<div class="results-tab" data-type="videos">Videos</div>
-<div class="results-tab" data-type="news">News</div>
+<div class="results-tab active" data-type="web">
+  {{t:search-templates.tabs.web}}
+</div>
+<div class="results-tab" data-type="images">
+  {{t:search-templates.tabs.images}}
+</div>
+<div class="results-tab" data-type="videos">
+  {{t:search-templates.tabs.videos}}
+</div>
+<div class="results-tab" data-type="news">{{t:search-templates.tabs.news}}</div>
 <div class="tools-wrap" id="tools-bar">
   <button class="tools-toggle" id="tools-toggle" type="button">
-    Options
+    {{t:search-templates.tabs.options}}
   </button>
   <div class="tools-dropdown" id="tools-dropdown" style="display: none">
     <button class="tools-menu-item" data-menu="time" type="button">
-      <span class="tools-menu-label">Time</span>
-      <span class="tools-menu-value" id="tools-time-val">Any time</span>
+      <span class="tools-menu-label">{{t:search-templates.tabs.time}}</span>
+      <span class="tools-menu-value" id="tools-time-val"
+        >{{t:search-templates.tabs.any-time}}</span
+      >
       <svg
         class="tools-menu-chevron"
         width="12"
@@ -23,8 +31,10 @@
       </svg>
     </button>
     <button class="tools-menu-item" data-menu="lang" type="button">
-      <span class="tools-menu-label">Language</span>
-      <span class="tools-menu-value" id="tools-lang-val">Any</span>
+      <span class="tools-menu-label">{{t:search-templates.tabs.language}}</span>
+      <span class="tools-menu-value" id="tools-lang-val"
+        >{{t:search-templates.tabs.any}}</span
+      >
       <svg
         class="tools-menu-chevron"
         width="12"
@@ -38,45 +48,43 @@
       </svg>
     </button>
   </div>
-  <div
-    class="tools-submenu"
-    id="tools-submenu-time"
-    style="display: none"
-  >
-    <button class="tools-option active" data-time="any">Any time</button>
-    <button class="tools-option" data-time="hour">Hour</button>
-    <button class="tools-option" data-time="day">24 hours</button>
-    <button class="tools-option" data-time="week">Week</button>
-    <button class="tools-option" data-time="month">Month</button>
-    <button class="tools-option" data-time="year">Year</button>
-    <button class="tools-option" data-time="custom">Custom...</button>
-    <div
-      class="tools-custom-date"
-      id="tools-custom-date"
-      style="display: none"
-    >
+  <div class="tools-submenu" id="tools-submenu-time" style="display: none">
+    <button class="tools-option active" data-time="any">
+      {{t:search-templates.tabs.any-time}}
+    </button>
+    <button class="tools-option" data-time="hour">
+      {{t:search-templates.tabs.hour}}
+    </button>
+    <button class="tools-option" data-time="day">
+      {{t:search-templates.tabs.day}}
+    </button>
+    <button class="tools-option" data-time="week">
+      {{t:search-templates.tabs.week}}
+    </button>
+    <button class="tools-option" data-time="month">
+      {{t:search-templates.tabs.month}}
+    </button>
+    <button class="tools-option" data-time="year">
+      {{t:search-templates.tabs.year}}
+    </button>
+    <button class="tools-option" data-time="custom">
+      {{t:search-templates.tabs.custom}}
+    </button>
+    <div class="tools-custom-date" id="tools-custom-date" style="display: none">
       <input type="date" id="tools-date-from" class="tools-date-input" />
-      <span class="tools-date-sep">to</span>
+      <span class="tools-date-sep">{{t:search-templates.tabs.date-to}}</span>
       <input type="date" id="tools-date-to" class="tools-date-input" />
-      <button
-        type="button"
-        class="tools-date-apply"
-        id="tools-date-apply"
-      >
-        Apply
+      <button type="button" class="tools-date-apply" id="tools-date-apply">
+        {{t:search-templates.tabs.apply}}
       </button>
     </div>
   </div>
-  <div
-    class="tools-submenu"
-    id="tools-submenu-lang"
-    style="display: none"
-  >
+  <div class="tools-submenu" id="tools-submenu-lang" style="display: none">
     <input
       type="text"
       class="tools-lang-filter"
       id="tools-lang-filter"
-      placeholder="Filter languages..."
+      placeholder="{{t:search-templates.tabs.filter-languages}}"
       autocomplete="off"
     />
     <div class="tools-lang-list" id="tools-lang-list"></div>

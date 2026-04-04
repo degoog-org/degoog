@@ -3,10 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="degoog is an alternative search engine aggregator."
-    />
+    <meta name="description" content="{{t:app.description}}" />
     <link
       rel="icon"
       href="/public/favicon/favicon.ico?v=__APP_VERSION__"
@@ -20,10 +17,10 @@
     <link
       rel="search"
       type="application/opensearchdescription+xml"
-      title="degoog"
+      title="{{t:app.title}}"
       href="/opensearch.xml"
     />
-    <title>degoog</title>
+    <title>{{t:app.title}}</title>
     <script>
       (function () {
         var t = localStorage.getItem("theme");
@@ -43,12 +40,14 @@
       type="font/ttf"
       crossorigin
     />
-    <link rel="stylesheet" href="/public/themes/degoog-theme/style.css?v=__APP_VERSION__" />
+    <link
+      rel="stylesheet"
+      href="/public/themes/degoog-theme/style.css?v=__APP_VERSION__"
+    />
     __THEME_CSS__ __PLUGIN_ASSETS__
   </head>
   <body __BODY_CLASS__>
-    __PAGE_CONTENT__
-    __THEME_TEMPLATES__
+    __PAGE_CONTENT__ __THEME_TEMPLATES__
     <script type="module" src="/public/app.js?v=__APP_VERSION__"></script>
   </body>
 </html>
