@@ -14,6 +14,39 @@ const statusEl = document.getElementById("ext-modal-status");
 
 let currentExt: ExtensionMeta | null = null;
 
+const _initTestButton = (container: HTMLElement): void => {
+  const btn = container.querySelector<HTMLButtonElement>(".ext-test-btn");
+  if (!btn) return;
+  const resultEl = container.querySelector<HTMLElement>(".ext-test-result");
+  btn.addEventListener("click", async () => {
+    const transport = btn.dataset.transport;
+    if (!transport) return;
+    btn.disabled = true;
+    if (resultEl) {
+      resultEl.textContent = "Testing…";
+      resultEl.className = "ext-test-result";
+    }
+    try {
+      const res = await fetch(
+        `/api/extensions/transports/${encodeURIComponent(transport)}/test`,
+        { method: "POST", headers: jsonHeaders(getStoredToken) },
+      );
+      const data = (await res.json()) as { ok: boolean; message: string };
+      if (resultEl) {
+        resultEl.textContent = data.message;
+        resultEl.classList.add(data.ok ? "ext-test-ok" : "ext-test-fail");
+      }
+    } catch {
+      if (resultEl) {
+        resultEl.textContent = "Request failed";
+        resultEl.classList.add("ext-test-fail");
+      }
+    } finally {
+      btn.disabled = false;
+    }
+  });
+};
+
 const _collectValues = (): Record<string, string | string[]> => {
   const values: Record<string, string | string[]> = {};
   bodyEl?.querySelectorAll<HTMLElement>(".ext-field").forEach((fieldEl) => {
@@ -126,11 +159,19 @@ export function openModal(ext: ExtensionMeta): void {
           .join("")}</div>
       </div>`;
     }
+    if (ext.id.startsWith("transport-") && ext.configurable) {
+      const transportName = ext.id.slice(10);
+      html += `<div class="ext-test-connection">
+        <button type="button" class="ext-test-btn" data-transport="${transportName}">Test Connection</button>
+        <span class="ext-test-result"></span>
+      </div>`;
+    }
     bodyEl.innerHTML = html;
     bodyEl.querySelector(".ext-advanced-toggle")?.addEventListener("change", (e) => {
       const body = bodyEl.querySelector<HTMLElement>(".ext-advanced-body");
       if (body) body.hidden = !(e.target as HTMLInputElement).checked;
     });
+    _initTestButton(bodyEl);
     initUrlList(bodyEl);
     bodyEl
       .querySelectorAll<HTMLElement>(".ext-field-input--configured")

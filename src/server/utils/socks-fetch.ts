@@ -2,7 +2,7 @@ import { SocksClient, type SocksProxy } from "socks";
 import tls from "node:tls";
 import { gunzipSync, inflateSync, brotliDecompressSync } from "node:zlib";
 import type { Socket } from "node:net";
-import type { OutgoingFetchOptions } from "./outgoing";
+import type { TransportFetchOptions as OutgoingFetchOptions } from "../extensions/transports/types";
 
 const SOCKS_PREFIX_RE = /^socks[45h]*:\/\//i;
 const MAX_REDIRECTS = 5;
@@ -33,12 +33,13 @@ async function openSocksSocket(
   host: string,
   port: number,
   useTls: boolean,
+  timeoutMs: number = SOCKS_TIMEOUT_MS,
 ): Promise<Socket> {
   const { socket } = await SocksClient.createConnection({
     proxy,
     command: "connect",
     destination: { host, port },
-    timeout: SOCKS_TIMEOUT_MS,
+    timeout: timeoutMs,
   });
   if (!useTls) return socket;
 
@@ -173,6 +174,7 @@ export async function fetchViaSocks(
   url: string,
   proxyUrl: string,
   options: OutgoingFetchOptions = {},
+  timeoutMs?: number,
 ): Promise<Response> {
   const proxy = parseSocksUrl(proxyUrl);
   const followRedirects = (options.redirect ?? "follow") !== "manual";
@@ -186,7 +188,7 @@ export async function fetchViaSocks(
     const useTls = parsed.protocol === "https:";
     const port = Number(parsed.port) || (useTls ? 443 : 80);
 
-    const sock = await openSocksSocket(proxy, parsed.hostname, port, useTls);
+    const sock = await openSocksSocket(proxy, parsed.hostname, port, useTls, timeoutMs);
 
     try {
       const res = await rawHttpFetch(

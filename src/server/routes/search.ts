@@ -132,6 +132,7 @@ async function runSlotPlugins(
         title: out.title,
         html: out.html,
         position: effectivePosition,
+        gridSize: plugin.gridSize,
       });
     } catch { }
   }
@@ -236,14 +237,21 @@ router.get("/api/search/stream", async (c) => {
   const autoRetry = asString(settings.streamingAutoRetry) === "true";
   const maxRetries = Math.min(5, Math.max(1, parseInt(asString(settings.streamingMaxRetries) || "2", 10)));
 
+  const builtinTypes = new Set(["web", "images", "videos", "news"]);
   const rawActiveEngines =
     searchType === "web"
       ? await getActiveWebEngines(engines)
-      : getEnginesForType(searchType, engines).map((e) => ({
-          id: e.id,
-          instance: e.instance,
-          score: 1,
-        }));
+      : builtinTypes.has(searchType)
+        ? getEnginesForType(searchType, engines).map((e) => ({
+            id: e.id,
+            instance: e.instance,
+            score: 1,
+          }))
+        : getEnginesForCustomType(searchType).map((e) => ({
+            id: e.id,
+            instance: e.instance,
+            score: 1,
+          }));
 
   if (rawActiveEngines.length === 0) {
     return c.json({
@@ -260,6 +268,8 @@ router.get("/api/search/stream", async (c) => {
 
   const start = performance.now();
 
+  let closed = false;
+
   const stream = new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder();
@@ -267,9 +277,14 @@ router.get("/api/search/stream", async (c) => {
       const allRawResults: { results: import("../types").SearchResult[]; multiplier: number }[] = [];
 
       function _send(event: string, data: unknown) {
-        controller.enqueue(
-          encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
-        );
+        if (closed) return;
+        try {
+          controller.enqueue(
+            encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
+          );
+        } catch {
+          closed = true;
+        }
       }
 
       const enginePromises = rawActiveEngines.map(async ({ instance, score, id }) => {
@@ -366,8 +381,14 @@ router.get("/api/search/stream", async (c) => {
           knowledgePanel,
           atAGlance,
         });
-        controller.close();
+        if (!closed) {
+          closed = true;
+          controller.close();
+        }
       });
+    },
+    cancel() {
+      closed = true;
     },
   });
 
@@ -429,6 +450,7 @@ router.post("/api/slots/glance", async (c) => {
         title: out.title,
         html: out.html,
         position: plugin.position,
+        gridSize: plugin.gridSize,
       });
     } catch { }
   }

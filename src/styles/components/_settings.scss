@@ -4,29 +4,28 @@
 
 .settings-page {
   margin: 0 auto;
-  padding: 24px 20px 48px;
+  padding: clamp($space-6, 4vw, $space-8) clamp($space-5, 5vw, $space-7) clamp($space-9, 5vw, $space-10);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 
   @media (min-width: 768px) {
-    max-width: 960px;
-    padding: 40px 32px 64px;
+    max-width: 60rem;
   }
 }
 
 .settings-page-header {
-  margin-bottom: 24px;
+  margin-bottom: $space-6;
 }
 
 .settings-page-back {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-2;
   color: var(--text-secondary);
   text-decoration: none;
   font-size: $font-size-base;
-  margin-bottom: 24px;
+  margin-bottom: $space-6;
 
   &:hover {
     color: var(--text-primary);
@@ -38,7 +37,7 @@
 }
 
 .settings-page-title {
-  font-size: 28px;
+  font-size: $font-size-2xl;
   font-weight: 400;
   color: var(--text-primary);
   margin: 0;
@@ -51,12 +50,12 @@
 
   @media (min-width: 768px) {
     flex-direction: row;
-    gap: 32px;
+    gap: $space-7;
   }
 }
 
 .settings-nav-mobile {
-  margin-bottom: 24px;
+  margin-bottom: $space-6;
 
   @media (min-width: 768px) {
     display: none;
@@ -66,20 +65,20 @@
 .settings-tab-select {
   display: block;
   width: 100%;
-  min-height: 48px;
+  min-height: $space-9;
   background: var(--bg-light);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: $radius-xl;
   color: var(--text-primary);
   font-family: $font-family;
-  padding: 14px 44px 14px 16px;
+  padding: $space-3 2.75rem $space-3 $space-4;
   cursor: pointer;
   outline: none;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 20px;
+  background-position: right $space-3 center;
+  background-size: $space-5;
 
   &:focus {
     border-color: $primary;
@@ -94,10 +93,10 @@
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    width: 180px;
+    width: 11.25rem;
     gap: 2px;
     position: sticky;
-    top: 40px;
+    top: $space-8;
     align-self: flex-start;
   }
 }
@@ -105,12 +104,12 @@
 .settings-nav-item {
   background: none;
   border: none;
-  border-radius: 8px;
+  border-radius: $radius-lg;
   color: var(--text-secondary);
   cursor: pointer;
   font-family: $font-family;
   font-size: $font-size-base;
-  padding: 10px 14px;
+  padding: $space-3 $space-3;
   text-align: left;
   transition: color $transition-fast, background $transition-fast;
 
@@ -142,7 +141,7 @@
 }
 
 .settings-section {
-  padding: 24px 0;
+  padding: $space-6 0;
   border-bottom: 1px solid var(--border-light);
 
   &:first-of-type {
@@ -155,37 +154,37 @@
 }
 
 .settings-section-heading {
-  font-size: 18px;
+  font-size: $font-size-lg;
   font-weight: 500;
   color: var(--text-primary);
-  margin: 0 0 4px;
+  margin: 0 0 $space-1;
 }
 
 .settings-section .settings-desc {
-  margin: 0 0 16px;
+  margin: 0 0 $space-4;
 }
 
 .settings-page-actions {
-  padding-top: 16px;
+  padding-top: $space-4;
 }
 
 .settings-desc {
   font-size: $font-size-small;
   color: var(--text-secondary);
-  margin: 0 0 16px;
+  margin: 0 0 $space-4;
 }
 
 .engine-toggles {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: $space-3;
 }
 
 .engine-toggle {
   display: flex;
   align-items: center;
   cursor: pointer;
-  gap: 12px;
+  gap: $space-3;
 
   input {
     display: none;
@@ -193,10 +192,10 @@
 }
 
 .toggle-slider {
-  width: 40px;
-  height: 20px;
+  width: $space-8;
+  height: $space-5;
   background: var(--border);
-  border-radius: 10px;
+  border-radius: $radius-xl;
   position: relative;
   transition: background $transition-fast;
   flex-shrink: 0;
@@ -206,9 +205,9 @@
     position: absolute;
     top: 2px;
     left: 2px;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
+    width: $space-4;
+    height: $space-4;
+    border-radius: $radius-full;
     background: var(--white);
     transition: transform $transition-fast;
   }
@@ -217,7 +216,7 @@
     background: $primary;
 
     &::after {
-      transform: translateX(20px);
+      transform: translateX($space-5);
     }
   }
 }
@@ -228,17 +227,17 @@
 }
 
 .theme-select-wrap {
-  margin-top: 4px;
+  margin-top: $space-1;
 }
 
 .theme-select {
   background: var(--bg-light);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: $radius-md;
   color: var(--text-primary);
   font-size: $font-size-base;
   font-family: $font-family;
-  padding: 8px 12px;
+  padding: $space-2 $space-3;
   width: 100%;
   cursor: pointer;
   outline: none;
@@ -251,9 +250,9 @@
 .settings-toggle-wrap {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: $space-3;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: $space-2;
 
   .settings-toggle {
     display: none;
@@ -266,27 +265,27 @@
 }
 
 .settings-proxy-urls-wrap {
-  margin-top: 12px;
+  margin-top: $space-3;
 }
 
 .settings-proxy-urls-label {
   display: block;
   font-size: $font-size-small;
   color: var(--text-secondary);
-  margin: 6px 0;
+  margin: $space-2 0;
 }
 
 .settings-proxy-urls {
   display: block;
   width: 100%;
-  min-height: 100px;
-  padding: 10px 12px;
+  min-height: 6.25rem;
+  padding: $space-3;
   font-family: $font-family;
   font-size: $font-size-base;
   color: var(--text-primary);
   background: var(--bg-light);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: $radius-md;
   resize: vertical;
   outline: none;
 
@@ -296,13 +295,13 @@
 }
 
 .proxy-test-btn {
-  margin-top: 10px;
+  margin-top: $space-3;
 }
 
 .proxy-test-result {
-  margin-top: 10px;
-  padding: 10px 14px;
-  border-radius: 6px;
+  margin-top: $space-3;
+  padding: $space-3;
+  border-radius: $radius-md;
   font-size: $font-size-small;
   line-height: 1.5;
 
@@ -330,26 +329,26 @@
 }
 
 .settings-rate-limit-wrap {
-  margin-top: 12px;
+  margin-top: $space-3;
 }
 
 .settings-rate-limit-desc {
-  margin-top: 8px;
+  margin-top: $space-2;
   margin-bottom: 0;
 }
 
 .settings-rate-limit-options {
-  margin-top: 12px;
+  margin-top: $space-3;
 }
 
 .settings-rate-limit-defaults {
   font-size: $font-size-small;
   color: var(--text-secondary);
-  margin-bottom: 12px;
+  margin-bottom: $space-3;
 }
 
 .settings-rate-limit-options .settings-proxy-urls-label {
-  margin-top: 10px;
+  margin-top: $space-3;
 
   &:first-of-type {
     margin-top: 0;
@@ -359,15 +358,15 @@
 .settings-rate-limit-input {
   display: block;
   width: 100%;
-  min-height: 44px;
-  padding: 10px 12px;
-  margin-top: 6px;
+  min-height: $search-bar-height;
+  padding: $space-3;
+  margin-top: $space-2;
   font-family: $font-family;
   font-size: $font-size-base;
   color: var(--text-primary);
   background: var(--bg-light);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: $radius-md;
   outline: none;
   box-sizing: border-box;
 
@@ -382,7 +381,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 0 48px;
+  padding: $space-6 0 $space-9;
 }
 
 .settings-auth-gate-inner {
@@ -390,10 +389,10 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 20px;
+  gap: $space-5;
 
   @media (min-width: 481px) {
-    max-width: 400px;
+    max-width: 25rem;
   }
 }
 
@@ -407,18 +406,18 @@
 .settings-auth-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: $space-3;
 }
 
 .settings-auth-input {
   background: var(--bg-light);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: $radius-xl;
   color: var(--text-primary);
   font-family: $font-family;
-  font-size: 1.125rem;
+  font-size: $font-size-lg;
   outline: none;
-  padding: 18px 20px;
+  padding: $space-4 $space-5;
   width: 100%;
   box-sizing: border-box;
 
@@ -437,15 +436,15 @@
   font-size: $font-size-small;
   text-align: center;
   margin: 0;
-  min-height: 20px;
+  min-height: $space-5;
 }
 
 .settings-auth-submit {
   background: $primary;
   color: #fff;
   border: none;
-  border-radius: 10px;
-  padding: 16px 24px;
+  border-radius: $radius-xl;
+  padding: $space-4 $space-6;
   font-weight: 500;
   cursor: pointer;
   font-family: $font-family;
@@ -460,8 +459,8 @@
   background: $primary;
   color: #fff;
   border: none;
-  border-radius: 4px;
-  padding: 8px 24px;
+  border-radius: $radius-sm;
+  padding: $space-2 $space-6;
   font-size: $font-size-base;
   cursor: pointer;
   font-family: $font-family;

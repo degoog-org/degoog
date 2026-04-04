@@ -6,6 +6,7 @@ import {
 } from "../../settings/general-tab";
 import { initEnginesTab } from "../../settings/engines-tab";
 import { initPluginsTab } from "../../settings/plugins-tab";
+import { initTransportsTab } from "../../settings/transports-tab";
 import { initThemesTab } from "../../settings/themes-tab";
 import { initServerTab } from "../../settings/server-tab";
 import { initStoreTab } from "../../settings/store-tab";
@@ -169,15 +170,18 @@ async function _initSettings(): Promise<void> {
     const themesData = (await themesRes.json()) as { activeId: string | null };
     await initEnginesTab(allExtensions);
     initPluginsTab(allExtensions);
+    initTransportsTab(allExtensions);
     await initThemesTab(themesData, allExtensions.themes ?? []);
     const storeEl = document.getElementById("store-content");
     if (storeEl) void initStoreTab(storeEl, getStoredToken);
   } catch {
     const enginesEl = document.getElementById("engines-content");
     const pluginsEl = document.getElementById("plugins-content");
+    const transportsEl = document.getElementById("transports-content");
     const themesEl = document.getElementById("themes-content");
     if (enginesEl) enginesEl.innerHTML = "<p>Failed to load extensions.</p>";
     if (pluginsEl) pluginsEl.innerHTML = "<p>Failed to load extensions.</p>";
+    if (transportsEl) transportsEl.innerHTML = "<p>Failed to load transports.</p>";
     if (themesEl) themesEl.innerHTML = "<p>Failed to load themes.</p>";
   }
 }
@@ -192,6 +196,7 @@ window.addEventListener("extensions-saved", async () => {
     const allExtensions = (await res.json()) as AllExtensions;
     await initEnginesTab(allExtensions);
     initPluginsTab(allExtensions);
+    initTransportsTab(allExtensions);
   } catch {}
 });
 

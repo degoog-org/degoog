@@ -1,7 +1,7 @@
 import net from "node:net";
 import tls from "node:tls";
 import { gunzipSync, inflateSync, brotliDecompressSync } from "node:zlib";
-import type { OutgoingFetchOptions } from "./outgoing";
+import type { TransportFetchOptions as OutgoingFetchOptions } from "../extensions/transports/types";
 
 const MAX_REDIRECTS = 5;
 const CONNECT_TIMEOUT_MS = 8_000;
@@ -16,13 +16,14 @@ const _openConnectTunnel = (
   proxyPort: number,
   targetHost: string,
   targetPort: number,
+  timeoutMs: number = CONNECT_TIMEOUT_MS,
 ): Promise<net.Socket> =>
   new Promise((resolve, reject) => {
     const sock = net.connect(proxyPort, proxyHost);
     const timer = setTimeout(() => {
       sock.destroy();
       reject(new Error("CONNECT tunnel timeout"));
-    }, CONNECT_TIMEOUT_MS);
+    }, timeoutMs);
 
     sock.once("connect", () => {
       sock.write(
@@ -61,12 +62,14 @@ async function _openProxySocket(
   targetHost: string,
   targetPort: number,
   useTls: boolean,
+  timeoutMs?: number,
 ): Promise<net.Socket> {
   const sock = await _openConnectTunnel(
     proxyHost,
     proxyPort,
     targetHost,
     targetPort,
+    timeoutMs,
   );
   if (!useTls) return sock;
 
@@ -169,6 +172,7 @@ export async function fetchViaHttpProxy(
   url: string,
   proxyUrl: string,
   options: OutgoingFetchOptions = {},
+  timeoutMs?: number,
 ): Promise<Response> {
   const { host: proxyHost, port: proxyPort } = parseProxyUrl(proxyUrl);
   const followRedirects = (options.redirect ?? "follow") !== "manual";
@@ -188,6 +192,7 @@ export async function fetchViaHttpProxy(
       parsed.hostname,
       port,
       useTls,
+      timeoutMs,
     );
 
     try {

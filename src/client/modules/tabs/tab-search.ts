@@ -12,6 +12,27 @@ import { skeletonResults } from "../../animations/skeleton";
 import { buildPaginationHtml } from "../../utils/pagination";
 import { renderTemplate } from "../../utils/template";
 import { SlotPanelPosition, type ScoredResult, type SearchResponse } from "../../types";
+import { performStreamingSearch, abortStreamingSearch } from "../../utils/streaming-search";
+
+let _streamingConfig: { enabled: boolean } | null = null;
+
+const _fetchStreamingConfig = async (): Promise<boolean> => {
+  if (_streamingConfig) return _streamingConfig.enabled;
+  try {
+    const res = await fetch("/api/settings/streaming");
+    if (res.ok) {
+      _streamingConfig = (await res.json()) as { enabled: boolean };
+      return _streamingConfig.enabled;
+    }
+  } catch {}
+  return false;
+};
+
+if (typeof window !== "undefined") {
+  window.addEventListener("extensions-saved", () => {
+    _streamingConfig = null;
+  });
+}
 
 export async function performTabSearch(
   query: string,
@@ -19,6 +40,12 @@ export async function performTabSearch(
   page = 1,
 ): Promise<void> {
   if (!query.trim()) return;
+
+  if (tabId.startsWith("engine:") && page === 1 && await _fetchStreamingConfig()) {
+    const engineType = tabId.replace("engine:", "");
+    abortStreamingSearch();
+    return performStreamingSearch(query, engineType, (q) => void performTabSearch(q, tabId));
+  }
 
   state.currentQuery = query;
   state.currentType = `tab:${tabId}`;

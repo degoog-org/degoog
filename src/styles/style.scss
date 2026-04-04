@@ -127,7 +127,11 @@
   --white: #fff;
 }
 
-html, body {
+html {
+  font-size: 100%;
+}
+
+body {
   margin: 0;
   padding: 0;
   font-family: $font-family;
@@ -149,7 +153,6 @@ html, body {
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding-bottom: 100px;
   padding: 0 1em;
   margin-top: -100px;
 
@@ -168,7 +171,7 @@ body.has-results #app {
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: $space-2;
 }
 
 ::-webkit-scrollbar-track {
@@ -177,18 +180,18 @@ body.has-results #app {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 4px;
+  border-radius: $radius-sm;
 }
 
 #home-footer {
   flex-shrink: 0;
   text-align: center;
-  padding: 16px;
+  padding: $space-4;
 
   a {
     color: var(--text-secondary);
     text-decoration: none;
-    font-size: 12px;
+    font-size: $font-size-small;
 
     &:hover {
       text-decoration: underline;

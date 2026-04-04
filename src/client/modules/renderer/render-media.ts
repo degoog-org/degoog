@@ -123,6 +123,8 @@ export function renderImageGrid(
     container.innerHTML =
       '<div class="image-grid"></div><div class="media-scroll-sentinel"></div>';
     grid = container.querySelector<HTMLElement>(".image-grid")!;
+  } else {
+    grid.innerHTML = "";
   }
   appendMediaCards(grid, results, "image");
 }
@@ -136,6 +138,8 @@ export function renderVideoGrid(
     container.innerHTML =
       '<div class="video-grid"></div><div class="media-scroll-sentinel"></div>';
     grid = container.querySelector<HTMLElement>(".video-grid")!;
+  } else {
+    grid.innerHTML = "";
   }
   appendMediaCards(grid, results, "video");
 }

@@ -1,16 +1,16 @@
 .glance-box {
   background: var(--bg-light);
-  border-radius: 8px;
-  padding: 20px;
-  margin: 16px 0;
+  border-radius: $radius-lg;
+  padding: $space-5;
+  margin: 0 0 $space-4 0;
   max-width: $results-max-width;
 }
 
 .glance-snippet {
-  font-size: 16px;
+  font-size: $font-size-md;
   color: var(--text-primary);
   line-height: 1.5;
-  margin-bottom: 8px;
+  margin-bottom: $space-2;
 }
 
 .glance-link {
@@ -24,8 +24,8 @@
 }
 
 .glance-sources {
-  margin-top: 8px;
-  font-size: 12px;
+  margin-top: $space-2;
+  font-size: $font-size-small;
   color: var(--text-secondary);
 }
 
@@ -35,33 +35,33 @@
 
 .glance-ai {
   position: relative;
-  padding: 0.5em;
+  padding: $space-2;
 }
 
 .glance-ai-footer {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: $space-3;
+  margin-top: $space-3;
 }
 
 .glance-ai-badge {
   display: inline-block;
-  font-size: 11px;
+  font-size: $font-size-xs;
   color: var(--text-secondary);
   background: var(--bg-hover);
-  border-radius: 4px;
-  padding: 2px 7px;
+  border-radius: $radius-sm;
+  padding: 2px $space-2;
 }
 
 .glance-ai-dive {
   border: none;
   background: none;
   color: var(--text-link);
-  font-size: 13px;
+  font-size: $font-size-small;
   cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 2px $space-2;
+  border-radius: $radius-sm;
 
   &:hover {
     text-decoration: underline;
@@ -69,7 +69,7 @@
 }
 
 .glance-ai-chat {
-  margin-top: 12px;
+  margin-top: $space-3;
 }
 
 .glance-ai-input {
@@ -78,9 +78,9 @@
   background: var(--bg);
   color: var(--text-primary);
   border: none;
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 14px;
+  border-radius: $radius-lg;
+  padding: $space-3;
+  font-size: $font-size-base;
   font-family: inherit;
   line-height: 1.5;
   resize: none;
@@ -93,20 +93,19 @@
 }
 
 .glance-ai-reply {
-  margin-top: 12px;
-  font-size: 15px;
+  margin-top: $space-3;
+  font-size: 0.9375rem;
   color: var(--text-primary);
   line-height: 1.5;
 }
 
 .glance-ai-user {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: $font-size-base;
 }
 
 .glance-ai-typing {
-  margin-top: 12px;
-  font-size: 13px;
+  margin-top: $space-3;
+  font-size: $font-size-small;
   color: var(--text-secondary);
 }
-

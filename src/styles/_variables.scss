@@ -1,13 +1,44 @@
 $font-family: arial, sans-serif;
-$font-size-base: 14px;
-$font-size-small: 13px;
-$font-size-logo: 92px;
 
-$search-bar-height: 44px;
-$search-bar-radius: 24px;
+$font-size-xs: 0.6875rem;
+$font-size-small: 0.8125rem;
+$font-size-base: 0.875rem;
+$font-size-md: 1rem;
+$font-size-lg: 1.125rem;
+$font-size-xl: 1.25rem;
+$font-size-2xl: 1.75rem;
+$font-size-logo: 5.75rem;
 
-$results-max-width: 652px;
-$header-height: 44px;
+$space-1: 0.25rem;
+$space-2: 0.5rem;
+$space-3: 0.75rem;
+$space-4: 1rem;
+$space-5: 1.25rem;
+$space-6: 1.5rem;
+$space-7: 2rem;
+$space-8: 2.5rem;
+$space-9: 3rem;
+$space-10: 4rem;
+
+$radius-xs: 0.1875rem;
+$radius-sm: 0.25rem;
+$radius-md: 0.375rem;
+$radius-lg: 0.5rem;
+$radius-xl: 0.625rem;
+$radius-2xl: 0.75rem;
+$radius-pill: 1.5rem;
+$radius-full: 50%;
+
+$search-bar-height: 2.75rem;
+$search-bar-radius: $radius-pill;
+
+$results-max-width: 40.75rem;
+$results-inline-gutter: clamp(
+  #{$space-4},
+  calc(#{$space-4} + max(0px, (100vw - 48rem) * 0.31)),
+  9.375rem
+);
+$header-height: 2.75rem;
 
 $transition-fast: 0.2s ease;
 $transition-med: 0.3s ease;

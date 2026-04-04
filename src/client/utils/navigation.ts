@@ -41,6 +41,8 @@ export function showHome(): void {
 
 export function setActiveTab(type: string): void {
   document.querySelectorAll<HTMLElement>(".results-tab").forEach((tab) => {
-    tab.classList.toggle("active", tab.dataset.type === type);
+    const tabType = tab.dataset.type ?? "";
+    const match = tabType === type || tabType === `tab:engine:${type}`;
+    tab.classList.toggle("active", match);
   });
 }

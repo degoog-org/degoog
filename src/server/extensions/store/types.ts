@@ -54,6 +54,7 @@ export interface RepoPackageJson {
   plugins?: Array<{ path: string; name: string; description?: string; version?: string; type?: string; dependencies?: string[] }>;
   themes?: Array<{ path: string; name: string; description?: string; version?: string; dependencies?: string[] }>;
   engines?: Array<{ path: string; name: string; description?: string; version?: string; type?: string; dependencies?: string[] }>;
+  transports?: Array<{ path: string; name: string; description?: string; version?: string; dependencies?: string[] }>;
   "repo-image"?: string;
 }
 

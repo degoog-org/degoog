@@ -10,6 +10,7 @@ import { reloadPluginRoutes } from "../plugin-routes/registry";
 import { reloadMiddlewareRegistry } from "../middleware/registry";
 import { reloadThemes } from "../themes/registry";
 import { reloadEngines } from "../engines/registry";
+import { reloadTransports } from "../transports/registry";
 import { ExtensionStoreType } from "../../types";
 import type {
   RepoInfo,
@@ -19,7 +20,12 @@ import type {
   RepoPackageJson,
   AuthorJson,
 } from "./types";
-import { pluginsDir, themesDir, enginesDir } from "../../utils/paths";
+import {
+  pluginsDir,
+  themesDir,
+  enginesDir,
+  transportsDir,
+} from "../../utils/paths";
 
 const CLONE_TIMEOUT_MS = 60_000;
 const OFFICIAL_REPO_URL =
@@ -356,11 +362,10 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
           installed: isInstalled,
           installedVersion: inst?.version,
           updateAvailable:
-            isInstalled &&
-            !!inst?.version &&
-            inst.version !== repoVersion,
+            isInstalled && !!inst?.version && inst.version !== repoVersion,
         };
-        if (type === ExtensionStoreType.Plugin && ent.type) item.pluginType = ent.type;
+        if (type === ExtensionStoreType.Plugin && ent.type)
+          item.pluginType = ent.type;
         if (type === ExtensionStoreType.Engine) {
           if (ent.type) item.engineType = ent.type;
           else {
@@ -376,6 +381,8 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
     if (pkg.plugins) await push(ExtensionStoreType.Plugin, pkg.plugins);
     if (pkg.themes) await push(ExtensionStoreType.Theme, pkg.themes);
     if (pkg.engines) await push(ExtensionStoreType.Engine, pkg.engines);
+    if (pkg.transports)
+      await push(ExtensionStoreType.Transport, pkg.transports);
   }
 
   return items;
@@ -384,6 +391,7 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
 function getDestDir(type: ExtensionStoreType): string {
   if (type === ExtensionStoreType.Plugin) return pluginsDir();
   if (type === ExtensionStoreType.Theme) return themesDir();
+  if (type === ExtensionStoreType.Transport) return transportsDir();
   return enginesDir();
 }
 
@@ -410,9 +418,7 @@ async function copyItemDir(
   }
 }
 
-function _parseDependencyUrl(
-  depUrl: string,
-): {
+function _parseDependencyUrl(depUrl: string): {
   repoUrl: string;
   type: ExtensionStoreType;
   itemPath: string;
@@ -425,6 +431,10 @@ function _parseDependencyUrl(
     { type: ExtensionStoreType.Plugin, pattern: /^(.+?)\/(plugins\/[^/]+)$/ },
     { type: ExtensionStoreType.Theme, pattern: /^(.+?)\/(themes\/[^/]+)$/ },
     { type: ExtensionStoreType.Engine, pattern: /^(.+?)\/(engines\/[^/]+)$/ },
+    {
+      type: ExtensionStoreType.Transport,
+      pattern: /^(.+?)\/(transports\/[^/]+)$/,
+    },
   ];
   for (const { type, pattern } of typePatterns) {
     const match = cleaned.match(pattern);
@@ -504,12 +514,27 @@ export async function installItem(
   }
   const pkgPath = join(storeDir, repo.localPath, "package.json");
   const pkg = JSON.parse(await readFile(pkgPath, "utf-8")) as RepoPackageJson;
-  const entries =
-    type === ExtensionStoreType.Plugin
-      ? pkg.plugins
-      : type === ExtensionStoreType.Theme
-        ? pkg.themes
-        : pkg.engines;
+  let entries:
+    | Array<{
+        path: string;
+        name: string;
+        description?: string;
+        version?: string;
+        type?: string;
+        dependencies?: string[];
+      }>
+    | undefined;
+
+  if (type === ExtensionStoreType.Plugin) {
+    entries = pkg.plugins;
+  } else if (type === ExtensionStoreType.Theme) {
+    entries = pkg.themes;
+  } else if (type === ExtensionStoreType.Transport) {
+    entries = pkg.transports;
+  } else {
+    entries = pkg.engines;
+  }
+
   const manifest = entries?.find(
     (e) => e.path.replace(/\/$/, "") === normalizedPath,
   );
@@ -571,6 +596,8 @@ export async function uninstallItem(
     settingsIds.push(`plugin-${inst.installedAs}`, `slot-${inst.installedAs}`);
   } else if (type === ExtensionStoreType.Theme) {
     settingsIds.push(`theme-${inst.installedAs}`);
+  } else if (type === ExtensionStoreType.Transport) {
+    settingsIds.push(`transport-${inst.installedAs}`);
   } else {
     settingsIds.push(`engine-${inst.installedAs}`);
   }
@@ -583,9 +610,7 @@ export async function uninstallItem(
   await reloadAfterAction(type);
 }
 
-async function reloadAfterAction(
-  type: ExtensionStoreType,
-): Promise<void> {
+async function reloadAfterAction(type: ExtensionStoreType): Promise<void> {
   if (type === ExtensionStoreType.Plugin) {
     await reloadSlotPlugins();
     await reloadSearchResultTabs();
@@ -595,6 +620,8 @@ async function reloadAfterAction(
     await reloadMiddlewareRegistry();
   } else if (type === ExtensionStoreType.Theme) {
     await reloadThemes();
+  } else if (type === ExtensionStoreType.Transport) {
+    await reloadTransports();
   } else {
     await reloadEngines();
   }
@@ -627,12 +654,27 @@ export async function updateItem(
 
   const pkgPath = join(storeDir, repo.localPath, "package.json");
   const pkg = JSON.parse(await readFile(pkgPath, "utf-8")) as RepoPackageJson;
-  const entries =
-    type === ExtensionStoreType.Plugin
-      ? pkg.plugins
-      : type === ExtensionStoreType.Theme
-        ? pkg.themes
-        : pkg.engines;
+  let entries:
+    | Array<{
+        path: string;
+        name: string;
+        description?: string;
+        version?: string;
+        type?: string;
+        dependencies?: string[];
+      }>
+    | undefined;
+
+  if (type === ExtensionStoreType.Plugin) {
+    entries = pkg.plugins;
+  } else if (type === ExtensionStoreType.Theme) {
+    entries = pkg.themes;
+  } else if (type === ExtensionStoreType.Transport) {
+    entries = pkg.transports;
+  } else {
+    entries = pkg.engines;
+  }
+
   const manifest = entries?.find(
     (e) => e.path.replace(/\/$/, "") === normalizedPath,
   );

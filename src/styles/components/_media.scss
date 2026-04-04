@@ -18,10 +18,10 @@
 .img-lightbox-close {
   @include button-reset;
   position: absolute;
-  top: 16px;
-  right: 20px;
+  top: $space-4;
+  right: $space-5;
   z-index: 2;
-  font-size: 32px;
+  font-size: $space-7;
   line-height: 1;
   color: rgba(255, 255, 255, 0.7);
 
@@ -55,8 +55,8 @@
   display: flex;
   flex-wrap: nowrap;
   flex-basis: 100%;
-  gap: 6px;
-  padding: 4px 0 0;
+  gap: $space-2;
+  padding: $space-1 0 0;
   overflow-x: auto;
   scrollbar-width: none;
 
@@ -73,22 +73,22 @@
 
 .image-grid {
   display: flex;
-  gap: 4px;
-  padding: 16px 0;
+  gap: $space-1;
+  padding: $space-4 0;
 }
 
 .image-column {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $space-1;
   min-width: 0;
 }
 
 .image-card {
   margin-bottom: 0;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: $radius-lg;
   overflow: hidden;
   position: relative;
   transition: opacity $transition-fast;
@@ -119,7 +119,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20px 8px 6px;
+  padding: $space-5 $space-2 $space-2;
   background: linear-gradient(transparent, rgba(0,0,0,0.6));
   display: flex;
   flex-direction: column;
@@ -133,26 +133,26 @@
 }
 
 .image-title {
-  font-size: 11px;
+  font-size: $font-size-xs;
   color: #fff;
   @include truncate;
 }
 
 .image-source {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: rgba(255,255,255,0.7);
   @include truncate;
 }
 
 .media-scroll-sentinel {
-  padding: 16px 0;
+  padding: $space-4 0;
   @include flex-center;
 }
 
 #media-preview-panel {
   background: var(--bg);
   border-left: none;
-  border-radius: 16px 16px 0 0;
+  border-radius: $space-4 $space-4 0 0;
   border-top: 1px solid var(--border);
   bottom: 0;
   display: flex;
@@ -197,9 +197,9 @@
     &.open {
       border-left: 1px solid var(--border);
       box-shadow: none;
-      min-width: 420px;
+      min-width: 26.25rem;
       transform: none;
-      width: 420px;
+      width: 26.25rem;
     }
   }
 }
@@ -207,9 +207,9 @@
 .media-preview-close {
   @include button-reset;
   position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 24px;
+  top: $space-3;
+  right: $space-3;
+  font-size: $space-6;
   color: var(--text-secondary);
   z-index: 1;
 
@@ -228,9 +228,9 @@
   @include button-reset;
   position: absolute;
   z-index: 2;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: clamp(#{$space-7}, 4vw, #{$space-8});
+  height: clamp(#{$space-7}, 4vw, #{$space-8});
+  border-radius: $radius-full;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
   @include flex-center;
@@ -248,8 +248,6 @@
   }
 
   @media (min-width: 768px) {
-    width: 40px;
-    height: 40px;
     opacity: 0;
 
     #media-preview-panel.open:hover &,
@@ -260,33 +258,24 @@
 }
 
 .media-preview-prev {
-  left: 8px;
+  left: $space-2;
 }
 
 .media-preview-next {
-  right: 8px;
+  right: $space-2;
 }
 
 .media-preview-img {
   width: 100%;
-  max-height: 40vh;
+  max-height: clamp(40vh, 30vh + 15vw, 60vh);
   object-fit: contain;
   background: var(--bg-light);
-  padding: 12px;
-
-  @media (min-width: 768px) {
-    max-height: 60vh;
-    padding: 20px;
-  }
+  padding: clamp($space-3, 3vw, $space-5);
 }
 
 .media-preview-info {
-  padding: 12px 16px;
+  padding: clamp($space-3, 3vw, $space-5) clamp($space-4, 4vw, $space-5);
   flex: 1;
-
-  @media (min-width: 768px) {
-    padding: 20px;
-  }
 }
 
 .media-preview-embed {
@@ -297,10 +286,10 @@
 }
 
 .media-preview-title {
-  font-size: 16px;
+  font-size: $font-size-md;
   font-weight: 400;
   color: var(--text-primary);
-  margin: 0 0 8px;
+  margin: 0 0 $space-2;
   line-height: 1.3;
 }
 
@@ -309,19 +298,19 @@
   color: var(--text-secondary);
   text-decoration: none;
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: $space-3;
 }
 
 .media-preview-engines {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 12px;
+  gap: $space-2;
+  margin-bottom: $space-3;
 }
 
 .media-preview-actions {
   display: flex;
-  gap: 8px;
+  gap: $space-2;
   flex-wrap: wrap;
 }
 
@@ -332,18 +321,23 @@
 
 .video-grid {
   column-count: 2;
-  column-gap: 8px;
-  padding: 16px 0;
+  column-gap: $space-2;
+  padding: $space-4 0;
 
-  @media (min-width: 800px) { column-count: 3; }
-  @media (min-width: 1400px) { column-count: 4; }
+  @media (min-width: 800px) {
+    column-count: 3;
+  }
+
+  @media (min-width: 1400px) {
+    column-count: 4;
+  }
 }
 
 .video-card {
   break-inside: avoid;
-  margin-bottom: 8px;
+  margin-bottom: $space-2;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: $radius-lg;
   overflow: hidden;
   background: var(--bg-light);
   transition: box-shadow $transition-fast;
@@ -388,25 +382,25 @@
 
 .video-duration {
   position: absolute;
-  bottom: 6px;
-  right: 6px;
+  bottom: $space-2;
+  right: $space-2;
   background: rgba(0, 0, 0, 0.8);
   color: #fff;
-  font-size: 11px;
-  padding: 2px 4px;
-  border-radius: 3px;
+  font-size: $font-size-xs;
+  padding: 2px $space-1;
+  border-radius: $radius-xs;
   font-family: $font-family;
 }
 
 .video-info {
-  padding: 10px;
+  padding: $space-3;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $space-1;
 }
 
 .video-title {
-  font-size: 13px;
+  font-size: $font-size-small;
   color: var(--text-primary);
   display: -webkit-box;
   line-clamp: 2;
@@ -417,7 +411,7 @@
 }
 
 .video-source {
-  font-size: 12px;
+  font-size: $font-size-small;
   color: var(--text-secondary);
   @include truncate;
 }

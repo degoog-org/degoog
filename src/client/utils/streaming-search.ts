@@ -7,7 +7,6 @@ import {
   destroyMediaObserver,
   closeMediaPreview,
 } from "../modules/media/media";
-import { renderAtAGlance } from "../modules/renderer/render-slots";
 import {
   renderResults,
   renderPagination,
@@ -145,10 +144,6 @@ export async function performStreamingSearch(
       renderResults(currentResults);
     } else {
       _updateResults(resultsList, currentResults, renderedUrls);
-    }
-
-    if (type === "web" && currentResults.length > 0 && currentResults[0].snippet) {
-      renderAtAGlance(currentResults[0]);
     }
 
     if (resultsMeta) {

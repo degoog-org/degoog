@@ -3,6 +3,7 @@ export const SETTINGS_TABS = [
   "server",
   "engines",
   "plugins",
+  "transports",
   "themes",
   "store",
 ] as const;

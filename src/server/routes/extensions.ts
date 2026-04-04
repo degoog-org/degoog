@@ -3,7 +3,10 @@ import {
   getEngineExtensionMeta,
   getEngineMap,
 } from "../extensions/engines/registry";
-import { getSettingsTokenFromRequest, validateSettingsToken } from "./settings-auth";
+import {
+  getSettingsTokenFromRequest,
+  validateSettingsToken,
+} from "./settings-auth";
 import {
   getPluginExtensionMeta,
   getCommandInstanceById,
@@ -29,6 +32,8 @@ import {
   type ExtensionMeta,
   type SettingField,
 } from "../types";
+import { getTransportExtensionMeta, getTransport } from "../extensions/transports/registry";
+import { outgoingFetch } from "../utils/outgoing";
 
 const router = new Hono();
 
@@ -45,7 +50,8 @@ async function getSlotExtensionMeta(): Promise<ExtensionMeta[]> {
         label: "Position",
         type: "select",
         options: [...slot.slotPositions!],
-        description: "Where the slot content appears (e.g. knowledge-panel replaces the default knowledge panel).",
+        description:
+          "Where the slot content appears (e.g. knowledge-panel replaces the default knowledge panel).",
       });
     }
     const id = slot.settingsId ?? `slot-${slot.id}`;
@@ -56,10 +62,11 @@ async function getSlotExtensionMeta(): Promise<ExtensionMeta[]> {
       const stored = raw[SLOT_POSITION_SETTING_KEY];
       const value =
         (typeof stored === "string" ? stored : undefined) ?? slot.position;
-      settings[SLOT_POSITION_SETTING_KEY] =
-        slot.slotPositions!.includes(value as typeof slot.position)
-          ? value
-          : slot.position;
+      settings[SLOT_POSITION_SETTING_KEY] = slot.slotPositions!.includes(
+        value as typeof slot.position,
+      )
+        ? value
+        : slot.position;
     }
     out.push({
       id,
@@ -75,19 +82,20 @@ async function getSlotExtensionMeta(): Promise<ExtensionMeta[]> {
 }
 
 router.get("/api/extensions", async (c) => {
-  const [engines, plugins, slotMeta, searchBarMeta, themes] = await Promise.all(
-    [
+  const [engines, plugins, slotMeta, searchBarMeta, themes, transports] =
+    await Promise.all([
       getEngineExtensionMeta(),
       getPluginExtensionMeta(),
       getSlotExtensionMeta(),
       getSearchBarActionExtensionMeta(),
       getThemeExtensionMeta(),
-    ],
-  );
+      getTransportExtensionMeta(),
+    ]);
   return c.json({
     engines,
     plugins: [...plugins, ...slotMeta, ...searchBarMeta],
     themes,
+    transports,
   });
 });
 
@@ -98,21 +106,22 @@ router.post("/api/extensions/:id/settings", async (c) => {
   const id = c.req.param("id");
   const body = await c.req.json<Record<string, unknown>>();
 
-  const [engines, plugins, slotMeta, searchBarMeta, themes] = await Promise.all(
-    [
+  const [engines, plugins, slotMeta, searchBarMeta, themes, transportMeta] =
+    await Promise.all([
       getEngineExtensionMeta(),
       getPluginExtensionMeta(),
       getSlotExtensionMeta(),
       getSearchBarActionExtensionMeta(),
       getThemeExtensionMeta(),
-    ],
-  );
+      getTransportExtensionMeta(),
+    ]);
   const ext = [
     ...engines,
     ...plugins,
     ...slotMeta,
     ...searchBarMeta,
     ...themes,
+    ...transportMeta,
   ].find((e) => e.id === id);
 
   if (!ext) {
@@ -172,7 +181,31 @@ router.post("/api/extensions/:id/settings", async (c) => {
     if (slotPlugin?.configure) slotPlugin.configure(merged);
   }
 
+  if (id.startsWith("transport-")) {
+    const transportName = id.slice(10);
+    const transportInstance = getTransport(transportName);
+    if (transportInstance?.configure) transportInstance.configure(merged);
+  }
+
   return c.json({ ok: true });
+});
+
+router.post("/api/extensions/transports/:name/test", async (c) => {
+  const token = getSettingsTokenFromRequest(c);
+  if (!(await validateSettingsToken(token)))
+    return c.json({ error: "Unauthorized" }, 401);
+
+  const name = c.req.param("name");
+  if (!getTransport(name)) return c.json({ ok: false, message: "Transport not found" }, 404);
+
+  try {
+    const res = await outgoingFetch("https://example.com", {}, name);
+    if (res.ok) return c.json({ ok: true, message: `OK (${res.status})` });
+    return c.json({ ok: false, message: `HTTP ${res.status}` });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Connection failed";
+    return c.json({ ok: false, message: msg });
+  }
 });
 
 router.get("/api/plugins/styles.css", async (c) => {

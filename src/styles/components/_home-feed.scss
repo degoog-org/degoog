@@ -1,13 +1,13 @@
 #main-home.has-feed {
   justify-content: flex-start;
   margin-top: 0;
-  padding-top: 80px;
-  padding-bottom: 24px;
+  padding-top: 5rem;
+  padding-bottom: $space-6;
 
   @media (min-width: 768px) {
     justify-content: center;
     padding-top: 0;
-    padding-bottom: 100px;
+    padding-bottom: 6.25rem;
   }
 }
 
@@ -15,9 +15,9 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 584px;
-  margin: 24px auto 0;
-  gap: 16px;
+  max-width: 36.5rem;
+  margin: $space-6 auto 0;
+  gap: $space-4;
 
   &:empty {
     display: none;
@@ -32,12 +32,12 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 16px;
+  gap: $space-4;
 }
 
 .skeleton-feed-card {
   background: var(--bg-light);
-  border-radius: 12px;
+  border-radius: $radius-2xl;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -57,10 +57,10 @@
 }
 
 .skeleton-feed-body {
-  padding: 10px 14px 14px;
+  padding: $space-3 $space-3 $space-3;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $space-2;
 }
 
 .skeleton-feed-line {
@@ -72,15 +72,15 @@
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.6s ease-in-out infinite;
-  border-radius: 4px;
-  height: 12px;
+  border-radius: $radius-sm;
+  height: $space-3;
 
   &.skeleton-feed-source {
-    width: 100px;
+    width: 6.25rem;
   }
 
   &.skeleton-feed-title {
-    height: 16px;
+    height: $space-4;
     width: 85%;
   }
 }
@@ -88,7 +88,7 @@
 @keyframes home-feed-fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY($space-2);
   }
   to {
     opacity: 1;
@@ -99,7 +99,7 @@
 .home-feed-card {
   display: block;
   background: var(--bg-light);
-  border-radius: 12px;
+  border-radius: $radius-2xl;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
@@ -129,20 +129,20 @@
   }
 
   &-body {
-    padding: 10px 14px 14px;
+    padding: $space-3 $space-3 $space-3;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: $space-1;
   }
 
   &-source {
-    font-size: 12px;
+    font-size: $font-size-small;
     color: var(--text-secondary);
     @include truncate;
   }
 
   &-title {
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 500;
     color: var(--text-primary);
     line-height: 1.3;

@@ -8,16 +8,16 @@
   display: flex;
   align-items: stretch;
   flex-direction: column;
-  padding: 16px 16px 0;
-  gap: 15px;
+  padding: $space-4 $results-inline-gutter 0;
+  gap: $space-4;
   position: relative;
 
   @media (min-width: 768px) {
     flex-direction: row;
     align-items: center;
-    padding: 16px 20px 0;
-    gap: 10px;
     position: static;
+    padding: $space-4 $space-5 0;
+    gap: $space-3;
   }
 }
 
@@ -27,7 +27,7 @@
 
   @media (min-width: 768px) {
     flex: 1;
-    max-width: 692px;
+    max-width: 43.25rem;
     width: auto;
   }
 }
@@ -35,10 +35,10 @@
 .settings-gear {
   @include button-reset;
   color: var(--text-secondary);
-  padding: 8px;
+  padding: $space-2;
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: $space-4;
+  right: $space-4;
 
   &:hover {
     color: var(--text-primary);
@@ -53,26 +53,23 @@
 #results-tabs {
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  margin-top: 6px;
+  padding: 0 $results-inline-gutter;
+  margin-top: $space-2;
   border-bottom: 1px solid var(--border-light);
-  gap: 4px;
+  gap: $space-1;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 
   &::-webkit-scrollbar {
     display: none;
   }
-
-  @media (min-width: 768px) { padding: 0 20px; }
-  @media (min-width: 1200px) { padding: 0 150px; }
 }
 
 .results-tab {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
+  gap: $space-2;
+  padding: $space-3 $space-4;
   font-size: $font-size-small;
   color: var(--text-secondary);
   cursor: pointer;
@@ -92,7 +89,7 @@
 .tools-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: $space-2;
   position: relative;
 }
 
@@ -101,7 +98,7 @@
   font-size: $font-size-small;
   font-family: $font-family;
   color: var(--text-secondary);
-  padding: 10px 16px;
+  padding: $space-3 $space-4;
   white-space: nowrap;
   border-bottom: 3px solid transparent;
   transition: color $transition-fast;
@@ -114,10 +111,10 @@
 .tools-dropdown {
   z-index: 200;
   background: var(--bg-light);
-  border-radius: 8px;
+  border-radius: $radius-lg;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  min-width: 180px;
-  padding: 4px 0;
+  min-width: 11.25rem;
+  padding: $space-1 0;
 }
 
 .tools-menu-item {
@@ -125,8 +122,8 @@
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 10px 14px;
-  gap: 8px;
+  padding: $space-3 $space-3;
+  gap: $space-2;
   font-family: $font-family;
   font-size: $font-size-small;
   color: var(--text-primary);
@@ -143,9 +140,9 @@
 }
 
 .tools-menu-value {
-  font-size: 11px;
+  font-size: $font-size-xs;
   color: var(--text-secondary);
-  max-width: 80px;
+  max-width: 5rem;
   @include truncate;
 
   &--set {
@@ -161,18 +158,18 @@
 .tools-submenu {
   z-index: 201;
   background: var(--bg-light);
-  border-radius: 8px;
+  border-radius: $radius-lg;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  min-width: 200px;
-  padding: 6px 0;
+  min-width: 12.5rem;
+  padding: $space-2 0;
   overflow: hidden;
 }
 
 .tools-custom-date {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
+  gap: $space-1;
+  padding: $space-2 $space-3;
   flex-wrap: wrap;
 }
 
@@ -184,8 +181,8 @@
   color: var(--text-primary);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 4px 6px;
+  border-radius: $radius-sm;
+  padding: $space-1 $space-2;
 }
 
 .tools-date-sep {
@@ -199,8 +196,8 @@
   font-size: $font-size-small;
   font-family: $font-family;
   color: $primary;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: $space-1 $space-2;
+  border-radius: $radius-sm;
   flex-shrink: 0;
 
   &:hover {
@@ -210,15 +207,15 @@
 
 .tools-lang-filter {
   display: block;
-  width: calc(100% - 24px);
-  margin: 4px 12px 2px;
-  padding: 5px 8px;
+  width: calc(100% - $space-6);
+  margin: $space-1 $space-3 2px;
+  padding: $space-1 $space-2;
   font-size: $font-size-small;
   font-family: $font-family;
   color: var(--text-primary);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: $radius-sm;
   outline: none;
   box-sizing: border-box;
 
@@ -229,17 +226,17 @@
 
 .tools-lang-list {
   overflow-y: auto;
-  max-height: 260px;
+  max-height: 16.25rem;
 }
 
 .tools-lang-code {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--text-secondary);
-  margin-left: 4px;
+  margin-left: $space-1;
 }
 
 .tools-lang-error {
-  padding: 8px 16px;
+  padding: $space-2 $space-4;
   font-size: $font-size-small;
   color: var(--text-secondary);
 }
@@ -249,7 +246,7 @@
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 8px 16px;
+  padding: $space-2 $space-4;
   font-size: $font-size-small;
   font-family: $font-family;
   color: var(--text-primary);
@@ -264,8 +261,8 @@
 
     &::before {
       content: "\2713";
-      margin-right: 8px;
-      font-size: 12px;
+      margin-right: $space-2;
+      font-size: $font-size-small;
     }
   }
 }
@@ -274,37 +271,30 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 20px 16px 10px 16px;
+  gap: $space-3;
+  padding: $space-5 $results-inline-gutter $space-3;
   font-size: $font-size-small;
   color: var(--text-secondary);
-
-  @media (min-width: 768px) { padding: 20px 20px 10px 20px; }
-  @media (min-width: 1200px) { padding: 20px 150px 10px 150px; }
 }
 
 #results-layout {
   display: flex;
   flex-direction: column;
-  padding: 0 16px;
+  padding: 0 $results-inline-gutter;
   gap: 0;
 
   @media (min-width: 768px) {
     flex-direction: row;
-    padding: 0 20px;
-    gap: 40px;
-  }
-
-  @media (min-width: 1200px) {
-    padding: 0 150px;
+    gap: $space-8;
   }
 
   &.media-mode {
-    padding: 0 8px;
-
-    @media (min-width: 768px) {
-      padding: 0 20px;
-    }
+    padding: 0
+      clamp(
+        #{$space-2},
+        calc(#{$space-2} + max(0px, (100vw - 48rem) * 0.028)),
+        #{$space-5}
+      );
 
     #results-main {
       max-width: none;
@@ -325,18 +315,18 @@
 #sidebar-col {
   width: 100%;
   flex-shrink: 0;
-  padding-bottom: 8px;
+  padding-bottom: $space-2;
   order: -1;
 
   @media (min-width: 768px) {
-    width: 340px;
+    width: 21.25rem;
     padding-bottom: 0;
     order: 0;
   }
 }
 
 .result-item {
-  padding: 16px 0;
+  padding: $space-4 0;
 }
 
 .result-item-inner {
@@ -345,7 +335,7 @@
   @media (min-width: 768px) {
     display: flex;
     align-items: flex-start;
-    gap: 16px;
+    gap: $space-4;
     overflow: visible;
   }
 }
@@ -360,10 +350,10 @@
 
 .result-thumbnail-wrap {
   float: right;
-  margin: 2px 0 6px 10px;
-  width: 80px;
-  height: 60px;
-  border-radius: 8px;
+  margin: 2px 0 $space-2 $space-3;
+  width: 5rem;
+  height: 3.75rem;
+  border-radius: $radius-lg;
   overflow: hidden;
   background: var(--bg-light, #f0f0f0);
 
@@ -372,8 +362,8 @@
     margin: 0;
     flex-shrink: 0;
     order: 2;
-    width: 120px;
-    height: 90px;
+    width: 7.5rem;
+    height: 5.625rem;
   }
 
   .result-thumbnail-img {
@@ -386,14 +376,14 @@
 .result-url-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-2;
 }
 
 .result-favicon {
-  width: 26px;
-  height: 26px;
+  width: 1.625rem;
+  height: 1.625rem;
   flex-shrink: 0;
-  border-radius: 50%;
+  border-radius: $radius-full;
   object-fit: cover;
 }
 
@@ -406,11 +396,11 @@
 
 .result-title {
   display: block;
-  font-size: 20px;
+  font-size: $font-size-xl;
   color: var(--text-link);
   text-decoration: none;
   line-height: 1.3;
-  margin-top: 4px;
+  margin-top: $space-1;
 
   &:hover {
     text-decoration: underline;
@@ -425,40 +415,40 @@
   font-size: $font-size-base;
   color: var(--text-snippet);
   line-height: 1.58;
-  margin: 4px 0 0;
+  margin: $space-1 0 0;
   overflow-wrap: break-word;
   word-break: break-word;
 }
 
 .result-engines {
   display: flex;
-  gap: 6px;
-  margin-top: 6px;
+  gap: $space-2;
+  margin-top: $space-2;
 }
 
 .result-engine-tag {
-  font-size: 11px;
+  font-size: $font-size-xs;
   color: var(--text-secondary);
   background: var(--bg-light);
-  border-radius: 3px;
-  padding: 2px 6px;
+  border-radius: $radius-xs;
+  padding: 2px $space-2;
 }
 
 .no-results {
-  padding: 40px 0;
+  padding: $space-8 0;
   color: var(--text-secondary);
-  font-size: 16px;
+  font-size: $font-size-md;
 }
 
 .loading-dots {
   @include flex-center;
-  padding: 40px 0;
-  gap: 6px;
+  padding: $space-8 0;
+  gap: $space-2;
 
   span {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    width: $space-2;
+    height: $space-2;
+    border-radius: $radius-full;
     background: $primary;
     animation: dot-pulse 1.2s ease-in-out infinite;
 
@@ -475,7 +465,7 @@
 .pagination {
   justify-content: flex-start;
   align-items: center;
-  padding: 30px 0 40px;
+  padding: $space-7 0 $space-8;
   flex-wrap: wrap;
 }
 
@@ -485,17 +475,17 @@
   gap: 2px;
 
   @media (min-width: 768px) {
-    gap: 8px;
+    gap: $space-2;
   }
 }
 
 .pagination-link {
   @include flex-center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: $radius-full;
   text-decoration: none;
-  font-size: 14px;
+  font-size: $font-size-base;
   color: $primary;
   cursor: pointer;
   transition: background $transition-fast;
@@ -507,10 +497,10 @@
 
 .pagination-current {
   @include flex-center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  font-size: 14px;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: $radius-full;
+  font-size: $font-size-base;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -520,7 +510,7 @@
   text-decoration: none;
   font-size: $font-size-base;
   cursor: pointer;
-  padding: 8px 16px;
+  padding: $space-2 $space-4;
 
   &:hover {
     text-decoration: underline;
@@ -530,32 +520,60 @@
 #slot-above-results,
 #slot-below-results {
   &:empty { display: none; }
-  margin: 20px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+  margin: $space-5 0;
 }
 
 #slot-above-sidebar,
 #slot-below-sidebar {
   &:empty { display: none; }
-  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+  margin-top: $space-4;
 }
 
 .results-slot-panel {
   background: var(--bg-light);
-  border-radius: 8px;
-  margin-bottom: 12px;
+  border-radius: $radius-lg;
   overflow: hidden;
+  flex: 1 1 100%;
+  min-width: 0;
+
+  &[data-grid="1"] {
+    flex: 1 1 0;
+    min-width: min(100%, 10rem);
+  }
+
+  &[data-grid="2"] {
+    flex: 2 1 0;
+    min-width: min(100%, 14rem);
+  }
+
+  &[data-grid="3"] {
+    flex: 3 1 0;
+    min-width: min(100%, 18rem);
+  }
+
+  @media (max-width: 767px) {
+    &[data-grid] {
+      flex-basis: 100%;
+    }
+  }
 }
 
 .results-slot-panel-title {
   font-size: $font-size-base;
   font-weight: 600;
   color: var(--text-primary);
-  padding: 12px 14px;
+  padding: $space-3;
   margin-bottom: 0;
 }
 
 .results-slot-panel-body {
-  padding: 14px;
+  padding: $space-3;
   font-size: $font-size-small;
   color: var(--text-primary);
   line-height: 1.5;
@@ -573,7 +591,7 @@
 @keyframes resultFadeIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY($space-2);
   }
   to {
     opacity: 1;

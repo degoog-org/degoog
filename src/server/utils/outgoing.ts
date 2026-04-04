@@ -13,28 +13,25 @@
 
 import { fetch as bunFetch } from "bun";
 import { getSettings } from "./plugin-settings";
-import { debug } from "./logger";
 import { isSocksProxy, fetchViaSocks } from "./socks-fetch";
 import { fetchViaHttpProxy } from "./http-proxy-fetch";
-import { fetchViaCurl } from "./curl-fetch";
+import { resolveTransport } from "../extensions/transports/registry";
+import { debug } from "./logger";
+import type {
+  Transport,
+  TransportFetchOptions,
+  TransportContext,
+  ProxyAwareFetch,
+} from "../extensions/transports/types";
 
-export interface OutgoingFetchOptions {
-  method?: string;
-  headers?: Record<string, string>;
-  body?: string;
-  redirect?: RequestRedirect;
-  signal?: AbortSignal;
-}
+export type { TransportFetchOptions as OutgoingFetchOptions };
 
 const DEGOOG_SETTINGS_ID = "degoog-settings";
 
-export type OutgoingTransport = "fetch" | "curl" | "auto";
+export type OutgoingTransport = string;
 
-export function parseOutgoingTransport(
-  raw: string | undefined,
-): OutgoingTransport {
-  if (raw === "curl" || raw === "auto") return raw;
-  return "fetch";
+export function parseOutgoingTransport(raw: string | undefined): string {
+  return raw?.trim() || "fetch";
 }
 
 let allowedHosts: Set<string> | null = null;
@@ -63,10 +60,6 @@ function parseProxyUrls(raw: string): string[] {
     .filter(Boolean);
 }
 
-function shouldRetryWithCurl(status: number): boolean {
-  return status === 429 || status === 403 || status === 502 || status === 503;
-}
-
 export function isUrlAllowedForOutgoing(url: string): boolean {
   try {
     const parsed = new URL(url);
@@ -82,65 +75,83 @@ export function isUrlAllowedForOutgoing(url: string): boolean {
   return allowedHosts.has(host);
 }
 
-export async function outgoingFetch(
-  url: string,
-  options: OutgoingFetchOptions = {},
-  transport: OutgoingTransport = "fetch",
-): Promise<Response> {
-  const settings = await getSettings(DEGOOG_SETTINGS_ID);
+function _buildProxyFetch(
+  proxyUrl?: string,
+  timeoutMs?: number,
+): ProxyAwareFetch {
+  return async (url: string, init?: RequestInit): Promise<Response> => {
+    const method = init?.method ?? "GET";
+    const redirect = init?.redirect ?? "follow";
+    const signal = init?.signal ?? undefined;
+    const headers = init?.headers as Record<string, string> | undefined;
+    const body = typeof init?.body === "string" ? init.body : undefined;
 
+    if (!proxyUrl) {
+      return bunFetch(url, { method, redirect, signal, headers, body });
+    }
+
+    if (isSocksProxy(proxyUrl)) {
+      return fetchViaSocks(
+        url,
+        proxyUrl,
+        {
+          method,
+          redirect,
+          signal,
+          headers,
+          body,
+        },
+        timeoutMs,
+      );
+    }
+
+    return fetchViaHttpProxy(
+      url,
+      proxyUrl,
+      {
+        method,
+        redirect,
+        signal,
+        headers,
+        body,
+      },
+      timeoutMs,
+    );
+  };
+}
+
+async function buildTransportContext(
+  transportName: string,
+): Promise<{ transport: Transport; context: TransportContext }> {
+  const settings = await getSettings(DEGOOG_SETTINGS_ID);
   const enabled = settings.proxyEnabled === "true";
   const proxyUrlsRaw = settings.proxyUrls;
   const urls = parseProxyUrls(
     typeof proxyUrlsRaw === "string" ? proxyUrlsRaw : "",
   );
-
   const useProxy = enabled && urls.length > 0;
-  const method = options.method ?? "GET";
-  const redirect = options.redirect ?? "follow";
-  const signal = options.signal;
-  const headers = options.headers;
-  const body = options.body;
-
   const proxyUrl = useProxy ? urls[proxyIndex++ % urls.length] : undefined;
-
-  const nativeFetch = async (): Promise<Response> => {
-    if (!useProxy) {
-      debug("outgoing", `direct fetch ${new URL(url).hostname}`);
-      return bunFetch(url, { method, redirect, signal, headers, body });
-    }
-    debug("outgoing", `via proxy ${proxyUrl} -> ${new URL(url).hostname}`);
-
-    if (isSocksProxy(proxyUrl!)) {
-      return fetchViaSocks(url, proxyUrl!, {
-        method,
-        redirect,
-        signal,
-        headers,
-        body: body ?? undefined,
-      });
-    }
-
-    return fetchViaHttpProxy(url, proxyUrl!, {
-      method,
-      redirect,
-      signal,
-      headers,
-      body: body ?? undefined,
-    });
+  const transport = resolveTransport(transportName);
+  return {
+    transport,
+    context: {
+      proxyUrl,
+      fetch: _buildProxyFetch(proxyUrl, transport.timeoutMs),
+    },
   };
+}
 
-  if (transport === "curl") {
-    debug("outgoing", `curl ${new URL(url).hostname}`);
-    return fetchViaCurl(url, options, proxyUrl);
+export async function outgoingFetch(
+  url: string,
+  options: TransportFetchOptions = {},
+  transportName: string = "fetch",
+): Promise<Response> {
+  const { transport, context } = await buildTransportContext(transportName);
+  const host = new URL(url).hostname;
+  if (context.proxyUrl) {
+    debug("outgoing", `${transport.name} via ${context.proxyUrl} -> ${host}`);
+  } else {
+    debug("outgoing", `${transport.name} -> ${host}`);
   }
-
-  const first = await nativeFetch();
-
-  if (transport === "auto" && shouldRetryWithCurl(first.status)) {
-    debug("outgoing", `auto curl retry ${new URL(url).hostname}`);
-    return fetchViaCurl(url, options, proxyUrl);
-  }
-
-  return first;
+  return transport.fetch(url, options, context);
 }

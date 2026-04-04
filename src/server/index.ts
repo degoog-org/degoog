@@ -12,6 +12,7 @@ import { initSearchBarActions } from "./extensions/search-bar/registry";
 import { initPluginRoutes } from "./extensions/plugin-routes/registry";
 import { initMiddlewareRegistry } from "./extensions/middleware/registry";
 import { initThemes } from "./extensions/themes/registry";
+import { initTransports } from "./extensions/transports/registry";
 import pagesRouter from "./routes/pages";
 import themesRouter from "./routes/themes";
 import searchRouter from "./routes/search";
@@ -53,6 +54,7 @@ app.route("/", pluginRoutesRouter);
 const port = Number(process.env.DEGOOG_PORT) || 4444;
 
 Promise.all([
+  initTransports(),
   initEngines(),
   initPlugins(),
   initSlotPlugins(),
@@ -63,6 +65,6 @@ Promise.all([
   initThemes(),
 ]).then(() => {
   setOutgoingAllowlist(getOutgoingAllowlist());
-  Bun.serve({ port, fetch: app.fetch });
+  Bun.serve({ port, fetch: app.fetch, idleTimeout: 120 });
   console.log(`degoog v${pkg.version} running on http://localhost:${port}`);
 });

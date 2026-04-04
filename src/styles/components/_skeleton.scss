@@ -12,82 +12,87 @@
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.6s ease-in-out infinite;
-  border-radius: 4px;
+  border-radius: $radius-sm;
 }
 
 .skeleton-results {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: $space-7;
 }
 
 .skeleton-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: $space-2;
   max-width: $results-max-width;
 }
 
 .skeleton-line {
   @extend %skeleton-base;
-  height: 13px;
+  height: $font-size-small;
   width: 100%;
 
   &--url {
-    height: 12px;
-    width: 180px;
+    height: $font-size-small;
+    width: 11.25rem;
     margin-bottom: 2px;
   }
 
   &--title {
-    height: 18px;
+    height: $font-size-lg;
     width: 70%;
   }
 
   &--snippet {
-    height: 13px;
+    height: $font-size-small;
     width: 100%;
   }
 
   &--snippet-short {
-    height: 13px;
+    height: $font-size-small;
     width: 55%;
   }
 }
 
 .skeleton-image-grid {
   display: flex;
-  gap: 4px;
-  padding: 16px 0;
+  gap: $space-1;
+  padding: $space-4 0;
 
   .image-column {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: $space-1;
     min-width: 0;
   }
 }
 
 .skeleton-video-grid {
   column-count: 2;
-  column-gap: 8px;
-  padding: 16px 0;
+  column-gap: $space-2;
+  padding: $space-4 0;
 
-  @media (min-width: 800px) { column-count: 3; }
-  @media (min-width: 1400px) { column-count: 4; }
+  @media (min-width: 800px) {
+    column-count: 3;
+  }
+
+  @media (min-width: 1400px) {
+    column-count: 4;
+  }
 }
 
 .skeleton-media-card {
   @extend %skeleton-base;
-  border-radius: 8px;
+  border-radius: $radius-lg;
   width: 100%;
 }
 
 .skeleton-video-card {
   break-inside: avoid;
-  margin-bottom: 8px;
-  border-radius: 8px;
+  margin-bottom: $space-2;
+  border-radius: $radius-lg;
   overflow: hidden;
 }
 
@@ -100,8 +105,8 @@
 .skeleton-glance {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 4px 0 8px;
+  gap: $space-3;
+  padding: $space-1 0 $space-2;
 
   .skeleton-line--title {
     width: 80%;

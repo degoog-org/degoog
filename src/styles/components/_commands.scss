@@ -1,5 +1,5 @@
 .command-result {
-  padding: 1.5em 0;
+  padding: $space-6 0;
   max-width: $results-max-width;
   width: 100%;
   color: var(--text-primary);
@@ -11,7 +11,7 @@
 
   th, td {
     text-align: left;
-    padding: 0.5em 1em;
+    padding: $space-2 $space-4;
     border-bottom: 1px solid var(--border-light);
   }
 
@@ -60,7 +60,7 @@
   code {
     background: var(--bg-light);
     padding: 0.15em 0.4em;
-    border-radius: 4px;
+    border-radius: $radius-sm;
     font-size: 0.9em;
   }
 }
@@ -70,9 +70,9 @@
   flex-direction: column;
   gap: 0;
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: $radius-lg;
   overflow: hidden;
-  min-height: 300px;
+  min-height: 18.75rem;
 
   @media (min-width: 601px) {
     flex-direction: row;
@@ -93,13 +93,13 @@
     flex-direction: column;
     border-right: 1px solid var(--border-light);
     border-bottom: none;
-    min-width: 160px;
+    min-width: 10rem;
     overflow-x: initial;
   }
 }
 
 .help-tab {
-  padding: 0.75em 1em;
+  padding: $space-3 $space-4;
   font-size: $font-size-base;
   color: var(--text-secondary);
   background: none;
@@ -111,7 +111,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5em;
+  gap: $space-2;
   white-space: nowrap;
 
   &:hover {
@@ -146,9 +146,9 @@
   font-size: $font-size-small;
   color: var(--text-secondary);
   background: var(--bg-hover);
-  padding: 0.1em 0.5em;
-  border-radius: 10px;
-  min-width: 20px;
+  padding: 0.1em $space-2;
+  border-radius: $radius-xl;
+  min-width: $space-5;
   text-align: center;
 }
 
@@ -167,7 +167,7 @@
 }
 
 .help-row {
-  padding: 0.75em 1em;
+  padding: $space-3 $space-4;
   border-bottom: 1px solid var(--border-light);
   transition: background $transition-fast;
 
@@ -183,8 +183,8 @@
 .help-row-main {
   display: flex;
   align-items: center;
-  gap: 0.75em;
-  margin-bottom: 0.25em;
+  gap: $space-3;
+  margin-bottom: $space-1;
 }
 
 .help-trigger {
@@ -208,7 +208,7 @@
 .help-row-aliases {
   font-size: $font-size-small;
   color: var(--text-secondary);
-  margin-top: 0.25em;
+  margin-top: $space-1;
 }
 
 .help-aliases {
@@ -220,25 +220,25 @@
 .command-uuid {
   display: flex;
   flex-direction: column;
-  gap: 0.75em;
+  gap: $space-3;
 
   .uuid-row {
     display: flex;
     align-items: center;
-    gap: 1em;
+    gap: $space-4;
   }
 
   code {
-    font-size: 1.25em;
-    padding: 0.5em 0.75em;
+    font-size: $font-size-xl;
+    padding: $space-2 $space-3;
     background: var(--bg-light);
-    border-radius: 6px;
+    border-radius: $radius-md;
     border: 1px solid var(--border-light);
     user-select: all;
   }
 
   .uuid-copy {
-    padding: 0.5em 1em;
+    padding: $space-2 $space-4;
     background: var(--search-bar-bg);
     color: var(--text-primary);
     border: none;
@@ -258,7 +258,7 @@
 .command-ip-info {
   .ip-row {
     display: flex;
-    padding: 0.4em 0;
+    padding: $space-1 0;
     border-bottom: 1px solid var(--border-light);
 
     &:last-child {
@@ -267,7 +267,7 @@
   }
 
   .ip-label {
-    width: 120px;
+    width: 7.5rem;
     flex-shrink: 0;
     color: var(--text-secondary);
     font-weight: bold;
@@ -283,13 +283,13 @@
 .command-speedtest {
   .speedtest-gauges {
     display: flex;
-    gap: 2em;
+    gap: $space-7;
     flex-wrap: wrap;
   }
 
   .speedtest-gauge {
     flex: 1;
-    min-width: 150px;
+    min-width: 9.375rem;
   }
 
   .speedtest-value {
@@ -302,27 +302,27 @@
   .speedtest-label {
     font-size: $font-size-small;
     color: var(--text-secondary);
-    margin-bottom: 0.5em;
+    margin-bottom: $space-2;
   }
 
   .speedtest-bar {
-    height: 6px;
+    height: $space-2;
     background: var(--bg-light);
-    border-radius: 3px;
+    border-radius: $radius-xs;
     overflow: hidden;
-    margin-top: 0.4em;
+    margin-top: $space-1;
   }
 
   .speedtest-bar-fill {
     height: 100%;
     width: 0;
     background: $primary;
-    border-radius: 3px;
+    border-radius: $radius-xs;
     transition: width 0.5s ease;
   }
 
   .speedtest-status {
-    margin-top: 1.5em;
+    margin-top: $space-6;
     font-size: $font-size-small;
     color: var(--text-secondary);
   }
@@ -330,13 +330,13 @@
 
 .command-media-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1em;
+  grid-template-columns: repeat(auto-fill, minmax(8.75rem, 1fr));
+  gap: $space-4;
   max-width: none;
 
   .media-card {
     background: var(--bg-light);
-    border-radius: 8px;
+    border-radius: $radius-lg;
     overflow: hidden;
     border: 1px solid var(--border-light);
     transition: transform $transition-fast;
@@ -365,10 +365,10 @@
   }
 
   .media-card-info {
-    padding: 0.5em;
+    padding: $space-2;
     display: flex;
     flex-direction: column;
-    gap: 0.25em;
+    gap: $space-1;
   }
 
   .media-card-title {
@@ -385,11 +385,11 @@
   }
 
   .media-type-badge {
-    font-size: 11px;
+    font-size: $font-size-xs;
     color: var(--text-secondary);
     background: var(--bg-hover);
-    padding: 0.15em 0.5em;
-    border-radius: 4px;
+    padding: 0.15em $space-2;
+    border-radius: $radius-sm;
     width: fit-content;
     text-transform: uppercase;
   }

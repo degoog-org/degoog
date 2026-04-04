@@ -15,12 +15,33 @@ import {
   getActiveWebEngines,
   getEnginesForSearchType,
   getEngineIdByInstance,
+  getEngineDefaultTransport,
 } from "./extensions/engines/registry";
 import { getSettings, asString } from "./utils/plugin-settings";
 import { outgoingFetch, parseOutgoingTransport } from "./utils/outgoing";
+import { resolveTransport } from "./extensions/transports/registry";
 
 const MAX_PAGE = 10;
 const ENGINE_TIMEOUT_MS = 10_000;
+
+const ENGINE_TIMEOUT_BUFFER_MS = 5000;
+
+const _getEngineTimeout = async (
+  engineSettingsId: string | undefined,
+): Promise<number> => {
+  if (!engineSettingsId) return ENGINE_TIMEOUT_MS;
+  let raw =
+    asString((await getSettings(engineSettingsId)).outgoingTransport) ||
+    undefined;
+  if (!raw)
+    raw = getEngineDefaultTransport(engineSettingsId) ?? undefined;
+  const transportName = parseOutgoingTransport(raw);
+  const transport = resolveTransport(transportName);
+  if (transport.timeoutMs && transport.timeoutMs > ENGINE_TIMEOUT_MS) {
+    return transport.timeoutMs + ENGINE_TIMEOUT_BUFFER_MS;
+  }
+  return ENGINE_TIMEOUT_MS;
+};
 
 const _normalizeUrl = (url: string): string => {
   try {
@@ -74,7 +95,9 @@ const _sortedFromMap = (urlMap: Map<string, ScoredResult>): ScoredResult[] => {
   return scored;
 };
 
-export const fetchRelatedSearches = async (query: string): Promise<string[]> => {
+export const fetchRelatedSearches = async (
+  query: string,
+): Promise<string[]> => {
   try {
     const res = await outgoingFetch(
       `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`,
@@ -110,7 +133,10 @@ export const fetchKnowledgePanel = async (
     const res = await outgoingFetch(
       `https://en.wikipedia.org/w/api.php?${params.toString()}`,
       {
-        headers: { "Api-User-Agent": "degoog/1.0" },
+        headers: {
+          "User-Agent": "degoog/1.0 (+https://github.com/fccview/degoog)",
+          "Api-User-Agent": "degoog/1.0 (+https://github.com/fccview/degoog)",
+        },
       },
     );
     const data = (await res.json()) as {
@@ -201,13 +227,16 @@ export const createSearchEngineContext = (
   dateTo?: string,
 ): EngineContext => ({
   fetch: async (url, init) => {
-    const transport =
-      engineSettingsId !== undefined
-        ? parseOutgoingTransport(
-            asString((await getSettings(engineSettingsId)).outgoingTransport) ||
-              undefined,
-          )
-        : "fetch";
+    let raw: string | undefined;
+    if (engineSettingsId !== undefined) {
+      raw =
+        asString((await getSettings(engineSettingsId)).outgoingTransport) ||
+        undefined;
+    }
+    if (!raw && engineSettingsId !== undefined) {
+      raw = getEngineDefaultTransport(engineSettingsId) ?? undefined;
+    }
+    const transport = parseOutgoingTransport(raw);
     return outgoingFetch(url, init ?? {}, transport);
   },
   lang: lang || undefined,
@@ -242,9 +271,10 @@ export const searchSingleEngine = async (
     dateTo,
   );
   try {
+    const timeout = await _getEngineTimeout(engineSettingsId);
     const results = await _withTimeout(
       engine.executeSearch(query, p, timeFilter, engineContext),
-      ENGINE_TIMEOUT_MS,
+      timeout,
     );
     const elapsed = Math.round(performance.now() - t0);
     return {
@@ -299,9 +329,10 @@ export const search = async (
     rawActiveEngines.map(async ({ instance, id }) => {
       const t0 = performance.now();
       const ctx = createSearchEngineContext(id, lang, dateFrom, dateTo);
+      const timeout = await _getEngineTimeout(id);
       const results = await _withTimeout(
         instance.executeSearch(query, p, timeFilter, ctx),
-        ENGINE_TIMEOUT_MS,
+        timeout,
       );
       return { results, elapsed: Math.round(performance.now() - t0) };
     }),
@@ -313,7 +344,10 @@ export const search = async (
   for (let i = 0; i < settled.length; i++) {
     const result = settled[i];
     if (result.status === "fulfilled") {
-      allResults.push({ results: result.value.results, multiplier: rawActiveEngines[i].score });
+      allResults.push({
+        results: result.value.results,
+        multiplier: rawActiveEngines[i].score,
+      });
       engineTimings.push({
         name: rawActiveEngines[i].instance.name,
         time: result.value.elapsed,

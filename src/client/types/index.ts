@@ -47,6 +47,7 @@ export interface SlotPanel {
   title?: string;
   html: string;
   position: SlotPanelPosition;
+  gridSize?: 1 | 2 | 3 | 4;
 }
 
 export interface SearchResponse {
@@ -124,6 +125,7 @@ export interface AllExtensions {
   engines: ExtensionMeta[];
   plugins: ExtensionMeta[];
   themes: ExtensionMeta[];
+  transports: ExtensionMeta[];
 }
 
 export interface SearchBarAction {

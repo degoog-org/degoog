@@ -39,6 +39,7 @@
           <li><a href="plugins.html">Plugins</a></li>
           <li><a href="themes.html">Themes</a></li>
           <li><a href="engines.html">Search engines</a></li>
+          <li><a href="transports.html">Transports</a></li>
           <li><a href="store.html">Store</a></li>
           <li><a href="aliases.html">Aliases</a></li>
           <li><a href="env.html">Environment</a></li>
@@ -281,8 +282,9 @@ export default class MyEngine {
           Every engine also has an <strong>Outgoing HTTP client</strong> control
           under <strong>Advanced</strong> in Settings → Engines (Configure).
           It is stored per engine: <code>fetch</code> (default), system
-          <code>curl</code>, or <code>auto</code> (retry with curl after certain
-          error statuses). Custom engines should still use
+          <code>curl</code>, <code>auto</code> (retry with curl after certain
+          error statuses), or any custom <a href="transports.html">transport</a>
+          installed via the Store. Custom engines should still use
           <code>context.fetch</code> so that setting is applied automatically.
         </p>
 

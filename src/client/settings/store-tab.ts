@@ -23,7 +23,7 @@ interface StoreItem {
   name: string;
   description?: string;
   version: string;
-  type: "plugin" | "theme" | "engine";
+  type: "plugin" | "theme" | "engine" | "transport";
   installed: boolean;
   installedVersion?: string;
   updateAvailable?: boolean;
@@ -128,7 +128,7 @@ const _renderRepoList = (
   selectedUrl: string | null,
 ): string => {
   if (!repos.length) {
-    return '<p class="store-empty">No repositories added. Add a git repository URL to browse its plugins, themes, and engines.</p>';
+    return '<p class="store-empty">No repositories added. Add a git repository URL to browse its plugins, themes, engines, and transports.</p>';
   }
   const selected = selectedUrl
     ? repos.find((r) => r.url === selectedUrl)
@@ -189,18 +189,21 @@ const _renderItemCard = (
       ? `<a href="${escapeHtml(item.author.url)}" target="_blank" rel="noopener">${escapeHtml(item.author.name)}</a>`
       : escapeHtml(item.author.name)
     : "";
-  const typeLabel =
-    item.type === "plugin"
-      ? "Plugin"
-      : item.type === "theme"
-        ? "Theme"
-        : "Engine";
-  const subLabel =
-    item.type === "plugin" && item.pluginType
-      ? pluginTypeLabel(item.pluginType)
-      : item.type === "engine" && item.engineType
-        ? engineTypeLabel(item.engineType)
-        : "";
+
+  let typeLabel = "";
+  let subLabel = "";
+  if (item.type === "plugin") {
+    typeLabel = "Plugin";
+    subLabel = item.pluginType ? pluginTypeLabel(item.pluginType) : "";
+  } else if (item.type === "engine") {
+    typeLabel = "Engine";
+    subLabel = item.engineType ? engineTypeLabel(item.engineType) : "";
+  } else if (item.type === "transport") {
+    typeLabel = "Transport";
+  } else {
+    typeLabel = "Theme";
+  }
+
   const btn = item.installed
     ? item.updateAvailable
       ? `<span class="ext-configured-badge"></span><button class="btn btn--primary store-btn-update" type="button" data-repo-url="${escapeHtml(item.repoUrl)}" data-item-path="${escapeHtml(item.path)}" data-type="${escapeHtml(item.type)}">Update</button><button class="btn btn--secondary store-btn-uninstall" type="button" data-repo-url="${escapeHtml(item.repoUrl)}" data-item-path="${escapeHtml(item.path)}" data-type="${escapeHtml(item.type)}">Uninstall</button>`
@@ -355,9 +358,8 @@ export async function initStoreTab(
     const catalogSection = container.querySelector<HTMLElement>(
       ".store-catalog-section",
     );
-    const typeSelect = catalogSection?.querySelector<HTMLSelectElement>(
-      ".store-filter-type",
-    );
+    const typeSelect =
+      catalogSection?.querySelector<HTMLSelectElement>(".store-filter-type");
     const subtypeSelect = catalogSection?.querySelector<HTMLSelectElement>(
       ".store-filter-subtype",
     );
@@ -371,12 +373,14 @@ export async function initStoreTab(
         plugin: items.filter((i) => i.type === "plugin").length,
         theme: items.filter((i) => i.type === "theme").length,
         engine: items.filter((i) => i.type === "engine").length,
+        transport: items.filter((i) => i.type === "transport").length,
       };
       typeSelect.innerHTML = [
         { id: "all", label: "All", count: typeCounts.all },
         { id: "plugin", label: "Plugins", count: typeCounts.plugin },
         { id: "theme", label: "Themes", count: typeCounts.theme },
         { id: "engine", label: "Engines", count: typeCounts.engine },
+        { id: "transport", label: "Transports", count: typeCounts.transport },
       ]
         .map(
           (t) =>
@@ -638,7 +642,7 @@ export async function initStoreTab(
         <button class="btn btn--primary store-btn-add-confirm" type="button">Add</button>
         <span class="store-inline-error"></span>
       </div>
-      <p class="settings-desc">Add a git repository URL to browse and install plugins, themes, and engines. Set <code>repo-image</code> in the repo’s package.json to show an image next to the URL.</p>
+      <p class="settings-desc">Add a git repository URL to browse and install plugins, themes, engines, and transports. Set <code>repo-image</code> in the repo’s package.json to show an image next to the URL.</p>
       <div class="store-repo-list-wrap"></div>
     </section>
     <section class="store-catalog-section settings-section">

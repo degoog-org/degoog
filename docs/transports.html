@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transports — Degoog docs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1><a href="index.html">Degoog</a> — Transports</h1>
+        <p>Custom HTTP fetch strategies for outgoing search requests.</p>
+      </header>
+
+      <nav class="doc-nav">
+        <div class="doc-search-wrap">
+          <label for="doc-search-input" class="doc-search-label">Search</label>
+          <input
+            type="search"
+            id="doc-search-input"
+            class="doc-search"
+            placeholder="Search docs..."
+            autocomplete="off"
+          />
+          <button
+            type="button"
+            class="doc-search-clear"
+            aria-label="Clear search"
+            style="display: none"
+          >
+            Clear
+          </button>
+          <span class="doc-search-count"></span>
+        </div>
+        <h2>Docs</h2>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="plugins.html">Plugins</a></li>
+          <li><a href="themes.html">Themes</a></li>
+          <li><a href="engines.html">Search engines</a></li>
+          <li><a href="transports.html">Transports</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="aliases.html">Aliases</a></li>
+          <li><a href="env.html">Environment</a></li>
+          <li><a href="styling.html">Styling</a></li>
+        </ul>
+      </nav>
+
+      <main>
+        <h2>What transports are</h2>
+        <p>
+          A transport controls <em>how</em> degoog makes outgoing HTTP requests
+          to search engines. Each engine can pick its transport in
+          Settings &rarr; Engines &rarr; Configure &rarr; Advanced.
+        </p>
+        <p>Three transports are built in:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Behaviour</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>fetch</code></td>
+              <td>
+                Bun's native <code>fetch</code> with SOCKS&nbsp;5 / HTTP proxy
+                support. Default for all engines.
+              </td>
+            </tr>
+            <tr>
+              <td><code>curl</code></td>
+              <td>
+                Shells out to the system <code>curl</code> binary. Uses a
+                different TLS stack, which helps when a site blocks Bun's
+                fingerprint.
+              </td>
+            </tr>
+            <tr>
+              <td><code>auto</code></td>
+              <td>
+                Tries <code>fetch</code> first; if the response is
+                403&nbsp;/&nbsp;429&nbsp;/&nbsp;502&nbsp;/&nbsp;503, retries
+                with <code>curl</code>.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Additional transports (e.g. FlareSolverr) can be installed from the
+          <a href="store.html">Store</a> or placed manually in
+          <code>data/transports/</code>.
+        </p>
+
+        <h2>Where transports live</h2>
+        <p>
+          Custom transports live in <code>data/transports/</code> (or
+          <code>DEGOOG_TRANSPORTS_DIR</code>). Each transport is a file or
+          folder with an entry file that exports a class or object implementing
+          the transport contract.
+        </p>
+
+        <h2>Transport contract</h2>
+        <p><strong>Required:</strong></p>
+        <ul>
+          <li><strong>name</strong> &mdash; Unique identifier (lowercase, no spaces).</li>
+          <li>
+            <strong>available()</strong> &mdash; Return <code>true</code> (or a
+            Promise resolving to <code>true</code>) when the transport is ready
+            to use. Return <code>false</code> to hide it from engine transport
+            dropdowns.
+          </li>
+          <li>
+            <strong>fetch(url, options, context)</strong> (async) &mdash;
+            Perform the HTTP request and return a <code>Response</code>.
+          </li>
+        </ul>
+        <p><strong>Optional:</strong></p>
+        <ul>
+          <li>
+            <strong>displayName</strong> &mdash; Friendly name shown in
+            Settings &rarr; Transports.
+          </li>
+          <li>
+            <strong>description</strong> &mdash; Short description shown in
+            Settings &rarr; Transports.
+          </li>
+          <li>
+            <strong>settingsSchema</strong>,
+            <strong>configure(settings)</strong> &mdash; Same pattern as engines
+            and plugins. A Configure button appears in Settings &rarr;
+            Transports; values are stored in
+            <code>data/plugin-settings.json</code> under
+            <code>transport-&lt;name&gt;</code>.
+          </li>
+        </ul>
+
+        <h2>Arguments</h2>
+        <h3>options</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>method</code></td>
+              <td><code>string</code></td>
+              <td>HTTP method (default <code>"GET"</code>).</td>
+            </tr>
+            <tr>
+              <td><code>headers</code></td>
+              <td><code>Record&lt;string, string&gt;</code></td>
+              <td>Request headers.</td>
+            </tr>
+            <tr>
+              <td><code>body</code></td>
+              <td><code>string</code></td>
+              <td>Request body.</td>
+            </tr>
+            <tr>
+              <td><code>redirect</code></td>
+              <td><code>RequestRedirect</code></td>
+              <td>Redirect mode (default <code>"follow"</code>).</td>
+            </tr>
+            <tr>
+              <td><code>signal</code></td>
+              <td><code>AbortSignal</code></td>
+              <td>Abort signal for cancellation.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>context</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>proxyUrl</code></td>
+              <td><code>string | undefined</code></td>
+              <td>
+                The proxy URL from Settings &rarr; Server &rarr; Proxy, already
+                rotated. <code>undefined</code> when proxies are disabled.
+              </td>
+            </tr>
+            <tr>
+              <td><code>fetch</code></td>
+              <td><code>(url, init?) =&gt; Promise&lt;Response&gt;</code></td>
+              <td>
+                A proxy-aware fetch function. <strong>Use this</strong> for all
+                outbound requests so the user's proxy settings are respected
+                automatically (SOCKS&nbsp;5, HTTP CONNECT, or direct).
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Proxies</h2>
+        <p>
+          When the user enables a proxy in Settings &rarr; Server,
+          <code>context.proxyUrl</code> is set and <code>context.fetch</code>
+          routes through it automatically. Your transport should use
+          <code>context.fetch</code> for any outbound HTTP call so that proxy
+          routing just works:
+        </p>
+        <pre><code>async fetch(url, options, context) {
+  const doFetch = context.fetch;
+  const res = await doFetch("https://my-service.example.com/api", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target: url }),
+    signal: options.signal,
+  });
+  // transform and return a Response
+}</code></pre>
+
+        <h2>Setup</h2>
+        <p>
+          Create <code>data/transports/</code> (or set
+          <code>DEGOOG_TRANSPORTS_DIR</code>). Add a single file (e.g.
+          <code>my-transport.js</code>) or a folder with
+          <code>index.js</code> (or .ts, .mjs, .cjs). The transport settings id
+          is <code>transport-&lt;name&gt;</code>.
+        </p>
+
+        <h2>How settings work</h2>
+        <ol>
+          <li>
+            Declare <code>settingsSchema</code> &mdash; a Configure button
+            appears in Settings &rarr; Transports.
+          </li>
+          <li>
+            User saves; values go to
+            <code>data/plugin-settings.json</code> under
+            <code>transport-&lt;name&gt;</code>.
+          </li>
+          <li>
+            <code>configure(settings)</code> is called after save and on server
+            restart if settings exist.
+          </li>
+          <li>
+            Return <code>false</code> from <code>available()</code> when
+            required settings are missing &mdash; the transport won't appear in
+            engine dropdowns until configured.
+          </li>
+          <li>
+            Users can disable configurable transports with the toggle in
+            Settings &rarr; Transports.
+          </li>
+        </ol>
+
+        <h2>Example: minimal transport</h2>
+        <pre><code>export default class MyTransport {
+  name = "my-transport";
+  displayName = "My Transport";
+  description = "Example custom transport.";
+
+  settingsSchema = [
+    {
+      key: "apiUrl",
+      label: "API URL",
+      type: "url",
+      required: true,
+      placeholder: "https://my-service.example.com",
+    },
+  ];
+
+  _apiUrl = "";
+
+  configure(settings) {
+    this._apiUrl = (settings.apiUrl || "").trim();
+  }
+
+  available() {
+    return this._apiUrl.length > 0;
+  }
+
+  async fetch(url, options, context) {
+    const doFetch = context.fetch;
+
+    const res = await doFetch(this._apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, timeout: 10000 }),
+      signal: options.signal,
+    });
+
+    if (!res.ok) return new Response("", { status: res.status });
+    const data = await res.json();
+    return new Response(data.html ?? "", {
+      status: data.status ?? 200,
+      headers: { "Content-Type": "text/html" },
+    });
+  }
+}</code></pre>
+
+        <h2>Examples from the official store</h2>
+        <ul>
+          <li>
+            <a
+              href="https://github.com/fccview/fccview-degoog-extensions/tree/main/transports/flaresolverr"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >FlareSolverr</a
+            >
+            &mdash; bypass Cloudflare challenges via a FlareSolverr instance.
+            Uses <code>context.fetch</code> so proxy settings are respected.
+          </li>
+        </ul>
+        <p>
+          When distributing via the <a href="store.html">Store</a>, add your
+          transport under <code>transports/</code> in the repo and list it in
+          the <code>transports</code> array in <code>package.json</code>.
+        </p>
+      </main>
+    </div>
+    <script
+      src="https://code.jquery.com/jquery-4.0.0.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="docs.js"></script>
+  </body>
+</html>

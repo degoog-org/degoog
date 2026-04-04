@@ -1,6 +1,6 @@
 #home-logo {
   @include flex-center;
-  padding-bottom: 24px;
+  padding-bottom: $space-6;
 }
 
 .logo {
@@ -21,17 +21,16 @@
 }
 
 .results-logo {
-  font-size: 40px;
+  font-size: clamp(1.875rem, 3rem - 2.5vw, #{$space-8});
   font-weight: 500;
   font-family: 'Google Sans', $font-family;
   text-decoration: none;
   letter-spacing: -1px;
   flex-shrink: 0;
-  padding-right: 20px;
+  padding-right: $space-4;
   align-self: center;
 
-  @media (min-width: 767px) {
-    font-size: 30px;
+  @media (min-width: 768px) {
     margin-top: -5px;
   }
 }

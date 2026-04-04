@@ -16,7 +16,7 @@
   background: var(--search-bar-bg);
   border-radius: $search-bar-radius;
   height: $search-bar-height;
-  padding: 0 14px;
+  padding: 0 $space-3;
   transition: box-shadow $transition-fast, border-color $transition-fast;
 
   &:hover,

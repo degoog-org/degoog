@@ -3,13 +3,13 @@
   -webkit-appearance: none;
   background: var(--bg);
   border: 0;
-  border-radius: 6px;
+  border-radius: $radius-md;
   box-shadow: none;
   color: var(--text-secondary);
   cursor: pointer;
   font-family: $font-family;
   font-size: $font-size-small;
-  padding: 8px 14px;
+  padding: $space-2 $space-3;
   transition: color $transition-fast, background $transition-fast, opacity $transition-fast;
 
   &:hover:not(:disabled) {
@@ -31,8 +31,8 @@
     background: transparent;
     color: var(--text-secondary);
     border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 8px 16px;
+    border-radius: $radius-sm;
+    padding: $space-2 $space-4;
     font-size: $font-size-small;
     cursor: pointer;
     font-family: $font-family;

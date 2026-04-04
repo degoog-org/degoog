@@ -2,7 +2,7 @@
   @include flex-center;
   flex-direction: column;
   width: 100%;
-  max-width: 584px;
+  max-width: 36.5rem;
   margin: 0 auto;
 
   .search-form {
@@ -18,7 +18,7 @@
 
   .search-icon {
     flex-shrink: 0;
-    margin-right: 12px;
+    margin-right: $space-3;
   }
 
   .search-input {
@@ -27,7 +27,7 @@
     border: none;
     outline: none;
     color: var(--text-primary);
-    font-size: 16px;
+    font-size: $font-size-md;
     font-family: $font-family;
     height: 100%;
     width: 100%;
@@ -41,19 +41,19 @@
 
 .button-row {
   @include flex-center;
-  gap: 12px;
-  margin-top: 24px;
+  gap: $space-3;
+  margin-top: $space-6;
 }
 
 .search-btn {
   background: var(--btn-bg);
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: $radius-sm;
   color: var(--btn-text);
   font-size: $font-size-base;
   font-family: $font-family;
-  padding: 0 16px;
-  height: 36px;
+  padding: 0 $space-4;
+  height: 2.25rem;
   cursor: pointer;
   transition: border-color $transition-fast, box-shadow $transition-fast;
 
@@ -97,7 +97,7 @@
       white-space: nowrap;
       font-size: $font-size-base;
       font-weight: 400;
-      height: 36px;
+      height: 2.25rem;
       flex-shrink: 0;
       color: var(--btn-text);
     }
@@ -117,9 +117,9 @@
 .search-submit-btn {
   @include button-reset;
   @include flex-center;
-  width: 24px;
-  height: 24px;
-  margin-left: 12px;
+  width: $space-6;
+  height: $space-6;
+  margin-left: $space-3;
   flex-shrink: 0;
 }
 
@@ -136,8 +136,8 @@
 }
 
 .ac-item {
-  padding: 8px 14px 8px 46px;
-  font-size: 16px;
+  padding: $space-2 $space-3 $space-2 2.875rem;
+  font-size: $font-size-md;
   color: var(--text-primary);
   cursor: pointer;
 
@@ -150,18 +150,18 @@
 .search-bar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-2;
   flex-shrink: 0;
-  margin-left: 8px;
+  margin-left: $space-2;
 }
 
 .search-bar-action-btn {
   @include button-reset;
   @include flex-center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 13px;
+  gap: $space-1;
+  padding: $space-1 $space-2;
+  border-radius: $radius-sm;
+  font-size: $font-size-small;
   color: var(--text-secondary);
   cursor: pointer;
 
@@ -172,8 +172,8 @@
 }
 
 .search-bar-action-icon {
-  width: 18px;
-  height: 18px;
+  width: $font-size-lg;
+  height: $font-size-lg;
   object-fit: contain;
 }
 

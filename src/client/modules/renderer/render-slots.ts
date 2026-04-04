@@ -36,6 +36,8 @@ function _renderSlotPanelsInto(panels: SlotPanel[], clearFirst: boolean): void {
     } else {
       const block = document.createElement("div");
       block.className = "results-slot-panel";
+      const grid = panel.gridSize ?? 4;
+      block.dataset.grid = String(grid);
       if (panel.title) {
         const titleEl = document.createElement("div");
         titleEl.className = "results-slot-panel-title";

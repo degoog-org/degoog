@@ -148,7 +148,6 @@ export async function initServerTab(
         : "none";
     });
   }
-
   const _rateLimitPayload = (): Record<string, string> => {
     const payload: Record<string, string> = {
       rateLimitEnabled: rateLimitEnabled?.checked ? "true" : "false",

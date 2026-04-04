@@ -1,12 +1,12 @@
 import { randomUUID } from "crypto";
-import type { OutgoingFetchOptions } from "./outgoing";
+import type { TransportFetchOptions } from "../../types";
 
 const DEFAULT_TIMEOUT_SEC = 60;
 const DELIMITER = randomUUID();
 
 function buildCurlArgs(
   url: string,
-  options: OutgoingFetchOptions,
+  options: TransportFetchOptions,
   proxyUrl: string | undefined,
   timeoutSec: number,
 ): string[] {
@@ -39,7 +39,7 @@ function buildCurlArgs(
 
 export async function fetchViaCurl(
   url: string,
-  options: OutgoingFetchOptions = {},
+  options: TransportFetchOptions = {},
   proxyUrl?: string,
 ): Promise<Response> {
   const parsed = new URL(url);

@@ -12,6 +12,9 @@ export const enginesDir = (): string =>
 export const themesDir = (): string =>
   process.env.DEGOOG_THEMES_DIR ?? join(_dataDir(), "themes");
 
+export const transportsDir = (): string =>
+  process.env.DEGOOG_TRANSPORTS_DIR ?? join(_dataDir(), "transports");
+
 export const aliasesFile = (): string =>
   process.env.DEGOOG_ALIASES_FILE ?? join(_dataDir(), "aliases.json");
 

@@ -1,7 +1,7 @@
 .sidebar-panel {
   background: var(--bg-light);
-  border-radius: 8px;
-  margin-bottom: 16px;
+  border-radius: $radius-lg;
+  margin-bottom: $space-4;
   overflow: hidden;
 }
 
@@ -9,7 +9,7 @@
   @include button-reset;
   @include flex-between;
   width: 100%;
-  padding: 12px 16px;
+  padding: $space-3 $space-4;
   font-size: $font-size-base;
   font-weight: 500;
   font-family: $font-family;
@@ -27,11 +27,11 @@
 
 .sidebar-accordion-body {
   display: none;
-  padding: 0 16px 16px;
+  padding: 0 $space-4 $space-4;
 
   @media (min-width: 768px) {
     display: block;
-    padding: 16px;
+    padding: $space-4;
   }
 }
 
@@ -51,29 +51,29 @@
   font-size: $font-size-base;
   font-weight: 500;
   color: var(--text-primary);
-  margin: 0 0 12px;
+  margin: 0 0 $space-3;
 }
 
 .kp-image {
   width: 100%;
-  max-height: 200px;
+  max-height: 12.5rem;
   object-fit: cover;
-  border-radius: 6px;
-  margin-bottom: 12px;
+  border-radius: $radius-md;
+  margin-bottom: $space-3;
 }
 
 .kp-title {
-  font-size: 18px;
+  font-size: $font-size-lg;
   font-weight: 400;
   color: var(--text-primary);
-  margin: 0 0 8px;
+  margin: 0 0 $space-2;
 }
 
 .kp-description {
   font-size: $font-size-small;
   color: var(--text-snippet);
   line-height: 1.5;
-  margin: 0 0 8px;
+  margin: 0 0 $space-2;
 }
 
 .kp-link {
@@ -87,7 +87,7 @@
 }
 
 .engine-stat-row {
-  margin-bottom: 10px;
+  margin-bottom: $space-3;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -98,18 +98,18 @@
 }
 
 .engine-retry-link {
-  font-size: 11px;
+  font-size: $font-size-xs;
   cursor: pointer;
 }
 
 .engine-stat-label {
   font-size: $font-size-small;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: $space-1;
 }
 
 .engine-stat-bar-wrap {
-  height: 4px;
+  height: $space-1;
   background: var(--bg-hover);
   border-radius: 2px;
   overflow: hidden;
@@ -124,13 +124,13 @@
 }
 
 .engine-stat-meta {
-  font-size: 11px;
+  font-size: $font-size-xs;
   color: var(--text-secondary);
 }
 
 .related-search-link {
   display: block;
-  padding: 8px 0;
+  padding: $space-2 0;
   font-size: $font-size-base;
   color: var(--text-link);
   text-decoration: none;

@@ -11,8 +11,8 @@
       <header>
         <h1>Degoog — Documentation</h1>
         <p>
-          Third-party extensions: plugins, themes, search engines, Store, and
-          aliases.
+          Third-party extensions: plugins, themes, search engines, transports,
+          Store, and aliases.
         </p>
       </header>
 
@@ -42,6 +42,7 @@
           <li><a href="plugins.html">Plugins</a></li>
           <li><a href="themes.html">Themes</a></li>
           <li><a href="engines.html">Search engines</a></li>
+          <li><a href="transports.html">Transports</a></li>
           <li><a href="store.html">Store</a></li>
           <li><a href="aliases.html">Aliases</a></li>
           <li><a href="env.html">Environment</a></li>
@@ -52,10 +53,10 @@
       <main>
         <h2>Overview</h2>
         <p>
-          Degoog can be customised with plugins, themes, search engines, and
-          aliases. Extensions live under <code>data/</code> and can be installed
-          from <strong>Store</strong> repositories (git repos you add in
-          Settings → Store).
+          Degoog can be customised with plugins, themes, search engines,
+          transports, and aliases. Extensions live under <code>data/</code> and
+          can be installed from <strong>Store</strong> repositories (git repos
+          you add in Settings → Store).
         </p>
 
         <h2>Where things live</h2>
@@ -80,6 +81,10 @@
             <tr>
               <td><code>data/engines/</code></td>
               <td>Search engines (web, images, video, etc.)</td>
+            </tr>
+            <tr>
+              <td><code>data/transports/</code></td>
+              <td>Transports (custom HTTP fetch strategies)</td>
             </tr>
             <tr>
               <td><code>data/plugin-settings.json</code></td>
@@ -125,14 +130,15 @@
             target="_blank"
             rel="noopener"
             >fccview-degoog-extensions</a
-          >. Add its clone URL in Settings → Store to install plugins, themes,
-          and engines.
+          >. This is automatically added to your instance when you start it for
+          the first time.
         </p>
 
         <h2>Use as your browser's default search engine</h2>
         <p>
           Any browser that supports custom search engines can use degoog.
-          Replace <code>https://your-instance</code> with your actual instance URL.
+          Replace <code>https://your-instance</code> with your actual instance
+          URL.
         </p>
         <table>
           <thead>
@@ -148,14 +154,23 @@
             </tr>
             <tr>
               <td>Suggestions URL</td>
-              <td><code>https://your-instance/api/suggest/opensearch?q=%s</code></td>
+              <td>
+                <code>https://your-instance/api/suggest/opensearch?q=%s</code>
+              </td>
             </tr>
           </tbody>
         </table>
         <p>
           Browsers that support
-          <a href="https://developer.mozilla.org/en-US/docs/Web/OpenSearch" class="external" target="_blank" rel="noopener">OpenSearch</a>
-          can detect degoog automatically — right-clicking the search bar on your instance will offer to add it.
+          <a
+            href="https://developer.mozilla.org/en-US/docs/Web/OpenSearch"
+            class="external"
+            target="_blank"
+            rel="noopener"
+            >OpenSearch</a
+          >
+          can detect degoog automatically — right-clicking the search bar on
+          your instance will offer to add it.
         </p>
 
         <h2>Extension types</h2>
@@ -172,6 +187,11 @@
           <li>
             <strong><a href="engines.html">Search engines</a></strong> — Custom
             search backends (web, images, video).
+          </li>
+          <li>
+            <strong><a href="transports.html">Transports</a></strong> — Custom
+            HTTP fetch strategies (e.g. fetch, curl and whatever you can come up
+            with really).
           </li>
           <li>
             <strong><a href="store.html">Store</a></strong> — Add git repos and
