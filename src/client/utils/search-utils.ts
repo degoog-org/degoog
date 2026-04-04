@@ -58,9 +58,13 @@ export async function fetchGlancePanels(
   }
 }
 
-export async function fetchSlotPanels(query: string): Promise<SlotPanel[]> {
+export async function fetchSlotPanels(query: string, results?: ScoredResult[]): Promise<SlotPanel[]> {
   try {
-    const res = await fetch("/api/slots?q=" + encodeURIComponent(query));
+    const res = await fetch("/api/slots", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: query.trim(), results }),
+    });
     if (!res.ok) return [];
     const data = (await res.json()) as { panels?: SlotPanel[] };
     const panels = data.panels ?? [];

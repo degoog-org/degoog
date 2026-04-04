@@ -281,8 +281,9 @@
             <strong>execute(query, context)</strong> (async) — Return
             <code>{ title?: string, html: string }</code>. Return
             <code>{ html: "" }</code> to show nothing. <code>context</code> has
-            <code>clientIp</code> and, for <code>at-a-glance</code> slots only,
-            <code>results</code> (the search results array).
+            <code>clientIp</code> and <code>results</code> (the search results
+            array) — only populated if <code>waitForResults: true</code> is set
+            on the plugin.
           </li>
         </ul>
         <p>
@@ -291,6 +292,14 @@
           <code>settingsSchema</code>, <code>configure(settings)</code>,
           <code>init(ctx)</code>. Multiple slots can match the same query; all
           are shown.
+        </p>
+        <p>
+          Optional: <strong>waitForResults</strong> — Set to <code>true</code>
+          to receive <code>context.results</code> in <code>execute()</code>.
+          Results are always available at execution time (slots run after the
+          search completes), but are only passed to the plugin if this flag is
+          set. Defaults to <code>false</code> so plugins that don't need results
+          remain independent.
         </p>
         <p>
           Optional: <strong>slotPositions</strong> — Array of position values
@@ -323,9 +332,8 @@
             >POST /api/slots/glance</code
           >
           with body <code>{ query, results }</code>). Your
-          <code>execute(query, context)</code> receives
-          <code>context.results</code> so you can use the result list (e.g. for
-          an AI summary).
+          <code>execute(query, context)</code> always receives
+          <code>context.results</code> for at-a-glance slots.
         </p>
         <p><strong>Examples from the official store:</strong></p>
         <ul>
@@ -369,10 +377,11 @@
           </li>
         </ul>
         <p>
-          <strong>Slot API:</strong> <code>GET /api/slots?q=&lt;query&gt;</code>
-          returns panels for above-results, below-results, above-sidebar,
-          below-sidebar, knowledge-panel. <code>POST /api/slots/glance</code> with
-          body <code>{ query, results }</code> returns only at-a-glance panels.
+          <strong>Slot API:</strong> <code>POST /api/slots</code> with body
+          <code>{ query, results }</code> returns panels for above-results,
+          below-results, above-sidebar, below-sidebar, knowledge-panel.
+          <code>POST /api/slots/glance</code> with body
+          <code>{ query, results }</code> returns only at-a-glance panels.
           Slots also run for custom tabs (e.g. weeb): the client fetches panels
           after a tab-search and renders them in the same positions.
         </p>

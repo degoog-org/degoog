@@ -123,7 +123,7 @@ export async function performTabSearch(
       _renderTabPagination(pagination, data.totalPages, page, query, tabId);
     }
 
-    const panels = await fetchSlotPanels(query);
+    const panels = await fetchSlotPanels(query, data.results);
     renderSidebar(state.currentData, (q) => void performTabSearch(q, tabId), {
       sidebarTopPanels: panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel),
     });

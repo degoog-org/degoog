@@ -193,7 +193,7 @@ export async function performSearch(
       renderSidebar(data, (q) => void performSearch(q));
       if (resolvedType === "web") {
         void fetchGlancePanels(query, data.results, data.atAGlance);
-        void fetchSlotPanels(query);
+        void fetchSlotPanels(query, data.results);
       } else {
         if (glanceEl) glanceEl.innerHTML = "";
       }
@@ -235,7 +235,7 @@ async function _performSearchWithBang(
     } else {
       renderSidebar(searchData, (q) => void performSearch(q));
       if (type === "web") {
-        void fetchSlotPanels(query);
+        void fetchSlotPanels(query, searchData.results);
       } else {
         if (glanceEl) glanceEl.innerHTML = "";
       }
@@ -404,7 +404,7 @@ export async function goToPage(pageNum: number): Promise<void> {
       renderAtAGlance(data.atAGlance);
     }
     if (state.currentType === "web") {
-      void fetchSlotPanels(state.currentQuery);
+      void fetchSlotPanels(state.currentQuery, state.currentResults);
     }
     renderResults(state.currentResults);
     window.scrollTo(0, 0);

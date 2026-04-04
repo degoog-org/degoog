@@ -200,7 +200,7 @@ export async function performStreamingSearch(
       renderSidebar(searchData, (q) => onComplete(q));
       if (type === "web") {
         void fetchGlancePanels(query, currentResults, data.atAGlance);
-        void fetchSlotPanels(query);
+        void fetchSlotPanels(query, currentResults);
       } else {
         if (glanceEl) glanceEl.innerHTML = "";
       }

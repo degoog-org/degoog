@@ -202,7 +202,7 @@ async function runSlotPlugins(
       if (!ok) continue;
       const context: SlotPluginContext = {
         clientIp,
-        results,
+        results: plugin.waitForResults ? results : undefined,
         fetch: outgoingFetch as SlotPluginContext["fetch"],
       };
       const t0 = performance.now();
@@ -536,13 +536,18 @@ router.get("/api/search/stream", async (c) => {
   });
 });
 
-router.get("/api/slots", async (c) => {
+router.post("/api/slots", async (c) => {
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
-  const query = c.req.query("q");
-  if (!query || !query.trim()) return c.json({ panels: [] });
+  let body: { query?: string; results?: ScoredResult[] };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
+  if (!body.query || !body.query.trim()) return c.json({ panels: [] });
   const clientIp = getClientIp(c);
-  const panels = await runSlotPlugins(query.trim(), clientIp, undefined, {
+  const panels = await runSlotPlugins(body.query.trim(), clientIp, body.results, {
     excludePosition: SlotPanelPosition.AtAGlance,
   });
   return c.json({ panels });

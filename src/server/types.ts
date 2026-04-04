@@ -147,6 +147,7 @@ export interface SlotPlugin {
   slotPositions?: SlotPanelPosition[];
   settingsId?: string;
   trigger: (query: string) => boolean | Promise<boolean>;
+  waitForResults?: boolean;
   gridSize?: 1 | 2 | 3 | 4;
   execute(
     query: string,
