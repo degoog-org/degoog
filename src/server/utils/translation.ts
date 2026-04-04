@@ -182,14 +182,17 @@ export const withFallback = (
 };
 
 export const translateHTML = (html: string, t: Translate): string => {
-  // Remove <script>...</script> blocks, translate, then restore them
-  const scripts: string[] = [];
-  const placeholder = (i: number) => `<!--__SCRIPT_BLOCK_${i}__-->`;
+  // Remove <script>...</script>, <style>...</style>, ... blocks, translate, then restore them
+  const blocks: string[] = [];
+  const placeholder = (i: number) => `__IGNORE_BLOCK_${i}__`;
 
-  const stripped = html.replace(/<script[\s\S]*?<\/script>/gi, (match) => {
-    scripts.push(match);
-    return placeholder(scripts.length - 1);
-  });
+  const stripped = html.replace(
+    /<(script|style|code|pre)[\s\S]*?<\/\1>/gi,
+    (match) => {
+      blocks.push(match);
+      return placeholder(blocks.length - 1);
+    },
+  );
 
   const translated = stripped.replace(
     // This regex looks for {{ t:key }} or {{ t:key, var1, var2 }} patterns
@@ -217,8 +220,8 @@ export const translateHTML = (html: string, t: Translate): string => {
 
   // Restore script blocks
   return translated.replace(
-    /<!--__SCRIPT_BLOCK_(\d+)__-->/g,
-    (_, i) => scripts[Number(i)],
+    /__IGNORE_BLOCK_(\d+)__/g,
+    (_, i) => blocks[Number(i)],
   );
 };
 
