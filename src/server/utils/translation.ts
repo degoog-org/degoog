@@ -25,7 +25,9 @@ export const getClosestLanguage = (
     "translation",
     `No exact match for language "${lang}" or its base language "${baseLang}".`,
   );
-  return null;
+
+  const firstAvailableEn = availableLangs.find((l) => l.startsWith("en"));
+  return firstAvailableEn ? firstAvailableEn : availableLangs[0] || null;
 };
 
 /**
