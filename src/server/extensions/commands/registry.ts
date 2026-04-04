@@ -57,8 +57,7 @@ function isBangCommand(val: unknown): val is BangCommand {
     "trigger" in val &&
     typeof (val as BangCommand).trigger === "string" &&
     "execute" in val &&
-    typeof (val as BangCommand).execute === "function" &&
-    "t" in val
+    typeof (val as BangCommand).execute === "function"
   );
 }
 
