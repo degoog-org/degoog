@@ -1,0 +1,220 @@
+{
+  "settings-page": {
+    "meta": {
+      "title": "Impostazioni – degoog",
+      "description": "Impostazioni per degoog."
+    },
+    "back": "Ritorna",
+    "page-title": "Impostazioni",
+    "nav": {
+      "aria-section": "Sezione impostazioni",
+      "aria-sections": "Sezioni impostazioni",
+      "general": "Generale",
+      "server": "Server",
+      "engines": "Motori",
+      "plugins": "Plugin",
+      "transports": "Trasporti",
+      "themes": "Temi",
+      "store": "Negozio"
+    },
+    "appearance": {
+      "heading": "Aspetto",
+      "desc": "Scegli il tema preferito."
+    },
+    "theme": {
+      "system": "Predefinito di sistema",
+      "light": "Chiaro",
+      "dark": "Scuro"
+    },
+    "search-options": {
+      "heading": "Opzioni di ricerca",
+      "open-new-tab": "Apri i link dei risultati in una nuova scheda",
+      "open-new-tab-aria": "Apri i link dei risultati in una nuova scheda",
+      "engine-performance": "Mostra le prestazioni dei motori",
+      "engine-performance-aria": "Mostra le prestazioni dei motori",
+      "search-suggestions": "Mostra suggerimenti di ricerca",
+      "search-suggestions-aria": "Mostra suggerimenti di ricerca"
+    },
+    "install": {
+      "heading": "Installa app",
+      "desc": "Aggiungi degoog alla schermata home. Se il browser non ha mostrato l’invito all’installazione, usa questo pulsante per riprovare.",
+      "prompt-button": "Mostra invito all’installazione"
+    },
+    "server": {
+      "cache-heading": "Cache",
+      "cache-desc": "Cancella i risultati di ricerca memorizzati.",
+      "cache-clear": "Svuota cache di ricerca",
+      "cache-cleared": "Svuotata",
+      "cache-failed": "Operazione non riuscita",
+      "streaming-heading": "Risultati in streaming",
+      "streaming-desc": "Carica i risultati man mano che ogni motore risponde, invece di attendere tutti i motori. Funzione sperimentale.",
+      "streaming-enable": "Abilita risultati in streaming (sperimentale)",
+      "streaming-enable-aria": "Abilita risultati in streaming (sperimentale)",
+      "streaming-auto-retry": "Riprova automaticamente i motori falliti",
+      "streaming-auto-retry-aria": "Riprova automaticamente i motori falliti",
+      "streaming-max-retries-label": "Tentativi massimi per motore",
+      "languages-heading": "Lingua di ricerca",
+      "languages-desc": "Modifica le lingue di ricerca nel menu delle opzioni. Se disabilitato, sono mostrate tutte le ~90 lingue integrate.",
+      "languages-toggle": "Modifica lingue di ricerca",
+      "languages-toggle-aria": "Modifica lingue di ricerca",
+      "languages-codes-label": "Codici lingua (uno per riga)",
+      "proxy-heading": "Proxy",
+      "proxy-desc": "Usa proxy per le richieste di ricerca lato server. Un URL per riga; le richieste ruotano sull’elenco.",
+      "proxy-enable": "Usa proxy per la ricerca",
+      "proxy-enable-aria": "Usa proxy per la ricerca",
+      "proxy-urls-label": "URL proxy (uno per riga)",
+      "proxy-test": "Prova connessione proxy",
+      "proxy-testing": "Verifica in corso…",
+      "rate-limit-heading": "Limite di frequenza",
+      "rate-limit-desc": "Limita le richieste per IP per proteggere l’istanza e i motori a monte.",
+      "rate-limit-enable": "Abilita limite di frequenza",
+      "rate-limit-enable-aria": "Abilita limite di frequenza",
+      "rate-limit-defaults": "Predefiniti: 15 richieste ogni 20 s, 150 ogni 10 min per IP.",
+      "rate-limit-burst-window": "Finestra burst (secondi)",
+      "rate-limit-burst-max": "Richieste max burst",
+      "rate-limit-long-window": "Finestra lunga (secondi)",
+      "rate-limit-long-max": "Richieste max finestra lunga",
+      "saved": "Salvato",
+      "save-failed-network": "Salvataggio non riuscito. Riprova."
+    },
+    "proxy-test": {
+      "not-enabled": "Il proxy non è abilitato. Abilitalo e salva prima di verificare.",
+      "ip-unreachable": "Impossibile raggiungere il servizio di verifica IP. Controlla la connessione.",
+      "unreachable-title": "Proxy non raggiungibile.",
+      "unreachable-detail": "IP diretto: {directIp}",
+      "unreachable-hint": "Impossibile contattare il server proxy. Controlla l’URL del proxy e che sia in esecuzione.",
+      "match-title": "Gli IP coincidono — il proxy potrebbe non funzionare.",
+      "match-detail": "Diretto: {directIp} · Proxy: {proxyIp}",
+      "match-hint": "Entrambi i percorsi hanno restituito lo stesso IP. Il proxy potrebbe non cambiare l’IP di uscita.",
+      "ok-title": "Il proxy funziona.",
+      "ok-detail": "Diretto: {directIp} · Proxy: {proxyIp}",
+      "server-error": "Il server ha risposto {status}. Assicurati di essere autenticato.",
+      "request-failed": "Richiesta non riuscita. Controlla la connessione."
+    },
+    "actions": {
+      "save": "Salva"
+    },
+    "modal": {
+      "close-aria": "Chiudi",
+      "save": "Salva",
+      "saving": "Salvataggio…",
+      "saved": "Salvato",
+      "save-failed": "Salvataggio non riuscito. Riprova.",
+      "configure-title": "Configura {name}",
+      "advanced": "Avanzate",
+      "test-connection": "Prova connessione",
+      "test-testing": "Verifica in corso…",
+      "test-request-failed": "Richiesta non riuscita",
+      "field-remove-aria": "Rimuovi",
+      "field-add": "Aggiungi"
+    },
+    "confirm": {
+      "title": "Conferma",
+      "cancel": "Annulla",
+      "confirm": "Conferma"
+    },
+    "extensions": {
+      "configure": "Configura",
+      "active": "Attivo",
+      "built-in-theme-name": "Integrato",
+      "built-in-theme-desc": "Aspetto predefinito degoog.",
+      "group-plugins": "Plugin",
+      "group-builtin-commands": "Comandi integrati",
+      "group-transports": "Trasporti",
+      "group-builtin-transports": "Trasporti integrati",
+      "group-themes": "Temi",
+      "apply-failed": "Operazione non riuscita"
+    },
+    "errors": {
+      "load-extensions": "Impossibile caricare le estensioni.",
+      "load-transports": "Impossibile caricare i trasporti.",
+      "load-themes": "Impossibile caricare i temi.",
+      "load-engines": "Impossibile caricare i motori."
+    },
+    "gate": {
+      "desc": "Inserisci la password per accedere alle impostazioni.",
+      "password-placeholder": "Password",
+      "unlock": "Sblocca",
+      "incorrect-password": "Password errata.",
+      "network-error": "Si è verificato un errore. Riprova."
+    },
+    "public": {
+      "engines-heading": "Motori"
+    },
+    "store": {
+      "repos-heading": "Repository",
+      "catalog-heading": "Catalogo",
+      "desc": "Aggiungi l’URL di un repository git per sfogliare e installare plugin, temi, motori e trasporti. Imposta repo-image nel package.json del repo per mostrare un’immagine accanto all’URL.",
+      "empty-repos": "Nessun repository aggiunto. Aggiungi l’URL di un repository git per sfogliare plugin, temi, motori e trasporti.",
+      "refresh-all": "Aggiorna tutto",
+      "add-repo": "Aggiungi repository",
+      "add": "Aggiungi",
+      "placeholder-url": "https://github.com/user/repo.git",
+      "search-placeholder": "Cerca…",
+      "filter-type-aria": "Filtra per tipo",
+      "filter-subtype-aria": "Filtra per sottotipo",
+      "lightbox-aria": "Galleria screenshot",
+      "close-aria": "Chiudi",
+      "prev-aria": "Precedente",
+      "next-aria": "Successivo",
+      "view-screenshots-aria": "Vedi screenshot",
+      "filter-all": "Tutti",
+      "filter-plugins": "Plugin",
+      "filter-themes": "Temi",
+      "filter-engines": "Motori",
+      "filter-transports": "Trasporti",
+      "type-plugin": "Plugin",
+      "type-engine": "Motore",
+      "type-transport": "Trasporto",
+      "type-theme": "Tema",
+      "plugin-type-bang": "Bang",
+      "plugin-type-slot": "Slot",
+      "plugin-type-search-tab": "Scheda di ricerca",
+      "plugin-type-search-bar": "Barra di ricerca",
+      "install": "Installa",
+      "update": "Aggiorna",
+      "uninstall": "Disinstalla",
+      "meta-by": "di {author} · {repo}",
+      "refresh": "Aggiorna",
+      "remove": "Rimuovi",
+      "updates-one": "1 aggiornamento disponibile",
+      "updates-many": "{count} aggiornamenti disponibili",
+      "update-all": "Aggiorna tutto ({count})",
+      "time-just-now": "proprio ora",
+      "time-min-ago": "{n} min fa",
+      "time-hours-ago": "{n} ore fa",
+      "time-days-ago": "{n} giorni fa",
+      "failed-add-repo": "Impossibile aggiungere il repository",
+      "failed-remove-repo": "Impossibile rimuovere il repository",
+      "network-error": "Errore di rete",
+      "install-failed": "Installazione non riuscita",
+      "uninstall-failed": "Disinstallazione non riuscita",
+      "update-failed": "Aggiornamento non riuscito",
+      "install-plugin-title": "Installare il plugin?",
+      "install-plugin-message": "Questo plugin eseguirà codice sul server. Installa solo da fonti attendibili. Continuare?",
+      "uninstall-title": "Disinstallare?",
+      "uninstall-message": "Disinstallare questo {type}?",
+      "remove-repo-title": "Rimuovere il repository?",
+      "remove-repo-message": "Rimuovere questo repository? Prima disinstalla gli elementi installati.",
+      "failed-load-store": "Impossibile caricare il negozio."
+    },
+    "schema": {
+      "natural-language": {
+        "label": "Linguaggio naturale",
+        "description": "Se attivato, digitare il trigger o la frase senza ! esegue il comando e mostra i risultati sotto."
+      },
+      "score": {
+        "label": "Punteggio",
+        "description": "Moltiplicatore di classifica per questo motore. Valori più alti favoriscono i suoi risultati."
+      },
+      "outgoing-transport": {
+        "label": "Client HTTP in uscita",
+        "description": "Il client HTTP in uscita da usare per questo motore."
+      },
+      "slot-position": {
+        "label": "Posizione",
+        "description": "Dove appare il contenuto dello slot nella pagina."
+      }
+    }
+  }
+}

@@ -4,12 +4,15 @@ import { escapeHtml, getConfigStatus } from "../utils/dom";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, EngineRecord, AllExtensions } from "../types";
 
-const SEARCH_TYPE_LABELS: Record<string, string> = {
-  web: "Web",
-  images: "Images",
-  videos: "Videos",
-  news: "News",
-};
+const t = window.scopedT("core");
+const themeT = window.scopedT("themes/degoog");
+
+const _TAB_TYPES = new Set(["web", "images", "videos", "news"]);
+
+const _typeLabel = (type: string): string =>
+  _TAB_TYPES.has(type)
+    ? themeT(`search-templates.tabs.${type}`)
+    : type.charAt(0).toUpperCase() + type.slice(1);
 
 const _groupByType = (
   engines: ExtensionMeta[],
@@ -17,8 +20,7 @@ const _groupByType = (
   const groups: Record<string, ExtensionMeta[]> = {};
   for (const engine of engines) {
     const type = engine.description.split(" ")[0].toLowerCase();
-    const label =
-      SEARCH_TYPE_LABELS[type] || type.charAt(0).toUpperCase() + type.slice(1);
+    const label = _typeLabel(type);
     if (!groups[label]) groups[label] = [];
     groups[label].push(engine);
   }
@@ -43,7 +45,7 @@ const _renderEngineCard = (
         : "";
   const configureBtn =
     allowConfigure && engine.configurable
-      ? `<button class="ext-card-configure" data-id="${escapeHtml(engine.id)}" type="button">Configure</button>`
+      ? `<button class="ext-card-configure" data-id="${escapeHtml(engine.id)}" type="button">${escapeHtml(t("settings-page.extensions.configure"))}</button>`
       : "";
   return `
     <div class="ext-card" data-id="${escapeHtml(engine.id)}">

@@ -1,6 +1,7 @@
 const pluginCss = new Map<string, string>();
 const scriptFolderSource = new Map<string, "plugin" | "builtin">();
 const folderSettingsIds = new Map<string, Set<string>>();
+const folderNamespaces = new Map<string, string>();
 
 export function addPluginCss(id: string, css: string): void {
   pluginCss.set(id, css);
@@ -17,6 +18,17 @@ export function registerPluginScript(
     existing.add(settingsId);
     folderSettingsIds.set(folderName, existing);
   }
+}
+
+export function registerPluginNamespace(
+  folderName: string,
+  namespace: string,
+): void {
+  folderNamespaces.set(folderName, namespace);
+}
+
+export function getPluginNamespace(folderName: string): string | null {
+  return folderNamespaces.get(folderName) ?? null;
 }
 
 export function registerPluginSettingsId(
@@ -56,7 +68,11 @@ export function getScriptFolderSource(
 
 import { join } from "path";
 import type { PluginContext, SettingField } from "../types";
-import { getSettings, mergeDefaults, type SettingValue } from "./plugin-settings";
+import {
+  getSettings,
+  mergeDefaults,
+  type SettingValue,
+} from "./plugin-settings";
 
 type PluginLike = {
   init?: (ctx: PluginContext) => void | Promise<void>;
@@ -102,8 +118,6 @@ export async function initPlugin(
   }
   if (plugin.configure && plugin.settingsSchema?.length) {
     const stored = await getSettings(settingsId);
-    plugin.configure(
-      mergeDefaults(stored, plugin.settingsSchema),
-    );
+    plugin.configure(mergeDefaults(stored, plugin.settingsSchema));
   }
 }

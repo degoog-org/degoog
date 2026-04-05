@@ -1,6 +1,8 @@
 import { authHeaders, jsonHeaders } from "../utils/request";
 import { initProxyTest } from "./proxy-test";
 
+const t = window.scopedT("core");
+
 export async function initServerTab(
   getToken: () => string | null,
 ): Promise<void> {
@@ -193,7 +195,7 @@ export async function initServerTab(
       const btn = document.getElementById("settings-save");
       if (btn) {
         const prev = btn.textContent;
-        btn.textContent = "Saved";
+        btn.textContent = t("settings-page.server.saved");
         setTimeout(() => {
           btn.textContent = prev;
         }, 1200);
@@ -208,13 +210,13 @@ export async function initServerTab(
         await fetch("/api/cache/clear", { method: "POST" });
         if (btn) {
           const prev = btn.textContent;
-          btn.textContent = "Cleared";
+          btn.textContent = t("settings-page.server.cache-cleared");
           setTimeout(() => {
             btn.textContent = prev;
           }, 1500);
         }
       } catch {
-        if (btn) btn.textContent = "Failed";
+        if (btn) btn.textContent = t("settings-page.server.cache-failed");
       }
     });
 }

@@ -1,0 +1,7 @@
+{
+  "uuid": {
+    "title": "UUID generati",
+    "description": "Genera UUID v4 casuali (predefinito 10, oppure indica un numero)",
+    "copy": "Copia"
+  }
+}

@@ -2,65 +2,83 @@
   <div class="speedtest-gauges">
     <div class="speedtest-gauge">
       <div class="speedtest-value" id="st-download">—</div>
-      <div class="speedtest-label">Download (Mbps)</div>
-      <div class="speedtest-bar"><div class="speedtest-bar-fill" id="st-download-bar"></div></div>
+      <div class="speedtest-label">{{t:speedtest.download}}</div>
+      <div class="speedtest-bar">
+        <div class="speedtest-bar-fill" id="st-download-bar"></div>
+      </div>
     </div>
     <div class="speedtest-gauge">
       <div class="speedtest-value" id="st-upload">—</div>
-      <div class="speedtest-label">Upload (Mbps)</div>
-      <div class="speedtest-bar"><div class="speedtest-bar-fill" id="st-upload-bar"></div></div>
+      <div class="speedtest-label">{{t:speedtest.upload}}</div>
+      <div class="speedtest-bar">
+        <div class="speedtest-bar-fill" id="st-upload-bar"></div>
+      </div>
     </div>
     <div class="speedtest-gauge">
       <div class="speedtest-value" id="st-latency">—</div>
-      <div class="speedtest-label">Latency (ms)</div>
+      <div class="speedtest-label">{{t:speedtest.latency}}</div>
     </div>
   </div>
-  <div class="speedtest-status" id="st-status">Starting...</div>
+  <div class="speedtest-status" id="st-status">{{t:speedtest.starting}}</div>
 </div>
 <script>
-(function(){
-var status=document.getElementById('st-status');
-var dlEl=document.getElementById('st-download');
-var ulEl=document.getElementById('st-upload');
-var latEl=document.getElementById('st-latency');
-var dlBar=document.getElementById('st-download-bar');
-var ulBar=document.getElementById('st-upload-bar');
-var maxSpeed=500;
-if(!status||!dlEl)return;
-async function run(){
-  status.textContent='Testing latency...';
-  var pings=[];
-  for(var i=0;i<5;i++){
-    var t0=performance.now();
-    try{await fetch('/api/commands',{cache:'no-store'});}catch(e){}
-    pings.push(performance.now()-t0);
-  }
-  pings.sort(function(a,b){return a-b;});
-  var latency=Math.round(pings[Math.floor(pings.length/2)]);
-  latEl.textContent=latency;
-  status.textContent='Testing download speed...';
-  var dlUrl='https://speed.cloudflare.com/__down?bytes=25000000';
-  var dlStart=performance.now();
-  try{
-    var res=await fetch(dlUrl,{cache:'no-store'});
-    var blob=await res.blob();
-    var dlTime=(performance.now()-dlStart)/1000;
-    var dlMbps=((blob.size*8)/dlTime/1e6).toFixed(1);
-    dlEl.textContent=dlMbps;
-    if(dlBar)dlBar.style.width=Math.min((dlMbps/maxSpeed)*100,100)+'%';
-  }catch(e){dlEl.textContent='Error';}
-  status.textContent='Testing upload speed...';
-  var ulData=new Uint8Array(5000000);
-  var ulStart=performance.now();
-  try{
-    await fetch('https://speed.cloudflare.com/__up',{method:'POST',body:ulData,cache:'no-store'});
-    var ulTime=(performance.now()-ulStart)/1000;
-    var ulMbps=((ulData.byteLength*8)/ulTime/1e6).toFixed(1);
-    ulEl.textContent=ulMbps;
-    if(ulBar)ulBar.style.width=Math.min((ulMbps/maxSpeed)*100,100)+'%';
-  }catch(e){ulEl.textContent='Error';}
-  status.textContent='Complete';
-}
-run();
-})();
+  (function () {
+    var status = document.getElementById("st-status");
+    var dlEl = document.getElementById("st-download");
+    var ulEl = document.getElementById("st-upload");
+    var latEl = document.getElementById("st-latency");
+    var dlBar = document.getElementById("st-download-bar");
+    var ulBar = document.getElementById("st-upload-bar");
+    var maxSpeed = 500;
+    if (!status || !dlEl) return;
+    async function run() {
+      status.textContent = t("speedtest.testing-latency");
+      var pings = [];
+      for (var i = 0; i < 5; i++) {
+        var t0 = performance.now();
+        try {
+          await fetch("/api/commands", { cache: "no-store" });
+        } catch (e) {}
+        pings.push(performance.now() - t0);
+      }
+      pings.sort(function (a, b) {
+        return a - b;
+      });
+      var latency = Math.round(pings[Math.floor(pings.length / 2)]);
+      latEl.textContent = latency;
+      status.textContent = t("speedtest.testing-download");
+      var dlUrl = "https://speed.cloudflare.com/__down?bytes=25000000";
+      var dlStart = performance.now();
+      try {
+        var res = await fetch(dlUrl, { cache: "no-store" });
+        var blob = await res.blob();
+        var dlTime = (performance.now() - dlStart) / 1000;
+        var dlMbps = ((blob.size * 8) / dlTime / 1e6).toFixed(1);
+        dlEl.textContent = dlMbps;
+        if (dlBar)
+          dlBar.style.width = Math.min((dlMbps / maxSpeed) * 100, 100) + "%";
+      } catch (e) {
+        dlEl.textContent = t("speedtest.error");
+      }
+      status.textContent = t("speedtest.testing-upload");
+      var ulData = new Uint8Array(5000000);
+      var ulStart = performance.now();
+      try {
+        await fetch("https://speed.cloudflare.com/__up", {
+          method: "POST",
+          body: ulData,
+          cache: "no-store",
+        });
+        var ulTime = (performance.now() - ulStart) / 1000;
+        var ulMbps = ((ulData.byteLength * 8) / ulTime / 1e6).toFixed(1);
+        ulEl.textContent = ulMbps;
+        if (ulBar)
+          ulBar.style.width = Math.min((ulMbps / maxSpeed) * 100, 100) + "%";
+      } catch (e) {
+        ulEl.textContent = t("speedtest.error");
+      }
+      status.textContent = t("speedtest.complete");
+    }
+    run();
+  })();
 </script>

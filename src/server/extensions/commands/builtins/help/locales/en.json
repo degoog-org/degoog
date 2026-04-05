@@ -1,0 +1,10 @@
+{
+  "help": {
+    "description": "List all available bang commands",
+    "title": "Available Commands",
+    "search-placeholder": "Search commands...",
+    "aliases": "Aliases: {aliases}",
+    "prefix-hint": "Search with a type prefix: {types}",
+    "category-other": "Other"
+  }
+}

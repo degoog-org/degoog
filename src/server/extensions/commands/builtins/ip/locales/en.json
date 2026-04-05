@@ -1,0 +1,20 @@
+{
+  "ip": {
+    "title": "IP Lookup",
+    "description": "Look up IP address information",
+    "title-result": "IP Info: {ip}",
+    "detecting": "Detecting your IP...",
+    "detect-failed": "Could not detect IP.",
+    "detect-failed-hint": "Could not detect your public IP. Try <strong>!ip 8.8.8.8</strong>",
+    "lookup-failed": "Lookup failed: {message}",
+    "fetch-failed": "Failed to fetch IP data. Please try again.",
+    "label-ip": "IP",
+    "label-city": "City",
+    "label-region": "Region",
+    "label-country": "Country",
+    "label-isp": "ISP",
+    "label-org": "Org",
+    "label-latlon": "Lat/Lon",
+    "na": "N/A"
+  }
+}

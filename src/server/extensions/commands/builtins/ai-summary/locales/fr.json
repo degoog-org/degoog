@@ -1,0 +1,12 @@
+{
+    "ai-summary": {
+        "name": "Résumé IA",
+        "description": "Remplace le résumé rapide par un résumé généré par IA via un fournisseur compatible OpenAI",
+        "badge": "Résumé IA",
+        "dive-deeper": "Approfondir",
+        "follow-up-placeholder": "Posez une question\u2026",
+        "thinking": "Réflexion en cours\u2026",
+        "no-response": "Impossible d'obtenir une réponse. Réessayez.",
+        "request-failed": "La requête a échoué. Réessayez."
+    }
+}

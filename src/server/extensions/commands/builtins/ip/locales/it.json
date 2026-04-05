@@ -1,0 +1,20 @@
+{
+  "ip": {
+    "title": "Ricerca IP",
+    "description": "Cerca informazioni su un indirizzo IP",
+    "title-result": "Info IP: {ip}",
+    "detecting": "Rilevamento IP in corso...",
+    "detect-failed": "Impossibile rilevare l’IP.",
+    "detect-failed-hint": "Impossibile rilevare il tuo IP pubblico. Prova <strong>!ip 8.8.8.8</strong>",
+    "lookup-failed": "Ricerca non riuscita: {message}",
+    "fetch-failed": "Impossibile recuperare i dati IP. Riprova.",
+    "label-ip": "IP",
+    "label-city": "Città",
+    "label-region": "Regione",
+    "label-country": "Paese",
+    "label-isp": "ISP",
+    "label-org": "Organizzazione",
+    "label-latlon": "Lat/Lon",
+    "na": "N/D"
+  }
+}

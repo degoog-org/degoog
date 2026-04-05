@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Translations — Degoog docs</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1><a href="index.html">Degoog</a> — Translations</h1>
+        <p>
+          How translations work and how to add a new language.
+        </p>
+      </header>
+
+      <nav class="doc-nav">
+        <div class="doc-search-wrap">
+          <label for="doc-search-input" class="doc-search-label">Search</label>
+          <input
+            type="search"
+            id="doc-search-input"
+            class="doc-search"
+            placeholder="Search docs..."
+            autocomplete="off"
+          />
+          <button
+            type="button"
+            class="doc-search-clear"
+            aria-label="Clear search"
+            style="display: none"
+          >
+            Clear
+          </button>
+          <span class="doc-search-count"></span>
+        </div>
+        <h2>Docs</h2>
+        <ul>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="plugins.html">Plugins</a></li>
+          <li><a href="themes.html">Themes</a></li>
+          <li><a href="engines.html">Search engines</a></li>
+          <li><a href="transports.html">Transports</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="aliases.html">Aliases</a></li>
+          <li><a href="env.html">Environment</a></li>
+          <li><a href="styling.html">Styling</a></li>
+          <li><a href="translations.html">Translations</a></li>
+        </ul>
+      </nav>
+
+      <main>
+        <h2>How it works</h2>
+        <p>
+          The server resolves the locale on every request, collects all
+          translations for that locale from every extension, serialises them
+          into <code>window.__DEGOOG_T__</code>, and injects the result into
+          the page before it reaches the browser. There is no client-side
+          locale loading.
+        </p>
+        <p>
+          The locale is resolved in this order:
+        </p>
+        <ol>
+          <li>
+            <code>DEGOOG_I18N</code> environment variable, if set — forces a
+            specific locale for every request.
+          </li>
+          <li>
+            The browser's <code>Accept-Language</code> header — matched against
+            available locale files (exact tag first, then language-only
+            fallback, then <code>en-US</code>).
+          </li>
+        </ol>
+        <p>
+          On the client, <code>window.scopedT("namespace")</code> returns a
+          <code>t(key)</code> function scoped to a namespace within
+          <code>window.__DEGOOG_T__</code>. The core app uses
+          <code>scopedT("core")</code>. Extensions get their own namespace
+          automatically.
+        </p>
+        <p>
+          In HTML output returned by plugins and built-in commands, strings are
+          translated server-side using the <code>{{ t:key }}</code> syntax:
+        </p>
+        <pre><code>return {
+  html: `&lt;p&gt;{{ t:plugin-myname.some-string }}&lt;/p&gt;`
+};</code></pre>
+        <p>
+          Variables can be interpolated by passing comma-separated names after
+          the key. They map to <code>{{ varname }}</code> template placeholders
+          in the rendered output so the client-side template engine can
+          substitute them later:
+        </p>
+        <pre><code>// locale file
+{ "plugin-myname.found": "Found on: {sources_text}" }
+
+// plugin output
+`{{ t:plugin-myname.found, sources_text }}`</code></pre>
+
+        <h2>Locale file format</h2>
+        <p>
+          Each locale file is a plain JSON object. Keys are dot-separated and
+          nested into objects. Values are strings and may contain named
+          placeholders in <code>{curly braces}</code> — do not rename them, but
+          you may reorder them.
+        </p>
+        <pre><code>{
+  "plugin-weather": {
+    "codes": {
+      "0": "Cielo sereno",
+      "unknown": "Sconosciuto"
+    },
+    "usage": {
+      "needCityLine1": "Uso: &lt;code&gt;!weather &lt;città&gt;&lt;/code&gt;"
+    }
+  }
+}</code></pre>
+        <p>
+          Locale codes follow
+          <a
+            href="https://www.ietf.org/rfc/bcp/bcp47.txt"
+            class="external"
+            target="_blank"
+            rel="noopener"
+            >BCP 47</a
+          >. The core settings page and default theme use the full tag (e.g.
+          <code>en-US</code>, <code>fr-FR</code>). Built-in commands and
+          third-party plugins use the short language code (e.g.
+          <code>en</code>, <code>fr</code>).
+        </p>
+
+        <h2>Core locale files</h2>
+        <p>
+          These are the files you need to create to add a new language to the
+          core app. Each has an English original to base your translation on —
+          only change the values, never the keys.
+        </p>
+        <dl>
+          <dt><code>src/locales/&lt;locale&gt;.json</code></dt>
+          <dd>
+            Settings page — all tabs, modals, store UI, and errors. Copy from
+            <code>src/locales/en-US.json</code>. Uses full locale tags
+            (<code>en-US</code>, <code>fr-FR</code>).
+          </dd>
+          <dt>
+            <code>src/public/themes/degoog-theme/locales/&lt;locale&gt;.json</code>
+          </dt>
+          <dd>
+            Home page and search results page — title, search button, tab
+            labels, footer links. Copy from
+            <code>…/degoog-theme/locales/en-US.json</code>. Uses full locale
+            tags.
+          </dd>
+          <dt>
+            <code>src/server/extensions/commands/builtins/&lt;command&gt;/locales/&lt;lang&gt;.json</code>
+          </dt>
+          <dd>
+            Output strings for each built-in command. Commands with locale
+            files: <code>help</code>, <code>ip</code>,
+            <code>ai-summary</code>, <code>speedtest</code>,
+            <code>uuid</code>. Copy from the corresponding
+            <code>en.json</code> in each command's <code>locales/</code>
+            folder. Uses short language codes (<code>en</code>,
+            <code>fr</code>).
+          </dd>
+        </dl>
+
+        <h2>Adding a new language — step by step</h2>
+
+        <h3>1. Copy the English originals</h3>
+        <pre><code>LANG=it-IT
+SLANG=it
+
+cp src/locales/en-US.json src/locales/$LANG.json
+cp src/public/themes/degoog-theme/locales/en-US.json \
+   src/public/themes/degoog-theme/locales/$LANG.json
+
+for cmd in help ip ai-summary speedtest uuid; do
+  cp src/server/extensions/commands/builtins/$cmd/locales/en.json \
+     src/server/extensions/commands/builtins/$cmd/locales/$SLANG.json
+done</code></pre>
+
+        <h3>2. Translate the values</h3>
+        <p>
+          Open each copied file and translate every string value. Keep all
+          keys and placeholders (<code>{like_this}</code>) exactly as-is.
+          HTML in values (e.g. <code>&lt;code&gt;</code> tags) should be kept
+          and adapted to your language's wording.
+        </p>
+
+        <h3>3. Verify</h3>
+        <p>
+          Start the dev server with your locale forced and check everything:
+        </p>
+        <pre><code>DEGOOG_I18N=it-IT npm run dev</code></pre>
+        <p>
+          Go through the home page, every settings tab, the Configure modal for
+          an engine and a plugin, and trigger each built-in command
+          (<code>!help</code>, <code>!ip</code>, <code>!uuid</code>, etc.).
+        </p>
+
+        <h3>4. Open a pull request</h3>
+        <p>
+          Commit all new locale files and open a PR against
+          <code>develop</code>. Title it
+          <em>feat(i18n): add &lt;Language&gt; translations</em>. See
+          <a href="contributing.html">Contributing</a> for the PR checklist.
+        </p>
+
+        <h2>Translations in third-party extensions</h2>
+        <p>
+          Plugins, engines, and themes distributed via the Store are each
+          responsible for their own translations. The pattern is identical:
+          add a <code>locales/</code> folder inside the extension with one JSON
+          file per language code. The app picks up the files automatically.
+        </p>
+        <p>
+          For a plugin named <code>my-plugin</code>, the locale file is
+          <code>locales/fr.json</code> and the top-level key is
+          <code>plugin-my-plugin</code>. The plugin's display name,
+          description, settings field labels, and any output strings can all
+          live under that key. If you want to translate someone else's
+          extension, open a PR in their repo rather than here.
+        </p>
+      </main>
+    </div>
+    <script
+      src="https://code.jquery.com/jquery-4.0.0.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="docs.js"></script>
+  </body>
+</html>

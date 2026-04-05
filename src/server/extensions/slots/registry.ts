@@ -1,11 +1,18 @@
 import { join } from "path";
-import { SlotPanelPosition, type SlotPlugin } from "../../types";
-import { isDisabled } from "../../utils/plugin-settings";
 import {
-  loadPluginAssets,
+  SlotPanelPosition,
+  type SlotPlugin,
+  type Translate,
+} from "../../types";
+import { debug } from "../../utils/logger";
+import {
   initPlugin,
+  loadPluginAssets,
+  registerPluginNamespace,
   registerPluginSettingsId,
 } from "../../utils/plugin-assets";
+import { isDisabled } from "../../utils/plugin-settings";
+import { createTranslatorFromPath } from "../../utils/translation";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 
@@ -23,7 +30,8 @@ function isSlotPlugin(val: unknown): val is SlotPlugin {
   const slot = val as SlotPlugin;
   const validPositions = new Set(Object.values(SlotPanelPosition));
   const positionOk =
-    "position" in slot && validPositions.has(slot.position as SlotPanelPosition);
+    "position" in slot &&
+    validPositions.has(slot.position as SlotPanelPosition);
   const slotPositionsOk =
     !("slotPositions" in slot) ||
     (Array.isArray(slot.slotPositions) &&
@@ -54,6 +62,8 @@ const registry = createRegistry<SlotPlugin>({
   },
   onLoad: async (slot, { entryPath, folderName, source }) => {
     const settingsId = slot.settingsId ?? `slot-${slot.id}`;
+    slot.t = await createTranslatorFromPath(entryPath);
+    registerPluginNamespace(folderName, `slots/${slot.id}`);
     registerPluginSettingsId(folderName, settingsId);
     if (!(await isDisabled(settingsId))) {
       const template = await loadPluginAssets(entryPath, folderName, settingsId, source);
@@ -73,6 +83,15 @@ export function getSlotPlugins(): SlotPlugin[] {
 
 export function getSlotPluginById(slotId: string): SlotPlugin | null {
   return registry.items().find((p) => p.id === slotId) ?? null;
+}
+
+export function getAllSlotTranslators(): {
+  namespace: string;
+  translator: Translate;
+}[] {
+  return registry.items()
+    .filter((s) => !!s.t)
+    .map((s) => ({ namespace: `slots/${s.id}`, translator: s.t! }));
 }
 
 export async function reloadSlotPlugins(): Promise<void> {

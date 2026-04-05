@@ -1,0 +1,15 @@
+{
+  "speedtest": {
+    "title": "Test de débit",
+    "description": "Lancer un test de débit internet",
+    "download": "Téléchargement (Mbps)",
+    "upload": "Envoi (Mbps)",
+    "latency": "Latence (ms)",
+    "starting": "Démarrage...",
+    "testing-latency": "Test de latence...",
+    "testing-download": "Test de débit descendant...",
+    "testing-upload": "Test de débit montant...",
+    "complete": "Terminé",
+    "error": "Erreur"
+  }
+}

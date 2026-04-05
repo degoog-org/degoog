@@ -1,0 +1,220 @@
+{
+  "settings-page": {
+    "meta": {
+      "title": "Settings – degoog",
+      "description": "degoog search settings."
+    },
+    "back": "Back",
+    "page-title": "Settings",
+    "nav": {
+      "aria-section": "Settings section",
+      "aria-sections": "Settings sections",
+      "general": "General",
+      "server": "Server",
+      "engines": "Engines",
+      "plugins": "Plugins",
+      "transports": "Transports",
+      "themes": "Themes",
+      "store": "Store"
+    },
+    "appearance": {
+      "heading": "Appearance",
+      "desc": "Choose your preferred theme."
+    },
+    "theme": {
+      "system": "System default",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "search-options": {
+      "heading": "Search Options",
+      "open-new-tab": "Open result links in new tab",
+      "open-new-tab-aria": "Open result links in new tab",
+      "engine-performance": "Display engine performance",
+      "engine-performance-aria": "Display engine performance",
+      "search-suggestions": "Display search suggestions",
+      "search-suggestions-aria": "Display search suggestions"
+    },
+    "install": {
+      "heading": "Install app",
+      "desc": "Add degoog to your home screen. If your browser did not show the install prompt, use this to try again.",
+      "prompt-button": "Show install prompt"
+    },
+    "server": {
+      "cache-heading": "Cache",
+      "cache-desc": "Clear stored search results.",
+      "cache-clear": "Clear search cache",
+      "cache-cleared": "Cleared",
+      "cache-failed": "Failed",
+      "streaming-heading": "Streaming results",
+      "streaming-desc": "Load results progressively as each engine responds instead of waiting for all engines to finish. This is an experimental feature.",
+      "streaming-enable": "Enable streaming results (experimental)",
+      "streaming-enable-aria": "Enable streaming results (experimental)",
+      "streaming-auto-retry": "Auto-retry failed engines",
+      "streaming-auto-retry-aria": "Auto-retry failed engines",
+      "streaming-max-retries-label": "Max retries per engine",
+      "languages-heading": "Search language",
+      "languages-desc": "Change the search languages in the search options dropdown. When disabled, all ~90 built-in languages are shown.",
+      "languages-toggle": "Change search languages",
+      "languages-toggle-aria": "Change search languages",
+      "languages-codes-label": "Language codes (one per line)",
+      "proxy-heading": "Proxy",
+      "proxy-desc": "Use proxies for server-side search requests. One URL per line; requests rotate through the list.",
+      "proxy-enable": "Use proxy for search",
+      "proxy-enable-aria": "Use proxy for search",
+      "proxy-urls-label": "Proxy URLs (one per line)",
+      "proxy-test": "Test proxy connection",
+      "proxy-testing": "Testing…",
+      "rate-limit-heading": "Rate limit",
+      "rate-limit-desc": "Limit requests per IP to protect the instance and upstream engines.",
+      "rate-limit-enable": "Enable rate limiting",
+      "rate-limit-enable-aria": "Enable rate limiting",
+      "rate-limit-defaults": "Defaults: 15 requests per 20s, 150 per 10 min per IP.",
+      "rate-limit-burst-window": "Burst window (seconds)",
+      "rate-limit-burst-max": "Burst max requests",
+      "rate-limit-long-window": "Long window (seconds)",
+      "rate-limit-long-max": "Long max requests",
+      "saved": "Saved",
+      "save-failed-network": "Save failed. Please try again."
+    },
+    "proxy-test": {
+      "not-enabled": "Proxy is not enabled. Enable it and save before testing.",
+      "ip-unreachable": "Could not reach IP check service. Check your network connection.",
+      "unreachable-title": "Proxy unreachable.",
+      "unreachable-detail": "Direct IP: {directIp}",
+      "unreachable-hint": "The proxy server could not be contacted. Check your proxy URL and that the proxy is running.",
+      "match-title": "IPs match — proxy may not be working.",
+      "match-detail": "Direct: {directIp} · Proxy: {proxyIp}",
+      "match-hint": "Both routes returned the same IP. The proxy might not be changing your exit IP.",
+      "ok-title": "Proxy is working.",
+      "ok-detail": "Direct: {directIp} · Proxy: {proxyIp}",
+      "server-error": "Server returned {status}. Make sure you are authenticated.",
+      "request-failed": "Request failed. Check your connection."
+    },
+    "actions": {
+      "save": "Save"
+    },
+    "modal": {
+      "close-aria": "Close",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "save-failed": "Save failed. Please try again.",
+      "configure-title": "Configure {name}",
+      "advanced": "Advanced",
+      "test-connection": "Test Connection",
+      "test-testing": "Testing…",
+      "test-request-failed": "Request failed",
+      "field-remove-aria": "Remove",
+      "field-add": "Add"
+    },
+    "confirm": {
+      "title": "Confirm",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
+    "extensions": {
+      "configure": "Configure",
+      "active": "Active",
+      "built-in-theme-name": "Built-in",
+      "built-in-theme-desc": "Default degoog look.",
+      "group-plugins": "Plugins",
+      "group-builtin-commands": "Built-in commands",
+      "group-transports": "Transports",
+      "group-builtin-transports": "Built-in transports",
+      "group-themes": "Themes",
+      "apply-failed": "Failed"
+    },
+    "errors": {
+      "load-extensions": "Failed to load extensions.",
+      "load-transports": "Failed to load transports.",
+      "load-themes": "Failed to load themes.",
+      "load-engines": "Failed to load engines."
+    },
+    "gate": {
+      "desc": "Enter the password to access settings.",
+      "password-placeholder": "Password",
+      "unlock": "Unlock",
+      "incorrect-password": "Incorrect password.",
+      "network-error": "Something went wrong. Please try again."
+    },
+    "public": {
+      "engines-heading": "Engines"
+    },
+    "store": {
+      "repos-heading": "Repositories",
+      "catalog-heading": "Catalog",
+      "desc": "Add a git repository URL to browse and install plugins, themes, engines, and transports. Set repo-image in the repo’s package.json to show an image next to the URL.",
+      "empty-repos": "No repositories added. Add a git repository URL to browse its plugins, themes, engines, and transports.",
+      "refresh-all": "Refresh all",
+      "add-repo": "Add repository",
+      "add": "Add",
+      "placeholder-url": "https://github.com/user/repo.git",
+      "search-placeholder": "Search…",
+      "filter-type-aria": "Filter by type",
+      "filter-subtype-aria": "Filter by sub-type",
+      "lightbox-aria": "Screenshot gallery",
+      "close-aria": "Close",
+      "prev-aria": "Previous",
+      "next-aria": "Next",
+      "view-screenshots-aria": "View screenshots",
+      "filter-all": "All",
+      "filter-plugins": "Plugins",
+      "filter-themes": "Themes",
+      "filter-engines": "Engines",
+      "filter-transports": "Transports",
+      "type-plugin": "Plugin",
+      "type-engine": "Engine",
+      "type-transport": "Transport",
+      "type-theme": "Theme",
+      "plugin-type-bang": "Bang",
+      "plugin-type-slot": "Slot",
+      "plugin-type-search-tab": "Search tab",
+      "plugin-type-search-bar": "Search bar",
+      "install": "Install",
+      "update": "Update",
+      "uninstall": "Uninstall",
+      "meta-by": "by {author} · {repo}",
+      "refresh": "Refresh",
+      "remove": "Remove",
+      "updates-one": "1 update available",
+      "updates-many": "{count} updates available",
+      "update-all": "Update all ({count})",
+      "time-just-now": "just now",
+      "time-min-ago": "{n} min ago",
+      "time-hours-ago": "{n} hours ago",
+      "time-days-ago": "{n} days ago",
+      "failed-add-repo": "Failed to add repository",
+      "failed-remove-repo": "Failed to remove repository",
+      "network-error": "Network error",
+      "install-failed": "Install failed",
+      "uninstall-failed": "Uninstall failed",
+      "update-failed": "Update failed",
+      "install-plugin-title": "Install plugin?",
+      "install-plugin-message": "This plugin will run code on your server. Only install from sources you trust. Continue?",
+      "uninstall-title": "Uninstall?",
+      "uninstall-message": "Uninstall this {type}?",
+      "remove-repo-title": "Remove repository?",
+      "remove-repo-message": "Remove this repository? You must uninstall any installed items first.",
+      "failed-load-store": "Failed to load store."
+    },
+    "schema": {
+      "natural-language": {
+        "label": "Natural language",
+        "description": "When on, typing the trigger or phrase without ! runs the command and shows search results below."
+      },
+      "score": {
+        "label": "Score",
+        "description": "Result ranking multiplier for this engine. Higher values favour its results."
+      },
+      "outgoing-transport": {
+        "label": "Outgoing HTTP client",
+        "description": "The outgoing HTTP client to use for this engine."
+      },
+      "slot-position": {
+        "label": "Position",
+        "description": "Where the slot content appears on the page."
+      }
+    }
+  }
+}

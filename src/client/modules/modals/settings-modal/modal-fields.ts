@@ -1,6 +1,8 @@
 import { escapeHtml } from "../../../utils/dom";
 import type { SettingField, ExtensionMeta } from "../../../types";
 
+const t = window.scopedT("core");
+
 const _parseUrlListValue = (
   raw: string | string[] | undefined,
   defaultUrls: string[],
@@ -37,7 +39,7 @@ const _renderUrlListField = (
       (url) =>
         `<li class="ext-field-urllist-item" data-url="${escapeHtml(url)}">
           <span class="ext-field-urllist-url">${escapeHtml(url)}</span>
-          <button type="button" class="ext-field-urllist-remove" aria-label="Remove">×</button>
+          <button type="button" class="ext-field-urllist-remove" aria-label="${escapeHtml(t("settings-page.modal.field-remove-aria"))}">×</button>
         </li>`,
     )
     .join("");
@@ -47,7 +49,7 @@ const _renderUrlListField = (
       <ul class="ext-field-urllist">${listItems}</ul>
       <div class="ext-field-urllist-add">
         <input type="url" class="ext-field-input ext-field-urllist-input" placeholder="${escapeHtml(field.placeholder || "https://example.com/feed.xml")}" autocomplete="off">
-        <button type="button" class="ext-field-urllist-add-btn">Add</button>
+        <button type="button" class="ext-field-urllist-add-btn">${escapeHtml(t("settings-page.modal.field-add"))}</button>
       </div>
       <input type="hidden" id="field-${escapeHtml(field.key)}" class="ext-field-urllist-value">
       ${descHtml}
@@ -108,7 +110,7 @@ export function initUrlList(container: HTMLElement): void {
     const li = document.createElement("li");
     li.className = "ext-field-urllist-item";
     li.dataset.url = trimmed;
-    li.innerHTML = `<span class="ext-field-urllist-url">${escapeHtml(trimmed)}</span><button type="button" class="ext-field-urllist-remove" aria-label="Remove">×</button>`;
+    li.innerHTML = `<span class="ext-field-urllist-url">${escapeHtml(trimmed)}</span><button type="button" class="ext-field-urllist-remove" aria-label="${escapeHtml(t("settings-page.modal.field-remove-aria"))}">×</button>`;
     li.querySelector(".ext-field-urllist-remove")?.addEventListener(
       "click",
       () => {

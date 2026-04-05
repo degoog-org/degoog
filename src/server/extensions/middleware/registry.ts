@@ -1,4 +1,6 @@
-import type { RequestMiddleware } from "../../types";
+import type { RequestMiddleware, Translate } from "../../types";
+import { registerPluginNamespace } from "../../utils/plugin-assets";
+import { createTranslatorFromPath } from "../../utils/translation";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 
@@ -15,8 +17,13 @@ function isRequestMiddleware(val: unknown): val is RequestMiddleware {
 const registry = createRegistry<RequestMiddleware>({
   dirs: () => [{ dir: pluginsDir(), source: "plugin" }],
   match: (mod) => {
-    const m = mod.middleware ?? (mod.default as Record<string, unknown>)?.middleware;
+    const m =
+      mod.middleware ?? (mod.default as Record<string, unknown>)?.middleware;
     return isRequestMiddleware(m) ? m : null;
+  },
+  onLoad: async (m, { entryPath, folderName }) => {
+    m.t = await createTranslatorFromPath(entryPath);
+    registerPluginNamespace(folderName, `middleware/${m.id}`);
   },
   debugTag: "middleware",
 });
@@ -31,4 +38,14 @@ export function getMiddleware(id: string): RequestMiddleware | null {
 
 export async function reloadMiddlewareRegistry(): Promise<void> {
   await registry.reload();
+}
+
+export function getAllMiddlewareTranslators(): {
+  namespace: string;
+  translator: Translate;
+}[] {
+  return registry
+    .items()
+    .filter((m) => !!m.t)
+    .map((m) => ({ namespace: `middleware/${m.id}`, translator: m.t! }));
 }

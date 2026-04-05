@@ -1,39 +1,56 @@
-import { Hono } from "hono";
-import * as cache from "../utils/cache";
-import {
-  getEngineRegistry,
-  getDefaultEngineConfig,
-} from "../extensions/engines/registry";
 import { readFile } from "fs/promises";
+import { Hono } from "hono";
 import { join } from "path";
+import pkg from "../../../package.json";
+import { SETTINGS_TABS } from "../../shared/settings-tabs";
+import { getAllCommandTranslators } from "../extensions/commands/registry";
 import {
-  getThemeHtml,
+  getAllEngineTranslators,
+  getDefaultEngineConfig,
+  getEngineRegistry,
+} from "../extensions/engines/registry";
+import { getAllMiddlewareTranslators } from "../extensions/middleware/registry";
+import { getAllSearchBarTranslators } from "../extensions/search-bar/registry";
+import { getAllTabTranslators } from "../extensions/search-result-tabs/registry";
+import { getAllSlotTranslators } from "../extensions/slots/registry";
+import {
   getActiveTheme,
   getActiveThemeDataAttrs,
+  getThemeHtml,
   getThemeTemplatesHtml,
 } from "../extensions/themes/registry";
+import { Translate } from "../types";
+import * as cache from "../utils/cache";
+import { getLocale } from "../utils/hono";
 import {
   getAllPluginCss,
   getPluginScriptFolders,
   getPluginSettingsIds,
 } from "../utils/plugin-assets";
 import { isDisabled } from "../utils/plugin-settings";
+import { isPublicInstance } from "../utils/public-instance";
 import {
-  shouldServeSettingsGate,
+  collectTranslationsForLocale,
+  createTranslatorFromPath,
+  translateHTML,
+  withFallback,
+} from "../utils/translation";
+import {
   getSettingsTokenFromRequest,
+  shouldServeSettingsGate,
   validateSettingsToken,
 } from "./settings-auth";
-import { isPublicInstance } from "../utils/public-instance";
-import { SETTINGS_TABS } from "../../shared/settings-tabs";
-import pkg from "../../../package.json";
 
 const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
+const CORE_LOCALES_ROOT = "src";
 
 interface DefaultThemeManifest {
   templates?: Record<string, string>;
 }
 
 let defaultManifestCache: DefaultThemeManifest | null = null;
+let defaultThemeTranslator: Translate | null = null;
+let coreTranslator: Translate | null = null;
 
 async function getDefaultManifest(): Promise<DefaultThemeManifest> {
   if (defaultManifestCache) return defaultManifestCache;
@@ -51,6 +68,33 @@ async function getDefaultTemplatesHtml(): Promise<string> {
     parts.push(`<template id="degoog-${id}">${content}</template>`);
   }
   return parts.join("\n");
+}
+
+async function getDefaultThemeTranslator(): Promise<Translate> {
+  if (!defaultThemeTranslator) {
+    defaultThemeTranslator = await createTranslatorFromPath(DEFAULT_THEME_DIR);
+  }
+  return defaultThemeTranslator;
+}
+
+export async function getCoreTranslator(): Promise<Translate> {
+  if (!coreTranslator) {
+    coreTranslator = await createTranslatorFromPath(CORE_LOCALES_ROOT);
+  }
+  return coreTranslator;
+}
+
+async function getTranslator(
+  locale?: string,
+  themed = false,
+): Promise<Translate> {
+  const baseT = await getDefaultThemeTranslator();
+  const theme = getActiveTheme();
+  const themeChain = themed && theme?.t ? withFallback(theme.t, baseT) : baseT;
+  const coreT = await getCoreTranslator();
+  const t = withFallback(themeChain, coreT);
+  if (locale) t.setLocale(locale);
+  return t;
 }
 
 const router = new Hono();
@@ -95,8 +139,43 @@ async function pluginAssetsPlaceholder(): Promise<string> {
   return parts.join("\n  ");
 }
 
-async function applyPagePlaceholders(html: string): Promise<string> {
+async function applyPagePlaceholders(
+  html: string,
+  t: Translate,
+): Promise<string> {
   const themeAttrs = await getActiveThemeDataAttrs();
+  const locale = t.locale || "en";
+
+  // Collect all translations for the current locale (namespaced)
+  const entries: { namespace: string; translator: Translate }[] = [
+    {
+      namespace: "core",
+      translator: await getCoreTranslator(),
+    },
+    {
+      namespace: "themes/degoog",
+      translator: await getDefaultThemeTranslator(),
+    },
+    ...getAllCommandTranslators(),
+    ...getAllSlotTranslators(),
+    ...getAllTabTranslators(),
+    ...getAllEngineTranslators(),
+    ...getAllMiddlewareTranslators(),
+    ...getAllSearchBarTranslators(),
+  ];
+  const theme = getActiveTheme();
+
+  if (theme?.t && theme.manifest?.name) {
+    entries.push({
+      namespace: `themes/${theme.manifest.name}`,
+      translator: theme.t,
+    });
+  }
+
+  const clientTranslations = collectTranslationsForLocale(entries, locale);
+  const safeJson = JSON.stringify(clientTranslations).replace(/<\//g, "<\\/");
+  const translationsScript = `<script>window.__DEGOOG_T__=${safeJson}</script>\n  <script src="/public/t.js?v=${pkg.version}"></script>`;
+
   let result = html
     .replace("__THEME_CSS__", themeCssPlaceholder())
     .replace("__THEME_ATTRS__", themeAttrs)
@@ -111,7 +190,12 @@ async function applyPagePlaceholders(html: string): Promise<string> {
   } else if (allTemplates) {
     result = result.replace("</body>", `${allTemplates}\n</body>`);
   }
-  return result.replaceAll("__APP_VERSION__", pkg.version);
+  result = result.replaceAll("__APP_VERSION__", pkg.version);
+
+  // Inject translations before </head> so t() is available to all scripts
+  result = result.replace("</head>", `${translationsScript}\n  </head>`);
+
+  return translateHTML(result, t);
 }
 
 function isFullDocument(html: string): boolean {
@@ -127,6 +211,7 @@ async function getLayout(): Promise<string> {
 
 async function buildLayoutPage(
   pageName: string,
+  locale?: string,
   bodyClass?: string,
 ): Promise<string> {
   const layout = await getLayout();
@@ -134,23 +219,27 @@ async function buildLayoutPage(
   const html = layout
     .replace("__PAGE_CONTENT__", pageContent)
     .replace("__BODY_CLASS__", bodyClass ? `class="${bodyClass}"` : "");
-  return applyPagePlaceholders(html);
+  const t = await getTranslator(locale);
+  return applyPagePlaceholders(html, t);
 }
 
 async function buildThemedLayoutPage(
   themePageHtml: string,
+  locale?: string,
   bodyClass?: string,
 ): Promise<string> {
   const layout = await getLayout();
   const html = layout
     .replace("__PAGE_CONTENT__", themePageHtml)
     .replace("__BODY_CLASS__", bodyClass ? `class="${bodyClass}"` : "");
-  return applyPagePlaceholders(html);
+  const t = await getTranslator(locale, true);
+  return applyPagePlaceholders(html, t);
 }
 
-async function buildPage(filename: string): Promise<string> {
+async function buildPage(filename: string, locale?: string): Promise<string> {
   const html = await Bun.file(`src/public/${filename}`).text();
-  return applyPagePlaceholders(html);
+  const t = await getTranslator(locale);
+  return applyPagePlaceholders(html, t);
 }
 
 router.get("/", async (c) => {
@@ -159,35 +248,40 @@ router.get("/", async (c) => {
     const params = new URLSearchParams(c.req.url.split("?")[1] || "");
     return c.redirect(`/search?${params.toString()}`, 302);
   }
+  const locale = getLocale(c);
   const override = await getThemeHtml("index");
   if (override) {
     if (isFullDocument(override)) {
-      return c.html(await applyPagePlaceholders(override));
+      const t = await getTranslator(locale, true);
+      return c.html(await applyPagePlaceholders(override, t));
     }
-    return c.html(await buildThemedLayoutPage(override));
+    return c.html(await buildThemedLayoutPage(override, locale));
   }
-  return c.html(await buildLayoutPage("index.html"));
+  return c.html(await buildLayoutPage("index.html", locale));
 });
 
 router.get("/search", async (c) => {
+  const locale = getLocale(c);
   const override = await getThemeHtml("search");
   if (override) {
     if (isFullDocument(override)) {
-      return c.html(await applyPagePlaceholders(override));
+      const t = await getTranslator(locale, true);
+      return c.html(await applyPagePlaceholders(override, t));
     }
-    return c.html(await buildThemedLayoutPage(override, "has-results"));
+    return c.html(await buildThemedLayoutPage(override, locale, "has-results"));
   }
-  return c.html(await buildLayoutPage("search.html", "has-results"));
+  return c.html(await buildLayoutPage("search.html", locale, "has-results"));
 });
 
 router.get("/settings/", (c) => c.redirect("/settings", 301));
 router.get("/settings", async (c) => {
+  const locale = getLocale(c);
   if (isPublicInstance())
-    return c.html(await buildPage("settings-public.html"));
+    return c.html(await buildPage("settings-public.html", locale));
   if (await shouldServeSettingsGate(c)) {
-    return c.html(await buildPage("settings-gate.html"));
+    return c.html(await buildPage("settings-gate.html", locale));
   }
-  return c.html(await buildPage("settings.html"));
+  return c.html(await buildPage("settings.html", locale));
 });
 
 router.get("/settings/:tab", async (c) => {
@@ -196,10 +290,11 @@ router.get("/settings/:tab", async (c) => {
   if (!(SETTINGS_TABS as readonly string[]).includes(tab)) {
     return c.redirect("/settings", 302);
   }
+  const locale = getLocale(c);
   if (await shouldServeSettingsGate(c)) {
-    return c.html(await buildPage("settings-gate.html"));
+    return c.html(await buildPage("settings-gate.html", locale));
   }
-  return c.html(await buildPage("settings.html"));
+  return c.html(await buildPage("settings.html", locale));
 });
 
 router.get("/api/engines", (c) => {

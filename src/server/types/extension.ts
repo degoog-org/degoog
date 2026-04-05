@@ -5,6 +5,33 @@ import type {
   EngineContext,
 } from "./search";
 
+export type TranslationVars = string | number | boolean;
+export type TranslationRecord = {
+  [key: string]: TranslationVars | TranslationRecord;
+};
+export interface Translate {
+  (
+    key: string,
+    vars?: Record<string, TranslationVars> | TranslationVars[],
+  ): string;
+  setLocale(locale: string): void;
+  locale: string;
+  translations?: TranslationRecord;
+}
+export const TranslateFunction: Translate = Object.assign(
+  function (
+    key: string,
+    _vars?: Record<string, TranslationVars> | TranslationVars[],
+  ): string {
+    return key;
+  },
+  {
+    setLocale(_locale: string) {},
+    locale: "",
+    translations: undefined as TranslationRecord | undefined,
+  },
+);
+
 export enum ExtensionStoreType {
   Plugin = "plugin",
   Theme = "theme",
@@ -61,6 +88,7 @@ export interface SearchEngine {
     timeFilter?: TimeFilter,
     context?: EngineContext,
   ): Promise<SearchResult[]>;
+  t?: Translate;
 }
 
 export enum SlotPanelPosition {
@@ -105,6 +133,7 @@ export interface SlotPlugin {
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, string | string[]>): void;
   init?(context: PluginContext): void | Promise<void>;
+  t?: Translate;
 }
 
 export interface CommandResult {
@@ -130,6 +159,7 @@ export interface BangCommand {
   isConfigured?(): Promise<boolean>;
   init?(context: PluginContext): void | Promise<void>;
   execute(args: string, context?: CommandContext): Promise<CommandResult>;
+  t?: Translate;
 }
 
 export interface SearchResultTab {
@@ -146,6 +176,7 @@ export interface SearchResultTab {
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, string | string[]>): void;
   init?(context: PluginContext): void | Promise<void>;
+  t?: Translate;
 }
 
 export interface MiddlewareResult {
@@ -159,6 +190,7 @@ export interface RequestMiddleware {
     req: Request,
     context?: { route?: string },
   ): Response | Promise<Response | MiddlewareResult | null>;
+  t?: Translate;
 }
 
 export type SearchBarActionType = "navigate" | "bang" | "custom";
@@ -170,6 +202,7 @@ export interface SearchBarAction {
   type: SearchBarActionType;
   url?: string;
   trigger?: string;
+  t?: Translate;
 }
 
 export type PluginRouteMethod = "get" | "post" | "put" | "delete" | "patch";
@@ -178,6 +211,7 @@ export interface PluginRoute {
   method: PluginRouteMethod;
   path: string;
   handler: (req: Request) => Response | Promise<Response>;
+  t?: Translate;
 }
 
 export interface TransportFetchOptions {

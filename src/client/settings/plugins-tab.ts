@@ -2,6 +2,8 @@ import { escapeHtml, getConfigStatus } from "../utils/dom";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, AllExtensions } from "../types";
 
+const t = window.scopedT("core");
+
 const _renderPluginCard = (plugin: ExtensionMeta): string => {
   const isEnabled = plugin.settings["disabled"] !== "true";
   const trigger =
@@ -19,7 +21,7 @@ const _renderPluginCard = (plugin: ExtensionMeta): string => {
         ? '<span class="ext-needs-config-badge"></span>'
         : "";
   const configureBtn = plugin.configurable
-    ? `<button class="ext-card-configure" data-id="${escapeHtml(plugin.id)}" type="button">Configure</button>`
+    ? `<button class="ext-card-configure" data-id="${escapeHtml(plugin.id)}" type="button">${escapeHtml(t("settings-page.extensions.configure"))}</button>`
     : "";
   const canDisable =
     plugin.configurable ||
@@ -62,12 +64,12 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
 
   let html = "";
   if (custom.length > 0) {
-    html += `<div class="ext-group"><h3 class="ext-group-label">Plugins</h3><div class="ext-cards">`;
+    html += `<div class="ext-group"><h3 class="ext-group-label">${escapeHtml(t("settings-page.extensions.group-plugins"))}</h3><div class="ext-cards">`;
     for (const plugin of custom) html += _renderPluginCard(plugin);
     html += `</div></div>`;
   }
   if (builtin.length > 0) {
-    html += `<div class="ext-group"><h3 class="ext-group-label">Built-in commands</h3><div class="ext-cards">`;
+    html += `<div class="ext-group"><h3 class="ext-group-label">${escapeHtml(t("settings-page.extensions.group-builtin-commands"))}</h3><div class="ext-cards">`;
     for (const plugin of builtin) html += _renderPluginCard(plugin);
     html += `</div></div>`;
   }

@@ -2,6 +2,8 @@ import { escapeHtml, getConfigStatus } from "../utils/dom";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, AllExtensions } from "../types";
 
+const t = window.scopedT("core");
+
 const _renderTransportCard = (transport: ExtensionMeta): string => {
   const isEnabled = transport.settings["disabled"] !== "true";
   const desc = transport.description
@@ -15,7 +17,7 @@ const _renderTransportCard = (transport: ExtensionMeta): string => {
         ? '<span class="ext-needs-config-badge"></span>'
         : "";
   const configureBtn = transport.configurable
-    ? `<button class="ext-card-configure" data-id="${escapeHtml(transport.id)}" type="button">Configure</button>`
+    ? `<button class="ext-card-configure" data-id="${escapeHtml(transport.id)}" type="button">${escapeHtml(t("settings-page.extensions.configure"))}</button>`
     : "";
   const toggle = transport.configurable
     ? `<label class="engine-toggle">
@@ -56,14 +58,12 @@ export function initTransportsTab(allExtensions: AllExtensions): void {
 
   let html = "";
   if (custom.length > 0) {
-    html +=
-      '<div class="ext-group"><h3 class="ext-group-label">Transports</h3><div class="ext-cards">';
+    html += `<div class="ext-group"><h3 class="ext-group-label">${escapeHtml(t("settings-page.extensions.group-transports"))}</h3><div class="ext-cards">`;
     for (const t of custom) html += _renderTransportCard(t);
     html += "</div></div>";
   }
   if (builtin.length > 0) {
-    html +=
-      '<div class="ext-group"><h3 class="ext-group-label">Built-in transports</h3><div class="ext-cards">';
+    html += `<div class="ext-group"><h3 class="ext-group-label">${escapeHtml(t("settings-page.extensions.group-builtin-transports"))}</h3><div class="ext-cards">`;
     for (const t of builtin) html += _renderTransportCard(t);
     html += "</div></div>";
   }

@@ -1,43 +1,45 @@
 import { Hono, type Context } from "hono";
-import * as cache from "../utils/cache";
 import {
-  search,
-  searchSingleEngine,
-  scoreResults,
-  mergeNewResults,
-  fetchRelatedSearches,
-  fetchKnowledgePanel,
-  createSearchEngineContext,
-} from "../search";
-import {
+  getActiveWebEngines,
+  getCustomEngineTypes,
   getEngineRegistry,
   getEnginesForCustomType,
-  getCustomEngineTypes,
-  getActiveWebEngines,
   getEnginesForSearchType as getEnginesForType,
 } from "../extensions/engines/registry";
+import {
+  getSearchResultTabById,
+  getSearchResultTabs,
+} from "../extensions/search-result-tabs/registry";
 import { getSlotPlugins } from "../extensions/slots/registry";
 import {
-  getSearchResultTabs,
-  getSearchResultTabById,
-} from "../extensions/search-result-tabs/registry";
-import { asString, getSettings, isDisabled } from "../utils/plugin-settings";
-import { getClientIp } from "../utils/request";
-import { outgoingFetch } from "../utils/outgoing";
-import { checkRateLimit } from "../utils/rate-limit";
-import { debug } from "../utils/logger";
+  createSearchEngineContext,
+  fetchKnowledgePanel,
+  fetchRelatedSearches,
+  mergeNewResults,
+  scoreResults,
+  search,
+  searchSingleEngine,
+} from "../search";
 import {
   SLOT_POSITION_SETTING_KEY,
   SlotPanelPosition,
   type EngineConfig,
-  type SlotPluginContext,
-  type SearchType,
-  type TimeFilter,
-  type SearchResponse,
-  type SlotPanelResult,
-  type ScoredResult,
   type EngineTiming,
+  type ScoredResult,
+  type SearchResponse,
+  type SearchType,
+  type SlotPanelResult,
+  type SlotPluginContext,
+  type TimeFilter,
 } from "../types";
+import * as cache from "../utils/cache";
+import { debug } from "../utils/logger";
+import { outgoingFetch } from "../utils/outgoing";
+import { asString, getSettings, isDisabled } from "../utils/plugin-settings";
+import { checkRateLimit } from "../utils/rate-limit";
+import { getClientIp } from "../utils/request";
+import { getLocale } from "../utils/hono";
+import { injectScope, translateHTML } from "../utils/translation";
 
 const DEGOOG_SETTINGS_ID = "degoog-settings";
 const router = new Hono();
@@ -69,15 +71,93 @@ function parseEngineConfig(query: URLSearchParams): EngineConfig {
 }
 
 const DEFAULT_LANGUAGES = [
-  "af","am","ar","az","be","bg","bn","bs","ca","cs",
-  "cy","da","de","el","en","eo","es","et","eu","fa",
-  "fi","fr","ga","gl","gu","he","hi","hr","hu","hy",
-  "id","is","it","ja","ka","kk","km","kn","ko","ku",
-  "ky","lb","lo","lt","lv","mk","ml","mn","mr","ms",
-  "my","ne","nl","no","or","pa","pl","ps","pt","ro",
-  "ru","sd","si","sk","sl","so","sq","sr","st","sv",
-  "sw","ta","te","tg","th","tk","tl","tr","uk","ur",
-  "uz","vi","xh","yi","yo","zh","zu",
+  "af",
+  "am",
+  "ar",
+  "az",
+  "be",
+  "bg",
+  "bn",
+  "bs",
+  "ca",
+  "cs",
+  "cy",
+  "da",
+  "de",
+  "el",
+  "en",
+  "eo",
+  "es",
+  "et",
+  "eu",
+  "fa",
+  "fi",
+  "fr",
+  "ga",
+  "gl",
+  "gu",
+  "he",
+  "hi",
+  "hr",
+  "hu",
+  "hy",
+  "id",
+  "is",
+  "it",
+  "ja",
+  "ka",
+  "kk",
+  "km",
+  "kn",
+  "ko",
+  "ku",
+  "ky",
+  "lb",
+  "lo",
+  "lt",
+  "lv",
+  "mk",
+  "ml",
+  "mn",
+  "mr",
+  "ms",
+  "my",
+  "ne",
+  "nl",
+  "no",
+  "or",
+  "pa",
+  "pl",
+  "ps",
+  "pt",
+  "ro",
+  "ru",
+  "sd",
+  "si",
+  "sk",
+  "sl",
+  "so",
+  "sq",
+  "sr",
+  "st",
+  "sv",
+  "sw",
+  "ta",
+  "te",
+  "tg",
+  "th",
+  "tk",
+  "tl",
+  "tr",
+  "uk",
+  "ur",
+  "uz",
+  "vi",
+  "xh",
+  "yi",
+  "yo",
+  "zh",
+  "zu",
 ];
 
 function cacheKey(
@@ -98,18 +178,22 @@ async function runSlotPlugins(
   query: string,
   clientIp?: string,
   results?: ScoredResult[],
-  options?: { excludePosition?: SlotPanelPosition },
+  options?: { excludePosition?: SlotPanelPosition; locale?: string },
 ): Promise<SlotPanelResult[]> {
   const plugins = getSlotPlugins();
   const panels: SlotPanelResult[] = [];
   const exclude = options?.excludePosition;
+  const locale = options?.locale;
   for (const plugin of plugins) {
     const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
     let effectivePosition: SlotPanelPosition = plugin.position;
     if (plugin.slotPositions?.length) {
       const raw = await getSettings(slotSettingsId);
       const chosen = asString(raw[SLOT_POSITION_SETTING_KEY]);
-      if (chosen && plugin.slotPositions.includes(chosen as SlotPanelPosition)) {
+      if (
+        chosen &&
+        plugin.slotPositions.includes(chosen as SlotPanelPosition)
+      ) {
         effectivePosition = chosen as SlotPanelPosition;
       }
     }
@@ -118,6 +202,7 @@ async function runSlotPlugins(
       if (await isDisabled(slotSettingsId)) continue;
       const ok = await Promise.resolve(plugin.trigger(query.trim()));
       if (!ok) continue;
+      if (plugin.t && locale) plugin.t.setLocale(locale);
       const context: SlotPluginContext = {
         clientIp,
         results: plugin.waitForResults ? results : undefined,
@@ -125,16 +210,22 @@ async function runSlotPlugins(
       };
       const t0 = performance.now();
       const out = await plugin.execute(query, context);
-      debug("plugin", `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`);
+      debug(
+        "plugin",
+        `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`,
+      );
       if (!out.html || !out.html.trim()) continue;
       panels.push({
         id: plugin.id,
         title: out.title,
-        html: out.html,
+        html: injectScope(
+          plugin.t ? translateHTML(out.html, plugin.t) : out.html,
+          `slots/${plugin.id}`,
+        ),
         position: effectivePosition,
         gridSize: plugin.gridSize,
       });
-    } catch { }
+    } catch {}
   }
   return panels;
 }
@@ -157,14 +248,32 @@ router.get("/api/search", async (c) => {
   const lang = c.req.query("lang") || "";
   const dateFrom = c.req.query("dateFrom") || "";
   const dateTo = c.req.query("dateTo") || "";
-  const key = cacheKey(query, engines, searchType, page, timeFilter, lang, dateFrom, dateTo);
+  const key = cacheKey(
+    query,
+    engines,
+    searchType,
+    page,
+    timeFilter,
+    lang,
+    dateFrom,
+    dateTo,
+  );
 
   const cached = cache.get(key);
   let response: SearchResponse;
   if (cached) {
     response = cached;
   } else {
-    response = await search(query, engines, searchType, page, timeFilter, lang, dateFrom, dateTo);
+    response = await search(
+      query,
+      engines,
+      searchType,
+      page,
+      timeFilter,
+      lang,
+      dateFrom,
+      dateTo,
+    );
     const ttl = cache.hasFailedEngines(response)
       ? cache.SHORT_TTL_MS
       : searchType === "news"
@@ -194,7 +303,16 @@ router.get("/api/search/stream", async (c) => {
   const lang = c.req.query("lang") || "";
   const dateFrom = c.req.query("dateFrom") || "";
   const dateTo = c.req.query("dateTo") || "";
-  const key = cacheKey(query, engines, searchType, page, timeFilter, lang, dateFrom, dateTo);
+  const key = cacheKey(
+    query,
+    engines,
+    searchType,
+    page,
+    timeFilter,
+    lang,
+    dateFrom,
+    dateTo,
+  );
 
   const cached = cache.get(key);
   if (cached) {
@@ -203,23 +321,27 @@ router.get("/api/search/stream", async (c) => {
       start(controller) {
         for (const et of cached.engineTimings) {
           controller.enqueue(
-            encoder.encode(`event: engine-result\ndata: ${JSON.stringify({
-              engine: et.name,
-              timing: et,
-              results: cached.results,
-              retry: false,
-              attempt: 0,
-            })}\n\n`),
+            encoder.encode(
+              `event: engine-result\ndata: ${JSON.stringify({
+                engine: et.name,
+                timing: et,
+                results: cached.results,
+                retry: false,
+                attempt: 0,
+              })}\n\n`,
+            ),
           );
         }
         controller.enqueue(
-          encoder.encode(`event: done\ndata: ${JSON.stringify({
-            totalTime: cached.totalTime,
-            engineTimings: cached.engineTimings,
-            relatedSearches: cached.relatedSearches,
-            knowledgePanel: cached.knowledgePanel,
-            atAGlance: cached.atAGlance,
-          })}\n\n`),
+          encoder.encode(
+            `event: done\ndata: ${JSON.stringify({
+              totalTime: cached.totalTime,
+              engineTimings: cached.engineTimings,
+              relatedSearches: cached.relatedSearches,
+              knowledgePanel: cached.knowledgePanel,
+              atAGlance: cached.atAGlance,
+            })}\n\n`,
+          ),
         );
         controller.close();
       },
@@ -235,7 +357,10 @@ router.get("/api/search/stream", async (c) => {
 
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
   const autoRetry = asString(settings.streamingAutoRetry) === "true";
-  const maxRetries = Math.min(5, Math.max(1, parseInt(asString(settings.streamingMaxRetries) || "2", 10)));
+  const maxRetries = Math.min(
+    5,
+    Math.max(1, parseInt(asString(settings.streamingMaxRetries) || "2", 10)),
+  );
 
   const builtinTypes = new Set(["web", "images", "videos", "news"]);
   const rawActiveEngines =
@@ -274,76 +399,89 @@ router.get("/api/search/stream", async (c) => {
     start(controller) {
       const encoder = new TextEncoder();
       const allTimings: EngineTiming[] = [];
-      const allRawResults: { results: import("../types").SearchResult[]; multiplier: number }[] = [];
+      const allRawResults: {
+        results: import("../types").SearchResult[];
+        multiplier: number;
+      }[] = [];
 
       function _send(event: string, data: unknown) {
         if (closed) return;
         try {
           controller.enqueue(
-            encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
+            encoder.encode(
+              `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
+            ),
           );
         } catch {
           closed = true;
         }
       }
 
-      const enginePromises = rawActiveEngines.map(async ({ instance, score, id }) => {
-        const engineName = instance.name;
-        let attempt = 0;
-        let lastTiming: EngineTiming = { name: engineName, time: 0, resultCount: 0 };
+      const enginePromises = rawActiveEngines.map(
+        async ({ instance, score, id }) => {
+          const engineName = instance.name;
+          let attempt = 0;
+          let lastTiming: EngineTiming = {
+            name: engineName,
+            time: 0,
+            resultCount: 0,
+          };
 
-        while (attempt <= (autoRetry ? maxRetries : 0)) {
-          const isRetry = attempt > 0;
-          const { results, timing } = await searchSingleEngine(
-            id,
-            query,
-            page,
-            timeFilter,
-            lang,
-            dateFrom,
-            dateTo,
-          );
-          lastTiming = timing;
+          while (attempt <= (autoRetry ? maxRetries : 0)) {
+            const isRetry = attempt > 0;
+            const { results, timing } = await searchSingleEngine(
+              id,
+              query,
+              page,
+              timeFilter,
+              lang,
+              dateFrom,
+              dateTo,
+            );
+            lastTiming = timing;
 
-          if (timing.resultCount > 0) {
-            allRawResults.push({ results, multiplier: score });
-            allTimings.push(timing);
-            _send("engine-result", {
-              engine: engineName,
-              timing,
-              results: scoreResults(allRawResults),
-              retry: isRetry,
-              attempt,
-            });
-            return;
+            if (timing.resultCount > 0) {
+              allRawResults.push({ results, multiplier: score });
+              allTimings.push(timing);
+              _send("engine-result", {
+                engine: engineName,
+                timing,
+                results: scoreResults(allRawResults),
+                retry: isRetry,
+                attempt,
+              });
+              return;
+            }
+
+            attempt++;
+            if (attempt <= (autoRetry ? maxRetries : 0)) {
+              _send("engine-retry", {
+                engine: engineName,
+                attempt,
+                maxRetries,
+                timing,
+              });
+            }
           }
 
-          attempt++;
-          if (attempt <= (autoRetry ? maxRetries : 0)) {
-            _send("engine-retry", {
-              engine: engineName,
-              attempt,
-              maxRetries,
-              timing,
-            });
-          }
-        }
-
-        allTimings.push(lastTiming);
-        _send("engine-result", {
-          engine: engineName,
-          timing: lastTiming,
-          results: scoreResults(allRawResults),
-          retry: false,
-          attempt: 0,
-        });
-      });
+          allTimings.push(lastTiming);
+          _send("engine-result", {
+            engine: engineName,
+            timing: lastTiming,
+            results: scoreResults(allRawResults),
+            retry: false,
+            attempt: 0,
+          });
+        },
+      );
 
       void Promise.all(enginePromises).then(async () => {
         const totalTime = Math.round(performance.now() - start);
         const finalResults = scoreResults(allRawResults);
         const atAGlance =
-          searchType === "web" && finalResults.length > 0 && finalResults[0].snippet
+          searchType === "web" &&
+          finalResults.length > 0 &&
+          finalResults[0].snippet
             ? finalResults[0]
             : null;
 
@@ -414,6 +552,7 @@ router.post("/api/slots", async (c) => {
   const clientIp = getClientIp(c);
   const panels = await runSlotPlugins(body.query.trim(), clientIp, body.results, {
     excludePosition: SlotPanelPosition.AtAGlance,
+    locale: getLocale(c),
   });
   return c.json({ panels });
 });
@@ -431,6 +570,7 @@ router.post("/api/slots/glance", async (c) => {
     return c.json({ error: "Missing query or results" }, 400);
   }
   const clientIp = getClientIp(c);
+  const locale = getLocale(c);
   const glancePlugins = getSlotPlugins().filter(
     (p) => p.position === SlotPanelPosition.AtAGlance,
   );
@@ -441,6 +581,7 @@ router.post("/api/slots/glance", async (c) => {
       if (await isDisabled(slotSettingsId)) continue;
       const ok = await Promise.resolve(plugin.trigger(body.query!.trim()));
       if (!ok) continue;
+      if (plugin.t && locale) plugin.t.setLocale(locale);
       const context: SlotPluginContext = {
         clientIp: clientIp ?? undefined,
         results: body.results,
@@ -448,16 +589,22 @@ router.post("/api/slots/glance", async (c) => {
       };
       const t0 = performance.now();
       const out = await plugin.execute(body.query!.trim(), context);
-      debug("plugin", `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`);
+      debug(
+        "plugin",
+        `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`,
+      );
       if (!out.html || !out.html.trim()) continue;
       panels.push({
         id: plugin.id,
         title: out.title,
-        html: out.html,
+        html: injectScope(
+          plugin.t ? translateHTML(out.html, plugin.t) : out.html,
+          `slots/${plugin.id}`,
+        ),
         position: plugin.position,
         gridSize: plugin.gridSize,
       });
-    } catch { }
+    } catch {}
   }
   return c.json({ panels });
 });
@@ -490,7 +637,16 @@ router.get("/api/search/retry", async (c) => {
     dateFrom,
     dateTo,
   );
-  const key = cacheKey(query, engines, searchType, page, timeFilter, lang, dateFrom, dateTo);
+  const key = cacheKey(
+    query,
+    engines,
+    searchType,
+    page,
+    timeFilter,
+    lang,
+    dateFrom,
+    dateTo,
+  );
   const cached = cache.get(key);
 
   if (cached) {
@@ -677,7 +833,10 @@ router.get("/api/tab-search", async (c) => {
       if (allResults.length > 0) totalPages = 10;
     }
 
-    if (tab?.executeSearch && !(await isDisabled(tab.settingsId ?? `tab-${tab.id}`))) {
+    if (
+      tab?.executeSearch &&
+      !(await isDisabled(tab.settingsId ?? `tab-${tab.id}`))
+    ) {
       const tabStart = performance.now();
       const result = await tab.executeSearch(query.trim(), page, {
         clientIp: clientIp ?? undefined,

@@ -2,6 +2,9 @@ import { escapeHtml, getConfigStatus } from "../utils/dom";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta } from "../types";
 
+const t = window.scopedT("core");
+const themeT = window.scopedT("themes/degoog");
+
 const _themeIdFromExtId = (extId: string): string =>
   extId.startsWith("theme-") ? extId.slice(6) : extId;
 
@@ -19,10 +22,10 @@ const _renderThemeCard = (
         ? '<span class="ext-needs-config-badge"></span>'
         : "";
   const configureBtn = themeExt.configurable
-    ? `<button class="ext-card-configure" data-id="${escapeHtml(themeExt.id)}" type="button">Configure</button>`
+    ? `<button class="ext-card-configure" data-id="${escapeHtml(themeExt.id)}" type="button">${escapeHtml(t("settings-page.extensions.configure"))}</button>`
     : "";
   const activeLabel = isActive
-    ? '<span class="ext-card-active">Active</span>'
+    ? `<span class="ext-card-active">${escapeHtml(t("settings-page.extensions.active"))}</span>`
     : "";
   return `
     <div class="ext-card" data-theme-id="${escapeHtml(themeId)}">
@@ -35,7 +38,7 @@ const _renderThemeCard = (
         <div class="ext-card-actions">
           ${badge}
           ${configureBtn}
-          <button class="ext-card-apply" data-theme-id="${escapeHtml(themeId)}" type="button" ${isActive ? "disabled" : ""}>Apply</button>
+          <button class="ext-card-apply" data-theme-id="${escapeHtml(themeId)}" type="button" ${isActive ? "disabled" : ""}>${escapeHtml(themeT("search-templates.tabs.apply"))}</button>
         </div>
       </div>
     </div>`;
@@ -47,12 +50,12 @@ const _renderBuiltInCard = (activeId: string | null): string => {
     <div class="ext-card" data-theme-id="built-in">
       <div class="ext-card-main">
         <div class="ext-card-info">
-          <span class="ext-card-name">Built-in</span>
-          <span class="ext-card-desc">Default degoog look.</span>
-          ${isActive ? '<span class="ext-card-active">Active</span>' : ""}
+          <span class="ext-card-name">${escapeHtml(t("settings-page.extensions.built-in-theme-name"))}</span>
+          <span class="ext-card-desc">${escapeHtml(t("settings-page.extensions.built-in-theme-desc"))}</span>
+          ${isActive ? `<span class="ext-card-active">${escapeHtml(t("settings-page.extensions.active"))}</span>` : ""}
         </div>
         <div class="ext-card-actions">
-          <button class="ext-card-apply" data-theme-id="built-in" type="button" ${isActive ? "disabled" : ""}>Apply</button>
+          <button class="ext-card-apply" data-theme-id="built-in" type="button" ${isActive ? "disabled" : ""}>${escapeHtml(themeT("search-templates.tabs.apply"))}</button>
         </div>
       </div>
     </div>`;
@@ -66,8 +69,7 @@ export async function initThemesTab(
   if (!container) return;
 
   const activeId = themesData.activeId;
-  let html =
-    '<div class="ext-group"><h3 class="ext-group-label">Themes</h3><div class="ext-cards">';
+  let html = `<div class="ext-group"><h3 class="ext-group-label">${escapeHtml(t("settings-page.extensions.group-themes"))}</h3><div class="ext-cards">`;
   html += _renderBuiltInCard(activeId);
   for (const ext of themeExts) {
     html += _renderThemeCard(ext, activeId);

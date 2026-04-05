@@ -1,4 +1,5 @@
 import type { PluginRoute } from "../../types";
+import { createTranslatorFromPath } from "../../utils/translation";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 
@@ -26,12 +27,28 @@ function normalizePath(p: string): string {
 const registry = createRegistry<RouteEntry>({
   dirs: () => [{ dir: pluginsDir(), source: "plugin" }],
   match: (mod) => {
-    const routes = mod.routes ?? (mod.default as Record<string, unknown>)?.routes;
-    if (!Array.isArray(routes) || !(routes as unknown[]).every(isPluginRoute) || routes.length === 0) return null;
-    return { pluginId: "", routes: (routes as PluginRoute[]).map((r) => ({ ...r, path: normalizePath(r.path) })) };
+    const routes =
+      mod.routes ?? (mod.default as Record<string, unknown>)?.routes;
+    if (
+      !Array.isArray(routes) ||
+      !(routes as unknown[]).every(isPluginRoute) ||
+      routes.length === 0
+    )
+      return null;
+    return {
+      pluginId: "",
+      routes: (routes as PluginRoute[]).map((r) => ({
+        ...r,
+        path: normalizePath(r.path),
+      })),
+    };
   },
-  onLoad: async (entry, { folderName }) => {
+  onLoad: async (entry, { entryPath, folderName }) => {
     entry.pluginId = folderName;
+    const t = await createTranslatorFromPath(entryPath);
+    for (const route of entry.routes) {
+      route.t = t;
+    }
   },
   debugTag: "plugin-routes",
 });
@@ -41,7 +58,9 @@ export async function initPluginRoutes(): Promise<void> {
 }
 
 export function getPluginRoutes(pluginId: string): PluginRoute[] {
-  return [...(registry.items().find((e) => e.pluginId === pluginId)?.routes ?? [])];
+  return [
+    ...(registry.items().find((e) => e.pluginId === pluginId)?.routes ?? []),
+  ];
 }
 
 export function findPluginRoute(
@@ -53,7 +72,11 @@ export function findPluginRoute(
   if (!entry) return null;
   const normalized = path.replace(/^\/+/, "").replace(/\/+$/, "") || "";
   const want = normalized ? `/${normalized}` : "/";
-  return entry.routes.find((r) => r.method === method.toLowerCase() && r.path === want) ?? null;
+  return (
+    entry.routes.find(
+      (r) => r.method === method.toLowerCase() && r.path === want,
+    ) ?? null
+  );
 }
 
 export async function reloadPluginRoutes(): Promise<void> {

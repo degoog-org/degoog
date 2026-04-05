@@ -1,10 +1,16 @@
-import { type SearchBarAction, type ExtensionMeta, ExtensionStoreType } from "../../types";
 import {
+  type ExtensionMeta,
+  ExtensionStoreType,
+  type SearchBarAction,
+  type Translate,
+} from "../../types";
+import {
+  asString,
   getSettings,
   isDisabled,
-  asString,
   maskSecrets,
 } from "../../utils/plugin-settings";
+import { createTranslatorFromPath } from "../../utils/translation";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 
@@ -33,11 +39,15 @@ let storedActions: StoredAction[] = [];
 const registry = createRegistry<SearchBarAction[]>({
   dirs: () => [{ dir: pluginsDir(), source: "plugin" }],
   match: (mod) => {
-    const actions = mod.searchBarActions ?? (mod.default as Record<string, unknown>)?.searchBarActions;
+    const actions =
+      mod.searchBarActions ??
+      (mod.default as Record<string, unknown>)?.searchBarActions;
     return isSearchBarActionArray(actions) ? actions : null;
   },
-  onLoad: async (actions, { folderName }) => {
+  onLoad: async (actions, { entryPath, folderName }) => {
+    const t = await createTranslatorFromPath(entryPath);
     for (const action of actions) {
+      action.t = t;
       storedActions.push({
         pluginId: folderName,
         action: { ...action, id: `${folderName}-${action.id}` },
@@ -103,4 +113,19 @@ export async function getSearchBarActionExtensionMeta(): Promise<
     });
   }
   return out;
+}
+
+export function getAllSearchBarTranslators(): {
+  namespace: string;
+  translator: Translate;
+}[] {
+  const seen = new Map<string, Translate>();
+  for (const { pluginId, action } of storedActions) {
+    if (!action.t || seen.has(pluginId)) continue;
+    seen.set(pluginId, action.t);
+  }
+  return Array.from(seen.entries()).map(([id, translator]) => ({
+    namespace: `search-bar/${id}`,
+    translator,
+  }));
 }

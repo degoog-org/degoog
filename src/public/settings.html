@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="degoog search settings." />
+    <meta name="description" content="{{t:settings-page.meta.description}}" />
     <link
       rel="icon"
       href="/public/favicon/favicon.ico?v=__APP_VERSION__"
@@ -14,7 +14,7 @@
       href="/public/favicon/site.webmanifest"
       crossorigin="use-credentials"
     />
-    <title>Settings – degoog</title>
+    <title>{{t:settings-page.meta.title}}</title>
     <script>
       (function () {
         var t = localStorage.getItem("theme");
@@ -54,9 +54,9 @@
           >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          Back
+          {{t:settings-page.back}}
         </a>
-        <h1 class="settings-page-title">Settings</h1>
+        <h1 class="settings-page-title">{{t:settings-page.page-title}}</h1>
       </header>
 
       <div class="settings-layout">
@@ -64,77 +64,85 @@
           <select
             id="settings-tab-select"
             class="settings-tab-select"
-            aria-label="Settings section"
+            aria-label="{{t:settings-page.nav.aria-section}}"
           >
-            <option value="general">General</option>
-            <option value="server">Server</option>
-            <option value="engines">Engines</option>
-            <option value="plugins">Plugins</option>
-            <option value="transports">Transports</option>
-            <option value="themes">Themes</option>
-            <option value="store">Store</option>
+            <option value="general">{{t:settings-page.nav.general}}</option>
+            <option value="server">{{t:settings-page.nav.server}}</option>
+            <option value="engines">{{t:settings-page.nav.engines}}</option>
+            <option value="plugins">{{t:settings-page.nav.plugins}}</option>
+            <option value="transports">
+              {{t:settings-page.nav.transports}}
+            </option>
+            <option value="themes">{{t:settings-page.nav.themes}}</option>
+            <option value="store">{{t:settings-page.nav.store}}</option>
           </select>
         </div>
 
         <nav
           class="settings-nav"
           id="settings-tabs-nav"
-          aria-label="Settings sections"
+          aria-label="{{t:settings-page.nav.aria-sections}}"
         >
           <button
             class="settings-nav-item active"
             data-tab="general"
             type="button"
           >
-            General
+            {{t:settings-page.nav.general}}
           </button>
           <button class="settings-nav-item" data-tab="server" type="button">
-            Server
+            {{t:settings-page.nav.server}}
           </button>
           <button class="settings-nav-item" data-tab="engines" type="button">
-            Engines
+            {{t:settings-page.nav.engines}}
           </button>
           <button class="settings-nav-item" data-tab="plugins" type="button">
-            Plugins
+            {{t:settings-page.nav.plugins}}
           </button>
           <button class="settings-nav-item" data-tab="transports" type="button">
-            Transports
+            {{t:settings-page.nav.transports}}
           </button>
           <button class="settings-nav-item" data-tab="themes" type="button">
-            Themes
+            {{t:settings-page.nav.themes}}
           </button>
           <button class="settings-nav-item" data-tab="store" type="button">
-            Store
+            {{t:settings-page.nav.store}}
           </button>
         </nav>
 
         <main class="settings-page-main">
           <div class="settings-tab-panel active" id="tab-general">
             <section class="settings-section">
-              <h2 class="settings-section-heading">Appearance</h2>
-              <p class="settings-desc">Choose your preferred theme.</p>
+              <h2 class="settings-section-heading">
+                {{t:settings-page.appearance.heading}}
+              </h2>
+              <p class="settings-desc">{{t:settings-page.appearance.desc}}</p>
               <div class="theme-select-wrap">
                 <select id="theme-select" class="theme-select">
-                  <option value="system">System default</option>
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
+                  <option value="system">
+                    {{t:settings-page.theme.system}}
+                  </option>
+                  <option value="light">{{t:settings-page.theme.light}}</option>
+                  <option value="dark">{{t:settings-page.theme.dark}}</option>
                 </select>
               </div>
             </section>
 
             <section class="settings-section">
-              <h2 class="settings-section-heading">Search Options</h2>
+              <h2 class="settings-section-heading">
+                {{t:settings-page.search-options.heading}}
+              </h2>
 
               <label class="settings-toggle-wrap" style="margin-top: 1rem">
                 <input
                   type="checkbox"
                   id="settings-open-new-tab"
                   class="settings-toggle"
-                  aria-label="Open result links in new tab"
+                  aria-label="{{t:settings-page.search-options.open-new-tab-aria}}"
                 />
                 <span class="toggle-slider"></span>
                 <span class="settings-toggle-label"
-                  >Open result links in new tab</span
+                  >{{t:settings-page.search-options.open-new-tab}}</span
                 >
               </label>
 
@@ -143,11 +151,11 @@
                   type="checkbox"
                   id="display-engine-performance"
                   class="settings-toggle"
-                  aria-label="Display engine performance"
+                  aria-label="{{t:settings-page.search-options.engine-performance-aria}}"
                 />
                 <span class="toggle-slider"></span>
                 <span class="settings-toggle-label"
-                  >Display engine performance</span
+                  >{{t:settings-page.search-options.engine-performance}}</span
                 >
               </label>
 
@@ -156,27 +164,26 @@
                   type="checkbox"
                   id="display-search-suggestions"
                   class="settings-toggle"
-                  aria-label="Display search suggestions"
+                  aria-label="{{t:settings-page.search-options.search-suggestions-aria}}"
                 />
                 <span class="toggle-slider"></span>
                 <span class="settings-toggle-label"
-                  >Display search suggestions</span
+                  >{{t:settings-page.search-options.search-suggestions}}</span
                 >
               </label>
             </section>
 
             <section class="settings-section">
-              <h2 class="settings-section-heading">Install app</h2>
-              <p class="settings-desc">
-                Add degoog to your home screen. If your browser did not show the
-                install prompt, use this to try again.
-              </p>
+              <h2 class="settings-section-heading">
+                {{t:settings-page.install.heading}}
+              </h2>
+              <p class="settings-desc">{{t:settings-page.install.desc}}</p>
               <button
                 class="btn btn--secondary settings-install-prompt"
                 id="settings-install-prompt"
                 type="button"
               >
-                Show install prompt
+                {{t:settings-page.install.prompt-button}}
               </button>
             </section>
           </div>
@@ -198,34 +205,36 @@
           </div>
           <div class="settings-tab-panel" id="tab-server">
             <section class="settings-section">
-              <h2 class="settings-section-heading">Cache</h2>
-              <p class="settings-desc">Clear stored search results.</p>
+              <h2 class="settings-section-heading">
+                {{t:settings-page.server.cache-heading}}
+              </h2>
+              <p class="settings-desc">{{t:settings-page.server.cache-desc}}</p>
               <button
                 class="btn btn--secondary settings-cache-clear"
                 id="settings-cache-clear"
                 type="button"
               >
-                Clear search cache
+                {{t:settings-page.server.cache-clear}}
               </button>
             </section>
 
             <section class="settings-section" id="settings-section-streaming">
-              <h2 class="settings-section-heading">Streaming results</h2>
+              <h2 class="settings-section-heading">
+                {{t:settings-page.server.streaming-heading}}
+              </h2>
               <p class="settings-desc">
-                Load results progressively as each engine responds instead of
-                waiting for all engines to finish. This is an experimental
-                feature.
+                {{t:settings-page.server.streaming-desc}}
               </p>
               <label class="settings-toggle-wrap">
                 <input
                   type="checkbox"
                   id="settings-streaming-enabled"
                   class="settings-toggle"
-                  aria-label="Enable streaming results (experimental)"
+                  aria-label="{{t:settings-page.server.streaming-enable-aria}}"
                 />
                 <span class="toggle-slider"></span>
                 <span class="settings-toggle-label"
-                  >Enable streaming results (experimental)</span
+                  >{{t:settings-page.server.streaming-enable}}</span
                 >
               </label>
               <div
@@ -238,11 +247,11 @@
                     type="checkbox"
                     id="settings-streaming-auto-retry"
                     class="settings-toggle"
-                    aria-label="Auto-retry failed engines"
+                    aria-label="{{t:settings-page.server.streaming-auto-retry-aria}}"
                   />
                   <span class="toggle-slider"></span>
                   <span class="settings-toggle-label"
-                    >Auto-retry failed engines</span
+                    >{{t:settings-page.server.streaming-auto-retry}}</span
                   >
                 </label>
                 <div
@@ -253,7 +262,7 @@
                   <label
                     for="settings-streaming-max-retries"
                     class="settings-proxy-urls-label"
-                    >Max retries per engine</label
+                    >{{t:settings-page.server.streaming-max-retries-label}}</label
                   >
                   <input
                     type="number"
@@ -268,21 +277,22 @@
             </section>
 
             <section class="settings-section">
-              <h2 class="settings-section-heading">Search language</h2>
+              <h2 class="settings-section-heading">
+                {{t:settings-page.server.languages-heading}}
+              </h2>
               <p class="settings-desc">
-                Change the search languages in the search options dropdown. When
-                disabled, all ~90 built-in languages are shown.
+                {{t:settings-page.server.languages-desc}}
               </p>
               <label class="settings-toggle-wrap">
                 <input
                   type="checkbox"
                   id="settings-languages-enabled"
                   class="settings-toggle"
-                  aria-label="Change search languages"
+                  aria-label="{{t:settings-page.server.languages-toggle-aria}}"
                 />
                 <span class="toggle-slider"></span>
                 <span class="settings-toggle-label"
-                  >Change search languages</span
+                  >{{t:settings-page.server.languages-toggle}}</span
                 >
               </label>
               <div
@@ -293,7 +303,7 @@
                 <label
                   for="settings-languages"
                   class="settings-proxy-urls-label"
-                  >Language codes (one per line)</label
+                  >{{t:settings-page.server.languages-codes-label}}</label
                 >
                 <textarea
                   id="settings-languages"
@@ -305,20 +315,21 @@
             </section>
 
             <section class="settings-section" id="settings-section-proxy">
-              <h2 class="settings-section-heading">Proxy</h2>
-              <p class="settings-desc">
-                Use proxies for server-side search requests. One URL per line;
-                requests rotate through the list.
-              </p>
+              <h2 class="settings-section-heading">
+                {{t:settings-page.server.proxy-heading}}
+              </h2>
+              <p class="settings-desc">{{t:settings-page.server.proxy-desc}}</p>
               <label class="settings-toggle-wrap">
                 <input
                   type="checkbox"
                   id="settings-proxy-enabled"
                   class="settings-toggle"
-                  aria-label="Use proxy for search"
+                  aria-label="{{t:settings-page.server.proxy-enable-aria}}"
                 />
                 <span class="toggle-slider"></span>
-                <span class="settings-toggle-label">Use proxy for search</span>
+                <span class="settings-toggle-label"
+                  >{{t:settings-page.server.proxy-enable}}</span
+                >
               </label>
               <div
                 class="settings-proxy-urls-wrap"
@@ -328,7 +339,7 @@
                 <label
                   for="settings-proxy-urls"
                   class="settings-proxy-urls-label"
-                  >Proxy URLs (one per line)</label
+                  >{{t:settings-page.server.proxy-urls-label}}</label
                 >
                 <textarea
                   id="settings-proxy-urls"
@@ -341,7 +352,7 @@
                   id="settings-proxy-test"
                   type="button"
                 >
-                  Test proxy connection
+                  {{t:settings-page.server.proxy-test}}
                 </button>
                 <div
                   class="proxy-test-result"
@@ -352,10 +363,11 @@
             </section>
 
             <section class="settings-section" id="settings-section-rate-limit">
-              <h2 class="settings-section-heading">Rate limit</h2>
+              <h2 class="settings-section-heading">
+                {{t:settings-page.server.rate-limit-heading}}
+              </h2>
               <p class="settings-desc">
-                Limit requests per IP to protect the instance and upstream
-                engines.
+                {{t:settings-page.server.rate-limit-desc}}
               </p>
               <div
                 class="settings-rate-limit-wrap"
@@ -366,11 +378,11 @@
                     type="checkbox"
                     id="settings-rate-limit-enabled"
                     class="settings-toggle"
-                    aria-label="Enable rate limiting"
+                    aria-label="{{t:settings-page.server.rate-limit-enable-aria}}"
                   />
                   <span class="toggle-slider"></span>
                   <span class="settings-toggle-label"
-                    >Enable rate limiting</span
+                    >{{t:settings-page.server.rate-limit-enable}}</span
                   >
                 </label>
                 <div
@@ -379,12 +391,12 @@
                   style="display: none"
                 >
                   <p class="settings-rate-limit-defaults">
-                    Defaults: 15 requests per 20s, 150 per 10 min per IP.
+                    {{t:settings-page.server.rate-limit-defaults}}
                   </p>
                   <label
                     for="settings-rate-limit-burst-window"
                     class="settings-proxy-urls-label"
-                    >Burst window (seconds)</label
+                    >{{t:settings-page.server.rate-limit-burst-window}}</label
                   >
                   <input
                     type="number"
@@ -397,7 +409,7 @@
                   <label
                     for="settings-rate-limit-burst-max"
                     class="settings-proxy-urls-label"
-                    >Burst max requests</label
+                    >{{t:settings-page.server.rate-limit-burst-max}}</label
                   >
                   <input
                     type="number"
@@ -410,7 +422,7 @@
                   <label
                     for="settings-rate-limit-long-window"
                     class="settings-proxy-urls-label"
-                    >Long window (seconds)</label
+                    >{{t:settings-page.server.rate-limit-long-window}}</label
                   >
                   <input
                     type="number"
@@ -423,7 +435,7 @@
                   <label
                     for="settings-rate-limit-long-max"
                     class="settings-proxy-urls-label"
-                    >Long max requests</label
+                    >{{t:settings-page.server.rate-limit-long-max}}</label
                   >
                   <input
                     type="number"
@@ -439,7 +451,7 @@
 
             <div class="settings-page-actions">
               <button class="settings-save" id="settings-save" type="button">
-                Save
+                {{t:settings-page.actions.save}}
               </button>
             </div>
           </div>
@@ -459,7 +471,7 @@
             class="ext-modal-close"
             id="ext-modal-close"
             type="button"
-            aria-label="Close"
+            aria-label="{{t:settings-page.modal.close-aria}}"
           >
             &times;
           </button>
@@ -468,7 +480,7 @@
         <div class="ext-modal-footer">
           <span class="ext-modal-status" id="ext-modal-status"></span>
           <button class="settings-save" id="ext-modal-save" type="button">
-            Save
+            {{t:settings-page.modal.save}}
           </button>
         </div>
       </div>
@@ -487,12 +499,14 @@
         aria-labelledby="confirm-modal-title"
       >
         <div class="ext-modal-header">
-          <h2 class="ext-modal-title" id="confirm-modal-title">Confirm</h2>
+          <h2 class="ext-modal-title" id="confirm-modal-title">
+            {{t:settings-page.confirm.title}}
+          </h2>
           <button
             class="ext-modal-close"
             id="confirm-modal-close"
             type="button"
-            aria-label="Close"
+            aria-label="{{t:settings-page.modal.close-aria}}"
           >
             &times;
           </button>
@@ -504,14 +518,14 @@
             id="confirm-modal-cancel"
             type="button"
           >
-            Cancel
+            {{t:settings-page.confirm.cancel}}
           </button>
           <button
             class="btn btn--primary"
             id="confirm-modal-confirm"
             type="button"
           >
-            Confirm
+            {{t:settings-page.confirm.confirm}}
           </button>
         </div>
       </div>

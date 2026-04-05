@@ -1,15 +1,21 @@
-import type {
-  BangCommand,
-  CommandResult,
-  CommandContext,
+import {
+  TranslateFunction,
+  type BangCommand,
+  type CommandContext,
+  type CommandResult,
 } from "../../../../types";
 import { outgoingFetch } from "../../../../utils/outgoing";
 
 export const ipCommand: BangCommand = {
   name: "IP Lookup",
-  description: "Look up IP geolocation info (optionally specify an IP)",
+  get description(): string {
+    return this.t!("ip.description");
+  },
   trigger: "ip",
   naturalLanguagePhrases: ["what's my ip", "my ip"],
+
+  t: TranslateFunction,
+
   async execute(
     args: string,
     context?: CommandContext,
@@ -23,9 +29,12 @@ export const ipCommand: BangCommand = {
       ip === "localhost" ||
       /^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(ip)
     ) {
-      const detectHtml = `<div id="ip-detect-root"><p>Detecting your IP...</p></div><script>(function(){var c=document.getElementById('ip-detect-root');if(!c)return;fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){return fetch('/api/command?q='+encodeURIComponent('!ip '+d.ip));}).then(function(r){return r.json();}).then(function(d){if(d&&d.html)c.innerHTML=d.html;else c.innerHTML='<p>Could not detect IP.</p>';}).catch(function(){c.innerHTML='<p>Could not detect your public IP. Try <strong>!ip 8.8.8.8</strong></p>';});})();<\/script>`;
+      const detecting = this.t!("ip.detecting");
+      const detectFailed = this.t!("ip.detect-failed");
+      const detectFailedHint = this.t!("ip.detect-failed-hint");
+      const detectHtml = `<div id="ip-detect-root"><p>${detecting}</p></div><script>(function(){var c=document.getElementById('ip-detect-root');if(!c)return;fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){return fetch('/api/command?q='+encodeURIComponent('!ip '+d.ip));}).then(function(r){return r.json();}).then(function(d){if(d&&d.html)c.innerHTML=d.html;else c.innerHTML='<p>${detectFailed}</p>';}).catch(function(){c.innerHTML='<p>${detectFailedHint}</p>';});})();<\/script>`;
       return {
-        title: "IP Lookup",
+        title: this.t!("ip.title"),
         html: detectHtml,
       };
     }
@@ -36,33 +45,34 @@ export const ipCommand: BangCommand = {
       const data = await res.json();
       if (data.status === "fail") {
         return {
-          title: "IP Lookup",
-          html: `<div><p>Lookup failed: ${data.message}</p></div>`,
+          title: this.t!("ip.title"),
+          html: `<div><p>${this.t!("ip.lookup-failed", { message: data.message })}</p></div>`,
         };
       }
+      const na = this.t!("ip.na");
       const fields = [
-        ["IP", data.query],
-        ["City", data.city],
-        ["Region", data.regionName],
-        ["Country", data.country],
-        ["ISP", data.isp],
-        ["Org", data.org],
-        ["Lat/Lon", `${data.lat}, ${data.lon}`],
+        [this.t!("ip.label-ip"), data.query],
+        [this.t!("ip.label-city"), data.city],
+        [this.t!("ip.label-region"), data.regionName],
+        [this.t!("ip.label-country"), data.country],
+        [this.t!("ip.label-isp"), data.isp],
+        [this.t!("ip.label-org"), data.org],
+        [this.t!("ip.label-latlon"), `${data.lat}, ${data.lon}`],
       ];
       const rows = fields
         .map(
           ([k, v]) =>
-            `<div class="ip-row"><span class="ip-label">${k}</span><span class="ip-value">${v || "N/A"}</span></div>`,
+            `<div class="ip-row"><span class="ip-label">${k}</span><span class="ip-value">${v || na}</span></div>`,
         )
         .join("");
       return {
-        title: `IP Info: ${data.query}`,
+        title: this.t!("ip.title-result", { ip: data.query }),
         html: `<div class="command-ip-info">${rows}</div>`,
       };
     } catch {
       return {
-        title: "IP Lookup",
-        html: `<div><p>Failed to fetch IP data. Please try again.</p></div>`,
+        title: this.t!("ip.title"),
+        html: `<div><p>${this.t!("ip.fetch-failed")}</p></div>`,
       };
     }
   },

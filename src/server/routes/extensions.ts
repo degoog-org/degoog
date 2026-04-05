@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import {
   getEngineExtensionMeta,
   getEngineMap,
+  setEnginesLocale,
 } from "../extensions/engines/registry";
 import {
   getSettingsTokenFromRequest,
@@ -10,7 +11,10 @@ import {
 import {
   getPluginExtensionMeta,
   getCommandInstanceById,
+  setCommandsLocale,
 } from "../extensions/commands/registry";
+import { getCoreTranslator } from "./pages";
+import { getLocale } from "../utils/hono";
 import {
   getSlotPlugins,
   getSlotPluginById,
@@ -31,13 +35,17 @@ import {
   SLOT_POSITION_SETTING_KEY,
   type ExtensionMeta,
   type SettingField,
+  type Translate,
 } from "../types";
-import { getTransportExtensionMeta, getTransport } from "../extensions/transports/registry";
+import {
+  getTransportExtensionMeta,
+  getTransport,
+} from "../extensions/transports/registry";
 import { outgoingFetch } from "../utils/outgoing";
 
 const router = new Hono();
 
-async function getSlotExtensionMeta(): Promise<ExtensionMeta[]> {
+async function getSlotExtensionMeta(coreT?: Translate): Promise<ExtensionMeta[]> {
   const slots = getSlotPlugins();
   const out: ExtensionMeta[] = [];
   for (const slot of slots) {
@@ -47,11 +55,12 @@ async function getSlotExtensionMeta(): Promise<ExtensionMeta[]> {
     if (hasPositionChoice) {
       fullSchema.push({
         key: SLOT_POSITION_SETTING_KEY,
-        label: "Position",
+        label: coreT ? coreT("settings-page.schema.slot-position.label") || "Position" : "Position",
         type: "select",
         options: [...slot.slotPositions!],
-        description:
-          "Where the slot content appears (e.g. knowledge-panel replaces the default knowledge panel).",
+        description: coreT
+          ? coreT("settings-page.schema.slot-position.description") || "Where the slot content appears on the page."
+          : "Where the slot content appears on the page.",
       });
     }
     const id = slot.settingsId ?? `slot-${slot.id}`;
@@ -82,11 +91,18 @@ async function getSlotExtensionMeta(): Promise<ExtensionMeta[]> {
 }
 
 router.get("/api/extensions", async (c) => {
+  const locale = getLocale(c);
+  const coreT = await getCoreTranslator();
+  if (locale) {
+    setCommandsLocale(locale);
+    setEnginesLocale(locale);
+    coreT.setLocale(locale);
+  }
   const [engines, plugins, slotMeta, searchBarMeta, themes, transports] =
     await Promise.all([
-      getEngineExtensionMeta(),
-      getPluginExtensionMeta(),
-      getSlotExtensionMeta(),
+      getEngineExtensionMeta(coreT),
+      getPluginExtensionMeta(coreT),
+      getSlotExtensionMeta(coreT),
       getSearchBarActionExtensionMeta(),
       getThemeExtensionMeta(),
       getTransportExtensionMeta(),
@@ -106,11 +122,18 @@ router.post("/api/extensions/:id/settings", async (c) => {
   const id = c.req.param("id");
   const body = await c.req.json<Record<string, unknown>>();
 
+  const locale = getLocale(c);
+  const coreT = await getCoreTranslator();
+  if (locale) {
+    setCommandsLocale(locale);
+    setEnginesLocale(locale);
+    coreT.setLocale(locale);
+  }
   const [engines, plugins, slotMeta, searchBarMeta, themes, transportMeta] =
     await Promise.all([
-      getEngineExtensionMeta(),
-      getPluginExtensionMeta(),
-      getSlotExtensionMeta(),
+      getEngineExtensionMeta(coreT),
+      getPluginExtensionMeta(coreT),
+      getSlotExtensionMeta(coreT),
       getSearchBarActionExtensionMeta(),
       getThemeExtensionMeta(),
       getTransportExtensionMeta(),
@@ -196,7 +219,8 @@ router.post("/api/extensions/transports/:name/test", async (c) => {
     return c.json({ error: "Unauthorized" }, 401);
 
   const name = c.req.param("name");
-  if (!getTransport(name)) return c.json({ ok: false, message: "Transport not found" }, 404);
+  if (!getTransport(name))
+    return c.json({ ok: false, message: "Transport not found" }, 404);
 
   try {
     const res = await outgoingFetch("https://example.com", {}, name);

@@ -36,7 +36,10 @@
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="degoog search settings." />
+    <meta
+      name="description"
+      content="{{t:settings-page.meta.description}}"
+    />
     <link
       rel="icon"
       href="/public/favicon/favicon.ico?v=__APP_VERSION__"
@@ -46,7 +49,7 @@
       rel="manifest"
       href="/public/favicon/site.webmanifest" crossorigin="use-credentials"
     />
-    <title>Settings – degoog</title>
+    <title>{{t:settings-page.meta.title}}</title>
     <link
       rel="preload"
       href="/public/themes/degoog-theme/fonts/google-sans/static/GoogleSans-Medium.ttf"
@@ -71,14 +74,14 @@
           >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          Back
+          {{t:settings-page.back}}
         </a>
-        <h1 class="settings-page-title">Settings</h1>
+        <h1 class="settings-page-title">{{t:settings-page.page-title}}</h1>
       </header>
       <div class="settings-auth-gate">
         <div class="settings-auth-gate-inner">
           <p class="settings-auth-desc">
-            Enter the password to access settings.
+            {{t:settings-page.gate.desc}}
           </p>
           <form
             class="settings-auth-form"
@@ -89,11 +92,11 @@
               class="settings-auth-input"
               type="password"
               id="settings-auth-input"
-              placeholder="Password"
+              placeholder="{{t:settings-page.gate.password-placeholder}}"
               autocomplete="current-password"
               autofocus
             />
-            <button class="settings-auth-submit" type="submit">Unlock</button>
+            <button class="settings-auth-submit" type="submit">{{t:settings-page.gate.unlock}}</button>
           </form>
           <p class="settings-auth-error" id="settings-auth-error"></p>
         </div>
@@ -101,6 +104,7 @@
     </div>
     <script>
       (function () {
+        var t = window.scopedT("core");
         const TOKEN_KEY = "degoog-settings-token";
         const form = document.getElementById("settings-auth-form");
         const errorEl = document.getElementById("settings-auth-error");
@@ -120,10 +124,10 @@
               sessionStorage.setItem(TOKEN_KEY, data.token);
               window.location.reload();
             } else {
-              errorEl.textContent = "Incorrect password.";
+              errorEl.textContent = t("settings-page.gate.incorrect-password");
             }
           } catch {
-            errorEl.textContent = "Something went wrong. Please try again.";
+            errorEl.textContent = t("settings-page.gate.network-error");
           }
         });
       })();

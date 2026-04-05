@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { findPluginRoute } from "../extensions/plugin-routes/registry";
-import { isDisabled } from "../utils/plugin-settings";
 import { debug } from "../utils/logger";
 import { getPluginSettingsIds } from "../utils/plugin-assets";
+import { isDisabled } from "../utils/plugin-settings";
 
 const router = new Hono();
 
@@ -21,11 +21,17 @@ router.all("/api/plugin/:pluginId/*", async (c) => {
     : "/";
   const method = c.req.method.toLowerCase();
   const route = findPluginRoute(pluginId, method, suffix);
+
   if (!route) return c.notFound();
   try {
     const t0 = performance.now();
     const res = await route.handler(c.req.raw);
-    debug("plugin", `${pluginId} ${method} ${suffix} executed in ${Math.round(performance.now() - t0)}ms`);
+
+    debug(
+      "plugin",
+      `${pluginId} ${method} ${suffix} executed in ${Math.round(performance.now() - t0)}ms`,
+    );
+
     return new Response(res.body, {
       status: res.status,
       statusText: res.statusText,

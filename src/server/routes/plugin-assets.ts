@@ -1,7 +1,13 @@
 import { Hono } from "hono";
 import { join } from "path";
-import { getScriptFolderSource } from "../utils/plugin-assets";
-import { pluginsDir as getPluginsDir, themesDir as getThemesDir } from "../utils/paths";
+import {
+  pluginsDir as getPluginsDir,
+  themesDir as getThemesDir,
+} from "../utils/paths";
+import {
+  getPluginNamespace,
+  getScriptFolderSource,
+} from "../utils/plugin-assets";
 
 const MIME_TYPES: Record<string, string> = {
   ".js": "application/javascript",
@@ -49,13 +55,30 @@ router.get("/plugins/:folder/*", async (c) => {
   if (!(await file.exists())) return c.notFound();
   c.header("Content-Type", mime);
   c.header("Cache-Control", "no-cache");
+
+  // Auto-scope JS files with the plugin's translation namespace
+  // Same as injectScope but done here in the backend to avoid needing to load the entire script in the frontend first
+  if (ext === ".js" || ext === ".mjs") {
+    const ns = getPluginNamespace(folder);
+    if (ns) {
+      const code = await file.text();
+      const scoped = `(function(t){${code}})(window.scopedT(${JSON.stringify(ns)}));`;
+      return c.body(scoped);
+    }
+  }
+
   return c.body(await file.arrayBuffer());
 });
 
 router.get("/themes/:folder/*", async (c) => {
   const folder = c.req.param("folder");
   const rest = c.req.path.replace(`/themes/${folder}/`, "");
-  if (!rest || rest.includes("..") || rest.startsWith("index.") || rest === "theme.json") {
+  if (
+    !rest ||
+    rest.includes("..") ||
+    rest.startsWith("index.") ||
+    rest === "theme.json"
+  ) {
     return c.notFound();
   }
   const ext = rest.substring(rest.lastIndexOf("."));
@@ -66,6 +89,13 @@ router.get("/themes/:folder/*", async (c) => {
   if (!(await file.exists())) return c.notFound();
   c.header("Content-Type", mime);
   c.header("Cache-Control", "no-cache");
+  // Auto-scope JS files with the theme's translation namespace
+  if (ext === ".js" || ext === ".mjs") {
+    const ns = `themes/${folder}`;
+    const code = await file.text();
+    const scoped = `(function(t){${code}})(window.scopedT(${JSON.stringify(ns)}));`;
+    return c.body(scoped);
+  }
   return c.body(await file.arrayBuffer());
 });
 

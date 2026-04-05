@@ -1,0 +1,50 @@
+{
+  "app": {
+    "title": "degoog",
+    "name": "Degoog",
+    "description": "degoog è un aggregatore alternativo di motori di ricerca."
+  },
+  "index-templates": {
+    "footer": {
+      "repo": "repo",
+      "docs": "docs"
+    },
+    "header": {
+      "settings-title": "Impostazioni"
+    },
+    "search": {
+      "search-button": "Cerca con degoog",
+      "feeling-lucky": "Mi sento fortunato",
+      "feeling-curious": "Mi sento curioso",
+      "feeling-adventurous": "Mi sento avventuroso",
+      "feeling-playful": "Mi sento giocoso",
+      "feeling-stellar": "Mi sento stellare",
+      "feeling-trendy": "Mi sento alla moda"
+    }
+  },
+  "search-templates": {
+    "at-a-glance": {
+      "found-on": "Trovato su: {sources_text}"
+    },
+    "tabs": {
+      "web": "Web",
+      "images": "Immagini",
+      "videos": "Video",
+      "news": "Notizie",
+      "options": "Opzioni",
+      "time": "Periodo",
+      "any-time": "Qualsiasi periodo",
+      "language": "Lingua",
+      "any": "Qualsiasi",
+      "hour": "Ultima ora",
+      "day": "Ultime 24 ore",
+      "week": "Settimana",
+      "month": "Mese",
+      "year": "Anno",
+      "custom": "Personalizzato...",
+      "date-to": "a",
+      "apply": "Applica",
+      "filter-languages": "Filtra lingue..."
+    }
+  }
+}

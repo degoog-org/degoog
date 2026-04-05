@@ -1,13 +1,22 @@
-import type { BangCommand, CommandResult } from "../../../../types";
+import {
+  TranslateFunction,
+  type BangCommand,
+  type CommandResult,
+} from "../../../../types";
 
 const DEFAULT_UUID_COUNT = 10;
 const MAX_UUID_COUNT = 100;
 
 export const uuidCommand: BangCommand = {
   name: "UUID Generator",
-  description: "Generate random UUIDs v4 (default 10, or specify a number)",
+  get description(): string {
+    return this.t!("uuid.description");
+  },
   trigger: "uuid",
   naturalLanguagePhrases: ["uuid", "generate uuid", "generate uuids"],
+
+  t: TranslateFunction,
+
   async execute(args: string): Promise<CommandResult> {
     const raw = args.trim();
     const count = raw
@@ -17,14 +26,15 @@ export const uuidCommand: BangCommand = {
         )
       : DEFAULT_UUID_COUNT;
     const uuids = Array.from({ length: count }, () => crypto.randomUUID());
+    const copyLabel = this.t!("uuid.copy");
     const rows = uuids
       .map(
         (u) =>
-          `<div class="uuid-row"><code class="uuid-value">${u}</code><button type="button" class="uuid-copy" data-uuid="${u}">Copy</button></div>`,
+          `<div class="uuid-row"><code class="uuid-value">${u}</code><button type="button" class="uuid-copy" data-uuid="${u}">${copyLabel}</button></div>`,
       )
       .join("");
     return {
-      title: "Generated UUIDs",
+      title: this.t!("uuid.title"),
       html: `<div class="command-result command-uuid">${rows}</div>`,
     };
   },

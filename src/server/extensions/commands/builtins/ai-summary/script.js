@@ -16,7 +16,8 @@
     let i = 0;
     for (const el of items) {
       if (i >= 6) break;
-      const title = el.querySelector(".result-title")?.textContent?.trim() || "";
+      const title =
+        el.querySelector(".result-title")?.textContent?.trim() || "";
       const snippet =
         el.querySelector(".result-snippet")?.textContent?.trim() || "";
       if (title || snippet) {
@@ -28,16 +29,26 @@
   }
 
   const _renderMarkdown = (md) => {
-    const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const esc = (s) =>
+      s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     let html = esc(md);
-    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => "<pre><code>" + code.trimEnd() + "</code></pre>");
+    html = html.replace(
+      /```(\w*)\n([\s\S]*?)```/g,
+      (_, lang, code) => "<pre><code>" + code.trimEnd() + "</code></pre>",
+    );
     html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
     html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
     html = html.replace(/^(\s*)[*-] (.+)$/gm, "$1<li>$2</li>");
     html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, "<ul>$1</ul>");
     html = html.replace(/^(\d+)\. (.+)$/gm, "<li>$2</li>");
-    html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, (m) => m.startsWith("<ul>") ? m : "<ol>" + m + "</ol>");
+    html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, (m) =>
+      m.startsWith("<ul>") ? m : "<ol>" + m + "</ol>",
+    );
     html = html.replace(/\n{2,}/g, "</p><p>");
     html = "<p>" + html + "</p>";
     html = html.replace(/<p>\s*(<pre>|<ul>|<ol>)/g, "$1");
@@ -111,7 +122,7 @@
 
     const typingDiv = document.createElement("div");
     typingDiv.className = "glance-ai-typing";
-    typingDiv.textContent = "Thinking\u2026";
+    typingDiv.textContent = t("ai-summary.thinking");
     messagesEl.appendChild(typingDiv);
 
     try {
@@ -132,14 +143,14 @@
       } else {
         const errDiv = document.createElement("div");
         errDiv.className = "glance-ai-typing";
-        errDiv.textContent = "Could not get a response. Try again.";
+        errDiv.textContent = t("ai-summary.no-response");
         messagesEl.appendChild(errDiv);
       }
     } catch {
       typingDiv.remove();
       const errDiv = document.createElement("div");
       errDiv.className = "glance-ai-typing";
-      errDiv.textContent = "Request failed. Try again.";
+      errDiv.textContent = t("ai-summary.request-failed");
       messagesEl.appendChild(errDiv);
     }
 

@@ -1,0 +1,220 @@
+{
+  "settings-page": {
+    "meta": {
+      "title": "Paramètres – degoog",
+      "description": "Paramètres de recherche degoog."
+    },
+    "back": "Retour",
+    "page-title": "Paramètres",
+    "nav": {
+      "aria-section": "Section des paramètres",
+      "aria-sections": "Sections des paramètres",
+      "general": "Général",
+      "server": "Serveur",
+      "engines": "Moteurs",
+      "plugins": "Plugins",
+      "transports": "Transports",
+      "themes": "Thèmes",
+      "store": "Boutique"
+    },
+    "appearance": {
+      "heading": "Apparence",
+      "desc": "Choisissez le thème souhaité."
+    },
+    "theme": {
+      "system": "Par défaut du système",
+      "light": "Clair",
+      "dark": "Sombre"
+    },
+    "search-options": {
+      "heading": "Options de recherche",
+      "open-new-tab": "Ouvrir les liens des résultats dans un nouvel onglet",
+      "open-new-tab-aria": "Ouvrir les liens des résultats dans un nouvel onglet",
+      "engine-performance": "Afficher les performances des moteurs",
+      "engine-performance-aria": "Afficher les performances des moteurs",
+      "search-suggestions": "Afficher les suggestions de recherche",
+      "search-suggestions-aria": "Afficher les suggestions de recherche"
+    },
+    "install": {
+      "heading": "Installer l'application",
+      "desc": "Ajoutez degoog à l'écran d'accueil. Si votre navigateur n'a pas affiché l'invite d'installation, utilisez ce bouton pour réessayer.",
+      "prompt-button": "Afficher l'invite d'installation"
+    },
+    "server": {
+      "cache-heading": "Cache",
+      "cache-desc": "Effacer les résultats de recherche stockés.",
+      "cache-clear": "Vider le cache de recherche",
+      "cache-cleared": "Vidé",
+      "cache-failed": "Échec",
+      "streaming-heading": "Résultats en flux",
+      "streaming-desc": "Chargez les résultats au fil à mesure que chaque moteur répond, plutôt que d'attendre la fin de tous les moteurs. Fonctionnalité expérimentale.",
+      "streaming-enable": "Activer les résultats en flux (expérimental)",
+      "streaming-enable-aria": "Activer les résultats en flux (expérimental)",
+      "streaming-auto-retry": "Réessayer automatiquement les moteurs en échec",
+      "streaming-auto-retry-aria": "Réessayer automatiquement les moteurs en échec",
+      "streaming-max-retries-label": "Nombre max. de tentatives par moteur",
+      "languages-heading": "Langue de recherche",
+      "languages-desc": "Modifiez les langues proposées dans le menu des options de recherche. Si désactivé, les ~90 langues intégrées sont affichées.",
+      "languages-toggle": "Modifier les langues de recherche",
+      "languages-toggle-aria": "Modifier les langues de recherche",
+      "languages-codes-label": "Codes langue (un par ligne)",
+      "proxy-heading": "Proxy",
+      "proxy-desc": "Utilisez des proxies pour les requêtes de recherche côté serveur. Une URL par ligne ; les requêtes tournent sur la liste.",
+      "proxy-enable": "Utiliser un proxy pour la recherche",
+      "proxy-enable-aria": "Utiliser un proxy pour la recherche",
+      "proxy-urls-label": "URLs de proxy (une par ligne)",
+      "proxy-test": "Tester la connexion proxy",
+      "proxy-testing": "Test en cours…",
+      "rate-limit-heading": "Limitation du débit",
+      "rate-limit-desc": "Limitez les requêtes par adresse IP pour protéger l'instance et les moteurs en amont.",
+      "rate-limit-enable": "Activer la limitation du débit",
+      "rate-limit-enable-aria": "Activer la limitation du débit",
+      "rate-limit-defaults": "Valeurs par défaut : 15 requêtes par 20 s, 150 par 10 min par IP.",
+      "rate-limit-burst-window": "Fenêtre d'affluence (secondes)",
+      "rate-limit-burst-max": "Requêtes max. par affluence",
+      "rate-limit-long-window": "Fenêtre longue (secondes)",
+      "rate-limit-long-max": "Requêtes max. sur la fenêtre longue",
+      "saved": "Enregistré",
+      "save-failed-network": "Échec de l'enregistrement. Réessayez."
+    },
+    "proxy-test": {
+      "not-enabled": "Le proxy n'est pas activé. Activez-le et enregistrez avant de tester.",
+      "ip-unreachable": "Impossible de joindre le service de vérification d'IP. Vérifiez votre connexion réseau.",
+      "unreachable-title": "Proxy injoignable.",
+      "unreachable-detail": "IP directe : {directIp}",
+      "unreachable-hint": "Le serveur proxy n'a pas pu être contacté. Vérifiez l'URL du proxy et qu'il est bien démarré.",
+      "match-title": "Les IP correspondent — le proxy ne semble pas fonctionner.",
+      "match-detail": "Direct : {directIp} · Proxy : {proxyIp}",
+      "match-hint": "Les deux chemins ont renvoyé la même IP. Le proxy ne modifie peut-être pas votre IP de sortie.",
+      "ok-title": "Le proxy fonctionne.",
+      "ok-detail": "Direct : {directIp} · Proxy : {proxyIp}",
+      "server-error": "Le serveur a renvoyé {status}. Vérifiez que vous êtes authentifié.",
+      "request-failed": "Échec de la requête. Vérifiez votre connexion."
+    },
+    "actions": {
+      "save": "Enregistrer"
+    },
+    "modal": {
+      "close-aria": "Fermer",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Enregistré",
+      "save-failed": "Échec de l'enregistrement. Réessayez.",
+      "configure-title": "Configurer {name}",
+      "advanced": "Avancé",
+      "test-connection": "Tester la connexion",
+      "test-testing": "Test en cours…",
+      "test-request-failed": "Échec de la requête",
+      "field-remove-aria": "Retirer",
+      "field-add": "Ajouter"
+    },
+    "confirm": {
+      "title": "Confirmer",
+      "cancel": "Annuler",
+      "confirm": "Confirmer"
+    },
+    "extensions": {
+      "configure": "Configurer",
+      "active": "Actif",
+      "built-in-theme-name": "Intégré",
+      "built-in-theme-desc": "Apparence degoog par défaut.",
+      "group-plugins": "Plugins",
+      "group-builtin-commands": "Commandes intégrées",
+      "group-transports": "Transports",
+      "group-builtin-transports": "Transports intégrés",
+      "group-themes": "Thèmes",
+      "apply-failed": "Échec"
+    },
+    "errors": {
+      "load-extensions": "Impossible de charger les extensions.",
+      "load-transports": "Impossible de charger les transports.",
+      "load-themes": "Impossible de charger les thèmes.",
+      "load-engines": "Impossible de charger les moteurs."
+    },
+    "gate": {
+      "desc": "Saisissez le mot de passe pour accéder aux paramètres.",
+      "password-placeholder": "Mot de passe",
+      "unlock": "Déverrouiller",
+      "incorrect-password": "Mot de passe incorrect.",
+      "network-error": "Une erreur s'est produite. Réessayez."
+    },
+    "public": {
+      "engines-heading": "Moteurs"
+    },
+    "store": {
+      "repos-heading": "Dépôts",
+      "catalog-heading": "Catalogue",
+      "desc": "Ajoutez l'URL d'un dépôt git pour parcourir et installer des plugins, thèmes, moteurs et transports. Définissez repo-image dans le package.json du dépôt pour afficher une image à côté de l'URL.",
+      "empty-repos": "Aucun dépôt ajouté. Ajoutez l'URL d'un dépôt git pour parcourir ses plugins, thèmes, moteurs et transports.",
+      "refresh-all": "Tout actualiser",
+      "add-repo": "Ajouter un dépôt",
+      "add": "Ajouter",
+      "placeholder-url": "https://github.com/user/repo.git",
+      "search-placeholder": "Rechercher…",
+      "filter-type-aria": "Filtrer par type",
+      "filter-subtype-aria": "Filtrer par sous-type",
+      "lightbox-aria": "Galerie de captures d'écran",
+      "close-aria": "Fermer",
+      "prev-aria": "Précédent",
+      "next-aria": "Suivant",
+      "view-screenshots-aria": "Voir les captures d'écran",
+      "filter-all": "Tout",
+      "filter-plugins": "Plugins",
+      "filter-themes": "Thèmes",
+      "filter-engines": "Moteurs",
+      "filter-transports": "Transports",
+      "type-plugin": "Plugin",
+      "type-engine": "Moteur",
+      "type-transport": "Transport",
+      "type-theme": "Thème",
+      "plugin-type-bang": "Bang",
+      "plugin-type-slot": "Slot",
+      "plugin-type-search-tab": "Onglet de recherche",
+      "plugin-type-search-bar": "Barre de recherche",
+      "install": "Installer",
+      "update": "Mettre à jour",
+      "uninstall": "Désinstaller",
+      "meta-by": "par {author} · {repo}",
+      "refresh": "Actualiser",
+      "remove": "Retirer",
+      "updates-one": "1 mise à jour disponible",
+      "updates-many": "{count} mises à jour disponibles",
+      "update-all": "Tout mettre à jour ({count})",
+      "time-just-now": "à l'instant",
+      "time-min-ago": "il y a {n} min",
+      "time-hours-ago": "il y a {n} h",
+      "time-days-ago": "il y a {n} j",
+      "failed-add-repo": "Impossible d'ajouter le dépôt",
+      "failed-remove-repo": "Impossible de retirer le dépôt",
+      "network-error": "Erreur réseau",
+      "install-failed": "Échec de l'installation",
+      "uninstall-failed": "Échec de la désinstallation",
+      "update-failed": "Échec de la mise à jour",
+      "install-plugin-title": "Installer le plugin ?",
+      "install-plugin-message": "Ce plugin exécutera du code sur votre serveur. N'installez que depuis des sources de confiance. Continuer ?",
+      "uninstall-title": "Désinstaller ?",
+      "uninstall-message": "Désinstaller cet élément ({type}) ?",
+      "remove-repo-title": "Retirer le dépôt ?",
+      "remove-repo-message": "Retirer ce dépôt ? Vous devez d'abord désinstaller tout élément installé.",
+      "failed-load-store": "Impossible de charger la boutique."
+    },
+    "schema": {
+      "natural-language": {
+        "label": "Langage naturel",
+        "description": "Quand activé, taper le déclencheur ou la phrase sans ! exécute la commande et affiche les résultats en dessous."
+      },
+      "score": {
+        "label": "Score",
+        "description": "Multiplicateur de classement pour ce moteur. Des valeurs plus élevées favorisent ses résultats."
+      },
+      "outgoing-transport": {
+        "label": "Client HTTP sortant",
+        "description": "Le client HTTP sortant à utiliser pour ce moteur."
+      },
+      "slot-position": {
+        "label": "Position",
+        "description": "Où le contenu du slot apparaît sur la page."
+      }
+    }
+  }
+}

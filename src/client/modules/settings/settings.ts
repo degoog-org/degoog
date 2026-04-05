@@ -18,8 +18,13 @@ import { navigateSettingsBack } from "../../utils/navigation";
 declare global {
   interface Window {
     __DEGOOG_PUBLIC_INSTANCE__?: boolean;
+    scopedT: (
+      namespace: string,
+    ) => (key: string, vars?: Record<string, string> | string[]) => string;
   }
 }
+
+const t = window.scopedT("core");
 
 const TOKEN_KEY = "degoog-settings-token";
 
@@ -63,16 +68,16 @@ function _showAuthGate(): void {
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
-        Back
+        ${t("settings-page.back")}
       </a>
-      <h1 class="settings-page-title">Settings</h1>
+      <h1 class="settings-page-title">${t("settings-page.page-title")}</h1>
     </header>
     <div class="settings-auth-gate">
       <div class="settings-auth-gate-inner">
-        <p class="settings-auth-desc">Enter the password to access settings.</p>
+        <p class="settings-auth-desc">${t("settings-page.gate.desc")}</p>
         <form class="settings-auth-form" id="settings-auth-form" autocomplete="off">
-          <input class="settings-auth-input" type="password" id="settings-auth-input" placeholder="Password" autocomplete="current-password" autofocus>
-          <button class="settings-auth-submit" type="submit">Unlock</button>
+          <input class="settings-auth-input" type="password" id="settings-auth-input" placeholder="${t("settings-page.gate.password-placeholder")}" autocomplete="current-password" autofocus>
+          <button class="settings-auth-submit" type="submit">${t("settings-page.gate.unlock")}</button>
         </form>
         <p class="settings-auth-error" id="settings-auth-error"></p>
       </div>
@@ -100,11 +105,12 @@ function _showAuthGate(): void {
           sessionStorage.setItem(TOKEN_KEY, data.token);
           window.location.reload();
         } else {
-          if (errorEl) errorEl.textContent = "Incorrect password.";
+          if (errorEl)
+            errorEl.textContent = t("settings-page.gate.incorrect-password");
         }
       } catch {
         if (errorEl)
-          errorEl.textContent = "Something went wrong. Please try again.";
+          errorEl.textContent = t("settings-page.gate.network-error");
       }
     });
 }
@@ -179,10 +185,14 @@ async function _initSettings(): Promise<void> {
     const pluginsEl = document.getElementById("plugins-content");
     const transportsEl = document.getElementById("transports-content");
     const themesEl = document.getElementById("themes-content");
-    if (enginesEl) enginesEl.innerHTML = "<p>Failed to load extensions.</p>";
-    if (pluginsEl) pluginsEl.innerHTML = "<p>Failed to load extensions.</p>";
-    if (transportsEl) transportsEl.innerHTML = "<p>Failed to load transports.</p>";
-    if (themesEl) themesEl.innerHTML = "<p>Failed to load themes.</p>";
+    if (enginesEl)
+      enginesEl.innerHTML = `<p>${t("settings-page.errors.load-extensions")}</p>`;
+    if (pluginsEl)
+      pluginsEl.innerHTML = `<p>${t("settings-page.errors.load-extensions")}</p>`;
+    if (transportsEl)
+      transportsEl.innerHTML = `<p>${t("settings-page.errors.load-transports")}</p>`;
+    if (themesEl)
+      themesEl.innerHTML = `<p>${t("settings-page.errors.load-themes")}</p>`;
   }
 }
 
@@ -209,7 +219,8 @@ async function _initPublicSettings(): Promise<void> {
     await initEnginesTab(allExtensions, { publicInstance: true });
   } catch {
     const enginesEl = document.getElementById("engines-content");
-    if (enginesEl) enginesEl.innerHTML = "<p>Failed to load engines.</p>";
+    if (enginesEl)
+      enginesEl.innerHTML = `<p>${t("settings-page.errors.load-engines")}</p>`;
   }
 }
 

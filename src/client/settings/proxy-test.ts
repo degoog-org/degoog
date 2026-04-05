@@ -1,4 +1,7 @@
+import { escapeHtml } from "../utils/dom";
 import { authHeaders } from "../utils/request";
+
+const t = window.scopedT("core");
 
 interface ProxyTestResult {
   enabled: boolean;
@@ -10,38 +13,57 @@ interface ProxyTestResult {
 function renderResult(el: HTMLElement, data: ProxyTestResult): void {
   if (!data.enabled) {
     el.className = "proxy-test-result proxy-test-result--warn";
-    el.textContent = "Proxy is not enabled. Enable it and save before testing.";
+    el.textContent = t("settings-page.proxy-test.not-enabled");
     return;
   }
 
   if (!data.directIp && !data.proxyIp) {
     el.className = "proxy-test-result proxy-test-result--error";
-    el.textContent =
-      "Could not reach IP check service. Check your network connection.";
+    el.textContent = t("settings-page.proxy-test.ip-unreachable");
     return;
   }
 
   if (!data.proxyIp) {
     el.className = "proxy-test-result proxy-test-result--error";
+    const dip = data.directIp ?? "";
     el.innerHTML =
-      `<strong>Proxy unreachable.</strong> Direct IP: ${data.directIp}` +
-      `<br>The proxy server could not be contacted. Check your proxy URL and that the proxy is running.`;
+      `<strong>${escapeHtml(t("settings-page.proxy-test.unreachable-title"))}</strong> ` +
+      escapeHtml(
+        t("settings-page.proxy-test.unreachable-detail", {
+          directIp: dip,
+        }),
+      ) +
+      `<br>${escapeHtml(t("settings-page.proxy-test.unreachable-hint"))}`;
     return;
   }
 
   if (data.match) {
     el.className = "proxy-test-result proxy-test-result--warn";
+    const dip = data.directIp ?? "";
+    const pip = data.proxyIp ?? "";
     el.innerHTML =
-      `<strong>IPs match — proxy may not be working.</strong>` +
-      `<br>Direct: ${data.directIp} &middot; Proxy: ${data.proxyIp}` +
-      `<br>Both routes returned the same IP. The proxy might not be changing your exit IP.`;
+      `<strong>${escapeHtml(t("settings-page.proxy-test.match-title"))}</strong><br>` +
+      escapeHtml(
+        t("settings-page.proxy-test.match-detail", {
+          directIp: dip,
+          proxyIp: pip,
+        }),
+      ) +
+      `<br>${escapeHtml(t("settings-page.proxy-test.match-hint"))}`;
     return;
   }
 
   el.className = "proxy-test-result proxy-test-result--ok";
+  const dip = data.directIp ?? "";
+  const pip = data.proxyIp ?? "";
   el.innerHTML =
-    `<strong>Proxy is working.</strong>` +
-    `<br>Direct: ${data.directIp} &middot; Proxy: ${data.proxyIp}`;
+    `<strong>${escapeHtml(t("settings-page.proxy-test.ok-title"))}</strong><br>` +
+    escapeHtml(
+      t("settings-page.proxy-test.ok-detail", {
+        directIp: dip,
+        proxyIp: pip,
+      }),
+    );
 }
 
 export function initProxyTest(getToken: () => string | null): void {
@@ -51,9 +73,12 @@ export function initProxyTest(getToken: () => string | null): void {
   const resultEl = document.getElementById("settings-proxy-test-result");
   if (!btn || !resultEl) return;
 
+  const labelTest = t("settings-page.server.proxy-test");
+  const labelTesting = t("settings-page.server.proxy-testing");
+
   btn.addEventListener("click", async () => {
     btn.disabled = true;
-    btn.textContent = "Testing\u2026";
+    btn.textContent = labelTesting;
     resultEl.hidden = true;
 
     try {
@@ -62,7 +87,9 @@ export function initProxyTest(getToken: () => string | null): void {
       });
       if (!res.ok) {
         resultEl.className = "proxy-test-result proxy-test-result--error";
-        resultEl.textContent = `Server returned ${res.status}. Make sure you are authenticated.`;
+        resultEl.textContent = t("settings-page.proxy-test.server-error", {
+          status: String(res.status),
+        });
         resultEl.hidden = false;
         return;
       }
@@ -71,11 +98,11 @@ export function initProxyTest(getToken: () => string | null): void {
       resultEl.hidden = false;
     } catch {
       resultEl.className = "proxy-test-result proxy-test-result--error";
-      resultEl.textContent = "Request failed. Check your connection.";
+      resultEl.textContent = t("settings-page.proxy-test.request-failed");
       resultEl.hidden = false;
     } finally {
       btn.disabled = false;
-      btn.textContent = "Test proxy connection";
+      btn.textContent = labelTest;
     }
   });
 }

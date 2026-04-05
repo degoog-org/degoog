@@ -3,6 +3,8 @@ import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
 import type { ExtensionMeta, SettingField } from "../../../types";
 
+const t = window.scopedT("core");
+
 const overlay = document.getElementById("ext-modal-overlay");
 const titleEl = document.getElementById("ext-modal-title");
 const bodyEl = document.getElementById("ext-modal-body");
@@ -23,7 +25,7 @@ const _initTestButton = (container: HTMLElement): void => {
     if (!transport) return;
     btn.disabled = true;
     if (resultEl) {
-      resultEl.textContent = "Testing…";
+      resultEl.textContent = t("settings-page.modal.test-testing");
       resultEl.className = "ext-test-result";
     }
     try {
@@ -38,7 +40,7 @@ const _initTestButton = (container: HTMLElement): void => {
       }
     } catch {
       if (resultEl) {
-        resultEl.textContent = "Request failed";
+        resultEl.textContent = t("settings-page.modal.test-request-failed");
         resultEl.classList.add("ext-test-fail");
       }
     } finally {
@@ -133,14 +135,23 @@ const _advancedFieldDiffersFromDefault = (
 
 export function openModal(ext: ExtensionMeta): void {
   currentExt = ext;
-  if (titleEl) titleEl.textContent = `Configure ${ext.displayName}`;
+  if (titleEl)
+    titleEl.textContent = t("settings-page.modal.configure-title", {
+      name: ext.displayName,
+    });
   if (statusEl) statusEl.textContent = "";
 
   if (bodyEl) {
     const normalFields = ext.settingsSchema.filter((f) => !f.advanced);
     const advancedFields = ext.settingsSchema.filter((f) => f.advanced);
     let html = normalFields
-      .map((field) => renderField(field, String(ext.settings[field.key] ?? field.default ?? ""), ext))
+      .map((field) =>
+        renderField(
+          field,
+          String(ext.settings[field.key] ?? field.default ?? ""),
+          ext,
+        ),
+      )
       .join("");
     if (advancedFields.length > 0) {
       const showAdvanced = advancedFields.some((f) =>
@@ -148,29 +159,37 @@ export function openModal(ext: ExtensionMeta): void {
       );
       html += `<div class="ext-advanced-section">
         <label class="ext-field-toggle-row ext-advanced-header">
-          <span class="ext-field-label">Advanced</span>
+          <span class="ext-field-label">${t("settings-page.modal.advanced")}</span>
           <label class="engine-toggle">
             <input type="checkbox" class="ext-advanced-toggle"${showAdvanced ? " checked" : ""}>
             <span class="toggle-slider"></span>
           </label>
         </label>
         <div class="ext-advanced-body"${showAdvanced ? "" : " hidden"}>${advancedFields
-          .map((field) => renderField(field, String(ext.settings[field.key] ?? field.default ?? ""), ext))
+          .map((field) =>
+            renderField(
+              field,
+              String(ext.settings[field.key] ?? field.default ?? ""),
+              ext,
+            ),
+          )
           .join("")}</div>
       </div>`;
     }
     if (ext.id.startsWith("transport-") && ext.configurable) {
       const transportName = ext.id.slice(10);
       html += `<div class="ext-test-connection">
-        <button type="button" class="ext-test-btn" data-transport="${transportName}">Test Connection</button>
+        <button type="button" class="ext-test-btn" data-transport="${transportName}">${t("settings-page.modal.test-connection")}</button>
         <span class="ext-test-result"></span>
       </div>`;
     }
     bodyEl.innerHTML = html;
-    bodyEl.querySelector(".ext-advanced-toggle")?.addEventListener("change", (e) => {
-      const body = bodyEl.querySelector<HTMLElement>(".ext-advanced-body");
-      if (body) body.hidden = !(e.target as HTMLInputElement).checked;
-    });
+    bodyEl
+      .querySelector(".ext-advanced-toggle")
+      ?.addEventListener("change", (e) => {
+        const body = bodyEl.querySelector<HTMLElement>(".ext-advanced-body");
+        if (body) body.hidden = !(e.target as HTMLInputElement).checked;
+      });
     _initTestButton(bodyEl);
     initUrlList(bodyEl);
     bodyEl
@@ -203,7 +222,7 @@ async function _save(): Promise<void> {
   if (!currentExt) return;
   const values = _collectValues();
   if (saveBtn) saveBtn.disabled = true;
-  if (statusEl) statusEl.textContent = "Saving…";
+  if (statusEl) statusEl.textContent = t("settings-page.modal.saving");
   try {
     const res = await fetch(
       `/api/extensions/${encodeURIComponent(currentExt.id)}/settings`,
@@ -214,11 +233,11 @@ async function _save(): Promise<void> {
       },
     );
     if (!res.ok) throw new Error("Failed");
-    if (statusEl) statusEl.textContent = "Saved";
+    if (statusEl) statusEl.textContent = t("settings-page.modal.saved");
     window.dispatchEvent(new CustomEvent("extensions-saved"));
     setTimeout(closeModal, 800);
   } catch {
-    if (statusEl) statusEl.textContent = "Save failed. Please try again.";
+    if (statusEl) statusEl.textContent = t("settings-page.modal.save-failed");
   } finally {
     if (saveBtn) saveBtn.disabled = false;
   }

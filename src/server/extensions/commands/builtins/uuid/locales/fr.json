@@ -1,0 +1,7 @@
+{
+    "uuid": {
+        "title": "UUIDs générés",
+        "description": "Générer des UUIDs v4 aléatoires (10 par défaut, ou spécifiez un nombre)",
+        "copy": "Copier"
+    }
+}

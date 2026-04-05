@@ -1,0 +1,12 @@
+{
+  "ai-summary": {
+    "name": "Riassunto IA",
+    "description": "Sostituisce “A colpo d’occhio” con un breve riassunto generato da IA tramite qualsiasi provider compatibile con OpenAI",
+    "badge": "Riassunto IA",
+    "dive-deeper": "Approfondisci",
+    "follow-up-placeholder": "Fai un seguito…",
+    "thinking": "Elaborazione…",
+    "no-response": "Impossibile ottenere una risposta. Riprova.",
+    "request-failed": "Richiesta non riuscita. Riprova."
+  }
+}

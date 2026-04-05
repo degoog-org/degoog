@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="degoog search settings." />
+    <meta
+      name="description"
+      content="{{t:settings-page.meta.description}}"
+    />
     <link
       rel="icon"
       href="/public/favicon/favicon.ico?v=__APP_VERSION__"
@@ -14,7 +17,7 @@
       href="/public/favicon/site.webmanifest"
       crossorigin="use-credentials"
     />
-    <title>Settings – degoog</title>
+    <title>{{t:settings-page.meta.title}}</title>
     <script>
       (function () {
         var t = localStorage.getItem("theme");
@@ -57,36 +60,36 @@
           >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          Back
+          {{t:settings-page.back}}
         </a>
-        <h1 class="settings-page-title">Settings</h1>
+        <h1 class="settings-page-title">{{t:settings-page.page-title}}</h1>
       </header>
 
       <main class="settings-page-main">
         <section class="settings-section">
-          <h2 class="settings-section-heading">Appearance</h2>
-          <p class="settings-desc">Choose your preferred theme.</p>
+          <h2 class="settings-section-heading">{{t:settings-page.appearance.heading}}</h2>
+          <p class="settings-desc">{{t:settings-page.appearance.desc}}</p>
           <div class="theme-select-wrap">
             <select id="theme-select" class="theme-select">
-              <option value="system">System default</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
+              <option value="system">{{t:settings-page.theme.system}}</option>
+              <option value="light">{{t:settings-page.theme.light}}</option>
+              <option value="dark">{{t:settings-page.theme.dark}}</option>
             </select>
           </div>
         </section>
 
         <section class="settings-section">
-          <h2 class="settings-section-heading">Search Options</h2>
+          <h2 class="settings-section-heading">{{t:settings-page.search-options.heading}}</h2>
           <label class="settings-toggle-wrap" style="margin-top: 1rem">
             <input
               type="checkbox"
               id="settings-open-new-tab"
               class="settings-toggle"
-              aria-label="Open result links in new tab"
+              aria-label="{{t:settings-page.search-options.open-new-tab-aria}}"
             />
             <span class="toggle-slider"></span>
             <span class="settings-toggle-label"
-              >Open result links in new tab</span
+              >{{t:settings-page.search-options.open-new-tab}}</span
             >
           </label>
 
@@ -95,11 +98,11 @@
               type="checkbox"
               id="display-engine-performance"
               class="settings-toggle"
-              aria-label="Display engine performance"
+              aria-label="{{t:settings-page.search-options.engine-performance-aria}}"
             />
             <span class="toggle-slider"></span>
             <span class="settings-toggle-label"
-              >Display engine performance</span
+              >{{t:settings-page.search-options.engine-performance}}</span
             >
           </label>
 
@@ -108,17 +111,17 @@
               type="checkbox"
               id="display-search-suggestions"
               class="settings-toggle"
-              aria-label="Display search suggestions"
+              aria-label="{{t:settings-page.search-options.search-suggestions-aria}}"
             />
             <span class="toggle-slider"></span>
             <span class="settings-toggle-label"
-              >Display search suggestions</span
+              >{{t:settings-page.search-options.search-suggestions}}</span
             >
           </label>
         </section>
 
         <section class="settings-section">
-          <h2 class="settings-section-heading">Engines</h2>
+          <h2 class="settings-section-heading">{{t:settings-page.public.engines-heading}}</h2>
           <div id="engines-content"></div>
         </section>
       </main>

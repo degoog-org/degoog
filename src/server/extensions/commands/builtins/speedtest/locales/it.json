@@ -1,0 +1,15 @@
+{
+  "speedtest": {
+    "title": "Test di velocità",
+    "description": "Esegui un test di velocità della connessione",
+    "download": "Download (Mbps)",
+    "upload": "Upload (Mbps)",
+    "latency": "Latenza (ms)",
+    "starting": "Avvio...",
+    "testing-latency": "Misurazione latenza...",
+    "testing-download": "Test velocità di download...",
+    "testing-upload": "Test velocità di upload...",
+    "complete": "Completato",
+    "error": "Errore"
+  }
+}
