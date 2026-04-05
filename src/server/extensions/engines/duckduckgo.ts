@@ -8,6 +8,33 @@ import type {
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
 
+function resolveDdgRedirect(href: string): string {
+  try {
+    const parsed = new URL(href, "https://duckduckgo.com");
+    if (parsed.searchParams.has("uddg")) {
+      return parsed.searchParams.get("uddg")!;
+    }
+    if (parsed.pathname.endsWith("/y.js") && parsed.searchParams.has("u")) {
+      return parsed.searchParams.get("u")!;
+    }
+  } catch {
+    /* keep original */
+  }
+  return href;
+}
+
+function isDdgInternal(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname;
+    return (
+      hostname === "duckduckgo.com" ||
+      hostname.endsWith(".duckduckgo.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
 const DDG_SAFE_SEARCH_MAP: Record<string, string> = {
   moderate: "-2",
   strict: "1",
@@ -91,16 +118,9 @@ export class DuckDuckGoEngine implements SearchEngine {
       let href = titleEl.attr("href") || "";
       const snippet = snippetEl.text().trim();
 
-      if (href.includes("uddg=")) {
-        try {
-          const parsed = new URL(href, "https://duckduckgo.com");
-          href = decodeURIComponent(parsed.searchParams.get("uddg") || href);
-        } catch {
-          /* keep original */
-        }
-      }
+      href = resolveDdgRedirect(href);
 
-      if (title && href && href.startsWith("http")) {
+      if (title && href && href.startsWith("http") && !isDdgInternal(href)) {
         results.push({ title, url: href, snippet, source: this.name });
       }
     });

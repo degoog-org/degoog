@@ -19,8 +19,13 @@ describe("routes/search", () => {
     expect(body.error).toContain("query");
   });
 
-  test("GET /api/slots without q returns 200 with empty panels", async () => {
-    const res = await searchRouter.request("http://localhost/api/slots");
+  test("POST /api/slots without query returns 200 with empty panels", async () => {
+    const req = new Request("http://localhost/api/slots", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    const res = await searchRouter.request(req);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ panels: [] });
