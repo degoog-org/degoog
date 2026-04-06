@@ -1,7 +1,28 @@
 import { state } from "../state";
 
+const getCurrentOrigin = (): string => {
+  const candidate = globalThis.location?.origin;
+  return typeof candidate === "string" ? candidate : "";
+};
+
 export const proxyImageUrl = (url: string): string => {
   if (!url) return "";
+
+  if (url.startsWith("/") && !url.startsWith("//")) {
+    return url;
+  }
+
+  const origin = getCurrentOrigin();
+  if (origin) {
+    try {
+      if (new URL(url, origin).origin === origin) {
+        return url;
+      }
+    } catch {
+      //
+    }
+  }
+
   return `/api/proxy/image?url=${encodeURIComponent(url)}`;
 };
 
