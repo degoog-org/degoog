@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/ tests/",
     "lint:fix": "eslint src/ tests/ --fix",
-    "test": "LOGGER= bun test $(find tests -name '*.test.ts' ! -path '*/stress/*' | sort | tr '\\n' ' ')",
-    "test:rate-limit": "LOGGER=debug bun test tests/stress/"
+    "test": "LOG_LEVEL= bun test $(find tests -name '*.test.ts' ! -path '*/stress/*' | sort | tr '\\n' ' ')",
+    "test:rate-limit": "LOG_LEVEL=debug bun test tests/stress/"
   },
   "dependencies": {
     "cheerio": "1.2.0",
