@@ -34,9 +34,7 @@ const _renderEngineCard = (
 ): string => {
   const isEnabled = enabledMap[engine.id] !== false;
   const status =
-    allowConfigure && engine.configurable
-      ? getConfigStatus(engine)
-      : null;
+    allowConfigure && engine.configurable ? getConfigStatus(engine) : null;
   const badge =
     status === "configured"
       ? '<span class="ext-configured-badge"></span>'
@@ -118,25 +116,32 @@ export async function initEnginesTab(
         });
       });
 
-    document.getElementById("save-default-engines")?.addEventListener("click", async () => {
-      const btn = document.getElementById("save-default-engines");
-      try {
-        const token = sessionStorage.getItem("degoog-settings-token");
-        const headers: Record<string, string> = { "Content-Type": "application/json" };
-        if (token) headers["x-settings-token"] = token;
-        await fetch("/api/settings/default-engines", {
-          method: "POST",
-          headers,
-          body: JSON.stringify(enabledMap),
-        });
-        if (btn) {
-          const prev = btn.textContent;
-          btn.textContent = t("settings-page.server.saved");
-          setTimeout(() => { btn.textContent = prev; }, 1200);
+    document
+      .getElementById("save-default-engines")
+      ?.addEventListener("click", async () => {
+        const btn = document.getElementById("save-default-engines");
+        try {
+          const token = sessionStorage.getItem("degoog-settings-token");
+          const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+          };
+          if (token) headers["x-settings-token"] = token;
+          await fetch("/api/settings/default-engines", {
+            method: "POST",
+            headers,
+            body: JSON.stringify(enabledMap),
+          });
+          if (btn) {
+            const prev = btn.textContent;
+            btn.textContent = t("settings-page.server.saved");
+            setTimeout(() => {
+              btn.textContent = prev;
+            }, 1200);
+          }
+        } catch {
+          if (btn)
+            btn.textContent = t("settings-page.server.save-failed-network");
         }
-      } catch {
-        if (btn) btn.textContent = t("settings-page.server.save-failed-network");
-      }
-    });
+      });
   }
 }

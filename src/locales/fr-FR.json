@@ -19,7 +19,8 @@
     },
     "appearance": {
       "heading": "Apparence",
-      "desc": "Choisissez le thème souhaité."
+      "desc": "Choisissez le thème souhaité.",
+      "save-defaults": "Enregistrer comme valeur par défaut de l'instance"
     },
     "theme": {
       "system": "Par défaut du système",

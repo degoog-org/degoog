@@ -19,7 +19,8 @@
     },
     "appearance": {
       "heading": "Aspetto",
-      "desc": "Scegli il tema preferito."
+      "desc": "Scegli il tema preferito.",
+      "save-defaults": "Salva come predefinito dell’istanza"
     },
     "theme": {
       "system": "Predefinito di sistema",

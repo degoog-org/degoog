@@ -41,3 +41,7 @@ export const getConfigStatus = (ext: {
   );
   return missingRequired ? "needs-config" : "configured";
 };
+
+export const getInputElement = (id: string) => {
+  return document.getElementById(id) as HTMLInputElement | null;
+};

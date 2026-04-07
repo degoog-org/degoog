@@ -55,13 +55,9 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
   const container = document.getElementById("plugins-content");
   if (!container) return;
 
-  const custom = allExtensions.plugins.filter(
-    (p) => p.source === "plugin",
-  );
+  const custom = allExtensions.plugins.filter((p) => p.source === "plugin");
 
-  const builtin = allExtensions.plugins.filter(
-    (p) => p.source !== "plugin",
-  );
+  const builtin = allExtensions.plugins.filter((p) => p.source !== "plugin");
 
   let html = "";
   if (custom.length > 0) {
