@@ -7,7 +7,7 @@ const DEGOOG_SETTINGS_ID = "degoog-settings";
 const router = new Hono();
 
 router.get("/api/rate-limit/test", async (c) => {
-  if (process.env.LOGGER !== "debug") return;
+  if (process.env.LOG_LEVEL !== "debug") return;
 
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
   const opts: Record<string, string> = {};
