@@ -5,7 +5,7 @@ import type {
   Transport,
   TransportFetchOptions,
   TransportContext,
-} from "../../types";
+} from "../../../../types";
 
 export class FetchTransport implements Transport {
   name = "fetch";

@@ -31,6 +31,12 @@ import pkg from "../../package.json";
 
 const app = new Hono();
 
+app.use("*", async (c, next) => {
+  await next();
+  c.res.headers.set("Referrer-Policy", "no-referrer");
+  c.res.headers.set("X-Content-Type-Options", "nosniff");
+});
+
 app.use("/public/*.js", async (c, next) => {
   await next();
   c.res.headers.set("Cache-Control", "no-cache");

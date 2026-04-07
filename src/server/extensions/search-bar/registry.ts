@@ -4,7 +4,6 @@ import {
   type SearchBarAction,
   type Translate,
 } from "../../types";
-import { debug } from "../../utils/logger";
 import {
   asString,
   getSettings,
@@ -12,13 +11,13 @@ import {
   maskSecrets,
 } from "../../utils/plugin-settings";
 import { createTranslatorFromPath } from "../../utils/translation";
+import { pluginsDir } from "../../utils/paths";
+import { createRegistry } from "../registry-factory";
 
-interface StoredAction {
+interface PluginActions {
   pluginId: string;
-  action: SearchBarAction;
+  actions: SearchBarAction[];
 }
-
-let storedActions: StoredAction[] = [];
 
 function isSearchBarAction(val: unknown): val is SearchBarAction {
   if (typeof val !== "object" || val === null) return false;
@@ -35,84 +34,55 @@ function isSearchBarActionArray(val: unknown): val is SearchBarAction[] {
   return Array.isArray(val) && val.every(isSearchBarAction);
 }
 
+const registry = createRegistry<PluginActions>({
+  dirs: () => [{ dir: pluginsDir(), source: "plugin" }],
+  match: (mod) => {
+    const actions =
+      mod.searchBarActions ??
+      (mod.default as Record<string, unknown>)?.searchBarActions;
+    return isSearchBarActionArray(actions) ? { pluginId: "", actions } : null;
+  },
+  onLoad: async (item, { entryPath, folderName }) => {
+    const t = await createTranslatorFromPath(entryPath);
+    item.pluginId = folderName;
+    item.actions = item.actions.map((action) => ({
+      ...action,
+      id: `${folderName}-${action.id}`,
+      t,
+    }));
+  },
+  debugTag: "search-bar",
+});
+
 export async function initSearchBarActions(): Promise<void> {
-  const { readdir, stat } = await import("fs/promises");
-  const { join } = await import("path");
-  const { pathToFileURL } = await import("url");
-  const { pluginsDir } = await import("../../utils/paths");
-  const pluginDir = pluginsDir();
-  storedActions = [];
-
-  try {
-    const entries = await readdir(pluginDir);
-    for (const entry of entries) {
-      const entryPath = join(pluginDir, entry);
-      const entryStat = await stat(entryPath).catch(() => null);
-      if (!entryStat?.isDirectory()) continue;
-
-      let indexFile: string | undefined;
-      for (const f of ["index.js", "index.ts", "index.mjs", "index.cjs"]) {
-        const s = await stat(join(entryPath, f)).catch(() => null);
-        if (s?.isFile()) {
-          indexFile = f;
-          break;
-        }
-      }
-      if (!indexFile) continue;
-
-      try {
-        const fullPath = join(entryPath, indexFile);
-        const url = pathToFileURL(fullPath).href;
-        const mod = await import(url);
-        const actions = mod.searchBarActions ?? mod.default?.searchBarActions;
-
-        if (!isSearchBarActionArray(actions)) continue;
-
-        for (const action of actions) {
-          action.t = await createTranslatorFromPath(entryPath);
-
-          storedActions.push({
-            pluginId: entry,
-            action: { ...action, id: `${entry}-${action.id}` },
-          });
-        }
-      } catch (err) {
-        debug(
-          "search-bar",
-          `Failed to load search bar actions from plugin: ${entry}`,
-          err,
-        );
-      }
-    }
-  } catch (err) {
-    debug("search-bar", "Failed to read plugin directory", err);
-  }
+  await registry.init();
 }
 
 export async function getSearchBarActions(): Promise<SearchBarAction[]> {
   const out: SearchBarAction[] = [];
-  for (const { pluginId, action } of storedActions) {
+  for (const { pluginId, actions } of registry.items()) {
     const pluginSettingsId = `plugin-${pluginId}`;
     if (await isDisabled(pluginSettingsId)) continue;
     const settings = await getSettings(pluginSettingsId);
-    const label = asString(settings.buttonLabel).trim() || action.label;
-    out.push({ ...action, label });
+    for (const action of actions) {
+      const label = asString(settings.buttonLabel).trim() || action.label;
+      out.push({ ...action, label });
+    }
   }
   return out;
 }
 
 export async function reloadSearchBarActions(): Promise<void> {
-  storedActions = [];
-  await initSearchBarActions();
+  await registry.init();
 }
 
 export async function getSearchBarActionExtensionMeta(): Promise<
   ExtensionMeta[]
 > {
   const out: ExtensionMeta[] = [];
-  const seen = new Set<string>();
-  for (const { pluginId, action } of storedActions) {
-    if (seen.has(pluginId)) continue;
+  for (const { pluginId, actions } of registry.items()) {
+    if (actions.length === 0) continue;
+    const action = actions[0];
     const schema =
       (
         action as SearchBarAction & {
@@ -120,7 +90,6 @@ export async function getSearchBarActionExtensionMeta(): Promise<
         }
       ).settingsSchema ?? [];
     if (schema.length === 0) continue;
-    seen.add(pluginId);
     const id = `plugin-${pluginId}`;
     const raw = await getSettings(id);
     const settings = maskSecrets(raw, schema);
@@ -146,15 +115,11 @@ export function getAllSearchBarTranslators(): {
   namespace: string;
   translator: Translate;
 }[] {
-  const seen = new Map<string, Translate>();
-
-  for (const { pluginId, action } of storedActions) {
-    if (!action.t || seen.has(pluginId)) continue;
-    seen.set(pluginId, action.t);
-  }
-
-  return Array.from(seen.entries()).map(([id, translator]) => ({
-    namespace: `search-bar/${id}`,
-    translator,
-  }));
+  return registry
+    .items()
+    .filter(({ actions }) => !!actions[0]?.t)
+    .map(({ pluginId, actions }) => ({
+      namespace: `search-bar/${pluginId}`,
+      translator: actions[0].t!,
+    }));
 }

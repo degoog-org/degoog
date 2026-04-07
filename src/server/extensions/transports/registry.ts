@@ -1,10 +1,11 @@
-import type { Transport } from "./types";
+import type { Transport } from "../../types";
 import { ExtensionStoreType, type ExtensionMeta } from "../../types";
 import { FetchTransport } from "./builtins/fetch";
 import { CurlTransport } from "./builtins/curl";
 import { AutoTransport } from "./builtins/auto";
 import { getSettings, maskSecrets } from "../../utils/plugin-settings";
-import { debug } from "../../utils/logger";
+import { transportsDir } from "../../utils/paths";
+import { createRegistry } from "../registry-factory";
 
 const _builtins: Transport[] = [
   new FetchTransport(),
@@ -12,9 +13,41 @@ const _builtins: Transport[] = [
   new AutoTransport(),
 ];
 
-let _custom: Transport[] = [];
+function _isTransport(val: unknown): val is Transport {
+  return (
+    typeof val === "object" &&
+    val !== null &&
+    "name" in val &&
+    typeof (val as Transport).name === "string" &&
+    "fetch" in val &&
+    typeof (val as Transport).fetch === "function" &&
+    "available" in val &&
+    typeof (val as Transport).available === "function"
+  );
+}
 
-const _all = (): Transport[] => [..._builtins, ..._custom];
+const registry = createRegistry<Transport>({
+  dirs: () => [{ dir: transportsDir(), source: "plugin" }],
+  match: (mod) => {
+    const Export = mod.default ?? mod.transport ?? mod.Transport;
+    const instance: Transport =
+      typeof Export === "function" ? new (Export as new () => Transport)() : (Export as Transport);
+    if (!_isTransport(instance)) return null;
+    if (_builtins.some((t) => t.name === instance.name)) return null;
+    if (registry.items().some((t) => t.name === instance.name)) return null;
+    return instance;
+  },
+  onLoad: async (instance) => {
+    if (instance.configure) {
+      const stored = await getSettings(`transport-${instance.name}`);
+      if (Object.keys(stored).length > 0) instance.configure(stored);
+    }
+  },
+  allowFlatFiles: true,
+  debugTag: "transports",
+});
+
+const _all = (): Transport[] => [..._builtins, ...registry.items()];
 
 export function getTransport(name: string): Transport | undefined {
   return _all().find((t) => t.name === name);
@@ -65,82 +98,11 @@ export async function getTransportExtensionMeta(): Promise<ExtensionMeta[]> {
   return results;
 }
 
-function _isTransport(val: unknown): val is Transport {
-  return (
-    typeof val === "object" &&
-    val !== null &&
-    "name" in val &&
-    typeof (val as Transport).name === "string" &&
-    "fetch" in val &&
-    typeof (val as Transport).fetch === "function" &&
-    "available" in val &&
-    typeof (val as Transport).available === "function"
-  );
-}
-
 export async function initTransports(): Promise<void> {
-  _custom = [];
-
-  const { readdir, stat } = await import("fs/promises");
-  const { join } = await import("path");
-  const { pathToFileURL } = await import("url");
-
-  const { transportsDir: getTransportsDir } = await import("../../utils/paths");
-  const transportsDir = getTransportsDir();
-  const seen = new Set<string>(_builtins.map((t) => t.name));
-
-  try {
-    const entries = await readdir(transportsDir, { withFileTypes: true });
-    for (const entry of entries) {
-      let fullPath: string;
-      let base: string;
-
-      if (entry.isFile() && /\.(js|ts|mjs|cjs)$/.test(entry.name)) {
-        base = entry.name.replace(/\.(js|ts|mjs|cjs)$/, "");
-        fullPath = join(transportsDir, entry.name);
-      } else if (entry.isDirectory()) {
-        let indexFile: string | undefined;
-        for (const f of ["index.js", "index.ts", "index.mjs", "index.cjs"]) {
-          try {
-            const s = await stat(join(transportsDir, entry.name, f));
-            if (s.isFile()) {
-              indexFile = f;
-              break;
-            }
-          } catch {}
-        }
-        if (!indexFile) continue;
-        base = entry.name;
-        fullPath = join(transportsDir, entry.name, indexFile);
-      } else {
-        continue;
-      }
-
-      if (seen.has(base)) continue;
-      seen.add(base);
-
-      try {
-        const url = pathToFileURL(fullPath).href;
-        const mod = await import(url);
-        const Export = mod.default ?? mod.transport ?? mod.Transport;
-        const instance: Transport =
-          typeof Export === "function" ? new Export() : Export;
-        if (!_isTransport(instance)) continue;
-        _custom.push(instance);
-
-        if (instance.configure) {
-          const stored = await getSettings(_settingsId(instance));
-          if (Object.keys(stored).length > 0) instance.configure(stored);
-        }
-
-        debug("transports", `loaded custom transport: ${instance.name}`);
-      } catch (err) {
-        debug("transports", `failed to load transport: ${base}`, err);
-      }
-    }
-  } catch {}
+  await registry.init();
 }
 
 export async function reloadTransports(): Promise<void> {
   await initTransports();
 }
+

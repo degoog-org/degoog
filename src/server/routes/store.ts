@@ -19,7 +19,7 @@ import {
   getStoreDirPath,
   resolveScreenshotPath,
   resolveRepoAssetPath,
-} from "../extensions/store/repo-manager";
+} from "../extensions/store";
 import { ExtensionStoreType } from "../types";
 
 const router = new Hono();

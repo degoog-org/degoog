@@ -2,7 +2,7 @@ import { SocksClient, type SocksProxy } from "socks";
 import tls from "node:tls";
 import { gunzipSync, inflateSync, brotliDecompressSync } from "node:zlib";
 import type { Socket } from "node:net";
-import type { TransportFetchOptions as OutgoingFetchOptions } from "../extensions/transports/types";
+import type { TransportFetchOptions as OutgoingFetchOptions } from "../types";
 
 const SOCKS_PREFIX_RE = /^socks[45h]*:\/\//i;
 const MAX_REDIRECTS = 5;

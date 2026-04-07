@@ -1,6 +1,4 @@
-import { join } from "path";
 import type { SearchResultTab, Translate } from "../../types";
-import { debug } from "../../utils/logger";
 import {
   initPlugin,
   loadPluginAssets,
@@ -9,8 +7,8 @@ import {
 } from "../../utils/plugin-assets";
 import { isDisabled } from "../../utils/plugin-settings";
 import { createTranslatorFromPath } from "../../utils/translation";
-
-let tabPlugins: SearchResultTab[] = [];
+import { pluginsDir } from "../../utils/paths";
+import { createRegistry } from "../registry-factory";
 
 function isSearchResultTab(val: unknown): val is SearchResultTab {
   if (typeof val !== "object" || val === null) return false;
@@ -22,87 +20,55 @@ function isSearchResultTab(val: unknown): val is SearchResultTab {
   return hasExecute || hasEngineType;
 }
 
-async function loadTabsFromRoot(
-  rootDir: string,
-  source: "plugin" | "builtin",
-): Promise<void> {
-  const { readdir, stat } = await import("fs/promises");
-  const { pathToFileURL } = await import("url");
-  let entries: string[];
-  try {
-    entries = await readdir(rootDir);
-  } catch {
-    return;
-  }
-  for (const entry of entries) {
-    const entryPath = join(rootDir, entry);
-    const entryStat = await stat(entryPath).catch(() => null);
-    if (!entryStat?.isDirectory()) continue;
-
-    let indexFile: string | undefined;
-    for (const f of ["index.js", "index.ts", "index.mjs", "index.cjs"]) {
-      const s = await stat(join(entryPath, f)).catch(() => null);
-      if (s?.isFile()) {
-        indexFile = f;
-        break;
-      }
+const registry = createRegistry<SearchResultTab>({
+  dirs: () => [{ dir: pluginsDir(), source: "plugin" }],
+  match: (mod) => {
+    const t =
+      mod.tab ??
+      mod.searchResultTab ??
+      (mod.default as Record<string, unknown>)?.tab;
+    return isSearchResultTab(t) ? t : null;
+  },
+  onLoad: async (tab, { entryPath, folderName, source }) => {
+    const settingsId = tab.settingsId ?? `tab-${tab.id}`;
+    tab.t = await createTranslatorFromPath(entryPath);
+    registerPluginNamespace(folderName, `tabs/${tab.id}`);
+    registerPluginSettingsId(folderName, settingsId);
+    if (!(await isDisabled(settingsId))) {
+      const template = await loadPluginAssets(
+        entryPath,
+        folderName,
+        settingsId,
+        source,
+      );
+      await initPlugin(tab, entryPath, settingsId, template);
     }
-    if (!indexFile) continue;
-
-    try {
-      const fullPath = join(entryPath, indexFile);
-      const url = pathToFileURL(fullPath).href;
-      const mod = await import(url);
-      const tab = mod.tab ?? mod.searchResultTab ?? mod.default?.tab;
-      if (!tab || !isSearchResultTab(tab)) continue;
-
-      tab.t = await createTranslatorFromPath(entryPath);
-      registerPluginNamespace(entry, `tabs/${tab.id}`);
-
-      const tabSettingsId = tab.settingsId ?? `tab-${tab.id}`;
-      registerPluginSettingsId(entry, tabSettingsId);
-
-      if (!(await isDisabled(tabSettingsId))) {
-        const template = await loadPluginAssets(
-          entryPath,
-          entry,
-          tabSettingsId,
-          source,
-        );
-        await initPlugin(tab, entryPath, tabSettingsId, template);
-      }
-      tabPlugins.push(tab);
-    } catch (err) {
-      debug("search-result-tabs", `Failed to load tab plugin: ${entry}`, err);
-    }
-  }
-}
+  },
+  debugTag: "search-result-tabs",
+});
 
 export async function initSearchResultTabs(): Promise<void> {
-  const { pluginsDir } = await import("../../utils/paths");
-  const pluginDir = pluginsDir();
-  tabPlugins = [];
-  await loadTabsFromRoot(pluginDir, "plugin");
+  await registry.init();
 }
 
 export function getSearchResultTabs(): SearchResultTab[] {
-  return [...tabPlugins];
+  return registry.items();
 }
 
 export function getSearchResultTabById(tabId: string): SearchResultTab | null {
-  return tabPlugins.find((t) => t.id === tabId) ?? null;
+  return registry.items().find((t) => t.id === tabId) ?? null;
 }
 
 export async function reloadSearchResultTabs(): Promise<void> {
-  tabPlugins = [];
-  await initSearchResultTabs();
+  await registry.reload();
 }
 
 export function getAllTabTranslators(): {
   namespace: string;
   translator: Translate;
 }[] {
-  return tabPlugins
+  return registry
+    .items()
     .filter((t) => !!t.t)
     .map((t) => ({ namespace: `tabs/${t.id}`, translator: t.t! }));
 }

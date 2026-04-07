@@ -5,7 +5,7 @@ import type {
   Transport,
   TransportFetchOptions,
   TransportContext,
-} from "../../types";
+} from "../../../../types";
 
 const _fetchTransport = new FetchTransport();
 const _curlTransport = new CurlTransport();

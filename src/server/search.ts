@@ -33,8 +33,7 @@ const _getEngineTimeout = async (
   let raw =
     asString((await getSettings(engineSettingsId)).outgoingTransport) ||
     undefined;
-  if (!raw)
-    raw = getEngineDefaultTransport(engineSettingsId) ?? undefined;
+  if (!raw) raw = getEngineDefaultTransport(engineSettingsId) ?? undefined;
   const transportName = parseOutgoingTransport(raw);
   const transport = resolveTransport(transportName);
   if (transport.timeoutMs && transport.timeoutMs > ENGINE_TIMEOUT_MS) {

@@ -5,8 +5,9 @@ import { clearRateLimitState } from "../../src/server/utils/rate-limit";
 const SETTINGS_ID = "degoog-settings";
 
 describe("routes/rate-limit", () => {
-  afterEach(() => {
+  afterEach(async () => {
     clearRateLimitState();
+    await removeSettings(SETTINGS_ID);
   });
 
   test("GET /api/rate-limit/test when rate limit disabled returns 200 with rateLimitEnabled false", async () => {

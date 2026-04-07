@@ -1,6 +1,6 @@
 import { fetchViaCurl } from "./curl-fetch";
 import { debug } from "../../../../utils/logger";
-import type { Transport, TransportFetchOptions, TransportContext } from "../../types";
+import type { Transport, TransportFetchOptions, TransportContext } from "../../../../types";
 
 export class CurlTransport implements Transport {
   name = "curl";

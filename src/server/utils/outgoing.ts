@@ -22,7 +22,7 @@ import type {
   TransportFetchOptions,
   TransportContext,
   ProxyAwareFetch,
-} from "../extensions/transports/types";
+} from "../types";
 
 export type { TransportFetchOptions as OutgoingFetchOptions };
 

@@ -1,7 +1,7 @@
 import net from "node:net";
 import tls from "node:tls";
 import { gunzipSync, inflateSync, brotliDecompressSync } from "node:zlib";
-import type { TransportFetchOptions as OutgoingFetchOptions } from "../extensions/transports/types";
+import type { TransportFetchOptions as OutgoingFetchOptions } from "../types";
 
 const MAX_REDIRECTS = 5;
 const CONNECT_TIMEOUT_MS = 8_000;
