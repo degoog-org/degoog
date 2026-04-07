@@ -19,7 +19,8 @@
     },
     "appearance": {
       "heading": "Appearance",
-      "desc": "Choose your preferred theme."
+      "desc": "Choose your preferred theme.",
+      "save-defaults": "Save as instance default"
     },
     "theme": {
       "system": "System default",
