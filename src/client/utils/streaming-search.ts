@@ -99,8 +99,6 @@ export async function performStreamingSearch(
   }
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Searching...";
-  const glanceEl = document.getElementById("at-a-glance");
-  if (glanceEl) glanceEl.innerHTML = type === "web" ? skeletonGlance() : "";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
     if (type === "images") {
@@ -116,6 +114,8 @@ export async function performStreamingSearch(
   const sidebar = document.getElementById("results-sidebar");
   if (sidebar) sidebar.innerHTML = "";
   clearSlotPanels();
+  const glanceEl = document.getElementById("at-a-glance");
+  if (glanceEl) glanceEl.innerHTML = type === "web" ? skeletonGlance() : "";
   document.title = `${query} - degoog`;
 
   const urlParams = new URLSearchParams({ q: query });
