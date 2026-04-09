@@ -8,22 +8,23 @@ jobs:
   validate-branch:
     name: Validate Target Branch
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: YOU SHALL NOT PASS
-        if: github.base_ref == 'main'
+        if: github.base_ref == 'main' && github.head_ref != 'develop'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ github.head_ref }}" != "develop" ]; then
-            echo "ERROR: Pull requests to 'main' are not allowed."
-            echo "Current source branch: ${{ github.head_ref }}"
-            echo ""
-            echo "Please create a PR to 'develop' first, this will become a release candidate when merged into 'main' by a maintainer"
-            exit 1
-          fi
-          echo "Valid PR: develop → main"
+          echo "ERROR: Pull requests to 'main' are not allowed from ${{ github.head_ref }}."
+          gh pr close ${{ github.event.pull_request.number }} \
+            --comment "ERROR: Pull requests to 'main' are not allowed. Current source branch: ${{ github.head_ref }}. Please create a PR to 'develop' first, this will become a release candidate when merged into 'main' by a maintainer."
+          exit 1
 
       - name: PR info
+        if: always()
         run: |
-          echo "PR validation passed"
+          echo "PR validation check completed"
           echo "Source: ${{ github.head_ref }}"
           echo "Target: ${{ github.base_ref }}"
 
