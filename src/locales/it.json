@@ -34,7 +34,10 @@
       "engine-performance": "Mostra le prestazioni dei motori",
       "engine-performance-aria": "Mostra le prestazioni dei motori",
       "search-suggestions": "Mostra suggerimenti di ricerca",
-      "search-suggestions-aria": "Mostra suggerimenti di ricerca"
+      "search-suggestions-aria": "Mostra suggerimenti di ricerca",
+      "post-method": "Usa il metodo POST per le richieste di ricerca",
+      "post-method-aria": "Usa il metodo POST per le richieste di ricerca",
+      "post-method-tooltip": "Il metodo POST non è compatibile con i risultati in streaming"
     },
     "install": {
       "heading": "Installa app",
@@ -51,6 +54,7 @@
       "streaming-desc": "Carica i risultati man mano che ogni motore risponde, invece di attendere tutti i motori. Funzione sperimentale.",
       "streaming-enable": "Abilita risultati in streaming (sperimentale)",
       "streaming-enable-aria": "Abilita risultati in streaming (sperimentale)",
+      "streaming-enable-tooltip": "Lo streaming non è compatibile con il metodo POST",
       "streaming-auto-retry": "Riprova automaticamente i motori falliti",
       "streaming-auto-retry-aria": "Riprova automaticamente i motori falliti",
       "streaming-max-retries-label": "Tentativi massimi per motore",

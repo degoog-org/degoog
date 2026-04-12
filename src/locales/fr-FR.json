@@ -34,7 +34,10 @@
       "engine-performance": "Afficher les performances des moteurs",
       "engine-performance-aria": "Afficher les performances des moteurs",
       "search-suggestions": "Afficher les suggestions de recherche",
-      "search-suggestions-aria": "Afficher les suggestions de recherche"
+      "search-suggestions-aria": "Afficher les suggestions de recherche",
+      "post-method": "Utiliser la méthode POST pour les requêtes de recherche",
+      "post-method-aria": "Utiliser la méthode POST pour les requêtes de recherche",
+      "post-method-tooltip": "La méthode POST n'est pas compatible avec les résultats en flux"
     },
     "install": {
       "heading": "Installer l'application",
@@ -51,6 +54,7 @@
       "streaming-desc": "Chargez les résultats au fil à mesure que chaque moteur répond, plutôt que d'attendre la fin de tous les moteurs. Fonctionnalité expérimentale.",
       "streaming-enable": "Activer les résultats en flux (expérimental)",
       "streaming-enable-aria": "Activer les résultats en flux (expérimental)",
+      "streaming-enable-tooltip": "Les résultats en flux ne sont pas compatibles avec la méthode POST",
       "streaming-auto-retry": "Réessayer automatiquement les moteurs en échec",
       "streaming-auto-retry-aria": "Réessayer automatiquement les moteurs en échec",
       "streaming-max-retries-label": "Nombre max. de tentatives par moteur",

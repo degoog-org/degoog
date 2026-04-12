@@ -36,7 +36,8 @@
       "search-suggestions": "Display search suggestions",
       "search-suggestions-aria": "Display search suggestions",
       "post-method": "Use POST method for search requests",
-      "post-method-aria": "Use POST method for search requests"
+      "post-method-aria": "Use POST method for search requests",
+      "post-method-tooltip": "POST method is not compatible with streaming results"
     },
     "install": {
       "heading": "Install app",
@@ -53,6 +54,7 @@
       "streaming-desc": "Load results progressively as each engine responds instead of waiting for all engines to finish. This is an experimental feature.",
       "streaming-enable": "Enable streaming results (experimental)",
       "streaming-enable-aria": "Enable streaming results (experimental)",
+      "streaming-enable-tooltip": "Streaming is not compatible with POST search method",
       "streaming-auto-retry": "Auto-retry failed engines",
       "streaming-auto-retry-aria": "Auto-retry failed engines",
       "streaming-max-retries-label": "Max retries per engine",
