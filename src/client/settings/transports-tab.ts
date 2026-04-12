@@ -53,18 +53,22 @@ export function initTransportsTab(allExtensions: AllExtensions): void {
     "transport-curl",
     "transport-curl-fallback",
   ]);
-  const custom = transports.filter((t) => !BUILTIN_IDS.has(t.id));
-  const builtin = transports.filter((t) => BUILTIN_IDS.has(t.id));
+  const custom = transports.filter(
+    (transport) => !BUILTIN_IDS.has(transport.id),
+  );
+  const builtin = transports.filter((transport) =>
+    BUILTIN_IDS.has(transport.id),
+  );
 
   let html = "";
   if (custom.length > 0) {
     html += `<div class="ext-group"><h3 class="ext-group-label">${escapeHtml(t("settings-page.extensions.group-transports"))}</h3><div class="ext-cards">`;
-    for (const t of custom) html += _renderTransportCard(t);
+    for (const transport of custom) html += _renderTransportCard(transport);
     html += "</div></div>";
   }
   if (builtin.length > 0) {
     html += `<div class="ext-group"><h3 class="ext-group-label">${escapeHtml(t("settings-page.extensions.group-builtin-transports"))}</h3><div class="ext-cards">`;
-    for (const t of builtin) html += _renderTransportCard(t);
+    for (const transport of builtin) html += _renderTransportCard(transport);
     html += "</div></div>";
   }
   container.innerHTML = html;
@@ -93,7 +97,7 @@ export function initTransportsTab(allExtensions: AllExtensions): void {
     .forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.id;
-        const ext = transports.find((t) => t.id === id);
+        const ext = transports.find((transport) => transport.id === id);
         if (ext) openModal(ext);
       });
     });

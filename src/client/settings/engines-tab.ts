@@ -7,10 +7,10 @@ import type { ExtensionMeta, EngineRecord, AllExtensions } from "../types";
 const t = window.scopedT("core");
 const themeT = window.scopedT("themes/degoog");
 
-const _TAB_TYPES = new Set(["web", "images", "videos", "news"]);
+const TAB_TYPES = new Set(["web", "images", "videos", "news"]);
 
 const _typeLabel = (type: string): string =>
-  _TAB_TYPES.has(type)
+  TAB_TYPES.has(type)
     ? themeT(`search-templates.tabs.${type}`)
     : type.charAt(0).toUpperCase() + type.slice(1);
 
@@ -34,9 +34,7 @@ const _renderEngineCard = (
 ): string => {
   const isEnabled = enabledMap[engine.id] !== false;
   const status =
-    allowConfigure && engine.configurable
-      ? getConfigStatus(engine)
-      : null;
+    allowConfigure && engine.configurable ? getConfigStatus(engine) : null;
   const badge =
     status === "configured"
       ? '<span class="ext-configured-badge"></span>'
@@ -92,6 +90,9 @@ export async function initEnginesTab(
     }
     html += `</div></div>`;
   }
+  if (allowConfigure) {
+    html += `<div class="settings-page-actions"><button class="btn btn--secondary" id="save-default-engines" type="button">${t("settings-page.extensions.save-defaults")}</button></div>`;
+  }
   container.innerHTML = html;
 
   container
@@ -113,6 +114,34 @@ export async function initEnginesTab(
           const ext = allExtensions.engines.find((e) => e.id === id);
           if (ext) openModal(ext);
         });
+      });
+
+    document
+      .getElementById("save-default-engines")
+      ?.addEventListener("click", async () => {
+        const btn = document.getElementById("save-default-engines");
+        try {
+          const token = sessionStorage.getItem("degoog-settings-token");
+          const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+          };
+          if (token) headers["x-settings-token"] = token;
+          await fetch("/api/settings/default-engines", {
+            method: "POST",
+            headers,
+            body: JSON.stringify(enabledMap),
+          });
+          if (btn) {
+            const prev = btn.textContent;
+            btn.textContent = t("settings-page.server.saved");
+            setTimeout(() => {
+              btn.textContent = prev;
+            }, 1200);
+          }
+        } catch {
+          if (btn)
+            btn.textContent = t("settings-page.server.save-failed-network");
+        }
       });
   }
 }

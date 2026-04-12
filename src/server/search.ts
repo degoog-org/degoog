@@ -17,6 +17,10 @@ import type {
   SearchType,
   TimeFilter,
 } from "./types";
+import {
+  filterBlockedDomains,
+  applyDomainReplacements,
+} from "./utils/domain-filter";
 import { outgoingFetch, parseOutgoingTransport } from "./utils/outgoing";
 import { asString, getSettings } from "./utils/plugin-settings";
 
@@ -299,6 +303,8 @@ export const search = async (
   }
 
   const scored = scoreResults(allResults);
+  const filtered = await filterBlockedDomains(scored);
+  const processed = await applyDomainReplacements(filtered);
 
   let relatedSearches: string[] = [];
 
@@ -312,7 +318,7 @@ export const search = async (
   const totalTime = Math.round(performance.now() - start);
 
   return {
-    results: scored,
+    results: processed,
     query,
     totalTime,
     type,

@@ -15,7 +15,8 @@ import {
 } from "../../utils/plugin-settings";
 import { createTranslatorFromPath } from "../../utils/translation";
 import { getTransportNames } from "../transports/registry";
-import { enginesDir } from "../../utils/paths";
+import { enginesDir, defaultEnginesFile } from "../../utils/paths";
+import { readFileSync } from "fs";
 import { createRegistry } from "../registry-factory";
 import { BingEngine } from "./bing";
 import { BingImagesEngine } from "./bing-images";
@@ -338,11 +339,22 @@ export const getActiveWebEngines = async (
   return active;
 };
 
+const _loadDefaultEngineOverrides = (): Record<string, boolean> => {
+  try {
+    const raw = readFileSync(defaultEnginesFile(), "utf-8");
+    return JSON.parse(raw) as Record<string, boolean>;
+  } catch {
+    return {};
+  }
+};
+
 export function getDefaultEngineConfig(): Record<string, boolean> {
   const entries = getEngineRegistry();
   const engineMap = getEngineMap();
+  const overrides = _loadDefaultEngineOverrides();
   return Object.fromEntries(
     entries.map((e) => {
+      if (e.id in overrides) return [e.id, overrides[e.id]];
       const instance = engineMap[e.id];
       const disabledByDefault =
         instance &&

@@ -1,4 +1,3 @@
-import { skeletonGlance } from "../animations/skeleton";
 import { appendSlotPanels } from "../modules/renderer/render-slots";
 import { SlotPanelPosition, type ScoredResult, type SlotPanel } from "../types";
 import { escapeHtml } from "./dom";
@@ -15,9 +14,9 @@ export async function fetchGlancePanels(
   const signal = glanceAbortController.signal;
   const glanceEl = document.getElementById("at-a-glance");
   if (!results || results.length === 0) {
+    if (glanceEl) glanceEl.innerHTML = "";
     return;
   }
-  if (glanceEl) glanceEl.innerHTML = skeletonGlance();
   try {
     const res = await fetch("/api/slots/glance", {
       method: "POST",

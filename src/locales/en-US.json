@@ -19,7 +19,8 @@
     },
     "appearance": {
       "heading": "Appearance",
-      "desc": "Choose your preferred theme."
+      "desc": "Choose your preferred theme.",
+      "save-defaults": "Save as instance default"
     },
     "theme": {
       "system": "System default",
@@ -76,6 +77,17 @@
       "rate-limit-burst-max": "Burst max requests",
       "rate-limit-long-window": "Long window (seconds)",
       "rate-limit-long-max": "Long max requests",
+      "domain-block-heading": "Domain blocking",
+      "domain-block-desc": "Hide search results from specific domains. One domain per line. Subdomains are included automatically. Wrap a line in /slashes/ for regex.",
+      "domain-block-enable": "Enable domain blocking",
+      "domain-block-enable-aria": "Enable domain blocking",
+      "domain-block-list-label": "Blocked domains (one per line)",
+      "domain-block-regex-help": "Regex entries must be wrapped in /slashes/ and use JavaScript RegExp syntax (no flags). They are matched against the URL hostname only (not the full URL). Example: /(^|\\\\.)instagram\\\\.com$/ blocks instagram.com and all subdomains; /^www\\\\.instagram\\\\.com$/ blocks only www.instagram.com.",
+      "domain-replace-heading": "Domain replacement",
+      "domain-replace-desc": "Replace domains in search result URLs. Use the format: source.com -> target.com (one per line). Subdomains are matched automatically, and the path is preserved.",
+      "domain-replace-enable": "Enable domain replacement",
+      "domain-replace-enable-aria": "Enable domain replacement",
+      "domain-replace-list-label": "Replacement rules (one per line)",
       "saved": "Saved",
       "save-failed-network": "Save failed. Please try again."
     },
@@ -125,7 +137,8 @@
       "group-transports": "Transports",
       "group-builtin-transports": "Built-in transports",
       "group-themes": "Themes",
-      "apply-failed": "Failed"
+      "apply-failed": "Failed",
+      "save-defaults": "Save as instance defaults"
     },
     "errors": {
       "load-extensions": "Failed to load extensions.",

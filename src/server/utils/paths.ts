@@ -20,3 +20,6 @@ export const aliasesFile = (): string =>
 
 export const pluginSettingsFile = (): string =>
   process.env.DEGOOG_PLUGIN_SETTINGS_FILE ?? join(_dataDir(), "plugin-settings.json");
+
+export const defaultEnginesFile = (): string =>
+  process.env.DEGOOG_DEFAULT_ENGINES_FILE ?? join(_dataDir(), "default-engines.json");

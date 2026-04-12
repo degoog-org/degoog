@@ -1,224 +1,185 @@
+import { getInputElement } from "../utils/dom";
 import { authHeaders, jsonHeaders } from "../utils/request";
 import { initProxyTest } from "./proxy-test";
 
 const t = window.scopedT("core");
 
+type ServerSettingsData = {
+  proxyEnabled?: string;
+  proxyUrls?: string;
+  rateLimitEnabled?: string;
+  rateLimitBurstWindow?: string;
+  rateLimitBurstMax?: string;
+  rateLimitLongWindow?: string;
+  rateLimitLongMax?: string;
+  languagesEnabled?: string;
+  languages?: string;
+  streamingEnabled?: string;
+  streamingAutoRetry?: string;
+  streamingMaxRetries?: string;
+  domainBlockEnabled?: string;
+  domainBlockList?: string;
+  domainReplaceEnabled?: string;
+  domainReplaceList?: string;
+};
+
+const el = (id: string) => getInputElement(`settings-${id}`);
+const val = (id: string) => el(id)?.value.trim() ?? "";
+const boolStr = (id: string) => (el(id)?.checked ? "true" : "false");
+
+function _bindToggle(checkboxId: string, wrapId: string) {
+  const checkbox = el(checkboxId);
+  const wrap = el(wrapId);
+  if (checkbox && wrap) {
+    const update = () => {
+      wrap.style.display = checkbox.checked ? "block" : "none";
+    };
+    checkbox.addEventListener("change", update);
+    update();
+  }
+}
+
+function _setToggle(id: string, state?: string) {
+  const checkbox = el(id);
+  if (checkbox && state !== undefined) {
+    checkbox.checked = state === "true";
+    checkbox.dispatchEvent(new Event("change"));
+  }
+}
+
+function _setVal(id: string, value?: string) {
+  const element = el(id);
+  if (element && value !== undefined) element.value = value;
+}
+
 export async function initServerTab(
   getToken: () => string | null,
 ): Promise<void> {
-  const proxyEnabled = document.getElementById(
-    "settings-proxy-enabled",
-  ) as HTMLInputElement | null;
-  const proxyUrlsWrap = document.getElementById("settings-proxy-urls-wrap");
-  const proxyUrls = document.getElementById(
-    "settings-proxy-urls",
-  ) as HTMLTextAreaElement | null;
-  const rateLimitEnabled = document.getElementById(
-    "settings-rate-limit-enabled",
-  ) as HTMLInputElement | null;
-  const rateLimitOptions = document.getElementById(
-    "settings-rate-limit-options",
-  );
-  const rateLimitBurstWindow = document.getElementById(
-    "settings-rate-limit-burst-window",
-  ) as HTMLInputElement | null;
-  const rateLimitBurstMax = document.getElementById(
-    "settings-rate-limit-burst-max",
-  ) as HTMLInputElement | null;
-  const rateLimitLongWindow = document.getElementById(
-    "settings-rate-limit-long-window",
-  ) as HTMLInputElement | null;
-  const rateLimitLongMax = document.getElementById(
-    "settings-rate-limit-long-max",
-  ) as HTMLInputElement | null;
+  _bindToggle("proxy-enabled", "proxy-urls-wrap");
+  _bindToggle("languages-enabled", "languages-wrap");
+  _bindToggle("rate-limit-enabled", "rate-limit-options");
+  _bindToggle("streaming-enabled", "streaming-options");
+  _bindToggle("streaming-auto-retry", "streaming-retry-wrap");
+  _bindToggle("domain-block-enabled", "domain-block-wrap");
+  _bindToggle("domain-replace-enabled", "domain-replace-wrap");
 
-  const languagesEnabled = document.getElementById(
-    "settings-languages-enabled",
-  ) as HTMLInputElement | null;
-  const languagesWrap = document.getElementById("settings-languages-wrap");
-  const languagesTextarea = document.getElementById(
-    "settings-languages",
-  ) as HTMLTextAreaElement | null;
-
-  const streamingEnabled = document.getElementById(
-    "settings-streaming-enabled",
-  ) as HTMLInputElement | null;
-  const streamingOptions = document.getElementById(
-    "settings-streaming-options",
-  );
-  const streamingAutoRetry = document.getElementById(
-    "settings-streaming-auto-retry",
-  ) as HTMLInputElement | null;
-  const streamingRetryWrap = document.getElementById(
-    "settings-streaming-retry-wrap",
-  );
-  const streamingMaxRetries = document.getElementById(
-    "settings-streaming-max-retries",
-  ) as HTMLInputElement | null;
+  if (el("proxy-enabled")) initProxyTest(getToken);
 
   try {
     const res = await fetch("/api/settings/general", {
       headers: authHeaders(getToken),
     });
     if (res.ok) {
-      const data = (await res.json()) as {
-        proxyEnabled?: string;
-        proxyUrls?: string;
-        rateLimitEnabled?: string;
-        rateLimitBurstWindow?: string;
-        rateLimitBurstMax?: string;
-        rateLimitLongWindow?: string;
-        rateLimitLongMax?: string;
-        languagesEnabled?: string;
-        languages?: string;
-        streamingEnabled?: string;
-        streamingAutoRetry?: string;
-        streamingMaxRetries?: string;
-      };
-      if (languagesEnabled && languagesWrap) {
-        languagesEnabled.checked = data.languagesEnabled === "true";
-        languagesWrap.style.display = languagesEnabled.checked
-          ? "block"
-          : "none";
-      }
-      if (languagesTextarea) languagesTextarea.value = data.languages ?? "";
-      if (proxyEnabled) {
-        proxyEnabled.checked = data.proxyEnabled === "true";
-      }
-      if (proxyUrls) proxyUrls.value = data.proxyUrls ?? "";
-      if (proxyUrlsWrap) {
-        proxyUrlsWrap.style.display = proxyEnabled?.checked ? "block" : "none";
-      }
-      if (rateLimitEnabled && rateLimitOptions) {
-        rateLimitEnabled.checked = data.rateLimitEnabled === "true";
-        rateLimitOptions.style.display = rateLimitEnabled.checked
-          ? "block"
-          : "none";
-      }
-      if (rateLimitBurstWindow)
-        rateLimitBurstWindow.value = data.rateLimitBurstWindow ?? "";
-      if (rateLimitBurstMax)
-        rateLimitBurstMax.value = data.rateLimitBurstMax ?? "";
-      if (rateLimitLongWindow)
-        rateLimitLongWindow.value = data.rateLimitLongWindow ?? "";
-      if (rateLimitLongMax)
-        rateLimitLongMax.value = data.rateLimitLongMax ?? "";
-      if (streamingEnabled && streamingOptions) {
-        streamingEnabled.checked = data.streamingEnabled === "true";
-        streamingOptions.style.display = streamingEnabled.checked
-          ? "block"
-          : "none";
-      }
-      if (streamingAutoRetry && streamingRetryWrap) {
-        streamingAutoRetry.checked = data.streamingAutoRetry === "true";
-        streamingRetryWrap.style.display = streamingAutoRetry.checked
-          ? "block"
-          : "none";
-      }
-      if (streamingMaxRetries)
-        streamingMaxRetries.value = data.streamingMaxRetries ?? "";
+      const data = (await res.json()) as ServerSettingsData;
+
+      _setToggle("proxy-enabled", data.proxyEnabled);
+      _setVal("proxy-urls", data.proxyUrls);
+
+      _setToggle("languages-enabled", data.languagesEnabled);
+      _setVal("languages", data.languages);
+
+      _setToggle("rate-limit-enabled", data.rateLimitEnabled);
+      _setVal("rate-limit-burst-window", data.rateLimitBurstWindow);
+      _setVal("rate-limit-burst-max", data.rateLimitBurstMax);
+      _setVal("rate-limit-long-window", data.rateLimitLongWindow);
+      _setVal("rate-limit-long-max", data.rateLimitLongMax);
+
+      _setToggle("streaming-enabled", data.streamingEnabled);
+      _setToggle("streaming-auto-retry", data.streamingAutoRetry);
+      _setVal("streaming-max-retries", data.streamingMaxRetries);
+
+      _setToggle("domain-block-enabled", data.domainBlockEnabled);
+      _setVal("domain-block-list", data.domainBlockList);
+
+      _setToggle("domain-replace-enabled", data.domainReplaceEnabled);
+      _setVal("domain-replace-list", data.domainReplaceList);
     }
   } catch {}
 
-  if (proxyEnabled && proxyUrlsWrap) {
-    proxyEnabled.addEventListener("change", () => {
-      proxyUrlsWrap.style.display = proxyEnabled.checked ? "block" : "none";
-    });
-    initProxyTest(getToken);
-  }
-  if (languagesEnabled && languagesWrap) {
-    languagesEnabled.addEventListener("change", () => {
-      languagesWrap.style.display = languagesEnabled.checked ? "block" : "none";
-    });
-  }
-  if (rateLimitEnabled && rateLimitOptions) {
-    rateLimitEnabled.addEventListener("change", () => {
-      rateLimitOptions.style.display = rateLimitEnabled.checked
-        ? "block"
-        : "none";
-    });
-  }
-  if (streamingEnabled && streamingOptions) {
-    streamingEnabled.addEventListener("change", () => {
-      streamingOptions.style.display = streamingEnabled.checked
-        ? "block"
-        : "none";
-    });
-  }
-  if (streamingAutoRetry && streamingRetryWrap) {
-    streamingAutoRetry.addEventListener("change", () => {
-      streamingRetryWrap.style.display = streamingAutoRetry.checked
-        ? "block"
-        : "none";
-    });
-  }
-  const _rateLimitPayload = (): Record<string, string> => {
+  const getRateLimitPayload = () => {
+    const enabled = el("rate-limit-enabled")?.checked;
     const payload: Record<string, string> = {
-      rateLimitEnabled: rateLimitEnabled?.checked ? "true" : "false",
+      rateLimitEnabled: enabled ? "true" : "false",
     };
-    if (
-      rateLimitEnabled?.checked &&
-      rateLimitBurstWindow &&
-      rateLimitBurstMax &&
-      rateLimitLongWindow &&
-      rateLimitLongMax
-    ) {
-      const bw = rateLimitBurstWindow.value.trim();
-      const bm = rateLimitBurstMax.value.trim();
-      const lw = rateLimitLongWindow.value.trim();
-      const lm = rateLimitLongMax.value.trim();
-      if (bw) payload.rateLimitBurstWindow = bw;
-      if (bm) payload.rateLimitBurstMax = bm;
-      if (lw) payload.rateLimitLongWindow = lw;
-      if (lm) payload.rateLimitLongMax = lm;
+
+    if (enabled) {
+      const bw = val("rate-limit-burst-window");
+      const bm = val("rate-limit-burst-max");
+      const lw = val("rate-limit-long-window");
+      const lm = val("rate-limit-long-max");
+
+      if (bw && bm && lw && lm) {
+        Object.assign(payload, {
+          rateLimitBurstWindow: bw,
+          rateLimitBurstMax: bm,
+          rateLimitLongWindow: lw,
+          rateLimitLongMax: lm,
+        });
+      }
     }
+
     return payload;
   };
 
-  document
-    .getElementById("settings-save")
-    ?.addEventListener("click", async () => {
-      try {
-        await fetch("/api/settings/general", {
-          method: "POST",
-          headers: jsonHeaders(getToken),
-          body: JSON.stringify({
-            proxyEnabled: proxyEnabled?.checked ? "true" : "false",
-            proxyUrls: proxyUrls?.value.trim() ?? "",
-            languagesEnabled: languagesEnabled?.checked ? "true" : "false",
-            languages: languagesTextarea?.value.trim() ?? "",
-            ..._rateLimitPayload(),
-            streamingEnabled: streamingEnabled?.checked ? "true" : "false",
-            streamingAutoRetry: streamingAutoRetry?.checked ? "true" : "false",
-            streamingMaxRetries: streamingMaxRetries?.value.trim() ?? "",
-          }),
-        });
-      } catch {}
-      const btn = document.getElementById("settings-save");
-      if (btn) {
-        const prev = btn.textContent;
-        btn.textContent = t("settings-page.server.saved");
-        setTimeout(() => {
-          btn.textContent = prev;
-        }, 1200);
-      }
-    });
+  const handleButtonState = (
+    id: string,
+    action: () => Promise<void>,
+    successKey: string,
+    failKey?: string,
+  ) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
 
-  document
-    .getElementById("settings-cache-clear")
-    ?.addEventListener("click", async () => {
-      const btn = document.getElementById("settings-cache-clear");
+    btn.addEventListener("click", async () => {
+      const prev = btn.textContent;
       try {
-        await fetch("/api/cache/clear", { method: "POST" });
-        if (btn) {
-          const prev = btn.textContent;
-          btn.textContent = t("settings-page.server.cache-cleared");
-          setTimeout(() => {
-            btn.textContent = prev;
-          }, 1500);
-        }
+        await action();
+        btn.textContent = t(successKey);
       } catch {
-        if (btn) btn.textContent = t("settings-page.server.cache-failed");
+        if (failKey) btn.textContent = t(failKey);
+      } finally {
+        setTimeout(
+          () => {
+            btn.textContent = prev;
+          },
+          failKey ? 1500 : 1200,
+        );
       }
     });
+  };
+
+  handleButtonState(
+    "settings-save",
+    async () => {
+      await fetch("/api/settings/general", {
+        method: "POST",
+        headers: jsonHeaders(getToken),
+        body: JSON.stringify({
+          proxyEnabled: boolStr("proxy-enabled"),
+          proxyUrls: val("proxy-urls"),
+          languagesEnabled: boolStr("languages-enabled"),
+          languages: val("languages"),
+          ...getRateLimitPayload(),
+          streamingEnabled: boolStr("streaming-enabled"),
+          streamingAutoRetry: boolStr("streaming-auto-retry"),
+          streamingMaxRetries: val("streaming-max-retries"),
+          domainBlockEnabled: boolStr("domain-block-enabled"),
+          domainBlockList: val("domain-block-list"),
+          domainReplaceEnabled: boolStr("domain-replace-enabled"),
+          domainReplaceList: val("domain-replace-list"),
+        }),
+      });
+    },
+    "settings-page.server.saved",
+  );
+
+  handleButtonState(
+    "settings-cache-clear",
+    async () => {
+      const res = await fetch("/api/cache/clear", { method: "POST" });
+      if (!res.ok) throw new Error();
+    },
+    "settings-page.server.cache-cleared",
+    "settings-page.server.cache-failed",
+  );
 }

@@ -25,6 +25,10 @@ import {
   type TimeFilter,
 } from "../types";
 import * as cache from "../utils/cache";
+import {
+  applyDomainReplacements,
+  filterBlockedDomains,
+} from "../utils/domain-filter";
 import { logger } from "../utils/logger";
 import { isDisabled } from "../utils/plugin-settings";
 import { getClientIp } from "../utils/request";
@@ -436,8 +440,10 @@ router.get("/api/tab-search", async (c) => {
     }
 
     const totalTime = Math.round(performance.now() - startTime);
+    const afterBlock = await filterBlockedDomains(allResults);
+    const finalResults = await applyDomainReplacements(afterBlock);
     return c.json({
-      results: allResults,
+      results: finalResults,
       totalPages,
       page,
       engineTimings,

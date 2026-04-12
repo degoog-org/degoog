@@ -30,5 +30,13 @@ export async function initTheme(): Promise<void> {
       localStorage.setItem(THEME_KEY, saved);
     } catch {}
     applyTheme(saved);
+    return;
   }
+  try {
+    const res = await fetch("/api/settings/appearance");
+    const data = (await res.json()) as { theme?: string };
+    if (data.theme && data.theme !== "system") {
+      applyTheme(data.theme);
+    }
+  } catch {}
 }

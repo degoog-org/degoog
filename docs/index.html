@@ -60,6 +60,44 @@
           you add in Settings → Store).
         </p>
 
+        <h2>Default enabled/disabled engines</h2>
+        <p>
+          Search engines have two separate layers of “enabled” state:
+          <strong>instance defaults</strong> and <strong>your browser’s saved
+          selection</strong>.
+        </p>
+        <ul>
+          <li>
+            <strong>Instance defaults (server-side)</strong>: on startup, Degoog
+            computes a default enabled/disabled value for every engine. Engines
+            that are marked as <em>disabled by default</em>, or engines that
+            have required settings that are not configured, start out disabled.
+            You can override these defaults by saving a
+            <code>data/default-engines.json</code> file (this is what the
+            Settings → Engines “Save defaults” button writes).
+          </li>
+          <li>
+            <strong>Your selection (client-side)</strong>: the Engines tab
+            stores your toggles in your browser (IndexedDB). Those saved values
+            take priority over the instance defaults for that browser/profile,
+            so your choice persists even if the server defaults change later.
+          </li>
+        </ul>
+        <p>
+          Example <code>data/default-engines.json</code>:
+        </p>
+        <pre><code>{
+  "google": true,
+  "duckduckgo": true,
+  "bing": false,
+  "engine-my-custom-engine": true
+}</code></pre>
+        <p>
+          When you toggle engines on the Engines tab, the enabled/disabled
+          state is sent along with each search request, so different users (or
+          different browsers) can use different engine sets at the same time.
+        </p>
+
         <h2>Where things live</h2>
         <table>
           <thead>

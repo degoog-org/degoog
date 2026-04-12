@@ -1,3 +1,7 @@
+#at-a-glance:not(:empty) {
+  margin-bottom: $space-4;
+}
+
 .glance-box {
   background: var(--bg-light);
   border-radius: $radius-lg;
