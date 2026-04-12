@@ -20,6 +20,9 @@ import themes from "./themes";
 
 const globalRouter = new Hono();
 
+// TODO Consider using a more structured approach for the routes
+// e.g. globalRouter.route("/", commands); becomes globalRouter.route("/commands/", commands);
+// needs a full refactor of the client-side code to match the new API endpoints, but it would be more maintainable and scalable in the long run
 globalRouter.route("/", commands);
 globalRouter.route("/", extensions);
 globalRouter.route("/", pages);

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { SuggestPostBody } from "../types/search";
 
 const router = new Hono();
 
@@ -41,6 +42,11 @@ async function getSuggestions(query: string): Promise<string[]> {
 router.get("/api/suggest", async (c) => {
   const query = c.req.query("q") ?? "";
   return c.json(await getSuggestions(query));
+});
+
+router.post("/api/suggest", async (c) => {
+  const { query } = await c.req.json<SuggestPostBody>();
+  return c.json(await getSuggestions(query ?? ""));
 });
 
 router.get("/api/suggest/opensearch", async (c) => {

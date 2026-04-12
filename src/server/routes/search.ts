@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import {
   getCustomEngineTypes,
+  getEngineRegistry,
   getEnginesForCustomType,
 } from "../extensions/engines/registry";
 import {
@@ -14,8 +15,12 @@ import {
   searchSingleEngine,
 } from "../search";
 import {
+  type EngineConfig,
   type EngineTiming,
+  type RetryPostBody,
   type ScoredResult,
+  type SearchBody,
+  type SearchParams,
   type SearchType,
   type TimeFilter,
 } from "../types";
@@ -32,25 +37,31 @@ import {
 
 const router = new Hono();
 
-router.get("/api/search", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
+function _parsePage(raw: unknown): number {
+  return Math.max(1, Math.min(10, Math.floor(Number(raw)) || 1));
+}
 
-  const query = c.req.query("q") ?? "";
+function _parseEnginesFromBody(enabledList?: string[]): EngineConfig {
+  const registry = getEngineRegistry();
+  const enabledSet = enabledList ? new Set(enabledList) : null;
+  const engines: EngineConfig = {};
+  for (const { id } of registry) {
+    engines[id] = enabledSet ? enabledSet.has(id) : true;
+  }
+  return engines;
+}
 
-  if (!isValidQuery(query))
-    return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
-
-  const searchType = (c.req.query("type") || "web") as SearchType;
-  const engines = parseEngineConfig(new URL(c.req.url).searchParams);
-  const page = Math.max(
-    1,
-    Math.min(10, Math.floor(Number(c.req.query("page"))) || 1),
-  );
-  const timeFilter = (c.req.query("time") || "any") as TimeFilter;
-  const lang = c.req.query("lang") || "";
-  const dateFrom = c.req.query("dateFrom") || "";
-  const dateTo = c.req.query("dateTo") || "";
+async function _handleSearch(params: SearchParams) {
+  const {
+    query,
+    engines,
+    searchType,
+    page,
+    timeFilter,
+    lang,
+    dateFrom,
+    dateTo,
+  } = params;
   const key = cacheKey(
     query,
     engines,
@@ -63,7 +74,7 @@ router.get("/api/search", async (c) => {
   );
 
   const cached = cache.get(key);
-  if (cached) return c.json(cached);
+  if (cached) return cached;
 
   const response = await search(
     query,
@@ -83,27 +94,21 @@ router.get("/api/search", async (c) => {
       : undefined;
   cache.set(key, response, ttl);
 
-  return c.json(response);
-});
+  return response;
+}
 
-router.get("/api/search/retry", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-  const query = c.req.query("q");
-  const engineName = c.req.query("engine");
-  if (!query || !engineName)
-    return c.json({ error: "Missing 'q' or 'engine' parameter" }, 400);
-
-  const engines = parseEngineConfig(new URL(c.req.url).searchParams);
-  const searchType = (c.req.query("type") || "web") as SearchType;
-  const page = Math.max(
-    1,
-    Math.min(10, Math.floor(Number(c.req.query("page"))) || 1),
-  );
-  const timeFilter = (c.req.query("time") || "any") as TimeFilter;
-  const lang = c.req.query("lang") || "";
-  const dateFrom = c.req.query("dateFrom") || "";
-  const dateTo = c.req.query("dateTo") || "";
+async function _handleRetry(params: SearchParams & { engineName: string }) {
+  const {
+    query,
+    engineName,
+    engines,
+    searchType,
+    page,
+    timeFilter,
+    lang,
+    dateFrom,
+    dateTo,
+  } = params;
 
   const { results: newResults, timing } = await searchSingleEngine(
     engineName,
@@ -144,10 +149,10 @@ router.get("/api/search/retry", async (c) => {
       updated,
       cache.hasFailedEngines(updated) ? cache.SHORT_TTL_MS : undefined,
     );
-    return c.json(updated);
+    return updated;
   }
 
-  return c.json({
+  return {
     results: newResults.map((r, i) => ({
       ...r,
       score: Math.max(10 - i, 1),
@@ -155,7 +160,101 @@ router.get("/api/search/retry", async (c) => {
     })),
     timing,
     engineTimings: [timing],
+  };
+}
+
+router.get("/api/search", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
+
+  const query = c.req.query("q") ?? "";
+  if (!isValidQuery(query))
+    return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
+
+  const result = await _handleSearch({
+    query,
+    engines: parseEngineConfig(new URL(c.req.url).searchParams),
+    searchType: (c.req.query("type") || "web") as SearchType,
+    page: _parsePage(c.req.query("page")),
+    timeFilter: (c.req.query("time") || "any") as TimeFilter,
+    lang: c.req.query("lang") || "",
+    dateFrom: c.req.query("dateFrom") || "",
+    dateTo: c.req.query("dateTo") || "",
   });
+
+  return c.json(result);
+});
+
+router.post("/api/search", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
+
+  const body = await c.req.json<SearchBody>();
+  const query = body.query ?? "";
+  if (!isValidQuery(query))
+    return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
+
+  const result = await _handleSearch({
+    query,
+    engines: _parseEnginesFromBody(body.engines),
+    searchType: (body.type || "web") as SearchType,
+    page: _parsePage(body.page),
+    timeFilter: (body.time || "any") as TimeFilter,
+    lang: body.lang || "",
+    dateFrom: body.dateFrom || "",
+    dateTo: body.dateTo || "",
+  });
+
+  return c.json(result);
+});
+
+router.get("/api/search/retry", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
+
+  const query = c.req.query("q");
+  const engineName = c.req.query("engine");
+  if (!query || !engineName)
+    return c.json({ error: "Missing 'q' or 'engine' parameter" }, 400);
+
+  const result = await _handleRetry({
+    query,
+    engineName,
+    engines: parseEngineConfig(new URL(c.req.url).searchParams),
+    searchType: (c.req.query("type") || "web") as SearchType,
+    page: _parsePage(c.req.query("page")),
+    timeFilter: (c.req.query("time") || "any") as TimeFilter,
+    lang: c.req.query("lang") || "",
+    dateFrom: c.req.query("dateFrom") || "",
+    dateTo: c.req.query("dateTo") || "",
+  });
+
+  return c.json(result);
+});
+
+router.post("/api/search/retry", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
+
+  const body = await c.req.json<RetryPostBody>();
+  const query = body.query ?? "";
+  const engineName = body.engine ?? "";
+  if (!query || !engineName)
+    return c.json({ error: "Missing 'query' or 'engine' parameter" }, 400);
+
+  const result = await _handleRetry({
+    query,
+    engineName,
+    engines: _parseEnginesFromBody(body.engines),
+    searchType: (body.type || "web") as SearchType,
+    page: _parsePage(body.page),
+    timeFilter: (body.time || "any") as TimeFilter,
+    lang: body.lang || "",
+    dateFrom: body.dateFrom || "",
+    dateTo: body.dateTo || "",
+  });
+
+  return c.json(result);
 });
 
 router.post("/api/ai-chat", async (c) => {

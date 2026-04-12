@@ -10,6 +10,36 @@ export interface SearchResult {
   duration?: string;
 }
 
+export interface SearchBody {
+  query: string;
+  engines: string[];
+  type?: string;
+  page?: number;
+  time?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  lang?: string;
+}
+
+export interface RetryPostBody extends SearchBody {
+  engine: string;
+}
+
+export interface SuggestPostBody {
+  query: string;
+}
+
+export interface SearchParams {
+  query: string;
+  engines: EngineConfig;
+  searchType: SearchType;
+  page: number;
+  timeFilter: TimeFilter;
+  lang: string;
+  dateFrom: string;
+  dateTo: string;
+}
+
 export interface ScoredResult extends SearchResult {
   score: number;
   sources: string[];
