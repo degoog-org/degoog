@@ -21,4 +21,5 @@ export const state: AppState = {
   displayEnginePerformance: true,
   displaySearchSuggestions: true,
   postMethodEnabled: false,
+  isInitialLoad: false,
 };

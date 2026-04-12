@@ -204,7 +204,9 @@ export function initOptionsDropdown(): void {
         syncLangOptions(langFilter?.value ?? "");
         closeAll();
         if (state.currentQuery)
-          void performSearch(state.currentQuery, state.currentType);
+          void performSearch(state.currentQuery, state.currentType, undefined, {
+            forceAjax: true,
+          });
       });
     } catch {
       if (langList)
@@ -272,7 +274,9 @@ export function initOptionsDropdown(): void {
     if (value !== "custom") {
       closeAll();
       if (state.currentQuery)
-        void performSearch(state.currentQuery, state.currentType);
+        void performSearch(state.currentQuery, state.currentType, undefined, {
+          forceAjax: true,
+        });
     }
   });
 
@@ -281,7 +285,9 @@ export function initOptionsDropdown(): void {
     state.customDateTo = dateToInput?.value ?? "";
     closeAll();
     if (state.currentQuery)
-      void performSearch(state.currentQuery, state.currentType);
+      void performSearch(state.currentQuery, state.currentType, undefined, {
+        forceAjax: true,
+      });
   });
 
   langFilter?.addEventListener("input", () =>

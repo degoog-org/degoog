@@ -31,6 +31,7 @@ import {
   runScriptsInContainer,
   setResultsMeta,
 } from "./search-helpers";
+import { navigateToSearch } from "./search-navigation";
 import {
   buildCommandGlanceHtml,
   fetchGlancePanels,
@@ -86,9 +87,18 @@ export async function performSearch(
   query: string,
   type?: string,
   page?: number,
+  options?: { forceAjax?: boolean },
 ): Promise<void> {
   const resolvedType = type || state.currentType || "web";
   if (!query.trim()) return;
+
+  const isInit = state.isInitialLoad;
+  state.isInitialLoad = false;
+
+  if (!isInit && !options?.forceAjax && !state.postMethodEnabled) {
+    navigateToSearch(query, resolvedType, page);
+    return;
+  }
 
   if (resolvedType.startsWith("tab:")) {
     const { performTabSearch } = await import("../modules/tabs/tab-search");
@@ -183,11 +193,16 @@ export async function performSearch(
   document.title = `${query} - degoog`;
 
   if (state.postMethodEnabled) {
-    history.pushState(null, "", "/search");
+    const historyState = { degoog: true, query, type: resolvedType, page: 1 };
+    if (isInit) {
+      history.replaceState(historyState, "", "/search");
+    } else {
+      history.pushState(historyState, "", "/search");
+    }
   } else {
     const urlParams = new URLSearchParams({ q: query });
     if (resolvedType !== "web") urlParams.set("type", resolvedType);
-    history.pushState(null, "", `/search?${urlParams.toString()}`);
+    history.replaceState(null, "", `/search?${urlParams.toString()}`);
   }
 
   const commands = await _fetchCommands();
@@ -347,7 +362,15 @@ async function _performBangCommand(
 
   const urlParams = new URLSearchParams({ q: query });
   if (page > 1) urlParams.set("page", String(page));
-  history.pushState(null, "", `/search?${urlParams.toString()}`);
+  if (state.postMethodEnabled) {
+    history.pushState(
+      { degoog: true, query, type: "web", page },
+      "",
+      "/search",
+    );
+  } else {
+    history.replaceState(null, "", `/search?${urlParams.toString()}`);
+  }
 
   try {
     const apiParams = new URLSearchParams({ q: query });
@@ -413,6 +436,12 @@ function _renderBangPagination(
 
 export async function goToPage(pageNum: number): Promise<void> {
   if (pageNum === state.currentPage) return;
+
+  if (!state.postMethodEnabled) {
+    navigateToSearch(state.currentQuery, state.currentType, pageNum);
+    return;
+  }
+
   const resultsList = document.getElementById("results-list");
   const pagination = document.getElementById("pagination");
   if (resultsList) {
@@ -454,6 +483,16 @@ export async function goToPage(pageNum: number): Promise<void> {
     state.currentResults = data.results;
     state.currentData = data;
     state.currentPage = pageNum;
+    history.pushState(
+      {
+        degoog: true,
+        query: state.currentQuery,
+        type: state.currentType,
+        page: pageNum,
+      },
+      "",
+      "/search",
+    );
     const metaText = `About ${state.currentResults.length} results — Page ${state.currentPage}`;
     setResultsMeta(metaText);
     if (state.currentPage === 1 && state.currentType === "web") {
@@ -504,7 +543,10 @@ export async function retryEngine(engineName: string): Promise<void> {
               .map(([k]) => k),
             type: state.currentType !== "web" ? state.currentType : undefined,
             page: state.currentPage > 1 ? state.currentPage : undefined,
-            time: state.currentTimeFilter !== "any" ? state.currentTimeFilter : undefined,
+            time:
+              state.currentTimeFilter !== "any"
+                ? state.currentTimeFilter
+                : undefined,
           }),
           headers: { "Content-Type": "application/json" },
         })

@@ -120,7 +120,7 @@ export async function performStreamingSearch(
 
   const urlParams = new URLSearchParams({ q: query });
   if (type !== "web") urlParams.set("type", type);
-  history.pushState(null, "", `/search?${urlParams.toString()}`);
+  history.replaceState(null, "", `/search?${urlParams.toString()}`);
 
   const engineTimings: EngineTiming[] = [];
   let firstResult = true;

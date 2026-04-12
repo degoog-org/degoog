@@ -23,4 +23,5 @@ export interface AppState {
   displayEnginePerformance: boolean;
   displaySearchSuggestions: boolean;
   postMethodEnabled: boolean;
+  isInitialLoad: boolean;
 }

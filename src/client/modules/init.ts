@@ -160,13 +160,18 @@ export function init(): void {
   const params = new URLSearchParams(window.location.search);
   const q = params.get("q");
   const postQuery = sessionStorage.getItem("degoog-post-query");
+  const postType = sessionStorage.getItem("degoog-post-type");
+  const postPage = sessionStorage.getItem("degoog-post-page");
 
   if (postQuery) sessionStorage.removeItem("degoog-post-query");
+  if (postType) sessionStorage.removeItem("degoog-post-type");
+  if (postPage) sessionStorage.removeItem("degoog-post-page");
 
   const resolvedQ = q || postQuery;
-  const type = params.get("type") || "web";
-  const page = parseInt(params.get("page") ?? "1", 10) || 1;
+  const type = params.get("type") || postType || "web";
+  const page = parseInt(params.get("page") ?? postPage ?? "1", 10) || 1;
   if (resolvedQ) {
+    state.isInitialLoad = true;
     if (searchInput) searchInput.value = resolvedQ;
     if (type.startsWith("tab:")) {
       void (async () => {
@@ -178,4 +183,24 @@ export function init(): void {
       void performSearch(resolvedQ, type, page);
     }
   }
+
+  window.addEventListener("popstate", (e) => {
+    if (!state.postMethodEnabled) return;
+    const hs = e.state as {
+      degoog: boolean;
+      query: string;
+      type: string;
+      page: number;
+    } | null;
+    if (hs?.degoog) {
+      state.isInitialLoad = true;
+      if (hs.type?.startsWith("tab:")) {
+        void performTabSearch(hs.query, hs.type.slice(4), hs.page);
+      } else {
+        void performSearch(hs.query, hs.type, hs.page);
+      }
+    } else {
+      window.location.reload();
+    }
+  });
 }
