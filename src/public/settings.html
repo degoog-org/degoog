@@ -40,6 +40,7 @@
     />
     __THEME_CSS__
   </head>
+  <!-- TODO Switch to form instead of JS to save settings -->
   <body class="settings-page-body">
     <div class="settings-page">
       <header class="settings-page-header">
@@ -169,6 +170,19 @@
                 <span class="toggle-slider"></span>
                 <span class="settings-toggle-label"
                   >{{t:settings-page.search-options.search-suggestions}}</span
+                >
+              </label>
+
+              <label class="settings-toggle-wrap" style="margin-top: 1rem">
+                <input
+                  type="checkbox"
+                  id="settings-post-method-enabled"
+                  class="settings-toggle"
+                  aria-label="{{t:settings-page.search-options.post-method-aria}}"
+                />
+                <span class="toggle-slider"></span>
+                <span class="settings-toggle-label"
+                  >{{t:settings-page.search-options.post-method}}</span
                 >
               </label>
             </section>

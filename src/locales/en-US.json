@@ -33,7 +33,9 @@
       "engine-performance": "Display engine performance",
       "engine-performance-aria": "Display engine performance",
       "search-suggestions": "Display search suggestions",
-      "search-suggestions-aria": "Display search suggestions"
+      "search-suggestions-aria": "Display search suggestions",
+      "post-method": "Use POST method for search requests",
+      "post-method-aria": "Use POST method for search requests"
     },
     "install": {
       "heading": "Install app",

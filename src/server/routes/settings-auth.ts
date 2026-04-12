@@ -1,8 +1,8 @@
 import { Hono, type Context } from "hono";
-import { getSettings, setSettings, asString } from "../utils/plugin-settings";
 import { getMiddleware } from "../extensions/middleware/registry";
-import { isPublicInstance } from "../utils/public-instance";
 import { outgoingFetch } from "../utils/outgoing";
+import { asString, getSettings, setSettings } from "../utils/plugin-settings";
+import { isPublicInstance } from "../utils/public-instance";
 import { getRandomUserAgent } from "../utils/user-agents";
 
 const DEGOOG_SETTINGS_ID = "degoog-settings";
@@ -198,6 +198,7 @@ router.post("/api/settings/general", async (c) => {
     "streamingEnabled",
     "streamingAutoRetry",
     "streamingMaxRetries",
+    "postMethodEnabled",
   ];
   const updates: Record<string, string> = {};
   for (const key of allowed) {
