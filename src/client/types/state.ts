@@ -22,4 +22,5 @@ export interface AppState {
   openInNewTab: boolean;
   displayEnginePerformance: boolean;
   displaySearchSuggestions: boolean;
+  postMethodEnabled: boolean;
 }

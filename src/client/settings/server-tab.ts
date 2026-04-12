@@ -43,7 +43,9 @@ export async function initServerTab(
   const streamingEnabled = document.getElementById(
     "settings-streaming-enabled",
   ) as HTMLInputElement | null;
-  const streamingOptions = document.getElementById("settings-streaming-options");
+  const streamingOptions = document.getElementById(
+    "settings-streaming-options",
+  );
   const streamingAutoRetry = document.getElementById(
     "settings-streaming-auto-retry",
   ) as HTMLInputElement | null;

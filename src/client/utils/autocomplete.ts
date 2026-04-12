@@ -1,3 +1,4 @@
+import { state } from "../state";
 import { escapeHtml } from "./dom";
 
 let acController: AbortController | null = null;
@@ -27,9 +28,17 @@ async function _fetchSuggestions(
   acController = new AbortController();
 
   try {
-    const res = await fetch(`/api/suggest?q=${encodeURIComponent(query)}`, {
-      signal: acController.signal,
-    });
+    const res = state.postMethodEnabled
+      ? await fetch("/api/suggest", {
+          method: "POST",
+          body: JSON.stringify({ query }),
+          headers: { "Content-Type": "application/json" },
+          signal: acController.signal,
+        })
+      : await fetch(`/api/suggest?q=${encodeURIComponent(query)}`, {
+          signal: acController.signal,
+        });
+
     const suggestions = (await res.json()) as string[];
 
     if (!suggestions.length || input.value.trim() !== query) {

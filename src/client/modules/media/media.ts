@@ -1,9 +1,13 @@
 import { state } from "../../state";
-import { getEngines } from "../../utils/engines";
-import { buildSearchUrl, proxyImageUrl } from "../../utils/url";
-import { escapeHtml, cleanHostname } from "../../utils/dom";
-import { openLightbox } from "./lightbox";
 import type { ScoredResult } from "../../types";
+import { cleanHostname, escapeHtml } from "../../utils/dom";
+import { getEngines } from "../../utils/engines";
+import {
+  buildSearchBody,
+  buildSearchUrl,
+  proxyImageUrl,
+} from "../../utils/url";
+import { openLightbox } from "./lightbox";
 
 let mediaObserver: IntersectionObserver | null = null;
 let appendMediaCardsRef:
@@ -69,7 +73,16 @@ export async function loadMoreMedia(type: string): Promise<void> {
   const engines = await getEngines();
   const url = buildSearchUrl(state.currentQuery, engines, type, nextPage);
   try {
-    const res = await fetch(url);
+    const res = state.postMethodEnabled
+      ? await fetch("/api/search", {
+          method: "POST",
+          body: JSON.stringify(
+            buildSearchBody(state.currentQuery, engines, type, nextPage),
+          ),
+          headers: { "Content-Type": "application/json" },
+        })
+      : await fetch(url);
+
     const data = (await res.json()) as { results: ScoredResult[] };
     if (data.results.length === 0) {
       if (type === "images") state.imageLastPage = page;

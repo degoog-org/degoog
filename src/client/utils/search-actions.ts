@@ -40,7 +40,7 @@ import {
   abortStreamingSearch,
   performStreamingSearch,
 } from "./streaming-search";
-import { buildSearchUrl } from "./url";
+import { buildSearchBody, buildSearchUrl } from "./url";
 
 let commandsCache: Command[] | null = null;
 let _streamingConfig: { enabled: boolean } | null = null;
@@ -117,7 +117,11 @@ export async function performSearch(
     return _performBangCommand(query, resolvedType, page || 1);
   }
 
-  if ((!page || page === 1) && (await _fetchStreamingConfig())) {
+  if (
+    !state.postMethodEnabled &&
+    (!page || page === 1) &&
+    (await _fetchStreamingConfig())
+  ) {
     abortStreamingSearch();
     return performStreamingSearch(
       query,
@@ -143,6 +147,7 @@ export async function performSearch(
   closeMediaPreview();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));
+
   const resultsInput = document.getElementById(
     "results-search-input",
   ) as HTMLInputElement | null;
@@ -177,9 +182,13 @@ export async function performSearch(
   clearSlotPanels();
   document.title = `${query} - degoog`;
 
-  const urlParams = new URLSearchParams({ q: query });
-  if (resolvedType !== "web") urlParams.set("type", resolvedType);
-  history.pushState(null, "", `/search?${urlParams.toString()}`);
+  if (state.postMethodEnabled) {
+    history.pushState(null, "", "/search");
+  } else {
+    const urlParams = new URLSearchParams({ q: query });
+    if (resolvedType !== "web") urlParams.set("type", resolvedType);
+    history.pushState(null, "", `/search?${urlParams.toString()}`);
+  }
 
   const commands = await _fetchCommands();
   const bangQuery = commands.length
@@ -191,7 +200,16 @@ export async function performSearch(
   }
 
   try {
-    const res = await fetch(url);
+    const res = state.postMethodEnabled
+      ? await fetch("/api/search", {
+          method: "POST",
+          body: JSON.stringify(
+            buildSearchBody(query, engines, resolvedType, 1),
+          ),
+          headers: { "Content-Type": "application/json" },
+        })
+      : await fetch(url);
+
     const data = (await res.json()) as SearchResponse;
     state.currentResults = data.results;
     state.currentData = data;
@@ -417,7 +435,21 @@ export async function goToPage(pageNum: number): Promise<void> {
     pageNum,
   );
   try {
-    const res = await fetch(url);
+    const res = state.postMethodEnabled
+      ? await fetch("/api/search", {
+          method: "POST",
+          body: JSON.stringify(
+            buildSearchBody(
+              state.currentQuery,
+              engines,
+              state.currentType,
+              pageNum,
+            ),
+          ),
+          headers: { "Content-Type": "application/json" },
+        })
+      : await fetch(url);
+
     const data = (await res.json()) as SearchResponse;
     state.currentResults = data.results;
     state.currentData = data;
@@ -461,7 +493,22 @@ export async function retryEngine(engineName: string): Promise<void> {
   }
 
   try {
-    const res = await fetch(`/api/search/retry?${params.toString()}`);
+    const res = state.postMethodEnabled
+      ? await fetch("/api/search/retry", {
+          method: "POST",
+          body: JSON.stringify({
+            query: state.currentQuery,
+            engine: engineName,
+            engines: Object.entries(engines)
+              .filter(([, v]) => v)
+              .map(([k]) => k),
+            type: state.currentType !== "web" ? state.currentType : undefined,
+            page: state.currentPage > 1 ? state.currentPage : undefined,
+            time: state.currentTimeFilter !== "any" ? state.currentTimeFilter : undefined,
+          }),
+          headers: { "Content-Type": "application/json" },
+        })
+      : await fetch(`/api/search/retry?${params.toString()}`);
     const data = (await res.json()) as SearchResponse & {
       results: ScoredResult[];
     };

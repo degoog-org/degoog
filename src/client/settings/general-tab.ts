@@ -1,12 +1,13 @@
-import { idbGet, idbSet } from "../utils/db";
 import {
-  THEME_KEY,
-  OPEN_IN_NEW_TAB_KEY,
   DISPLAY_ENGINE_PERFORMANCE,
   DISPLAY_SEARCH_SUGGESTIONS,
+  OPEN_IN_NEW_TAB_KEY,
+  POST_METHOD_ENABLED,
+  THEME_KEY,
 } from "../constants";
-import { applyTheme } from "../utils/theme";
+import { idbGet, idbSet } from "../utils/db";
 import { requestInstallPrompt } from "../utils/install-prompt";
+import { applyTheme } from "../utils/theme";
 
 export async function initAppearanceSettings(): Promise<void> {
   const themeSelect = document.getElementById(
@@ -61,6 +62,18 @@ export async function initAppearanceSettings(): Promise<void> {
         DISPLAY_SEARCH_SUGGESTIONS,
         displaySearchSuggestions.checked,
       );
+    });
+  }
+
+  const postMethodEnabled = document.getElementById(
+    "settings-post-method-enabled",
+  ) as HTMLInputElement | null;
+  if (postMethodEnabled) {
+    const saved = await idbGet<boolean>(POST_METHOD_ENABLED);
+    postMethodEnabled.checked = saved || false;
+    postMethodEnabled.addEventListener("change", async () => {
+      console.log("Post method enabled:", postMethodEnabled.checked);
+      await idbSet(POST_METHOD_ENABLED, postMethodEnabled.checked);
     });
   }
 }
