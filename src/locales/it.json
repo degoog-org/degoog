@@ -35,9 +35,9 @@
       "engine-performance-aria": "Mostra le prestazioni dei motori",
       "search-suggestions": "Mostra suggerimenti di ricerca",
       "search-suggestions-aria": "Mostra suggerimenti di ricerca",
-      "post-method": "Usa il metodo POST per le richieste di ricerca",
-      "post-method-aria": "Usa il metodo POST per le richieste di ricerca",
-      "post-method-tooltip": "Il metodo POST non è compatibile con i risultati in streaming"
+      "post-method": "Usa il metodo POST per le richieste di ricerca (Non funziona con lo streaming dei risultati)",
+      "post-method-aria": "Usa il metodo POST per le richieste di ricerca (Non funziona con lo streaming dei risultati)",
+      "post-method-tooltip": "Il metodo POST non è compatibile con lo streaming dei risultati"
     },
     "install": {
       "heading": "Installa app",

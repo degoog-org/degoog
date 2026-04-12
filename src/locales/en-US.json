@@ -35,8 +35,8 @@
       "engine-performance-aria": "Display engine performance",
       "search-suggestions": "Display search suggestions",
       "search-suggestions-aria": "Display search suggestions",
-      "post-method": "Use POST method for search requests",
-      "post-method-aria": "Use POST method for search requests",
+      "post-method": "Use POST method for search requests (Won't work with streaming results)",
+      "post-method-aria": "Use POST method for search requests (Won't work with streaming results)",
       "post-method-tooltip": "POST method is not compatible with streaming results"
     },
     "install": {
