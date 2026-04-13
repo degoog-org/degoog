@@ -22,12 +22,47 @@
   border: 1px solid var(--border-light);
   border-radius: $radius-lg;
   padding: $space-3 $space-4;
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+
+  &-reorder {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  &-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: $radius-sm;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 2px;
+    transition: color $transition-fast, border-color $transition-fast;
+
+    &:hover:not(:disabled) {
+      color: $primary;
+      border-color: var(--border);
+    }
+
+    &:disabled {
+      opacity: 0.25;
+      cursor: default;
+    }
+  }
 
   &-main {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: $space-3;
+    min-width: 0;
+    flex: 1;
   }
 
   &-info {
