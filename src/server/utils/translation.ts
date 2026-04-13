@@ -40,11 +40,10 @@ export const getClosestLanguage = (
 export const dynamicImportTranslationFiles = async (
   path: string,
 ): Promise<TranslationRecord> => {
-  const files = await readdir(join(path, "locales")).catch((e) => {
+  const files = await readdir(join(path, "locales")).catch(() => {
     logger.debug(
       "translation",
-      `Error reading translation directory at path "${path}":`,
-      e,
+      `No "locales" directory found at path "${path}". Skipping translation.`,
     );
     return [];
   });
@@ -64,7 +63,7 @@ export const dynamicImportTranslationFiles = async (
       if (typeof translation === "object" && translation !== null) {
         translations[lang] = translation;
       } else {
-        logger.debug(
+        logger.warn(
           "translation",
           `Translation file for language "${lang}" at path "${path}" does not export an object.`,
         );
