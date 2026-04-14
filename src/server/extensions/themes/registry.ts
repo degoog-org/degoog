@@ -1,6 +1,5 @@
 import { mkdir, readdir, readFile } from "fs/promises";
 import { join } from "path";
-import * as sass from "sass";
 import {
   type ExtensionMeta,
   ExtensionStoreType,
@@ -63,10 +62,6 @@ async function compileThemeCss(
 
   const fullPath = join(theme.dir, cssFile);
   try {
-    if (cssFile.endsWith(".scss")) {
-      const result = sass.compile(fullPath);
-      return result.css;
-    }
     return await readFile(fullPath, "utf-8");
   } catch (err) {
     logger.debug("themes", `Failed to compile CSS for theme ${theme.id}`, err);
