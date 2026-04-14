@@ -22,8 +22,7 @@ export const logger = LEVELS.reduce(
     acc[level] = (namespace: string, ...args: unknown[]) => {
       if (LEVELS.indexOf(LOG_LEVEL) < LEVELS.indexOf(level)) return;
       CONSOLE_LEVELS[level](
-        `${CONSOLE_COLORS[level]}${level.toUpperCase()} [${namespace}]`,
-        "\x1b[0m",
+        `${CONSOLE_COLORS[level]}${level.toUpperCase()} [${namespace}]\x1b[0m`,
         ...args.map((e) => (e instanceof Error ? ["\n", e] : [e])).flat(),
       );
     };
