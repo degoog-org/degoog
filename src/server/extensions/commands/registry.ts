@@ -5,6 +5,7 @@ import type {
   SettingField,
   Translate,
 } from "../../types";
+import { pluginsDir } from "../../utils/paths";
 import {
   initPlugin,
   loadPluginAssets,
@@ -18,7 +19,6 @@ import {
 } from "../../utils/plugin-settings";
 import { createTranslatorFromPath } from "../../utils/translation";
 import { getEngineMap as getSearchEngineMap } from "../engines/registry";
-import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 
 const builtinsDir = join(

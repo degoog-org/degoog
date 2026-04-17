@@ -1,13 +1,17 @@
-import { escapeHtml, getConfigStatus } from "../utils/dom";
 import { openModal } from "../modules/modals/settings-modal/modal";
-import type { ExtensionMeta, AllExtensions } from "../types";
+import type { AllExtensions, ExtensionMeta } from "../types";
+import { escapeHtml, getConfigStatus } from "../utils/dom";
 
 const t = window.scopedT("core");
 
 const _arrowUp = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>`;
 const _arrowDown = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`;
 
-const _renderPluginCard = (plugin: ExtensionMeta, index: number, total: number): string => {
+const _renderPluginCard = (
+  plugin: ExtensionMeta,
+  index: number,
+  total: number,
+): string => {
   const isEnabled = plugin.settings["disabled"] !== "true";
   const trigger =
     plugin.settingsSchema.length === 0
@@ -69,12 +73,14 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
     let html = "";
     if (custom.length > 0) {
       html += `<div class="ext-group"><h3 class="ext-group-label">${escapeHtml(t("settings-page.extensions.group-plugins"))}</h3><div class="ext-cards">`;
-      for (let i = 0; i < custom.length; i++) html += _renderPluginCard(custom[i], i, custom.length);
+      for (let i = 0; i < custom.length; i++)
+        html += _renderPluginCard(custom[i], i, custom.length);
       html += `</div></div>`;
     }
     if (builtin.length > 0) {
       html += `<div class="ext-group"><h3 class="ext-group-label">${escapeHtml(t("settings-page.extensions.group-builtin-commands"))}</h3><div class="ext-cards">`;
-      for (let i = 0; i < builtin.length; i++) html += _renderPluginCard(builtin[i], i, builtin.length);
+      for (let i = 0; i < builtin.length; i++)
+        html += _renderPluginCard(builtin[i], i, builtin.length);
       html += `</div></div>`;
     }
     container!.innerHTML = html;
@@ -90,7 +96,11 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
     });
   }
 
-  function _swapInGroup(group: ExtensionMeta[], id: string, direction: "up" | "down"): void {
+  function _swapInGroup(
+    group: ExtensionMeta[],
+    id: string,
+    direction: "up" | "down",
+  ): void {
     const idx = group.findIndex((p) => p.id === id);
     if (idx === -1) return;
     const target = direction === "up" ? idx - 1 : idx + 1;

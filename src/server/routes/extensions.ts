@@ -1,36 +1,25 @@
 import { Hono } from "hono";
 import {
+  getCommandInstanceById,
+  getPluginExtensionMeta,
+  setCommandsLocale,
+} from "../extensions/commands/registry";
+import {
   getEngineExtensionMeta,
   getEngineMap,
   setEnginesLocale,
 } from "../extensions/engines/registry";
+import { getSearchBarActionExtensionMeta } from "../extensions/search-bar/registry";
 import {
-  getSettingsTokenFromRequest,
-  validateSettingsToken,
-} from "./settings-auth";
-import {
-  getPluginExtensionMeta,
-  getCommandInstanceById,
-  setCommandsLocale,
-} from "../extensions/commands/registry";
-import { getCoreTranslator } from "./pages";
-import { getLocale } from "../utils/hono";
-import {
-  getSlotPlugins,
   getSlotPluginById,
+  getSlotPlugins,
   getSlotSource,
 } from "../extensions/slots/registry";
-import { getSearchBarActionExtensionMeta } from "../extensions/search-bar/registry";
 import { getThemeExtensionMeta } from "../extensions/themes/registry";
 import {
-  getSettings,
-  isDisabled,
-  setSettings,
-  mergeSecrets,
-  maskSecrets,
-  type SettingValue,
-} from "../utils/plugin-settings";
-import { getPluginCssIds, getPluginCssById } from "../utils/plugin-assets";
+  getTransport,
+  getTransportExtensionMeta,
+} from "../extensions/transports/registry";
 import {
   ExtensionStoreType,
   SLOT_POSITION_SETTING_KEY,
@@ -38,15 +27,33 @@ import {
   type SettingField,
   type Translate,
 } from "../types";
-import {
-  getTransportExtensionMeta,
-  getTransport,
-} from "../extensions/transports/registry";
+import { getLocale } from "../utils/hono";
 import { outgoingFetch } from "../utils/outgoing";
+import { getPluginCssById, getPluginCssIds } from "../utils/plugin-assets";
+import {
+  applyPluginOrder,
+  getPluginOrder,
+  setPluginOrder,
+} from "../utils/plugin-order";
+import {
+  getSettings,
+  isDisabled,
+  maskSecrets,
+  mergeSecrets,
+  setSettings,
+  type SettingValue,
+} from "../utils/plugin-settings";
+import { getCoreTranslator } from "./pages";
+import {
+  getSettingsTokenFromRequest,
+  validateSettingsToken,
+} from "./settings-auth";
 
 const router = new Hono();
 
-async function getSlotExtensionMeta(coreT?: Translate): Promise<ExtensionMeta[]> {
+async function getSlotExtensionMeta(
+  coreT?: Translate,
+): Promise<ExtensionMeta[]> {
   const slots = getSlotPlugins();
   const out: ExtensionMeta[] = [];
   for (const slot of slots) {
@@ -56,11 +63,14 @@ async function getSlotExtensionMeta(coreT?: Translate): Promise<ExtensionMeta[]>
     if (hasPositionChoice) {
       fullSchema.push({
         key: SLOT_POSITION_SETTING_KEY,
-        label: coreT ? coreT("settings-page.schema.slot-position.label") || "Position" : "Position",
+        label: coreT
+          ? coreT("settings-page.schema.slot-position.label") || "Position"
+          : "Position",
         type: "select",
         options: [...slot.slotPositions!],
         description: coreT
-          ? coreT("settings-page.schema.slot-position.description") || "Where the slot content appears on the page."
+          ? coreT("settings-page.schema.slot-position.description") ||
+            "Where the slot content appears on the page."
           : "Where the slot content appears on the page.",
       });
     }
@@ -109,12 +119,37 @@ router.get("/api/extensions", async (c) => {
       getThemeExtensionMeta(),
       getTransportExtensionMeta(),
     ]);
+
+  const allPlugins = [...plugins, ...slotMeta, ...searchBarMeta];
+  const order = await getPluginOrder();
+
   return c.json({
     engines,
-    plugins: [...plugins, ...slotMeta, ...searchBarMeta],
+    plugins: applyPluginOrder(allPlugins, order, (p) => p.id),
     themes,
     transports,
   });
+});
+
+router.get("/api/extensions/order", async (c) => {
+  const order = await getPluginOrder();
+  return c.json({ order });
+});
+
+router.put("/api/extensions/order", async (c) => {
+  const token = getSettingsTokenFromRequest(c);
+  if (!(await validateSettingsToken(token)))
+    return c.json({ error: "Unauthorized" }, 401);
+
+  const body = await c.req.json<{ order?: unknown }>();
+  if (
+    !Array.isArray(body.order) ||
+    !body.order.every((v: unknown) => typeof v === "string")
+  )
+    return c.json({ error: "order must be a string array" }, 400);
+
+  await setPluginOrder(body.order as string[]);
+  return c.json({ ok: true });
 });
 
 router.post("/api/extensions/:id/settings", async (c) => {

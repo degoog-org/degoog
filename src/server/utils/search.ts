@@ -13,6 +13,7 @@ import {
 } from "../types";
 import { logger } from "./logger";
 import { outgoingFetch } from "./outgoing";
+import { applyPluginOrder, getPluginOrder } from "./plugin-order";
 import { asString, getSettings, isDisabled } from "./plugin-settings";
 import { checkRateLimit } from "./rate-limit";
 import { getClientIp } from "./request";
@@ -155,7 +156,13 @@ export async function runSlotPlugins(
   results?: ScoredResult[],
   options?: { excludePosition?: SlotPanelPosition; locale?: string },
 ): Promise<SlotPanelResult[]> {
-  const plugins = getSlotPlugins();
+  const rawPlugins = getSlotPlugins();
+  const order = await getPluginOrder();
+  const plugins = applyPluginOrder(
+    rawPlugins,
+    order,
+    (p) => p.settingsId ?? `slot-${p.id}`,
+  );
   const panels: SlotPanelResult[] = [];
   const exclude = options?.excludePosition;
   const locale = options?.locale;
