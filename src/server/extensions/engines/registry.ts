@@ -99,6 +99,7 @@ const BUILTIN_DEFINITIONS: EngineDefinition[] = [
     searchType: "images",
     EngineClass: GoogleImagesEngine,
     outgoingHosts: ["www.google.com", "google.com"],
+    defaultTransport: "curl",
   },
   {
     id: "bing-images",
@@ -233,7 +234,9 @@ export function getOutgoingAllowlist(): string[] {
   const fromBuiltins = BUILTIN_DEFINITIONS.flatMap(
     (d) => d.outgoingHosts ?? [],
   );
-  const fromPlugins = engineRegistry.items().flatMap((e) => e.outgoingHosts ?? []);
+  const fromPlugins = engineRegistry
+    .items()
+    .flatMap((e) => e.outgoingHosts ?? []);
   const all = [...fromBuiltins, ...fromPlugins];
   return [...new Set(all)];
 }
@@ -256,7 +259,8 @@ function engineSearchTypeFromSearchType(
 export function getEnginesForCustomType(
   engineType: string,
 ): { id: string; instance: SearchEngine }[] {
-  return engineRegistry.items()
+  return engineRegistry
+    .items()
     .filter((e) => e.searchType === engineType)
     .map((e) => ({ id: e.id, instance: e.instance }));
 }
@@ -559,7 +563,8 @@ export function getAllEngineTranslators(): {
   namespace: string;
   translator: Translate;
 }[] {
-  return engineRegistry.items()
+  return engineRegistry
+    .items()
     .filter((e) => !!e.instance.t)
     .map((e) => ({ namespace: `engines/${e.id}`, translator: e.instance.t! }));
 }

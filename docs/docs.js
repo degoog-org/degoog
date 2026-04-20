@@ -11,6 +11,7 @@
     "env.html",
     "styling.html",
     "contributing.html",
+    "api.html",
   ];
 
   var searchDebounceTimer = null;
