@@ -1,0 +1,32 @@
+name: Feature Request
+description: Suggest a new feature for Degoog
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **Note:** Before submitting, please consider whether your feature could be implemented as a [plugin](https://fccview.github.io/degoog/plugins.html).
+        > If it can, we encourage you to create your own plugin repository and use it via the [store](https://fccview.github.io/degoog/store.html) instead of opening a feature request here.
+        > Feature requests here should be for changes to Degoog's core functionality.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is the problem this feature would solve?
+      placeholder: A clear description of the problem or pain point.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What is the feature you are proposing to solve the problem?
+      placeholder: Describe the solution you'd like.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What alternatives have you considered?
+      placeholder: Describe any alternative solutions or features you've considered.
+    validations:
+      required: false

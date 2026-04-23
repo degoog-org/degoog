@@ -11,3 +11,7 @@ Some amazing people around the web decided to make their degoog instances availa
 ## All public instances 
 
 [https://search2.drinker.beer/](https://search2.drinker.beer/)
+
+[https://degoog.org/](https://degoog.org/)
+
+[https://search.gglvxd.net/](https://search.gglvxd.net/)

@@ -1,0 +1,28 @@
+name: Crash Report
+description: Report a crash in Degoog
+title: "[Crash]: "
+labels: ["bug", "crash"]
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How can we reproduce the crash?
+      placeholder: Steps to reproduce the crash, if known.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: stacktrace
+    attributes:
+      label: Stack Trace
+      description: Please paste the full stack trace.
+      render: shell
+    validations:
+      required: true

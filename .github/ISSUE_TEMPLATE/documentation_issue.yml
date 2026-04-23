@@ -1,0 +1,31 @@
+name: Documentation Issue
+description: Report an issue with the documentation
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: What is the type of issue?
+      options:
+        - Missing documentation
+        - Incorrect
+        - Confusing
+        - Example code not working
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is the issue?
+      placeholder: Describe the documentation issue in detail.
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Where did you find it?
+      placeholder: e.g. URL, page name, or section
+    validations:
+      required: false
