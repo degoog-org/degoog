@@ -4,6 +4,7 @@ import {
   type SettingField,
   type SlotPlugin,
 } from "../../../../types";
+import { logger } from "../../../../utils/logger";
 import { asString, getSettings } from "../../../../utils/plugin-settings";
 
 export const AI_SUMMARY_ID = "ai-summary";
@@ -24,7 +25,8 @@ export const aiSummarySettingsSchema: SettingField[] = [
     type: "text",
     required: true,
     placeholder: "gpt-4o-mini",
-    description: "Model name (e.g. gpt-4o-mini, llama3, mistral)",
+    description:
+      "Model name (e.g. gpt-4o-mini, llama3, mistral). Note: reasoning/thinking models (e.g. qwen3, deepseek-r1) may not work well here as their chain-of-thought consumes the token budget before producing a summary. Increase Max Tokens if you must use one.",
   },
   {
     key: "apiKey",
@@ -43,6 +45,14 @@ export const aiSummarySettingsSchema: SettingField[] = [
       "Max seconds to wait for an AI response before falling back to the standard result.",
   },
   {
+    key: "maxTokens",
+    label: "Max Tokens",
+    type: "text",
+    placeholder: "256",
+    description:
+      "Maximum tokens for the AI response. Bump this up (e.g. 1024+) if you use reasoning/thinking models.",
+  },
+  {
     key: "systemPrompt",
     label: "Custom System Prompt",
     type: "textarea",
@@ -59,18 +69,22 @@ export interface AISummarySettings {
   apiKey: string;
   timeoutMs: number;
   systemPrompt: string;
+  maxTokens: number;
 }
 
 export async function getAISummarySettings(): Promise<AISummarySettings> {
   const stored = await getSettings(AI_SUMMARY_ID);
   const timeoutSeconds =
     parseFloat(asString(stored["timeoutSeconds"]) || "") || 30;
+  const maxTokens =
+    parseInt(asString(stored["maxTokens"]) || "", 10) || 256;
   return {
     baseUrl: asString(stored["baseUrl"]),
     model: asString(stored["model"]),
     apiKey: asString(stored["apiKey"]),
     timeoutMs: Math.max(5, timeoutSeconds) * 1000,
     systemPrompt: asString(stored["systemPrompt"]),
+    maxTokens: Math.max(16, maxTokens),
   };
 }
 
@@ -80,7 +94,10 @@ interface OpenAIMessage {
 }
 
 interface OpenAIChatResponse {
-  choices?: { message?: { content?: string } }[];
+  choices?: {
+    message?: { content?: string; reasoning_content?: string };
+    finish_reason?: string;
+  }[];
 }
 
 function escapeHtml(s: string): string {
@@ -97,7 +114,7 @@ const DEFAULT_SYSTEM_PROMPT =
 async function chatComplete(
   settings: AISummarySettings,
   messages: OpenAIMessage[],
-  maxTokens = 256,
+  maxTokens?: number,
 ): Promise<string | null> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -111,13 +128,28 @@ async function chatComplete(
       body: JSON.stringify({
         model: settings.model,
         messages,
-        max_tokens: maxTokens,
+        max_tokens: maxTokens ?? settings.maxTokens,
       }),
       signal: AbortSignal.timeout(settings.timeoutMs),
     });
     if (!res.ok) return null;
     const data = (await res.json()) as OpenAIChatResponse;
-    return data.choices?.[0]?.message?.content?.trim() ?? null;
+    const choice = data.choices?.[0];
+    const content = choice?.message?.content?.trim();
+    const reasoning = choice?.message?.reasoning_content?.trim();
+    if (content) return content;
+    if (reasoning) {
+      logger.debug(
+        AI_SUMMARY_ID,
+        `empty content, falling back to reasoning_content (finish_reason=${choice?.finish_reason}). Consider increasing Max Tokens.`,
+      );
+      return reasoning;
+    }
+    logger.debug(
+      AI_SUMMARY_ID,
+      `model returned empty content and reasoning_content (finish_reason=${choice?.finish_reason}).`,
+    );
+    return null;
   } catch {
     return null;
   }
@@ -154,7 +186,7 @@ export async function chatFollowUp(
 ): Promise<string | null> {
   const settings = await getAISummarySettings();
   if (!settings.baseUrl || !settings.model) return null;
-  return chatComplete(settings, history, 512);
+  return chatComplete(settings, history, Math.max(settings.maxTokens, 512));
 }
 
 const aiSummarySlot: SlotPlugin = {
