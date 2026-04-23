@@ -31,7 +31,6 @@ import {
   runScriptsInContainer,
   setResultsMeta,
 } from "./search-helpers";
-import { navigateToSearch } from "./search-navigation";
 import {
   buildCommandGlanceHtml,
   fetchGlancePanels,
@@ -87,18 +86,12 @@ export async function performSearch(
   query: string,
   type?: string,
   page?: number,
-  options?: { forceAjax?: boolean },
 ): Promise<void> {
   const resolvedType = type || state.currentType || "web";
   if (!query.trim()) return;
 
   const isInit = state.isInitialLoad;
   state.isInitialLoad = false;
-
-  if (!isInit && !options?.forceAjax && !state.postMethodEnabled) {
-    navigateToSearch(query, resolvedType, page);
-    return;
-  }
 
   if (resolvedType.startsWith("tab:")) {
     const { performTabSearch } = await import("../modules/tabs/tab-search");
@@ -199,13 +192,13 @@ export async function performSearch(
   clearSlotPanels();
   document.title = `${query} - degoog`;
 
+  const historyState = {
+    degoog: true,
+    query,
+    type: resolvedType,
+    page: resolvedPage,
+  };
   if (state.postMethodEnabled) {
-    const historyState = {
-      degoog: true,
-      query,
-      type: resolvedType,
-      page: resolvedPage,
-    };
     if (isInit) {
       history.replaceState(historyState, "", "/search");
     } else {
@@ -215,7 +208,12 @@ export async function performSearch(
     const urlParams = new URLSearchParams({ q: query });
     if (resolvedType !== "web") urlParams.set("type", resolvedType);
     if (resolvedPage > 1) urlParams.set("page", String(resolvedPage));
-    history.replaceState(null, "", `/search?${urlParams.toString()}`);
+    const getUrl = `/search?${urlParams.toString()}`;
+    if (isInit) {
+      history.replaceState(historyState, "", getUrl);
+    } else {
+      history.pushState(historyState, "", getUrl);
+    }
   }
 
   if (naturalBangQuery) {
@@ -445,11 +443,6 @@ function _renderBangPagination(
 export async function goToPage(pageNum: number): Promise<void> {
   if (pageNum === state.currentPage) return;
 
-  if (!state.postMethodEnabled) {
-    navigateToSearch(state.currentQuery, state.currentType, pageNum);
-    return;
-  }
-
   const resultsList = document.getElementById("results-list");
   const pagination = document.getElementById("pagination");
   if (resultsList) {
@@ -491,16 +484,20 @@ export async function goToPage(pageNum: number): Promise<void> {
     state.currentResults = data.results;
     state.currentData = data;
     state.currentPage = pageNum;
-    history.pushState(
-      {
-        degoog: true,
-        query: state.currentQuery,
-        type: state.currentType,
-        page: pageNum,
-      },
-      "",
-      "/search",
-    );
+    const pageHistoryState = {
+      degoog: true,
+      query: state.currentQuery,
+      type: state.currentType,
+      page: pageNum,
+    };
+    if (state.postMethodEnabled) {
+      history.pushState(pageHistoryState, "", "/search");
+    } else {
+      const urlParams = new URLSearchParams({ q: state.currentQuery });
+      if (state.currentType !== "web") urlParams.set("type", state.currentType);
+      if (pageNum > 1) urlParams.set("page", String(pageNum));
+      history.pushState(pageHistoryState, "", `/search?${urlParams.toString()}`);
+    }
     const metaText = `About ${state.currentResults.length} results — Page ${state.currentPage}`;
     setResultsMeta(metaText);
     if (state.currentPage === 1 && state.currentType === "web") {

@@ -8,7 +8,6 @@ import {
 import { hideAcDropdown } from "../../utils/autocomplete";
 import { setActiveTab } from "../../utils/navigation";
 import { buildPaginationHtml } from "../../utils/pagination";
-import { navigateToSearch } from "../../utils/search-navigation";
 import { fetchSlotPanels } from "../../utils/search-utils";
 import {
   abortStreamingSearch,
@@ -51,11 +50,6 @@ export async function performTabSearch(
 
   const isInit = state.isInitialLoad;
   state.isInitialLoad = false;
-
-  if (!isInit && !state.postMethodEnabled) {
-    navigateToSearch(query, `tab:${tabId}`, page);
-    return;
-  }
 
   if (
     tabId.startsWith("engine:") &&
@@ -103,15 +97,20 @@ export async function performTabSearch(
 
   const urlParams = new URLSearchParams({ q: query, type: `tab:${tabId}` });
   if (page > 1) urlParams.set("page", String(page));
+  const tabHistoryState = { degoog: true, query, type: `tab:${tabId}`, page };
   if (state.postMethodEnabled) {
-    const historyState = { degoog: true, query, type: `tab:${tabId}`, page };
     if (isInit) {
-      history.replaceState(historyState, "", "/search");
+      history.replaceState(tabHistoryState, "", "/search");
     } else {
-      history.pushState(historyState, "", "/search");
+      history.pushState(tabHistoryState, "", "/search");
     }
   } else {
-    history.replaceState(null, "", `/search?${urlParams.toString()}`);
+    const getUrl = `/search?${urlParams.toString()}`;
+    if (isInit) {
+      history.replaceState(tabHistoryState, "", getUrl);
+    } else {
+      history.pushState(tabHistoryState, "", getUrl);
+    }
   }
 
   try {

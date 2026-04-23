@@ -185,7 +185,6 @@ export function init(): void {
   }
 
   window.addEventListener("popstate", (e) => {
-    if (!state.postMethodEnabled) return;
     const hs = e.state as {
       degoog: boolean;
       query: string;
@@ -198,6 +197,19 @@ export function init(): void {
         void performTabSearch(hs.query, hs.type.slice(4), hs.page);
       } else {
         void performSearch(hs.query, hs.type, hs.page);
+      }
+      return;
+    }
+    const popParams = new URLSearchParams(window.location.search);
+    const popQ = popParams.get("q");
+    if (popQ) {
+      const popType = popParams.get("type") || "web";
+      const popPage = parseInt(popParams.get("page") ?? "1", 10) || 1;
+      state.isInitialLoad = true;
+      if (popType.startsWith("tab:")) {
+        void performTabSearch(popQ, popType.slice(4), popPage);
+      } else {
+        void performSearch(popQ, popType, popPage);
       }
     } else {
       window.location.reload();
