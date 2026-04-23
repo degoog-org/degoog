@@ -33,8 +33,8 @@
       "open-new-tab-aria": "Ouvrir les liens des résultats dans un nouvel onglet",
       "engine-performance": "Afficher les performances des moteurs",
       "engine-performance-aria": "Afficher les performances des moteurs",
-      "search-suggestions": "Afficher les suggestions de recherche",
-      "search-suggestions-aria": "Afficher les suggestions de recherche",
+      "related-queries": "Afficher les requêtes de recherche connexes",
+      "related-queries-aria": "Afficher les requêtes de recherche connexes",
       "post-method": "Utiliser la méthode POST pour les requêtes de recherche (Ne fonctionne pas avec les résultats en flux)",
       "post-method-aria": "Utiliser la méthode POST pour les requêtes de recherche (Ne fonctionne pas avec les résultats en flux)",
       "post-method-tooltip": "La méthode POST n'est pas compatible avec les résultats en flux"

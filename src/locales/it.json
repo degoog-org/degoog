@@ -33,8 +33,8 @@
       "open-new-tab-aria": "Apri i link dei risultati in una nuova scheda",
       "engine-performance": "Mostra le prestazioni dei motori",
       "engine-performance-aria": "Mostra le prestazioni dei motori",
-      "search-suggestions": "Mostra suggerimenti di ricerca",
-      "search-suggestions-aria": "Mostra suggerimenti di ricerca",
+      "related-queries": "Mostra query di ricerca correlate",
+      "related-queries-aria": "Mostra query di ricerca correlate",
       "post-method": "Usa il metodo POST per le richieste di ricerca (Non funziona con lo streaming dei risultati)",
       "post-method-aria": "Usa il metodo POST per le richieste di ricerca (Non funziona con lo streaming dei risultati)",
       "post-method-tooltip": "Il metodo POST non è compatibile con lo streaming dei risultati"

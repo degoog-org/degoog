@@ -3,10 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="{{t:settings-page.meta.description}}"
-    />
+    <meta name="description" content="{{t:settings-page.meta.description}}" />
     <link
       rel="icon"
       href="/public/favicon/favicon.ico?v=__APP_VERSION__"
@@ -67,7 +64,9 @@
 
       <main class="settings-page-main">
         <section class="settings-section">
-          <h2 class="settings-section-heading">{{t:settings-page.appearance.heading}}</h2>
+          <h2 class="settings-section-heading">
+            {{t:settings-page.appearance.heading}}
+          </h2>
           <p class="settings-desc">{{t:settings-page.appearance.desc}}</p>
           <div class="theme-select-wrap">
             <select id="theme-select" class="theme-select">
@@ -79,7 +78,9 @@
         </section>
 
         <section class="settings-section">
-          <h2 class="settings-section-heading">{{t:settings-page.search-options.heading}}</h2>
+          <h2 class="settings-section-heading">
+            {{t:settings-page.search-options.heading}}
+          </h2>
           <label class="settings-toggle-wrap" style="margin-top: 1rem">
             <input
               type="checkbox"
@@ -109,13 +110,13 @@
           <label class="settings-toggle-wrap" style="margin-top: 1rem">
             <input
               type="checkbox"
-              id="display-search-suggestions"
+              id="display-related-queries"
               class="settings-toggle"
-              aria-label="{{t:settings-page.search-options.search-suggestions-aria}}"
+              aria-label="{{t:settings-page.search-options.related-queries-aria}}"
             />
             <span class="toggle-slider"></span>
             <span class="settings-toggle-label"
-              >{{t:settings-page.search-options.search-suggestions}}</span
+              >{{t:settings-page.search-options.related-queries}}</span
             >
           </label>
 
@@ -138,7 +139,9 @@
         </section>
 
         <section class="settings-section">
-          <h2 class="settings-section-heading">{{t:settings-page.public.engines-heading}}</h2>
+          <h2 class="settings-section-heading">
+            {{t:settings-page.public.engines-heading}}
+          </h2>
           <div id="engines-content"></div>
         </section>
       </main>

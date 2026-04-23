@@ -33,8 +33,8 @@
       "open-new-tab-aria": "Open result links in new tab",
       "engine-performance": "Display engine performance",
       "engine-performance-aria": "Display engine performance",
-      "search-suggestions": "Display search suggestions",
-      "search-suggestions-aria": "Display search suggestions",
+      "related-queries": "Display related search queries",
+      "related-queries-aria": "Display related search queries",
       "post-method": "Use POST method for search requests (Won't work with streaming results)",
       "post-method-aria": "Use POST method for search requests (Won't work with streaming results)",
       "post-method-tooltip": "POST method is not compatible with streaming results"

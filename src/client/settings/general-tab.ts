@@ -23,7 +23,7 @@ export async function initAppearanceSettings(): Promise<void> {
       await idbSet(THEME_KEY, value);
       try {
         localStorage.setItem(THEME_KEY, value);
-      } catch {}
+      } catch { }
       applyTheme(value);
     });
   }
@@ -77,7 +77,7 @@ export async function initAppearanceSettings(): Promise<void> {
   ) as HTMLInputElement | null;
   if (displayEnginePerformance) {
     const saved = await idbGet<boolean>(DISPLAY_ENGINE_PERFORMANCE);
-    displayEnginePerformance.checked = saved || false;
+    displayEnginePerformance.checked = saved ?? true;
     displayEnginePerformance.addEventListener("change", async () => {
       await idbSet(
         DISPLAY_ENGINE_PERFORMANCE,
@@ -87,11 +87,11 @@ export async function initAppearanceSettings(): Promise<void> {
   }
 
   const displaySearchSuggestions = document.getElementById(
-    "display-search-suggestions",
+    "display-related-queries",
   ) as HTMLInputElement | null;
   if (displaySearchSuggestions) {
     const saved = await idbGet<boolean>(DISPLAY_SEARCH_SUGGESTIONS);
-    displaySearchSuggestions.checked = saved || false;
+    displaySearchSuggestions.checked = saved ?? true;
     displaySearchSuggestions.addEventListener("change", async () => {
       await idbSet(
         DISPLAY_SEARCH_SUGGESTIONS,
