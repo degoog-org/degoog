@@ -198,15 +198,20 @@ async function _initSettings(): Promise<void> {
 
 window.addEventListener("extensions-saved", async () => {
   try {
-    const res = await fetch("/api/extensions", {
-      headers: getStoredToken()
-        ? { "x-settings-token": getStoredToken()! }
-        : {},
-    });
-    const allExtensions = (await res.json()) as AllExtensions;
+    const [extRes, themesRes] = await Promise.all([
+      fetch("/api/extensions", {
+        headers: getStoredToken()
+          ? { "x-settings-token": getStoredToken()! }
+          : {},
+      }),
+      fetch("/api/themes"),
+    ]);
+    const allExtensions = (await extRes.json()) as AllExtensions;
+    const themesData = (await themesRes.json()) as { activeId: string | null };
     await initEnginesTab(allExtensions);
     initPluginsTab(allExtensions);
     initTransportsTab(allExtensions);
+    await initThemesTab(themesData, allExtensions.themes ?? []);
   } catch {}
 });
 

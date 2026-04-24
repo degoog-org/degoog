@@ -2,6 +2,7 @@ import {
   skeletonGlance,
   skeletonImageGrid,
   skeletonResults,
+  skeletonSidebar,
   skeletonVideoGrid,
 } from "../animations/skeleton";
 import { MAX_PAGE } from "../constants";
@@ -112,7 +113,7 @@ export async function performStreamingSearch(
   const pagination = document.getElementById("pagination");
   if (pagination) pagination.innerHTML = "";
   const sidebar = document.getElementById("results-sidebar");
-  if (sidebar) sidebar.innerHTML = "";
+  if (sidebar) sidebar.innerHTML = isMediaType ? "" : skeletonSidebar();
   clearSlotPanels();
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl) glanceEl.innerHTML = type === "web" ? skeletonGlance() : "";
@@ -199,23 +200,21 @@ export async function performStreamingSearch(
     if (isMediaType) {
       renderMediaEngineBar(data.engineTimings);
       if (sidebar) sidebar.innerHTML = "";
+    } else if (type === "web") {
+      void fetchGlancePanels(query, currentResults);
+      void fetchSlotPanels(query, currentResults).then((panels) => {
+        const kpPanels = panels.filter(
+          (p) => p.position === SlotPanelPosition.KnowledgePanel,
+        );
+        renderSidebar(
+          searchData,
+          (q) => onComplete(q),
+          kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
+        );
+      });
     } else {
       renderSidebar(searchData, (q) => onComplete(q));
-      if (type === "web") {
-        void fetchGlancePanels(query, currentResults);
-        void fetchSlotPanels(query, currentResults).then((panels) => {
-          const kpPanels = panels.filter(
-            (p) => p.position === SlotPanelPosition.KnowledgePanel,
-          );
-          if (kpPanels.length > 0) {
-            renderSidebar(searchData, (q) => onComplete(q), {
-              sidebarTopPanels: kpPanels,
-            });
-          }
-        });
-      } else {
-        if (glanceEl) glanceEl.innerHTML = "";
-      }
+      if (glanceEl) glanceEl.innerHTML = "";
     }
 
     if (currentResults.length === 0 && resultsList) {
@@ -317,6 +316,7 @@ function _updateEngineTimings(
 
   let panel = sidebar.querySelector<HTMLElement>(".streaming-engine-panel");
   if (!panel) {
+    sidebar.querySelector(".skeleton-sidebar")?.remove();
     panel = document.createElement("div");
     panel.className =
       "sidebar-panel sidebar-accordion streaming-engine-panel open";

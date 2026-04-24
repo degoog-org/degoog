@@ -39,6 +39,21 @@ export const skeletonGlance = (): string =>
     </div>
   </div>`;
 
+export const skeletonSidebar = (): string =>
+  `<div class="skeleton-sidebar" aria-hidden="true">
+    <div class="sidebar-panel skeleton-sidebar-panel">
+      <div class="skeleton-line skeleton-line--title"></div>
+      <div class="skeleton-line skeleton-line--snippet"></div>
+      <div class="skeleton-line skeleton-line--snippet"></div>
+      <div class="skeleton-line skeleton-line--snippet-short"></div>
+    </div>
+    <div class="sidebar-panel skeleton-sidebar-panel">
+      <div class="skeleton-line skeleton-line--title"></div>
+      <div class="skeleton-line skeleton-line--snippet"></div>
+      <div class="skeleton-line skeleton-line--snippet-short"></div>
+    </div>
+  </div>`;
+
 export const skeletonFeedCards = (count = 4): string =>
   `<div class="skeleton-feed" aria-hidden="true">${Array.from(
     { length: count },

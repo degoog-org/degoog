@@ -233,8 +233,13 @@ const _filterItems = (
   typeFilter: string,
   subtypeFilter: string,
   searchQuery: string,
+  repoFilter: string | null,
 ): StoreItem[] => {
   let out = items;
+  if (repoFilter) {
+    const norm = _normalizeRepoUrl(repoFilter);
+    out = out.filter((i) => _normalizeRepoUrl(i.repoUrl) === norm);
+  }
   if (typeFilter && typeFilter !== "all") {
     out = out.filter((i) => i.type === typeFilter);
   }
@@ -289,6 +294,7 @@ export async function initStoreTab(
   let typeFilter = "all";
   let subtypeFilter = "all";
   let searchQuery = "";
+  let updatesOpen = false;
 
   async function loadRepos(): Promise<void> {
     const res = await fetch("/api/store/repos", {
@@ -435,6 +441,7 @@ export async function initStoreTab(
         typeFilter,
         subtypeFilter,
         searchQuery,
+        selectedRepoUrl,
       );
       grid.innerHTML = filtered
         .map((item) => _renderItemCard(item, getToken))
@@ -456,16 +463,52 @@ export async function initStoreTab(
         });
     }
 
-    const updateAllBtn = container.querySelector<HTMLButtonElement>(
-      ".store-btn-update-all",
+    const updatesPanel = container.querySelector<HTMLElement>(
+      ".store-updates-panel",
     );
-    const updatableCount = items.filter((i) => i.updateAvailable).length;
-    if (updateAllBtn) {
-      if (updatableCount > 0) {
-        updateAllBtn.style.display = "";
-        updateAllBtn.textContent = `Update all (${updatableCount})`;
+    const updatable = items.filter((i) => i.updateAvailable);
+    if (updatesPanel) {
+      if (updatable.length === 0) {
+        updatesPanel.style.display = "none";
+        updatesPanel.innerHTML = "";
       } else {
-        updateAllBtn.style.display = "none";
+        updatesPanel.style.display = "";
+        updatesPanel.classList.toggle("open", updatesOpen);
+        const rows = updatable
+          .map(
+            (i) => `
+              <div class="store-updates-row" data-repo-url="${escapeHtml(i.repoUrl)}" data-item-path="${escapeHtml(i.path)}" data-type="${escapeHtml(i.type)}">
+                <div class="store-updates-row-info">
+                  <span class="store-updates-row-name">${escapeHtml(i.name)}</span>
+                  <span class="store-updates-row-meta">${escapeHtml(i.repoName)} · <span class="store-card-version-old">v${escapeHtml(i.installedVersion || "?")}</span> → v${escapeHtml(i.version)}</span>
+                </div>
+                <button class="btn btn--primary store-btn-update" type="button" data-repo-url="${escapeHtml(i.repoUrl)}" data-item-path="${escapeHtml(i.path)}" data-type="${escapeHtml(i.type)}">Update</button>
+              </div>`,
+          )
+          .join("");
+        updatesPanel.innerHTML = `
+          <div class="store-updates-header">
+            <button class="store-updates-toggle" type="button">
+              <span>Updates available (${updatable.length})</span>
+              <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <button class="btn btn--primary store-btn-update-all" type="button">Update all</button>
+          </div>
+          <div class="store-updates-body">${rows}</div>`;
+        updatesPanel
+          .querySelector<HTMLButtonElement>(".store-updates-toggle")
+          ?.addEventListener("click", () => {
+            updatesOpen = !updatesOpen;
+            updatesPanel.classList.toggle("open", updatesOpen);
+          });
+        updatesPanel
+          .querySelector<HTMLButtonElement>(".store-btn-update-all")
+          ?.addEventListener("click", () => void handleUpdateAll());
+        updatesPanel
+          .querySelectorAll<HTMLButtonElement>(".store-btn-update")
+          .forEach((btn) => {
+            btn.addEventListener("click", () => void handleUpdate(btn));
+          });
       }
     }
   }
@@ -553,7 +596,11 @@ export async function initStoreTab(
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) alert(data.error || "Install failed");
-      else await loadItems().then(() => render());
+      else {
+        await loadItems();
+        render();
+        window.dispatchEvent(new CustomEvent("extensions-saved"));
+      }
     } catch {
       alert("Network error");
     } finally {
@@ -579,7 +626,11 @@ export async function initStoreTab(
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) alert(data.error || "Uninstall failed");
-      else await loadItems().then(() => render());
+      else {
+        await loadItems();
+        render();
+        window.dispatchEvent(new CustomEvent("extensions-saved"));
+      }
     } catch {
       alert("Network error");
     } finally {
@@ -598,7 +649,11 @@ export async function initStoreTab(
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) alert(data.error || "Update failed");
-      else await loadItems().then(() => render());
+      else {
+        await loadItems();
+        render();
+        window.dispatchEvent(new CustomEvent("extensions-saved"));
+      }
     } catch {
       alert("Network error");
     } finally {
@@ -618,7 +673,11 @@ export async function initStoreTab(
       });
       const data = (await res.json()) as { error?: string; updated?: number };
       if (!res.ok) alert(data.error || "Update failed");
-      else await loadItems().then(() => render());
+      else {
+        await loadItems();
+        render();
+        window.dispatchEvent(new CustomEvent("extensions-saved"));
+      }
     } catch {
       alert("Network error");
     } finally {
@@ -648,8 +707,8 @@ export async function initStoreTab(
     <section class="store-catalog-section settings-section">
       <div class="store-catalog-header">
         <h2 class="settings-section-heading">Catalog</h2>
-        <button class="btn btn--primary store-btn-update-all" type="button" style="display:none">Update all</button>
       </div>
+      <div class="store-updates-panel" style="display:none"></div>
       <div class="store-filter-bar">
         <input type="text" class="store-search-input" placeholder="Search…" id="store-search-input">
         <select class="store-filter-select store-filter-type" aria-label="Filter by type"></select>
@@ -727,10 +786,6 @@ export async function initStoreTab(
       if (ok) void handleRemove(removeBtn.dataset.url);
     }
   });
-
-  container
-    .querySelector<HTMLButtonElement>(".store-btn-update-all")
-    ?.addEventListener("click", () => void handleUpdateAll());
 
   const searchInput = container.querySelector<HTMLInputElement>(
     "#store-search-input",
