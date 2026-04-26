@@ -88,7 +88,7 @@ export const dynamicImportTranslationFiles = async (
 export const createTranslator = (translations: TranslationRecord) => {
   let locale = "en";
 
-  return Object.assign(
+  const t = Object.assign(
     function (
       key: string,
       vars?: TranslationVars[] | Record<string, TranslationVars>,
@@ -139,14 +139,16 @@ export const createTranslator = (translations: TranslationRecord) => {
       setLocale: function (newLocale: string) {
         locale = newLocale;
       },
-      get locale() {
-        return locale;
-      },
-      get translations() {
-        return translations;
-      },
+      locale: "" as string,
+      translations: undefined as TranslationRecord | undefined,
     },
   );
+  Object.defineProperty(t, "locale", { get: () => locale, enumerable: true });
+  Object.defineProperty(t, "translations", {
+    get: () => translations,
+    enumerable: true,
+  });
+  return t;
 };
 
 export const createTranslatorFromPath = async (path: string) => {
@@ -158,7 +160,7 @@ export const withFallback = (
   primary: Translate,
   fallback: Translate,
 ): Translate => {
-  return Object.assign(
+  const t = Object.assign(
     function (
       key: string,
       vars?: TranslationVars[] | Record<string, TranslationVars>,
@@ -172,14 +174,19 @@ export const withFallback = (
         primary.setLocale(newLocale);
         fallback.setLocale(newLocale);
       },
-      get locale() {
-        return primary.locale;
-      },
-      get translations() {
-        return primary.translations;
-      },
+      locale: "" as string,
+      translations: undefined as TranslationRecord | undefined,
     },
   );
+  Object.defineProperty(t, "locale", {
+    get: () => primary.locale,
+    enumerable: true,
+  });
+  Object.defineProperty(t, "translations", {
+    get: () => primary.translations,
+    enumerable: true,
+  });
+  return t;
 };
 
 export const translateHTML = (html: string, t: Translate): string => {
