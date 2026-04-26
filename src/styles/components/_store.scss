@@ -138,7 +138,6 @@
   border: 0;
   border-radius: $radius-md;
   color: var(--text-primary);
-  font-family: $font-family;
   font-size: $font-size-base;
   padding: $space-2 $space-3;
   outline: none;
@@ -202,7 +201,6 @@
   padding: $space-3 $space-4;
   font-size: $font-size-base;
   font-weight: 500;
-  font-family: $font-family;
   color: var(--text-primary);
   cursor: pointer;
 
@@ -274,7 +272,6 @@
   border: 0;
   border-radius: $search-bar-radius;
   color: var(--text-primary);
-  font-family: $font-family;
   font-size: $font-size-base;
   padding: $space-3;
   outline: none;
@@ -296,7 +293,6 @@
   border: 1px solid var(--border);
   border-radius: $radius-lg;
   color: var(--text-primary);
-  font-family: $font-family;
   font-size: $font-size-small;
   padding: $space-2 $space-7 $space-2 $space-3;
   cursor: pointer;

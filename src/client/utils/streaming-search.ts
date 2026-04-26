@@ -28,7 +28,12 @@ import {
 import { hideAcDropdown } from "./autocomplete";
 import { getEngines } from "./engines";
 import { setActiveTab } from "./navigation";
-import { fetchGlancePanels, fetchSlotPanels } from "./search-utils";
+import {
+  abortGlancePanels,
+  abortSlotPanels,
+  fetchGlancePanels,
+  fetchSlotPanels,
+} from "./search-utils";
 import { renderTemplate } from "./template";
 import { buildSearchUrl } from "./url";
 
@@ -115,6 +120,10 @@ export async function performStreamingSearch(
   const sidebar = document.getElementById("results-sidebar");
   if (sidebar) sidebar.innerHTML = isMediaType ? "" : skeletonSidebar();
   clearSlotPanels();
+  if (isMediaType) {
+    abortGlancePanels();
+    abortSlotPanels();
+  }
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl) glanceEl.innerHTML = type === "web" ? skeletonGlance() : "";
   document.title = `${query} - degoog`;

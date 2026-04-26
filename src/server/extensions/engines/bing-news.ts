@@ -5,6 +5,7 @@ import type {
   TimeFilter,
   EngineContext,
 } from "../../types";
+import { extractImageUrl } from "../../utils/extract-image";
 import { getRandomUserAgent } from "../../utils/user-agents";
 
 const TIME_RANGE_MAP: Record<string, string> = {
@@ -71,8 +72,11 @@ export class BingNewsEngine implements SearchEngine {
       const title =
         $el.find(".title").text().trim() || $el.find("a.title").text().trim();
       const snippet = $el.find(".snippet").text().trim();
-      const imgEl = $el.find("img").first();
-      const thumbnail = imgEl.attr("src") || imgEl.attr("data-src") || "";
+      const extract = context?.extractImageUrl ?? extractImageUrl;
+      const thumbnail = extract($el, "https://www.bing.com", [
+        ".image img",
+        ".imagelink img",
+      ]);
 
       if (title) {
         results.push({
@@ -80,7 +84,7 @@ export class BingNewsEngine implements SearchEngine {
           url: href,
           snippet,
           source: this.name,
-          ...(thumbnail && thumbnail.startsWith("http") ? { thumbnail } : {}),
+          ...(thumbnail ? { thumbnail } : {}),
         });
       }
     });

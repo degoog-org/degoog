@@ -75,7 +75,7 @@
   cursor: pointer;
   border-bottom: 3px solid transparent;
   transition: color $transition-fast, border-color $transition-fast;
-
+  
   &.active {
     color: var(--text-primary);
     border-bottom-color: var(--text-primary);
@@ -96,7 +96,6 @@
 .tools-toggle {
   @include button-reset;
   font-size: $font-size-small;
-  font-family: $font-family;
   color: var(--text-secondary);
   padding: $space-3 $space-4;
   white-space: nowrap;
@@ -124,7 +123,6 @@
   width: 100%;
   padding: $space-3 $space-3;
   gap: $space-2;
-  font-family: $font-family;
   font-size: $font-size-small;
   color: var(--text-primary);
   text-align: left;
@@ -177,7 +175,6 @@
   flex: 1;
   min-width: 0;
   font-size: $font-size-small;
-  font-family: $font-family;
   color: var(--text-primary);
   background: var(--bg);
   border: 1px solid var(--border);
@@ -194,7 +191,6 @@
 .tools-date-apply {
   @include button-reset;
   font-size: $font-size-small;
-  font-family: $font-family;
   color: $primary;
   padding: $space-1 $space-2;
   border-radius: $radius-sm;
@@ -211,7 +207,6 @@
   margin: $space-1 $space-3 2px;
   padding: $space-1 $space-2;
   font-size: $font-size-small;
-  font-family: $font-family;
   color: var(--text-primary);
   background: var(--bg);
   border: 1px solid var(--border);
@@ -248,7 +243,6 @@
   width: 100%;
   padding: $space-2 $space-4;
   font-size: $font-size-small;
-  font-family: $font-family;
   color: var(--text-primary);
   text-align: left;
 

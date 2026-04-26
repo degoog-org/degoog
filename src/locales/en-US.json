@@ -90,6 +90,9 @@
       "domain-replace-enable": "Enable domain replacement",
       "domain-replace-enable-aria": "Enable domain replacement",
       "domain-replace-list-label": "Replacement rules (one per line)",
+      "custom-css-heading": "Custom CSS",
+      "custom-css-desc": "Inject custom CSS into every page. Loaded after theme and plugin styles, so it overrides them. Use !important when you need to beat selectors with higher specificity.",
+      "custom-css-label": "Custom CSS",
       "saved": "Saved",
       "save-failed-network": "Save failed. Please try again."
     },

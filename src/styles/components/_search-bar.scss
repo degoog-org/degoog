@@ -28,7 +28,6 @@
     outline: none;
     color: var(--text-primary);
     font-size: $font-size-md;
-    font-family: $font-family;
     height: 100%;
     width: 100%;
     min-width: 0;
@@ -51,7 +50,6 @@
   border-radius: $radius-sm;
   color: var(--btn-text);
   font-size: $font-size-base;
-  font-family: $font-family;
   padding: 0 $space-4;
   height: 2.25rem;
   cursor: pointer;

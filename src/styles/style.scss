@@ -21,6 +21,10 @@
   box-sizing: border-box;
 }
 
+* {
+  font-family: $font-family;
+}
+
 :root {
   --primary: #4285f4;
   --primary-hover: #5a95f5;
@@ -134,7 +138,6 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: $font-family;
   font-size: $font-size-base;
   background: var(--bg);
   color: var(--text-primary);

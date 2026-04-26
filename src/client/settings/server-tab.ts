@@ -21,6 +21,7 @@ type ServerSettingsData = {
   domainBlockList?: string;
   domainReplaceEnabled?: string;
   domainReplaceList?: string;
+  customCss?: string;
 };
 
 const el = (id: string) => getInputElement(`settings-${id}`);
@@ -93,6 +94,8 @@ export async function initServerTab(
 
       _setToggle("domain-replace-enabled", data.domainReplaceEnabled);
       _setVal("domain-replace-list", data.domainReplaceList);
+
+      _setVal("custom-css", data.customCss);
     }
   } catch {}
 
@@ -167,6 +170,7 @@ export async function initServerTab(
           domainBlockList: val("domain-block-list"),
           domainReplaceEnabled: boolStr("domain-replace-enabled"),
           domainReplaceList: val("domain-replace-list"),
+          customCss: val("custom-css"),
         }),
       });
     },

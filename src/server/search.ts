@@ -21,6 +21,7 @@ import {
   filterBlockedDomains,
   applyDomainReplacements,
 } from "./utils/domain-filter";
+import { extractImageUrl } from "./utils/extract-image";
 import { outgoingFetch, parseOutgoingTransport } from "./utils/outgoing";
 import { asString, getSettings } from "./utils/plugin-settings";
 
@@ -193,6 +194,7 @@ export const createSearchEngineContext = (
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
     buildAcceptLanguage: () => _buildAcceptLanguage(resolvedLang),
+    extractImageUrl: extractImageUrl as EngineContext["extractImageUrl"],
   };
 };
 

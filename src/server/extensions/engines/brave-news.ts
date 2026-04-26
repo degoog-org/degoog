@@ -6,6 +6,7 @@ import type {
   EngineContext,
   SettingField,
 } from "../../types";
+import { extractImageUrl } from "../../utils/extract-image";
 import { getRandomUserAgent } from "../../utils/user-agents";
 
 const TIME_RANGE_MAP: Record<string, string> = {
@@ -108,10 +109,13 @@ export class BraveNewsEngine implements SearchEngine {
         )
         .text()
         .trim();
-      const thumbnail = $el
-        .find("img.thumb, img[src^='http']")
-        .first()
-        .attr("src");
+      const extract = context?.extractImageUrl ?? extractImageUrl;
+      const thumbnail = extract($el, "https://search.brave.com", [
+        ".snippet-thumbnail-wrapper .thumbnail img",
+        ".result-thumbnail-wrapper .thumbnail img",
+        ".thumbnail img",
+        "img.thumb",
+      ]);
 
       if (title) {
         results.push({
@@ -119,7 +123,7 @@ export class BraveNewsEngine implements SearchEngine {
           url: href,
           snippet,
           source: this.name,
-          ...(thumbnail && thumbnail.startsWith("http") ? { thumbnail } : {}),
+          ...(thumbnail ? { thumbnail } : {}),
         });
       }
     });

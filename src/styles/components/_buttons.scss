@@ -7,7 +7,6 @@
   box-shadow: none;
   color: var(--text-secondary);
   cursor: pointer;
-  font-family: $font-family;
   font-size: $font-size-small;
   padding: $space-2 $space-3;
   transition: color $transition-fast, background $transition-fast, opacity $transition-fast;
@@ -35,7 +34,6 @@
     padding: $space-2 $space-4;
     font-size: $font-size-small;
     cursor: pointer;
-    font-family: $font-family;
 
     &:hover {
       color: var(--text-primary);

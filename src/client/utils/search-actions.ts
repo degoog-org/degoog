@@ -33,6 +33,8 @@ import {
   setResultsMeta,
 } from "./search-helpers";
 import {
+  abortGlancePanels,
+  abortSlotPanels,
   buildCommandGlanceHtml,
   fetchGlancePanels,
   fetchSlotPanels,
@@ -172,6 +174,10 @@ export async function performSearch(
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   clearSlotPanels();
+  if (resolvedType === "images" || resolvedType === "videos") {
+    abortGlancePanels();
+    abortSlotPanels();
+  }
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl)
     glanceEl.innerHTML = resolvedType === "web" ? skeletonGlance() : "";

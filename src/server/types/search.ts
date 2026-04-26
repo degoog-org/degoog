@@ -77,6 +77,11 @@ export interface EngineContext {
   dateFrom?: string;
   dateTo?: string;
   buildAcceptLanguage?: () => string;
+  extractImageUrl?: (
+    $el: unknown,
+    baseUrl?: string,
+    selectors?: string[],
+  ) => string;
 }
 
 export interface SearchResponse {

@@ -71,7 +71,6 @@
     border-radius: $radius-sm;
     color: var(--text-secondary);
     cursor: pointer;
-    font-family: $font-family;
     font-size: $font-size-small;
     padding: $space-1 $space-3;
     transition: color $transition-fast, border-color $transition-fast;
@@ -185,7 +184,6 @@
     border: 1px solid var(--border);
     border-radius: $radius-md;
     color: var(--text-primary);
-    font-family: $font-family;
     font-size: $font-size-base;
     outline: none;
     padding: $space-2 $space-3;
@@ -278,7 +276,6 @@
       border: 1px solid var(--border);
       border-radius: $radius-md;
       color: var(--text-primary);
-      font-family: $font-family;
       font-size: $font-size-base;
       padding: $space-2 $space-3;
 
@@ -294,7 +291,6 @@
       border-radius: $radius-md;
       color: #fff;
       cursor: pointer;
-      font-family: $font-family;
       font-size: $font-size-base;
       padding: $space-2 $space-4;
 
@@ -330,8 +326,7 @@
   border: 1px solid var(--border);
   border-radius: $radius-md;
   color: var(--text-secondary);
-  cursor: pointer;
-  font-family: $font-family;
+  cursor: pointer;  
   font-size: $font-size-small;
   padding: $space-2 $space-3;
   transition: color $transition-fast, border-color $transition-fast;

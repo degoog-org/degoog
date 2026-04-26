@@ -181,6 +181,23 @@
                 Only set when <code>timeFilter === "custom"</code>.
               </td>
             </tr>
+            <tr>
+              <td><code>context.extractImageUrl($el, baseUrl?, selectors?)</code></td>
+              <td>
+                <code>($el, baseUrl?, selectors?) =&gt; string</code>
+              </td>
+              <td>
+                Robustly extract an article image URL from a cheerio element.
+                Walks <code>&lt;source srcset&gt;</code>, <code>&lt;img srcset&gt;</code>,
+                <code>data-src-hq</code>, <code>data-src</code>,
+                <code>data-lazy-src</code>, <code>data-original</code>,
+                <code>data-actualsrc</code>, <code>data-img-url</code>, <code>src</code>;
+                normalizes <code>//</code> URLs and resolves relative paths
+                against <code>baseUrl</code>. Skips favicon-like images
+                (class hints, &lt;48px). Pass <code>selectors</code> to
+                target a specific thumbnail container first.
+              </td>
+            </tr>
           </tbody>
         </table>
         <p>

@@ -70,7 +70,6 @@
   border: 1px solid var(--border);
   border-radius: $radius-xl;
   color: var(--text-primary);
-  font-family: $font-family;
   padding: $space-3 2.75rem $space-3 $space-4;
   cursor: pointer;
   outline: none;
@@ -107,7 +106,6 @@
   border-radius: $radius-lg;
   color: var(--text-secondary);
   cursor: pointer;
-  font-family: $font-family;
   font-size: $font-size-base;
   padding: $space-3 $space-3;
   text-align: left;
@@ -236,7 +234,6 @@
   border-radius: $radius-md;
   color: var(--text-primary);
   font-size: $font-size-base;
-  font-family: $font-family;
   padding: $space-2 $space-3;
   width: 100%;
   cursor: pointer;
@@ -280,7 +277,6 @@
   width: 100%;
   min-height: 6.25rem;
   padding: $space-3;
-  font-family: $font-family;
   font-size: $font-size-base;
   color: var(--text-primary);
   background: var(--bg-light);
@@ -361,7 +357,6 @@
   min-height: $search-bar-height;
   padding: $space-3;
   margin-top: $space-2;
-  font-family: $font-family;
   font-size: $font-size-base;
   color: var(--text-primary);
   background: var(--bg-light);
@@ -414,7 +409,6 @@
   border: 1px solid var(--border);
   border-radius: $radius-xl;
   color: var(--text-primary);
-  font-family: $font-family;
   font-size: $font-size-lg;
   outline: none;
   padding: $space-4 $space-5;
@@ -447,7 +441,6 @@
   padding: $space-4 $space-6;
   font-weight: 500;
   cursor: pointer;
-  font-family: $font-family;
   transition: background $transition-fast;
 
   &:hover {
@@ -463,7 +456,6 @@
   padding: $space-2 $space-6;
   font-size: $font-size-base;
   cursor: pointer;
-  font-family: $font-family;
 
   &:hover:not(:disabled) {
     background: $primary-hover;

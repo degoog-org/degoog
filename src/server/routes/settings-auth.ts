@@ -206,6 +206,7 @@ router.post("/api/settings/general", async (c) => {
     "domainBlockList",
     "domainReplaceEnabled",
     "domainReplaceList",
+    "customCss",
   ];
   const updates: Record<string, string> = {};
   for (const key of allowed) {
