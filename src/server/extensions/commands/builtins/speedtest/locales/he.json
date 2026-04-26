@@ -1,0 +1,15 @@
+{
+  "speedtest": {
+    "title": "בדיקת מהירות",
+    "description": "הפעל בדיקת מהירות אינטרנט",
+    "download": "הורדה (Mbps)",
+    "upload": "העלאה (Mbps)",
+    "latency": "שיהוי (ms)",
+    "starting": "מתחיל...",
+    "testing-latency": "בודק שיהוי...",
+    "testing-download": "בודק מהירות הורדה...",
+    "testing-upload": "בודק מהירות העלאה...",
+    "complete": "הושלם",
+    "error": "שגיאה"
+  }
+}

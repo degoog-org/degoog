@@ -1,0 +1,12 @@
+{
+  "ai-summary": {
+    "name": "סיכום AI",
+    "description": "מחליף את 'במבט חטוף' בסיכום קצר שנוצר על ידי AI באמצעות כל ספק התואם ל-OpenAI",
+    "badge": "סיכום AI",
+    "dive-deeper": "צלילה לעומק",
+    "follow-up-placeholder": "שאל שאלת המשך…",
+    "thinking": "חושב…",
+    "no-response": "לא התקבלה תגובה. נסה שוב.",
+    "request-failed": "הבקשה נכשלה. נסה שוב."
+  }
+}

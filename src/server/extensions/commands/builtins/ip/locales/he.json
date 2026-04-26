@@ -1,0 +1,20 @@
+{
+  "ip": {
+    "title": "חיפוש IP",
+    "description": "חיפוש מידע על כתובת IP",
+    "title-result": "מידע IP: {ip}",
+    "detecting": "מזהה את ה-IP שלך...",
+    "detect-failed": "לא ניתן היה לזהות IP.",
+    "detect-failed-hint": "לא ניתן היה לזהות את ה-IP הציבורי שלך. נסה <strong>!ip 8.8.8.8</strong>",
+    "lookup-failed": "החיפוש נכשל: {message}",
+    "fetch-failed": "נכשל ניסיון הבאת נתוני IP. אנא נסה שוב.",
+    "label-ip": "IP",
+    "label-city": "עיר",
+    "label-region": "אזור",
+    "label-country": "מדינה",
+    "label-isp": "ספק אינטרנט",
+    "label-org": "ארגון",
+    "label-latlon": "קו רוחב/אורך",
+    "na": "לא זמין"
+  }
+}

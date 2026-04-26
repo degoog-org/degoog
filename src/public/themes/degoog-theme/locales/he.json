@@ -1,0 +1,50 @@
+{
+  "app": {
+    "title": "degoog",
+    "name": "degoog",
+    "description": "degoog הוא אגרגטור מנועי חיפוש אלטרנטיבי."
+  },
+  "index-templates": {
+    "footer": {
+      "repo": "מאגר",
+      "docs": "תיעוד"
+    },
+    "header": {
+      "settings-title": "הגדרות"
+    },
+    "search": {
+      "search-button": "חיפוש degoog",
+      "feeling-lucky": "יותר מזל משכל",
+      "feeling-curious": "אני מרגיש סקרן",
+      "feeling-adventurous": "אני מרגיש הרפתקני",
+      "feeling-playful": "אני מרגיש שובב",
+      "feeling-stellar": "אני מרגיש כוכבי",
+      "feeling-trendy": "אני מרגיש טרנדי"
+    }
+  },
+  "search-templates": {
+    "at-a-glance": {
+      "found-on": "נמצא ב-: {sources_text}"
+    },
+    "tabs": {
+      "web": "אינטרנט",
+      "images": "תמונות",
+      "videos": "סרטונים",
+      "news": "חדשות",
+      "options": "אפשרויות",
+      "time": "זמן",
+      "any-time": "בכל זמן",
+      "language": "שפה",
+      "any": "הכל",
+      "hour": "שעה",
+      "day": "24 שעות",
+      "week": "שבוע",
+      "month": "חודש",
+      "year": "שנה",
+      "custom": "מותאם אישית...",
+      "date-to": "עד",
+      "apply": "החל",
+      "filter-languages": "סנן שפות..."
+    }
+  }
+}

@@ -97,6 +97,14 @@ async function getTranslator(
   return t;
 }
 
+function getTextDirection(
+  locale: string
+): "rtl" | "ltr" {
+  const RTL_LANGS = ["ar", "he", "fa", "ur", "ps", "ckb"];
+  const isRTL = RTL_LANGS.some(lang => locale.toLowerCase().startsWith(lang));
+  return isRTL ? "rtl" : "ltr";
+}
+
 const router = new Hono();
 
 function buildOpenSearchXml(origin: string): string {
@@ -190,7 +198,8 @@ async function applyPagePlaceholders(
     .replace("__THEME_CSS__", themeCssPlaceholder())
     .replace("__THEME_ATTRS__", themeAttrs)
     .replace("__PLUGIN_ASSETS__", await pluginAssetsPlaceholder())
-    .replace("__CUSTOM_CSS__", await customCssPlaceholder());
+    .replace("__CUSTOM_CSS__", await customCssPlaceholder())
+    .replace("__RTL_SUPPORT__", `dir=${getTextDirection(locale)}`);
   const defaultTemplates = await getDefaultTemplatesHtml();
   const themeTemplates = await getThemeTemplatesHtml();
   const allTemplates = [defaultTemplates, themeTemplates]

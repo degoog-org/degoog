@@ -108,7 +108,7 @@
   cursor: pointer;
   font-size: $font-size-base;
   padding: $space-3 $space-3;
-  text-align: left;
+  text-align: start;
   transition: color $transition-fast, background $transition-fast;
 
   &:hover {

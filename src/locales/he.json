@@ -1,0 +1,237 @@
+{
+  "settings-page": {
+    "meta": {
+      "title": "הגדרות - degoog",
+      "description": "הגדרות חיפוש degoog"
+    },
+    "back": "חזרה",
+    "page-title": "הגדרות",
+    "nav": {
+      "aria-section": "אזור הגדרות",
+      "aria-sections": "אזורי הגדרות",
+      "general": "כללי",
+      "server": "שרת",
+      "engines": "מנועים",
+      "plugins": "תוספים",
+      "transports": "דרכי העברה",
+      "themes": "ערכות נושא",
+      "store": "חנות"
+    },
+    "appearance": {
+      "heading": "מראה",
+      "desc": "בחר את העיצוב המועדף עליך.",
+      "save-defaults": "שמור כברירת מחדל עבור המופע"
+    },
+    "theme": {
+      "system": "ברירת מחדל של המערכת",
+      "light": "בהיר",
+      "dark": "כהה"
+    },
+    "search-options": {
+      "heading": "אפשרויות חיפוש",
+      "open-new-tab": "פתח קישורי תוצאות בלשונית חדשה",
+      "open-new-tab-aria": "פתח קישורי תוצאות בלשונית חדשה",
+      "engine-performance": "הצג ביצועי מנוע",
+      "engine-performance-aria": "הצג ביצועי מנוע",
+      "search-suggestions": "הצג הצעות חיפוש",
+      "search-suggestions-aria": "הצג הצעות חיפוש",
+      "post-method": "השתמש בשיטת POST לבקשות חיפוש (לא יעבוד עם תוצאות מוזרמות)",
+      "post-method-aria": "השתמש בשיטת POST לבקשות חיפוש (לא יעבוד עם תוצאות מוזרמות)",
+      "post-method-tooltip": "שיטת POST אינה תואמת לתוצאות מוזרמות"
+    },
+    "install": {
+      "heading": "התקן אפליקציה",
+      "desc": "הוסף את degoog למסך הבית שלך. אם הדפדפן שלך לא הציג את הודעת ההתקנה, השתמש בלחצן זה כדי לנסות שוב.",
+      "prompt-button": "הצג הודעת התקנה"
+    },
+    "server": {
+      "cache-heading": "מטמון (Cache)",
+      "cache-desc": "נקה תוצאות חיפוש מאוחסנות.",
+      "cache-clear": "נקה מטמון חיפוש",
+      "cache-cleared": "נוקה",
+      "cache-failed": "נכשל",
+      "streaming-heading": "תוצאות מוזרמות",
+      "streaming-desc": "טען תוצאות באופן הדרגתי ככל שכל מנוע מגיב במקום לחכות שכל המנועים יסיימו. זוהי תכונה ניסיונית.",
+      "streaming-enable": "אפשר תוצאות מוזרמות (ניסיוני)",
+      "streaming-enable-aria": "אפשר תוצאות מוזרמות (ניסיוני)",
+      "streaming-enable-tooltip": "הזרמה אינה תואמת לשיטת החיפוש POST",
+      "streaming-auto-retry": "ניסיון חוזר אוטומטי למנועים שנכשלו",
+      "streaming-auto-retry-aria": "ניסיון חוזר אוטומטי למנועים שנכשלו",
+      "streaming-max-retries-label": "מקסימום ניסיונות חוזרים לכל מנוע",
+      "languages-heading": "שפת חיפוש",
+      "languages-desc": "שנה את שפות החיפוש בתפריט הנפתח של אפשרויות החיפוש. כאשר מושבת, כל ~90 השפות המובנות מוצגות.",
+      "languages-toggle": "שנה שפות חיפוש",
+      "languages-toggle-aria": "שנה שפות חיפוש",
+      "languages-codes-label": "קודי שפה (אחד בשורה)",
+      "proxy-heading": "פרוקסי (Proxy)",
+      "proxy-desc": "השתמש בפרוקסי לבקשות חיפוש בצד השרת. כתובת URL אחת בשורה; הבקשות עוברות בסבב בין הרשימה.",
+      "proxy-enable": "השתמש בפרוקסי לחיפוש",
+      "proxy-enable-aria": "השתמש בפרוקסי לחיפוש",
+      "proxy-urls-label": "כתובות URL של פרוקסי (אחת בשורה)",
+      "proxy-test": "בדוק חיבור פרוקסי",
+      "proxy-testing": "בודק...",
+      "rate-limit-heading": "הגבלת קצב (Rate limit)",
+      "rate-limit-desc": "הגבל בקשות לכל IP כדי להגן על המופע ועל המנועים במעלה הזרם.",
+      "rate-limit-enable": "אפשר הגבלת קצב",
+      "rate-limit-enable-aria": "אפשר הגבלת קצב",
+      "rate-limit-defaults": "ברירת מחדל: 15 בקשות ל-20 שניות, 150 ל-10 דקות לכל IP.",
+      "rate-limit-burst-window": "חלון פרץ (שניות)",
+      "rate-limit-burst-max": "מקסימום בקשות בפרץ",
+      "rate-limit-long-window": "חלון ארוך (שניות)",
+      "rate-limit-long-max": "מקסימום בקשות בחלון ארוך",
+      "domain-block-heading": "חסימת דומיינים",
+      "domain-block-desc": "הסתר תוצאות חיפוש מדומיינים ספציפיים. דומיין אחד בשורה. תת-דומיינים נכללים אוטומטית. עטוף שורה ב-/לוכסנים/ עבור ביטוי רגולרי (Regex).",
+      "domain-block-enable": "אפשר חסימת דומיינים",
+      "domain-block-enable-aria": "אפשר חסימת דומיינים",
+      "domain-block-list-label": "דומיינים חסומים (אחד בשורה)",
+      "domain-block-regex-help": "ערכי Regex חייבים להיות עטופים ב-/לוכסנים/ ולהשתמש בתחביר JavaScript RegExp (ללא דגלים). הם מותאמים מול שם המארח של כתובת ה-URL בלבד (לא הכתובת המלאה). דוגמה: /(^|\\\\.)instagram\\\\.com$/ חוסם את instagram.com ואת כל תתי-הדומיינים שלו; /^www\\\\.instagram\\\\.com$/ חוסם רק את www.instagram.com.",
+      "domain-replace-heading": "החלפת דומיינים",
+      "domain-replace-desc": "החלף דומיינים בכתובות URL של תוצאות חיפוש. השתמש בפורמט: source.com -> target.com (אחד בשורה). תת-דומיינים מותאמים אוטומטית, והנתיב נשמר.",
+      "domain-replace-enable": "אפשר החלפת דומיינים",
+      "domain-replace-enable-aria": "אפשר החלפת דומיינים",
+      "domain-replace-list-label": "כללי החלפה (אחד בשורה)",
+      "saved": "נשמר",
+      "save-failed-network": "השמירה נכשלה. אנא נסה שוב."
+    },
+    "proxy-test": {
+      "not-enabled": "פרוקסי אינו מופעל. אפשר אותו ושמור לפני הבדיקה.",
+      "ip-unreachable": "לא ניתן היה להגיע לשירות בדיקת ה-IP. בדוק את חיבור הרשת שלך.",
+      "unreachable-title": "פרוקסי לא זמין.",
+      "unreachable-detail": "IP ישיר: {directIp}",
+      "unreachable-hint": "לא ניתן היה ליצור קשר עם שרת הפרוקסי. בדוק את כתובת ה-URL של הפרוקסי וודא שהפרוקסי פועל.",
+      "match-title": "כתובות ה-IP זהות - ייתכן שהפרוקסי אינו פועל.",
+      "match-detail": "ישיר: {directIp} · פרוקסי: {proxyIp}",
+      "match-hint": "שני הנתיבים החזירו את אותה כתובת IP. ייתכן שהפרוקסי אינו משנה את כתובת ה-IP היוצאת שלך.",
+      "ok-title": "הפרוקסי עובד.",
+      "ok-detail": "ישיר: {directIp} · פרוקסי: {proxyIp}",
+      "server-error": "השרת החזיר {status}. וודא שאתה מחובר (authenticated).",
+      "request-failed": "הבקשה נכשלה. בדוק את החיבור שלך."
+    },
+    "actions": {
+      "save": "שמור"
+    },
+    "modal": {
+      "close-aria": "סגור",
+      "save": "שמור",
+      "saving": "שומר...",
+      "saved": "נשמר",
+      "save-failed": "השמירה נכשלה. אנא נסה שוב.",
+      "configure-title": "הגדר את {name}",
+      "advanced": "מתקדם",
+      "test-connection": "בדוק חיבור",
+      "test-testing": "בודק...",
+      "test-request-failed": "הבקשה נכשלה",
+      "field-remove-aria": "הסר",
+      "field-add": "הוסף"
+    },
+    "confirm": {
+      "title": "אישור",
+      "cancel": "ביטול",
+      "confirm": "אישור"
+    },
+    "extensions": {
+      "configure": "הגדר",
+      "active": "פעיל",
+      "built-in-theme-name": "מובנה",
+      "built-in-theme-desc": "המראה המוגדר כברירת מחדל של degoog.",
+      "group-plugins": "תוספים",
+      "group-builtin-commands": "פקודות מובנות",
+      "group-transports": "דרכי העברה",
+      "group-builtin-transports": "דרכי העברה מובנות",
+      "group-themes": "ערכות נושא",
+      "apply-failed": "נכשל",
+      "save-defaults": "שמור כברירות מחדל עבור המופע"
+    },
+    "errors": {
+      "load-extensions": "טעינת התוספים נכשלה.",
+      "load-transports": "טעינת דרכי ההעברה נכשלה.",
+      "load-themes": "טעינת ערכות הנושא נכשלה.",
+      "load-engines": "טעינת המנועים נכשלה."
+    },
+    "gate": {
+      "desc": "הזן את הסיסמה כדי לגשת להגדרות.",
+      "password-placeholder": "סיסמה",
+      "unlock": "שחרר נעילה",
+      "incorrect-password": "סיסמה שגויה.",
+      "network-error": "משהו השתבש. אנא נסה שוב."
+    },
+    "public": {
+      "engines-heading": "מנועים"
+    },
+    "store": {
+      "repos-heading": "מאגרים",
+      "catalog-heading": "קטלוג",
+      "desc": "הוסף כתובת URL של מאגר git כדי לעיין ולהתקין תוספים, ערכות נושא, מנועים ודרכי העברה. הגדר repo-image ב-package.json של המאגר כדי להציג תמונה ליד כתובת ה-URL.",
+      "empty-repos": "לא נוספו מאגרים. הוסף כתובת URL של מאגר git כדי לעיין בתוספים, ערכות נושא, מנועים ודרכי ההעברה שלו.",
+      "refresh-all": "רענן הכל",
+      "add-repo": "הוסף מאגר",
+      "add": "הוסף",
+      "placeholder-url": "https://github.com/user/repo.git",
+      "search-placeholder": "חיפוש...",
+      "filter-type-aria": "סנן לפי סוג",
+      "filter-subtype-aria": "סנן לפי תת-סוג",
+      "lightbox-aria": "גלריית צילומי מסך",
+      "close-aria": "סגור",
+      "prev-aria": "הקודם",
+      "next-aria": "הבא",
+      "view-screenshots-aria": "צפה בצילומי מסך",
+      "filter-all": "הכל",
+      "filter-plugins": "תוספים",
+      "filter-themes": "ערכות נושא",
+      "filter-engines": "מנועים",
+      "filter-transports": "דרכי העברה",
+      "type-plugin": "תוסף",
+      "type-engine": "מנוע",
+      "type-transport": "דרך העברה",
+      "type-theme": "ערכת נושא",
+      "plugin-type-bang": "Bang",
+      "plugin-type-slot": "Slot",
+      "plugin-type-search-tab": "לשונית חיפוש",
+      "plugin-type-search-bar": "שורת חיפוש",
+      "install": "התקן",
+      "update": "עדכן",
+      "uninstall": "הסר התקנה",
+      "meta-by": "מאת {author} · {repo}",
+      "refresh": "רענן",
+      "remove": "הסר",
+      "updates-one": "עדכון אחד זמין",
+      "updates-many": "{count} עדכונים זמינים",
+      "update-all": "עדכן הכל ({count})",
+      "time-just-now": "ממש עכשיו",
+      "time-min-ago": "לפני {n} דקות",
+      "time-hours-ago": "לפני {n} שעות",
+      "time-days-ago": "לפני {n} ימים",
+      "failed-add-repo": "הוספת המאגר נכשלה",
+      "failed-remove-repo": "הסרת המאגר נכשלה",
+      "network-error": "שגיאת רשת",
+      "install-failed": "ההתקנה נכשלה",
+      "uninstall-failed": "הסרת ההתקנה נכשלה",
+      "update-failed": "העדכון נכשל",
+      "install-plugin-title": "להתקין תוסף?",
+      "install-plugin-message": "תוסף זה יריץ קוד על השרת שלך. התקן רק ממקורות שאתה סומך עליהם. להמשיך?",
+      "uninstall-title": "להסיר התקנה?",
+      "uninstall-message": "להסיר את ההתקנה של {type} זה?",
+      "remove-repo-title": "להסיר מאגר?",
+      "remove-repo-message": "להסיר מאגר זה? עליך להסיר את ההתקנה של כל הפריטים המותקנים תחילה.",
+      "failed-load-store": "טעינת החנות נכשלה."
+    },
+    "schema": {
+      "natural-language": {
+        "label": "שפה טבעית",
+        "description": "כאשר מופעל, הקלדת הטריגר או הביטוי ללא ! תריץ את הפקודה ותציג תוצאות חיפוש למטה."
+      },
+      "score": {
+        "label": "ניקוד",
+        "description": "מכפיל דירוג תוצאות עבור מנוע זה. ערכים גבוהים יותר נותנים עדיפות לתוצאות שלו."
+      },
+      "outgoing-transport": {
+        "label": "לקוח HTTP יוצא",
+        "description": "לקוח ה-HTTP היוצא לשימוש עבור מנוע זה."
+      },
+      "slot-position": {
+        "label": "מיקום",
+        "description": "איפה תוכן ה-slot מופיע בדף."
+      }
+    }
+  }
+}

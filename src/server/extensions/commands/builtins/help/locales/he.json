@@ -1,0 +1,10 @@
+{
+  "help": {
+    "description": "רשימה של כל פקודות ה-bang הזמינות",
+    "title": "פקודות זמינות",
+    "search-placeholder": "חיפוש פקודות...",
+    "aliases": "כינויים: {aliases}",
+    "prefix-hint": "חיפוש עם קידומת סוג: {types}",
+    "category-other": "אחר"
+  }
+}
