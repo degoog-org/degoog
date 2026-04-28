@@ -245,8 +245,8 @@ export async function performStreamingSearch(
   });
 }
 
-function _renderResultEl(r: ScoredResult): HTMLElement | null {
-  const html = renderTemplate("degoog-result", buildResultContext(r)) ?? "";
+function _renderResultEl(r: ScoredResult, index: number): HTMLElement | null {
+  const html = renderTemplate("degoog-result", buildResultContext(r, index)) ?? "";
   const wrapper = document.createElement("div");
   wrapper.innerHTML = html;
   const el = wrapper.firstElementChild as HTMLElement | null;
@@ -270,7 +270,8 @@ function _updateResults(
 
   const resultMap = new Map(results.map((r) => [r.url, r]));
 
-  for (const r of results) {
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
     const existing = existingEls.get(r.url);
     if (existing) {
       const oldSources =
@@ -279,7 +280,7 @@ function _updateResults(
       const oldSnippet =
         existing.querySelector(".result-snippet")?.textContent?.trim() ?? "";
       if (oldSources !== newSources || oldSnippet !== r.snippet.trim()) {
-        const updated = _renderResultEl(r);
+        const updated = _renderResultEl(r, i);
         if (updated) {
           container.replaceChild(updated, existing);
           existingEls.set(r.url, updated);
@@ -287,7 +288,7 @@ function _updateResults(
       }
     } else {
       renderedUrls.add(r.url);
-      const el = _renderResultEl(r);
+      const el = _renderResultEl(r, i);
       if (!el) continue;
       el.classList.add("result-stream-in");
       container.appendChild(el);

@@ -545,8 +545,8 @@
           Some templates contain inner elements that JS hooks into. Keep these
           IDs when overriding or the feature breaks. Templates not listed here
           (<code>degoog-home-header</code>, <code>degoog-home-logo</code>,
-          <code>degoog-home-footer</code>, <code>degoog-result</code>,
-          <code>degoog-image-card</code>, <code>degoog-video-card</code>,
+          <code>degoog-home-footer</code>, <code>degoog-image-card</code>,
+          <code>degoog-video-card</code>,
           <code>degoog-at-a-glance</code>) can be restructured freely.
         </p>
 
@@ -598,6 +598,44 @@
           <li>
             <code>tools-date-from</code>, <code>tools-date-to</code>,
             <code>tools-date-apply</code> &mdash; date range
+          </li>
+        </ul>
+
+        <h4><code>degoog-result</code></h4>
+        <p>
+          IDs in this template are suffixed with the
+          <code>{{ index }}</code> placeholder (the result&rsquo;s zero-based
+          position) so they stay unique within the page. Keep the prefix
+          intact when overriding.
+        </p>
+        <ul>
+          <li>
+            <code>result-favicon-{N}</code> &mdash; favicon image. Must also
+            carry <code>data-favicon-host="{{ favicon_host }}"</code>; JS
+            attaches the DDG &rarr; Google &rarr; letter-avatar fallback chain.
+            On final fallback the <code>&lt;img&gt;</code> is replaced with a
+            <code>&lt;span class="result-favicon-fallback"&gt;</code>.
+          </li>
+          <li>
+            <code>result-actions-{N}</code> &mdash; per-result action wrapper
+            (block / replace / score). Only rendered when
+            <code>show_actions</code> is truthy.
+          </li>
+          <li>
+            <code>result-actions-toggle-{N}</code> &mdash; kebab button that
+            opens the menu; <code>aria-expanded</code> is toggled by JS.
+          </li>
+          <li>
+            <code>result-actions-menu-{N}</code> &mdash; popover containing
+            the action buttons; toggled via the <code>hidden</code> attribute.
+          </li>
+          <li>
+            <code>result-action-block-{N}</code>,
+            <code>result-action-replace-{N}</code>,
+            <code>result-action-score-{N}</code> &mdash; individual menu
+            buttons. Each one is conditional on the matching
+            <code>action_block</code> / <code>action_replace</code> /
+            <code>action_score</code> placeholder.
           </li>
         </ul>
 
@@ -668,6 +706,14 @@
           </thead>
           <tbody>
             <tr>
+              <td><code>index</code></td>
+              <td>number</td>
+              <td>
+                Zero-based position of this result; used to suffix the
+                template&rsquo;s required IDs.
+              </td>
+            </tr>
+            <tr>
               <td><code>title</code></td>
               <td>string</td>
               <td>Result title</td>
@@ -690,7 +736,12 @@
             <tr>
               <td><code>favicon_url</code></td>
               <td>string</td>
-              <td>Proxied favicon</td>
+              <td>Proxied favicon (first candidate; fallback chain runs in JS)</td>
+            </tr>
+            <tr>
+              <td><code>favicon_host</code></td>
+              <td>string</td>
+              <td>Hostname used by the favicon fallback chain</td>
             </tr>
             <tr>
               <td><code>thumbnail_url</code></td>
@@ -716,6 +767,30 @@
               <td><code>link_rel</code></td>
               <td>string</td>
               <td><code>noopener</code> or empty</td>
+            </tr>
+            <tr>
+              <td><code>show_actions</code></td>
+              <td>bool</td>
+              <td>
+                Truthy when the per-result block/replace/score menu should
+                render (authenticated, non-public instance, at least one
+                action enabled in settings).
+              </td>
+            </tr>
+            <tr>
+              <td><code>action_block</code></td>
+              <td>bool</td>
+              <td>Show the &ldquo;Block domain&rdquo; menu item</td>
+            </tr>
+            <tr>
+              <td><code>action_replace</code></td>
+              <td>bool</td>
+              <td>Show the &ldquo;Replace domain&rdquo; menu item</td>
+            </tr>
+            <tr>
+              <td><code>action_score</code></td>
+              <td>bool</td>
+              <td>Show the &ldquo;Score domain&rdquo; menu item</td>
             </tr>
           </tbody>
         </table>

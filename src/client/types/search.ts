@@ -11,6 +11,7 @@ export interface SearchResult {
 export interface ScoredResult extends SearchResult {
   score: number;
   sources: string[];
+  insecure?: boolean;
 }
 
 export interface AtAGlance {

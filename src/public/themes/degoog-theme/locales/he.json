@@ -45,6 +45,25 @@
       "date-to": "עד",
       "apply": "החל",
       "filter-languages": "סנן שפות..."
+    },
+    "result": {
+      "insecure": "בלתי מאובטח",
+      "insecure-tooltip": "אתר זה משובץ על חיבור HTTP לא מאובטח.",
+      "actions": {
+        "menu-aria": "פעולות דומיין",
+        "block": "חסום דומיין זה",
+        "block-confirm-title": "לחסום דומיין?",
+        "block-confirm-message": "דומיין זה יוסר מכל התוצאות.",
+        "replace": "החלף דומיין זה",
+        "score": "נקוד דומיין זה",
+        "prompt-target-title": "החלף דומיין",
+        "prompt-target": "החלף בדומיין של ?",
+        "prompt-score-title": "נקוד דומיין",
+        "prompt-score": "ניקוד עבור דומיין זה (ערכים חיוביים מגבירים, ערכים שליליים מנקטים) :",
+        "modal-confirm": "אישור",
+        "modal-cancel": "ביטול",
+        "scored": "נקוד"
+      }
     }
   }
 }

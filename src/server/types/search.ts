@@ -43,6 +43,7 @@ export interface SearchParams {
 export interface ScoredResult extends SearchResult {
   score: number;
   sources: string[];
+  insecure?: boolean;
 }
 
 export type SearchType = "web" | "images" | "videos" | "news";

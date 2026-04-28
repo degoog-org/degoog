@@ -1,5 +1,5 @@
 import { readFile } from "fs/promises";
-import { Hono } from "hono";
+import { Context, Hono } from "hono";
 import { join } from "path";
 import pkg from "../../../package.json";
 import { SETTINGS_TABS } from "../../shared/settings-tabs";
@@ -97,11 +97,9 @@ async function getTranslator(
   return t;
 }
 
-function getTextDirection(
-  locale: string
-): "rtl" | "ltr" {
+function getTextDirection(locale: string): "rtl" | "ltr" {
   const RTL_LANGS = ["ar", "he", "fa", "ur", "ps", "ckb"];
-  const isRTL = RTL_LANGS.some(lang => locale.toLowerCase().startsWith(lang));
+  const isRTL = RTL_LANGS.some((lang) => locale.toLowerCase().startsWith(lang));
   return isRTL ? "rtl" : "ltr";
 }
 
@@ -280,17 +278,50 @@ router.get("/", async (c) => {
   return c.html(await buildLayoutPage("index.html", locale));
 });
 
+const _buildResultActionsScript = async (c: Context): Promise<string> => {
+  const token = getSettingsTokenFromRequest(c);
+  const authenticated = await validateSettingsToken(token);
+  let blockUi = false;
+  let replaceUi = false;
+  let scoreUi = false;
+  if (authenticated) {
+    const settings = await getSettings("degoog-settings");
+    blockUi = asString(settings.domainBlockUiEnabled) === "true";
+    replaceUi = asString(settings.domainReplaceUiEnabled) === "true";
+    scoreUi = asString(settings.domainScoreUiEnabled) === "true";
+  }
+  const payload = JSON.stringify({
+    authenticated,
+    blockUi,
+    replaceUi,
+    scoreUi,
+  }).replace(/<\//g, "<\\/");
+  return `<script>window.__DEGOOG_RESULT_ACTIONS__=${payload}</script>`;
+};
+
+const _injectIntoHead = (html: string, fragment: string): string => {
+  if (html.includes("</head>")) {
+    return html.replace("</head>", `${fragment}\n  </head>`);
+  }
+  return `${fragment}\n${html}`;
+};
+
 router.get("/search", async (c) => {
   const locale = getLocale(c);
   const override = await getThemeHtml("search");
+  const actionsScript = await _buildResultActionsScript(c);
+  let html: string;
   if (override) {
     if (isFullDocument(override)) {
       const t = await getTranslator(locale, true);
-      return c.html(await applyPagePlaceholders(override, t));
+      html = await applyPagePlaceholders(override, t);
+    } else {
+      html = await buildThemedLayoutPage(override, locale, "has-results");
     }
-    return c.html(await buildThemedLayoutPage(override, locale, "has-results"));
+  } else {
+    html = await buildLayoutPage("search.html", locale, "has-results");
   }
-  return c.html(await buildLayoutPage("search.html", locale, "has-results"));
+  return c.html(_injectIntoHead(html, actionsScript));
 });
 
 router.get("/settings/", (c) => c.redirect("/settings", 301));

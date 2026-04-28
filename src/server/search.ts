@@ -17,10 +17,6 @@ import type {
   SearchType,
   TimeFilter,
 } from "./types";
-import {
-  filterBlockedDomains,
-  applyDomainReplacements,
-} from "./utils/domain-filter";
 import { extractImageUrl } from "./utils/extract-image";
 import { outgoingFetch, parseOutgoingTransport } from "./utils/outgoing";
 import { asString, getSettings } from "./utils/plugin-settings";
@@ -46,13 +42,40 @@ const _getEngineTimeout = async (
   return ENGINE_TIMEOUT_MS;
 };
 
+const _TRACKING_PARAMS = new Set([
+  "gclid",
+  "dclid",
+  "gbraid",
+  "wbraid",
+  "fbclid",
+  "msclkid",
+  "yclid",
+  "ttclid",
+  "twclid",
+  "li_fat_id",
+  "mc_cid",
+  "mc_eid",
+  "igshid",
+  "_ga",
+  "_gl",
+  "vero_id",
+  "vero_conv",
+  "wt_mc",
+]);
+
 const _normalizeUrl = (url: string): string => {
   try {
     const parsed = new URL(url);
     parsed.hash = "";
-    parsed.searchParams.delete("utm_source");
-    parsed.searchParams.delete("utm_medium");
-    parsed.searchParams.delete("utm_campaign");
+    parsed.hostname = parsed.hostname.toLowerCase().replace(/^www\./, "");
+    parsed.pathname = parsed.pathname.replace(/\/{2,}/g, "/");
+    const keys = Array.from(parsed.searchParams.keys());
+    for (const k of keys) {
+      const lk = k.toLowerCase();
+      if (lk.startsWith("utm_") || _TRACKING_PARAMS.has(lk)) {
+        parsed.searchParams.delete(k);
+      }
+    }
     return parsed.href.replace(/\/+$/, "");
   } catch {
     return url;
@@ -67,6 +90,7 @@ const _mergeIntoMap = (
   for (let i = 0; i < results.length; i++) {
     const r = results[i];
     const normalized = _normalizeUrl(r.url);
+    const insecure = normalized.startsWith("http://");
     const positionScore = Math.max(10 - i, 1) * multiplier;
 
     if (urlMap.has(normalized)) {
@@ -81,12 +105,14 @@ const _mergeIntoMap = (
       if (r.thumbnail && !existing.thumbnail) {
         existing.thumbnail = r.thumbnail;
       }
+      if (insecure) existing.insecure = true;
     } else {
       urlMap.set(normalized, {
         ...r,
         url: normalized,
         score: positionScore,
         sources: [r.source],
+        insecure,
       });
     }
   }
@@ -314,8 +340,6 @@ export const search = async (
   }
 
   const scored = scoreResults(allResults);
-  const filtered = await filterBlockedDomains(scored);
-  const processed = await applyDomainReplacements(filtered);
 
   let relatedSearches: string[] = [];
 
@@ -329,7 +353,7 @@ export const search = async (
   const totalTime = Math.round(performance.now() - start);
 
   return {
-    results: processed,
+    results: scored,
     query,
     totalTime,
     type,

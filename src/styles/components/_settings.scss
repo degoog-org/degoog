@@ -162,6 +162,19 @@
   margin: 0 0 $space-4;
 }
 
+.settings-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
+  display: grid;
+  gap: $space-4;
+}
+
+.settings-fieldset--compact {
+  gap: $space-3;
+}
+
 .settings-page-actions {
   padding-top: $space-4;
 }
@@ -225,7 +238,7 @@
 }
 
 .theme-select-wrap {
-  margin-top: $space-1;
+  margin-top: 0;
 }
 
 .theme-select {
@@ -249,7 +262,6 @@
   align-items: center;
   gap: $space-3;
   cursor: pointer;
-  margin-top: $space-2;
 
   .settings-toggle {
     display: none;
@@ -262,14 +274,14 @@
 }
 
 .settings-proxy-urls-wrap {
-  margin-top: $space-3;
+  margin-top: 0;
 }
 
 .settings-proxy-urls-label {
   display: block;
   font-size: $font-size-small;
   color: var(--text-secondary);
-  margin: $space-2 0;
+  margin: 0;
 }
 
 .settings-proxy-urls {
@@ -290,12 +302,83 @@
   }
 }
 
+.settings-score-rows {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.settings-score-row {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.settings-score-domain,
+.settings-score-value {
+  padding: $space-2 $space-3;
+  font-size: $font-size-base;
+  color: var(--text-primary);
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  outline: none;
+
+  &:focus {
+    border-color: $primary;
+  }
+}
+
+.settings-score-domain {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-score-value {
+  width: 5rem;
+  flex-shrink: 0;
+}
+
+.settings-score-remove {
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: $radius-full;
+  color: var(--text-secondary);
+  font-size: $font-size-md;
+  line-height: 1;
+
+  &:hover,
+  &:focus {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+}
+
+.settings-score-add {
+  @include button-reset;
+  font-size: $font-size-small;
+  color: $primary;
+  padding: $space-1 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .proxy-test-btn {
-  margin-top: $space-3;
+  margin-top: 0;
 }
 
 .proxy-test-result {
-  margin-top: $space-3;
+  margin-top: 0;
   padding: $space-3;
   border-radius: $radius-md;
   font-size: $font-size-small;
@@ -325,7 +408,7 @@
 }
 
 .settings-rate-limit-wrap {
-  margin-top: $space-3;
+  margin-top: 0;
 }
 
 .settings-rate-limit-desc {
@@ -334,21 +417,13 @@
 }
 
 .settings-rate-limit-options {
-  margin-top: $space-3;
+  margin-top: 0;
 }
 
 .settings-rate-limit-defaults {
   font-size: $font-size-small;
   color: var(--text-secondary);
-  margin-bottom: $space-3;
-}
-
-.settings-rate-limit-options .settings-proxy-urls-label {
-  margin-top: $space-3;
-
-  &:first-of-type {
-    margin-top: 0;
-  }
+  margin: 0;
 }
 
 .settings-rate-limit-input {
@@ -356,7 +431,7 @@
   width: 100%;
   min-height: $search-bar-height;
   padding: $space-3;
-  margin-top: $space-2;
+  margin-top: 0;
   font-size: $font-size-base;
   color: var(--text-primary);
   background: var(--bg-light);

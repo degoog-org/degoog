@@ -15,14 +15,77 @@
     <div class="result-body">
       <div class="result-url-row">
         <img
+          id="result-favicon-{{ index }}"
           class="result-favicon"
           src="{{ favicon_url }}"
+          data-favicon-host="{{ favicon_host }}"
           alt=""
           width="26"
           height="26"
-          onerror="this.style.display = 'none'"
         />
         <cite class="result-cite">{{ cite_url }}</cite>
+        {{#if insecure}}
+        <span
+          class="result-insecure-badge"
+          title="{{t:search-templates.result.insecure-tooltip}}"
+          >{{t:search-templates.result.insecure}}</span
+        >
+        {{/if insecure}}
+        {{#if show_actions}}
+        <div
+          id="result-actions-{{ index }}"
+          class="result-actions"
+          data-host="{{ favicon_host }}"
+        >
+          <button
+            id="result-actions-toggle-{{ index }}"
+            type="button"
+            class="result-actions-toggle"
+            aria-label="{{t:search-templates.result.actions.menu-aria}}"
+            aria-haspopup="menu"
+            aria-expanded="false"
+          >
+            <span aria-hidden="true">⋮</span>
+          </button>
+          <div
+            id="result-actions-menu-{{ index }}"
+            class="result-actions-menu"
+            role="menu"
+            hidden
+          >
+            {{#if action_block}}
+            <button
+              id="result-action-block-{{ index }}"
+              type="button"
+              class="result-actions-item"
+              role="menuitem"
+            >
+              {{t:search-templates.result.actions.block}}
+            </button>
+            {{/if action_block}}
+            {{#if action_replace}}
+            <button
+              id="result-action-replace-{{ index }}"
+              type="button"
+              class="result-actions-item"
+              role="menuitem"
+            >
+              {{t:search-templates.result.actions.replace}}
+            </button>
+            {{/if action_replace}}
+            {{#if action_score}}
+            <button
+              id="result-action-score-{{ index }}"
+              type="button"
+              class="result-actions-item"
+              role="menuitem"
+            >
+              {{t:search-templates.result.actions.score}}
+            </button>
+            {{/if action_score}}
+          </div>
+        </div>
+        {{/if show_actions}}
       </div>
       <a
         class="result-title"

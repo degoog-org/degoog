@@ -45,6 +45,25 @@
       "date-to": "a",
       "apply": "Applica",
       "filter-languages": "Filtra lingue..."
+    },
+    "result": {
+      "insecure": "Non sicuro",
+      "insecure-tooltip": "Questo sito è servito su una connessione HTTP non crittata.",
+      "actions": {
+        "menu-aria": "Azioni del dominio",
+        "block": "Blocca questo dominio",
+        "block-confirm-title": "Bloccare il dominio?",
+        "block-confirm-message": "Questo dominio verrà rimosso da tutti i risultati.",
+        "replace": "Sostituisci questo dominio",
+        "score": "Punteggia questo dominio",
+        "prompt-target-title": "Sostituisci dominio",
+        "prompt-target": "Sostituisci con quale dominio ?",
+        "prompt-score-title": "Punteggia dominio",
+        "prompt-score": "Punteggio per questo dominio (positives boost, negative demotes) :",
+        "modal-confirm": "Conferma",
+        "modal-cancel": "Annulla",
+        "scored": "Punteggiato"
+      }
     }
   }
 }

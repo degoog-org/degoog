@@ -21,6 +21,7 @@ import * as cache from "../utils/cache";
 import { asString, getSettings } from "../utils/plugin-settings";
 import {
   applyDomainReplacements,
+  applyDomainScores,
   filterBlockedDomains,
 } from "../utils/domain-filter";
 import {
@@ -32,6 +33,14 @@ import {
 } from "../utils/search";
 
 const router = new Hono();
+
+const _applyDomainRules = async (
+  results: ScoredResult[],
+): Promise<ScoredResult[]> => {
+  const afterBlock = await filterBlockedDomains(results);
+  const afterReplace = await applyDomainReplacements(afterBlock);
+  return applyDomainScores(afterReplace);
+};
 
 router.get("/api/search/stream", async (c) => {
   const limitRes = await _applyRateLimit(c);
@@ -65,6 +74,7 @@ router.get("/api/search/stream", async (c) => {
 
   const cached = cache.get(key);
   if (cached) {
+    const liveResults = await _applyDomainRules(cached.results);
     const encoder = new TextEncoder();
     const body = new ReadableStream({
       start(controller) {
@@ -74,7 +84,7 @@ router.get("/api/search/stream", async (c) => {
               `event: engine-result\ndata: ${JSON.stringify({
                 engine: et.name,
                 timing: et,
-                results: cached.results,
+                results: liveResults,
                 retry: false,
                 attempt: 0,
               })}\n\n`,
@@ -163,12 +173,6 @@ router.get("/api/search/stream", async (c) => {
         }
       }
 
-      const _applyDomainRules = async (
-        results: ScoredResult[],
-      ): Promise<ScoredResult[]> => {
-        const afterBlock = await filterBlockedDomains(results);
-        return await applyDomainReplacements(afterBlock);
-      };
 
       const enginePromises = rawActiveEngines.map(
         async ({ instance, score, id }) => {
@@ -230,9 +234,7 @@ router.get("/api/search/stream", async (c) => {
 
       void Promise.all(enginePromises).then(async () => {
         const totalTime = Math.round(performance.now() - start);
-        const finalResults = await _applyDomainRules(
-          scoreResults(allRawResults),
-        );
+        const rawScoredResults = scoreResults(allRawResults);
         let relatedSearches: string[] = [];
         if (searchType === "web" && page === 1) {
           relatedSearches = await fetchRelatedSearches(query).catch(
@@ -241,7 +243,7 @@ router.get("/api/search/stream", async (c) => {
         }
 
         const response: SearchResponse = {
-          results: finalResults,
+          results: rawScoredResults,
           query,
           totalTime,
           type: searchType,

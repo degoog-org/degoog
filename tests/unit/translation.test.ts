@@ -4,7 +4,9 @@ import { getLocale } from "../../src/server/utils/hono";
 
 const mockCtx = (acceptLang?: string) =>
   ({
-    req: { header: (h: string) => (h === "Accept-Language" ? acceptLang : undefined) },
+    req: {
+      header: (h: string) => (h === "Accept-Language" ? acceptLang : undefined),
+    },
   }) as Parameters<typeof getLocale>[0];
 
 describe("getClosestLanguage", () => {
@@ -48,8 +50,8 @@ describe("getLocale", () => {
     expect(getLocale(mockCtx("en-GB,en;q=0.9"))).toBe("en-GB");
   });
 
-  test("returns undefined when DEGOOG_I18N unset and no Accept-Language", () => {
-    expect(getLocale(mockCtx())).toBeUndefined();
+  test('defaults to "en" when DEGOOG_I18N unset and no Accept-Language', () => {
+    expect(getLocale(mockCtx())).toBe("en");
   });
 
   test("treats whitespace-only DEGOOG_I18N as unset", () => {
