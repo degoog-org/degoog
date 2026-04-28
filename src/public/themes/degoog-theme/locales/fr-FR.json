@@ -48,7 +48,22 @@
     },
     "result": {
       "insecure": "Insecure",
-      "insecure-tooltip": "Ce site est servi sur une connexion HTTP non chiffrée."
+      "insecure-tooltip": "Ce site est servi sur une connexion HTTP non chiffrée.",
+      "actions": {
+        "menu-aria": "Actions du domaine",
+        "block": "Bloquer ce domaine",
+        "block-confirm-title": "Bloquer le domaine ?",
+        "block-confirm-message": "Ce domaine sera supprimé de tous les résultats.",
+        "replace": "Remplacer ce domaine",
+        "score": "Scorer ce domaine",
+        "prompt-target-title": "Remplacer le domaine",
+        "prompt-target": "Remplacer par quel domaine ?",
+        "prompt-score-title": "Scorer le domaine",
+        "prompt-score": "Score pour ce domaine (positives boost, négatives déboost) :",
+        "modal-confirm": "Confirmer",
+        "modal-cancel": "Annuler",
+        "scored": "Scoré"
+      }
     }
   }
 }

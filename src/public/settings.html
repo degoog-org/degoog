@@ -385,6 +385,20 @@
                   rows="5"
                   placeholder="quora.com&#10;tiktok.com&#10;/.*\.spam\.net/"
                 ></textarea>
+                <label class="settings-toggle-wrap">
+                  <input
+                    type="checkbox"
+                    id="settings-domain-block-ui-enabled"
+                    class="settings-toggle"
+                  />
+                  <span class="toggle-slider"></span>
+                  <span class="settings-toggle-label"
+                    >{{t:settings-page.server.domain-block-ui-enable}}</span
+                  >
+                </label>
+                <p class="settings-desc">
+                  {{t:settings-page.server.domain-block-ui-desc}}
+                </p>
               </div>
             </section>
 
@@ -426,6 +440,74 @@
                   rows="5"
                   placeholder="reddit.com -> teddit.example.com&#10;twitter.com -> nitter.example.com"
                 ></textarea>
+                <label class="settings-toggle-wrap">
+                  <input
+                    type="checkbox"
+                    id="settings-domain-replace-ui-enabled"
+                    class="settings-toggle"
+                  />
+                  <span class="toggle-slider"></span>
+                  <span class="settings-toggle-label"
+                    >{{t:settings-page.server.domain-replace-ui-enable}}</span
+                  >
+                </label>
+                <p class="settings-desc">
+                  {{t:settings-page.server.domain-replace-ui-desc}}
+                </p>
+              </div>
+            </section>
+
+            <section
+              class="settings-section"
+              id="settings-section-domain-score"
+            >
+              <h2 class="settings-section-heading">
+                {{t:settings-page.server.domain-score-heading}}
+              </h2>
+              <p class="settings-desc">
+                {{t:settings-page.server.domain-score-desc}}
+              </p>
+              <label class="settings-toggle-wrap">
+                <input
+                  type="checkbox"
+                  id="settings-domain-score-enabled"
+                  class="settings-toggle"
+                />
+                <span class="toggle-slider"></span>
+                <span class="settings-toggle-label"
+                  >{{t:settings-page.server.domain-score-enable}}</span
+                >
+              </label>
+              <div
+                class="settings-proxy-urls-wrap"
+                id="settings-domain-score-wrap"
+                style="display: none"
+              >
+                <span class="settings-proxy-urls-label"
+                  >{{t:settings-page.server.domain-score-list-label}}</span
+                >
+                <div id="settings-domain-score-rows" class="settings-score-rows"></div>
+                <button
+                  type="button"
+                  id="settings-domain-score-add"
+                  class="settings-score-add"
+                >
+                  {{t:settings-page.server.domain-score-add-row}}
+                </button>
+                <label class="settings-toggle-wrap">
+                  <input
+                    type="checkbox"
+                    id="settings-domain-score-ui-enabled"
+                    class="settings-toggle"
+                  />
+                  <span class="toggle-slider"></span>
+                  <span class="settings-toggle-label"
+                    >{{t:settings-page.server.domain-score-ui-enable}}</span
+                  >
+                </label>
+                <p class="settings-desc">
+                  {{t:settings-page.server.domain-score-ui-desc}}
+                </p>
               </div>
             </section>
 
@@ -620,51 +702,6 @@
           <span class="ext-modal-status" id="ext-modal-status"></span>
           <button class="settings-save" id="ext-modal-save" type="button">
             {{t:settings-page.modal.save}}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div
-      class="ext-modal-overlay"
-      id="confirm-modal-overlay"
-      style="display: none"
-    >
-      <div
-        class="ext-modal"
-        id="confirm-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-modal-title"
-      >
-        <div class="ext-modal-header">
-          <h2 class="ext-modal-title" id="confirm-modal-title">
-            {{t:settings-page.confirm.title}}
-          </h2>
-          <button
-            class="ext-modal-close"
-            id="confirm-modal-close"
-            type="button"
-            aria-label="{{t:settings-page.modal.close-aria}}"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="ext-modal-body" id="confirm-modal-body"></div>
-        <div class="ext-modal-footer">
-          <button
-            class="btn btn--secondary"
-            id="confirm-modal-cancel"
-            type="button"
-          >
-            {{t:settings-page.confirm.cancel}}
-          </button>
-          <button
-            class="btn btn--primary"
-            id="confirm-modal-confirm"
-            type="button"
-          >
-            {{t:settings-page.confirm.confirm}}
           </button>
         </div>
       </div>

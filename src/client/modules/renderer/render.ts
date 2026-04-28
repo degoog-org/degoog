@@ -5,7 +5,8 @@ import { cleanUrl } from "../../utils/dom";
 import { buildPaginationHtml } from "../../utils/pagination";
 import { goToPage } from "../../utils/search-actions";
 import { renderTemplate } from "../../utils/template";
-import { faviconUrl, proxyImageUrl } from "../../utils/url";
+import { attachFaviconFallback } from "../../utils/favicon";
+import { faviconHostname, faviconUrl, proxyImageUrl } from "../../utils/url";
 import { destroyMediaObserver, setupMediaObserver } from "../media/media";
 import { renderImageGrid, renderVideoGrid } from "./render-media";
 
@@ -18,21 +19,51 @@ export {
   renderSlotPanels,
 } from "./render-slots";
 
+type ResultActionsFlags = {
+  authenticated?: boolean;
+  blockUi?: boolean;
+  replaceUi?: boolean;
+  scoreUi?: boolean;
+};
+
+const _resultActionsFlags = (): ResultActionsFlags =>
+  (window as unknown as { __DEGOOG_RESULT_ACTIONS__?: ResultActionsFlags })
+    .__DEGOOG_RESULT_ACTIONS__ ?? {};
+
 export const buildResultContext = (
   r: ScoredResult,
-): Record<string, unknown> => ({
-  title: r.title,
-  url: r.url,
-  cite_url: cleanUrl(r.url),
-  snippet: r.snippet,
-  favicon_url: faviconUrl(r.url),
-  thumbnail_url: r.thumbnail ? proxyImageUrl(r.thumbnail) : "",
-  sources: r.sources,
-  duration: r.duration || "",
-  link_target: state.openInNewTab ? "_blank" : "_self",
-  link_rel: state.openInNewTab ? "noopener" : "",
-  insecure: !!r.insecure,
-});
+  index = 0,
+): Record<string, unknown> => {
+  const flags = _resultActionsFlags();
+  const showBlock = !!(flags.authenticated && flags.blockUi);
+  const showReplace = !!(flags.authenticated && flags.replaceUi);
+  const showScore = !!(flags.authenticated && flags.scoreUi);
+  return {
+    index,
+    title: r.title,
+    url: r.url,
+    cite_url: cleanUrl(r.url),
+    snippet: r.snippet,
+    favicon_url: faviconUrl(r.url),
+    favicon_host: faviconHostname(r.url),
+    thumbnail_url: r.thumbnail ? proxyImageUrl(r.thumbnail) : "",
+    sources: r.sources,
+    duration: r.duration || "",
+    link_target: state.openInNewTab ? "_blank" : "_self",
+    link_rel: state.openInNewTab ? "noopener" : "",
+    insecure: !!r.insecure,
+    show_actions: showBlock || showReplace || showScore,
+    action_block: showBlock,
+    action_replace: showReplace,
+    action_score: showScore,
+  };
+};
+
+const _hydrateFavicons = (container: HTMLElement): void => {
+  container
+    .querySelectorAll<HTMLImageElement>("img.result-favicon")
+    .forEach((img) => attachFaviconFallback(img));
+};
 
 export function renderResults(results: ScoredResult[]): void {
   const container = document.getElementById("results-list");
@@ -74,8 +105,12 @@ export function renderResults(results: ScoredResult[]): void {
   destroyMediaObserver();
 
   container.innerHTML = results
-    .map((r) => renderTemplate("degoog-result", buildResultContext(r)) ?? "")
+    .map(
+      (r, i) => renderTemplate("degoog-result", buildResultContext(r, i)) ?? "",
+    )
     .join("");
+
+  _hydrateFavicons(container);
 
   renderPagination(MAX_PAGE, state.currentPage);
   window.dispatchEvent(new CustomEvent("degoog-results-ready"));

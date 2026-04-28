@@ -204,8 +204,13 @@ router.post("/api/settings/general", async (c) => {
     "defaultTheme",
     "domainBlockEnabled",
     "domainBlockList",
+    "domainBlockUiEnabled",
     "domainReplaceEnabled",
     "domainReplaceList",
+    "domainReplaceUiEnabled",
+    "domainScoreEnabled",
+    "domainScoreList",
+    "domainScoreUiEnabled",
     "customCss",
   ];
   const updates: Record<string, string> = {};
@@ -214,6 +219,122 @@ router.post("/api/settings/general", async (c) => {
       updates[key] = body[key];
     }
   }
+  await setSettings(DEGOOG_SETTINGS_ID, { ...existing, ...updates });
+  return c.json({ ok: true });
+});
+
+const _normalizeHostname = (raw: string): string =>
+  raw
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "");
+
+const _appendBlock = (existing: string, source: string): string => {
+  const lines = existing
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  if (lines.includes(source)) return existing;
+  lines.push(source);
+  return lines.join("\n");
+};
+
+const _appendReplace = (
+  existing: string,
+  source: string,
+  target: string,
+): string => {
+  const lines = existing
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  const next = lines.filter((l) => {
+    const [src] = l.split("->").map((s) => s.trim());
+    return src !== source;
+  });
+  next.push(`${source} -> ${target}`);
+  return next.join("\n");
+};
+
+const _upsertScore = (
+  existing: string,
+  source: string,
+  score: number,
+): string => {
+  const lines = existing
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  const next = lines.filter((l) => {
+    const [src] = l.split("|").map((s) => s.trim());
+    return src !== source;
+  });
+  next.push(`${source}|${score}`);
+  return next.join("\n");
+};
+
+router.post("/api/settings/domain-action", async (c) => {
+  const token = getSettingsTokenFromRequest(c);
+  if (!(await validateSettingsToken(token))) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  let body: {
+    kind?: string;
+    source?: string;
+    target?: string;
+    score?: number;
+  };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
+
+  const kind = body.kind;
+  const source = _normalizeHostname(body.source ?? "");
+  if (!source) return c.json({ error: "Missing source" }, 400);
+
+  const existing = await getSettings(DEGOOG_SETTINGS_ID);
+  const updates: Record<string, string> = {};
+
+  if (kind === "block") {
+    if (asString(existing.domainBlockUiEnabled) !== "true") {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+    updates.domainBlockList = _appendBlock(
+      asString(existing.domainBlockList),
+      source,
+    );
+  } else if (kind === "replace") {
+    if (asString(existing.domainReplaceUiEnabled) !== "true") {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+    const target = _normalizeHostname(body.target ?? "");
+    if (!target) return c.json({ error: "Missing target" }, 400);
+    updates.domainReplaceList = _appendReplace(
+      asString(existing.domainReplaceList),
+      source,
+      target,
+    );
+  } else if (kind === "score") {
+    if (asString(existing.domainScoreUiEnabled) !== "true") {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+    const score = Number(body.score);
+    if (!Number.isFinite(score)) {
+      return c.json({ error: "Invalid score" }, 400);
+    }
+    updates.domainScoreList = _upsertScore(
+      asString(existing.domainScoreList),
+      source,
+      Math.trunc(score),
+    );
+  } else {
+    return c.json({ error: "Invalid kind" }, 400);
+  }
+
   await setSettings(DEGOOG_SETTINGS_ID, { ...existing, ...updates });
   return c.json({ ok: true });
 });

@@ -48,7 +48,22 @@
     },
     "result": {
       "insecure": "Insecure",
-      "insecure-tooltip": "This site is served over an unencrypted HTTP connection."
+      "insecure-tooltip": "This site is served over an unencrypted HTTP connection.",
+      "actions": {
+        "menu-aria": "Domain actions",
+        "block": "Block this domain",
+        "block-confirm-title": "Block domain?",
+        "block-confirm-message": "This domain will be removed from all results.",
+        "replace": "Replace this domain",
+        "score": "Score this domain",
+        "prompt-target-title": "Replace domain",
+        "prompt-target": "Replace with which domain?",
+        "prompt-score-title": "Score domain",
+        "prompt-score": "Score for this domain (positive boosts, negative demotes):",
+        "modal-confirm": "Confirm",
+        "modal-cancel": "Cancel",
+        "scored": "Scored"
+      }
     }
   }
 }

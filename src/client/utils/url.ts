@@ -6,15 +6,20 @@ export const proxyImageUrl = (url: string): string => {
   return `/api/proxy/image?url=${encodeURIComponent(url)}`;
 };
 
-export const faviconUrl = (url: string): string => {
+export const faviconHostname = (url: string): string => {
   try {
-    const hostname = new URL(url).hostname;
-    return proxyImageUrl(
-      `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`,
-    );
+    return new URL(url).hostname;
   } catch {
     return "";
   }
+};
+
+export const faviconUrl = (url: string): string => {
+  const hostname = faviconHostname(url);
+  if (!hostname) return "";
+  return proxyImageUrl(
+    `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`,
+  );
 };
 
 export const buildSearchParams = (

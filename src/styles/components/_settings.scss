@@ -290,6 +290,78 @@
   }
 }
 
+.settings-score-rows {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  margin-bottom: $space-3;
+
+  &:empty {
+    margin-bottom: 0;
+  }
+}
+
+.settings-score-row {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.settings-score-domain,
+.settings-score-value {
+  padding: $space-2 $space-3;
+  font-size: $font-size-base;
+  color: var(--text-primary);
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  outline: none;
+
+  &:focus {
+    border-color: $primary;
+  }
+}
+
+.settings-score-domain {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-score-value {
+  width: 5rem;
+  flex-shrink: 0;
+}
+
+.settings-score-remove {
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: $radius-full;
+  color: var(--text-secondary);
+  font-size: $font-size-md;
+  line-height: 1;
+
+  &:hover,
+  &:focus {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+}
+
+.settings-score-add {
+  @include button-reset;
+  font-size: $font-size-small;
+  color: $primary;
+  padding: $space-1 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .proxy-test-btn {
   margin-top: $space-3;
 }

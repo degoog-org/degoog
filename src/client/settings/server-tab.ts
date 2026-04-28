@@ -19,9 +19,85 @@ type ServerSettingsData = {
   streamingMaxRetries?: string;
   domainBlockEnabled?: string;
   domainBlockList?: string;
+  domainBlockUiEnabled?: string;
   domainReplaceEnabled?: string;
   domainReplaceList?: string;
+  domainReplaceUiEnabled?: string;
+  domainScoreEnabled?: string;
+  domainScoreList?: string;
+  domainScoreUiEnabled?: string;
   customCss?: string;
+};
+
+const _scoreT = window.scopedT("core");
+
+const _scoreRowTemplate = (
+  domain: string,
+  score: string,
+): HTMLDivElement => {
+  const row = document.createElement("div");
+  row.className = "settings-score-row";
+
+  const domainInput = document.createElement("input");
+  domainInput.type = "text";
+  domainInput.className = "settings-score-domain";
+  domainInput.placeholder = _scoreT(
+    "settings-page.server.domain-score-domain-placeholder",
+  );
+  domainInput.value = domain;
+
+  const scoreInput = document.createElement("input");
+  scoreInput.type = "number";
+  scoreInput.className = "settings-score-value";
+  scoreInput.placeholder = _scoreT(
+    "settings-page.server.domain-score-value-placeholder",
+  );
+  scoreInput.value = score;
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "settings-score-remove";
+  remove.setAttribute(
+    "aria-label",
+    _scoreT("settings-page.server.domain-score-remove-aria"),
+  );
+  remove.textContent = "×";
+  remove.addEventListener("click", () => row.remove());
+
+  row.append(domainInput, scoreInput, remove);
+  return row;
+};
+
+function _renderScoreRows(raw: string): void {
+  const wrap = document.getElementById("settings-domain-score-rows");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .forEach((line) => {
+      const [domain, score] = line.split("|").map((s) => s.trim());
+      wrap.appendChild(_scoreRowTemplate(domain ?? "", score ?? ""));
+    });
+}
+
+const _serializeScoreRows = (): string => {
+  const wrap = document.getElementById("settings-domain-score-rows");
+  if (!wrap) return "";
+  const lines: string[] = [];
+  wrap.querySelectorAll<HTMLDivElement>(".settings-score-row").forEach((row) => {
+    const domain = row
+      .querySelector<HTMLInputElement>(".settings-score-domain")
+      ?.value.trim();
+    const score = row
+      .querySelector<HTMLInputElement>(".settings-score-value")
+      ?.value.trim();
+    if (!domain || !score) return;
+    if (!Number.isFinite(Number(score))) return;
+    lines.push(`${domain}|${Math.trunc(Number(score))}`);
+  });
+  return lines.join("\n");
 };
 
 const el = (id: string) => getInputElement(`settings-${id}`);
@@ -63,6 +139,14 @@ export async function initServerTab(
   _bindToggle("streaming-auto-retry", "streaming-retry-wrap");
   _bindToggle("domain-block-enabled", "domain-block-wrap");
   _bindToggle("domain-replace-enabled", "domain-replace-wrap");
+  _bindToggle("domain-score-enabled", "domain-score-wrap");
+
+  document
+    .getElementById("settings-domain-score-add")
+    ?.addEventListener("click", () => {
+      const wrap = document.getElementById("settings-domain-score-rows");
+      wrap?.appendChild(_scoreRowTemplate("", ""));
+    });
 
   if (el("proxy-enabled")) initProxyTest(getToken);
 
@@ -91,9 +175,15 @@ export async function initServerTab(
 
       _setToggle("domain-block-enabled", data.domainBlockEnabled);
       _setVal("domain-block-list", data.domainBlockList);
+      _setToggle("domain-block-ui-enabled", data.domainBlockUiEnabled);
 
       _setToggle("domain-replace-enabled", data.domainReplaceEnabled);
       _setVal("domain-replace-list", data.domainReplaceList);
+      _setToggle("domain-replace-ui-enabled", data.domainReplaceUiEnabled);
+
+      _setToggle("domain-score-enabled", data.domainScoreEnabled);
+      _renderScoreRows(data.domainScoreList ?? "");
+      _setToggle("domain-score-ui-enabled", data.domainScoreUiEnabled);
 
       _setVal("custom-css", data.customCss);
     }
@@ -168,8 +258,13 @@ export async function initServerTab(
           streamingMaxRetries: val("streaming-max-retries"),
           domainBlockEnabled: boolStr("domain-block-enabled"),
           domainBlockList: val("domain-block-list"),
+          domainBlockUiEnabled: boolStr("domain-block-ui-enabled"),
           domainReplaceEnabled: boolStr("domain-replace-enabled"),
           domainReplaceList: val("domain-replace-list"),
+          domainReplaceUiEnabled: boolStr("domain-replace-ui-enabled"),
+          domainScoreEnabled: boolStr("domain-score-enabled"),
+          domainScoreList: _serializeScoreRows(),
+          domainScoreUiEnabled: boolStr("domain-score-ui-enabled"),
           customCss: val("custom-css"),
         }),
       });

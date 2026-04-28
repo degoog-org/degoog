@@ -27,6 +27,7 @@ import {
 import * as cache from "../utils/cache";
 import {
   applyDomainReplacements,
+  applyDomainScores,
   filterBlockedDomains,
 } from "../utils/domain-filter";
 import { logger } from "../utils/logger";
@@ -40,6 +41,14 @@ import {
 } from "../utils/search";
 
 const router = new Hono();
+
+const _applyDomainRules = async (
+  results: ScoredResult[],
+): Promise<ScoredResult[]> => {
+  const afterBlock = await filterBlockedDomains(results);
+  const afterReplace = await applyDomainReplacements(afterBlock);
+  return applyDomainScores(afterReplace);
+};
 
 function _parsePage(raw: unknown): number {
   return Math.max(1, Math.min(10, Math.floor(Number(raw)) || 1));
@@ -78,7 +87,9 @@ async function _handleSearch(params: SearchParams) {
   );
 
   const cached = cache.get(key);
-  if (cached) return cached;
+  if (cached) {
+    return { ...cached, results: await _applyDomainRules(cached.results) };
+  }
 
   const response = await search(
     query,
@@ -98,7 +109,7 @@ async function _handleSearch(params: SearchParams) {
       : undefined;
   cache.set(key, response, ttl);
 
-  return response;
+  return { ...response, results: await _applyDomainRules(response.results) };
 }
 
 async function _handleRetry(params: SearchParams & { engineName: string }) {
@@ -153,7 +164,7 @@ async function _handleRetry(params: SearchParams & { engineName: string }) {
       updated,
       cache.hasFailedEngines(updated) ? cache.SHORT_TTL_MS : undefined,
     );
-    return updated;
+    return { ...updated, results: await _applyDomainRules(merged) };
   }
 
   return {
@@ -296,7 +307,8 @@ router.get("/api/lucky", async (c) => {
     response = await search(query, engines, "web", 1);
     cache.set(key, response);
   }
-  if (response.results.length > 0) return c.redirect(response.results[0].url);
+  const luckyResults = await _applyDomainRules(response.results);
+  if (luckyResults.length > 0) return c.redirect(luckyResults[0].url);
   return c.json({ error: "No results found" }, 404);
 });
 
@@ -441,7 +453,8 @@ router.get("/api/tab-search", async (c) => {
 
     const totalTime = Math.round(performance.now() - startTime);
     const afterBlock = await filterBlockedDomains(allResults);
-    const finalResults = await applyDomainReplacements(afterBlock);
+    const afterReplace = await applyDomainReplacements(afterBlock);
+    const finalResults = await applyDomainScores(afterReplace);
     return c.json({
       results: finalResults,
       totalPages,

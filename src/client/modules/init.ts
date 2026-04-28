@@ -23,6 +23,7 @@ import {
 } from "../utils/keyboard-shortcuts";
 import { initSearchBarActions } from "../utils/search-bar-actions";
 import { renderPageTemplates } from "./renderer/render-page";
+import { initResultActions } from "./result-actions";
 
 function _copyToClipboard(text: string, onSuccess: () => void): void {
   const el = document.createElement("textarea");
@@ -125,6 +126,7 @@ export function init(): void {
   void initTheme();
   initOptionsDropdown();
   initInstallPrompt();
+  initResultActions();
 
   void idbGet<boolean>(OPEN_IN_NEW_TAB_KEY).then((v) => {
     if (v !== null) state.openInNewTab = v;

@@ -280,17 +280,52 @@ router.get("/", async (c) => {
   return c.html(await buildLayoutPage("index.html", locale));
 });
 
+const _buildResultActionsScript = async (
+  c: Parameters<Parameters<typeof router.get>[1]>[0],
+): Promise<string> => {
+  const token = getSettingsTokenFromRequest(c);
+  const authenticated = await validateSettingsToken(token);
+  let blockUi = false;
+  let replaceUi = false;
+  let scoreUi = false;
+  if (authenticated) {
+    const settings = await getSettings("degoog-settings");
+    blockUi = asString(settings.domainBlockUiEnabled) === "true";
+    replaceUi = asString(settings.domainReplaceUiEnabled) === "true";
+    scoreUi = asString(settings.domainScoreUiEnabled) === "true";
+  }
+  const payload = JSON.stringify({
+    authenticated,
+    blockUi,
+    replaceUi,
+    scoreUi,
+  }).replace(/<\//g, "<\\/");
+  return `<script>window.__DEGOOG_RESULT_ACTIONS__=${payload}</script>`;
+};
+
+const _injectIntoHead = (html: string, fragment: string): string => {
+  if (html.includes("</head>")) {
+    return html.replace("</head>", `${fragment}\n  </head>`);
+  }
+  return `${fragment}\n${html}`;
+};
+
 router.get("/search", async (c) => {
   const locale = getLocale(c);
   const override = await getThemeHtml("search");
+  const actionsScript = await _buildResultActionsScript(c);
+  let html: string;
   if (override) {
     if (isFullDocument(override)) {
       const t = await getTranslator(locale, true);
-      return c.html(await applyPagePlaceholders(override, t));
+      html = await applyPagePlaceholders(override, t);
+    } else {
+      html = await buildThemedLayoutPage(override, locale, "has-results");
     }
-    return c.html(await buildThemedLayoutPage(override, locale, "has-results"));
+  } else {
+    html = await buildLayoutPage("search.html", locale, "has-results");
   }
-  return c.html(await buildLayoutPage("search.html", locale, "has-results"));
+  return c.html(_injectIntoHead(html, actionsScript));
 });
 
 router.get("/settings/", (c) => c.redirect("/settings", 301));

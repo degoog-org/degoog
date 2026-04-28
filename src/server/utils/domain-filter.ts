@@ -72,3 +72,40 @@ export const applyDomainReplacements = async (
     }
   });
 };
+
+const _parseScoreList = (raw: string): { pattern: string; score: number }[] =>
+  raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.includes("|"))
+    .map((line) => {
+      const [pattern, scoreRaw] = line.split("|").map((s) => s.trim());
+      const score = Number(scoreRaw);
+      return { pattern, score };
+    })
+    .filter((entry) => entry.pattern.length > 0 && Number.isFinite(entry.score));
+
+export const applyDomainScores = async (
+  results: ScoredResult[],
+): Promise<ScoredResult[]> => {
+  const settings = await getSettings(DEGOOG_SETTINGS_ID);
+  if (asString(settings.domainScoreEnabled) !== "true") return results;
+
+  const entries = _parseScoreList(asString(settings.domainScoreList));
+  if (entries.length === 0) return results;
+
+  const adjusted = results.map((result) => {
+    try {
+      const hostname = new URL(result.url).hostname;
+      const boost = entries
+        .filter((entry) => _matchesDomain(hostname, entry.pattern))
+        .reduce((sum, entry) => sum + entry.score, 0);
+      if (boost === 0) return result;
+      return { ...result, score: result.score + boost };
+    } catch {
+      return result;
+    }
+  });
+
+  return adjusted.sort((a, b) => b.score - a.score);
+};
