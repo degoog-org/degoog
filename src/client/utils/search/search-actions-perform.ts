@@ -143,6 +143,7 @@ export async function performSearch(
       query,
       resolvedType,
       (q) => void performSearch(q),
+      isInit,
     );
   }
 

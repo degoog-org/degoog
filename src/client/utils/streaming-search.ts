@@ -73,6 +73,7 @@ export async function performStreamingSearch(
   query: string,
   type: string,
   onComplete: (q: string) => void,
+  isInitialLoad = false,
 ): Promise<void> {
   abortStreamingSearch();
 
@@ -135,7 +136,13 @@ export async function performStreamingSearch(
 
   const urlParams = new URLSearchParams({ q: query });
   if (type !== "web") urlParams.set("type", type);
-  history.replaceState(null, "", `/search?${urlParams.toString()}`);
+  const historyState = { degoog: true, query, type, page: 1 };
+  const searchUrl = `/search?${urlParams.toString()}`;
+  if (isInitialLoad) {
+    history.replaceState(historyState, "", searchUrl);
+  } else {
+    history.pushState(historyState, "", searchUrl);
+  }
 
   const engineTimings: EngineTiming[] = [];
   let firstResult = true;
