@@ -162,19 +162,24 @@
   }
 }
 
-.floating-section-icon {
-  position: absolute;
-  right: $space-4;
-  opacity: 0.3;
-  font-size: $font-size-xl;
+.setting-section-heading-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 $space-5;
+
+  .floating-section-icon {
+    opacity: 0.3;
+    font-size: $font-size-xl;
+  }
 }
 
 .settings-section-heading {
   font-size: $font-size-lg;
   font-weight: 500;
   color: var(--text-primary);
-  margin: 0 0 $space-5;
   font-size: $font-size-xl;
+  margin: 0;
 }
 
 .settings-section .settings-desc {
