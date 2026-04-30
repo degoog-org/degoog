@@ -173,9 +173,11 @@
   gap: $space-2;
 
   &-label {
-    color: var(--text-primary);
-    font-size: $font-size-base;
+    color: var(--text-secondary);
+    font-size: $font-size-small;
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   &-toggle-row {
@@ -186,9 +188,10 @@
   }
 
   &-input {
-    background: var(--bg-light);
-    border: 1px solid var(--border);
+    background: var(--bg-hover);
+    border: none;
     border-radius: $radius-md;
+    box-sizing: border-box;
     color: var(--text-primary);
     font-size: $font-size-base;
     outline: none;
@@ -196,7 +199,7 @@
     width: 100%;
 
     &:focus {
-      border-color: $primary;
+      box-shadow: 0 0 0 2px rgba($primary, 0.3);
     }
 
     &::placeholder {
@@ -278,16 +281,16 @@
 
     &-input {
       flex: 1;
-      background: var(--bg-input, var(--bg-light));
-      border: 1px solid var(--border);
+      background: var(--bg-hover);
+      border: none;
       border-radius: $radius-md;
       color: var(--text-primary);
       font-size: $font-size-base;
       padding: $space-2 $space-3;
 
       &:focus {
-        outline: 2px solid $primary;
-        outline-offset: 0;
+        box-shadow: 0 0 0 2px rgba($primary, 0.3);
+        outline: none;
       }
     }
 
@@ -373,7 +376,25 @@ textarea.ext-field-input {
 
 select.ext-field-input.ext-field-select {
   cursor: pointer;
-  appearance: auto;
+  appearance: none;
+  padding-right: $space-8;
+}
+
+.ext-field-select-wrap {
+  position: relative;
+
+  &::after {
+    content: '\f0d7';
+    font-family: 'Font Awesome 7 Free';
+    font-weight: 900;
+    font-size: $font-size-base;
+    color: var(--text-secondary);
+    position: absolute;
+    right: $space-4;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
 }
 
 .ext-configured-badge,

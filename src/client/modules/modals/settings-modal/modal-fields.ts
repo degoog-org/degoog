@@ -210,7 +210,9 @@ export const renderField = (
     return `
       <div class="ext-field" data-key="${escapeHtml(field.key)}" data-type="select">
         <label class="ext-field-label" for="field-${escapeHtml(field.key)}">${escapeHtml(field.label)}</label>
-        <select id="field-${escapeHtml(field.key)}" class="ext-field-input ext-field-select">${opts}</select>
+        <div class="ext-field-select-wrap">
+          <select id="field-${escapeHtml(field.key)}" class="ext-field-input ext-field-select">${opts}</select>
+        </div>
         ${descHtml}
       </div>`;
   }
