@@ -256,8 +256,8 @@
     position: absolute;
     top: 50%;
     left: 0;
-    width: $space-5;
-    height: $space-5;
+    width: $space-6;
+    height: $space-6;
     border-radius: $radius-full;
     background: var(--white);
     border: 1px solid var(--border);
@@ -270,7 +270,7 @@
     background: $primary;
 
     &::after {
-      left: 60%;
+      left: 55%;
     }
   }
 }
