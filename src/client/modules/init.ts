@@ -17,10 +17,7 @@ import { performTabSearch } from "./tabs/tab-search";
 import { initTabs } from "./tabs/tabs";
 
 import { initInstallPrompt } from "../utils/install-prompt";
-import {
-  focusInput,
-  initKeyboardShortcuts,
-} from "../utils/keyboard-shortcuts";
+import { focusInput, initKeyboardShortcuts } from "../utils/keyboard-shortcuts";
 import { initSearchBarActions } from "../utils/search-bar-actions";
 import { renderPageTemplates } from "./renderer/render-page";
 import { initResultActions } from "./result-actions";
@@ -233,7 +230,10 @@ export function init(): void {
       } else {
         void performSearch(popQ, popType, popPage);
       }
-    } else {
+      return;
+    }
+
+    if (state.postMethodEnabled) {
       window.location.reload();
     }
   });
