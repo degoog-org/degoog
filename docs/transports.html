@@ -9,17 +9,28 @@
         try {
           var t = localStorage.getItem("ade:theme");
           if (t !== "light" && t !== "dark") {
-            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
           }
           document.documentElement.setAttribute("data-theme", t);
         } catch (e) {}
       })();
     </script>
-    <link rel="icon" href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link
+      rel="icon"
+      href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -37,7 +48,7 @@
               src="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
               alt="degoog logo"
               class="ade-brand-img"
-              onerror="this.style.display='none'"
+              onerror="this.style.display = 'none'"
             />
             <a href="index.html" class="ade-brand-name">Degoog Docs</a>
           </div>
@@ -55,42 +66,74 @@
                 class="doc-search-clear ade-btn"
                 aria-label="Clear search"
                 style="display: none"
-              >Clear</button>
+              >
+                Clear
+              </button>
               <span class="doc-search-count"></span>
             </div>
           </div>
           <nav class="ade-nav" aria-label="Documentation">
-            <a href="index.html" class="ade-nav-item"><span class="ade-nav-item-name">Overview</span></a>
-            <a href="plugins.html" class="ade-nav-item"><span class="ade-nav-item-name">Plugins</span></a>
-            <a href="themes.html" class="ade-nav-item"><span class="ade-nav-item-name">Themes</span></a>
-            <a href="engines.html" class="ade-nav-item"><span class="ade-nav-item-name">Search engines</span></a>
-            <a href="transports.html" class="ade-nav-item"><span class="ade-nav-item-name">Transports</span></a>
-            <a href="store.html" class="ade-nav-item"><span class="ade-nav-item-name">Store</span></a>
-            <a href="aliases.html" class="ade-nav-item"><span class="ade-nav-item-name">Aliases</span></a>
-            <a href="env.html" class="ade-nav-item"><span class="ade-nav-item-name">Environment</span></a>
-            <a href="styling.html" class="ade-nav-item"><span class="ade-nav-item-name">Styling</span></a>
-            <a href="translations.html" class="ade-nav-item"><span class="ade-nav-item-name">Translations</span></a>
-            <a href="api.html" class="ade-nav-item"><span class="ade-nav-item-name">API</span></a>
+            <a href="index.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Overview</span></a
+            >
+            <a href="plugins.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Plugins</span></a
+            >
+            <a href="themes.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Themes</span></a
+            >
+            <a href="engines.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Search engines</span></a
+            >
+            <a href="transports.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Transports</span></a
+            >
+            <a href="store.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Store</span></a
+            >
+            <a href="aliases.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Aliases</span></a
+            >
+            <a href="env.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Environment</span></a
+            >
+            <a href="styling.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Styling</span></a
+            >
+            <a href="translations.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Translations</span></a
+            >
+            <a href="api.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">API</span></a
+            >
           </nav>
           <div class="ade-sidebar-actions">
-            <button id="doc-theme-toggle" type="button" class="ade-btn" aria-label="Toggle theme">
+            <button
+              id="doc-theme-toggle"
+              type="button"
+              class="ade-btn"
+              aria-label="Toggle theme"
+            >
               <i class="fa-solid fa-circle-half-stroke"></i>
             </button>
           </div>
         </aside>
         <main class="ade-main">
           <div class="doc-page-header">
-            <h1><a href="index.html">Degoog</a> — Transports</h1>
-            <p class="doc-page-desc">Custom HTTP fetch strategies for outgoing search requests.</p>
+            <h1><a href="index.html">Degoog</a> Transports</h1>
+            <p class="doc-page-desc">
+              Custom HTTP fetch strategies for your outgoing search requests.
+            </p>
           </div>
 
           <h2>What transports are</h2>
           <p>
-            A transport controls <em>how</em> degoog makes outgoing HTTP requests
-            to search engines. Each engine can pick its transport in Settings
-            &rarr; Engines &rarr; Configure &rarr; Advanced.
+            A transport controls exactly how Degoog makes its outgoing HTTP
+            requests to search engines. You can select a specific transport for
+            each engine by navigating to Settings then Engines then Configure
+            then Advanced.
           </p>
-          <p>Three transports are built in:</p>
+          <p>We include three built in transports out of the box:</p>
           <table>
             <thead>
               <tr>
@@ -102,75 +145,77 @@
               <tr>
                 <td><code>fetch</code></td>
                 <td>
-                  Bun's native <code>fetch</code> with SOCKS&nbsp;5 / HTTP proxy
-                  support. Default for all engines.
+                  The native Bun fetch implementation with full SOCKS 5 and HTTP
+                  proxy support. This is the default for all engines.
                 </td>
               </tr>
               <tr>
                 <td><code>curl</code></td>
                 <td>
-                  Shells out to the system <code>curl</code> binary. Uses a
-                  different TLS stack, which helps when a site blocks Bun's
-                  fingerprint.
+                  Shells out directly to your system curl binary. This uses a
+                  different TLS stack which helps immensely when a website tries
+                  to block the default Bun fingerprint.
                 </td>
               </tr>
               <tr>
                 <td><code>auto</code></td>
                 <td>
-                  Tries <code>fetch</code> first; if the response is
-                  403&nbsp;/&nbsp;429&nbsp;/&nbsp;502&nbsp;/&nbsp;503, retries
-                  with <code>curl</code>.
+                  Tries fetch first. If the server responds with a 403, 429,
+                  502, or 503 error, it automatically retries the request using
+                  curl.
                 </td>
               </tr>
             </tbody>
           </table>
           <p>
-            Additional transports (e.g. FlareSolverr) can be installed from the
-            <a href="store.html">Store</a> or placed manually in
-            <code>data/transports/</code>.
+            You can install additional transports like FlareSolverr straight
+            from the
+            <a href="store.html">Store</a> or place them manually inside your
+            <code>data/transports/</code> directory.
           </p>
 
           <h2>Where transports live</h2>
           <p>
-            Custom transports live in <code>data/transports/</code> (or
-            <code>DEGOOG_TRANSPORTS_DIR</code>). Each transport is a file or
-            folder with an entry file that exports a class or object implementing
-            the transport contract.
+            Your custom transports belong in <code>data/transports/</code> or
+            whatever path you set for <code>DEGOOG_TRANSPORTS_DIR</code>. Each
+            transport is just a file or folder containing an entry file that
+            exports a class or object implementing the transport contract.
           </p>
 
           <h2>Transport contract</h2>
-          <p><strong>Required:</strong></p>
+          <p><strong>Required properties:</strong></p>
           <ul>
             <li>
-              <strong>name</strong> &mdash; Unique identifier (lowercase, no
-              spaces).
+              <strong>name</strong>: A unique identifier written in lowercase
+              with no spaces.
             </li>
             <li>
-              <strong>available()</strong> &mdash; Return <code>true</code> (or a
-              Promise resolving to <code>true</code>) when the transport is ready
-              to use. Return <code>false</code> to hide it from engine transport
-              dropdowns.
+              <strong>available()</strong>: Return <code>true</code> or a
+              Promise resolving to <code>true</code> when your transport is
+              ready to use. If you return <code>false</code>, the transport will
+              be hidden from the engine dropdown menus.
             </li>
             <li>
-              <strong>fetch(url, options, context)</strong> (async) &mdash;
-              Perform the HTTP request and return a <code>Response</code>.
+              <strong>fetch(url, options, context)</strong> (async): Perform the
+              actual HTTP request and return a standard
+              <code>Response</code> object.
             </li>
           </ul>
-          <p><strong>Optional:</strong></p>
+          <p><strong>Optional properties:</strong></p>
           <ul>
             <li>
-              <strong>displayName</strong> &mdash; Friendly name shown in Settings
-              &rarr; Transports.
+              <strong>displayName</strong>: The friendly name shown in Settings
+              then Transports.
             </li>
             <li>
-              <strong>description</strong> &mdash; Short description shown in
-              Settings &rarr; Transports.
+              <strong>description</strong>: A short description displayed in
+              Settings then Transports.
             </li>
             <li>
-              <strong>settingsSchema</strong>,
-              <strong>configure(settings)</strong> &mdash; Same pattern as engines
-              and plugins. A Configure button appears in Settings &rarr;
-              Transports; values are stored in
+              <strong>settingsSchema</strong> and
+              <strong>configure(settings)</strong>: These follow the exact same
+              pattern as engines and plugins. A Configure button will appear in
+              Settings then Transports, and your values are stored safely in
               <code>data/plugin-settings.json</code> under
               <code>transport-&lt;name&gt;</code>.
             </li>
@@ -190,27 +235,29 @@
               <tr>
                 <td><code>method</code></td>
                 <td><code>string</code></td>
-                <td>HTTP method (default <code>"GET"</code>).</td>
+                <td>The HTTP method which defaults to <code>"GET"</code>.</td>
               </tr>
               <tr>
                 <td><code>headers</code></td>
                 <td><code>Record&lt;string, string&gt;</code></td>
-                <td>Request headers.</td>
+                <td>Your request headers.</td>
               </tr>
               <tr>
                 <td><code>body</code></td>
                 <td><code>string</code></td>
-                <td>Request body.</td>
+                <td>The request body.</td>
               </tr>
               <tr>
                 <td><code>redirect</code></td>
                 <td><code>RequestRedirect</code></td>
-                <td>Redirect mode (default <code>"follow"</code>).</td>
+                <td>
+                  The redirect mode which defaults to <code>"follow"</code>.
+                </td>
               </tr>
               <tr>
                 <td><code>signal</code></td>
                 <td><code>AbortSignal</code></td>
-                <td>Abort signal for cancellation.</td>
+                <td>The abort signal used for cancellation.</td>
               </tr>
             </tbody>
           </table>
@@ -229,17 +276,19 @@
                 <td><code>proxyUrl</code></td>
                 <td><code>string | undefined</code></td>
                 <td>
-                  The proxy URL from Settings &rarr; Server &rarr; Proxy, already
-                  rotated. <code>undefined</code> when proxies are disabled.
+                  The proxy URL configured in Settings then Server then Proxy.
+                  This comes already rotated. It will be
+                  <code>undefined</code> when proxies are disabled.
                 </td>
               </tr>
               <tr>
                 <td><code>fetch</code></td>
                 <td><code>(url, init?) =&gt; Promise&lt;Response&gt;</code></td>
                 <td>
-                  A proxy-aware fetch function. <strong>Use this</strong> for all
-                  outbound requests so the user's proxy settings are respected
-                  automatically (SOCKS&nbsp;5, HTTP CONNECT, or direct).
+                  A proxy aware fetch function.
+                  <strong>Always use this</strong> for all your outbound
+                  requests so the user proxy settings like SOCKS 5 or HTTP
+                  CONNECT are respected automatically.
                 </td>
               </tr>
             </tbody>
@@ -247,102 +296,103 @@
 
           <h2>Proxies</h2>
           <p>
-            When the user enables a proxy in Settings &rarr; Server,
-            <code>context.proxyUrl</code> is set and <code>context.fetch</code>
-            routes through it automatically. Your transport should use
-            <code>context.fetch</code> for any outbound HTTP call so that proxy
-            routing just works:
+            When a user enables a proxy in Settings then Server,
+            <code>context.proxyUrl</code> is populated and
+            <code>context.fetch</code>
+            routes through it automatically. Your transport should always use
+            <code>context.fetch</code> for any outbound HTTP calls so proxy
+            routing just works effortlessly:
           </p>
           <pre><code>async fetch(url, options, context) {
-  const doFetch = context.fetch;
-  const res = await doFetch("https://my-service.example.com/api", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ target: url }),
-    signal: options.signal,
-  });
-  // transform and return a Response
-}</code></pre>
+          const doFetch = context.fetch;
+          const res = await doFetch("https://my-service.example.com/api", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ target: url }),
+            signal: options.signal,
+          });
+          // transform and return a Response
+        }</code></pre>
 
           <h2>Setup</h2>
           <p>
-            Create <code>data/transports/</code> (or set
-            <code>DEGOOG_TRANSPORTS_DIR</code>). Add a single file (e.g.
-            <code>my-transport.js</code>) or a folder with
-            <code>index.js</code> (or .ts, .mjs, .cjs). The transport settings id
-            is <code>transport-&lt;name&gt;</code>.
+            Create your <code>data/transports/</code> directory or set your
+            <code>DEGOOG_TRANSPORTS_DIR</code>. Add a single file like
+            <code>my-transport.js</code> or create a folder with an
+            <code>index.js</code> file. Your transport settings ID will
+            automatically become <code>transport-&lt;name&gt;</code>.
           </p>
 
           <h2>How settings work</h2>
           <ol>
             <li>
-              Declare <code>settingsSchema</code> &mdash; a Configure button
-              appears in Settings &rarr; Transports.
+              Declare your <code>settingsSchema</code> so a Configure button
+              appears in Settings then Transports.
             </li>
             <li>
-              User saves; values go to
+              When the user saves, the values go into
               <code>data/plugin-settings.json</code> under
               <code>transport-&lt;name&gt;</code>.
             </li>
             <li>
-              <code>configure(settings)</code> is called after save and on server
-              restart if settings exist.
+              Your <code>configure(settings)</code> function is called right
+              after saving and every time the server restarts if settings exist.
             </li>
             <li>
               Return <code>false</code> from <code>available()</code> when
-              required settings are missing &mdash; the transport won't appear in
-              engine dropdowns until configured.
+              required settings are missing so the transport does not show up in
+              engine dropdowns until it is fully configured.
             </li>
             <li>
-              Users can disable configurable transports with the toggle in
-              Settings &rarr; Transports.
+              Users can easily disable configurable transports using the toggle
+              switch in Settings then Transports.
             </li>
           </ol>
 
-          <h2>Example: minimal transport</h2>
+          <h2>Example minimal transport</h2>
           <pre><code>export default class MyTransport {
-  name = "my-transport";
-  displayName = "My Transport";
-  description = "Example custom transport.";
-
-  settingsSchema = [
-    {
-      key: "apiUrl",
-      label: "API URL",
-      type: "url",
-      required: true,
-      placeholder: "https://my-service.example.com",
-    },
-  ];
-
-  _apiUrl = "";
-
-  configure(settings) {
-    this._apiUrl = (settings.apiUrl || "").trim();
-  }
-
-  available() {
-    return this._apiUrl.length > 0;
-  }
-
-  async fetch(url, options, context) {
-    const doFetch = context.fetch;
-
-    const res = await doFetch(this._apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, timeout: 10000 }),
-      signal: options.signal,
-    });
-
-    if (!res.ok) return new Response("", { status: res.status });
-    const data = await res.json();
-    return new Response(data.html ?? "", {
-      status: data.status ?? 200,
-      headers: { "Content-Type": "text/html" },
-    });
-  }
-}</code></pre>
+          name = "my-transport";
+          displayName = "My Transport";
+          description = "Example custom transport.";
+        
+          settingsSchema = [
+            {
+              key: "apiUrl",
+              label: "API URL",
+              type: "url",
+              required: true,
+              placeholder: "https://my-service.example.com",
+            },
+          ];
+        
+          _apiUrl = "";
+        
+          configure(settings) {
+            this._apiUrl = (settings.apiUrl || "").trim();
+          }
+        
+          available() {
+            return this._apiUrl.length > 0;
+          }
+        
+          async fetch(url, options, context) {
+            const doFetch = context.fetch;
+        
+            const res = await doFetch(this._apiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ url, timeout: 10000 }),
+              signal: options.signal,
+            });
+        
+            if (!res.ok) return new Response("", { status: res.status });
+            const data = await res.json();
+            return new Response(data.html ?? "", {
+              status: data.status ?? 200,
+              headers: { "Content-Type": "text/html" },
+            });
+          }
+        }</code></pre>
 
           <h2>Examples from the official store</h2>
           <ul>
@@ -354,14 +404,17 @@
                 rel="noopener"
                 >FlareSolverr</a
               >
-              &mdash; bypass Cloudflare challenges via a FlareSolverr instance.
-              Uses <code>context.fetch</code> so proxy settings are respected.
+              lets you bypass Cloudflare challenges via a FlareSolverr instance.
+              It correctly uses <code>context.fetch</code> so all proxy settings
+              are respected.
             </li>
           </ul>
           <p>
-            When distributing via the <a href="store.html">Store</a>, add your
-            transport under <code>transports/</code> in the repo and list it in
-            the <code>transports</code> array in <code>package.json</code>.
+            If you are distributing your transport through the
+            <a href="store.html">Store</a>, just add it under the
+            <code>transports/</code> directory in your repository and list it in
+            the <code>transports</code> array inside your
+            <code>package.json</code>.
           </p>
         </main>
       </div>

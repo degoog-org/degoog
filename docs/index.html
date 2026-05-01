@@ -9,17 +9,28 @@
         try {
           var t = localStorage.getItem("ade:theme");
           if (t !== "light" && t !== "dark") {
-            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
           }
           document.documentElement.setAttribute("data-theme", t);
         } catch (e) {}
       })();
     </script>
-    <link rel="icon" href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link
+      rel="icon"
+      href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -37,7 +48,7 @@
               src="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
               alt="degoog logo"
               class="ade-brand-img"
-              onerror="this.style.display='none'"
+              onerror="this.style.display = 'none'"
             />
             <a href="index.html" class="ade-brand-name">Degoog Docs</a>
           </div>
@@ -55,80 +66,185 @@
                 class="doc-search-clear ade-btn"
                 aria-label="Clear search"
                 style="display: none"
-              >Clear</button>
+              >
+                Clear
+              </button>
               <span class="doc-search-count"></span>
             </div>
           </div>
           <nav class="ade-nav" aria-label="Documentation">
-            <a href="index.html" class="ade-nav-item"><span class="ade-nav-item-name">Overview</span></a>
-            <a href="plugins.html" class="ade-nav-item"><span class="ade-nav-item-name">Plugins</span></a>
-            <a href="themes.html" class="ade-nav-item"><span class="ade-nav-item-name">Themes</span></a>
-            <a href="engines.html" class="ade-nav-item"><span class="ade-nav-item-name">Search engines</span></a>
-            <a href="transports.html" class="ade-nav-item"><span class="ade-nav-item-name">Transports</span></a>
-            <a href="store.html" class="ade-nav-item"><span class="ade-nav-item-name">Store</span></a>
-            <a href="aliases.html" class="ade-nav-item"><span class="ade-nav-item-name">Aliases</span></a>
-            <a href="env.html" class="ade-nav-item"><span class="ade-nav-item-name">Environment</span></a>
-            <a href="styling.html" class="ade-nav-item"><span class="ade-nav-item-name">Styling</span></a>
-            <a href="translations.html" class="ade-nav-item"><span class="ade-nav-item-name">Translations</span></a>
-            <a href="api.html" class="ade-nav-item"><span class="ade-nav-item-name">API</span></a>
+            <a href="index.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Overview</span></a
+            >
+            <a href="plugins.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Plugins</span></a
+            >
+            <a href="themes.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Themes</span></a
+            >
+            <a href="engines.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Search engines</span></a
+            >
+            <a href="transports.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Transports</span></a
+            >
+            <a href="store.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Store</span></a
+            >
+            <a href="aliases.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Aliases</span></a
+            >
+            <a href="env.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Environment</span></a
+            >
+            <a href="styling.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Styling</span></a
+            >
+            <a href="translations.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Translations</span></a
+            >
+            <a href="api.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">API</span></a
+            >
           </nav>
           <div class="ade-sidebar-actions">
-            <button id="doc-theme-toggle" type="button" class="ade-btn" aria-label="Toggle theme">
+            <button
+              id="doc-theme-toggle"
+              type="button"
+              class="ade-btn"
+              aria-label="Toggle theme"
+            >
               <i class="fa-solid fa-circle-half-stroke"></i>
             </button>
           </div>
         </aside>
         <main class="ade-main">
           <div class="doc-page-header">
-            <h1>Degoog — Documentation</h1>
+            <h1>Degoog Documentation</h1>
             <p class="doc-page-desc">
-              Third-party extensions: plugins, themes, search engines, transports,
-              Store, and aliases.
+              Third party extensions: plugins, themes, search engines,
+              transports, Store, and aliases.
             </p>
           </div>
+
+          <p>
+            If you are new to self hosting,
+            <a href="#beginner-guide"
+              >click here to jump straight to our beginner guide</a
+            >
+            at the bottom of the page where we walk you through setting up
+            Docker from scratch.
+          </p>
 
           <h2>Overview</h2>
           <p>
             Degoog can be customised with plugins, themes, search engines,
-            transports, and aliases. Extensions live under <code>data/</code> and
-            can be installed from <strong>Store</strong> repositories (git repos
-            you add in Settings → Store).
+            transports, and aliases. Extensions live under
+            <code>data/</code> and can be installed from
+            <strong>Store</strong> repositories (git repos you add in Settings
+            then Store).
           </p>
 
-          <h2>Default enabled/disabled engines</h2>
+          <h2>Running Degoog</h2>
           <p>
-            Search engines have two separate layers of "enabled" state:
+            By default the app will run on port <code>4444</code> with user
+            <code>1000:1000</code>. Please check the environment variable
+            documentation for a comprehensive list of configuration options.
+          </p>
+          <p>First, prepare your data directory:</p>
+          <pre><code>mkdir -p ./data
+        sudo chown -R 1000:1000 ./data</code></pre>
+
+          <h3>Docker Compose</h3>
+          <pre><code>services:
+          degoog:
+            image: ghcr.io/degoog-org/degoog:latest
+            volumes:
+              - ./data:/app/data
+            ports:
+              - "4444:4444"
+            restart: unless-stopped</code></pre>
+
+          <h3>Inline podman</h3>
+          <pre><code>podman run -d --name degoog -p 4444:4444 -v ./data:/app/data --security-opt label=disable --restart unless-stopped ghcr.io/degoog-org/degoog:latest</code></pre>
+
+          <h3>Podman Quadlet Container File</h3>
+          <pre><code>[Unit]
+        Description=Degoog selfhosted search aggregator
+        Wants=network-online.target
+        After=network-online.target
+        
+        [Container]
+        Image=ghcr.io/degoog-org/degoog:latest
+        AutoUpdate=registry
+        ContainerName=degoog
+        Environment=TZ=&lt;Country/City&gt;
+        Environment=PUID=1000
+        Environment=PGID=1000
+        UIDMap=+%U:@%U
+        Volume=&lt;Path to config&gt;:/app/data:Z
+        PublishPort=4444:4444
+        Network=degoog
+        
+        [Service]
+        Restart=always
+        
+        [Install]
+        WantedBy=default.target</code></pre>
+
+          <h3>Inline docker</h3>
+          <pre><code>docker run -d --name degoog -p 4444:4444 -v ./data:/app/data --restart unless-stopped ghcr.io/degoog-org/degoog:latest</code></pre>
+
+          <h3>Run natively</h3>
+          <p>
+            You will need a <code>.env</code> file for your env variables and
+            the following required dependencies: bun, git, and curl.
+          </p>
+          <pre><code>git clone https://github.com/degoog-org/degoog.git
+        cd degoog
+        bun install
+        bun run build
+        bun run start</code></pre>
+          <p>
+            Note: If HTTPS requests fail with certificate errors, install the
+            <code>ca-certificates</code> package.
+          </p>
+
+          <h2>Default enabled or disabled engines</h2>
+          <p>
+            Search engines have two separate layers of enabled state:
             <strong>instance defaults</strong> and
-            <strong>your browser's saved selection</strong>.
+            <strong>your browser saved selection</strong>.
           </p>
           <ul>
             <li>
-              <strong>Instance defaults (server-side)</strong>: on startup, Degoog
-              computes a default enabled/disabled value for every engine. Engines
-              that are marked as <em>disabled by default</em>, or engines that
-              have required settings that are not configured, start out disabled.
-              You can override these defaults by saving a
+              <strong>Instance defaults (server side)</strong>: on startup,
+              Degoog computes a default enabled or disabled value for every
+              engine. Engines that are marked as disabled by default, or engines
+              that have required settings that are not configured, start out
+              disabled. You can override these defaults by saving a
               <code>data/default-engines.json</code> file (this is what the
-              Settings → Engines "Save defaults" button writes).
+              Settings then Engines Save defaults button writes).
             </li>
             <li>
-              <strong>Your selection (client-side)</strong>: the Engines tab
-              stores your toggles in your browser (IndexedDB). Those saved values
-              take priority over the instance defaults for that browser/profile,
-              so your choice persists even if the server defaults change later.
+              <strong>Your selection (client side)</strong>: the Engines tab
+              stores your toggles in your browser IndexedDB. Those saved values
+              take priority over the instance defaults for that browser or
+              profile, so your choice persists even if the server defaults
+              change later.
             </li>
           </ul>
           <p>Example <code>data/default-engines.json</code>:</p>
           <pre><code>{
-  "google": true,
-  "duckduckgo": true,
-  "bing": false,
-  "engine-my-custom-engine": true
-}</code></pre>
+          "google": true,
+          "duckduckgo": true,
+          "bing": false,
+          "engine-my-custom-engine": true
+        }</code></pre>
           <p>
-            When you toggle engines on the Engines tab, the enabled/disabled state
-            is sent along with each search request, so different users (or
-            different browsers) can use different engine sets at the same time.
+            When you toggle engines on the Engines tab, the state is sent along
+            with each search request, so different users can use different
+            engine sets at the same time.
           </p>
 
           <h2>Where things live</h2>
@@ -143,7 +259,8 @@
               <tr>
                 <td><code>data/plugins/</code></td>
                 <td>
-                  Plugins (bang commands, slots, tabs, search bar actions, routes)
+                  Plugins (bang commands, slots, tabs, search bar actions,
+                  routes)
                 </td>
               </tr>
               <tr>
@@ -164,9 +281,7 @@
               </tr>
               <tr>
                 <td><code>data/aliases.json</code></td>
-                <td>
-                  Custom <code>!alias</code> → <code>!command</code> mappings
-                </td>
+                <td>Custom command mappings</td>
               </tr>
               <tr>
                 <td><code>data/repos.json</code></td>
@@ -181,30 +296,23 @@
 
           <h2>Quick start</h2>
           <ol>
-            <li>Open <strong>Settings → Store</strong>.</li>
+            <li>Open <strong>Settings</strong> then <strong>Store</strong>.</li>
             <li>
               Add a repo: paste
               <code>https://github.com/degoog-org/official-extensions.git</code>
               and add it.
             </li>
             <li>
-              Browse the Store tab and install a plugin (e.g.
-              <strong>Weather</strong>) or theme (e.g. <strong>Zen</strong>).
+              Browse the Store tab and install a plugin (like
+              <strong>Weather</strong>) or theme (like <strong>Zen</strong>).
             </li>
           </ol>
           <p>
-            Official extensions repo:
-            <a
-              href="https://github.com/degoog-org/official-extensions"
-              class="external"
-              target="_blank"
-              rel="noopener"
-              >official-extensions</a
-            >. This is automatically added to your instance when you start it for
-            the first time.
+            The official extensions repo is automatically added to your instance
+            when you start it for the first time.
           </p>
 
-          <h2>Use as your browser's default search engine</h2>
+          <h2>Use as your browser default search engine</h2>
           <p>
             Any browser that supports custom search engines can use degoog.
             Replace <code>https://your-instance</code> with your actual instance
@@ -231,47 +339,85 @@
             </tbody>
           </table>
           <p>
-            Browsers that support
-            <a
-              href="https://developer.mozilla.org/en-US/docs/Web/OpenSearch"
-              class="external"
-              target="_blank"
-              rel="noopener"
-              >OpenSearch</a
-            >
-            can detect degoog automatically — right-clicking the search bar on
-            your instance will offer to add it.
+            Browsers that support OpenSearch can detect degoog automatically.
+            Right clicking the search bar on your instance will offer to add it.
           </p>
 
           <h2>Extension types</h2>
           <ul>
             <li>
-              <strong><a href="plugins.html">Plugins</a></strong> — Bang commands
-              (<code>!weather London</code>), result slots, search result tabs,
-              search bar actions, API routes, middleware.
+              <strong><a href="plugins.html">Plugins</a></strong
+              >: Bang commands (<code>!weather London</code>), result slots,
+              search result tabs, search bar actions, API routes, middleware.
             </li>
             <li>
-              <strong><a href="themes.html">Themes</a></strong> — Override CSS and
-              optionally home/search HTML.
+              <strong><a href="themes.html">Themes</a></strong
+              >: Override CSS and optionally home or search HTML.
             </li>
             <li>
-              <strong><a href="engines.html">Search engines</a></strong> — Custom
-              search backends (web, images, video).
+              <strong><a href="engines.html">Search engines</a></strong
+              >: Custom search backends (web, images, video).
             </li>
             <li>
-              <strong><a href="transports.html">Transports</a></strong> — Custom
-              HTTP fetch strategies (e.g. fetch, curl and whatever you can come up
-              with really).
+              <strong><a href="transports.html">Transports</a></strong
+              >: Custom HTTP fetch strategies (like fetch or curl).
             </li>
             <li>
-              <strong><a href="store.html">Store</a></strong> — Add git repos and
-              install extensions from them.
+              <strong><a href="store.html">Store</a></strong
+              >: Add git repos and install extensions from them.
             </li>
             <li>
-              <strong><a href="aliases.html">Aliases</a></strong> — Custom
-              <code>!alias</code> → <code>!command</code> mappings.
+              <strong><a href="aliases.html">Aliases</a></strong
+              >: Custom command mappings.
             </li>
           </ul>
+
+          <h2 id="beginner-guide">Beginner guide to Docker</h2>
+          <p>
+            Welcome! If you are reading this, you might be new to running your
+            own software. Let us break it down simply. Think of Docker as a
+            shipping container. Instead of installing all the messy requirements
+            for an app directly onto your computer, Docker grabs a neat pre
+            packaged box that has everything the app needs to run perfectly. All
+            you do is tell Docker to start the box.
+          </p>
+          <p>
+            To get started, you will need to install
+            <a
+              href="https://www.docker.com/products/docker-desktop/"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Docker Desktop</a
+            >
+            if you are on Windows or Mac, or
+            <a
+              href="https://docs.docker.com/engine/install/"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Docker Engine</a
+            >
+            if you are using Linux. Once installed, the easiest way to launch
+            Degoog is using something called
+            <a
+              href="https://docs.docker.com/compose/"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >Docker Compose</a
+            >. It uses a simple text file to tell Docker exactly how to run the
+            container. Just copy the Docker Compose text block from the Run
+            section above, save it in a folder as
+            <code>docker-compose.yml</code>, open your terminal or command
+            prompt in that folder, and type <code>docker compose up -d</code>.
+          </p>
+          <p>
+            That command pulls the Degoog box from the internet and starts it up
+            quietly in the background. Once it finishes, you can just open your
+            web browser and go to <code>http://localhost:4444</code> to see your
+            brand new search engine.
+          </p>
         </main>
       </div>
       <div id="ade-backdrop" class="ade-backdrop"></div>

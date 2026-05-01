@@ -9,17 +9,28 @@
         try {
           var t = localStorage.getItem("ade:theme");
           if (t !== "light" && t !== "dark") {
-            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
           }
           document.documentElement.setAttribute("data-theme", t);
         } catch (e) {}
       })();
     </script>
-    <link rel="icon" href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link
+      rel="icon"
+      href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -37,7 +48,7 @@
               src="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
               alt="degoog logo"
               class="ade-brand-img"
-              onerror="this.style.display='none'"
+              onerror="this.style.display = 'none'"
             />
             <a href="index.html" class="ade-brand-name">Degoog Docs</a>
           </div>
@@ -55,194 +66,235 @@
                 class="doc-search-clear ade-btn"
                 aria-label="Clear search"
                 style="display: none"
-              >Clear</button>
+              >
+                Clear
+              </button>
               <span class="doc-search-count"></span>
             </div>
           </div>
           <nav class="ade-nav" aria-label="Documentation">
-            <a href="index.html" class="ade-nav-item"><span class="ade-nav-item-name">Overview</span></a>
-            <a href="plugins.html" class="ade-nav-item"><span class="ade-nav-item-name">Plugins</span></a>
-            <a href="themes.html" class="ade-nav-item"><span class="ade-nav-item-name">Themes</span></a>
-            <a href="engines.html" class="ade-nav-item"><span class="ade-nav-item-name">Search engines</span></a>
-            <a href="transports.html" class="ade-nav-item"><span class="ade-nav-item-name">Transports</span></a>
-            <a href="store.html" class="ade-nav-item"><span class="ade-nav-item-name">Store</span></a>
-            <a href="aliases.html" class="ade-nav-item"><span class="ade-nav-item-name">Aliases</span></a>
-            <a href="env.html" class="ade-nav-item"><span class="ade-nav-item-name">Environment</span></a>
-            <a href="styling.html" class="ade-nav-item"><span class="ade-nav-item-name">Styling</span></a>
-            <a href="translations.html" class="ade-nav-item"><span class="ade-nav-item-name">Translations</span></a>
-            <a href="api.html" class="ade-nav-item"><span class="ade-nav-item-name">API</span></a>
+            <a href="index.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Overview</span></a
+            >
+            <a href="plugins.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Plugins</span></a
+            >
+            <a href="themes.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Themes</span></a
+            >
+            <a href="engines.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Search engines</span></a
+            >
+            <a href="transports.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Transports</span></a
+            >
+            <a href="store.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Store</span></a
+            >
+            <a href="aliases.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Aliases</span></a
+            >
+            <a href="env.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Environment</span></a
+            >
+            <a href="styling.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Styling</span></a
+            >
+            <a href="translations.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Translations</span></a
+            >
+            <a href="api.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">API</span></a
+            >
           </nav>
           <div class="ade-sidebar-actions">
-            <button id="doc-theme-toggle" type="button" class="ade-btn" aria-label="Toggle theme">
+            <button
+              id="doc-theme-toggle"
+              type="button"
+              class="ade-btn"
+              aria-label="Toggle theme"
+            >
               <i class="fa-solid fa-circle-half-stroke"></i>
             </button>
           </div>
         </aside>
         <main class="ade-main">
           <div class="doc-page-header">
-            <h1><a href="index.html">Degoog</a> — Store repositories</h1>
+            <h1><a href="index.html">Degoog</a> Store repositories</h1>
             <p class="doc-page-desc">
-              Git repos users add in Settings → Store to install plugins, themes,
-              and engines.
+              Git repositories you can add in Settings then Store to easily
+              install plugins, themes, and engines.
             </p>
           </div>
 
           <h2>What a store repo is</h2>
           <p>
-            A <strong>store repo</strong> is a git repository that users add in
-            <strong>Settings → Store</strong>. Once added, they can browse and
-            install your plugins, themes, engines, and transports from the Store
-            tab without copying files by hand.
+            A <strong>store repo</strong> is a Git repository you can link to
+            Degoog by going to <strong>Settings</strong> then
+            <strong>Store</strong>. Once you add it, you can browse and install
+            plugins, themes, engines, and transports directly from the Store tab
+            without having to copy files manually.
           </p>
 
           <h2>Repo structure</h2>
-          <p>Your repo must follow this layout:</p>
+          <p>Your repository needs to follow this layout:</p>
           <pre><code>my-degoog-repo/
-  package.json       # required — lists all items
-  plugins/
-    my-plugin/
-      index.js       # same format as data/plugins/ (see Plugins docs)
-      template.html
-      style.css
-      ...
-  themes/
-    my-theme/
-      theme.json     # same format as data/themes/
-      style.css
-      ...
-  engines/
-    my-engine/
-      index.js       # same format as data/engines/
-      ...
-  transports/
-    my-transport/
-      index.js       # same format as data/transports/
-      ...</code></pre>
+          package.json
+          plugins/
+            my-plugin/
+              index.js
+              template.html
+              style.css
+          themes/
+            my-theme/
+              theme.json
+              style.css
+          engines/
+            my-engine/
+              index.js
+          transports/
+            my-transport/
+              index.js</code></pre>
           <p>
-            Plugin, theme, engine, and transport folders use the
-            <strong>same format</strong> as when installed in
-            <code>data/plugins</code>, <code>data/themes</code>,
-            <code>data/engines</code>, and <code>data/transports</code>. No extra
-            packaging.
+            Your plugin, theme, engine, and transport folders use the exact same
+            format as they do when installed directly in your
+            <code>data</code> folders. You do not need any extra packaging.
           </p>
 
           <h2>package.json (required)</h2>
           <p>
-            At the <strong>root</strong> of the repo, add a
-            <code>package.json</code>
-            that lists every item you want to appear in the Store:
+            At the root of your repository, you need to add a
+            <code>package.json</code> file that lists every item you want to
+            show up in the Store:
           </p>
           <pre><code>{
-  "name": "my-degoog-repo",
-  "description": "Short description of your collection",
-  "author": "YourName",
-  "plugins": [
-    {
-      "path": "plugins/my-plugin",
-      "name": "My Plugin",
-      "description": "What it does",
-      "version": "1.0.0",
-      "type": "command"
-    }
-  ],
-  "themes": [
-    {
-      "path": "themes/my-theme",
-      "name": "My Theme",
-      "description": "Short description",
-      "version": "1.0.0"
-    }
-  ],
-  "engines": [],
-  "transports": [],
-  "repo-image": "logo.png"
-}</code></pre>
+          "name": "my-degoog-repo",
+          "description": "Short description of your collection",
+          "author": "YourName",
+          "plugins": [
+            {
+              "path": "plugins/my-plugin",
+              "name": "My Plugin",
+              "description": "What it does",
+              "version": "1.0.0",
+              "type": "command"
+            }
+          ],
+          "themes": [
+            {
+              "path": "themes/my-theme",
+              "name": "My Theme",
+              "description": "Short description",
+              "version": "1.0.0"
+            }
+          ],
+          "engines": [],
+          "transports": [],
+          "repo-image": "logo.png"
+        }</code></pre>
           <ul>
             <li>
-              <strong>repo-image</strong> (optional) — Path to an image file in
-              the repo root (e.g. <code>logo.png</code>) or a full URL. Shown next
-              to your repo in Settings → Store.
+              <strong>repo-image</strong> (optional): The path to an image file
+              in your repository root like <code>logo.png</code> or a full URL.
+              This displays right next to your repository in Settings then
+              Store.
             </li>
             <li>
-              <strong>path</strong> — Folder path inside the repo (e.g.
-              <code>plugins/my-plugin</code>).
+              <strong>path</strong>: The folder path inside your repository.
             </li>
             <li>
-              <strong>name</strong>, <strong>description</strong>,
-              <strong>version</strong> — Shown on the Store card.
+              <strong>name</strong>, <strong>description</strong>, and
+              <strong>version</strong>: These details are displayed on the Store
+              card.
             </li>
             <li>
-              <strong>type</strong> (plugins only) — <code>"command"</code>,
-              <code>"slot"</code>, <code>"searchBar"</code>, or
-              <code>"search-result-tab"</code>; optional. Used for Store display.
+              <strong>type</strong> (plugins only): You can use
+              <code>command</code>, <code>slot</code>, <code>searchBar</code>,
+              or <code>search-result-tab</code>. This is optional and helps with
+              the Store display.
             </li>
             <li>
-              <strong>dependencies</strong> (optional) — Array of URLs (e.g. to an
-              engine). When the item is installed, those are offered as
-              dependencies.
+              <strong>dependencies</strong> (optional): An array of URLs for
+              things like required engines. When someone installs your item,
+              these dependencies are offered to them automatically.
             </li>
           </ul>
           <p>
-            Only items listed here appear in the Store. Paths must match real
-            folders.
+            Only the items you explicitly list here will appear in the Store.
+            Make sure your paths match your actual folders.
           </p>
 
-          <h2>Optional: author.json and screenshots</h2>
+          <h2>Optional author.json and screenshots</h2>
           <p>
-            Inside any <strong>plugin</strong>, <strong>theme</strong>,
-            <strong>engine</strong>, or <strong>transport</strong> folder you can
-            add:
+            Inside any plugin, theme, engine, or transport folder you can
+            include a few extra details:
           </p>
           <ul>
             <li>
-              <strong>author.json</strong> — Overrides the repo author for this
-              item:
+              <strong>author.json</strong>: This file overrides the main
+              repository author for a specific item.
             </li>
           </ul>
           <pre><code>{
-  "name": "Author Name",
-  "url": "https://github.com/username",
-  "avatar": "https://example.com/avatar.png"
-}</code></pre>
+          "name": "Author Name",
+          "url": "https://github.com/username",
+          "avatar": "https://example.com/avatar.png"
+        }</code></pre>
           <ul>
             <li>
-              <strong>screenshots/</strong> — Image files (e.g.
-              <code>1.png</code>, <code>preview.png</code>). The first is the
-              Store card thumbnail; all are shown in the lightbox when the user
-              clicks the image.
+              <strong>screenshots/</strong>: A folder containing image files
+              like <code>1.png</code> or <code>preview.png</code>. The very
+              first image acts as the Store card thumbnail, and all of them are
+              visible in the lightbox when a user clicks the image.
             </li>
           </ul>
 
           <h2>Publish and share</h2>
           <ol>
-            <li>Push the repo to GitHub (or any git host).</li>
+            <li>Push your repository to GitHub or any other Git host.</li>
+            <li>Copy the clone URL.</li>
             <li>
-              Copy the <strong>clone URL</strong> (e.g.
-              <code>https://github.com/you/my-degoog-repo.git</code>).
-            </li>
-            <li>
-              Tell users: <strong>Settings → Store → Add</strong>, then paste the
+              Tell your users to go to <strong>Settings</strong> then
+              <strong>Store</strong> then <strong>Add</strong> and paste your
               URL.
             </li>
           </ol>
           <p>
-            Users add the repo once; they can then install, uninstall, and refresh
-            from the Store. When a user refreshes a repo, already-installed items
-            are updated to the latest version from the repo.
+            Users only need to add your repository once. After that, they can
+            easily install, uninstall, and refresh items directly from the
+            Store. When someone refreshes a repository, their installed items
+            are automatically updated to the latest version.
           </p>
           <p>
-            <strong>Official example:</strong>
+            <strong>Official example:</strong> The
             <a
               href="https://github.com/degoog-org/official-extensions"
               class="external"
               target="_blank"
               rel="noopener"
-              >official-extensions</a
+              >official extensions repository</a
             >
-            — clone URL
+            uses the clone URL
             <code>https://github.com/degoog-org/official-extensions.git</code>.
-            Add it in Settings → Store to install Weather, themes, and other
-            extensions.
+            Just add it to your Store to install the Weather plugin, fresh
+            themes, and other great extensions.
+          </p>
+
+          <h2>Community extensions</h2>
+          <p>
+            We want to give a massive thank you to our community for building
+            and sharing their own plugins and engines. You can discover all of
+            these over at the
+            <a
+              href="https://degoog-org.github.io/community-extensions/"
+              class="external"
+              target="_blank"
+              rel="noopener"
+              >community extensions page</a
+            >. Please remember that because these are created by other users, we
+            do not officially vet them or take any responsibility for them.
+            Always make sure you double check what you are installing on your
+            system before adding it.
           </p>
         </main>
       </div>

@@ -9,17 +9,28 @@
         try {
           var t = localStorage.getItem("ade:theme");
           if (t !== "light" && t !== "dark") {
-            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
           }
           document.documentElement.setAttribute("data-theme", t);
         } catch (e) {}
       })();
     </script>
-    <link rel="icon" href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link
+      rel="icon"
+      href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -37,7 +48,7 @@
               src="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
               alt="degoog logo"
               class="ade-brand-img"
-              onerror="this.style.display='none'"
+              onerror="this.style.display = 'none'"
             />
             <a href="index.html" class="ade-brand-name">Degoog Docs</a>
           </div>
@@ -55,925 +66,991 @@
                 class="doc-search-clear ade-btn"
                 aria-label="Clear search"
                 style="display: none"
-              >Clear</button>
+              >
+                Clear
+              </button>
               <span class="doc-search-count"></span>
             </div>
           </div>
           <nav class="ade-nav" aria-label="Documentation">
-            <a href="index.html" class="ade-nav-item"><span class="ade-nav-item-name">Overview</span></a>
-            <a href="plugins.html" class="ade-nav-item"><span class="ade-nav-item-name">Plugins</span></a>
-            <a href="themes.html" class="ade-nav-item"><span class="ade-nav-item-name">Themes</span></a>
-            <a href="engines.html" class="ade-nav-item"><span class="ade-nav-item-name">Search engines</span></a>
-            <a href="transports.html" class="ade-nav-item"><span class="ade-nav-item-name">Transports</span></a>
-            <a href="store.html" class="ade-nav-item"><span class="ade-nav-item-name">Store</span></a>
-            <a href="aliases.html" class="ade-nav-item"><span class="ade-nav-item-name">Aliases</span></a>
-            <a href="env.html" class="ade-nav-item"><span class="ade-nav-item-name">Environment</span></a>
-            <a href="styling.html" class="ade-nav-item"><span class="ade-nav-item-name">Styling</span></a>
-            <a href="translations.html" class="ade-nav-item"><span class="ade-nav-item-name">Translations</span></a>
-            <a href="api.html" class="ade-nav-item"><span class="ade-nav-item-name">API</span></a>
+            <a href="index.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Overview</span></a
+            >
+            <a href="plugins.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Plugins</span></a
+            >
+            <a href="themes.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Themes</span></a
+            >
+            <a href="engines.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Search engines</span></a
+            >
+            <a href="transports.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Transports</span></a
+            >
+            <a href="store.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Store</span></a
+            >
+            <a href="aliases.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Aliases</span></a
+            >
+            <a href="env.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Environment</span></a
+            >
+            <a href="styling.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Styling</span></a
+            >
+            <a href="translations.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Translations</span></a
+            >
+            <a href="api.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">API</span></a
+            >
           </nav>
           <div class="ade-sidebar-actions">
-            <button id="doc-theme-toggle" type="button" class="ade-btn" aria-label="Toggle theme">
+            <button
+              id="doc-theme-toggle"
+              type="button"
+              class="ade-btn"
+              aria-label="Toggle theme"
+            >
               <i class="fa-solid fa-circle-half-stroke"></i>
             </button>
           </div>
         </aside>
         <main class="ade-main">
           <div class="doc-page-header">
-            <h1><a href="index.html">Degoog</a> — Themes</h1>
-            <p class="doc-page-desc">Override look, layout, and result markup.</p>
+            <h1><a href="index.html">Degoog</a> Themes</h1>
+            <p class="doc-page-desc">
+              Override the look, layout, and result markup.
+            </p>
           </div>
-        <h2 id="default-theme">Default theme reference</h2>
-        <p>
-          The built-in theme lives at
-          <a
-            href="https://github.com/degoog-org/degoog/tree/main/src/public/themes/degoog-theme"
-            ><code>src/public/themes/degoog-theme/</code></a
-          >
-          &mdash; use it as your starting point.
-        </p>
 
-        <h2>Getting started</h2>
-        <p>
-          Create a folder in <code>data/themes/</code> (or
-          <code>DEGOOG_THEMES_DIR</code>). The folder name is your theme id. Add
-          a <code>theme.json</code> with at least a <code>name</code>.
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Tier</th>
-              <th>What you provide</th>
-              <th>What you control</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>CSS only</strong></td>
-              <td><code>theme.json</code> + stylesheet</td>
-              <td>Colours, fonts, spacing via CSS variables</td>
-            </tr>
-            <tr>
-              <td><strong>CSS + templates</strong></td>
-              <td><code>theme.json</code> + stylesheet + template files</td>
-              <td>Above + HTML structure of any section</td>
-            </tr>
-            <tr>
-              <td><strong>Layout override</strong></td>
-              <td>
-                <code>theme.json</code> + stylesheet + custom
-                <code>layout.html</code>
-              </td>
-              <td>Above + page title, meta tags, favicons, scripts</td>
-            </tr>
-            <tr>
-              <td><strong>Full HTML override</strong></td>
-              <td>
-                <code>theme.json</code> + stylesheet + custom
-                <code>index.html</code> / <code>search.html</code>
-              </td>
-              <td>Total control &mdash; bypasses the layout entirely</td>
-            </tr>
-          </tbody>
-        </table>
-        <p>
-          Only include the templates you want to change &mdash; everything else
-          falls back to the <a href="#default-theme">default theme</a>. Apply
-          via Settings &rarr; Themes &rarr; <strong>Apply</strong>.
-        </p>
-
-        <h3>Layout override</h3>
-        <p>
-          To customise the page title, meta description, favicons, or anything
-          in the <code>&lt;head&gt;</code>, provide a
-          <code>layout.html</code> in your theme and reference it under
-          <code>html.layout</code>. Copy the
-          <a
-            href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/layout.html"
-            >default layout</a
-          >
-          and edit it. You <strong>must</strong> keep these placeholders:
-        </p>
-        <ul>
-          <li>
-            <code>__PAGE_CONTENT__</code> &mdash; skeleton HTML gets inserted
-            here
-          </li>
-          <li><code>__BODY_CLASS__</code> &mdash; body class attribute</li>
-          <li>
-            <code>__THEME_TEMPLATES__</code> &mdash; templates get injected here
-          </li>
-          <li>
-            <code>__THEME_CSS__</code>, <code>__PLUGIN_ASSETS__</code>,
-            <code>__CUSTOM_CSS__</code>, <code>__APP_VERSION__</code>
-          </li>
-        </ul>
-
-        <h2>Page architecture</h2>
-        <p>Every page has three layers:</p>
-        <ol>
-          <li>
-            <strong>Layout</strong>
-            (<a
-              href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/layout.html"
-              ><code>layout.html</code></a
-            >) &mdash; shared HTML shell. <em>Change at your own risk.</em>
-          </li>
-          <li>
-            <strong>Skeleton</strong>
-            (<a
-              href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/index.html"
-              ><code>index.html</code></a
-            >
-            /
+          <h2 id="default-theme">Default theme reference</h2>
+          <p>
+            The default theme lives at
             <a
-              href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search.html"
-              ><code>search.html</code></a
-            >) &mdash; empty <code>&lt;div&gt;</code>s with required IDs. JS
-            depends on these.
-          </li>
-          <li>
-            <strong>Templates</strong> &mdash; individual HTML files rendered
-            into the skeleton. These are what themes override.
-          </li>
-        </ol>
+              href="https://github.com/degoog-org/degoog/tree/main/src/public/themes/degoog-theme"
+              ><code>src/public/themes/degoog-theme/</code></a
+            >. You should use it as your starting point.
+          </p>
 
-        <h2>theme.json</h2>
-        <p>
-          See the
-          <a
-            href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/theme.json"
-            >default theme.json</a
-          >
-          for a complete example.
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Required</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>name</code></td>
-              <td>yes</td>
-              <td>Display name in Settings &rarr; Themes</td>
-            </tr>
-            <tr>
-              <td>
-                <code>author</code>, <code>description</code>,
-                <code>version</code>
-              </td>
-              <td>no</td>
-              <td>Shown on the theme card</td>
-            </tr>
-            <tr>
-              <td><code>css</code></td>
-              <td>no</td>
-              <td>
-                Stylesheet path (supports <code>.scss</code>). Served at
-                <code>/theme/style.css</code>
-              </td>
-            </tr>
-            <tr>
-              <td><code>templates</code></td>
-              <td>no</td>
-              <td>
-                Object mapping template keys to file paths. Injected as
-                <code>&lt;template&gt;</code> elements automatically
-              </td>
-            </tr>
-            <tr>
-              <td><code>html</code></td>
-              <td>no</td>
-              <td>
-                Object with <code>layout</code>, <code>index</code>,
-                <code>search</code>. Fragments are composed into the layout;
-                full HTML documents (starting with
-                <code>&lt;!doctype&gt;</code>) bypass it entirely
-              </td>
-            </tr>
-            <tr>
-              <td><code>settingsSchema</code></td>
-              <td>no</td>
-              <td>
-                Exposes a Configure button on the theme card. Values stored
-                under <code>theme-&lt;id&gt;</code>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p>
-          Custom HTML can use these placeholders:
-          <code>__THEME_CSS__</code>, <code>__THEME_ATTRS__</code>,
-          <code>__PLUGIN_ASSETS__</code>, <code>__CUSTOM_CSS__</code>,
-          <code>__APP_VERSION__</code>, <code>__THEME_TEMPLATES__</code>,
-          <code>__PAGE_CONTENT__</code>, <code>__BODY_CLASS__</code>.
-        </p>
+          <h2>Getting started</h2>
+          <p>
+            Create a folder inside <code>data/themes/</code> or whatever you set
+            <code>DEGOOG_THEMES_DIR</code> to. The folder name will be your
+            theme ID. Add a <code>theme.json</code> file with at least a
+            <code>name</code> property.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Tier</th>
+                <th>What you provide</th>
+                <th>What you control</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>CSS only</strong></td>
+                <td><code>theme.json</code> plus your stylesheet</td>
+                <td>Colors, fonts, and spacing using CSS variables</td>
+              </tr>
+              <tr>
+                <td><strong>CSS and templates</strong></td>
+                <td>
+                  <code>theme.json</code> plus your stylesheet and template
+                  files
+                </td>
+                <td>Everything above plus the HTML structure of any section</td>
+              </tr>
+              <tr>
+                <td><strong>Layout override</strong></td>
+                <td>
+                  <code>theme.json</code> plus your stylesheet and a custom
+                  <code>layout.html</code>
+                </td>
+                <td>
+                  Everything above plus the page title, meta tags, favicons, and
+                  scripts
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Full HTML override</strong></td>
+                <td>
+                  <code>theme.json</code> plus your stylesheet and a custom
+                  <code>index.html</code> or <code>search.html</code>
+                </td>
+                <td>Total control that bypasses the layout entirely</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Only include the templates you actually want to change because
+            everything else will naturally fall back to the
+            <a href="#default-theme">default theme</a>. You can apply your new
+            theme by navigating to Settings and then Themes.
+          </p>
 
-        <h2>Static assets</h2>
-        <p>
-          Any file inside your theme folder is served at
-          <code>/themes/&lt;theme-id&gt;/&lt;path&gt;</code>. Supported types:
-          JS, CSS, HTML, JSON, SVG, PNG, JPG, GIF, WebP, TTF, WOFF, WOFF2.
-        </p>
-        <p>
-          Use this to load custom fonts, images, or scripts from your theme CSS
-          or HTML:
-        </p>
-        <pre><code>@font-face {
-  font-family: "My Font";
-  src: url("/themes/my-theme/fonts/my-font.woff2") format("woff2");
-  font-display: swap;
-}</code></pre>
-        <p><code>theme.json</code> is never served.</p>
+          <h3>Layout override</h3>
+          <p>
+            To customize the page title, meta description, favicons, or anything
+            inside the <code>&lt;head&gt;</code>, provide a
+            <code>layout.html</code> in your theme and reference it under
+            <code>html.layout</code>. You can copy the
+            <a
+              href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/layout.html"
+              >default layout</a
+            >
+            and edit it. You <strong>must</strong> keep these exact
+            placeholders:
+          </p>
+          <ul>
+            <li>
+              <code>__PAGE_CONTENT__</code> is where the skeleton HTML gets
+              inserted
+            </li>
+            <li><code>__BODY_CLASS__</code> is the body class attribute</li>
+            <li>
+              <code>__THEME_TEMPLATES__</code> is where your templates are
+              injected
+            </li>
+            <li>
+              <code>__THEME_CSS__</code>, <code>__PLUGIN_ASSETS__</code>,
+              <code>__CUSTOM_CSS__</code>, and <code>__APP_VERSION__</code>
+            </li>
+          </ul>
 
-        <h3>Example</h3>
-        <pre><code>{
-  "name": "My Theme",
-  "css": "style.css",
-  "templates": {
-    "result": "templates/result.html"
-  }
-}</code></pre>
+          <h2>Page architecture</h2>
+          <p>Every page is built with three layers:</p>
+          <ol>
+            <li>
+              <strong>Layout</strong>
+              (<a
+                href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/layout.html"
+                ><code>layout.html</code></a
+              >) is the shared HTML shell. Change this at your own risk.
+            </li>
+            <li>
+              <strong>Skeleton</strong>
+              (<a
+                href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/index.html"
+                ><code>index.html</code></a
+              >
+              or
+              <a
+                href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search.html"
+                ><code>search.html</code></a
+              >) provides empty <code>&lt;div&gt;</code> elements with required
+              IDs that our JavaScript relies on.
+            </li>
+            <li>
+              <strong>Templates</strong> are individual HTML files rendered
+              directly into the skeleton. These are what your themes will
+              override.
+            </li>
+          </ol>
 
-        <h2 id="templates">Templates</h2>
-        <p>
-          Templates control the HTML of every page section. List them under
-          <code>templates</code> in <code>theme.json</code> &mdash; keys are
-          auto-prefixed with <code>degoog-</code> to form the element id. The
-          last template with a given id wins, so your overrides take priority
-          over the defaults.
-        </p>
+          <h2>theme.json</h2>
+          <p>
+            Check out the
+            <a
+              href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/theme.json"
+              >default theme.json</a
+            >
+            for a complete working example.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>name</code></td>
+                <td>yes</td>
+                <td>The display name shown in Settings then Themes</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>author</code>, <code>description</code>,
+                  <code>version</code>
+                </td>
+                <td>no</td>
+                <td>Details shown on the theme card</td>
+              </tr>
+              <tr>
+                <td><code>css</code></td>
+                <td>no</td>
+                <td>
+                  Your stylesheet path which also supports
+                  <code>.scss</code> files. It is served at
+                  <code>/theme/style.css</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>templates</code></td>
+                <td>no</td>
+                <td>
+                  An object mapping your template keys to their file paths.
+                  These are injected automatically as
+                  <code>&lt;template&gt;</code> elements
+                </td>
+              </tr>
+              <tr>
+                <td><code>html</code></td>
+                <td>no</td>
+                <td>
+                  An object containing <code>layout</code>, <code>index</code>,
+                  and <code>search</code>. Fragments are composed into the
+                  layout while full HTML documents starting with
+                  <code>&lt;!doctype&gt;</code> bypass the layout entirely
+                </td>
+              </tr>
+              <tr>
+                <td><code>settingsSchema</code></td>
+                <td>no</td>
+                <td>
+                  Exposes a Configure button directly on the theme card. These
+                  values are stored under <code>theme-&lt;id&gt;</code>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Your custom HTML can utilize these placeholders:
+            <code>__THEME_CSS__</code>, <code>__THEME_ATTRS__</code>,
+            <code>__PLUGIN_ASSETS__</code>, <code>__CUSTOM_CSS__</code>,
+            <code>__APP_VERSION__</code>, <code>__THEME_TEMPLATES__</code>,
+            <code>__PAGE_CONTENT__</code>, and <code>__BODY_CLASS__</code>.
+          </p>
 
-        <h3>Search page templates</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Description</th>
-              <th>Source</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>search-header</code></td>
-              <td>Logo + search bar + settings gear</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/header.html"
-                  >header.html</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td><code>search-tabs</code></td>
-              <td>Tab bar + options dropdown</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/tabs.html"
-                  >tabs.html</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td><code>search-media-preview</code></td>
-              <td>Image / video preview panel</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/media-preview.html"
-                  >media-preview.html</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td><code>search-lightbox</code></td>
-              <td>Full-screen image lightbox</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/lightbox.html"
-                  >lightbox.html</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td><code>result</code></td>
-              <td>Web / news result item</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/result.html"
-                  >result.html</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td><code>image-card</code></td>
-              <td>Image grid card</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/image-card.html"
-                  >image-card.html</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td><code>video-card</code></td>
-              <td>Video grid card</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/video-card.html"
-                  >video-card.html</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td><code>at-a-glance</code></td>
-              <td>At-a-glance box</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/at-a-glance.html"
-                  >at-a-glance.html</a
-                >
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          <h2>Static assets</h2>
+          <p>
+            Any file placed inside your theme folder is served securely at
+            <code>/themes/&lt;theme-id&gt;/&lt;path&gt;</code>. We support JS,
+            CSS, HTML, JSON, SVG, PNG, JPG, GIF, WebP, TTF, WOFF, and WOFF2
+            files.
+          </p>
+          <p>
+            You can use this to load your custom fonts, images, or scripts
+            directly from your theme CSS or HTML:
+          </p>
+          <pre><code>@font-face {
+          font-family: "My Font";
+          src: url("/themes/my-theme/fonts/my-font.woff2") format("woff2");
+          font-display: swap;
+        }</code></pre>
+          <p>
+            Note that <code>theme.json</code> is never served to the client.
+          </p>
 
-        <h3>Home page templates</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Description</th>
-              <th>Source</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>home-header</code></td>
-              <td>Top header bar</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/index-templates/header.html"
-                  >header.html</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td><code>home-logo</code></td>
-              <td>Logo / branding</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/index-templates/logo.html"
-                  >logo.html</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td><code>home-search</code></td>
-              <td>Search form</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/index-templates/search.html"
-                  >search.html</a
-                >
-              </td>
-            </tr>
-            <tr>
-              <td><code>home-footer</code></td>
-              <td>Footer</td>
-              <td>
-                <a
-                  href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/index-templates/footer.html"
-                  >footer.html</a
-                >
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          <h3>Example</h3>
+          <pre><code>{
+          "name": "My Theme",
+          "css": "style.css",
+          "templates": {
+            "result": "templates/result.html"
+          }
+        }</code></pre>
 
-        <h2>Skeleton IDs</h2>
-        <p>
-          Skeleton elements are empty <code>&lt;div&gt;</code>s with only an
-          <code>id</code>. JS injects templates into them.
-          <strong>Do not remove or rename these IDs.</strong>
-        </p>
+          <h2 id="templates">Templates</h2>
+          <p>
+            Templates control the HTML structure of every page section. You list
+            them under
+            <code>templates</code> inside your <code>theme.json</code> file. The
+            keys are automatically prefixed with <code>degoog-</code> to form
+            the element ID. The last template with a specific ID wins, meaning
+            your overrides will always take priority over the defaults.
+          </p>
 
-        <h3>Home page</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Receives</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>header</code></td>
-              <td><code>degoog-home-header</code></td>
-            </tr>
-            <tr>
-              <td><code>main-home</code></td>
-              <td>Main content area (plugins may inject here)</td>
-            </tr>
-            <tr>
-              <td><code>home-logo</code></td>
-              <td><code>degoog-home-logo</code></td>
-            </tr>
-            <tr>
-              <td><code>home-search</code></td>
-              <td><code>degoog-home-search</code></td>
-            </tr>
-            <tr>
-              <td><code>home-footer</code></td>
-              <td><code>degoog-home-footer</code></td>
-            </tr>
-          </tbody>
-        </table>
+          <h3>Search page templates</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Description</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>search-header</code></td>
+                <td>Logo plus search bar plus settings gear</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/header.html"
+                    >header.html</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>search-tabs</code></td>
+                <td>Tab bar plus options dropdown</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/tabs.html"
+                    >tabs.html</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>search-media-preview</code></td>
+                <td>Image and video preview panel</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/media-preview.html"
+                    >media-preview.html</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>search-lightbox</code></td>
+                <td>Full screen image lightbox</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/lightbox.html"
+                    >lightbox.html</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>result</code></td>
+                <td>Web and news result items</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/result.html"
+                    >result.html</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>image-card</code></td>
+                <td>Image grid cards</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/image-card.html"
+                    >image-card.html</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>video-card</code></td>
+                <td>Video grid cards</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/video-card.html"
+                    >video-card.html</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>at-a-glance</code></td>
+                <td>At a glance content box</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/search-templates/at-a-glance.html"
+                    >at-a-glance.html</a
+                  >
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h3>Search page</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Receives</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>results-page</code></td>
-              <td>Top-level wrapper</td>
-            </tr>
-            <tr>
-              <td><code>results-header</code></td>
-              <td><code>degoog-search-header</code></td>
-            </tr>
-            <tr>
-              <td><code>results-tabs</code></td>
-              <td><code>degoog-search-tabs</code></td>
-            </tr>
-            <tr>
-              <td><code>results-meta</code></td>
-              <td>Engine timing / stats</td>
-            </tr>
-            <tr>
-              <td><code>results-layout</code></td>
-              <td>Layout wrapper (main + sidebar + preview)</td>
-            </tr>
-            <tr>
-              <td><code>results-main</code></td>
-              <td>Main results column</td>
-            </tr>
-            <tr>
-              <td><code>at-a-glance</code></td>
-              <td><code>degoog-at-a-glance</code></td>
-            </tr>
-            <tr>
-              <td><code>results-list</code></td>
-              <td>Search results</td>
-            </tr>
-            <tr>
-              <td><code>pagination</code></td>
-              <td>Page navigation</td>
-            </tr>
-            <tr>
-              <td><code>sidebar-col</code></td>
-              <td>Sidebar column</td>
-            </tr>
-            <tr>
-              <td><code>results-sidebar</code></td>
-              <td>Sidebar content</td>
-            </tr>
-            <tr>
-              <td><code>media-preview-panel</code></td>
-              <td><code>degoog-search-media-preview</code></td>
-            </tr>
-            <tr>
-              <td><code>img-lightbox</code></td>
-              <td><code>degoog-search-lightbox</code></td>
-            </tr>
-            <tr>
-              <td><code>slot-above-results</code></td>
-              <td>Plugin slot</td>
-            </tr>
-            <tr>
-              <td><code>slot-below-results</code></td>
-              <td>Plugin slot</td>
-            </tr>
-            <tr>
-              <td><code>slot-above-sidebar</code></td>
-              <td>Plugin slot</td>
-            </tr>
-            <tr>
-              <td><code>slot-below-sidebar</code></td>
-              <td>Plugin slot</td>
-            </tr>
-          </tbody>
-        </table>
+          <h3>Home page templates</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Description</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>home-header</code></td>
+                <td>Top header navigation bar</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/index-templates/header.html"
+                    >header.html</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>home-logo</code></td>
+                <td>Main logo and branding</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/index-templates/logo.html"
+                    >logo.html</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>home-search</code></td>
+                <td>The primary search form</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/index-templates/search.html"
+                    >search.html</a
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>home-footer</code></td>
+                <td>Page footer</td>
+                <td>
+                  <a
+                    href="https://github.com/degoog-org/degoog/blob/main/src/public/themes/degoog-theme/index-templates/footer.html"
+                    >footer.html</a
+                  >
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h2>Required IDs inside templates</h2>
-        <p>
-          Some templates contain inner elements that JS hooks into. Keep these
-          IDs when overriding or the feature breaks. Templates not listed here
-          (<code>degoog-home-header</code>, <code>degoog-home-logo</code>,
-          <code>degoog-home-footer</code>, <code>degoog-image-card</code>,
-          <code>degoog-video-card</code>, <code>degoog-at-a-glance</code>) can
-          be restructured freely.
-        </p>
+          <h2>Skeleton IDs</h2>
+          <p>
+            Skeleton elements are simply empty <code>&lt;div&gt;</code> tags
+            that only contain an <code>id</code>. Our JavaScript injects the
+            templates right into them.
+            <strong>Please do not remove or rename these IDs.</strong>
+          </p>
 
-        <h4><code>degoog-home-search</code></h4>
-        <ul>
-          <li><code>search-input</code> &mdash; text input</li>
-          <li><code>ac-dropdown-home</code> &mdash; autocomplete dropdown</li>
-          <li><code>search-bar-actions-home</code> &mdash; action buttons</li>
-          <li>
-            <code>btn-lucky</code>, <code>lucky-slot-inner</code> &mdash; lucky
-            animation
-          </li>
-        </ul>
+          <h3>Home page</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Receives</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>header</code></td>
+                <td><code>degoog-home-header</code></td>
+              </tr>
+              <tr>
+                <td><code>main-home</code></td>
+                <td>Main content area where plugins might inject</td>
+              </tr>
+              <tr>
+                <td><code>home-logo</code></td>
+                <td><code>degoog-home-logo</code></td>
+              </tr>
+              <tr>
+                <td><code>home-search</code></td>
+                <td><code>degoog-home-search</code></td>
+              </tr>
+              <tr>
+                <td><code>home-footer</code></td>
+                <td><code>degoog-home-footer</code></td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h4><code>degoog-search-header</code></h4>
-        <ul>
-          <li><code>results-search-input</code> &mdash; search input</li>
-          <li><code>results-search-btn</code> &mdash; submit button</li>
-          <li>
-            <code>ac-dropdown-results</code> &mdash; autocomplete dropdown
-          </li>
-          <li>
-            <code>search-bar-actions-results</code> &mdash; action buttons
-          </li>
-          <li><code>.results-logo</code> (class) &mdash; logo link</li>
-        </ul>
+          <h3>Search page</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Receives</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>results-page</code></td>
+                <td>Top level page wrapper</td>
+              </tr>
+              <tr>
+                <td><code>results-header</code></td>
+                <td><code>degoog-search-header</code></td>
+              </tr>
+              <tr>
+                <td><code>results-tabs</code></td>
+                <td><code>degoog-search-tabs</code></td>
+              </tr>
+              <tr>
+                <td><code>results-meta</code></td>
+                <td>Engine timing and stats display</td>
+              </tr>
+              <tr>
+                <td><code>results-layout</code></td>
+                <td>Layout wrapper covering main, sidebar, and previews</td>
+              </tr>
+              <tr>
+                <td><code>results-main</code></td>
+                <td>Main results column</td>
+              </tr>
+              <tr>
+                <td><code>at-a-glance</code></td>
+                <td><code>degoog-at-a-glance</code></td>
+              </tr>
+              <tr>
+                <td><code>results-list</code></td>
+                <td>The actual search results</td>
+              </tr>
+              <tr>
+                <td><code>pagination</code></td>
+                <td>Page navigation controls</td>
+              </tr>
+              <tr>
+                <td><code>sidebar-col</code></td>
+                <td>Sidebar column container</td>
+              </tr>
+              <tr>
+                <td><code>results-sidebar</code></td>
+                <td>Sidebar content area</td>
+              </tr>
+              <tr>
+                <td><code>media-preview-panel</code></td>
+                <td><code>degoog-search-media-preview</code></td>
+              </tr>
+              <tr>
+                <td><code>img-lightbox</code></td>
+                <td><code>degoog-search-lightbox</code></td>
+              </tr>
+              <tr>
+                <td><code>slot-above-results</code></td>
+                <td>Plugin slot area</td>
+              </tr>
+              <tr>
+                <td><code>slot-below-results</code></td>
+                <td>Plugin slot area</td>
+              </tr>
+              <tr>
+                <td><code>slot-above-sidebar</code></td>
+                <td>Plugin slot area</td>
+              </tr>
+              <tr>
+                <td><code>slot-below-sidebar</code></td>
+                <td>Plugin slot area</td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h4><code>degoog-search-tabs</code></h4>
-        <ul>
-          <li>
-            <code>.results-tab[data-type]</code> (class + attr) &mdash; tab
-            buttons
-          </li>
-          <li><code>tools-bar</code> &mdash; options wrapper</li>
-          <li><code>tools-toggle</code> &mdash; dropdown toggle</li>
-          <li><code>tools-dropdown</code> &mdash; dropdown menu</li>
-          <li>
-            <code>tools-submenu-time</code>,
-            <code>tools-submenu-lang</code> &mdash; filter submenus
-          </li>
-          <li>
-            <code>tools-time-val</code>, <code>tools-lang-val</code> &mdash;
-            active filter labels
-          </li>
-          <li>
-            <code>tools-lang-filter</code>, <code>tools-lang-list</code> &mdash;
-            language filter
-          </li>
-          <li>
-            <code>tools-date-from</code>, <code>tools-date-to</code>,
-            <code>tools-date-apply</code> &mdash; date range
-          </li>
-        </ul>
+          <h2>Required IDs inside templates</h2>
+          <p>
+            Some templates contain inner elements that our JavaScript hooks into
+            directly. Keep these IDs intact when you override files otherwise
+            the feature will break. Any templates not listed here like
+            <code>degoog-home-header</code>, <code>degoog-home-logo</code>,
+            <code>degoog-home-footer</code>, <code>degoog-image-card</code>,
+            <code>degoog-video-card</code>, and
+            <code>degoog-at-a-glance</code> can be restructured freely.
+          </p>
 
-        <h4><code>degoog-result</code></h4>
-        <p>
-          IDs in this template are suffixed with the
-          <code>{{ index }}</code> placeholder (the result&rsquo;s zero-based
-          position) so they stay unique within the page. Keep the prefix intact
-          when overriding.
-        </p>
-        <ul>
-          <li>
-            <code>result-favicon-{N}</code> &mdash; favicon image. Must also
-            carry <code>data-favicon-host="{{ favicon_host }}"</code>; JS
-            attaches the DDG &rarr; Google &rarr; letter-avatar fallback chain.
-            On final fallback the <code>&lt;img&gt;</code> is replaced with a
-            <code>&lt;span class="result-favicon-fallback"&gt;</code>.
-          </li>
-          <li>
-            <code>result-actions-{N}</code> &mdash; per-result action wrapper
-            (block / replace / score). Only rendered when
-            <code>show_actions</code> is truthy.
-          </li>
-          <li>
-            <code>result-actions-toggle-{N}</code> &mdash; kebab button that
-            opens the menu; <code>aria-expanded</code> is toggled by JS.
-          </li>
-          <li>
-            <code>result-actions-menu-{N}</code> &mdash; popover containing the
-            action buttons; toggled via the <code>hidden</code> attribute.
-          </li>
-          <li>
-            <code>result-action-block-{N}</code>,
-            <code>result-action-replace-{N}</code>,
-            <code>result-action-score-{N}</code> &mdash; individual menu
-            buttons. Each one is conditional on the matching
-            <code>action_block</code> / <code>action_replace</code> /
-            <code>action_score</code> placeholder.
-          </li>
-        </ul>
+          <h4><code>degoog-home-search</code></h4>
+          <ul>
+            <li><code>search-input</code> handles the text input</li>
+            <li>
+              <code>ac-dropdown-home</code> handles the autocomplete dropdown
+            </li>
+            <li>
+              <code>search-bar-actions-home</code> handles the action buttons
+            </li>
+            <li>
+              <code>btn-lucky</code> and <code>lucky-slot-inner</code> handle
+              the lucky animation
+            </li>
+          </ul>
 
-        <h4><code>degoog-search-media-preview</code></h4>
-        <ul>
-          <li>
-            <code>media-preview-close</code>, <code>media-preview-prev</code>,
-            <code>media-preview-next</code> &mdash; nav buttons
-          </li>
-          <li><code>media-preview-img</code> &mdash; preview image</li>
-          <li><code>media-preview-info</code> &mdash; info panel</li>
-        </ul>
+          <h4><code>degoog-search-header</code></h4>
+          <ul>
+            <li><code>results-search-input</code> handles the search input</li>
+            <li><code>results-search-btn</code> handles the submit button</li>
+            <li>
+              <code>ac-dropdown-results</code> handles the autocomplete dropdown
+            </li>
+            <li>
+              <code>search-bar-actions-results</code> handles the action buttons
+            </li>
+            <li>
+              <code>.results-logo</code> is the required class for the logo link
+            </li>
+          </ul>
 
-        <h4><code>degoog-search-lightbox</code></h4>
-        <ul>
-          <li><code>img-lightbox-bg</code> &mdash; backdrop</li>
-          <li><code>img-lightbox-close</code> &mdash; close button</li>
-          <li><code>img-lightbox-wrap</code> &mdash; image container</li>
-          <li><code>img-lightbox-img</code> &mdash; full-size image</li>
-        </ul>
+          <h4><code>degoog-search-tabs</code></h4>
+          <ul>
+            <li>
+              <code>.results-tab[data-type]</code> is the class and attribute
+              for the tab buttons
+            </li>
+            <li><code>tools-bar</code> is the options wrapper</li>
+            <li><code>tools-toggle</code> is the dropdown toggle</li>
+            <li><code>tools-dropdown</code> is the dropdown menu</li>
+            <li>
+              <code>tools-submenu-time</code> and
+              <code>tools-submenu-lang</code> handle the filter submenus
+            </li>
+            <li>
+              <code>tools-time-val</code> and <code>tools-lang-val</code> handle
+              the active filter labels
+            </li>
+            <li>
+              <code>tools-lang-filter</code> and
+              <code>tools-lang-list</code> handle the language filter
+            </li>
+            <li>
+              <code>tools-date-from</code>, <code>tools-date-to</code>, and
+              <code>tools-date-apply</code> handle the custom date range
+            </li>
+          </ul>
 
-        <h2>Placeholder syntax</h2>
-        <p>
-          Inside templates, use double curly braces for dynamic values. All
-          values are HTML-escaped automatically.
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Syntax</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>{{ name }}</code></td>
-              <td>Output a value</td>
-            </tr>
-            <tr>
-              <td><code>{{#if name}} &hellip; {{/if name}}</code></td>
-              <td>Conditional &mdash; rendered when truthy</td>
-            </tr>
-            <tr>
-              <td><code>{{#each name}} &hellip; {{/each name}}</code></td>
-              <td>
-                Loop. <code>{{ . }}</code> = item, <code>{{ @index }}</code> =
-                index
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p>
-          <code>{{#if}}</code> blocks must contain balanced HTML. Placeholders
-          work in text and quoted attribute values (<code>href="{{ url }}"</code
-          >) but not as tag names.
-        </p>
+          <h4><code>degoog-result</code></h4>
+          <p>
+            The IDs inside this template are suffixed with the
+            <code>{{ index }}</code> placeholder. This represents the starting
+            position of the result from zero and ensures IDs stay unique across
+            the page. Make sure to keep the prefix intact when you override
+            this.
+          </p>
+          <ul>
+            <li>
+              <code>result-favicon-{N}</code> is the favicon image. It must also
+              carry <code>data-favicon-host="{{ favicon_host }}"</code> so
+              JavaScript can attach the fallback chain. During the final
+              fallback phase the <code>&lt;img&gt;</code> is smoothly replaced
+              with a
+              <code>&lt;span class="result-favicon-fallback"&gt;</code> element.
+            </li>
+            <li>
+              <code>result-actions-{N}</code> is the wrapper for per result
+              actions like block, replace, and score. This only renders when
+              <code>show_actions</code> is true.
+            </li>
+            <li>
+              <code>result-actions-toggle-{N}</code> is the button that opens
+              the menu. Its <code>aria-expanded</code> state is toggled by
+              JavaScript.
+            </li>
+            <li>
+              <code>result-actions-menu-{N}</code> is the popover containing the
+              action buttons. It is toggled using the
+              <code>hidden</code> attribute.
+            </li>
+            <li>
+              <code>result-action-block-{N}</code>,
+              <code>result-action-replace-{N}</code>, and
+              <code>result-action-score-{N}</code> are the individual menu
+              buttons. Each one only shows up if its matching
+              <code>action_block</code>, <code>action_replace</code>, or
+              <code>action_score</code> placeholder is active.
+            </li>
+          </ul>
 
-        <h3>Placeholders per template</h3>
+          <h4><code>degoog-search-media-preview</code></h4>
+          <ul>
+            <li>
+              <code>media-preview-close</code>, <code>media-preview-prev</code>,
+              and <code>media-preview-next</code> are the navigation buttons
+            </li>
+            <li><code>media-preview-img</code> is the main preview image</li>
+            <li><code>media-preview-info</code> is the sidebar info panel</li>
+          </ul>
 
-        <h4><code>degoog-result</code></h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>index</code></td>
-              <td>number</td>
-              <td>
-                Zero-based position of this result; used to suffix the
-                template&rsquo;s required IDs.
-              </td>
-            </tr>
-            <tr>
-              <td><code>title</code></td>
-              <td>string</td>
-              <td>Result title</td>
-            </tr>
-            <tr>
-              <td><code>url</code></td>
-              <td>string</td>
-              <td>Result URL</td>
-            </tr>
-            <tr>
-              <td><code>cite_url</code></td>
-              <td>string</td>
-              <td>Display URL (hostname + path)</td>
-            </tr>
-            <tr>
-              <td><code>snippet</code></td>
-              <td>string</td>
-              <td>Description</td>
-            </tr>
-            <tr>
-              <td><code>favicon_url</code></td>
-              <td>string</td>
-              <td>
-                Proxied favicon (first candidate; fallback chain runs in JS)
-              </td>
-            </tr>
-            <tr>
-              <td><code>favicon_host</code></td>
-              <td>string</td>
-              <td>Hostname used by the favicon fallback chain</td>
-            </tr>
-            <tr>
-              <td><code>thumbnail_url</code></td>
-              <td>string</td>
-              <td>Proxied thumbnail (empty if none)</td>
-            </tr>
-            <tr>
-              <td><code>sources</code></td>
-              <td>array</td>
-              <td>Engine names</td>
-            </tr>
-            <tr>
-              <td><code>duration</code></td>
-              <td>string</td>
-              <td>Video duration (empty for non-video)</td>
-            </tr>
-            <tr>
-              <td><code>link_target</code></td>
-              <td>string</td>
-              <td><code>_blank</code> or <code>_self</code></td>
-            </tr>
-            <tr>
-              <td><code>link_rel</code></td>
-              <td>string</td>
-              <td><code>noopener</code> or empty</td>
-            </tr>
-            <tr>
-              <td><code>show_actions</code></td>
-              <td>bool</td>
-              <td>
-                Truthy when the per-result block/replace/score menu should
-                render (authenticated, non-public instance, at least one action
-                enabled in settings).
-              </td>
-            </tr>
-            <tr>
-              <td><code>action_block</code></td>
-              <td>bool</td>
-              <td>Show the &ldquo;Block domain&rdquo; menu item</td>
-            </tr>
-            <tr>
-              <td><code>action_replace</code></td>
-              <td>bool</td>
-              <td>Show the &ldquo;Replace domain&rdquo; menu item</td>
-            </tr>
-            <tr>
-              <td><code>action_score</code></td>
-              <td>bool</td>
-              <td>Show the &ldquo;Score domain&rdquo; menu item</td>
-            </tr>
-          </tbody>
-        </table>
+          <h4><code>degoog-search-lightbox</code></h4>
+          <ul>
+            <li><code>img-lightbox-bg</code> is the dark backdrop</li>
+            <li><code>img-lightbox-close</code> is the close button</li>
+            <li>
+              <code>img-lightbox-wrap</code> is the container for the image
+            </li>
+            <li>
+              <code>img-lightbox-img</code> is the full size image element
+            </li>
+          </ul>
 
-        <h4><code>degoog-image-card</code></h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>title</code></td>
-              <td>string</td>
-              <td>Alt text</td>
-            </tr>
-            <tr>
-              <td><code>url</code></td>
-              <td>string</td>
-              <td>Source page URL</td>
-            </tr>
-            <tr>
-              <td><code>thumbnail_url</code></td>
-              <td>string</td>
-              <td>Proxied thumbnail</td>
-            </tr>
-            <tr>
-              <td><code>hostname</code></td>
-              <td>string</td>
-              <td>Source hostname</td>
-            </tr>
-            <tr>
-              <td><code>sources</code></td>
-              <td>array</td>
-              <td>Engine names</td>
-            </tr>
-          </tbody>
-        </table>
+          <h2>Placeholder syntax</h2>
+          <p>
+            Inside your templates you can use double curly braces for dynamic
+            values. Every value gets HTML escaped automatically for security.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Syntax</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>{{ name }}</code></td>
+                <td>Outputs a value</td>
+              </tr>
+              <tr>
+                <td><code>{{#if name}} content {{/if name}}</code></td>
+                <td>Conditional block that renders when the value is truthy</td>
+              </tr>
+              <tr>
+                <td><code>{{#each name}} content {{/each name}}</code></td>
+                <td>
+                  Looping block where <code>{{ . }}</code> is the item and
+                  <code>{{ @index }}</code> is the index
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Your <code>{{#if}}</code> blocks must contain balanced HTML.
+            Placeholders work perfectly in regular text and quoted attribute
+            values like <code>href="{{ url }}"</code>
+            but you cannot use them as HTML tag names.
+          </p>
 
-        <h4><code>degoog-video-card</code></h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>title</code></td>
-              <td>string</td>
-              <td>Video title</td>
-            </tr>
-            <tr>
-              <td><code>url</code></td>
-              <td>string</td>
-              <td>Video page URL</td>
-            </tr>
-            <tr>
-              <td><code>thumbnail_url</code></td>
-              <td>string</td>
-              <td>Proxied thumbnail</td>
-            </tr>
-            <tr>
-              <td><code>hostname</code></td>
-              <td>string</td>
-              <td>Source hostname</td>
-            </tr>
-            <tr>
-              <td><code>duration</code></td>
-              <td>string</td>
-              <td>Duration (may be empty)</td>
-            </tr>
-            <tr>
-              <td><code>sources</code></td>
-              <td>array</td>
-              <td>Engine names</td>
-            </tr>
-          </tbody>
-        </table>
+          <h3>Placeholders per template</h3>
 
-        <h4><code>degoog-at-a-glance</code></h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>title</code></td>
-              <td>string</td>
-              <td>Title</td>
-            </tr>
-            <tr>
-              <td><code>url</code></td>
-              <td>string</td>
-              <td>URL</td>
-            </tr>
-            <tr>
-              <td><code>snippet</code></td>
-              <td>string</td>
-              <td>Snippet text</td>
-            </tr>
-            <tr>
-              <td><code>sources</code></td>
-              <td>array</td>
-              <td>Engine names</td>
-            </tr>
-            <tr>
-              <td><code>sources_text</code></td>
-              <td>string</td>
-              <td>Engine names comma-separated</td>
-            </tr>
-          </tbody>
-        </table>
+          <h4><code>degoog-result</code></h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>index</code></td>
+                <td>number</td>
+                <td>
+                  The index starting at zero for this result. This is used to
+                  suffix the required IDs in the template.
+                </td>
+              </tr>
+              <tr>
+                <td><code>title</code></td>
+                <td>string</td>
+                <td>The result title</td>
+              </tr>
+              <tr>
+                <td><code>url</code></td>
+                <td>string</td>
+                <td>The result URL</td>
+              </tr>
+              <tr>
+                <td><code>cite_url</code></td>
+                <td>string</td>
+                <td>The display URL showing the hostname and path</td>
+              </tr>
+              <tr>
+                <td><code>snippet</code></td>
+                <td>string</td>
+                <td>The text description</td>
+              </tr>
+              <tr>
+                <td><code>favicon_url</code></td>
+                <td>string</td>
+                <td>
+                  The proxied favicon. This is just the first candidate before
+                  the fallback chain runs in JavaScript.
+                </td>
+              </tr>
+              <tr>
+                <td><code>favicon_host</code></td>
+                <td>string</td>
+                <td>The hostname used by the favicon fallback chain</td>
+              </tr>
+              <tr>
+                <td><code>thumbnail_url</code></td>
+                <td>string</td>
+                <td>The proxied thumbnail which is empty if none exists</td>
+              </tr>
+              <tr>
+                <td><code>sources</code></td>
+                <td>array</td>
+                <td>The engine names</td>
+              </tr>
+              <tr>
+                <td><code>duration</code></td>
+                <td>string</td>
+                <td>The video duration which is empty for non video results</td>
+              </tr>
+              <tr>
+                <td><code>link_target</code></td>
+                <td>string</td>
+                <td>Either <code>_blank</code> or <code>_self</code></td>
+              </tr>
+              <tr>
+                <td><code>link_rel</code></td>
+                <td>string</td>
+                <td>Either <code>noopener</code> or completely empty</td>
+              </tr>
+              <tr>
+                <td><code>show_actions</code></td>
+                <td>boolean</td>
+                <td>
+                  Returns true when the per result block, replace, or score menu
+                  should render. This requires being authenticated on a private
+                  instance with at least one action enabled in settings.
+                </td>
+              </tr>
+              <tr>
+                <td><code>action_block</code></td>
+                <td>boolean</td>
+                <td>Shows the block domain menu item</td>
+              </tr>
+              <tr>
+                <td><code>action_replace</code></td>
+                <td>boolean</td>
+                <td>Shows the replace domain menu item</td>
+              </tr>
+              <tr>
+                <td><code>action_score</code></td>
+                <td>boolean</td>
+                <td>Shows the score domain menu item</td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h2>Quick example</h2>
-        <p>
-          Override just the result template &mdash; everything else stays
-          default:
-        </p>
-        <p><code>templates/result.html</code>:</p>
-        <pre><code>&lt;div class="my-result"&gt;
-  &lt;a href="{{ url }}" target="{{ link_target }}"&gt;{{ title }}&lt;/a&gt;
-  &lt;p&gt;{{ snippet }}&lt;/p&gt;
-  &lt;small&gt;{{ cite_url }}&lt;/small&gt;
-  {{#if thumbnail_url}}
-  &lt;img src="{{ thumbnail_url }}" loading="lazy"&gt;
-  {{/if thumbnail_url}}
-  {{#each sources}}
-  &lt;span class="tag"&gt;{{ . }}&lt;/span&gt;
-  {{/each sources}}
-&lt;/div&gt;</code></pre>
-        <p><code>theme.json</code>:</p>
-        <pre><code>{
-  "name": "My Theme",
-  "css": "style.css",
-  "templates": {
-    "result": "templates/result.html"
-  }
-}</code></pre>
+          <h4><code>degoog-image-card</code></h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>title</code></td>
+                <td>string</td>
+                <td>The alt text</td>
+              </tr>
+              <tr>
+                <td><code>url</code></td>
+                <td>string</td>
+                <td>The source page URL</td>
+              </tr>
+              <tr>
+                <td><code>thumbnail_url</code></td>
+                <td>string</td>
+                <td>The proxied thumbnail</td>
+              </tr>
+              <tr>
+                <td><code>hostname</code></td>
+                <td>string</td>
+                <td>The source hostname</td>
+              </tr>
+              <tr>
+                <td><code>sources</code></td>
+                <td>array</td>
+                <td>The engine names</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h4><code>degoog-video-card</code></h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>title</code></td>
+                <td>string</td>
+                <td>The video title</td>
+              </tr>
+              <tr>
+                <td><code>url</code></td>
+                <td>string</td>
+                <td>The video page URL</td>
+              </tr>
+              <tr>
+                <td><code>thumbnail_url</code></td>
+                <td>string</td>
+                <td>The proxied thumbnail</td>
+              </tr>
+              <tr>
+                <td><code>hostname</code></td>
+                <td>string</td>
+                <td>The source hostname</td>
+              </tr>
+              <tr>
+                <td><code>duration</code></td>
+                <td>string</td>
+                <td>The video duration which might be empty</td>
+              </tr>
+              <tr>
+                <td><code>sources</code></td>
+                <td>array</td>
+                <td>The engine names</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h4><code>degoog-at-a-glance</code></h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>title</code></td>
+                <td>string</td>
+                <td>The title</td>
+              </tr>
+              <tr>
+                <td><code>url</code></td>
+                <td>string</td>
+                <td>The URL</td>
+              </tr>
+              <tr>
+                <td><code>snippet</code></td>
+                <td>string</td>
+                <td>The snippet text</td>
+              </tr>
+              <tr>
+                <td><code>sources</code></td>
+                <td>array</td>
+                <td>The engine names</td>
+              </tr>
+              <tr>
+                <td><code>sources_text</code></td>
+                <td>string</td>
+                <td>The engine names separated by commas</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h2>Quick example</h2>
+          <p>
+            Here is how you can override just the result template while keeping
+            everything else as the default:
+          </p>
+          <p><code>templates/result.html</code>:</p>
+          <pre><code>&lt;div class="my-result"&gt;
+          &lt;a href="{{ url }}" target="{{ link_target }}"&gt;{{ title }}&lt;/a&gt;
+          &lt;p&gt;{{ snippet }}&lt;/p&gt;
+          &lt;small&gt;{{ cite_url }}&lt;/small&gt;
+          {{#if thumbnail_url}}
+          &lt;img src="{{ thumbnail_url }}" loading="lazy"&gt;
+          {{/if thumbnail_url}}
+          {{#each sources}}
+          &lt;span class="tag"&gt;{{ . }}&lt;/span&gt;
+          {{/each sources}}
+        &lt;/div&gt;</code></pre>
+          <p><code>theme.json</code>:</p>
+          <pre><code>{
+          "name": "My Theme",
+          "css": "style.css",
+          "templates": {
+            "result": "templates/result.html"
+          }
+        }</code></pre>
         </main>
       </div>
       <div id="ade-backdrop" class="ade-backdrop"></div>

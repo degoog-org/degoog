@@ -9,17 +9,28 @@
         try {
           var t = localStorage.getItem("ade:theme");
           if (t !== "light" && t !== "dark") {
-            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
           }
           document.documentElement.setAttribute("data-theme", t);
         } catch (e) {}
       })();
     </script>
-    <link rel="icon" href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link
+      rel="icon"
+      href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -37,7 +48,7 @@
               src="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
               alt="degoog logo"
               class="ade-brand-img"
-              onerror="this.style.display='none'"
+              onerror="this.style.display = 'none'"
             />
             <a href="index.html" class="ade-brand-name">Degoog Docs</a>
           </div>
@@ -55,188 +66,225 @@
                 class="doc-search-clear ade-btn"
                 aria-label="Clear search"
                 style="display: none"
-              >Clear</button>
+              >
+                Clear
+              </button>
               <span class="doc-search-count"></span>
             </div>
           </div>
           <nav class="ade-nav" aria-label="Documentation">
-            <a href="index.html" class="ade-nav-item"><span class="ade-nav-item-name">Overview</span></a>
-            <a href="plugins.html" class="ade-nav-item"><span class="ade-nav-item-name">Plugins</span></a>
-            <a href="themes.html" class="ade-nav-item"><span class="ade-nav-item-name">Themes</span></a>
-            <a href="engines.html" class="ade-nav-item"><span class="ade-nav-item-name">Search engines</span></a>
-            <a href="transports.html" class="ade-nav-item"><span class="ade-nav-item-name">Transports</span></a>
-            <a href="store.html" class="ade-nav-item"><span class="ade-nav-item-name">Store</span></a>
-            <a href="aliases.html" class="ade-nav-item"><span class="ade-nav-item-name">Aliases</span></a>
-            <a href="env.html" class="ade-nav-item"><span class="ade-nav-item-name">Environment</span></a>
-            <a href="styling.html" class="ade-nav-item"><span class="ade-nav-item-name">Styling</span></a>
-            <a href="translations.html" class="ade-nav-item"><span class="ade-nav-item-name">Translations</span></a>
-            <a href="api.html" class="ade-nav-item"><span class="ade-nav-item-name">API</span></a>
+            <a href="index.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Overview</span></a
+            >
+            <a href="plugins.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Plugins</span></a
+            >
+            <a href="themes.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Themes</span></a
+            >
+            <a href="engines.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Search engines</span></a
+            >
+            <a href="transports.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Transports</span></a
+            >
+            <a href="store.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Store</span></a
+            >
+            <a href="aliases.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Aliases</span></a
+            >
+            <a href="env.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Environment</span></a
+            >
+            <a href="styling.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Styling</span></a
+            >
+            <a href="translations.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Translations</span></a
+            >
+            <a href="api.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">API</span></a
+            >
           </nav>
           <div class="ade-sidebar-actions">
-            <button id="doc-theme-toggle" type="button" class="ade-btn" aria-label="Toggle theme">
+            <button
+              id="doc-theme-toggle"
+              type="button"
+              class="ade-btn"
+              aria-label="Toggle theme"
+            >
               <i class="fa-solid fa-circle-half-stroke"></i>
             </button>
           </div>
         </aside>
         <main class="ade-main">
           <div class="doc-page-header">
-            <h1><a href="index.html">Degoog</a> — API reference</h1>
-            <p class="doc-page-desc">User-facing HTTP endpoints and a real life usage example.</p>
+            <h1><a href="index.html">Degoog</a> API reference</h1>
+            <p class="doc-page-desc">
+              User facing HTTP endpoints and a real life usage example.
+            </p>
           </div>
-        <h2>Overview</h2>
-        <p>
-          Most of Degoog's HTTP surface is internal plumbing for the web UI. The
-          endpoints below are the ones that will most likely be used for
-          external callers.
-        </p>
-        <p>
-          Endpoints live at the same host/port as the UI (<code
-            >http://localhost:4444</code
-          >
-          by default, or <code>DEGOOG_PORT</code>). Responses are JSON. Rate
-          limits is configured in Settings → Server and apply to every caller.
-        </p>
 
-        <h2><code>GET /api/search</code></h2>
-        <p>Run a metasearch and return merged, scored results.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Param</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>q</code></td>
-              <td>Required. Search query.</td>
-            </tr>
-            <tr>
-              <td><code>type</code></td>
-              <td>
-                <code>web</code> (default) | <code>images</code> |
-                <code>videos</code> | <code>news</code>.
-              </td>
-            </tr>
-            <tr>
-              <td><code>page</code></td>
-              <td>1-based page number. Clamped to <code>1..10</code>.</td>
-            </tr>
-            <tr>
-              <td><code>time</code></td>
-              <td>
-                <code>any</code> | <code>hour</code> | <code>day</code> |
-                <code>week</code> | <code>month</code> | <code>year</code> |
-                <code>custom</code>. For <code>custom</code>, pass
-                <code>dateFrom</code> / <code>dateTo</code>
-                (<code>YYYY-MM-DD</code>).
-              </td>
-            </tr>
-            <tr>
-              <td><code>lang</code></td>
-              <td>
-                ISO 639-1 code. Overrides
-                <code>DEGOOG_DEFAULT_SEARCH_LANGUAGE</code> for this request.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <pre><code>curl "http://localhost:4444/api/search?q=rust+lifetimes"</code></pre>
-        <p>Response:</p>
-        <pre><code>{
-  "results": [
-    {
-      "title": "...",
-      "url": "https://...",
-      "snippet": "...",
-      "source": "google",
-      "score": 92,
-      "sources": ["google", "duckduckgo"]
-    }
-  ],
-  "query": "rust lifetimes",
-  "totalTime": 812,
-  "type": "web",
-  "engineTimings": [{ "name": "Google", "time": 540, "resultCount": 10 }],
-  "relatedSearches": ["rust lifetime elision", "..."]
-}</code></pre>
+          <h2>Overview</h2>
+          <p>
+            Most of our HTTP surface is internal plumbing for the web UI. The
+            endpoints below are what you will likely use for making external
+            calls.
+          </p>
+          <p>
+            These endpoints live at the same host and port as your UI (<code
+              >http://localhost:4444</code
+            >
+            by default, or <code>DEGOOG_PORT</code>). All responses are returned
+            in JSON. You can configure rate limits by going to Settings then
+            Server, and these limits will apply to every caller.
+          </p>
 
-        <h2><code>POST /api/search</code></h2>
-        <p>
-          Same as the GET form, with a JSON body. Use this when you need a long
-          engine list.
-        </p>
-        <pre><code>curl -X POST http://localhost:4444/api/search \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "rust lifetimes",
-    "type": "web",
-    "page": 1,
-    "lang": "en",
-    "engines": ["google", "duckduckgo"]
-  }'</code></pre>
+          <h2><code>GET /api/search</code></h2>
+          <p>Run a metasearch and get merged and scored results.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Param</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>q</code></td>
+                <td>Required. Your search query.</td>
+              </tr>
+              <tr>
+                <td><code>type</code></td>
+                <td>
+                  <code>web</code> (default) | <code>images</code> |
+                  <code>videos</code> | <code>news</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>page</code></td>
+                <td>Starts at 1. Restricted to a maximum of 10.</td>
+              </tr>
+              <tr>
+                <td><code>time</code></td>
+                <td>
+                  <code>any</code> | <code>hour</code> | <code>day</code> |
+                  <code>week</code> | <code>month</code> | <code>year</code> |
+                  <code>custom</code>. For <code>custom</code>, pass
+                  <code>dateFrom</code> and <code>dateTo</code> (using the
+                  standard <code>YYYY MM DD</code> format).
+                </td>
+              </tr>
+              <tr>
+                <td><code>lang</code></td>
+                <td>
+                  ISO 639 1 language code. This overrides
+                  <code>DEGOOG_DEFAULT_SEARCH_LANGUAGE</code> for your current
+                  request.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <pre><code>curl "http://localhost:4444/api/search?q=rust+lifetimes"</code></pre>
+          <p>Response:</p>
+          <pre><code>{
+          "results": [
+            {
+              "title": "...",
+              "url": "https://...",
+              "snippet": "...",
+              "source": "google",
+              "score": 92,
+              "sources": ["google", "duckduckgo"]
+            }
+          ],
+          "query": "rust lifetimes",
+          "totalTime": 812,
+          "type": "web",
+          "engineTimings": [{ "name": "Google", "time": 540, "resultCount": 10 }],
+          "relatedSearches": ["rust lifetime elision", "..."]
+        }</code></pre>
 
-        <h2><code>GET /api/search/stream</code></h2>
-        <p>
-          Server-Sent Events variant. Same query parameters as
-          <code>GET /api/search</code>. Emits:
-        </p>
-        <ul>
-          <li>
-            <code>engine-result</code> — fired as each engine returns. The
-            <code>results</code> field is the running merged list, so a lazy
-            consumer can just keep the last one.
-          </li>
-          <li>
-            <code>done</code> — final event with <code>totalTime</code>,
-            <code>engineTimings</code>, <code>relatedSearches</code>.
-          </li>
-        </ul>
-        <pre><code>curl -N "http://localhost:4444/api/search/stream?q=hello"</code></pre>
+          <h2><code>POST /api/search</code></h2>
+          <p>
+            This works exactly like the GET version but accepts a JSON body. You
+            should use this when you have a long list of engines to query.
+          </p>
+          <pre><code>curl -X POST http://localhost:4444/api/search \
+          -H "Content-Type: application/json" \
+          -d '{
+            "query": "rust lifetimes",
+            "type": "web",
+            "page": 1,
+            "lang": "en",
+            "engines": ["google", "duckduckgo"]
+          }'</code></pre>
 
-        <h2><code>GET /api/suggest?q=...</code></h2>
-        <p>
-          Autocomplete suggestions merged from Google and DuckDuckGo. Returns
-          <code>string[]</code>.
-        </p>
+          <h2><code>GET /api/search/stream</code></h2>
+          <p>
+            This is the Server Sent Events variant. It uses the exact same query
+            parameters as
+            <code>GET /api/search</code> and emits two events:
+          </p>
+          <ul>
+            <li>
+              <code>engine-result</code> fires as each engine returns. The
+              <code>results</code> field contains the running merged list, so
+              you can simply keep the last one if you are a lazy consumer.
+            </li>
+            <li>
+              <code>done</code> is the final event containing
+              <code>totalTime</code>, <code>engineTimings</code>, and
+              <code>relatedSearches</code>.
+            </li>
+          </ul>
+          <pre><code>curl -N "http://localhost:4444/api/search/stream?q=hello"</code></pre>
 
-        <h2><code>GET /api/lucky?q=...</code></h2>
-        <p>
-          Runs a web search and <code>302</code>-redirects to the first result's
-          URL.
-        </p>
+          <h2><code>GET /api/suggest?q=...</code></h2>
+          <p>
+            Fetches autocomplete suggestions merged from Google and DuckDuckGo.
+            This returns an array of strings.
+          </p>
 
-        <h2><code>GET /opensearch.xml</code></h2>
-        <p>
-          OpenSearch descriptor — lets browsers install Degoog as a search
-          engine.
-        </p>
+          <h2><code>GET /api/lucky?q=...</code></h2>
+          <p>
+            Runs a web search and sends a <code>302</code> redirect directly to
+            the URL of the first result.
+          </p>
 
-        <h2>
-          Tip: wiring Degoog into
-          <a href="https://github.com/open-webui/open-webui">Open WebUI</a>
-        </h2>
-        <p>
-          Degoog is SearXNG-compatible for Open WebUI's built-in web search — no
-          custom tool needed.
-        </p>
-        <ol>
-          <li>Open WebUI → <strong>Admin Panel</strong>.</li>
-          <li>Go to <strong>Settings</strong>.</li>
-          <li>Select <strong>Web Search</strong> and enable it.</li>
-          <li>
-            Set <strong>Web Search Engine</strong> to <code>searxng</code>.
-          </li>
-          <li>
-            Set <strong>SearxNG Query URL</strong> to your Degoog instance URL +
-            <code>/api/search</code>, e.g.
-            <code>http://127.0.0.1:4444/api/search</code>.
-          </li>
-        </ol>
-        <p>
-          Replace <code>http://127.0.0.1:4444</code> with your actual Degoog
-          address.
-        </p>
+          <h2><code>GET /opensearch.xml</code></h2>
+          <p>
+            OpenSearch descriptor that allows browsers to install Degoog as a
+            search engine.
+          </p>
+
+          <h2>
+            Tip: wiring Degoog into
+            <a href="https://github.com/open-webui/open-webui">Open WebUI</a>
+          </h2>
+          <p>
+            Degoog is completely SearXNG compatible for the built in web search
+            inside Open WebUI, meaning you will not need any custom tools.
+          </p>
+          <ol>
+            <li>Open WebUI and go to your <strong>Admin Panel</strong>.</li>
+            <li>Navigate to <strong>Settings</strong>.</li>
+            <li>Select <strong>Web Search</strong> and enable it.</li>
+            <li>
+              Set your <strong>Web Search Engine</strong> to
+              <code>searxng</code>.
+            </li>
+            <li>
+              Set the <strong>SearxNG Query URL</strong> to your Degoog instance
+              URL followed by <code>/api/search</code>, like this:
+              <code>http://127.0.0.1:4444/api/search</code>.
+            </li>
+          </ol>
+          <p>
+            Just remember to replace <code>http://127.0.0.1:4444</code> with
+            your actual Degoog address.
+          </p>
         </main>
       </div>
       <div id="ade-backdrop" class="ade-backdrop"></div>

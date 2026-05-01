@@ -9,17 +9,28 @@
         try {
           var t = localStorage.getItem("ade:theme");
           if (t !== "light" && t !== "dark") {
-            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
           }
           document.documentElement.setAttribute("data-theme", t);
         } catch (e) {}
       })();
     </script>
-    <link rel="icon" href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link
+      rel="icon"
+      href="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -37,7 +48,7 @@
               src="https://github.com/fccview/degoog/raw/main/src/public/images/degoog-logo.png"
               alt="degoog logo"
               class="ade-brand-img"
-              onerror="this.style.display='none'"
+              onerror="this.style.display = 'none'"
             />
             <a href="index.html" class="ade-brand-name">Degoog Docs</a>
           </div>
@@ -55,452 +66,487 @@
                 class="doc-search-clear ade-btn"
                 aria-label="Clear search"
                 style="display: none"
-              >Clear</button>
+              >
+                Clear
+              </button>
               <span class="doc-search-count"></span>
             </div>
           </div>
           <nav class="ade-nav" aria-label="Documentation">
-            <a href="index.html" class="ade-nav-item"><span class="ade-nav-item-name">Overview</span></a>
-            <a href="plugins.html" class="ade-nav-item"><span class="ade-nav-item-name">Plugins</span></a>
-            <a href="themes.html" class="ade-nav-item"><span class="ade-nav-item-name">Themes</span></a>
-            <a href="engines.html" class="ade-nav-item"><span class="ade-nav-item-name">Search engines</span></a>
-            <a href="transports.html" class="ade-nav-item"><span class="ade-nav-item-name">Transports</span></a>
-            <a href="store.html" class="ade-nav-item"><span class="ade-nav-item-name">Store</span></a>
-            <a href="aliases.html" class="ade-nav-item"><span class="ade-nav-item-name">Aliases</span></a>
-            <a href="env.html" class="ade-nav-item"><span class="ade-nav-item-name">Environment</span></a>
-            <a href="styling.html" class="ade-nav-item"><span class="ade-nav-item-name">Styling</span></a>
-            <a href="translations.html" class="ade-nav-item"><span class="ade-nav-item-name">Translations</span></a>
-            <a href="api.html" class="ade-nav-item"><span class="ade-nav-item-name">API</span></a>
+            <a href="index.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Overview</span></a
+            >
+            <a href="plugins.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Plugins</span></a
+            >
+            <a href="themes.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Themes</span></a
+            >
+            <a href="engines.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Search engines</span></a
+            >
+            <a href="transports.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Transports</span></a
+            >
+            <a href="store.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Store</span></a
+            >
+            <a href="aliases.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Aliases</span></a
+            >
+            <a href="env.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Environment</span></a
+            >
+            <a href="styling.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Styling</span></a
+            >
+            <a href="translations.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">Translations</span></a
+            >
+            <a href="api.html" class="ade-nav-item"
+              ><span class="ade-nav-item-name">API</span></a
+            >
           </nav>
           <div class="ade-sidebar-actions">
-            <button id="doc-theme-toggle" type="button" class="ade-btn" aria-label="Toggle theme">
+            <button
+              id="doc-theme-toggle"
+              type="button"
+              class="ade-btn"
+              aria-label="Toggle theme"
+            >
               <i class="fa-solid fa-circle-half-stroke"></i>
             </button>
           </div>
         </aside>
         <main class="ade-main">
           <div class="doc-page-header">
-            <h1><a href="index.html">Degoog</a> — Styling</h1>
-            <p class="doc-page-desc">CSS variables and key classes for themes and plugin output.</p>
+            <h1><a href="index.html">Degoog</a> Styling</h1>
+            <p class="doc-page-desc">
+              CSS variables and key classes for your themes and plugin outputs.
+            </p>
           </div>
-        <h2>CSS variables</h2>
-        <p>
-          The app exposes these CSS custom properties on <code>:root</code>.
-          Themes and plugin styles can use them so colours follow light/dark
-          mode (<code>data-theme="light"</code> or
-          <code>data-theme="dark"</code> on <code>&lt;html&gt;</code>).
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Variable</th>
-              <th>Use</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <code>--primary</code>
-              </td>
-              <td>Primary accent (links, buttons)</td>
-            </tr>
-            <tr>
-              <td><code>--primary-hover</code></td>
-              <td>Hover state for primary</td>
-            </tr>
-            <tr>
-              <td><code>--primary-rgb</code></td>
-              <td>Primary as RGB tuple (e.g. for rgba)</td>
-            </tr>
-            <tr>
-              <td><code>--danger</code></td>
-              <td>Danger / error colour</td>
-            </tr>
-            <tr>
-              <td><code>--warning</code></td>
-              <td>Warning colour</td>
-            </tr>
-            <tr>
-              <td><code>--success</code></td>
-              <td>Success colour</td>
-            </tr>
-            <tr>
-              <td><code>--bg</code></td>
-              <td>Page background</td>
-            </tr>
-            <tr>
-              <td><code>--bg-light</code></td>
-              <td>Lighter background (cards, inputs)</td>
-            </tr>
-            <tr>
-              <td><code>--bg-hover</code></td>
-              <td>Hover background</td>
-            </tr>
-            <tr>
-              <td><code>--border</code></td>
-              <td>Border colour</td>
-            </tr>
-            <tr>
-              <td><code>--border-light</code></td>
-              <td>Lighter border</td>
-            </tr>
-            <tr>
-              <td><code>--text-primary</code></td>
-              <td>Main text</td>
-            </tr>
-            <tr>
-              <td><code>--text-secondary</code></td>
-              <td>Secondary / muted text</td>
-            </tr>
-            <tr>
-              <td><code>--text-link</code></td>
-              <td>Link colour</td>
-            </tr>
-            <tr>
-              <td><code>--text-link-visited</code></td>
-              <td>Visited link colour</td>
-            </tr>
-            <tr>
-              <td><code>--text-cite</code></td>
-              <td>Cite / URL text</td>
-            </tr>
-            <tr>
-              <td><code>--text-snippet</code></td>
-              <td>Snippet / description text</td>
-            </tr>
-            <tr>
-              <td><code>--search-bar-bg</code></td>
-              <td>Search bar background</td>
-            </tr>
-            <tr>
-              <td><code>--search-bar-bg-hover</code></td>
-              <td>Search bar hover</td>
-            </tr>
-            <tr>
-              <td><code>--btn-bg</code></td>
-              <td>Button background</td>
-            </tr>
-            <tr>
-              <td><code>--btn-text</code></td>
-              <td>Button text</td>
-            </tr>
-            <tr>
-              <td><code>--overlay-bg</code></td>
-              <td>Overlay background (e.g. modals)</td>
-            </tr>
-            <tr>
-              <td><code>--white</code></td>
-              <td>White</td>
-            </tr>
-          </tbody>
-        </table>
 
-        <h2>Example: theme or plugin CSS</h2>
-        <pre><code>.my-panel {
-  background: var(--bg-light);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-}
-.my-panel a {
-  color: var(--text-link);
-}</code></pre>
+          <h2>CSS variables</h2>
+          <p>
+            The application exposes several CSS custom properties on the
+            <code>:root</code> element. You can use these in your themes and
+            plugin styles to ensure your colors automatically adapt to light or
+            dark modes (using <code>data-theme="light"</code> or
+            <code>data-theme="dark"</code> on the
+            <code>&lt;html&gt;</code> tag).
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--primary</code></td>
+                <td>Primary accent for links and buttons</td>
+              </tr>
+              <tr>
+                <td><code>--primary-hover</code></td>
+                <td>Hover state for primary elements</td>
+              </tr>
+              <tr>
+                <td><code>--primary-rgb</code></td>
+                <td>Primary color as an RGB tuple</td>
+              </tr>
+              <tr>
+                <td><code>--danger</code></td>
+                <td>Danger or error color</td>
+              </tr>
+              <tr>
+                <td><code>--warning</code></td>
+                <td>Warning color</td>
+              </tr>
+              <tr>
+                <td><code>--success</code></td>
+                <td>Success color</td>
+              </tr>
+              <tr>
+                <td><code>--bg</code></td>
+                <td>Page background</td>
+              </tr>
+              <tr>
+                <td><code>--bg-light</code></td>
+                <td>Lighter background for cards and inputs</td>
+              </tr>
+              <tr>
+                <td><code>--bg-hover</code></td>
+                <td>Hover background</td>
+              </tr>
+              <tr>
+                <td><code>--border</code></td>
+                <td>Border color</td>
+              </tr>
+              <tr>
+                <td><code>--border-light</code></td>
+                <td>Lighter border</td>
+              </tr>
+              <tr>
+                <td><code>--text-primary</code></td>
+                <td>Main text color</td>
+              </tr>
+              <tr>
+                <td><code>--text-secondary</code></td>
+                <td>Secondary or muted text</td>
+              </tr>
+              <tr>
+                <td><code>--text-link</code></td>
+                <td>Link color</td>
+              </tr>
+              <tr>
+                <td><code>--text-link-visited</code></td>
+                <td>Visited link color</td>
+              </tr>
+              <tr>
+                <td><code>--text-cite</code></td>
+                <td>Citation or URL text</td>
+              </tr>
+              <tr>
+                <td><code>--text-snippet</code></td>
+                <td>Snippet or description text</td>
+              </tr>
+              <tr>
+                <td><code>--search-bar-bg</code></td>
+                <td>Search bar background</td>
+              </tr>
+              <tr>
+                <td><code>--search-bar-bg-hover</code></td>
+                <td>Search bar hover state</td>
+              </tr>
+              <tr>
+                <td><code>--btn-bg</code></td>
+                <td>Button background</td>
+              </tr>
+              <tr>
+                <td><code>--btn-text</code></td>
+                <td>Button text color</td>
+              </tr>
+              <tr>
+                <td><code>--overlay-bg</code></td>
+                <td>Overlay background for modals</td>
+              </tr>
+              <tr>
+                <td><code>--white</code></td>
+                <td>Pure white</td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h2>Reusable classes (plugins and extensions)</h2>
-        <p>
-          Reuse these app classes in your plugin or theme HTML/CSS so output
-          matches the UI and benefits from the same variables and layout. Prefer
-          them over inventing new classes when the meaning fits.
-        </p>
+          <h2>Example theme or plugin CSS</h2>
+          <pre><code>.my-panel {
+          background: var(--bg-light);
+          color: var(--text-primary);
+          border: 1px solid var(--border);
+        }
+        .my-panel a {
+          color: var(--text-link);
+        }</code></pre>
 
-        <h3>Bang command and result output</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Class</th>
-              <th>Use</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>.command-result</code></td>
-              <td>Wrapper for bang command HTML (injected into results)</td>
-            </tr>
-            <tr>
-              <td><code>.result-item</code></td>
-              <td>Single result row (e.g. list items in a command)</td>
-            </tr>
-            <tr>
-              <td><code>.result-item-inner</code></td>
-              <td>Inner wrapper of a result row</td>
-            </tr>
-            <tr>
-              <td><code>.result-body</code></td>
-              <td>Result text block</td>
-            </tr>
-            <tr>
-              <td><code>.result-title</code></td>
-              <td>Result title / link</td>
-            </tr>
-            <tr>
-              <td><code>.result-snippet</code></td>
-              <td>Result snippet or description</td>
-            </tr>
-            <tr>
-              <td><code>.result-cite</code></td>
-              <td>URL or cite line</td>
-            </tr>
-            <tr>
-              <td><code>.result-url-row</code></td>
-              <td>Row showing URL and favicon</td>
-            </tr>
-            <tr>
-              <td><code>.result-thumbnail-wrap</code></td>
-              <td>Thumbnail container</td>
-            </tr>
-          </tbody>
-        </table>
+          <h2>Reusable classes</h2>
+          <p>
+            Try to reuse these built in classes in your plugin or theme HTML and
+            CSS. This makes sure your output matches the main UI and benefits
+            from the exact same layout structure. It is always better to use
+            these instead of inventing new classes when the meaning fits
+            perfectly.
+          </p>
 
-        <h3>At-a-glance and slot panels</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Class</th>
-              <th>Use</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>.glance-box</code></td>
-              <td>At-a-glance panel container</td>
-            </tr>
-            <tr>
-              <td><code>.glance-snippet</code></td>
-              <td>Glance content area</td>
-            </tr>
-            <tr>
-              <td><code>.glance-link</code></td>
-              <td>Link inside glance</td>
-            </tr>
-            <tr>
-              <td><code>.results-slot</code></td>
-              <td>Slot wrapper in results</td>
-            </tr>
-            <tr>
-              <td><code>.results-slot--above-sidebar</code></td>
-              <td>Slot above main sidebar content</td>
-            </tr>
-            <tr>
-              <td><code>.results-slot--below-sidebar</code></td>
-              <td>Slot below main sidebar content</td>
-            </tr>
-            <tr>
-              <td><code>.results-slot-panel</code></td>
-              <td>Slot panel container</td>
-            </tr>
-            <tr>
-              <td><code>.results-slot-panel-title</code></td>
-              <td>Slot panel heading</td>
-            </tr>
-            <tr>
-              <td><code>.results-slot-panel-body</code></td>
-              <td>Slot panel content</td>
-            </tr>
-          </tbody>
-        </table>
+          <h3>Bang command and result output</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.command-result</code></td>
+                <td>Wrapper for bang command HTML injected into results</td>
+              </tr>
+              <tr>
+                <td><code>.result-item</code></td>
+                <td>Single result row like list items in a command</td>
+              </tr>
+              <tr>
+                <td><code>.result-item-inner</code></td>
+                <td>Inner wrapper of a result row</td>
+              </tr>
+              <tr>
+                <td><code>.result-body</code></td>
+                <td>Result text block</td>
+              </tr>
+              <tr>
+                <td><code>.result-title</code></td>
+                <td>Result title or link</td>
+              </tr>
+              <tr>
+                <td><code>.result-snippet</code></td>
+                <td>Result snippet or description</td>
+              </tr>
+              <tr>
+                <td><code>.result-cite</code></td>
+                <td>URL or citation line</td>
+              </tr>
+              <tr>
+                <td><code>.result-url-row</code></td>
+                <td>Row showing the URL and favicon</td>
+              </tr>
+              <tr>
+                <td><code>.result-thumbnail-wrap</code></td>
+                <td>Thumbnail container</td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h3>Buttons</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Class</th>
-              <th>Use</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>.btn</code></td>
-              <td>Base button</td>
-            </tr>
-            <tr>
-              <td><code>.btn--primary</code></td>
-              <td>Primary action</td>
-            </tr>
-            <tr>
-              <td><code>.btn--secondary</code></td>
-              <td>Secondary action</td>
-            </tr>
-            <tr>
-              <td><code>.btn--danger</code></td>
-              <td>Destructive action</td>
-            </tr>
-          </tbody>
-        </table>
+          <h3>At a glance and slot panels</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.glance-box</code></td>
+                <td>At a glance panel container</td>
+              </tr>
+              <tr>
+                <td><code>.glance-snippet</code></td>
+                <td>Glance content area</td>
+              </tr>
+              <tr>
+                <td><code>.glance-link</code></td>
+                <td>Link inside a glance panel</td>
+              </tr>
+              <tr>
+                <td><code>.results-slot</code></td>
+                <td>Slot wrapper within results</td>
+              </tr>
+              <tr>
+                <td><code>.results-slot--above-sidebar</code></td>
+                <td>Slot positioned above the main sidebar content</td>
+              </tr>
+              <tr>
+                <td><code>.results-slot--below-sidebar</code></td>
+                <td>Slot positioned below the main sidebar content</td>
+              </tr>
+              <tr>
+                <td><code>.results-slot-panel</code></td>
+                <td>Slot panel container</td>
+              </tr>
+              <tr>
+                <td><code>.results-slot-panel-title</code></td>
+                <td>Slot panel heading</td>
+              </tr>
+              <tr>
+                <td><code>.results-slot-panel-body</code></td>
+                <td>Slot panel content</td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h3>Forms and extension settings</h3>
-        <p>
-          If you render settings-like forms in plugin UI, these align with
-          Settings → Plugins/Themes/Engines modals:
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Class</th>
-              <th>Use</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>.ext-field</code></td>
-              <td>Field wrapper</td>
-            </tr>
-            <tr>
-              <td><code>.ext-field-label</code></td>
-              <td>Field label</td>
-            </tr>
-            <tr>
-              <td><code>.ext-field-input</code></td>
-              <td>Text input</td>
-            </tr>
-            <tr>
-              <td><code>.ext-field-desc</code></td>
-              <td>Field description</td>
-            </tr>
-            <tr>
-              <td><code>.ext-modal</code></td>
-              <td>Modal container</td>
-            </tr>
-            <tr>
-              <td><code>.ext-modal-header</code></td>
-              <td>Modal header</td>
-            </tr>
-            <tr>
-              <td><code>.ext-modal-body</code></td>
-              <td>Modal body</td>
-            </tr>
-            <tr>
-              <td><code>.ext-modal-footer</code></td>
-              <td>Modal footer</td>
-            </tr>
-          </tbody>
-        </table>
+          <h3>Buttons</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.btn</code></td>
+                <td>Base button styling</td>
+              </tr>
+              <tr>
+                <td><code>.btn--primary</code></td>
+                <td>Primary action button</td>
+              </tr>
+              <tr>
+                <td><code>.btn--secondary</code></td>
+                <td>Secondary action button</td>
+              </tr>
+              <tr>
+                <td><code>.btn--danger</code></td>
+                <td>Destructive action button</td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h3>Layout and chrome</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Class</th>
-              <th>Use</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>.header</code></td>
-              <td>Top header bar</td>
-            </tr>
-            <tr>
-              <td><code>.header-link</code></td>
-              <td>Header link</td>
-            </tr>
-            <tr>
-              <td><code>.search-bar</code></td>
-              <td>Search bar container</td>
-            </tr>
-            <tr>
-              <td><code>.search-bar-action-btn</code></td>
-              <td>Search bar action button</td>
-            </tr>
-            <tr>
-              <td><code>.sidebar-panel</code></td>
-              <td>Sidebar panel</td>
-            </tr>
-          </tbody>
-        </table>
+          <h3>Forms and extension settings</h3>
+          <p>
+            If you are rendering settings forms in your plugin UI, these classes
+            will align them perfectly with the standard Settings modals.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.ext-field</code></td>
+                <td>Field wrapper</td>
+              </tr>
+              <tr>
+                <td><code>.ext-field-label</code></td>
+                <td>Field label</td>
+              </tr>
+              <tr>
+                <td><code>.ext-field-input</code></td>
+                <td>Text input</td>
+              </tr>
+              <tr>
+                <td><code>.ext-field-desc</code></td>
+                <td>Field description</td>
+              </tr>
+              <tr>
+                <td><code>.ext-modal</code></td>
+                <td>Modal container</td>
+              </tr>
+              <tr>
+                <td><code>.ext-modal-header</code></td>
+                <td>Modal header</td>
+              </tr>
+              <tr>
+                <td><code>.ext-modal-body</code></td>
+                <td>Modal body</td>
+              </tr>
+              <tr>
+                <td><code>.ext-modal-footer</code></td>
+                <td>Modal footer</td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h3>Media (images / video)</h3>
-        <p>
-          For plugins that display image or video grids (e.g. custom tab
-          results):
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Class</th>
-              <th>Use</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>.image-grid</code></td>
-              <td>Image grid container</td>
-            </tr>
-            <tr>
-              <td><code>.image-card</code></td>
-              <td>Single image card</td>
-            </tr>
-            <tr>
-              <td><code>.image-thumb-wrap</code></td>
-              <td>Thumbnail wrapper</td>
-            </tr>
-            <tr>
-              <td><code>.image-title</code></td>
-              <td>Image title</td>
-            </tr>
-            <tr>
-              <td><code>.video-grid</code></td>
-              <td>Video grid</td>
-            </tr>
-            <tr>
-              <td><code>.video-card</code></td>
-              <td>Single video card</td>
-            </tr>
-            <tr>
-              <td><code>.video-duration</code></td>
-              <td>Duration label</td>
-            </tr>
-          </tbody>
-        </table>
+          <h3>Layout and chrome</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.header</code></td>
+                <td>Top header bar</td>
+              </tr>
+              <tr>
+                <td><code>.header-link</code></td>
+                <td>Header link</td>
+              </tr>
+              <tr>
+                <td><code>.search-bar</code></td>
+                <td>Search bar container</td>
+              </tr>
+              <tr>
+                <td><code>.search-bar-action-btn</code></td>
+                <td>Search bar action button</td>
+              </tr>
+              <tr>
+                <td><code>.sidebar-panel</code></td>
+                <td>Sidebar panel</td>
+              </tr>
+            </tbody>
+          </table>
 
-        <h3>Help and tables</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Class</th>
-              <th>Use</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>.command-help-table</code></td>
-              <td>Table in !help-style output</td>
-            </tr>
-            <tr>
-              <td><code>.help-row</code></td>
-              <td>Row in help list</td>
-            </tr>
-            <tr>
-              <td><code>.help-trigger</code></td>
-              <td>!trigger text</td>
-            </tr>
-            <tr>
-              <td><code>.help-name</code></td>
-              <td>Command name</td>
-            </tr>
-            <tr>
-              <td><code>.pagination</code></td>
-              <td>Pagination wrapper</td>
-            </tr>
-            <tr>
-              <td><code>.pagination-link</code></td>
-              <td>Page link</td>
-            </tr>
-          </tbody>
-        </table>
+          <h3>Media elements</h3>
+          <p>
+            You can use these classes for plugins that display image or video
+            grids.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.image-grid</code></td>
+                <td>Image grid container</td>
+              </tr>
+              <tr>
+                <td><code>.image-card</code></td>
+                <td>Single image card</td>
+              </tr>
+              <tr>
+                <td><code>.image-thumb-wrap</code></td>
+                <td>Thumbnail wrapper</td>
+              </tr>
+              <tr>
+                <td><code>.image-title</code></td>
+                <td>Image title</td>
+              </tr>
+              <tr>
+                <td><code>.video-grid</code></td>
+                <td>Video grid</td>
+              </tr>
+              <tr>
+                <td><code>.video-card</code></td>
+                <td>Single video card</td>
+              </tr>
+              <tr>
+                <td><code>.video-duration</code></td>
+                <td>Duration label</td>
+              </tr>
+            </tbody>
+          </table>
 
-        <p>
-          Use <code>.command-result</code> as the outer wrapper for bang command
-          HTML so spacing matches the results page. Scope your own classes (e.g.
-          <code>.my-plugin-card</code>) under it to avoid clashes.
-        </p>
+          <h3>Help and tables</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>.command-help-table</code></td>
+                <td>Table layout for help menus</td>
+              </tr>
+              <tr>
+                <td><code>.help-row</code></td>
+                <td>Row within a help list</td>
+              </tr>
+              <tr>
+                <td><code>.help-trigger</code></td>
+                <td>Trigger text element</td>
+              </tr>
+              <tr>
+                <td><code>.help-name</code></td>
+                <td>Command name</td>
+              </tr>
+              <tr>
+                <td><code>.pagination</code></td>
+                <td>Pagination wrapper</td>
+              </tr>
+              <tr>
+                <td><code>.pagination-link</code></td>
+                <td>Page link</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>
+            Make sure to use <code>.command-result</code> as the outer wrapper
+            for your bang command HTML so the spacing matches the rest of the
+            results page perfectly. You can easily scope your own classes
+            underneath it to avoid any styling clashes.
+          </p>
         </main>
       </div>
       <div id="ade-backdrop" class="ade-backdrop"></div>
