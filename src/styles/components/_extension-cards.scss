@@ -445,6 +445,11 @@ select.ext-field-input.ext-field-select {
   }
 }
 
+.ext-version-warning {
+  font-size: $font-size-small;
+  color: $warning;
+}
+
 .ext-configured-badge,
 .ext-needs-config-badge {
   align-items: center;

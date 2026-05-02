@@ -71,6 +71,7 @@ export interface ExtensionMeta {
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
   defaultFeedUrls?: string[];
+  requiresNewerVersion?: boolean;
 }
 
 export interface PluginContext {

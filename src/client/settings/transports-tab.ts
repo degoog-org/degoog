@@ -9,6 +9,9 @@ const _renderTransportCard = (transport: ExtensionMeta): string => {
   const desc = transport.description
     ? `<span class="ext-card-desc">${escapeHtml(transport.description)}</span>`
     : "";
+  const versionWarning = transport.requiresNewerVersion
+    ? `<span class="ext-version-warning">Requires a newer version of Degoog</span>`
+    : "";
   const status = transport.configurable ? getConfigStatus(transport) : null;
   const badge =
     status === "configured"
@@ -32,6 +35,7 @@ const _renderTransportCard = (transport: ExtensionMeta): string => {
         <div class="ext-card-info">
           <label for="transport-toggle-${escapeHtml(transport.id)}" class="ext-card-name transport-toggle-label">${escapeHtml(transport.displayName)}</label>
           ${desc}
+          ${versionWarning}
         </div>
         <div class="ext-card-actions">
           ${badge}

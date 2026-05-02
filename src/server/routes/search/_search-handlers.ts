@@ -8,6 +8,7 @@ import type {
 } from "../../types";
 import * as cache from "../../utils/cache";
 import { cacheKey } from "../../utils/search";
+import { signResultThumbnails } from "../../utils/proxy-sign";
 import { applyDomainRules } from "./_domain-rules";
 
 export async function handleSearch(params: SearchParams) {
@@ -34,7 +35,7 @@ export async function handleSearch(params: SearchParams) {
 
   const cached = cache.get(key);
   if (cached) {
-    return { ...cached, results: await applyDomainRules(cached.results) };
+    return { ...cached, results: signResultThumbnails(await applyDomainRules(cached.results)) };
   }
 
   const response = await search(
@@ -55,7 +56,7 @@ export async function handleSearch(params: SearchParams) {
       : undefined;
   cache.set(key, response, ttl);
 
-  return { ...response, results: await applyDomainRules(response.results) };
+  return { ...response, results: signResultThumbnails(await applyDomainRules(response.results)) };
 }
 
 export async function handleRetry(params: SearchParams & { engineName: string }) {
@@ -110,7 +111,7 @@ export async function handleRetry(params: SearchParams & { engineName: string })
       updated,
       cache.hasFailedEngines(updated) ? cache.SHORT_TTL_MS : undefined,
     );
-    return { ...updated, results: await applyDomainRules(merged) };
+    return { ...updated, results: signResultThumbnails(await applyDomainRules(merged)) };
   }
 
   return {

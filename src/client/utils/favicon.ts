@@ -1,13 +1,6 @@
-import { proxyImageUrl } from "./url";
-
 export const faviconCandidates = (hostname: string): string[] => {
   if (!hostname) return [];
-  return [
-    proxyImageUrl(
-      `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`,
-    ),
-    proxyImageUrl(`https://icons.duckduckgo.com/ip3/${hostname}.ico`),
-  ];
+  return [`/api/proxy/favicon?domain=${encodeURIComponent(hostname)}`];
 };
 
 const _faviconLetter = (hostname: string): string =>

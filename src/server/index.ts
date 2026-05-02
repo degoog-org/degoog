@@ -16,6 +16,7 @@ import { initThemes } from "./extensions/themes/registry";
 import { initTransports } from "./extensions/transports/registry";
 import globalRouter from "./routes";
 import { setOutgoingAllowlist } from "./utils/outgoing";
+import { initServerKey } from "./utils/server-key";
 
 const app = new Hono();
 
@@ -59,6 +60,7 @@ ${ANSI_GRAY}██████████████████████�
 );
 
 Promise.all([
+  initServerKey(),
   initTransports(),
   initEngines(),
   initPlugins(),

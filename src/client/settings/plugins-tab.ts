@@ -13,6 +13,9 @@ const _renderPluginCard = (plugin: ExtensionMeta): string => {
   const desc = plugin.description
     ? `<span class="ext-card-desc">${escapeHtml(plugin.description)}</span>`
     : "";
+  const versionWarning = plugin.requiresNewerVersion
+    ? `<span class="ext-version-warning">Requires a newer version of Degoog</span>`
+    : "";
   const status = plugin.configurable ? getConfigStatus(plugin) : null;
   const badge =
     status === "configured"
@@ -41,6 +44,7 @@ const _renderPluginCard = (plugin: ExtensionMeta): string => {
           <label for="plugin-toggle-${escapeHtml(plugin.id)}" class="ext-card-name plugin-toggle-label">${escapeHtml(plugin.displayName)}</label>
           ${trigger}
           ${desc}
+          ${versionWarning}
         </div>
         <div class="ext-card-actions">
           ${badge}

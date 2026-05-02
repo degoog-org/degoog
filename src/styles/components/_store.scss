@@ -417,6 +417,12 @@
   opacity: 0.6;
 }
 
+.store-card-version-warning {
+  font-size: $font-size-xs;
+  color: $warning;
+  margin-top: 2px;
+}
+
 .store-card-footer {
   display: flex;
   align-items: center;

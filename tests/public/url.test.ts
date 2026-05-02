@@ -19,7 +19,9 @@ describe("public/url", () => {
 
   test("faviconUrl returns proxy path for valid url", () => {
     const out = faviconUrl("https://example.com/page");
-    expect(out).toContain("/api/proxy/image");
+    expect(out).toContain("/api/proxy/favicon");
+    expect(out).toContain("domain=");
+    expect(out).toContain("example.com");
   });
 
   test("buildSearchUrl includes query and engine params", () => {
