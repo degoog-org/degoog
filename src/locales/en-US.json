@@ -170,7 +170,8 @@
       "password-placeholder": "Password",
       "unlock": "Unlock",
       "incorrect-password": "Incorrect password.",
-      "network-error": "Something went wrong. Please try again."
+      "network-error": "Something went wrong. Please try again.",
+      "misconfigured": "Settings authentication is misconfigured: the configured gate references a middleware that is not loaded. Contact the administrator to fix the gate setting or set DEGOOG_SETTINGS_PASSWORDS."
     },
     "public": {
       "engines-heading": "Engines"

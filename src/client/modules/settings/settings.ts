@@ -46,6 +46,7 @@ const _checkAuth = async (): Promise<{
   required: boolean;
   valid: boolean;
   loginUrl?: string;
+  error?: string;
 }> => {
   const token = getStoredToken();
   const headers = token ? { "x-settings-token": token } : {};
@@ -56,8 +57,29 @@ const _checkAuth = async (): Promise<{
     required: boolean;
     valid: boolean;
     loginUrl?: string;
+    error?: string;
   }>;
 };
+
+function _showAuthMisconfigured(): void {
+  const page = document.querySelector<HTMLElement>(".settings-page");
+  if (!page) return;
+  page.innerHTML = `
+    <header class="settings-page-header">
+      <a href="/" class="settings-page-back">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        ${t("settings-page.back")}
+      </a>
+      <h1 class="settings-page-title">${t("settings-page.page-title")}</h1>
+    </header>
+    <div class="settings-auth-gate">
+      <div class="settings-auth-gate-inner">
+        <p class="settings-auth-desc">${t("settings-page.gate.misconfigured")}</p>
+      </div>
+    </div>`;
+}
 
 function _showAuthGate(): void {
   const page = document.querySelector<HTMLElement>(".settings-page");
@@ -244,6 +266,10 @@ async function _init(): Promise<void> {
   }
   const auth = await _checkAuth();
   if (auth.required && !auth.valid) {
+    if (auth.error === "auth-misconfigured") {
+      _showAuthMisconfigured();
+      return;
+    }
     if (auth.loginUrl) {
       window.location.href = auth.loginUrl;
       return;

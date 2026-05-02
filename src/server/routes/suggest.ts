@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { SuggestPostBody } from "../types/search";
+import { _applyRateLimit } from "../utils/search";
 
 const router = new Hono();
 
@@ -40,16 +41,27 @@ async function getSuggestions(query: string): Promise<string[]> {
 }
 
 router.get("/api/suggest", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
   const query = c.req.query("q") ?? "";
   return c.json(await getSuggestions(query));
 });
 
 router.post("/api/suggest", async (c) => {
-  const { query } = await c.req.json<SuggestPostBody>();
-  return c.json(await getSuggestions(query ?? ""));
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
+  let body: SuggestPostBody;
+  try {
+    body = await c.req.json<SuggestPostBody>();
+  } catch {
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
+  return c.json(await getSuggestions(body.query ?? ""));
 });
 
 router.get("/api/suggest/opensearch", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
   const query = c.req.query("q") ?? "";
   const suggestions = await getSuggestions(query);
   return c.json([query, suggestions], 200, {

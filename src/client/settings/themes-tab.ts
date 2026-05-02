@@ -27,6 +27,9 @@ const _renderThemeCard = (
   const activeLabel = isActive
     ? `<span class="ext-card-active">${escapeHtml(t("settings-page.extensions.active"))}</span>`
     : "";
+  const versionWarning = themeExt.requiresNewerVersion
+    ? `<span class="ext-version-warning">Requires a newer version of Degoog</span>`
+    : "";
   return `
     <div class="ext-card" data-theme-id="${escapeHtml(themeId)}">
       <div class="ext-card-main">
@@ -34,6 +37,7 @@ const _renderThemeCard = (
           <span class="ext-card-name">${escapeHtml(themeExt.displayName)}</span>
           ${themeExt.description ? `<span class="ext-card-desc">${escapeHtml(themeExt.description)}</span>` : ""}
           ${activeLabel}
+          ${versionWarning}
         </div>
         <div class="ext-card-actions">
           ${badge}

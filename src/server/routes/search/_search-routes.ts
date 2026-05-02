@@ -1,6 +1,15 @@
 import type { Hono } from "hono";
-import type { SearchBody, SearchType, TimeFilter, RetryPostBody } from "../../types";
-import { _applyRateLimit, isValidQuery, parseEngineConfig } from "../../utils/search";
+import type {
+  SearchBody,
+  SearchType,
+  TimeFilter,
+  RetryPostBody,
+} from "../../types";
+import {
+  _applyRateLimit,
+  isValidQuery,
+  parseEngineConfig,
+} from "../../utils/search";
 import { parseEnginesFromBody, parsePage } from "./_parsers";
 import { handleRetry, handleSearch } from "./_search-handlers";
 
@@ -31,7 +40,12 @@ export function registerSearchRoutes(router: Hono): void {
     const limitRes = await _applyRateLimit(c);
     if (limitRes) return limitRes;
 
-    const body = await c.req.json<SearchBody>();
+    let body: SearchBody;
+    try {
+      body = await c.req.json<SearchBody>();
+    } catch {
+      return c.json({ error: "Invalid JSON" }, 400);
+    }
     const query = body.query ?? "";
     if (!isValidQuery(query))
       return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
@@ -78,7 +92,12 @@ export function registerSearchRoutes(router: Hono): void {
     const limitRes = await _applyRateLimit(c);
     if (limitRes) return limitRes;
 
-    const body = await c.req.json<RetryPostBody>();
+    let body: RetryPostBody;
+    try {
+      body = await c.req.json<RetryPostBody>();
+    } catch {
+      return c.json({ error: "Invalid JSON" }, 400);
+    }
     const query = body.query ?? "";
     const engineName = body.engine ?? "";
     if (!query || !engineName)

@@ -5,7 +5,10 @@ import {
   getActiveThemeId,
   setActiveTheme,
 } from "../extensions/themes/registry";
-import { getSettingsTokenFromRequest, validateSettingsToken } from "./settings-auth";
+import {
+  getSettingsTokenFromRequest,
+  validateSettingsToken,
+} from "./settings-auth";
 
 const router = new Hono();
 
@@ -27,7 +30,12 @@ router.post("/api/theme/active", async (c) => {
   const token = getSettingsTokenFromRequest(c);
   if (!(await validateSettingsToken(token)))
     return c.json({ error: "Unauthorized" }, 401);
-  const body = await c.req.json<{ id: string | null }>();
+  let body: { id: string | null };
+  try {
+    body = await c.req.json<{ id: string | null }>();
+  } catch {
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
   const ok = await setActiveTheme(body.id ?? null);
   if (!ok) return c.json({ error: "Theme not found" }, 400);
   return c.json({ ok: true, activeId: body.id });

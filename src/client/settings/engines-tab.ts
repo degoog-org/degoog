@@ -33,6 +33,9 @@ const _renderEngineCard = (
   allowConfigure: boolean,
 ): string => {
   const isEnabled = enabledMap[engine.id] !== false;
+  const versionWarning = engine.requiresNewerVersion
+    ? `<span class="ext-version-warning">Requires a newer version of Degoog</span>`
+    : "";
   const status =
     allowConfigure && engine.configurable ? getConfigStatus(engine) : null;
   const badge =
@@ -50,6 +53,7 @@ const _renderEngineCard = (
       <div class="ext-card-main">
         <div class="ext-card-info">
           <label for="engine-toggle-${escapeHtml(engine.id)}" class="ext-card-name engine-toggle-label">${escapeHtml(engine.displayName)}</label>
+          ${versionWarning}
         </div>
         <div class="ext-card-actions">
           ${badge}

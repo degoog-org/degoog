@@ -388,16 +388,8 @@ async executeSearch(query, page = 1, timeFilter, context) {
               Use <code>context.fetch</code> for every outbound HTTP request
               instead of the global <code>fetch</code>.
             </li>
-            <li>
-              Export <strong>outgoingHosts</strong> as an array of hostname
-              strings without the protocol or path. These hostnames get added to
-              the proxy allowlist. Only use <code>["*"]</code> if your engine
-              needs to fetch from random user provided URLs.
-            </li>
           </ol>
-          <pre><code>export const outgoingHosts = ["www.example.com", "example.com"];
-
-export default class MyEngine {
+          <pre><code>export default class MyEngine {
   name = "My Search";
   async executeSearch(query, page = 1, _timeFilter, context) {
     const url = `https://www.example.com/search?q=${encodeURIComponent(query)}`;
@@ -457,9 +449,8 @@ export default class MyEngine {
                 rel="noopener"
                 >Ecosia</a
               >
-              is a web engine using <code>outgoingHosts</code> and
-              <code>bangShortcut</code> while correctly utilizing
-              <code>context.fetch</code>.
+              is a web engine using <code>bangShortcut</code> while correctly
+              utilizing <code>context.fetch</code>.
             </li>
             <li>
               <a

@@ -23,4 +23,5 @@ export interface StoreItem {
   author?: { name: string; url?: string };
   pluginType?: string;
   engineType?: string;
+  requiresNewerVersion?: boolean;
 }

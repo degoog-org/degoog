@@ -3,6 +3,7 @@ import { state } from "../state";
 
 export const proxyImageUrl = (url: string): string => {
   if (!url) return "";
+  if (url.startsWith("/api/proxy/")) return url;
   return `/api/proxy/image?url=${encodeURIComponent(url)}`;
 };
 
@@ -17,9 +18,7 @@ export const faviconHostname = (url: string): string => {
 export const faviconUrl = (url: string): string => {
   const hostname = faviconHostname(url);
   if (!hostname) return "";
-  return proxyImageUrl(
-    `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`,
-  );
+  return `/api/proxy/favicon?domain=${encodeURIComponent(hostname)}`;
 };
 
 export const buildSearchParams = (

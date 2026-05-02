@@ -7,14 +7,20 @@ type Router = {
 const GATED_APIS: Array<{
   method: "GET" | "POST" | "DELETE";
   path: string;
-  routerKey: "store" | "settings-auth" | "themes" | "extensions" | "pages";
+  routerKey:
+    | "store"
+    | "settings-auth"
+    | "settings"
+    | "themes"
+    | "extensions"
+    | "pages";
   body?: string;
 }> = [
-  { method: "GET", path: "/api/settings/general", routerKey: "settings-auth" },
+  { method: "GET", path: "/api/settings/general", routerKey: "settings" },
   {
     method: "POST",
     path: "/api/settings/general",
-    routerKey: "settings-auth",
+    routerKey: "settings",
     body: "{}",
   },
   {
@@ -83,17 +89,25 @@ let envRestore: string | undefined;
 beforeAll(async () => {
   envRestore = process.env.DEGOOG_PUBLIC_INSTANCE;
   process.env.DEGOOG_PUBLIC_INSTANCE = "true";
-  const [storeMod, settingsAuthMod, themesMod, extensionsMod, pagesMod] =
-    await Promise.all([
-      import("../../src/server/routes/store"),
-      import("../../src/server/routes/settings-auth"),
-      import("../../src/server/routes/themes"),
-      import("../../src/server/routes/extensions"),
-      import("../../src/server/routes/pages"),
-    ]);
+  const [
+    storeMod,
+    settingsAuthMod,
+    settingsMod,
+    themesMod,
+    extensionsMod,
+    pagesMod,
+  ] = await Promise.all([
+    import("../../src/server/routes/store"),
+    import("../../src/server/routes/settings-auth"),
+    import("../../src/server/routes/settings"),
+    import("../../src/server/routes/themes"),
+    import("../../src/server/routes/extensions"),
+    import("../../src/server/routes/pages"),
+  ]);
   routers = {
     store: storeMod.default,
     "settings-auth": settingsAuthMod.default,
+    settings: settingsMod.default,
     themes: themesMod.default,
     extensions: extensionsMod.default,
     pages: pagesMod.default,

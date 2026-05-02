@@ -23,3 +23,6 @@ export const pluginSettingsFile = (): string =>
 
 export const defaultEnginesFile = (): string =>
   process.env.DEGOOG_DEFAULT_ENGINES_FILE ?? join(_dataDir(), "default-engines.json");
+
+export const settingsTokensFile = (): string =>
+  process.env.DEGOOG_SETTINGS_TOKENS_FILE ?? join(_dataDir(), "settings-tokens.json");

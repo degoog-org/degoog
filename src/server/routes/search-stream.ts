@@ -26,6 +26,7 @@ import {
   parseEngineConfig,
 } from "../utils/search";
 import { applyDomainRules } from "./search/_domain-rules";
+import { signResultThumbnails } from "../utils/proxy-sign";
 import { parsePage } from "./search/_parsers";
 
 const router = new Hono();
@@ -59,7 +60,7 @@ router.get("/api/search/stream", async (c) => {
 
   const cached = cache.get(key);
   if (cached) {
-    const liveResults = await applyDomainRules(cached.results);
+    const liveResults = signResultThumbnails(await applyDomainRules(cached.results));
     const encoder = new TextEncoder();
     const body = new ReadableStream({
       start(controller) {
@@ -188,7 +189,7 @@ router.get("/api/search/stream", async (c) => {
               _send("engine-result", {
                 engine: engineName,
                 timing,
-                results: await applyDomainRules(scoreResults(allRawResults)),
+                results: signResultThumbnails(await applyDomainRules(scoreResults(allRawResults))),
                 retry: isRetry,
                 attempt,
               });
