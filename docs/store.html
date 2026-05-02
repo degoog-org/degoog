@@ -74,37 +74,48 @@
           </div>
           <nav class="ade-nav" aria-label="Documentation">
             <a href="index.html" class="ade-nav-item"
+              ><i class="fa-solid fa-book-open fa-lg"></i></i
               ><span class="ade-nav-item-name">Overview</span></a
             >
             <a href="plugins.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Plugins</span></a
+              ><i class="fa-solid fa-puzzle-piece fa-lg"></i
+              ><span class="ade-nav-item-name"> Plugins</span></a
             >
             <a href="themes.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Themes</span></a
+              ><i class="fa-solid fa-palette fa-lg"></i
+              ><span class="ade-nav-item-name"> Themes</span></a
             >
             <a href="engines.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Search engines</span></a
+              ><i class="fa-solid fa-bolt fa-lg"></i
+              ><span class="ade-nav-item-name"> Search engines</span></a
             >
             <a href="transports.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Transports</span></a
+              ><i class="fa-solid fa-network-wired fa-lg"></i
+              ><span class="ade-nav-item-name"> Transports</span></a
             >
             <a href="store.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Store</span></a
+              ><i class="fa-solid fa-store fa-lg"></i
+              ><span class="ade-nav-item-name"> Store</span></a
             >
             <a href="aliases.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Aliases</span></a
+              ><i class="fa-solid fa-link fa-lg"></i
+              ><span class="ade-nav-item-name"> Aliases</span></a
             >
             <a href="env.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Environment</span></a
+              ><i class="fa-solid fa-lock fa-lg"></i></i
+              ><span class="ade-nav-item-name">ENV Variables</span></a
             >
             <a href="styling.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Styling</span></a
+              ><i class="fa-solid fa-swatchbook fa-lg"></i></i
+              ><span class="ade-nav-item-name"> Styling</span></a
             >
             <a href="translations.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Translations</span></a
+              ><i class="fa-solid fa-language fa-lg"></i
+              ><span class="ade-nav-item-name"> Translations</span></a
             >
             <a href="api.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">API</span></a
+              ><i class="fa-solid fa-code fa-lg"></i
+              ><span class="ade-nav-item-name"> API</span></a
             >
           </nav>
           <div class="ade-sidebar-actions">
@@ -139,22 +150,22 @@
           <h2>Repo structure</h2>
           <p>Your repository needs to follow this layout:</p>
           <pre><code>my-degoog-repo/
-          package.json
-          plugins/
-            my-plugin/
-              index.js
-              template.html
-              style.css
-          themes/
-            my-theme/
-              theme.json
-              style.css
-          engines/
-            my-engine/
-              index.js
-          transports/
-            my-transport/
-              index.js</code></pre>
+  package.json
+  plugins/
+    my-plugin/
+      index.js
+      template.html
+      style.css
+  themes/
+    my-theme/
+      theme.json
+      style.css
+  engines/
+    my-engine/
+      index.js
+  transports/
+    my-transport/
+      index.js</code></pre>
           <p>
             Your plugin, theme, engine, and transport folders use the exact same
             format as they do when installed directly in your
@@ -168,30 +179,30 @@
             show up in the Store:
           </p>
           <pre><code>{
-          "name": "my-degoog-repo",
-          "description": "Short description of your collection",
-          "author": "YourName",
-          "plugins": [
-            {
-              "path": "plugins/my-plugin",
-              "name": "My Plugin",
-              "description": "What it does",
-              "version": "1.0.0",
-              "type": "command"
-            }
-          ],
-          "themes": [
-            {
-              "path": "themes/my-theme",
-              "name": "My Theme",
-              "description": "Short description",
-              "version": "1.0.0"
-            }
-          ],
-          "engines": [],
-          "transports": [],
-          "repo-image": "logo.png"
-        }</code></pre>
+  "name": "my-degoog-repo",
+  "description": "Short description of your collection",
+  "author": "YourName",
+  "plugins": [
+    {
+      "path": "plugins/my-plugin",
+      "name": "My Plugin",
+      "description": "What it does",
+      "version": "1.0.0",
+      "type": "command"
+    }
+  ],
+  "themes": [
+    {
+      "path": "themes/my-theme",
+      "name": "My Theme",
+      "description": "Short description",
+      "version": "1.0.0"
+    }
+  ],
+  "engines": [],
+  "transports": [],
+  "repo-image": "logo.png"
+}</code></pre>
           <ul>
             <li>
               <strong>repo-image</strong> (optional): The path to an image file
@@ -236,10 +247,10 @@
             </li>
           </ul>
           <pre><code>{
-          "name": "Author Name",
-          "url": "https://github.com/username",
-          "avatar": "https://example.com/avatar.png"
-        }</code></pre>
+  "name": "Author Name",
+  "url": "https://github.com/username",
+  "avatar": "https://example.com/avatar.png"
+}</code></pre>
           <ul>
             <li>
               <strong>screenshots/</strong>: A folder containing image files

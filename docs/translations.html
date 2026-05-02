@@ -74,37 +74,48 @@
           </div>
           <nav class="ade-nav" aria-label="Documentation">
             <a href="index.html" class="ade-nav-item"
+              ><i class="fa-solid fa-book-open fa-lg"></i></i
               ><span class="ade-nav-item-name">Overview</span></a
             >
             <a href="plugins.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Plugins</span></a
+              ><i class="fa-solid fa-puzzle-piece fa-lg"></i
+              ><span class="ade-nav-item-name"> Plugins</span></a
             >
             <a href="themes.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Themes</span></a
+              ><i class="fa-solid fa-palette fa-lg"></i
+              ><span class="ade-nav-item-name"> Themes</span></a
             >
             <a href="engines.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Search engines</span></a
+              ><i class="fa-solid fa-bolt fa-lg"></i
+              ><span class="ade-nav-item-name"> Search engines</span></a
             >
             <a href="transports.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Transports</span></a
+              ><i class="fa-solid fa-network-wired fa-lg"></i
+              ><span class="ade-nav-item-name"> Transports</span></a
             >
             <a href="store.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Store</span></a
+              ><i class="fa-solid fa-store fa-lg"></i
+              ><span class="ade-nav-item-name"> Store</span></a
             >
             <a href="aliases.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Aliases</span></a
+              ><i class="fa-solid fa-link fa-lg"></i
+              ><span class="ade-nav-item-name"> Aliases</span></a
             >
             <a href="env.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Environment</span></a
+              ><i class="fa-solid fa-lock fa-lg"></i></i
+              ><span class="ade-nav-item-name">ENV Variables</span></a
             >
             <a href="styling.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Styling</span></a
+              ><i class="fa-solid fa-swatchbook fa-lg"></i></i
+              ><span class="ade-nav-item-name"> Styling</span></a
             >
             <a href="translations.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Translations</span></a
+              ><i class="fa-solid fa-language fa-lg"></i
+              ><span class="ade-nav-item-name"> Translations</span></a
             >
             <a href="api.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">API</span></a
+              ><i class="fa-solid fa-code fa-lg"></i
+              ><span class="ade-nav-item-name"> API</span></a
             >
           </nav>
           <div class="ade-sidebar-actions">
@@ -161,8 +172,8 @@
             <code>{{ t:key }}</code> syntax:
           </p>
           <pre><code>return {
-          html: `&lt;p&gt;{{ t:plugin-myname.some-string }}&lt;/p&gt;`
-        };</code></pre>
+  html: `&lt;p&gt;{{ t:plugin-myname.some-string }}&lt;/p&gt;`
+};</code></pre>
           <p>
             You can interpolate variables by passing comma separated names right
             after the key. These map to <code>{{ varname }}</code> template
@@ -170,8 +181,7 @@
             engine can substitute them later on:
           </p>
           <pre><code>{ "plugin-myname.found": "Found on: {sources_text}" }
-        
-        `{{ t:plugin-myname.found, sources_text }}`</code></pre>
+`{{ t:plugin-myname.found, sources_text }}`</code></pre>
 
           <h2>Locale file format</h2>
           <p>
@@ -183,16 +193,16 @@
             language structure.
           </p>
           <pre><code>{
-          "plugin-weather": {
-            "codes": {
-              "0": "Cielo sereno",
-              "unknown": "Sconosciuto"
-            },
-            "usage": {
-              "needCityLine1": "Uso: &lt;code&gt;!weather &lt;città&gt;&lt;/code&gt;"
-            }
-          }
-        }</code></pre>
+  "plugin-weather": {
+    "codes": {
+      "0": "Cielo sereno",
+      "unknown": "Sconosciuto"
+    },
+    "usage": {
+      "needCityLine1": "Uso: &lt;code&gt;!weather &lt;città&gt;&lt;/code&gt;"
+    }
+  }
+}</code></pre>
           <p>
             Locale codes follow the
             <a
@@ -254,16 +264,16 @@
 
           <h3>1. Copy the English originals</h3>
           <pre><code>LANG=it-IT
-        SLANG=it
-        
-        cp src/locales/en-US.json src/locales/$LANG.json
-        cp src/public/themes/degoog-theme/locales/en-US.json \
-           src/public/themes/degoog-theme/locales/$LANG.json
-        
-        for cmd in help ip ai-summary speedtest uuid; do
-          cp src/server/extensions/commands/builtins/$cmd/locales/en.json \
-             src/server/extensions/commands/builtins/$cmd/locales/$SLANG.json
-        done</code></pre>
+SLANG=it
+
+cp src/locales/en-US.json src/locales/$LANG.json
+cp src/public/themes/degoog-theme/locales/en-US.json \
+    src/public/themes/degoog-theme/locales/$LANG.json
+
+for cmd in help ip ai-summary speedtest uuid; do
+  cp src/server/extensions/commands/builtins/$cmd/locales/en.json \
+      src/server/extensions/commands/builtins/$cmd/locales/$SLANG.json
+done</code></pre>
 
           <h3>2. Translate the values</h3>
           <p>

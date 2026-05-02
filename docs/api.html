@@ -74,37 +74,48 @@
           </div>
           <nav class="ade-nav" aria-label="Documentation">
             <a href="index.html" class="ade-nav-item"
+              ><i class="fa-solid fa-book-open fa-lg"></i></i
               ><span class="ade-nav-item-name">Overview</span></a
             >
             <a href="plugins.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Plugins</span></a
+              ><i class="fa-solid fa-puzzle-piece fa-lg"></i
+              ><span class="ade-nav-item-name"> Plugins</span></a
             >
             <a href="themes.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Themes</span></a
+              ><i class="fa-solid fa-palette fa-lg"></i
+              ><span class="ade-nav-item-name"> Themes</span></a
             >
             <a href="engines.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Search engines</span></a
+              ><i class="fa-solid fa-bolt fa-lg"></i
+              ><span class="ade-nav-item-name"> Search engines</span></a
             >
             <a href="transports.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Transports</span></a
+              ><i class="fa-solid fa-network-wired fa-lg"></i
+              ><span class="ade-nav-item-name"> Transports</span></a
             >
             <a href="store.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Store</span></a
+              ><i class="fa-solid fa-store fa-lg"></i
+              ><span class="ade-nav-item-name"> Store</span></a
             >
             <a href="aliases.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Aliases</span></a
+              ><i class="fa-solid fa-link fa-lg"></i
+              ><span class="ade-nav-item-name"> Aliases</span></a
             >
             <a href="env.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Environment</span></a
+              ><i class="fa-solid fa-lock fa-lg"></i></i
+              ><span class="ade-nav-item-name">ENV Variables</span></a
             >
             <a href="styling.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Styling</span></a
+              ><i class="fa-solid fa-swatchbook fa-lg"></i></i
+              ><span class="ade-nav-item-name"> Styling</span></a
             >
             <a href="translations.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Translations</span></a
+              ><i class="fa-solid fa-language fa-lg"></i
+              ><span class="ade-nav-item-name"> Translations</span></a
             >
             <a href="api.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">API</span></a
+              ><i class="fa-solid fa-code fa-lg"></i
+              ><span class="ade-nav-item-name"> API</span></a
             >
           </nav>
           <div class="ade-sidebar-actions">
@@ -189,22 +200,22 @@
           <pre><code>curl "http://localhost:4444/api/search?q=rust+lifetimes"</code></pre>
           <p>Response:</p>
           <pre><code>{
-          "results": [
-            {
-              "title": "...",
-              "url": "https://...",
-              "snippet": "...",
-              "source": "google",
-              "score": 92,
-              "sources": ["google", "duckduckgo"]
-            }
-          ],
-          "query": "rust lifetimes",
-          "totalTime": 812,
-          "type": "web",
-          "engineTimings": [{ "name": "Google", "time": 540, "resultCount": 10 }],
-          "relatedSearches": ["rust lifetime elision", "..."]
-        }</code></pre>
+  "results": [
+    {
+      "title": "...",
+      "url": "https://...",
+      "snippet": "...",
+      "source": "google",
+      "score": 92,
+      "sources": ["google", "duckduckgo"]
+    }
+  ],
+  "query": "rust lifetimes",
+  "totalTime": 812,
+  "type": "web",
+  "engineTimings": [{ "name": "Google", "time": 540, "resultCount": 10 }],
+  "relatedSearches": ["rust lifetime elision", "..."]
+}</code></pre>
 
           <h2><code>POST /api/search</code></h2>
           <p>
@@ -212,14 +223,14 @@
             should use this when you have a long list of engines to query.
           </p>
           <pre><code>curl -X POST http://localhost:4444/api/search \
-          -H "Content-Type: application/json" \
-          -d '{
-            "query": "rust lifetimes",
-            "type": "web",
-            "page": 1,
-            "lang": "en",
-            "engines": ["google", "duckduckgo"]
-          }'</code></pre>
+-H "Content-Type: application/json" \
+-d '{
+  "query": "rust lifetimes",
+  "type": "web",
+  "page": 1,
+  "lang": "en",
+  "engines": ["google", "duckduckgo"]
+}'</code></pre>
 
           <h2><code>GET /api/search/stream</code></h2>
           <p>

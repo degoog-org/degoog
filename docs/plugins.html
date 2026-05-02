@@ -74,37 +74,48 @@
           </div>
           <nav class="ade-nav" aria-label="Documentation">
             <a href="index.html" class="ade-nav-item"
+              ><i class="fa-solid fa-book-open fa-lg"></i></i
               ><span class="ade-nav-item-name">Overview</span></a
             >
             <a href="plugins.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Plugins</span></a
+              ><i class="fa-solid fa-puzzle-piece fa-lg"></i
+              ><span class="ade-nav-item-name"> Plugins</span></a
             >
             <a href="themes.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Themes</span></a
+              ><i class="fa-solid fa-palette fa-lg"></i
+              ><span class="ade-nav-item-name"> Themes</span></a
             >
             <a href="engines.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Search engines</span></a
+              ><i class="fa-solid fa-bolt fa-lg"></i
+              ><span class="ade-nav-item-name"> Search engines</span></a
             >
             <a href="transports.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Transports</span></a
+              ><i class="fa-solid fa-network-wired fa-lg"></i
+              ><span class="ade-nav-item-name"> Transports</span></a
             >
             <a href="store.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Store</span></a
+              ><i class="fa-solid fa-store fa-lg"></i
+              ><span class="ade-nav-item-name"> Store</span></a
             >
             <a href="aliases.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Aliases</span></a
+              ><i class="fa-solid fa-link fa-lg"></i
+              ><span class="ade-nav-item-name"> Aliases</span></a
             >
             <a href="env.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Environment</span></a
+              ><i class="fa-solid fa-lock fa-lg"></i></i
+              ><span class="ade-nav-item-name">ENV Variables</span></a
             >
             <a href="styling.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Styling</span></a
+              ><i class="fa-solid fa-swatchbook fa-lg"></i></i
+              ><span class="ade-nav-item-name"> Styling</span></a
             >
             <a href="translations.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Translations</span></a
+              ><i class="fa-solid fa-language fa-lg"></i
+              ><span class="ade-nav-item-name"> Translations</span></a
             >
             <a href="api.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">API</span></a
+              ><i class="fa-solid fa-code fa-lg"></i
+              ><span class="ade-nav-item-name"> API</span></a
             >
           </nav>
           <div class="ade-sidebar-actions">
@@ -138,13 +149,13 @@
 
           <h2>Folder structure</h2>
           <pre><code>data/plugins/
-          my-plugin/
-            index.js        
-            template.html   
-            style.css       
-            script.js       
-            card.html       
-            author.json     </code></pre>
+  my-plugin/
+    index.js        
+    template.html   
+    style.css       
+    script.js       
+    card.html       
+    author.json     </code></pre>
           <p>
             Your entry file needs to be <code>index.js</code>,
             <code>index.ts</code>, <code>index.mjs</code>, or
@@ -185,10 +196,10 @@
             provides the following:
           </p>
           <pre><code>init(ctx) {
-          // ctx.template contains your template.html
-          // ctx.dir is the absolute path to your plugin folder
-          // ctx.readFile is an async function to read any file from your plugin folder
-        }</code></pre>
+  // ctx.template contains your template.html
+  // ctx.dir is the absolute path to your plugin folder
+  // ctx.readFile is an async function to read any file from your plugin folder
+}</code></pre>
           <p>
             For example, you might build a plugin that uses both a command
             template and a separate card template. The
@@ -615,22 +626,21 @@
             <code>style.css</code> file.
           </p>
           <pre><code>let template = "";
-        
-        export default {
-          name: "Greeting",
-          description: "Say hello",
-          trigger: "hello",
-          init(ctx) { template = ctx.template; },
-          async execute(args) {
-            const name = args.trim() || "world";
-            const html = template.replace("{{name}}", name);
-            return { title: "Hello", html };
-          },
-        };</code></pre>
+export default {
+  name: "Greeting",
+  description: "Say hello",
+  trigger: "hello",
+  init(ctx) { template = ctx.template; },
+  async execute(args) {
+    const name = args.trim() || "world";
+    const html = template.replace("{{name}}", name);
+    return { title: "Hello", html };
+  },
+};</code></pre>
           <p><strong>template.html</strong></p>
           <pre><code>&lt;div class="command-result greeting"&gt;
-          &lt;h3 class="greeting-title"&gt;Hello, {{name}}!&lt;/h3&gt;
-        &lt;/div&gt;</code></pre>
+  &lt;h3 class="greeting-title"&gt;Hello, {{name}}!&lt;/h3&gt;
+&lt;/div&gt;</code></pre>
           <p>
             For your <strong>style.css</strong>, you should use variables like
             <code>var(--text-primary)</code> to ensure everything matches. You

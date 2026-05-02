@@ -74,37 +74,48 @@
           </div>
           <nav class="ade-nav" aria-label="Documentation">
             <a href="index.html" class="ade-nav-item"
+              ><i class="fa-solid fa-book-open fa-lg"></i></i
               ><span class="ade-nav-item-name">Overview</span></a
             >
             <a href="plugins.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Plugins</span></a
+              ><i class="fa-solid fa-puzzle-piece fa-lg"></i
+              ><span class="ade-nav-item-name"> Plugins</span></a
             >
             <a href="themes.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Themes</span></a
+              ><i class="fa-solid fa-palette fa-lg"></i
+              ><span class="ade-nav-item-name"> Themes</span></a
             >
             <a href="engines.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Search engines</span></a
+              ><i class="fa-solid fa-bolt fa-lg"></i
+              ><span class="ade-nav-item-name"> Search engines</span></a
             >
             <a href="transports.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Transports</span></a
+              ><i class="fa-solid fa-network-wired fa-lg"></i
+              ><span class="ade-nav-item-name"> Transports</span></a
             >
             <a href="store.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Store</span></a
+              ><i class="fa-solid fa-store fa-lg"></i
+              ><span class="ade-nav-item-name"> Store</span></a
             >
             <a href="aliases.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Aliases</span></a
+              ><i class="fa-solid fa-link fa-lg"></i
+              ><span class="ade-nav-item-name"> Aliases</span></a
             >
             <a href="env.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Environment</span></a
+              ><i class="fa-solid fa-lock fa-lg"></i></i
+              ><span class="ade-nav-item-name">ENV Variables</span></a
             >
             <a href="styling.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Styling</span></a
+              ><i class="fa-solid fa-swatchbook fa-lg"></i></i
+              ><span class="ade-nav-item-name"> Styling</span></a
             >
             <a href="translations.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Translations</span></a
+              ><i class="fa-solid fa-language fa-lg"></i
+              ><span class="ade-nav-item-name"> Translations</span></a
             >
             <a href="api.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">API</span></a
+              ><i class="fa-solid fa-code fa-lg"></i
+              ><span class="ade-nav-item-name"> API</span></a
             >
           </nav>
           <div class="ade-sidebar-actions">
@@ -340,22 +351,22 @@
             directly from your theme CSS or HTML:
           </p>
           <pre><code>@font-face {
-          font-family: "My Font";
-          src: url("/themes/my-theme/fonts/my-font.woff2") format("woff2");
-          font-display: swap;
-        }</code></pre>
+  font-family: "My Font";
+  src: url("/themes/my-theme/fonts/my-font.woff2") format("woff2");
+  font-display: swap;
+}</code></pre>
           <p>
             Note that <code>theme.json</code> is never served to the client.
           </p>
 
           <h3>Example</h3>
           <pre><code>{
-          "name": "My Theme",
-          "css": "style.css",
-          "templates": {
-            "result": "templates/result.html"
-          }
-        }</code></pre>
+  "name": "My Theme",
+  "css": "style.css",
+  "templates": {
+    "result": "templates/result.html"
+  }
+}</code></pre>
 
           <h2 id="templates">Templates</h2>
           <p>
@@ -1033,24 +1044,24 @@
           </p>
           <p><code>templates/result.html</code>:</p>
           <pre><code>&lt;div class="my-result"&gt;
-          &lt;a href="{{ url }}" target="{{ link_target }}"&gt;{{ title }}&lt;/a&gt;
-          &lt;p&gt;{{ snippet }}&lt;/p&gt;
-          &lt;small&gt;{{ cite_url }}&lt;/small&gt;
-          {{#if thumbnail_url}}
-          &lt;img src="{{ thumbnail_url }}" loading="lazy"&gt;
-          {{/if thumbnail_url}}
-          {{#each sources}}
-          &lt;span class="tag"&gt;{{ . }}&lt;/span&gt;
-          {{/each sources}}
-        &lt;/div&gt;</code></pre>
+  &lt;a href="{{ url }}" target="{{ link_target }}"&gt;{{ title }}&lt;/a&gt;
+  &lt;p&gt;{{ snippet }}&lt;/p&gt;
+  &lt;small&gt;{{ cite_url }}&lt;/small&gt;
+  {{#if thumbnail_url}}
+  &lt;img src="{{ thumbnail_url }}" loading="lazy"&gt;
+  {{/if thumbnail_url}}
+  {{#each sources}}
+  &lt;span class="tag"&gt;{{ . }}&lt;/span&gt;
+  {{/each sources}}
+&lt;/div&gt;</code></pre>
           <p><code>theme.json</code>:</p>
           <pre><code>{
-          "name": "My Theme",
-          "css": "style.css",
-          "templates": {
-            "result": "templates/result.html"
-          }
-        }</code></pre>
+  "name": "My Theme",
+  "css": "style.css",
+  "templates": {
+    "result": "templates/result.html"
+  }
+}</code></pre>
         </main>
       </div>
       <div id="ade-backdrop" class="ade-backdrop"></div>

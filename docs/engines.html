@@ -74,37 +74,48 @@
           </div>
           <nav class="ade-nav" aria-label="Documentation">
             <a href="index.html" class="ade-nav-item"
+              ><i class="fa-solid fa-book-open fa-lg"></i></i
               ><span class="ade-nav-item-name">Overview</span></a
             >
             <a href="plugins.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Plugins</span></a
+              ><i class="fa-solid fa-puzzle-piece fa-lg"></i
+              ><span class="ade-nav-item-name"> Plugins</span></a
             >
             <a href="themes.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Themes</span></a
+              ><i class="fa-solid fa-palette fa-lg"></i
+              ><span class="ade-nav-item-name"> Themes</span></a
             >
             <a href="engines.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Search engines</span></a
+              ><i class="fa-solid fa-bolt fa-lg"></i
+              ><span class="ade-nav-item-name"> Search engines</span></a
             >
             <a href="transports.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Transports</span></a
+              ><i class="fa-solid fa-network-wired fa-lg"></i
+              ><span class="ade-nav-item-name"> Transports</span></a
             >
             <a href="store.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Store</span></a
+              ><i class="fa-solid fa-store fa-lg"></i
+              ><span class="ade-nav-item-name"> Store</span></a
             >
             <a href="aliases.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Aliases</span></a
+              ><i class="fa-solid fa-link fa-lg"></i
+              ><span class="ade-nav-item-name"> Aliases</span></a
             >
             <a href="env.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Environment</span></a
+              ><i class="fa-solid fa-lock fa-lg"></i></i
+              ><span class="ade-nav-item-name">ENV Variables</span></a
             >
             <a href="styling.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Styling</span></a
+              ><i class="fa-solid fa-swatchbook fa-lg"></i></i
+              ><span class="ade-nav-item-name"> Styling</span></a
             >
             <a href="translations.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Translations</span></a
+              ><i class="fa-solid fa-language fa-lg"></i
+              ><span class="ade-nav-item-name"> Translations</span></a
             >
             <a href="api.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">API</span></a
+              ><i class="fa-solid fa-code fa-lg"></i
+              ><span class="ade-nav-item-name"> API</span></a
             >
           </nav>
           <div class="ade-sidebar-actions">
@@ -198,15 +209,15 @@
             engine using POST looks like:
           </p>
           <pre><code>async executeSearch(query, page = 1, _timeFilter, context) {
-          const doFetch = context?.fetch ?? fetch;
-          const response = await doFetch("https://graphql.example.com", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: MY_QUERY, variables: { search: query, page } }),
-          });
-          const data = await response.json();
-          // parse and return array of { title, url, snippet, source }
-        }</code></pre>
+  const doFetch = context?.fetch ?? fetch;
+  const response = await doFetch("https://graphql.example.com", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: MY_QUERY, variables: { search: query, page } }),
+  });
+  const data = await response.json();
+  // parse and return array of { title, url, snippet, source }
+}</code></pre>
 
           <h2>Search types</h2>
           <p>
@@ -303,30 +314,30 @@
             <code>context.dateFrom</code> and <code>context.dateTo</code>.
           </p>
           <pre><code>export default class MyEngine {
-          name = "My Search";
-        
-          async executeSearch(query, page = 1, timeFilter, context) {
-            const lang = context?.lang;
-            const acceptLang = context?.buildAcceptLanguage?.() ?? "en,en-US;q=0.9";
-            const doFetch = context?.fetch ?? fetch;
-        
-            const params = new URLSearchParams({ q: query });
-        
-            if (lang) params.set("lang", lang);
-        
-            if (timeFilter === "day") params.set("when", "24h");
-            else if (timeFilter === "week") params.set("when", "7d");
-            else if (timeFilter === "custom" && context?.dateFrom) {
-              params.set("from", context.dateFrom);
-              if (context.dateTo) params.set("to", context.dateTo);
-            }
-        
-            const res = await doFetch(`https://example.com/search?${params}`, {
-              headers: { "Accept-Language": acceptLang },
-            });
-            // parse and return array of { title, url, snippet, source }
-          }
-        }</code></pre>
+  name = "My Search";
+
+  async executeSearch(query, page = 1, timeFilter, context) {
+    const lang = context?.lang;
+    const acceptLang = context?.buildAcceptLanguage?.() ?? "en,en-US;q=0.9";
+    const doFetch = context?.fetch ?? fetch;
+
+    const params = new URLSearchParams({ q: query });
+
+    if (lang) params.set("lang", lang);
+
+    if (timeFilter === "day") params.set("when", "24h");
+    else if (timeFilter === "week") params.set("when", "7d");
+    else if (timeFilter === "custom" && context?.dateFrom) {
+      params.set("from", context.dateFrom);
+      if (context.dateTo) params.set("to", context.dateTo);
+    }
+
+    const res = await doFetch(`https://example.com/search?${params}`, {
+      headers: { "Accept-Language": acceptLang },
+    });
+    // parse and return array of { title, url, snippet, source }
+  }
+}</code></pre>
 
           <h2>Safe Search</h2>
           <p>
@@ -344,27 +355,27 @@
             <code>executeSearch</code> function:
           </p>
           <pre><code>settingsSchema = [
-          {
-            key: "safeSearch",
-            label: "Safe Search",
-            type: "select",
-            options: ["off", "moderate", "strict"],
-            description: "Filter explicit content from search results.",
-          },
-        ];
-        
-        safeSearch = "moderate";
-        
-        configure(settings) {
-          if (typeof settings.safeSearch === "string") {
-            this.safeSearch = settings.safeSearch;
-          }
-        }
-        
-        async executeSearch(query, page = 1, timeFilter, context) {
-          const params = new URLSearchParams({ q: query, safesearch: this.safeSearch });
-          // ...
-        }</code></pre>
+  {
+    key: "safeSearch",
+    label: "Safe Search",
+    type: "select",
+    options: ["off", "moderate", "strict"],
+    description: "Filter explicit content from search results.",
+  },
+];
+
+safeSearch = "moderate";
+
+configure(settings) {
+  if (typeof settings.safeSearch === "string") {
+    this.safeSearch = settings.safeSearch;
+  }
+}
+
+async executeSearch(query, page = 1, timeFilter, context) {
+  const params = new URLSearchParams({ q: query, safesearch: this.safeSearch });
+  // ...
+}</code></pre>
 
           <h2>Proxies</h2>
           <p>
@@ -385,17 +396,17 @@
             </li>
           </ol>
           <pre><code>export const outgoingHosts = ["www.example.com", "example.com"];
-        
-        export default class MyEngine {
-          name = "My Search";
-          async executeSearch(query, page = 1, _timeFilter, context) {
-            const url = `https://www.example.com/search?q=${encodeURIComponent(query)}`;
-            const doFetch = context?.fetch ?? fetch;
-            const response = await doFetch(url, { headers: { "User-Agent": "my-engine/1.0" } });
-            const html = await response.text();
-            // parse and return array of { title, url, snippet, source, ... }
-          }
-        }</code></pre>
+
+export default class MyEngine {
+  name = "My Search";
+  async executeSearch(query, page = 1, _timeFilter, context) {
+    const url = `https://www.example.com/search?q=${encodeURIComponent(query)}`;
+    const doFetch = context?.fetch ?? fetch;
+    const response = await doFetch(url, { headers: { "User-Agent": "my-engine/1.0" } });
+    const html = await response.text();
+    // parse and return array of { title, url, snippet, source, ... }
+  }
+}</code></pre>
           <p>
             Every engine also features an
             <strong>Outgoing HTTP client</strong> control under the

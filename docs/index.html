@@ -74,37 +74,48 @@
           </div>
           <nav class="ade-nav" aria-label="Documentation">
             <a href="index.html" class="ade-nav-item"
+              ><i class="fa-solid fa-book-open fa-lg"></i></i
               ><span class="ade-nav-item-name">Overview</span></a
             >
             <a href="plugins.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Plugins</span></a
+              ><i class="fa-solid fa-puzzle-piece fa-lg"></i
+              ><span class="ade-nav-item-name"> Plugins</span></a
             >
             <a href="themes.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Themes</span></a
+              ><i class="fa-solid fa-palette fa-lg"></i
+              ><span class="ade-nav-item-name"> Themes</span></a
             >
             <a href="engines.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Search engines</span></a
+              ><i class="fa-solid fa-bolt fa-lg"></i
+              ><span class="ade-nav-item-name"> Search engines</span></a
             >
             <a href="transports.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Transports</span></a
+              ><i class="fa-solid fa-network-wired fa-lg"></i
+              ><span class="ade-nav-item-name"> Transports</span></a
             >
             <a href="store.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Store</span></a
+              ><i class="fa-solid fa-store fa-lg"></i
+              ><span class="ade-nav-item-name"> Store</span></a
             >
             <a href="aliases.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Aliases</span></a
+              ><i class="fa-solid fa-link fa-lg"></i
+              ><span class="ade-nav-item-name"> Aliases</span></a
             >
             <a href="env.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Environment</span></a
+              ><i class="fa-solid fa-lock fa-lg"></i></i
+              ><span class="ade-nav-item-name">ENV Variables</span></a
             >
             <a href="styling.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Styling</span></a
+              ><i class="fa-solid fa-swatchbook fa-lg"></i></i
+              ><span class="ade-nav-item-name"> Styling</span></a
             >
             <a href="translations.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">Translations</span></a
+              ><i class="fa-solid fa-language fa-lg"></i
+              ><span class="ade-nav-item-name"> Translations</span></a
             >
             <a href="api.html" class="ade-nav-item"
-              ><span class="ade-nav-item-name">API</span></a
+              ><i class="fa-solid fa-code fa-lg"></i
+              ><span class="ade-nav-item-name"> API</span></a
             >
           </nav>
           <div class="ade-sidebar-actions">
@@ -153,44 +164,44 @@
           </p>
           <p>First, prepare your data directory:</p>
           <pre><code>mkdir -p ./data
-        sudo chown -R 1000:1000 ./data</code></pre>
+sudo chown -R 1000:1000 ./data</code></pre>
 
           <h3>Docker Compose</h3>
           <pre><code>services:
-          degoog:
-            image: ghcr.io/degoog-org/degoog:latest
-            volumes:
-              - ./data:/app/data
-            ports:
-              - "4444:4444"
-            restart: unless-stopped</code></pre>
+  degoog:
+    image: ghcr.io/degoog-org/degoog:latest
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "4444:4444"
+    restart: unless-stopped</code></pre>
 
           <h3>Inline podman</h3>
           <pre><code>podman run -d --name degoog -p 4444:4444 -v ./data:/app/data --security-opt label=disable --restart unless-stopped ghcr.io/degoog-org/degoog:latest</code></pre>
 
           <h3>Podman Quadlet Container File</h3>
           <pre><code>[Unit]
-        Description=Degoog selfhosted search aggregator
-        Wants=network-online.target
-        After=network-online.target
-        
-        [Container]
-        Image=ghcr.io/degoog-org/degoog:latest
-        AutoUpdate=registry
-        ContainerName=degoog
-        Environment=TZ=&lt;Country/City&gt;
-        Environment=PUID=1000
-        Environment=PGID=1000
-        UIDMap=+%U:@%U
-        Volume=&lt;Path to config&gt;:/app/data:Z
-        PublishPort=4444:4444
-        Network=degoog
-        
-        [Service]
-        Restart=always
-        
-        [Install]
-        WantedBy=default.target</code></pre>
+Description=Degoog selfhosted search aggregator
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image=ghcr.io/degoog-org/degoog:latest
+AutoUpdate=registry
+ContainerName=degoog
+Environment=TZ=&lt;Country/City&gt;
+Environment=PUID=1000
+Environment=PGID=1000
+UIDMap=+%U:@%U
+Volume=&lt;Path to config&gt;:/app/data:Z
+PublishPort=4444:4444
+Network=degoog
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target</code></pre>
 
           <h3>Inline docker</h3>
           <pre><code>docker run -d --name degoog -p 4444:4444 -v ./data:/app/data --restart unless-stopped ghcr.io/degoog-org/degoog:latest</code></pre>
@@ -201,10 +212,10 @@
             the following required dependencies: bun, git, and curl.
           </p>
           <pre><code>git clone https://github.com/degoog-org/degoog.git
-        cd degoog
-        bun install
-        bun run build
-        bun run start</code></pre>
+cd degoog
+bun install
+bun run build
+bun run start</code></pre>
           <p>
             Note: If HTTPS requests fail with certificate errors, install the
             <code>ca-certificates</code> package.
@@ -236,11 +247,11 @@
           </ul>
           <p>Example <code>data/default-engines.json</code>:</p>
           <pre><code>{
-          "google": true,
-          "duckduckgo": true,
-          "bing": false,
-          "engine-my-custom-engine": true
-        }</code></pre>
+  "google": true,
+  "duckduckgo": true,
+  "bing": false,
+  "engine-my-custom-engine": true
+}</code></pre>
           <p>
             When you toggle engines on the Engines tab, the state is sent along
             with each search request, so different users can use different

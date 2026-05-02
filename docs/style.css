@@ -202,6 +202,17 @@ a:hover {
   border-left: calc(var(--ade-border-w) * 2) solid transparent;
   text-decoration: none;
   color: var(--ade-text);
+  gap: var(--ade-space-8);
+}
+
+.ade-nav-item i {
+  width: var(--ade-space-28);
+  height: var(--ade-space-28);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .ade-nav-item:hover {
