@@ -21,7 +21,7 @@ function parseProxyUrl(proxyUrl: string): {
 
   return {
     host: url.hostname,
-    port: Number(url.port) || 80,
+    port: Number(url.port) || url.protocol == "http:" ? 80 : 443,
     auth,
   };
 }
@@ -42,9 +42,9 @@ const _openConnectTunnel = (
     }, timeoutMs);
 
     sock.once("connect", () => {
-      const authHeader = proxyAuth ? `Proxy-Authorization: ${proxyAuth}` : "";
+      const authHeader = proxyAuth ? `Proxy-Authorization: ${proxyAuth}\r\n` : "";
       sock.write(
-        `CONNECT ${targetHost}:${targetPort} HTTP/1.1\r\nHost: ${targetHost}:${targetPort}\r\n${authHeader}\r\n\r\n`,
+        `CONNECT ${targetHost}:${targetPort} HTTP/1.1\r\nHost: ${targetHost}:${targetPort}\r\n${authHeader}\r\n`,
       );
     });
 
