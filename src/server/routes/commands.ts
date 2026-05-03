@@ -9,6 +9,7 @@ import type { TimeFilter } from "../types";
 import { getLocale } from "../utils/hono";
 import { logger } from "../utils/logger";
 import { isDisabled } from "../utils/plugin-settings";
+import { buildSignedProxyUrl } from "../utils/proxy-sign";
 import { getClientIp } from "../utils/request";
 import { injectScope, translateHTML } from "../utils/translation";
 
@@ -73,7 +74,7 @@ router.get("/api/command", async (c) => {
   const language = getLocale(c);
   if (language) match.command.t?.setLocale(language);
 
-  const result = await match.command.execute(match.args, { clientIp, page });
+  const result = await match.command.execute(match.args, { clientIp, page, signProxyUrl: buildSignedProxyUrl });
   logger.debug(
     "plugin",
     `${match.command.trigger} executed in ${Math.round(performance.now() - t0)}ms`,

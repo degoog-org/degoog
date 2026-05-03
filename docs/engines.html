@@ -303,6 +303,16 @@
                   target a specific thumbnail container first.
                 </td>
               </tr>
+              <tr>
+                <td><code>context.signProxyUrl(url)</code></td>
+                <td><code>(url: string) =&gt; string</code></td>
+                <td>
+                  Returns a signed <code>/api/proxy/image</code> URL for the
+                  given external image URL. Use this when you include thumbnails
+                  in your results so they load correctly regardless of the
+                  outgoing allowlist configuration.
+                </td>
+              </tr>
             </tbody>
           </table>
           <p>

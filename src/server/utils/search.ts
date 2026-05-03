@@ -15,6 +15,7 @@ import { logger } from "./logger";
 import { outgoingFetch } from "./outgoing";
 import { asString, getSettings, isDisabled } from "./plugin-settings";
 import { checkRateLimit } from "./rate-limit";
+import { buildSignedProxyUrl } from "./proxy-sign";
 import { getClientIp } from "./request";
 import { injectScope, translateHTML } from "./translation";
 
@@ -182,6 +183,7 @@ export async function runSlotPlugins(
         clientIp,
         results: plugin.waitForResults ? results : undefined,
         fetch: outgoingFetch as SlotPluginContext["fetch"],
+        signProxyUrl: buildSignedProxyUrl,
       };
       const t0 = performance.now();
       const out = await plugin.execute(query, context);

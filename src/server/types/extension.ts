@@ -78,6 +78,8 @@ export interface PluginContext {
   dir: string;
   template: string;
   readFile: (filename: string) => Promise<string>;
+  signProxyUrl: (url: string) => string;
+  fetch?: (url: string, init?: RequestInit) => Promise<Response>;
 }
 
 export interface SearchEngine {
@@ -117,6 +119,7 @@ export interface SlotPluginContext {
   clientIp?: string;
   results?: ScoredResult[];
   fetch?: (url: string, init?: RequestInit) => Promise<Response>;
+  signProxyUrl?: (url: string) => string;
 }
 
 export interface SlotPlugin {
@@ -149,6 +152,7 @@ export interface CommandResult {
 export interface CommandContext {
   clientIp?: string;
   page?: number;
+  signProxyUrl?: (url: string) => string;
 }
 
 export interface BangCommand {

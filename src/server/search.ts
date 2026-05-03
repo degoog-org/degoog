@@ -20,6 +20,7 @@ import type {
 import { extractImageUrl } from "./utils/extract-image";
 import { outgoingFetch, parseOutgoingTransport } from "./utils/outgoing";
 import { asString, getSettings } from "./utils/plugin-settings";
+import { buildSignedProxyUrl } from "./utils/proxy-sign";
 
 const MAX_PAGE = 10;
 const ENGINE_TIMEOUT_MS = 10_000;
@@ -237,6 +238,7 @@ export const createSearchEngineContext = (
     dateTo: dateTo || undefined,
     buildAcceptLanguage: () => _buildAcceptLanguage(resolvedLang),
     extractImageUrl: extractImageUrl as EngineContext["extractImageUrl"],
+    signProxyUrl: buildSignedProxyUrl,
   };
 };
 
