@@ -1,10 +1,11 @@
 import { SearchBody } from "../../server/types";
 import { state } from "../state";
+import { getBase } from "./base-url";
 
 export const proxyImageUrl = (url: string): string => {
   if (!url) return "";
   if (url.startsWith("/api/proxy/")) return url;
-  return `/api/proxy/image?url=${encodeURIComponent(url)}`;
+  return `${getBase()}/api/proxy/image?url=${encodeURIComponent(url)}`;
 };
 
 export const faviconHostname = (url: string): string => {
@@ -18,7 +19,7 @@ export const faviconHostname = (url: string): string => {
 export const faviconUrl = (url: string): string => {
   const hostname = faviconHostname(url);
   if (!hostname) return "";
-  return `/api/proxy/favicon?domain=${encodeURIComponent(hostname)}`;
+  return `${getBase()}/api/proxy/favicon?domain=${encodeURIComponent(hostname)}`;
 };
 
 export const buildSearchParams = (
@@ -56,7 +57,7 @@ export const buildSearchUrl = (
   type: string,
   page: number,
 ): string =>
-  `/api/search?${buildSearchParams(query, engines, type, page).toString()}`;
+  `${getBase()}/api/search?${buildSearchParams(query, engines, type, page).toString()}`;
 
 export const buildSearchBody = (
   query: string,

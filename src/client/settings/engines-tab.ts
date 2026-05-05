@@ -3,6 +3,7 @@ import { SETTINGS_KEY } from "../constants";
 import { escapeHtml, getConfigStatus } from "../utils/dom";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, EngineRecord, AllExtensions } from "../types";
+import { getBase } from "../utils/base-url";
 
 const t = window.scopedT("core");
 const themeT = window.scopedT("themes/degoog");
@@ -130,7 +131,7 @@ export async function initEnginesTab(
             "Content-Type": "application/json",
           };
           if (token) headers["x-settings-token"] = token;
-          await fetch("/api/settings/default-engines", {
+          await fetch(`${getBase()}/api/settings/default-engines`, {
             method: "POST",
             headers,
             body: JSON.stringify(enabledMap),

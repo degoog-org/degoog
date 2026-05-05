@@ -5,6 +5,7 @@ import {
   POST_METHOD_ENABLED,
   THEME_KEY,
 } from "../constants";
+import { getBase } from "../utils/base-url";
 import { idbGet, idbSet } from "../utils/db";
 import { requestInstallPrompt } from "../utils/install-prompt";
 import { applyTheme } from "../utils/theme";
@@ -29,7 +30,7 @@ export async function initAppearanceSettings(): Promise<void> {
       await idbSet(THEME_KEY, value);
       try {
         localStorage.setItem(THEME_KEY, value);
-      } catch { }
+      } catch {}
       applyTheme(value);
       if (saveDefaultBtn) saveDefaultBtn.style.display = "";
     });
@@ -45,7 +46,7 @@ export async function initAppearanceSettings(): Promise<void> {
         "Content-Type": "application/json",
       };
       if (token) headers["x-settings-token"] = token;
-      const res = await fetch("/api/settings/general", {
+      const res = await fetch(`${getBase()}/api/settings/general`, {
         method: "POST",
         headers,
         body: JSON.stringify({ defaultTheme: value }),
@@ -58,7 +59,9 @@ export async function initAppearanceSettings(): Promise<void> {
         saveDefaultBtn.style.display = "none";
       }, 1200);
     } catch {
-      saveDefaultBtn.textContent = t("settings-page.server.save-failed-network");
+      saveDefaultBtn.textContent = t(
+        "settings-page.server.save-failed-network",
+      );
     }
   });
 

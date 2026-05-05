@@ -139,12 +139,12 @@ export function renderItemCard(
   const token = getToken();
   const firstUrl = item.screenshots.length
     ? screenshotUrl(
-      item.repoSlug,
-      item.type,
-      itemSlug,
-      item.screenshots[0],
-      token,
-    )
+        item.repoSlug,
+        item.type,
+        itemSlug,
+        item.screenshots[0],
+        token,
+      )
     : "";
   const thumb = item.screenshots.length
     ? `<img src="${firstUrl}" alt="" class="store-card-thumb" loading="lazy">`
@@ -190,7 +190,7 @@ export function renderItemCard(
       <div class="store-card-body">
         <div class="store-card-main">
           <div class="store-card-name">${escapeHtml(item.name)}</div>
-          <div class="store-card-meta">by ${author || "—"} · ${escapeHtml(item.repoName)}</div>
+          <div class="store-card-meta">by ${author || "-"} · ${escapeHtml(item.repoName)}</div>
           <div class="store-card-desc">${escapeHtml(item.description || "")}</div>
           <div class="store-card-version">${item.updateAvailable ? `<span class="store-card-version-old">v${escapeHtml(item.installedVersion || "?")}</span> → ` : ""}v${escapeHtml(item.version)}</div>
           ${item.requiresNewerVersion ? `<div class="store-card-version-warning">Requires a newer version of Degoog</div>` : ""}

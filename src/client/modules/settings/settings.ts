@@ -1,4 +1,5 @@
 import { initTheme } from "../../utils/theme";
+import { getBase } from "../../utils/base-url";
 import { initInstallPrompt } from "../../utils/install-prompt";
 import {
   initGeneralTab,
@@ -51,7 +52,7 @@ const _checkAuth = async (): Promise<{
 }> => {
   const token = getStoredToken();
   const headers = token ? { "x-settings-token": token } : {};
-  const res = await fetch("/api/settings/auth", {
+  const res = await fetch(`${getBase()}/api/settings/auth`, {
     headers: headers as Record<string, string>,
   });
   return res.json() as Promise<{
@@ -118,7 +119,7 @@ function _showAuthGate(): void {
       const errorEl = document.getElementById("settings-auth-error");
       if (errorEl) errorEl.textContent = "";
       try {
-        const res = await fetch("/api/settings/auth", {
+        const res = await fetch(`${getBase()}/api/settings/auth`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ password }),
@@ -152,7 +153,7 @@ export function switchSettingsTab(value: string, updateUrl = true): void {
   if (select) select.value = value;
 
   if (updateUrl) {
-    const path = value === "general" ? "/settings" : `/settings/${value}`;
+    const path = value === "general" ? `${getBase()}/settings` : `${getBase()}/settings/${value}`;
     window.history.replaceState({}, "", path);
   }
 }
@@ -188,12 +189,12 @@ async function _initSettings(): Promise<void> {
 
   try {
     const [extRes, themesRes] = await Promise.all([
-      fetch("/api/extensions", {
+      fetch(`${getBase()}/api/extensions`, {
         headers: getStoredToken()
           ? { "x-settings-token": getStoredToken()! }
           : {},
       }),
-      fetch("/api/themes"),
+      fetch(`${getBase()}/api/themes`),
     ]);
     const allExtensions = (await extRes.json()) as AllExtensions;
     const themesData = (await themesRes.json()) as { activeId: string | null };
@@ -223,12 +224,12 @@ async function _initSettings(): Promise<void> {
 window.addEventListener("extensions-saved", async () => {
   try {
     const [extRes, themesRes] = await Promise.all([
-      fetch("/api/extensions", {
+      fetch(`${getBase()}/api/extensions`, {
         headers: getStoredToken()
           ? { "x-settings-token": getStoredToken()! }
           : {},
       }),
-      fetch("/api/themes"),
+      fetch(`${getBase()}/api/themes`),
     ]);
     const allExtensions = (await extRes.json()) as AllExtensions;
     const themesData = (await themesRes.json()) as { activeId: string | null };
@@ -243,7 +244,7 @@ async function _initPublicSettings(): Promise<void> {
   void initTheme();
   void initAppearanceSettings();
   try {
-    const res = await fetch("/api/extensions");
+    const res = await fetch(`${getBase()}/api/extensions`);
     const allExtensions = (await res.json()) as AllExtensions;
     await initEnginesTab(allExtensions, { publicInstance: true });
   } catch {
@@ -264,7 +265,7 @@ async function _init(): Promise<void> {
   const tokenFromUrl = params.get("token");
   if (tokenFromUrl) {
     sessionStorage.setItem(TOKEN_KEY, tokenFromUrl);
-    window.history.replaceState({}, "", "/settings");
+    window.history.replaceState({}, "", `${getBase()}/settings`);
   }
   const auth = await _checkAuth();
   if (auth.required && !auth.valid) {

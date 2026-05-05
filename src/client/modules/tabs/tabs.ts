@@ -1,4 +1,5 @@
 import { state } from "../../state";
+import { getBase } from "../../utils/base-url";
 import { performSearch } from "../../utils/search-actions";
 import { getEnabledSearchTypes } from "../../utils/engines";
 import { setTabTypeDisabled } from "../../utils/navigation";
@@ -53,7 +54,7 @@ async function _refreshBuiltinTabVisibility(): Promise<void> {
 
 const _loadPluginTabs = async (): Promise<void> => {
   try {
-    const res = await fetch("/api/search-tabs");
+    const res = await fetch(`${getBase()}/api/search-tabs`);
     if (!res.ok) return;
     const data = (await res.json()) as { tabs: TabInfo[] };
     pluginTabs = data.tabs || [];

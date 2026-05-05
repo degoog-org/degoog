@@ -23,6 +23,7 @@ import {
   renderItemCard,
   renderRepoList,
 } from "./store/store-tab-render";
+import { getBase } from "../utils/base-url";
 
 export async function initStoreTab(
   container: HTMLElement,
@@ -40,7 +41,7 @@ export async function initStoreTab(
   let updatesOpen = false;
 
   async function loadRepos(): Promise<void> {
-    const res = await fetch("/api/store/repos", {
+    const res = await fetch(`${getBase()}/api/store/repos`, {
       headers: authHeaders(getToken),
     });
     if (!res.ok) return;
@@ -49,7 +50,7 @@ export async function initStoreTab(
   }
 
   async function loadReposStatus(): Promise<void> {
-    const res = await fetch("/api/store/repos/status", {
+    const res = await fetch(`${getBase()}/api/store/repos/status`, {
       headers: authHeaders(getToken),
     });
     if (!res.ok) return;
@@ -66,7 +67,7 @@ export async function initStoreTab(
   }
 
   async function loadItems(): Promise<void> {
-    const res = await fetch("/api/store/items", {
+    const res = await fetch(`${getBase()}/api/store/items`, {
       headers: authHeaders(getToken),
     });
     if (!res.ok) return;
@@ -352,7 +353,7 @@ export async function initStoreTab(
   try {
     await refreshAndRender();
     void (async () => {
-      await fetch("/api/store/repos/refresh", {
+      await fetch(`${getBase()}/api/store/repos/refresh`, {
         method: "POST",
         headers: jsonHeaders(getToken),
         body: JSON.stringify({}),

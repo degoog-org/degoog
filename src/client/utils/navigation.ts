@@ -1,3 +1,5 @@
+import { getBase } from "./base-url";
+
 const SETTINGS_RETURN_KEY = "degoog-settings-return";
 
 export function recordSettingsReturn(): void {
@@ -16,7 +18,7 @@ export function navigateSettingsBack(): void {
   const raw = sessionStorage.getItem(SETTINGS_RETURN_KEY);
   sessionStorage.removeItem(SETTINGS_RETURN_KEY);
   if (!raw) {
-    window.location.href = "/";
+    window.location.href = `${getBase()}/`;
     return;
   }
   try {
@@ -25,18 +27,18 @@ export function navigateSettingsBack(): void {
       parsed.origin !== window.location.origin ||
       parsed.pathname !== "/search"
     ) {
-      window.location.href = "/";
+      window.location.href = `${getBase()}/`;
       return;
     }
     window.location.href = `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
-    window.location.href = "/";
+    window.location.href = `${getBase()}/`;
   }
 }
 
 export function showHome(): void {
   clearSettingsReturn();
-  window.location.href = "/";
+  window.location.href = `${getBase()}/`;
 }
 
 export function setActiveTab(type: string): void {

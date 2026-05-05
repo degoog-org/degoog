@@ -1,4 +1,5 @@
 import { renderField, initUrlList } from "./modal-fields";
+import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
 import type { ExtensionMeta, SettingField } from "../../../types";
@@ -52,7 +53,7 @@ const _initTestButton = (container: HTMLElement): void => {
     }
     try {
       const res = await fetch(
-        `/api/extensions/transports/${encodeURIComponent(transport)}/test`,
+        `${getBase()}/api/extensions/transports/${encodeURIComponent(transport)}/test`,
         { method: "POST", headers: jsonHeaders(getStoredToken) },
       );
       const data = (await res.json()) as { ok: boolean; message: string };

@@ -1,4 +1,5 @@
 import { clearSettingsReturn } from "./navigation";
+import { getBase } from "./base-url";
 
 const REQUEST_KEY = "degoog_request_install";
 
@@ -25,7 +26,7 @@ function _clearRequestedInstall(): void {
 
 export function initInstallPrompt(): void {
   if (!("serviceWorker" in navigator)) return;
-  navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
+  navigator.serviceWorker.register(`${getBase()}/sw.js`, { scope: `${getBase()}/` }).catch(() => {});
 
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
@@ -57,5 +58,5 @@ export function requestInstallPrompt(): void {
     localStorage.setItem(REQUEST_KEY, "1");
   } catch {}
   clearSettingsReturn();
-  window.location.href = "/";
+  window.location.href = `${getBase()}/`;
 }

@@ -7,6 +7,7 @@ import { getEngines } from "../engines";
 import { state } from "../../state";
 import { buildSearchBody, buildSearchUrl } from "../url";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
+import { getBase } from "../base-url";
 import type { SearchResponse } from "../../types";
 import { renderResults } from "../../modules/renderer/render";
 import { fetchGlancePanels, fetchSlotPanels } from "../search-utils";
@@ -38,7 +39,7 @@ export async function goToPage(pageNum: number): Promise<void> {
   );
   try {
     const res = state.postMethodEnabled
-      ? await fetch("/api/search", {
+      ? await fetch(`${getBase()}/api/search`, {
           method: "POST",
           body: JSON.stringify(
             buildSearchBody(
@@ -48,7 +49,10 @@ export async function goToPage(pageNum: number): Promise<void> {
               pageNum,
             ),
           ),
-          headers: { "Content-Type": "application/json", ...searchAuthHeaders() },
+          headers: {
+            "Content-Type": "application/json",
+            ...searchAuthHeaders(),
+          },
         })
       : await fetch(appendSearchAuthParams(url));
 
@@ -63,7 +67,7 @@ export async function goToPage(pageNum: number): Promise<void> {
       page: pageNum,
     };
     if (state.postMethodEnabled) {
-      history.pushState(pageHistoryState, "", "/search");
+      history.pushState(pageHistoryState, "", `${getBase()}/search`);
     } else {
       const urlParams = new URLSearchParams({ q: state.currentQuery });
       if (state.currentType !== "web") urlParams.set("type", state.currentType);
@@ -71,10 +75,10 @@ export async function goToPage(pageNum: number): Promise<void> {
       history.pushState(
         pageHistoryState,
         "",
-        `/search?${urlParams.toString()}`,
+        `${getBase()}/search?${urlParams.toString()}`,
       );
     }
-    const metaText = `About ${state.currentResults.length} results — Page ${state.currentPage}`;
+    const metaText = `About ${state.currentResults.length} results - Page ${state.currentPage}`;
     setResultsMeta(metaText);
     if (state.currentPage === 1 && state.currentType === "web") {
       void fetchGlancePanels(state.currentQuery, data.results);

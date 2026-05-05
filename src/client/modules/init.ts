@@ -22,6 +22,7 @@ import { focusInput, initKeyboardShortcuts } from "../utils/keyboard-shortcuts";
 import { initSearchBarActions } from "../utils/search-bar-actions";
 import { renderPageTemplates } from "./renderer/render-page";
 import { initResultActions } from "./result-actions";
+import { getBase } from "../utils/base-url";
 
 export function init(): void {
   renderPageTemplates();
@@ -63,9 +64,9 @@ export function init(): void {
       if (state.postMethodEnabled) {
         // Little hack to ensure we do not send the query in the URL
         sessionStorage.setItem("degoog-post-query", query);
-        window.location.href = "/search";
+        window.location.href = `${getBase()}/search`;
       } else {
-        window.location.href = `/search?${new URLSearchParams({ q: query }).toString()}`;
+        window.location.href = `${getBase()}/search?${new URLSearchParams({ q: query }).toString()}`;
       }
     });
 

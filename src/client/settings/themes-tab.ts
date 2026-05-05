@@ -1,4 +1,5 @@
 import { escapeHtml, getConfigStatus } from "../utils/dom";
+import { getBase } from "../utils/base-url";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta } from "../types";
 
@@ -99,7 +100,7 @@ export async function initThemesTab(
         const id = rawId === "built-in" ? null : (rawId ?? null);
         btn.disabled = true;
         try {
-          const res = await fetch("/api/theme/active", {
+          const res = await fetch(`${getBase()}/api/theme/active`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id }),

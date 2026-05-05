@@ -1,3 +1,4 @@
+import { getBase } from "../utils/base-url";
 import { escapeHtml } from "../utils/dom";
 import { authHeaders } from "../utils/request";
 
@@ -82,7 +83,7 @@ export function initProxyTest(getToken: () => string | null): void {
     resultEl.hidden = true;
 
     try {
-      const res = await fetch("/api/settings/proxy-test", {
+      const res = await fetch(`${getBase()}/api/settings/proxy-test`, {
         headers: authHeaders(getToken),
       });
       if (!res.ok) {

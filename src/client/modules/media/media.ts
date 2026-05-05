@@ -1,4 +1,5 @@
 import { state } from "../../state";
+import { getBase } from "../../utils/base-url";
 import type { ScoredResult } from "../../types";
 import { cleanHostname, escapeHtml } from "../../utils/dom";
 import { getEngines } from "../../utils/engines";
@@ -76,11 +77,11 @@ export async function loadMoreMedia(type: string): Promise<void> {
   try {
     if (bangQuery) {
       const params = new URLSearchParams({ q: bangQuery, page: String(nextPage) });
-      res = await fetch(`/api/command?${params.toString()}`);
+      res = await fetch(`${getBase()}/api/command?${params.toString()}`);
     } else {
       const engines = await getEngines();
       res = state.postMethodEnabled
-        ? await fetch("/api/search", {
+        ? await fetch(`${getBase()}/api/search`, {
             method: "POST",
             body: JSON.stringify(
               buildSearchBody(state.currentQuery, engines, type, nextPage),

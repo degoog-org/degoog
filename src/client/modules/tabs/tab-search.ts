@@ -6,6 +6,7 @@ import {
   type SearchResponse,
 } from "../../types";
 import { hideAcDropdown } from "../../utils/autocomplete";
+import { getBase } from "../../utils/base-url";
 import { setActiveTab } from "../../utils/navigation";
 import { buildPaginationHtml } from "../../utils/pagination";
 import { fetchSlotPanels } from "../../utils/search-utils";
@@ -26,7 +27,7 @@ let _streamingConfig: { enabled: boolean } | null = null;
 const _fetchStreamingConfig = async (): Promise<boolean> => {
   if (_streamingConfig) return _streamingConfig.enabled;
   try {
-    const res = await fetch("/api/settings/streaming");
+    const res = await fetch(`${getBase()}/api/settings/streaming`);
     if (res.ok) {
       _streamingConfig = (await res.json()) as { enabled: boolean };
       return _streamingConfig.enabled;
@@ -100,12 +101,12 @@ export async function performTabSearch(
   const tabHistoryState = { degoog: true, query, type: `tab:${tabId}`, page };
   if (state.postMethodEnabled) {
     if (isInit) {
-      history.replaceState(tabHistoryState, "", "/search");
+      history.replaceState(tabHistoryState, "", `${getBase()}/search`);
     } else {
-      history.pushState(tabHistoryState, "", "/search");
+      history.pushState(tabHistoryState, "", `${getBase()}/search`);
     }
   } else {
-    const getUrl = `/search?${urlParams.toString()}`;
+    const getUrl = `${getBase()}/search?${urlParams.toString()}`;
     if (isInit) {
       history.replaceState(tabHistoryState, "", getUrl);
     } else {
@@ -119,7 +120,7 @@ export async function performTabSearch(
       q: query,
       page: String(page),
     });
-    const res = await fetch(`/api/tab-search?${params.toString()}`);
+    const res = await fetch(`${getBase()}/api/tab-search?${params.toString()}`);
     const data = (await res.json()) as {
       results: ScoredResult[];
       totalPages?: number;

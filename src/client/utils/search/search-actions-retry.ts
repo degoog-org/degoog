@@ -1,4 +1,5 @@
 import type { ScoredResult, SearchResponse } from "../../types";
+import { getBase } from "../base-url";
 import { state } from "../../state";
 import { getEngines } from "../engines";
 import { renderMediaEngineBar } from "../../modules/renderer/render-media";
@@ -29,7 +30,7 @@ export async function retryEngine(engineName: string): Promise<void> {
 
   try {
     const res = state.postMethodEnabled
-      ? await fetch("/api/search/retry", {
+      ? await fetch(`${getBase()}/api/search/retry`, {
           method: "POST",
           body: JSON.stringify({
             query: state.currentQuery,
@@ -46,7 +47,7 @@ export async function retryEngine(engineName: string): Promise<void> {
           }),
           headers: { "Content-Type": "application/json", ...searchAuthHeaders() },
         })
-      : await fetch(appendSearchAuthParams(`/api/search/retry?${params.toString()}`));
+      : await fetch(appendSearchAuthParams(`${getBase()}/api/search/retry?${params.toString()}`));
     const data = (await res.json()) as SearchResponse & {
       results: ScoredResult[];
     };

@@ -1,12 +1,13 @@
 import { idbGet } from "./db";
 import { SETTINGS_KEY } from "../constants";
+import { getBase } from "./base-url";
 import type { EngineRecord, EngineRegistry } from "../types";
 
 let cachedRegistry: EngineRegistry | null = null;
 
 export const getRegistry = async (): Promise<EngineRegistry> => {
   if (cachedRegistry) return cachedRegistry;
-  const res = await fetch("/api/engines");
+  const res = await fetch(`${getBase()}/api/engines`);
   const data = (await res.json()) as EngineRegistry;
   cachedRegistry = data;
   return cachedRegistry;

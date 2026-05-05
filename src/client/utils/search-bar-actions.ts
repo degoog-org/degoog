@@ -1,6 +1,7 @@
 import { escapeHtml } from "./dom";
 import { performSearch } from "./search-actions";
 import type { SearchBarAction } from "../types";
+import { getBase } from "./base-url";
 
 const SEARCH_BAR_ACTION_EVENT = "search-bar-action";
 
@@ -76,7 +77,7 @@ export function initSearchBarActions(): void {
   if (!containers.length) return;
   const homeInputId = "search-input";
   const resultsInputId = "results-search-input";
-  fetch("/api/search-bar/actions")
+  fetch(`${getBase()}/api/search-bar/actions`)
     .then((r) => r.json())
     .then((data: { actions?: SearchBarAction[] }) => {
       const actions = data.actions ?? [];

@@ -136,7 +136,7 @@
       "unreachable-title": "Proxy unreachable.",
       "unreachable-detail": "Direct IP: {directIp}",
       "unreachable-hint": "The proxy server could not be contacted. Check your proxy URL and that the proxy is running.",
-      "match-title": "IPs match — proxy may not be working.",
+      "match-title": "IPs match - proxy may not be working.",
       "match-detail": "Direct: {directIp} · Proxy: {proxyIp}",
       "match-hint": "Both routes returned the same IP. The proxy might not be changing your exit IP.",
       "ok-title": "Proxy is working.",

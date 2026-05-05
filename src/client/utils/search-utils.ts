@@ -1,5 +1,6 @@
 import { appendSlotPanels } from "../modules/renderer/render-slots";
 import { state } from "../state";
+import { getBase } from "./base-url";
 import { SlotPanelPosition, type ScoredResult, type SlotPanel } from "../types";
 import { escapeHtml } from "./dom";
 import { runScriptsInContainer } from "./search-helpers";
@@ -37,7 +38,7 @@ export async function fetchGlancePanels(
     return;
   }
   try {
-    const res = await fetch("/api/slots/glance", {
+    const res = await fetch(`${getBase()}/api/slots/glance`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: query.trim(), results }),
@@ -80,7 +81,7 @@ export async function fetchSlotPanels(
   slotsAbortController = new AbortController();
   const signal = slotsAbortController.signal;
   try {
-    const res = await fetch("/api/slots", {
+    const res = await fetch(`${getBase()}/api/slots`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: query.trim(), results }),

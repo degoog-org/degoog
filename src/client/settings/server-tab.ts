@@ -1,4 +1,5 @@
 import { copyTextToClipboard } from "../utils/clipboard";
+import { getBase } from "../utils/base-url";
 import { getInputElement } from "../utils/dom";
 import { authHeaders, jsonHeaders } from "../utils/request";
 import { initProxyTest } from "./proxy-test";
@@ -34,10 +35,7 @@ type ServerSettingsData = {
 
 const _scoreT = window.scopedT("core");
 
-const _scoreRowTemplate = (
-  domain: string,
-  score: string,
-): HTMLDivElement => {
+const _scoreRowTemplate = (domain: string, score: string): HTMLDivElement => {
   const row = document.createElement("div");
   row.className = "settings-score-row";
 
@@ -89,17 +87,19 @@ const _serializeScoreRows = (): string => {
   const wrap = document.getElementById("settings-domain-score-rows");
   if (!wrap) return "";
   const lines: string[] = [];
-  wrap.querySelectorAll<HTMLDivElement>(".settings-score-row").forEach((row) => {
-    const domain = row
-      .querySelector<HTMLInputElement>(".settings-score-domain")
-      ?.value.trim();
-    const score = row
-      .querySelector<HTMLInputElement>(".settings-score-value")
-      ?.value.trim();
-    if (!domain || !score) return;
-    if (!Number.isFinite(Number(score))) return;
-    lines.push(`${domain}|${Math.trunc(Number(score))}`);
-  });
+  wrap
+    .querySelectorAll<HTMLDivElement>(".settings-score-row")
+    .forEach((row) => {
+      const domain = row
+        .querySelector<HTMLInputElement>(".settings-score-domain")
+        ?.value.trim();
+      const score = row
+        .querySelector<HTMLInputElement>(".settings-score-value")
+        ?.value.trim();
+      if (!domain || !score) return;
+      if (!Number.isFinite(Number(score))) return;
+      lines.push(`${domain}|${Math.trunc(Number(score))}`);
+    });
   return lines.join("\n");
 };
 
@@ -138,7 +138,9 @@ let _keyRevealed = false;
 function _renderApiKey(): void {
   const element = document.getElementById("settings-api-key-value");
   if (!element) return;
-  element.textContent = _keyRevealed ? _apiKey : "•".repeat(Math.min(_apiKey.length, 32));
+  element.textContent = _keyRevealed
+    ? _apiKey
+    : "•".repeat(Math.min(_apiKey.length, 32));
 }
 
 export async function initServerTab(
@@ -163,7 +165,7 @@ export async function initServerTab(
   if (el("proxy-enabled")) initProxyTest(getToken);
 
   try {
-    const res = await fetch("/api/settings/general", {
+    const res = await fetch(`${getBase()}/api/settings/general`, {
       headers: authHeaders(getToken),
     });
     if (res.ok) {
@@ -202,10 +204,10 @@ export async function initServerTab(
       _setToggle("api-key-search-enabled", data.apiKeySearchEnabled);
       _setToggle("api-key-suggest-enabled", data.apiKeySuggestEnabled);
     }
-  } catch { }
+  } catch {}
 
   try {
-    const apiKeyRes = await fetch("/api/settings/api-key", {
+    const apiKeyRes = await fetch(`${getBase()}/api/settings/api-key`, {
       headers: authHeaders(getToken),
     });
     if (apiKeyRes.ok) {
@@ -217,7 +219,7 @@ export async function initServerTab(
       _apiKey = apiKeyData.key;
       _renderApiKey();
     }
-  } catch { }
+  } catch {}
 
   const getRateLimitPayload = () => {
     const enabled = el("rate-limit-enabled")?.checked;
@@ -274,7 +276,7 @@ export async function initServerTab(
   handleButtonState(
     "settings-save",
     async () => {
-      await fetch("/api/settings/general", {
+      await fetch(`${getBase()}/api/settings/general`, {
         method: "POST",
         headers: jsonHeaders(getToken),
         body: JSON.stringify({
@@ -304,32 +306,47 @@ export async function initServerTab(
     "settings-page.server.saved",
   );
 
-  document.getElementById("settings-api-key-reveal")?.addEventListener("click", () => {
-    _keyRevealed = !_keyRevealed;
-    _renderApiKey();
-    const btn = document.getElementById("settings-api-key-reveal");
-    if (btn) btn.innerHTML = _keyRevealed ? `<i class="fa-solid fa-eye-slash fa-lg"></i>` : `<i class="fa-solid fa-eye fa-lg"></i>`;
-    if (btn) btn.setAttribute("aria-label", t(_keyRevealed ? "settings-page.server.api-key-hide" : "settings-page.server.api-key-reveal"));
-  });
-
-  document.getElementById("settings-api-key-copy")?.addEventListener("click", () => {
-    if (!_apiKey) return;
-    const btn = document.getElementById("settings-api-key-copy");
-    if (!btn) return;
-    const prevInner = btn.innerHTML;
-    void copyTextToClipboard(_apiKey).then((ok) => {
-      if (!ok) return;
-      btn.textContent = t("settings-page.server.api-key-copied");
-      setTimeout(() => {
-        btn.innerHTML = prevInner;
-      }, 1200);
+  document
+    .getElementById("settings-api-key-reveal")
+    ?.addEventListener("click", () => {
+      _keyRevealed = !_keyRevealed;
+      _renderApiKey();
+      const btn = document.getElementById("settings-api-key-reveal");
+      if (btn)
+        btn.innerHTML = _keyRevealed
+          ? `<i class="fa-solid fa-eye-slash fa-lg"></i>`
+          : `<i class="fa-solid fa-eye fa-lg"></i>`;
+      if (btn)
+        btn.setAttribute(
+          "aria-label",
+          t(
+            _keyRevealed
+              ? "settings-page.server.api-key-hide"
+              : "settings-page.server.api-key-reveal",
+          ),
+        );
     });
-  });
+
+  document
+    .getElementById("settings-api-key-copy")
+    ?.addEventListener("click", () => {
+      if (!_apiKey) return;
+      const btn = document.getElementById("settings-api-key-copy");
+      if (!btn) return;
+      const prevInner = btn.innerHTML;
+      void copyTextToClipboard(_apiKey).then((ok) => {
+        if (!ok) return;
+        btn.textContent = t("settings-page.server.api-key-copied");
+        setTimeout(() => {
+          btn.innerHTML = prevInner;
+        }, 1200);
+      });
+    });
 
   handleButtonState(
     "settings-api-key-regenerate",
     async () => {
-      const res = await fetch("/api/settings/api-key/regenerate", {
+      const res = await fetch(`${getBase()}/api/settings/api-key/regenerate`, {
         method: "POST",
         headers: authHeaders(getToken),
       });
@@ -339,7 +356,8 @@ export async function initServerTab(
       _keyRevealed = false;
       _renderApiKey();
       const revealBtn = document.getElementById("settings-api-key-reveal");
-      if (revealBtn) revealBtn.textContent = t("settings-page.server.api-key-reveal");
+      if (revealBtn)
+        revealBtn.textContent = t("settings-page.server.api-key-reveal");
     },
     "settings-page.server.api-key-regenerated",
     "settings-page.server.api-key-regenerate-failed",
@@ -348,7 +366,9 @@ export async function initServerTab(
   handleButtonState(
     "settings-cache-clear",
     async () => {
-      const res = await fetch("/api/cache/clear", { method: "POST" });
+      const res = await fetch(`${getBase()}/api/cache/clear`, {
+        method: "POST",
+      });
       if (!res.ok) throw new Error();
     },
     "settings-page.server.cache-cleared",

@@ -1,6 +1,8 @@
+import { getBase } from "./base-url";
+
 export const faviconCandidates = (hostname: string): string[] => {
   if (!hostname) return [];
-  return [`/api/proxy/favicon?domain=${encodeURIComponent(hostname)}`];
+  return [`${getBase()}/api/proxy/favicon?domain=${encodeURIComponent(hostname)}`];
 };
 
 const _faviconLetter = (hostname: string): string =>

@@ -1,6 +1,7 @@
 import type { RepoInfo } from "../../types/store-tab";
 import { jsonHeaders } from "../../utils/request";
 import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
+import { getBase } from "../../utils/base-url";
 
 export function showError(el: HTMLElement | null, msg: string): void {
   if (!el) return;
@@ -21,7 +22,7 @@ export async function handleAddRepo(
   addBtn.disabled = true;
   if (errorEl) errorEl.textContent = "";
   try {
-    const res = await fetch("/api/store/repos", {
+    const res = await fetch(`${getBase()}/api/store/repos`, {
       method: "POST",
       headers: jsonHeaders(getToken),
       body: JSON.stringify({ url }),
@@ -47,7 +48,7 @@ export async function handleRefresh(
   loadReposStatus: () => Promise<void>,
   render: () => void,
 ): Promise<void> {
-  const res = await fetch("/api/store/repos/refresh", {
+  const res = await fetch(`${getBase()}/api/store/repos/refresh`, {
     method: "POST",
     headers: jsonHeaders(getToken),
     body: JSON.stringify({ url }),
@@ -65,7 +66,7 @@ export async function handleRemove(
 ): Promise<void> {
   const fromRepo = repos.find((r) => r.url === url);
   if (!fromRepo) return;
-  const res = await fetch("/api/store/repos", {
+  const res = await fetch(`${getBase()}/api/store/repos`, {
     method: "DELETE",
     headers: jsonHeaders(getToken),
     body: JSON.stringify({ url }),
@@ -96,7 +97,7 @@ export async function handleInstall(
     return;
   btn.disabled = true;
   try {
-    const res = await fetch("/api/store/install", {
+    const res = await fetch(`${getBase()}/api/store/install`, {
       method: "POST",
       headers: jsonHeaders(getToken),
       body: JSON.stringify({ repoUrl, itemPath, type }),
@@ -131,7 +132,7 @@ export async function handleUninstall(
     return;
   btn.disabled = true;
   try {
-    const res = await fetch("/api/store/uninstall", {
+    const res = await fetch(`${getBase()}/api/store/uninstall`, {
       method: "POST",
       headers: jsonHeaders(getToken),
       body: JSON.stringify({ repoUrl, itemPath, type }),
@@ -159,7 +160,7 @@ export async function handleUpdate(
   const { repoUrl, itemPath, type } = btn.dataset;
   btn.disabled = true;
   try {
-    const res = await fetch("/api/store/update", {
+    const res = await fetch(`${getBase()}/api/store/update`, {
       method: "POST",
       headers: jsonHeaders(getToken),
       body: JSON.stringify({ repoUrl, itemPath, type }),
@@ -189,7 +190,7 @@ export async function handleUpdateAll(
   );
   if (btn) btn.disabled = true;
   try {
-    const res = await fetch("/api/store/update-all", {
+    const res = await fetch(`${getBase()}/api/store/update-all`, {
       method: "POST",
       headers: jsonHeaders(getToken),
     });
@@ -219,7 +220,7 @@ export async function handleRefreshAll(
   );
   if (btn) btn.disabled = true;
   try {
-    await fetch("/api/store/repos/refresh", {
+    await fetch(`${getBase()}/api/store/repos/refresh`, {
       method: "POST",
       headers: jsonHeaders(getToken),
       body: JSON.stringify({}),

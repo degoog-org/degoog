@@ -1,4 +1,5 @@
 import { cleanUrl } from "../utils/dom";
+import { getBase } from "../utils/base-url";
 import { attachFaviconFallback } from "../utils/favicon";
 import { confirmModal } from "./modals/confirm-modal/confirm";
 import { promptModal } from "./modals/prompt-modal/prompt";
@@ -63,7 +64,7 @@ const _postAction = async (body: {
   };
   if (token) headers["x-settings-token"] = token;
   try {
-    const res = await fetch("/api/settings/domain-action", {
+    const res = await fetch(`${getBase()}/api/settings/domain-action`, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
@@ -145,7 +146,7 @@ const _handleClick = async (e: MouseEvent): Promise<void> => {
   if (kind === "block") {
     const confirmed = await confirmModal({
       title: t("search-templates.result.actions.block-confirm-title"),
-      message: `${host} — ${t("search-templates.result.actions.block-confirm-message")}`,
+      message: `${host} - ${t("search-templates.result.actions.block-confirm-message")}`,
     });
     if (!confirmed) return;
     const ok = await _postAction({ kind, source: host });

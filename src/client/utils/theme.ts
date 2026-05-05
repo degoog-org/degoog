@@ -1,5 +1,6 @@
 import { idbGet } from "./db";
 import { THEME_KEY } from "../constants";
+import { getBase } from "./base-url";
 
 const _resolveTheme = (preference: string): string | null => {
   if (preference === "light" || preference === "dark") return preference;
@@ -33,7 +34,7 @@ export async function initTheme(): Promise<void> {
     return;
   }
   try {
-    const res = await fetch("/api/settings/appearance");
+    const res = await fetch(`${getBase()}/api/settings/appearance`);
     const data = (await res.json()) as { theme?: string };
     if (data.theme && data.theme !== "system") {
       applyTheme(data.theme);
