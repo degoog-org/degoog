@@ -1,9 +1,13 @@
+import { createHash } from "node:crypto";
 import {
   SlotPanelPosition,
   TranslateFunction,
+  type PluginContext,
+  type ScoredResult,
   type SettingField,
   type SlotPlugin,
 } from "../../../../types";
+import { SHORT_TTL_MS, type TtlCache } from "../../../../utils/cache";
 import { logger } from "../../../../utils/logger";
 import { asString, getSettings } from "../../../../utils/plugin-settings";
 
@@ -111,6 +115,17 @@ function escapeHtml(s: string): string {
 const DEFAULT_SYSTEM_PROMPT =
   "You are a helpful assistant that summarises web search results. Write a concise 2–3 sentence summary answering the query based on the provided snippets. Do not invent facts. Do not include citations.";
 
+let _summaryCache!: TtlCache<string>;
+
+function _summaryCacheKey(query: string, results: ScoredResult[]): string {
+  const fp = results
+    .slice(0, 6)
+    .map((r) => `${r.url}\n${r.snippet}`)
+    .join("\n\n");
+  const hash = createHash("sha256").update(fp).digest("hex").slice(0, 24);
+  return `${query.trim().toLowerCase()}|${hash}`;
+}
+
 async function chatComplete(
   settings: AISummarySettings,
   messages: OpenAIMessage[],
@@ -201,6 +216,10 @@ const aiSummarySlot: SlotPlugin = {
 
   t: TranslateFunction,
 
+  init(ctx: PluginContext): void {
+    _summaryCache = ctx.createCache<string>(SHORT_TTL_MS);
+  },
+
   async trigger(): Promise<boolean> {
     const settings = await getAISummarySettings();
     return !!settings.baseUrl && !!settings.model;
@@ -208,8 +227,14 @@ const aiSummarySlot: SlotPlugin = {
   async execute(query, context): Promise<{ title?: string; html: string }> {
     const results = context?.results ?? [];
     if (results.length === 0) return { html: "" };
-    const summary = await generateAISummary(query, results);
-    if (!summary) return { html: "" };
+    const key = _summaryCacheKey(query, results);
+    let summary = _summaryCache.get(key);
+    if (summary === null) {
+      const generated = await generateAISummary(query, results);
+      if (!generated) return { html: "" };
+      _summaryCache.set(key, generated);
+      summary = generated;
+    }
     return {
       html:
         '<div class="glance-ai">' +

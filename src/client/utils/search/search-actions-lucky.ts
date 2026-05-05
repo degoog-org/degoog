@@ -1,4 +1,5 @@
 import { getEngines } from "../engines";
+import { getBase } from "../base-url";
 
 export async function performLucky(query: string): Promise<void> {
   if (!query.trim()) return;
@@ -7,5 +8,5 @@ export async function performLucky(query: string): Promise<void> {
   for (const [key, val] of Object.entries(engines)) {
     params.set(key, String(val));
   }
-  window.location.href = `/api/lucky?${params.toString()}`;
+  window.location.href = `${getBase()}/api/lucky?${params.toString()}`;
 }

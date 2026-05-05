@@ -5,6 +5,7 @@ import {
   POST_METHOD_ENABLED,
   THEME_KEY,
 } from "../constants";
+import { getBase } from "../utils/base-url";
 import { idbGet, idbSet } from "../utils/db";
 import { requestInstallPrompt } from "../utils/install-prompt";
 import { applyTheme } from "../utils/theme";
@@ -15,6 +16,12 @@ export async function initAppearanceSettings(): Promise<void> {
   const themeSelect = document.getElementById(
     "theme-select",
   ) as HTMLSelectElement | null;
+  const saveDefaultBtn = document.getElementById(
+    "save-default-theme",
+  ) as HTMLButtonElement | null;
+
+  if (saveDefaultBtn) saveDefaultBtn.style.display = "none";
+
   if (themeSelect) {
     const saved = await idbGet<string>(THEME_KEY);
     themeSelect.value = saved || "system";
@@ -23,43 +30,40 @@ export async function initAppearanceSettings(): Promise<void> {
       await idbSet(THEME_KEY, value);
       try {
         localStorage.setItem(THEME_KEY, value);
-      } catch { }
+      } catch {}
       applyTheme(value);
+      if (saveDefaultBtn) saveDefaultBtn.style.display = "";
     });
   }
 
-  document
-    .getElementById("save-default-theme")
-    ?.addEventListener("click", async () => {
-      const btn = document.getElementById("save-default-theme");
-      const select = document.getElementById(
-        "theme-select",
-      ) as HTMLSelectElement | null;
-      const value = select?.value ?? "system";
-      try {
-        const token = sessionStorage.getItem("degoog-settings-token");
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (token) headers["x-settings-token"] = token;
-        const res = await fetch("/api/settings/general", {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ defaultTheme: value }),
-        });
-        if (!res.ok) throw new Error("save failed");
-        if (btn) {
-          const prev = btn.textContent;
-          btn.textContent = t("settings-page.server.saved");
-          setTimeout(() => {
-            btn.textContent = prev;
-          }, 1200);
-        }
-      } catch {
-        if (btn)
-          btn.textContent = t("settings-page.server.save-failed-network");
-      }
-    });
+  saveDefaultBtn?.addEventListener("click", async () => {
+    const value =
+      (document.getElementById("theme-select") as HTMLSelectElement | null)
+        ?.value ?? "system";
+    try {
+      const token = sessionStorage.getItem("degoog-settings-token");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) headers["x-settings-token"] = token;
+      const res = await fetch(`${getBase()}/api/settings/general`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ defaultTheme: value }),
+      });
+      if (!res.ok) throw new Error("save failed");
+      const prev = saveDefaultBtn.textContent;
+      saveDefaultBtn.textContent = t("settings-page.server.saved");
+      setTimeout(() => {
+        saveDefaultBtn.textContent = prev;
+        saveDefaultBtn.style.display = "none";
+      }, 1200);
+    } catch {
+      saveDefaultBtn.textContent = t(
+        "settings-page.server.save-failed-network",
+      );
+    }
+  });
 
   const openInNewTab = document.getElementById(
     "settings-open-new-tab",

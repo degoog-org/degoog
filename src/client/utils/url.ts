@@ -1,9 +1,11 @@
 import { SearchBody } from "../../server/types";
 import { state } from "../state";
+import { getBase } from "./base-url";
 
 export const proxyImageUrl = (url: string): string => {
   if (!url) return "";
-  return `/api/proxy/image?url=${encodeURIComponent(url)}`;
+  if (url.startsWith("/api/proxy/")) return url;
+  return `${getBase()}/api/proxy/image?url=${encodeURIComponent(url)}`;
 };
 
 export const faviconHostname = (url: string): string => {
@@ -17,9 +19,7 @@ export const faviconHostname = (url: string): string => {
 export const faviconUrl = (url: string): string => {
   const hostname = faviconHostname(url);
   if (!hostname) return "";
-  return proxyImageUrl(
-    `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`,
-  );
+  return `${getBase()}/api/proxy/favicon?domain=${encodeURIComponent(hostname)}`;
 };
 
 export const buildSearchParams = (
@@ -57,7 +57,7 @@ export const buildSearchUrl = (
   type: string,
   page: number,
 ): string =>
-  `/api/search?${buildSearchParams(query, engines, type, page).toString()}`;
+  `${getBase()}/api/search?${buildSearchParams(query, engines, type, page).toString()}`;
 
 export const buildSearchBody = (
   query: string,

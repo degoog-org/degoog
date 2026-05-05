@@ -15,6 +15,18 @@ const FETCH_TIMEOUT_MS = 15_000;
 const OFFICIAL_REPO_URL = "https://github.com/degoog-org/official-extensions.git";
 const OLD_OFFICIAL_REPO_URL = "https://github.com/fccview/fccview-degoog-extensions.git";
 
+function _sanitizeGitError(raw: string): string {
+  if (!raw) return raw;
+  const storeDir = getStoreDir();
+  const cwd = process.cwd();
+  return raw
+    .replaceAll(storeDir, "<store>")
+    .replaceAll(cwd, "<workdir>")
+    .replace(/'\/[^'\n]*'/g, "'<path>'")
+    .replace(/\/[A-Za-z0-9_./-]+\/(?=\.git\b)/g, "<path>/")
+    .trim();
+}
+
 export function slugFromUrl(url: string): string {
   const normalized = normalizeRepoUrl(url);
   const hash = createHash("sha256").update(normalized).digest("hex").slice(0, 8);
@@ -65,7 +77,7 @@ export async function addRepo(url: string): Promise<RepoInfo> {
     ),
   ]);
   if (exit !== 0) {
-    const err = await new Response(proc.stderr).text();
+    const err = _sanitizeGitError(await new Response(proc.stderr).text());
     throw new Error(err || `Git clone failed with code ${exit}`);
   }
   const pkgPath = join(dest, "package.json");
@@ -126,7 +138,7 @@ export async function refreshRepo(url?: string): Promise<void> {
       });
       const exit = await proc.exited;
       if (exit !== 0) {
-        const err = await new Response(proc.stderr).text();
+        const err = _sanitizeGitError(await new Response(proc.stderr).text());
         repo.error = err || `Git pull failed (${exit})`;
         continue;
       }

@@ -4,6 +4,7 @@ import {
   type PluginContext,
   type SlotPlugin,
 } from "../../../../types";
+import type { TtlCache } from "../../../../utils/cache";
 
 const TIMEOUT_MS = 5_000;
 const USER_AGENT = "degoog/1.0 (+https://github.com/degoog-org/degoog)";
@@ -27,10 +28,7 @@ interface WikiPage {
 
 let _template = "";
 
-let _cache: { query: string | null; page: WikiPage | null } = {
-  query: null,
-  page: null,
-};
+let _wikiCache!: TtlCache<WikiPage>;
 
 async function _fetchWikipedia(query: string): Promise<WikiPage | null> {
   const controller = new AbortController();
@@ -92,22 +90,35 @@ const wikipediaSlot: SlotPlugin = {
 
   init(ctx: PluginContext): void {
     _template = ctx.template;
+    _wikiCache = ctx.createCache<WikiPage>(60 * 60 * 1000);
   },
 
   async trigger(query: string): Promise<boolean> {
     const q = query.trim();
     if (q.length < 2 || q.length > 100) return false;
-    const page = await _fetchWikipedia(q);
-    _cache = { query: q, page };
-    return page !== null;
+    const key = q.toLowerCase();
+    const page = _wikiCache.get(key);
+    if (page === null) {
+      const fetched = await _fetchWikipedia(q);
+      if (fetched) {
+        _wikiCache.set(key, fetched);
+        return true;
+      }
+      return false;
+    }
+    return true;
   },
 
   async execute(query: string): Promise<{ title?: string; html: string }> {
     const q = query.trim();
-    let page = _cache.query === q ? _cache.page : null;
-    if (!page) {
-      page = await _fetchWikipedia(q);
-      _cache = { query: q, page };
+    const key = q.toLowerCase();
+    let page = _wikiCache.get(key);
+    if (page === null) {
+      const fetched = await _fetchWikipedia(q);
+      if (fetched) {
+        _wikiCache.set(key, fetched);
+        page = fetched;
+      }
     }
     if (!page) return { html: "" };
 
@@ -123,7 +134,7 @@ const wikipediaSlot: SlotPlugin = {
 
     const html = _template.replace(
       /\{\{(\w+)\}\}/g,
-      (_, key: string) => sanitizePage[key] ?? "",
+      (_, k: string) => sanitizePage[k] ?? "",
     );
 
     return { title: page.title, html };

@@ -3,6 +3,7 @@ import { SETTINGS_KEY } from "../constants";
 import { escapeHtml, getConfigStatus } from "../utils/dom";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, EngineRecord, AllExtensions } from "../types";
+import { getBase } from "../utils/base-url";
 
 const t = window.scopedT("core");
 const themeT = window.scopedT("themes/degoog");
@@ -33,6 +34,9 @@ const _renderEngineCard = (
   allowConfigure: boolean,
 ): string => {
   const isEnabled = enabledMap[engine.id] !== false;
+  const versionWarning = engine.requiresNewerVersion
+    ? `<span class="ext-version-warning">Requires a newer version of Degoog</span>`
+    : "";
   const status =
     allowConfigure && engine.configurable ? getConfigStatus(engine) : null;
   const badge =
@@ -50,6 +54,7 @@ const _renderEngineCard = (
       <div class="ext-card-main">
         <div class="ext-card-info">
           <label for="engine-toggle-${escapeHtml(engine.id)}" class="ext-card-name engine-toggle-label">${escapeHtml(engine.displayName)}</label>
+          ${versionWarning}
         </div>
         <div class="ext-card-actions">
           ${badge}
@@ -126,7 +131,7 @@ export async function initEnginesTab(
             "Content-Type": "application/json",
           };
           if (token) headers["x-settings-token"] = token;
-          await fetch("/api/settings/default-engines", {
+          await fetch(`${getBase()}/api/settings/default-engines`, {
             method: "POST",
             headers,
             body: JSON.stringify(enabledMap),

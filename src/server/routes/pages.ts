@@ -37,12 +37,17 @@ import {
 } from "../utils/translation";
 import {
   getSettingsTokenFromRequest,
+  isPasswordRequired,
   shouldServeSettingsGate,
   validateSettingsToken,
 } from "./settings-auth";
+import { generateSearchNonce } from "../utils/search-nonce";
+import { getBasePath, getBaseUrl } from "../utils/base-url";
 
 const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
 const CORE_LOCALES_ROOT = "src";
+const BASE_URL = getBaseUrl();
+const BASE_PATH = getBasePath();
 
 interface DefaultThemeManifest {
   templates?: Record<string, string>;
@@ -210,10 +215,30 @@ async function applyPagePlaceholders(
   }
   result = result.replaceAll("__APP_VERSION__", pkg.version);
 
-  // Inject translations before </head> so t() is available to all scripts
+  const pageSettings = await getSettings(_DEGOOG_SETTINGS_ID);
+  const anyApiKeyEnabled =
+    asString(pageSettings.apiKeySearchEnabled) === "true" ||
+    asString(pageSettings.apiKeySuggestEnabled) === "true";
+  if (anyApiKeyEnabled) {
+    const auth = generateSearchNonce();
+    const nonceScript = `<script>window.__DEGOOG_SEARCH_AUTH__=${JSON.stringify(auth)}</script>`;
+    result = result.replace("</head>", `${nonceScript}\n  </head>`);
+  }
+
   result = result.replace("</head>", `${translationsScript}\n  </head>`);
 
-  return translateHTML(result, t);
+  result = translateHTML(result, t);
+
+  if (BASE_URL) {
+    const baseScript = `<script>window.__DEGOOG_BASE_URL__=${JSON.stringify(BASE_URL)}</script>`;
+    result = result.replace("</head>", `${baseScript}\n  </head>`);
+    result = result.replace(
+      /(<(?:link|script|a|form)[^>]*(?:href|src|action)=")\/(?!\/)/g,
+      `$1${BASE_URL}/`,
+    );
+  }
+
+  return result;
 }
 
 function isFullDocument(html: string): boolean {
@@ -254,8 +279,23 @@ async function buildThemedLayoutPage(
   return applyPagePlaceholders(html, t);
 }
 
+const _apiKeySection = `<code id="settings-api-key-value" class="settings-toggle-label"></code>
+  <div>
+    <button type="button" id="settings-api-key-reveal" class="btn btn--secondary" aria-label="{{t:settings-page.server.api-key-reveal}}"><i class="fa-solid fa-eye fa-lg"></i></button>
+    <button type="button" id="settings-api-key-copy" class="btn btn--secondary" aria-label="{{t:settings-page.server.api-key-copy}}"><i class="fa-solid fa-copy fa-lg"></i></button>
+    <button type="button" id="settings-api-key-regenerate" class="btn btn--secondary" aria-label="{{t:settings-page.server.api-key-regenerate}}"><i class="fa-solid fa-rotate-right fa-lg"></i></button>
+  </div>`;
+
+const _apiKeySectionLocked = `<p class="settings-desc">{{t:settings-page.server.api-key-no-password}}</p>`;
+
 async function buildPage(filename: string, locale?: string): Promise<string> {
-  const html = await Bun.file(`src/public/${filename}`).text();
+  let html = await Bun.file(`src/public/${filename}`).text();
+  if (html.includes("__API_KEY_SECTION__")) {
+    const content = isPasswordRequired()
+      ? _apiKeySection
+      : _apiKeySectionLocked;
+    html = html.replace("__API_KEY_SECTION__", content);
+  }
   const t = await getTranslator(locale);
   return applyPagePlaceholders(html, t);
 }
@@ -264,7 +304,7 @@ router.get("/", async (c) => {
   const q = c.req.query("q");
   if (q?.trim()) {
     const params = new URLSearchParams(c.req.url.split("?")[1] || "");
-    return c.redirect(`/search?${params.toString()}`, 302);
+    return c.redirect(`${BASE_URL || BASE_PATH}/search?${params.toString()}`, 302);
   }
   const locale = getLocale(c);
   const override = await getThemeHtml("index");
@@ -324,7 +364,7 @@ router.get("/search", async (c) => {
   return c.html(_injectIntoHead(html, actionsScript));
 });
 
-router.get("/settings/", (c) => c.redirect("/settings", 301));
+router.get("/settings/", (c) => c.redirect(`${BASE_URL || BASE_PATH}/settings`, 301));
 router.get("/settings", async (c) => {
   const locale = getLocale(c);
   if (isPublicInstance())
@@ -336,10 +376,10 @@ router.get("/settings", async (c) => {
 });
 
 router.get("/settings/:tab", async (c) => {
-  if (isPublicInstance()) return c.redirect("/settings", 302);
+  if (isPublicInstance()) return c.redirect(`${BASE_URL || BASE_PATH}/settings`, 302);
   const tab = c.req.param("tab");
   if (!(SETTINGS_TABS as readonly string[]).includes(tab)) {
-    return c.redirect("/settings", 302);
+    return c.redirect(`${BASE_URL || BASE_PATH}/settings`, 302);
   }
   const locale = getLocale(c);
   if (await shouldServeSettingsGate(c)) {
@@ -363,7 +403,16 @@ router.get("/opensearch.xml", (c) => {
     c.req.header("x-forwarded-host") ||
     c.req.header("host") ||
     new URL(c.req.url).host;
-  return c.body(buildOpenSearchXml(`${proto}://${host}`), 200, {
+  const basePath = BASE_URL
+    ? (() => {
+        try {
+          return new URL(BASE_URL).pathname.replace(/\/+$/, "");
+        } catch {
+          return BASE_URL;
+        }
+      })()
+    : "";
+  return c.body(buildOpenSearchXml(`${proto}://${host}${basePath}`), 200, {
     "Content-Type": "application/opensearchdescription+xml; charset=utf-8",
   });
 });

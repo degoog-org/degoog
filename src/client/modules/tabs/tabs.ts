@@ -1,5 +1,8 @@
 import { state } from "../../state";
+import { getBase } from "../../utils/base-url";
 import { performSearch } from "../../utils/search-actions";
+import { getEnabledSearchTypes } from "../../utils/engines";
+import { setTabTypeDisabled } from "../../utils/navigation";
 import { performTabSearch } from "./tab-search";
 
 interface TabInfo {
@@ -26,17 +29,32 @@ export function initTabs(): void {
   });
 
   tabsReady = _loadPluginTabs();
+  void _refreshBuiltinTabVisibility();
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") void _loadPluginTabs();
   });
 
-  window.addEventListener("extensions-saved", () => void _loadPluginTabs());
+  window.addEventListener("extensions-saved", () => {
+    void _loadPluginTabs();
+    void _refreshBuiltinTabVisibility();
+  });
+}
+
+const BUILTIN_FILTERABLE_TYPES = ["images", "videos", "news"] as const;
+
+async function _refreshBuiltinTabVisibility(): Promise<void> {
+  try {
+    const enabled = await getEnabledSearchTypes();
+    for (const type of BUILTIN_FILTERABLE_TYPES) {
+      setTabTypeDisabled(type, !enabled.has(type));
+    }
+  } catch {}
 }
 
 const _loadPluginTabs = async (): Promise<void> => {
   try {
-    const res = await fetch("/api/search-tabs");
+    const res = await fetch(`${getBase()}/api/search-tabs`);
     if (!res.ok) return;
     const data = (await res.json()) as { tabs: TabInfo[] };
     pluginTabs = data.tabs || [];

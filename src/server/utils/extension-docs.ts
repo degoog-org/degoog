@@ -12,11 +12,13 @@ const _destDirFromId = (id: string): string | null => {
   return null;
 };
 
+const _SAFE_FOLDER = /^[A-Za-z0-9._-]+$/;
+
 export const getExtensionReadmePath = (id: string): string | null => {
   const base = _destDirFromId(id);
   if (!base) return null;
   const folder = id.replace(/^[a-z-]+-/, "");
-  if (!folder.trim()) return null;
+  if (!folder.trim() || !_SAFE_FOLDER.test(folder)) return null;
   return join(base, folder, "README.md");
 };
 

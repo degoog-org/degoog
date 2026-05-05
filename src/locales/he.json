@@ -17,6 +17,10 @@
       "themes": "ערכות נושא",
       "store": "חנות"
     },
+    "tab-search": {
+      "placeholder": "חיפוש בהגדרות...",
+      "no-results": "אין תוצאות"
+    },
     "appearance": {
       "heading": "מראה",
       "desc": "בחר את העיצוב המועדף עליך.",
@@ -50,6 +54,22 @@
       "cache-clear": "נקה מטמון חיפוש",
       "cache-cleared": "נוקה",
       "cache-failed": "נכשל",
+      "api-key-heading": "מפתח API",
+      "api-key-desc": "הגן על נקודות הקצה של החיפוש וההצעות באמצעות nonce חתום שנגזר ממפתח זה. הפעל את הכפתורים למטה כדי לדרוש nonce תקף בנתיבים אלו.",
+      "api-key-no-password": "הגדר סיסמה דרך משתנה הסביבה DEGOOG_SETTINGS_PASSWORDS כדי להציג ולנהל את מפתח ה-API.",
+      "api-key-reveal": "הצג",
+      "api-key-hide": "הסתר",
+      "api-key-copy": "העתק",
+      "api-key-copied": "הועתק",
+      "api-key-regenerate": "צור מחדש",
+      "api-key-regenerated": "נוצר מחדש",
+      "api-key-regenerate-failed": "נכשל",
+      "api-key-search-enable": "הגן על נתיבי חיפוש",
+      "api-key-search-aria": "הגן על נתיבי חיפוש",
+      "api-key-search-tooltip": "דרוש nonce חתום תקף על /api/search, /api/search/stream ו-/api/search/retry",
+      "api-key-suggest-enable": "הגן על נתיבי הצעות",
+      "api-key-suggest-aria": "הגן על נתיבי הצעות",
+      "api-key-suggest-tooltip": "דרוש nonce חתום תקף על /api/suggest ו-/api/suggest/opensearch",
       "streaming-heading": "תוצאות מוזרמות",
       "streaming-desc": "טען תוצאות באופן הדרגתי ככל שכל מנוע מגיב במקום לחכות שכל המנועים יסיימו. זוהי תכונה ניסיונית.",
       "streaming-enable": "אפשר תוצאות מוזרמות (ניסיוני)",
@@ -84,6 +104,8 @@
       "domain-block-enable": "אפשר חסימת דומיינים",
       "domain-block-enable-aria": "אפשר חסימת דומיינים",
       "domain-block-list-label": "דומיינים חסומים (אחד בשורה)",
+      "domain-block-ui-enable": "אפשר חסימה מתוצאות חיפוש",
+      "domain-block-ui-desc": "כאשר מופעל, משתמשים מאומתים יכולים לחסום דומיין ישירות מתוך תפריט על כל שורת תוצאות. מוסתר במופעים ציבוריים או לא מאומתים ללא קשר להגדרה זו.",
       "domain-block-regex-help": "ערכי Regex חייבים להיות עטופים ב-/לוכסנים/ ולהשתמש בתחביר JavaScript RegExp (ללא דגלים). הם מותאמים מול שם המארח של כתובת ה-URL בלבד (לא הכתובת המלאה). דוגמה: /(^|\\\\.)instagram\\\\.com$/ חוסם את instagram.com ואת כל תתי-הדומיינים שלו; /^www\\\\.instagram\\\\.com$/ חוסם רק את www.instagram.com.",
       "domain-replace-heading": "החלפת דומיינים",
       "domain-replace-desc": "החלף דומיינים בכתובות URL של תוצאות חיפוש. השתמש בפורמט: source.com -> target.com (אחד בשורה). תת-דומיינים מותאמים אוטומטית, והנתיב נשמר.",
@@ -102,6 +124,9 @@
       "domain-score-remove-aria": "הסר כלל",
       "domain-score-ui-enable": "אפשר ניקוד מתוצאות חיפוש",
       "domain-score-ui-desc": "כאשר מופעל, משתמשים מאומתים יכולים לנקוד דומיין ישירות מתוך תפריט מערבב על כל שורת תוצאות. מוסתר במופעים ציבוריים או לא מאומתים ללא קשר לפרמטר זה.",
+      "custom-css-heading": "CSS מותאם אישית",
+      "custom-css-desc": "הזרק CSS מותאם אישית לכל עמוד. נטען אחרי סגנונות הנושא והתוספים, כך שהוא עוקף אותם. השתמש ב-!important כשצריך להכריע סלקטורים עם ספציפיות גבוהה יותר.",
+      "custom-css-label": "CSS מותאם אישית",
       "saved": "נשמר",
       "save-failed-network": "השמירה נכשלה. אנא נסה שוב."
     },
@@ -161,6 +186,7 @@
       "load-engines": "טעינת המנועים נכשלה."
     },
     "gate": {
+      "misconfigured": "אימות ההגדרות מוגדר בצורה שגויה: השער המוגדר מפנה למידלוור שאינו טעון. צור קשר עם המנהל כדי לתקן את הגדרת השער או הגדר את DEGOOG_SETTINGS_PASSWORDS.",
       "desc": "הזן את הסיסמה כדי לגשת להגדרות.",
       "password-placeholder": "סיסמה",
       "unlock": "שחרר נעילה",

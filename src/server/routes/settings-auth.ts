@@ -1,39 +1,77 @@
-import { readFile, writeFile } from "fs/promises";
 import { Hono, type Context } from "hono";
 import { getMiddleware } from "../extensions/middleware/registry";
-import { outgoingFetch } from "../utils/outgoing";
-import { defaultEnginesFile } from "../utils/paths";
-import { asString, getSettings, setSettings } from "../utils/plugin-settings";
+import { asString, getSettings } from "../utils/plugin-settings";
 import { isPublicInstance } from "../utils/public-instance";
-import { getRandomUserAgent } from "../utils/user-agents";
-
-const DEGOOG_SETTINGS_ID = "degoog-settings";
+import { logger } from "../utils/logger";
+import {
+  TOKEN_TTL_MS,
+  checkAuthRate,
+  generateSettingsToken,
+  passwordMatches,
+  recordAuthFailure,
+  tokenStore,
+} from "../utils/settings-tokens";
 
 const router = new Hono();
 
-const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 const COOKIE_NAME = "settings-token";
-const validTokens = new Map<string, number>();
 const MIDDLEWARE_SETTINGS_ID = "middleware";
 const SETTINGS_GATE_KEY = "settingsGate";
 
+const _clientIp = (c: Context): string =>
+  c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
+  c.req.header("x-real-ip") ||
+  "unknown";
+
 function getTokenFromCookie(c: Context): string | undefined {
   const raw = c.req.header("cookie");
-  if (!raw) return undefined;
+  if (!raw) {
+    logger.debug("settings-auth", "no cookie header present");
+    return undefined;
+  }
   const match = raw
     .split(";")
     .find((s) => s.trim().startsWith(COOKIE_NAME + "="));
-  if (!match) return undefined;
+  if (!match) {
+    logger.debug(
+      "settings-auth",
+      `cookie header present but '${COOKIE_NAME}' not found`,
+    );
+    return undefined;
+  }
   const value = match.split("=")[1]?.trim();
+  logger.debug(
+    "settings-auth",
+    `'${COOKIE_NAME}' cookie found (length: ${value?.length ?? 0})`,
+  );
   return value || undefined;
 }
 
 export function getSettingsTokenFromRequest(c: Context): string | undefined {
-  return (
-    c.req.header("x-settings-token") ??
-    c.req.query("token") ??
-    getTokenFromCookie(c)
-  );
+  const fromHeader = c.req.header("x-settings-token");
+  if (fromHeader) {
+    logger.debug("settings-auth", "token source: x-settings-token header");
+    return fromHeader;
+  }
+  const fromQuery = c.req.query("token");
+  if (fromQuery) {
+    logger.debug("settings-auth", "token source: query param");
+    return fromQuery;
+  }
+  return getTokenFromCookie(c);
+}
+
+export async function guardSettingsRoute(
+  c: Context,
+  route: string,
+): Promise<Response | null> {
+  const token = getSettingsTokenFromRequest(c);
+  const valid = await validateSettingsToken(token);
+  if (!valid) {
+    logger.debug("settings-auth", `401 on ${route}`);
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  return null;
 }
 
 export async function shouldServeSettingsGate(c: Context): Promise<boolean> {
@@ -52,23 +90,8 @@ function getPasswords(): string[] {
     .filter(Boolean);
 }
 
-function isPasswordRequired(): boolean {
+export function isPasswordRequired(): boolean {
   return getPasswords().length > 0;
-}
-
-function generateToken(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function pruneExpired(): void {
-  const now = Date.now();
-  for (const [token, expiresAt] of validTokens) {
-    if (now > expiresAt) validTokens.delete(token);
-  }
 }
 
 export async function validateSettingsToken(
@@ -77,12 +100,28 @@ export async function validateSettingsToken(
   if (isPublicInstance()) return false;
   const required = await isAuthRequired();
   if (!required) return true;
-  if (!token) return false;
-  const expiresAt = validTokens.get(token);
-  if (!expiresAt || Date.now() > expiresAt) {
-    if (expiresAt) validTokens.delete(token);
+  if (!token) {
+    logger.debug("settings-auth", "token validation failed: no token provided");
     return false;
   }
+  const expiresAt = tokenStore.get(token);
+  if (!expiresAt) {
+    logger.debug(
+      "settings-auth",
+      `token validation failed: token not found in store (${tokenStore.size()} active tokens)`,
+    );
+    return false;
+  }
+  if (Date.now() > expiresAt) {
+    tokenStore.delete(token);
+    logger.debug("settings-auth", "token validation failed: token expired");
+    return false;
+  }
+  const ttlMs = expiresAt - Date.now();
+  logger.debug(
+    "settings-auth",
+    `token valid (expires in ${Math.round(ttlMs / 1000 / 60)}m)`,
+  );
   return true;
 }
 
@@ -104,23 +143,29 @@ async function isAuthRequired(): Promise<boolean> {
 }
 
 router.get("/api/settings/auth", async (c) => {
-  const m = await getSelectedMiddlewareForSettingsGate();
-  if (!m) {
-    if (!isPasswordRequired()) return c.json({ required: false, valid: true });
-    const token = getSettingsTokenFromRequest(c);
-    if (await validateSettingsToken(token))
-      return c.json({ required: true, valid: true });
-    return c.json({ required: true, valid: false });
-  }
+  const required = await isAuthRequired();
+  if (!required) return c.json({ required: false, valid: true });
+
   const token = getSettingsTokenFromRequest(c);
   if (await validateSettingsToken(token))
     return c.json({ required: true, valid: true });
+
+  const m = await getSelectedMiddlewareForSettingsGate();
+  if (!m) {
+    if (isPasswordRequired()) return c.json({ required: true, valid: false });
+    logger.warn(
+      "settings-auth",
+      "settingsGate references a middleware that is not loaded; refusing to grant access",
+    );
+    return c.json({
+      required: true,
+      valid: false,
+      error: "auth-misconfigured",
+    });
+  }
+
   const result = await m.handle(c.req.raw, { route: "settings-auth" });
   if (result instanceof Response) return result;
-  if (result === null) {
-    if (!isPasswordRequired()) return c.json({ required: false, valid: true });
-    return c.json({ required: true, valid: false });
-  }
   return c.json({ required: true, valid: false });
 });
 
@@ -133,9 +178,9 @@ router.get("/api/settings/auth/callback", async (c) => {
     !(result instanceof Response) &&
     "redirect" in result
   ) {
-    pruneExpired();
-    const sessionToken = generateToken();
-    validTokens.set(sessionToken, Date.now() + TOKEN_TTL_MS);
+    tokenStore.pruneExpired();
+    const sessionToken = generateSettingsToken();
+    tokenStore.set(sessionToken, Date.now() + TOKEN_TTL_MS);
     const sep = result.redirect.includes("?") ? "&" : "?";
     return c.redirect(`${result.redirect}${sep}token=${sessionToken}`);
   }
@@ -145,6 +190,17 @@ router.get("/api/settings/auth/callback", async (c) => {
 
 router.post("/api/settings/auth", async (c) => {
   if (isPublicInstance()) return c.json({ error: "Unauthorized" }, 401);
+  const ip = _clientIp(c);
+  const rate = checkAuthRate(ip);
+  if (!rate.allowed) {
+    logger.warn(
+      "settings-auth",
+      `auth rate-limited for ${ip} (retry in ${rate.retryAfter}s)`,
+    );
+    return c.json({ ok: false, error: "Too many attempts" }, 429, {
+      "Retry-After": String(rate.retryAfter),
+    });
+  }
   const m = await getSelectedMiddlewareForSettingsGate();
   if (m) {
     const result = await m.handle(c.req.raw, { route: "settings-auth-post" });
@@ -152,278 +208,26 @@ router.post("/api/settings/auth", async (c) => {
     return c.json({ ok: false, error: "Use the login flow" }, 400);
   }
   if (!isPasswordRequired()) return c.json({ ok: true, token: null });
-  const body = await c.req.json<{ password?: string }>();
+  let body: { password?: string };
+  try {
+    body = await c.req.json<{ password?: string }>();
+  } catch {
+    recordAuthFailure(ip);
+    return c.json({ ok: false }, 400);
+  }
   const passwords = getPasswords();
-  if (!body.password || !passwords.includes(body.password)) {
+  const candidate = typeof body.password === "string" ? body.password : "";
+  if (!candidate || !passwordMatches(candidate, passwords)) {
+    recordAuthFailure(ip);
     return c.json({ ok: false }, 401);
   }
-  pruneExpired();
-  const token = generateToken();
-  validTokens.set(token, Date.now() + TOKEN_TTL_MS);
+  tokenStore.pruneExpired();
+  const token = generateSettingsToken();
+  tokenStore.set(token, Date.now() + TOKEN_TTL_MS);
   const cookie = `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${TOKEN_TTL_MS / 1000}`;
   return c.json({ ok: true, token }, 200, {
     "Set-Cookie": cookie,
   });
-});
-
-router.get("/api/settings/general", async (c) => {
-  const token = getSettingsTokenFromRequest(c);
-  if (!(await validateSettingsToken(token))) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-  const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  return c.json(settings);
-});
-
-router.post("/api/settings/general", async (c) => {
-  const token = getSettingsTokenFromRequest(c);
-  if (!(await validateSettingsToken(token))) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-  let body: Record<string, string>;
-  try {
-    body = await c.req.json<Record<string, string>>();
-  } catch {
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
-  const existing = await getSettings(DEGOOG_SETTINGS_ID);
-  const allowed = [
-    "proxyEnabled",
-    "proxyUrls",
-    "rateLimitEnabled",
-    "rateLimitBurstWindow",
-    "rateLimitBurstMax",
-    "rateLimitLongWindow",
-    "rateLimitLongMax",
-    "languagesEnabled",
-    "languages",
-    "streamingEnabled",
-    "streamingAutoRetry",
-    "streamingMaxRetries",
-    "postMethodEnabled",
-    "defaultTheme",
-    "domainBlockEnabled",
-    "domainBlockList",
-    "domainBlockUiEnabled",
-    "domainReplaceEnabled",
-    "domainReplaceList",
-    "domainReplaceUiEnabled",
-    "domainScoreEnabled",
-    "domainScoreList",
-    "domainScoreUiEnabled",
-    "customCss",
-  ];
-  const updates: Record<string, string> = {};
-  for (const key of allowed) {
-    if (key in body && typeof body[key] === "string") {
-      updates[key] = body[key];
-    }
-  }
-  await setSettings(DEGOOG_SETTINGS_ID, { ...existing, ...updates });
-  return c.json({ ok: true });
-});
-
-const _normalizeHostname = (raw: string): string =>
-  raw
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/\/.*$/, "");
-
-const _appendBlock = (existing: string, source: string): string => {
-  const lines = existing
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-  if (lines.includes(source)) return existing;
-  lines.push(source);
-  return lines.join("\n");
-};
-
-const _appendReplace = (
-  existing: string,
-  source: string,
-  target: string,
-): string => {
-  const lines = existing
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-  const next = lines.filter((l) => {
-    const [src] = l.split("->").map((s) => s.trim());
-    return src !== source;
-  });
-  next.push(`${source} -> ${target}`);
-  return next.join("\n");
-};
-
-const _upsertScore = (
-  existing: string,
-  source: string,
-  score: number,
-): string => {
-  const lines = existing
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-  const next = lines.filter((l) => {
-    const [src] = l.split("|").map((s) => s.trim());
-    return src !== source;
-  });
-  next.push(`${source}|${score}`);
-  return next.join("\n");
-};
-
-router.post("/api/settings/domain-action", async (c) => {
-  const token = getSettingsTokenFromRequest(c);
-  if (!(await validateSettingsToken(token))) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  let body: {
-    kind?: string;
-    source?: string;
-    target?: string;
-    score?: number;
-  };
-  try {
-    body = await c.req.json();
-  } catch {
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
-
-  const kind = body.kind;
-  const source = _normalizeHostname(body.source ?? "");
-  if (!source) return c.json({ error: "Missing source" }, 400);
-
-  const existing = await getSettings(DEGOOG_SETTINGS_ID);
-  const updates: Record<string, string> = {};
-
-  if (kind === "block") {
-    if (asString(existing.domainBlockUiEnabled) !== "true") {
-      return c.json({ error: "Forbidden" }, 403);
-    }
-    updates.domainBlockList = _appendBlock(
-      asString(existing.domainBlockList),
-      source,
-    );
-  } else if (kind === "replace") {
-    if (asString(existing.domainReplaceUiEnabled) !== "true") {
-      return c.json({ error: "Forbidden" }, 403);
-    }
-    const target = _normalizeHostname(body.target ?? "");
-    if (!target) return c.json({ error: "Missing target" }, 400);
-    updates.domainReplaceList = _appendReplace(
-      asString(existing.domainReplaceList),
-      source,
-      target,
-    );
-  } else if (kind === "score") {
-    if (asString(existing.domainScoreUiEnabled) !== "true") {
-      return c.json({ error: "Forbidden" }, 403);
-    }
-    const score = Number(body.score);
-    if (!Number.isFinite(score)) {
-      return c.json({ error: "Invalid score" }, 400);
-    }
-    updates.domainScoreList = _upsertScore(
-      asString(existing.domainScoreList),
-      source,
-      Math.trunc(score),
-    );
-  } else {
-    return c.json({ error: "Invalid kind" }, 400);
-  }
-
-  await setSettings(DEGOOG_SETTINGS_ID, { ...existing, ...updates });
-  return c.json({ ok: true });
-});
-
-const IP_CHECK_URL = "https://api.ipify.org?format=json";
-const IP_CHECK_TIMEOUT_MS = 8_000;
-
-async function fetchIp(useFn: typeof fetch): Promise<string | null> {
-  try {
-    const res = await useFn(IP_CHECK_URL, {
-      signal: AbortSignal.timeout(IP_CHECK_TIMEOUT_MS),
-      headers: {
-        "User-Agent": getRandomUserAgent(),
-        Accept: "application/json,text/plain,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { ip?: string };
-    return data.ip ?? null;
-  } catch {
-    return null;
-  }
-}
-
-router.get("/api/settings/proxy-test", async (c) => {
-  const token = getSettingsTokenFromRequest(c);
-  if (!(await validateSettingsToken(token))) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  const enabled = asString(settings.proxyEnabled) === "true";
-  const proxyUrls = asString(settings.proxyUrls);
-
-  const directIp = await fetchIp(fetch);
-
-  if (!enabled || !proxyUrls.trim()) {
-    return c.json({
-      enabled: false,
-      directIp,
-      proxyIp: null,
-      match: null,
-    });
-  }
-
-  const proxyIp = await fetchIp(outgoingFetch as typeof fetch);
-
-  return c.json({
-    enabled: true,
-    directIp,
-    proxyIp,
-    match: directIp !== null && proxyIp !== null && directIp === proxyIp,
-  });
-});
-
-router.get("/api/settings/appearance", async (c) => {
-  const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  return c.json({
-    theme: asString(settings.defaultTheme) || "system",
-  });
-});
-
-router.get("/api/settings/default-engines", async (c) => {
-  const token = getSettingsTokenFromRequest(c);
-  if (!(await validateSettingsToken(token))) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-  try {
-    const raw = await readFile(defaultEnginesFile(), "utf-8");
-    return c.json(JSON.parse(raw));
-  } catch {
-    return c.json({});
-  }
-});
-
-router.post("/api/settings/default-engines", async (c) => {
-  const token = getSettingsTokenFromRequest(c);
-  if (!(await validateSettingsToken(token))) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-  let body: Record<string, boolean>;
-  try {
-    body = await c.req.json<Record<string, boolean>>();
-  } catch {
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
-  await writeFile(defaultEnginesFile(), JSON.stringify(body, null, 2), "utf-8");
-  return c.json({ ok: true });
 });
 
 export default router;

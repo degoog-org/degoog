@@ -1,4 +1,5 @@
 import { state } from "../state";
+import { getBase } from "./base-url";
 
 /**
  * Navigate to a search page via href (full page load).
@@ -22,12 +23,12 @@ export function navigateToSearch(
     if (page && page > 1) {
       sessionStorage.setItem("degoog-post-page", String(page));
     }
-    window.location.href = "/search";
+    window.location.href = `${getBase()}/search`;
     return;
   }
 
   const params = new URLSearchParams({ q: query });
   if (type && type !== "web") params.set("type", type);
   if (page && page > 1) params.set("page", String(page));
-  window.location.href = `/search?${params.toString()}`;
+  window.location.href = `${getBase()}/search?${params.toString()}`;
 }

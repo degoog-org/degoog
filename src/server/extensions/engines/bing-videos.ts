@@ -77,13 +77,13 @@ export class BingVideosEngine implements SearchEngine {
       const $el = $(el);
 
       const mmeta = $el.attr("mmeta") || "";
-      let url = "";
+      let videoUrl = "";
       let thumbnail = "";
 
       if (mmeta) {
         try {
           const data = JSON.parse(mmeta) as Record<string, string>;
-          url = data.murl || data.pgurl || "";
+          videoUrl = data.murl || data.pgurl || "";
           thumbnail = data.turl || "";
         } catch {}
       }
@@ -96,16 +96,16 @@ export class BingVideosEngine implements SearchEngine {
       }
 
       let duration = "";
-      $el.find(".mc_vtvc_meta_row").each((_, row) => {
+      $el.find(".mc_vtvc_meta_row").each((__, row) => {
         if (duration) return;
         const text = $(row).text().trim();
         if (/^\d{1,3}:\d{2}(:\d{2})?$/.test(text)) duration = text;
       });
 
-      if (!title || !url || seen.has(url)) return;
-      seen.add(url);
+      if (!title || !videoUrl || seen.has(videoUrl)) return;
+      seen.add(videoUrl);
 
-      results.push({ title, url, snippet: "", source: this.name, thumbnail, duration });
+      results.push({ title, url: videoUrl, snippet: "", source: this.name, thumbnail, duration });
     });
 
     return results;

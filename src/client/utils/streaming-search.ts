@@ -34,6 +34,7 @@ import {
   fetchSlotPanels,
 } from "./search-utils";
 import { buildSearchUrl } from "./url";
+import { appendSearchAuthParams } from "./request";
 import {
   updateEngineTimings,
   updateResults,
@@ -89,7 +90,9 @@ export async function performStreamingSearch(
 
   const engines = await getEngines();
   const url = buildSearchUrl(query, engines, type, 1);
-  const streamUrl = url.replace("/api/search?", "/api/search/stream?");
+  const streamUrl = appendSearchAuthParams(
+    url.replace("/api/search?", "/api/search/stream?"),
+  );
 
   setActiveTab(type);
   closeMediaPreview();

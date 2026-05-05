@@ -1,5 +1,6 @@
 import { state } from "../state";
 import { performSearch } from "./search-actions";
+import { getBase } from "./base-url";
 
 const TIME_LABELS: Record<string, string> = {
   any: "Any time",
@@ -172,7 +173,7 @@ export function initOptionsDropdown(): void {
   async function loadLanguages(): Promise<void> {
     if (!langList) return;
     try {
-      const res = await fetch("/api/settings/languages");
+      const res = await fetch(`${getBase()}/api/settings/languages`);
       const data = (await res.json()) as { languages: string[] };
       const codes = data.languages ?? [];
 

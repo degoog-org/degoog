@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Plugins — Degoog docs</title>
+    <title>Plugins - Degoog docs</title>
     <script>
       (function () {
         try {
@@ -199,7 +199,37 @@
   // ctx.template contains your template.html
   // ctx.dir is the absolute path to your plugin folder
   // ctx.readFile is an async function to read any file from your plugin folder
+  // ctx.signProxyUrl(url) returns a signed /api/proxy/image URL for any external image
+  // ctx.fetch(url, init?) is a proxy-aware fetch, respects your outgoing proxy settings
+  // ctx.createCache(defaultTtlMs) returns an in-memory TTL cache { get, set, clear }
 }</code></pre>
+          <h3>TTL cache (<code>createCache</code>)</h3>
+          <p>
+            Both <code>init(ctx)</code> and slot <code>execute(query, context)</code>
+            receive <strong><code>createCache</code></strong>: a factory compatible with
+            the built-in server helper. Call
+            <code>ctx.createCache&lt;T&gt;(defaultTtlMs)</code> (or
+            <code>context.createCache&lt;T&gt;(defaultTtlMs)</code> in slots) to get an
+            object with <code>get(key)</code>, <code>set(key, value, ttlMs?)</code>, and
+            <code>clear()</code>. Keys are strings; values are typed by your generic
+            <code>T</code>. Entries expire automatically after the TTL (milliseconds).
+          </p>
+          <p>
+            Built-in and third-party code paths share this API: typical usage is to
+            call <code>createCache</code> once in <code>init</code>, keep the returned
+            cache on a module-level variable, and reuse <code>get</code> /
+            <code>set</code> from <code>execute</code> (for example for fetched page
+            excerpts). Prefer <strong>always</strong> using
+            <code>ctx.createCache</code> / <code>context.createCache</code> rather than
+            importing cache helpers from server internals so plugins behave the same in
+            every environment.
+          </p>
+          <p>
+            Store <code>ctx.fetch</code> during <code>init</code> if your plugin
+            makes outgoing HTTP requests outside of <code>execute()</code>, for
+            example inside custom plugin routes. Using it keeps your requests
+            consistent with the proxy settings configured in Settings.
+          </p>
           <p>
             For example, you might build a plugin that uses both a command
             template and a separate card template. The
@@ -242,7 +272,11 @@
           <p>
             The second argument passed to <code>execute</code> is
             <code>context</code>, which might contain your
-            <code>clientIp</code> and <code>page</code>.
+            <code>clientIp</code>, <code>page</code>, and
+            <code>signProxyUrl(url)</code>. Call
+            <code>context.signProxyUrl</code> to get a signed
+            <code>/api/proxy/image</code> URL for any external image you want to
+            serve through the built-in image proxy.
           </p>
           <p>
             You can also include optional properties like
@@ -388,10 +422,14 @@
               <strong>execute(query, context)</strong> (async): Return an object
               with an optional <code>title</code> string and an
               <code>html</code> string. If you return an empty string for the
-              html, nothing will show up. The <code>context</code> contains the
-              <code>clientIp</code> and an array of <code>results</code>. Note
-              that the results array is only populated if you set
-              <code>waitForResults: true</code> on your plugin.
+              html, nothing will show up. The <code>context</code> includes
+              <code>clientIp</code>; <code>results</code> (only when
+              <code>waitForResults: true</code>); proxy-aware
+              <code>fetch(url, init?)</code>; <code>signProxyUrl(url)</code> for
+              external images; and <code>createCache(defaultTtlMs)</code> for the same
+              TTL cache factory as in <code>init(ctx)</code>. Note that the results
+              array is only populated if you set <code>waitForResults: true</code> on
+              your plugin.
             </li>
           </ul>
           <p>

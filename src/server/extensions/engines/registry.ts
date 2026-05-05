@@ -55,7 +55,6 @@ const BUILTIN_DEFINITIONS: EngineDefinition[] = [
     displayName: "Google",
     searchType: "web",
     EngineClass: GoogleEngine,
-    outgoingHosts: ["www.google.com", "google.com"],
     defaultTransport: "curl",
   },
   {
@@ -63,7 +62,6 @@ const BUILTIN_DEFINITIONS: EngineDefinition[] = [
     displayName: "DuckDuckGo",
     searchType: "web",
     EngineClass: DuckDuckGoEngine,
-    outgoingHosts: ["html.duckduckgo.com", "duckduckgo.com"],
   },
   {
     id: "bing",
@@ -71,28 +69,24 @@ const BUILTIN_DEFINITIONS: EngineDefinition[] = [
     searchType: "web",
     EngineClass: BingEngine,
     disabledByDefault: true,
-    outgoingHosts: ["www.bing.com", "bing.com"],
   },
   {
     id: "brave",
     displayName: "Brave Search",
     searchType: "web",
     EngineClass: BraveEngine,
-    outgoingHosts: ["search.brave.com"],
   },
   {
     id: "wikipedia",
     displayName: "Wikipedia",
     searchType: "web",
     EngineClass: WikipediaEngine,
-    outgoingHosts: ["en.wikipedia.org", "www.wikipedia.org", "wikipedia.org"],
   },
   {
     id: "reddit",
     displayName: "Reddit",
     searchType: "web",
     EngineClass: RedditEngine,
-    outgoingHosts: ["www.reddit.com", "reddit.com"],
   },
   {
     id: "google-images",
@@ -100,7 +94,6 @@ const BUILTIN_DEFINITIONS: EngineDefinition[] = [
     searchType: "images",
     EngineClass: GoogleImagesEngine,
     disabledByDefault: true,
-    outgoingHosts: ["www.google.com", "google.com"],
     defaultTransport: "fplay",
   },
   {
@@ -108,35 +101,30 @@ const BUILTIN_DEFINITIONS: EngineDefinition[] = [
     displayName: "Bing Images",
     searchType: "images",
     EngineClass: BingImagesEngine,
-    outgoingHosts: ["www.bing.com", "bing.com"],
   },
   {
     id: "google-videos",
     displayName: "Google Videos",
     searchType: "videos",
     EngineClass: GoogleVideosEngine,
-    outgoingHosts: ["www.google.com", "google.com", "i.ytimg.com"],
   },
   {
     id: "bing-videos",
     displayName: "Bing Videos",
     searchType: "videos",
     EngineClass: BingVideosEngine,
-    outgoingHosts: ["www.bing.com", "bing.com"],
   },
   {
     id: "brave-news",
     displayName: "Brave News",
     searchType: "news",
     EngineClass: BraveNewsEngine,
-    outgoingHosts: ["search.brave.com"],
   },
   {
     id: "bing-news",
     displayName: "Bing News",
     searchType: "news",
     EngineClass: BingNewsEngine,
-    outgoingHosts: ["www.bing.com", "bing.com"],
   },
 ];
 
@@ -275,6 +263,13 @@ export function getCustomEngineTypes(): string[] {
     if (!BUILTIN_TYPES.has(e.searchType)) types.add(e.searchType);
   }
   return [...types];
+}
+
+export function getEngineSearchType(engineId: string): string | null {
+  const builtin = BUILTIN_DEFINITIONS.find((d) => d.id === engineId);
+  if (builtin) return builtin.searchType;
+  const plugin = engineRegistry.items().find((e) => e.id === engineId);
+  return plugin?.searchType ?? null;
 }
 
 function engineRequiresConfig(engine: SearchEngine): boolean {

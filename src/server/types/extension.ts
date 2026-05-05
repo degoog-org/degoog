@@ -1,3 +1,4 @@
+import type { CreateCache } from "../utils/cache";
 import type {
   SearchResult,
   ScoredResult,
@@ -71,12 +72,16 @@ export interface ExtensionMeta {
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
   defaultFeedUrls?: string[];
+  requiresNewerVersion?: boolean;
 }
 
 export interface PluginContext {
   dir: string;
   template: string;
   readFile: (filename: string) => Promise<string>;
+  signProxyUrl: (url: string) => string;
+  fetch?: (url: string, init?: RequestInit) => Promise<Response>;
+  createCache: CreateCache;
 }
 
 export interface SearchEngine {
@@ -116,6 +121,8 @@ export interface SlotPluginContext {
   clientIp?: string;
   results?: ScoredResult[];
   fetch?: (url: string, init?: RequestInit) => Promise<Response>;
+  signProxyUrl?: (url: string) => string;
+  createCache: CreateCache;
 }
 
 export interface SlotPlugin {
@@ -148,6 +155,7 @@ export interface CommandResult {
 export interface CommandContext {
   clientIp?: string;
   page?: number;
+  signProxyUrl?: (url: string) => string;
 }
 
 export interface BangCommand {

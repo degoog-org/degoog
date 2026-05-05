@@ -26,7 +26,7 @@ import {
 import { hideAcDropdown } from "../autocomplete";
 import { triggerSearchQueryEggs } from "../uovadipasqua";
 import { getEngines } from "../engines";
-import { setActiveTab } from "../navigation";
+import { setActiveTab, setTabsForBang, showAllTabs } from "../navigation";
 import { buildPaginationHtml } from "../pagination";
 import {
   getNaturalLanguageBangQuery,
@@ -45,6 +45,8 @@ import {
   performStreamingSearch,
 } from "../streaming-search";
 import { buildSearchBody, buildSearchUrl } from "../url";
+import { searchAuthHeaders, appendSearchAuthParams } from "../request";
+import { getBase } from "../base-url";
 
 let commandsCache: Command[] | null = null;
 let _streamingConfig: { enabled: boolean } | null = null;
@@ -52,7 +54,7 @@ let _streamingConfig: { enabled: boolean } | null = null;
 const _fetchStreamingConfig = async (): Promise<boolean> => {
   if (_streamingConfig) return _streamingConfig.enabled;
   try {
-    const res = await fetch("/api/settings/streaming");
+    const res = await fetch(`${getBase()}/api/settings/streaming`);
     if (res.ok) {
       _streamingConfig = (await res.json()) as { enabled: boolean };
       return _streamingConfig.enabled;
@@ -76,7 +78,7 @@ if (typeof window !== "undefined") {
 const _fetchCommands = async (): Promise<Command[]> => {
   if (commandsCache) return commandsCache;
   try {
-    const res = await fetch("/api/commands", { cache: "no-store" });
+    const res = await fetch(`${getBase()}/api/commands`, { cache: "no-store" });
     if (res.ok) {
       const body = (await res.json()) as { commands?: Command[] };
       commandsCache = body.commands || [];
@@ -161,6 +163,8 @@ export async function performSearch(
   const engines = await getEngines();
   const url = buildSearchUrl(query, engines, resolvedType, resolvedPage);
 
+  state.currentBangQuery = "";
+  showAllTabs();
   setActiveTab(resolvedType);
   closeMediaPreview();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
@@ -216,15 +220,15 @@ export async function performSearch(
   };
   if (state.postMethodEnabled) {
     if (isInit) {
-      history.replaceState(historyState, "", "/search");
+      history.replaceState(historyState, "", `${getBase()}/search`);
     } else {
-      history.pushState(historyState, "", "/search");
+      history.pushState(historyState, "", `${getBase()}/search`);
     }
   } else {
     const urlParams = new URLSearchParams({ q: query });
     if (resolvedType !== "web") urlParams.set("type", resolvedType);
     if (resolvedPage > 1) urlParams.set("page", String(resolvedPage));
-    const getUrl = `/search?${urlParams.toString()}`;
+    const getUrl = `${getBase()}/search?${urlParams.toString()}`;
     if (isInit) {
       history.replaceState(historyState, "", getUrl);
     } else {
@@ -238,14 +242,14 @@ export async function performSearch(
 
   try {
     const res = state.postMethodEnabled
-      ? await fetch("/api/search", {
+      ? await fetch(`${getBase()}/api/search`, {
           method: "POST",
           body: JSON.stringify(
             buildSearchBody(query, engines, resolvedType, resolvedPage),
           ),
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...searchAuthHeaders() },
         })
-      : await fetch(url);
+      : await fetch(appendSearchAuthParams(url));
 
     const data = (await res.json()) as SearchResponse;
     state.currentResults = data.results;
@@ -295,7 +299,7 @@ async function _performSearchWithBang(
   const sidebar = document.getElementById("results-sidebar");
   try {
     const [cmdRes, searchRes] = await Promise.all([
-      fetch(`/api/command?q=${encodeURIComponent(bangQuery)}`),
+      fetch(`${getBase()}/api/command?q=${encodeURIComponent(bangQuery)}`),
       fetch(searchUrl),
     ]);
     const searchData = (await searchRes.json()) as SearchResponse;
@@ -386,10 +390,10 @@ async function _performBangCommand(
     history.pushState(
       { degoog: true, query, type: "web", page },
       "",
-      "/search",
+      `${getBase()}/search`,
     );
   } else {
-    history.replaceState(null, "", `/search?${urlParams.toString()}`);
+    history.replaceState(null, "", `${getBase()}/search?${urlParams.toString()}`);
   }
 
   try {
@@ -398,11 +402,13 @@ async function _performBangCommand(
     if (state.currentTimeFilter && state.currentTimeFilter !== "any") {
       apiParams.set("time", state.currentTimeFilter);
     }
-    const res = await fetch(`/api/command?${apiParams.toString()}`);
+    const res = await fetch(`${getBase()}/api/command?${apiParams.toString()}`);
     if (!res.ok) throw new Error("not found");
     const data = (await res.json()) as {
       type: string;
+      searchType?: string;
       results?: ScoredResult[];
+      engineTimings?: { name: string; time: number; resultCount: number }[];
       totalTime?: number;
       title?: string;
       html?: string;
@@ -410,13 +416,31 @@ async function _performBangCommand(
       page?: number;
     };
     if (data.type === "engine") {
+      const engineType = data.searchType ?? "web";
+      const isMedia = engineType === "images" || engineType === "videos";
       state.currentResults = data.results ?? [];
       state.currentData = data as unknown as SearchResponse;
+      state.currentType = engineType;
+      state.imagePage = 1;
+      state.imageLastPage = MAX_PAGE;
+      state.videoPage = 1;
+      state.videoLastPage = MAX_PAGE;
+      destroyMediaObserver();
+      setActiveTab(engineType);
+      setTabsForBang(engineType);
+      if (isMedia) {
+        const glanceEl = document.getElementById("at-a-glance");
+        if (glanceEl) glanceEl.innerHTML = "";
+        const sidebar = document.getElementById("results-sidebar");
+        if (sidebar) sidebar.innerHTML = "";
+        renderMediaEngineBar(data.engineTimings ?? []);
+      }
       if (resultsMeta)
         resultsMeta.textContent = `About ${data.results?.length ?? 0} results (${((data.totalTime ?? 0) / 1000).toFixed(2)} seconds)`;
       renderResults(data.results ?? []);
       return;
     }
+    setTabsForBang(null);
     if (resultsMeta) resultsMeta.textContent = data.title ?? "";
     if (resultsList) resultsList.innerHTML = data.html || "";
     runScriptsInContainer(resultsList);

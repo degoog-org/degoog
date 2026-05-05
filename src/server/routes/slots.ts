@@ -6,10 +6,12 @@ import {
   SlotPanelResult,
   SlotPluginContext,
 } from "../types";
+import { createCache } from "../utils/cache";
 import { getLocale } from "../utils/hono";
 import { logger } from "../utils/logger";
 import { outgoingFetch } from "../utils/outgoing";
 import { isDisabled } from "../utils/plugin-settings";
+import { buildSignedProxyUrl } from "../utils/proxy-sign";
 import { getClientIp } from "../utils/request";
 import { _applyRateLimit, runSlotPlugins } from "../utils/search";
 import { injectScope, translateHTML } from "../utils/translation";
@@ -68,6 +70,8 @@ router.post("/api/slots/glance", async (c) => {
         clientIp: clientIp ?? undefined,
         results: body.results,
         fetch: outgoingFetch as SlotPluginContext["fetch"],
+        signProxyUrl: buildSignedProxyUrl,
+        createCache,
       };
       const t0 = performance.now();
       const out = await plugin.execute(body.query!.trim(), context);
@@ -86,7 +90,7 @@ router.post("/api/slots/glance", async (c) => {
         position: plugin.position,
         gridSize: plugin.gridSize,
       });
-    } catch {}
+    } catch { }
   }
   return c.json({ panels });
 });

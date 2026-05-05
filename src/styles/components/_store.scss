@@ -272,8 +272,8 @@
   -webkit-appearance: none;
   flex: 1;
   min-width: 0;
-  background: var(--search-bar-bg);
-  border-radius: $search-bar-radius;
+  background: var(--bg-hover);
+  border-radius: $radius-lg;
   color: var(--text-primary);
   font-size: $font-size-base;
   padding: $space-3;
@@ -400,12 +400,10 @@
   color: var(--text-secondary);
   line-height: 1.45;
   display: -webkit-box;
-  line-clamp: 3;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
   flex: 1;
   min-height: 0;
+  max-height: 100px;
+  overflow-y: auto;
 }
 
 .store-card-version {
@@ -417,6 +415,12 @@
 .store-card-version-old {
   text-decoration: line-through;
   opacity: 0.6;
+}
+
+.store-card-version-warning {
+  font-size: $font-size-xs;
+  color: $warning;
+  margin-top: 2px;
 }
 
 .store-card-footer {

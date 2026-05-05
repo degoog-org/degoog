@@ -17,6 +17,10 @@
       "themes": "Temi",
       "store": "Negozio"
     },
+    "tab-search": {
+      "placeholder": "Cerca nelle impostazioni...",
+      "no-results": "Nessun risultato"
+    },
     "appearance": {
       "heading": "Aspetto",
       "desc": "Scegli il tema preferito.",
@@ -50,6 +54,22 @@
       "cache-clear": "Svuota cache di ricerca",
       "cache-cleared": "Svuotata",
       "cache-failed": "Operazione non riuscita",
+      "api-key-heading": "Chiave API",
+      "api-key-desc": "Proteggi gli endpoint di ricerca e suggerimento con un nonce firmato derivato da questa chiave. Abilita i toggle di seguito per richiedere un nonce valido su quelle route.",
+      "api-key-no-password": "Imposta una password tramite la variabile d'ambiente DEGOOG_SETTINGS_PASSWORDS per visualizzare e gestire la chiave API.",
+      "api-key-reveal": "Mostra",
+      "api-key-hide": "Nascondi",
+      "api-key-copy": "Copia",
+      "api-key-copied": "Copiato",
+      "api-key-regenerate": "Rigenera",
+      "api-key-regenerated": "Rigenerato",
+      "api-key-regenerate-failed": "Operazione non riuscita",
+      "api-key-search-enable": "Proteggi le route di ricerca",
+      "api-key-search-aria": "Proteggi le route di ricerca",
+      "api-key-search-tooltip": "Richiedi un nonce firmato valido su /api/search, /api/search/stream e /api/search/retry",
+      "api-key-suggest-enable": "Proteggi le route di suggerimento",
+      "api-key-suggest-aria": "Proteggi le route di suggerimento",
+      "api-key-suggest-tooltip": "Richiedi un nonce firmato valido su /api/suggest e /api/suggest/opensearch",
       "streaming-heading": "Risultati in streaming",
       "streaming-desc": "Carica i risultati man mano che ogni motore risponde, invece di attendere tutti i motori. Funzione sperimentale.",
       "streaming-enable": "Abilita risultati in streaming (sperimentale)",
@@ -84,6 +104,8 @@
       "domain-block-enable": "Abilita blocco dei domini",
       "domain-block-enable-aria": "Abilita blocco dei domini",
       "domain-block-list-label": "Domini bloccati (uno per riga)",
+      "domain-block-ui-enable": "Consenti blocco dai risultati di ricerca",
+      "domain-block-ui-desc": "Quando abilitato, gli utenti autenticati possono bloccare un dominio direttamente dal menu a tendina su ogni riga di risultati. Nascosto su istanze pubbliche o non autenticate indipendentemente da questa impostazione.",
       "domain-block-regex-help": "Le voci regex devono essere racchiuse tra /slash/ e usare la sintassi RegExp di JavaScript (senza flag). Vengono confrontate solo con l'hostname dell'URL (non con l'URL completo). Esempio: /(^|\\\\.)instagram\\\\.com$/ blocca instagram.com e tutti i sottodomini; /^www\\\\.instagram\\\\.com$/ blocca solo www.instagram.com.",
       "domain-replace-heading": "Sostituzione dei domini",
       "domain-replace-desc": "Sostituisci i domini negli URL dei risultati di ricerca. Usa il formato: origine.com -> destinazione.com (una regola per riga). I sottodomini vengono confrontati automaticamente e il percorso viene preservato.",
@@ -114,7 +136,7 @@
       "unreachable-title": "Proxy non raggiungibile.",
       "unreachable-detail": "IP diretto: {directIp}",
       "unreachable-hint": "Impossibile contattare il server proxy. Controlla l’URL del proxy e che sia in esecuzione.",
-      "match-title": "Gli IP coincidono — il proxy potrebbe non funzionare.",
+      "match-title": "Gli IP coincidono - il proxy potrebbe non funzionare.",
       "match-detail": "Diretto: {directIp} · Proxy: {proxyIp}",
       "match-hint": "Entrambi i percorsi hanno restituito lo stesso IP. Il proxy potrebbe non cambiare l’IP di uscita.",
       "ok-title": "Il proxy funziona.",
@@ -154,7 +176,8 @@
       "group-transports": "Trasporti",
       "group-builtin-transports": "Trasporti integrati",
       "group-themes": "Temi",
-      "apply-failed": "Operazione non riuscita"
+      "apply-failed": "Operazione non riuscita",
+      "save-defaults": "Salva come predefinito dell'istanza"
     },
     "errors": {
       "load-extensions": "Impossibile caricare le estensioni.",
@@ -163,6 +186,7 @@
       "load-engines": "Impossibile caricare i motori."
     },
     "gate": {
+      "misconfigured": "L'autenticazione delle impostazioni non è configurata correttamente: il gate configurato fa riferimento a un middleware non caricato. Contatta l'amministratore per correggere l'impostazione del gate o imposta DEGOOG_SETTINGS_PASSWORDS.",
       "desc": "Inserisci la password per accedere alle impostazioni.",
       "password-placeholder": "Password",
       "unlock": "Sblocca",

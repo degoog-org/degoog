@@ -6,9 +6,24 @@ import type { TransportFetchOptions as OutgoingFetchOptions } from "../types";
 const MAX_REDIRECTS = 5;
 const CONNECT_TIMEOUT_MS = 8_000;
 
-function parseProxyUrl(proxyUrl: string): { host: string; port: number } {
+function parseProxyUrl(proxyUrl: string): {
+  host: string;
+  port: number;
+  auth: string | undefined;
+} {
   const url = new URL(proxyUrl);
-  return { host: url.hostname, port: Number(url.port) || 8080 };
+  const username = decodeURIComponent(url.username);
+  const password = decodeURIComponent(url.password);
+  const auth =
+    username || password
+      ? `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`
+      : undefined;
+
+  return {
+    host: url.hostname,
+    port: Number(url.port) || (url.protocol === "http:" ? 80 : 443),
+    auth,
+  };
 }
 
 const _openConnectTunnel = (
@@ -16,6 +31,7 @@ const _openConnectTunnel = (
   proxyPort: number,
   targetHost: string,
   targetPort: number,
+  proxyAuth: string | undefined,
   timeoutMs: number = CONNECT_TIMEOUT_MS,
 ): Promise<net.Socket> =>
   new Promise((resolve, reject) => {
@@ -26,8 +42,9 @@ const _openConnectTunnel = (
     }, timeoutMs);
 
     sock.once("connect", () => {
+      const authHeader = proxyAuth ? `Proxy-Authorization: ${proxyAuth}\r\n` : "";
       sock.write(
-        `CONNECT ${targetHost}:${targetPort} HTTP/1.1\r\nHost: ${targetHost}:${targetPort}\r\n\r\n`,
+        `CONNECT ${targetHost}:${targetPort} HTTP/1.1\r\nHost: ${targetHost}:${targetPort}\r\n${authHeader}\r\n`,
       );
     });
 
@@ -59,6 +76,7 @@ const _openConnectTunnel = (
 async function _openProxySocket(
   proxyHost: string,
   proxyPort: number,
+  proxyAuth: string | undefined,
   targetHost: string,
   targetPort: number,
   useTls: boolean,
@@ -69,6 +87,7 @@ async function _openProxySocket(
     proxyPort,
     targetHost,
     targetPort,
+    proxyAuth,
     timeoutMs,
   );
   if (!useTls) return sock;
@@ -174,7 +193,8 @@ export async function fetchViaHttpProxy(
   options: OutgoingFetchOptions = {},
   timeoutMs?: number,
 ): Promise<Response> {
-  const { host: proxyHost, port: proxyPort } = parseProxyUrl(proxyUrl);
+  const { host: proxyHost, port: proxyPort, auth: proxyAuth } =
+    parseProxyUrl(proxyUrl);
   const followRedirects = (options.redirect ?? "follow") !== "manual";
   const method = options.method ?? "GET";
 
@@ -189,6 +209,7 @@ export async function fetchViaHttpProxy(
     const sock = await _openProxySocket(
       proxyHost,
       proxyPort,
+      proxyAuth,
       parsed.hostname,
       port,
       useTls,

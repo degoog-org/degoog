@@ -7,7 +7,7 @@
       "dependencies": {
         "cheerio": "1.2.0",
         "dompurify": "^3.4.2",
-        "hono": "4.12.7",
+        "hono": "4.12.14",
         "marked": "^18.0.2",
         "sass": "1.85.0",
         "socks": "2.8.7",
@@ -25,7 +25,7 @@
   "overrides": {
     "brace-expansion": "5.0.5",
     "flatted": "3.4.2",
-    "hono": "4.12.7",
+    "hono": "4.12.14",
     "picomatch": "4.0.4",
     "undici": "7.24.0",
   },
@@ -252,7 +252,7 @@
 
     "glob-parent": ["glob-parent@6.0.2", "", { "dependencies": { "is-glob": "^4.0.3" } }, "sha512-XxwI8EOhVQgWp6iDL+3b0r86f4d6AX6zSU55HfB4ydCEuXLXc5FcYeOu+nnGftS4TEju/11rt4KJPTMgbfmv4A=="],
 
-    "hono": ["hono@4.12.7", "", {}, "sha512-jq9l1DM0zVIvsm3lv9Nw9nlJnMNPOcAtsbsgiUhWcFzPE99Gvo6yRTlszSLLYacMeQ6quHD6hMfId8crVHvexw=="],
+    "hono": ["hono@4.12.14", "", {}, "sha512-am5zfg3yu6sqn5yjKBNqhnTX7Cv+m00ox+7jbaKkrLMRJ4rAdldd1xPd/JzbBWspqaQv6RSTrgFN95EsfhC+7w=="],
 
     "htmlparser2": ["htmlparser2@10.1.0", "", { "dependencies": { "domelementtype": "^2.3.0", "domhandler": "^5.0.3", "domutils": "^3.2.2", "entities": "^7.0.1" } }, "sha512-VTZkM9GWRAtEpveh7MSF6SjjrpNVNNVJfFup7xTY3UpFtm67foy9HDVXneLtFVt4pMz5kZtgNcvCniNFb1hlEQ=="],
 

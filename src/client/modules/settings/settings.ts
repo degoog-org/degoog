@@ -1,4 +1,5 @@
 import { initTheme } from "../../utils/theme";
+import { getBase } from "../../utils/base-url";
 import { initInstallPrompt } from "../../utils/install-prompt";
 import {
   initGeneralTab,
@@ -10,6 +11,7 @@ import { initTransportsTab } from "../../settings/transports-tab";
 import { initThemesTab } from "../../settings/themes-tab";
 import { initServerTab } from "../../settings/server-tab";
 import { initStoreTab } from "../../settings/store-tab";
+import { initGlobalSearch } from "../../settings/settings-search";
 import "../modals/settings-modal/modal";
 import { SETTINGS_TABS } from "../../../shared/settings-tabs";
 import type { AllExtensions } from "../../types";
@@ -46,18 +48,40 @@ const _checkAuth = async (): Promise<{
   required: boolean;
   valid: boolean;
   loginUrl?: string;
+  error?: string;
 }> => {
   const token = getStoredToken();
   const headers = token ? { "x-settings-token": token } : {};
-  const res = await fetch("/api/settings/auth", {
+  const res = await fetch(`${getBase()}/api/settings/auth`, {
     headers: headers as Record<string, string>,
   });
   return res.json() as Promise<{
     required: boolean;
     valid: boolean;
     loginUrl?: string;
+    error?: string;
   }>;
 };
+
+function _showAuthMisconfigured(): void {
+  const page = document.querySelector<HTMLElement>(".settings-page");
+  if (!page) return;
+  page.innerHTML = `
+    <header class="settings-page-header">
+      <a href="/" class="settings-page-back">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        ${t("settings-page.back")}
+      </a>
+      <h1 class="settings-page-title">${t("settings-page.page-title")}</h1>
+    </header>
+    <div class="settings-auth-gate">
+      <div class="settings-auth-gate-inner">
+        <p class="settings-auth-desc">${t("settings-page.gate.misconfigured")}</p>
+      </div>
+    </div>`;
+}
 
 function _showAuthGate(): void {
   const page = document.querySelector<HTMLElement>(".settings-page");
@@ -95,7 +119,7 @@ function _showAuthGate(): void {
       const errorEl = document.getElementById("settings-auth-error");
       if (errorEl) errorEl.textContent = "";
       try {
-        const res = await fetch("/api/settings/auth", {
+        const res = await fetch(`${getBase()}/api/settings/auth`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ password }),
@@ -115,7 +139,7 @@ function _showAuthGate(): void {
     });
 }
 
-function _switchSettingsTab(value: string, updateUrl = true): void {
+export function switchSettingsTab(value: string, updateUrl = true): void {
   document
     .querySelectorAll<HTMLElement>(".settings-tab-panel")
     .forEach((p) => p.classList.remove("active"));
@@ -129,7 +153,7 @@ function _switchSettingsTab(value: string, updateUrl = true): void {
   if (select) select.value = value;
 
   if (updateUrl) {
-    const path = value === "general" ? "/settings" : `/settings/${value}`;
+    const path = value === "general" ? `${getBase()}/settings` : `${getBase()}/settings/${value}`;
     window.history.replaceState({}, "", path);
   }
 }
@@ -139,10 +163,10 @@ function _initTabs(): void {
     "settings-tab-select",
   ) as HTMLSelectElement | null;
   const nav = document.getElementById("settings-tabs-nav");
-  select?.addEventListener("change", () => _switchSettingsTab(select.value));
+  select?.addEventListener("change", () => switchSettingsTab(select.value));
   nav?.querySelectorAll<HTMLElement>(".settings-nav-item").forEach((btn) => {
     btn.addEventListener("click", () =>
-      _switchSettingsTab(btn.dataset.tab ?? "general"),
+      switchSettingsTab(btn.dataset.tab ?? "general"),
     );
   });
 
@@ -151,7 +175,7 @@ function _initTabs(): void {
   if (match) {
     const tab = match[1];
     if ((SETTINGS_TABS as readonly string[]).includes(tab)) {
-      _switchSettingsTab(tab, false);
+      switchSettingsTab(tab, false);
     }
   }
 }
@@ -165,12 +189,12 @@ async function _initSettings(): Promise<void> {
 
   try {
     const [extRes, themesRes] = await Promise.all([
-      fetch("/api/extensions", {
+      fetch(`${getBase()}/api/extensions`, {
         headers: getStoredToken()
           ? { "x-settings-token": getStoredToken()! }
           : {},
       }),
-      fetch("/api/themes"),
+      fetch(`${getBase()}/api/themes`),
     ]);
     const allExtensions = (await extRes.json()) as AllExtensions;
     const themesData = (await themesRes.json()) as { activeId: string | null };
@@ -180,6 +204,7 @@ async function _initSettings(): Promise<void> {
     await initThemesTab(themesData, allExtensions.themes ?? []);
     const storeEl = document.getElementById("store-content");
     if (storeEl) void initStoreTab(storeEl, getStoredToken);
+    initGlobalSearch();
   } catch {
     const enginesEl = document.getElementById("engines-content");
     const pluginsEl = document.getElementById("plugins-content");
@@ -199,12 +224,12 @@ async function _initSettings(): Promise<void> {
 window.addEventListener("extensions-saved", async () => {
   try {
     const [extRes, themesRes] = await Promise.all([
-      fetch("/api/extensions", {
+      fetch(`${getBase()}/api/extensions`, {
         headers: getStoredToken()
           ? { "x-settings-token": getStoredToken()! }
           : {},
       }),
-      fetch("/api/themes"),
+      fetch(`${getBase()}/api/themes`),
     ]);
     const allExtensions = (await extRes.json()) as AllExtensions;
     const themesData = (await themesRes.json()) as { activeId: string | null };
@@ -219,7 +244,7 @@ async function _initPublicSettings(): Promise<void> {
   void initTheme();
   void initAppearanceSettings();
   try {
-    const res = await fetch("/api/extensions");
+    const res = await fetch(`${getBase()}/api/extensions`);
     const allExtensions = (await res.json()) as AllExtensions;
     await initEnginesTab(allExtensions, { publicInstance: true });
   } catch {
@@ -240,10 +265,14 @@ async function _init(): Promise<void> {
   const tokenFromUrl = params.get("token");
   if (tokenFromUrl) {
     sessionStorage.setItem(TOKEN_KEY, tokenFromUrl);
-    window.history.replaceState({}, "", "/settings");
+    window.history.replaceState({}, "", `${getBase()}/settings`);
   }
   const auth = await _checkAuth();
   if (auth.required && !auth.valid) {
+    if (auth.error === "auth-misconfigured") {
+      _showAuthMisconfigured();
+      return;
+    }
     if (auth.loginUrl) {
       window.location.href = auth.loginUrl;
       return;

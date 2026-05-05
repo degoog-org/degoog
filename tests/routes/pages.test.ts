@@ -1,10 +1,12 @@
 import { describe, test, expect, beforeAll } from "bun:test";
+import { initServerKey } from "../../src/server/utils/server-key";
 
 let pagesRouter: {
   request: (req: Request | string) => Response | Promise<Response>;
 };
 
 beforeAll(async () => {
+  await initServerKey();
   const mod = await import("../../src/server/routes/pages");
   pagesRouter = mod.default;
 });

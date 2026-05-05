@@ -45,10 +45,14 @@ import {
 import { outgoingFetch } from "../utils/outgoing";
 import { readFile } from "fs/promises";
 import { extensionReadmeExists } from "../utils/extension-docs";
+import { getInstalledItems } from "../extensions/store/item-ops";
+import { isVersionAtLeast, getAppVersion } from "../utils/version";
 
 const router = new Hono();
 
-async function getSlotExtensionMeta(coreT?: Translate): Promise<ExtensionMeta[]> {
+async function getSlotExtensionMeta(
+  coreT?: Translate,
+): Promise<ExtensionMeta[]> {
   const slots = getSlotPlugins();
   const out: ExtensionMeta[] = [];
   for (const slot of slots) {
@@ -58,11 +62,14 @@ async function getSlotExtensionMeta(coreT?: Translate): Promise<ExtensionMeta[]>
     if (hasPositionChoice) {
       fullSchema.push({
         key: SLOT_POSITION_SETTING_KEY,
-        label: coreT ? coreT("settings-page.schema.slot-position.label") || "Position" : "Position",
+        label: coreT
+          ? coreT("settings-page.schema.slot-position.label") || "Position"
+          : "Position",
         type: "select",
         options: [...slot.slotPositions!],
         description: coreT
-          ? coreT("settings-page.schema.slot-position.description") || "Where the slot content appears on the page."
+          ? coreT("settings-page.schema.slot-position.description") ||
+            "Where the slot content appears on the page."
           : "Where the slot content appears on the page.",
       });
     }
@@ -102,7 +109,7 @@ router.get("/api/extensions", async (c) => {
     setEnginesLocale(locale);
     coreT.setLocale(locale);
   }
-  const [engines, plugins, slotMeta, searchBarMeta, themes, transports] =
+  const [engines, plugins, slotMeta, searchBarMeta, themes, transports, installedItems] =
     await Promise.all([
       getEngineExtensionMeta(coreT),
       getPluginExtensionMeta(coreT),
@@ -110,7 +117,24 @@ router.get("/api/extensions", async (c) => {
       getSearchBarActionExtensionMeta(),
       getThemeExtensionMeta(),
       getTransportExtensionMeta(),
+      getInstalledItems(),
     ]);
+
+  const allMetas = [...engines, ...plugins, ...slotMeta, ...searchBarMeta, ...themes, ...transports];
+  for (const meta of allMetas) {
+    const inst = installedItems.find((i) => {
+      const prefixes =
+        i.type === ExtensionStoreType.Plugin ? ["plugin-", "slot-"] :
+        i.type === ExtensionStoreType.Theme ? ["theme-"] :
+        i.type === ExtensionStoreType.Engine ? ["engine-"] :
+        ["transport-"];
+      return prefixes.some((p) => meta.id === p + i.installedAs);
+    });
+    if (inst?.minDegoogVersion) {
+      meta.requiresNewerVersion = !isVersionAtLeast(getAppVersion(), inst.minDegoogVersion);
+    }
+  }
+
   return c.json({
     engines,
     plugins: [...plugins, ...slotMeta, ...searchBarMeta],
@@ -124,7 +148,12 @@ router.post("/api/extensions/:id/settings", async (c) => {
   if (!(await validateSettingsToken(token)))
     return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
-  const body = await c.req.json<Record<string, unknown>>();
+  let body: Record<string, unknown>;
+  try {
+    body = await c.req.json<Record<string, unknown>>();
+  } catch {
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
 
   const locale = getLocale(c);
   const coreT = await getCoreTranslator();

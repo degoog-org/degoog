@@ -1,6 +1,16 @@
 import type { Hono } from "hono";
-import type { SearchBody, SearchType, TimeFilter, RetryPostBody } from "../../types";
-import { _applyRateLimit, isValidQuery, parseEngineConfig } from "../../utils/search";
+import type {
+  SearchBody,
+  SearchType,
+  TimeFilter,
+  RetryPostBody,
+} from "../../types";
+import {
+  _applyRateLimit,
+  isValidQuery,
+  parseEngineConfig,
+} from "../../utils/search";
+import { guardApiKey } from "../../utils/api-key-guard";
 import { parseEnginesFromBody, parsePage } from "./_parsers";
 import { handleRetry, handleSearch } from "./_search-handlers";
 
@@ -8,6 +18,8 @@ export function registerSearchRoutes(router: Hono): void {
   router.get("/api/search", async (c) => {
     const limitRes = await _applyRateLimit(c);
     if (limitRes) return limitRes;
+    const authRes = await guardApiKey(c, "apiKeySearchEnabled");
+    if (authRes) return authRes;
 
     const query = c.req.query("q") ?? "";
     if (!isValidQuery(query))
@@ -30,8 +42,42 @@ export function registerSearchRoutes(router: Hono): void {
   router.post("/api/search", async (c) => {
     const limitRes = await _applyRateLimit(c);
     if (limitRes) return limitRes;
+    const authRes = await guardApiKey(c, "apiKeySearchEnabled");
+    if (authRes) return authRes;
 
-    const body = await c.req.json<SearchBody>();
+    const contentType = c.req.header("content-type") ?? "";
+
+    if (contentType.includes("application/x-www-form-urlencoded")) {
+      let form: FormData;
+      try {
+        form = await c.req.formData();
+      } catch {
+        return c.json({ error: "Invalid form data" }, 400);
+      }
+      const query = (form.get("q") as string | null) ?? "";
+      if (!isValidQuery(query))
+        return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
+
+      const result = await handleSearch({
+        query,
+        engines: parseEnginesFromBody(undefined),
+        searchType: ((form.get("type") as string | null) || "web") as SearchType,
+        page: parsePage(form.get("page")),
+        timeFilter: ((form.get("time") as string | null) || "any") as TimeFilter,
+        lang: (form.get("lang") as string | null) || "",
+        dateFrom: (form.get("dateFrom") as string | null) || "",
+        dateTo: (form.get("dateTo") as string | null) || "",
+      });
+
+      return c.json(result);
+    }
+
+    let body: SearchBody;
+    try {
+      body = await c.req.json<SearchBody>();
+    } catch {
+      return c.json({ error: "Invalid JSON" }, 400);
+    }
     const query = body.query ?? "";
     if (!isValidQuery(query))
       return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
@@ -53,6 +99,8 @@ export function registerSearchRoutes(router: Hono): void {
   router.get("/api/search/retry", async (c) => {
     const limitRes = await _applyRateLimit(c);
     if (limitRes) return limitRes;
+    const authRes = await guardApiKey(c, "apiKeySearchEnabled");
+    if (authRes) return authRes;
 
     const query = c.req.query("q");
     const engineName = c.req.query("engine");
@@ -77,8 +125,15 @@ export function registerSearchRoutes(router: Hono): void {
   router.post("/api/search/retry", async (c) => {
     const limitRes = await _applyRateLimit(c);
     if (limitRes) return limitRes;
+    const authRes = await guardApiKey(c, "apiKeySearchEnabled");
+    if (authRes) return authRes;
 
-    const body = await c.req.json<RetryPostBody>();
+    let body: RetryPostBody;
+    try {
+      body = await c.req.json<RetryPostBody>();
+    } catch {
+      return c.json({ error: "Invalid JSON" }, 400);
+    }
     const query = body.query ?? "";
     const engineName = body.engine ?? "";
     if (!query || !engineName)

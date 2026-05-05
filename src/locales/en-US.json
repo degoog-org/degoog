@@ -17,6 +17,10 @@
       "themes": "Themes",
       "store": "Store"
     },
+    "tab-search": {
+      "placeholder": "Search settings...",
+      "no-results": "No results"
+    },
     "appearance": {
       "heading": "Appearance",
       "desc": "Choose your preferred theme.",
@@ -50,6 +54,22 @@
       "cache-clear": "Clear search cache",
       "cache-cleared": "Cleared",
       "cache-failed": "Failed",
+      "api-key-heading": "API Key",
+      "api-key-no-password": "Set a password via the DEGOOG_SETTINGS_PASSWORDS environment variable to view and manage the API key.",
+      "api-key-desc": "Protect search and suggestion endpoints with a signed nonce derived from this key. Enable the toggles below to require a valid nonce on those routes.",
+      "api-key-reveal": "Reveal",
+      "api-key-hide": "Hide",
+      "api-key-copy": "Copy",
+      "api-key-copied": "Copied",
+      "api-key-regenerate": "Regenerate",
+      "api-key-regenerated": "Regenerated",
+      "api-key-regenerate-failed": "Failed",
+      "api-key-search-enable": "Protect search routes",
+      "api-key-search-aria": "Protect search routes",
+      "api-key-search-tooltip": "Require a valid signed nonce on /api/search, /api/search/stream and /api/search/retry",
+      "api-key-suggest-enable": "Protect suggestion routes",
+      "api-key-suggest-aria": "Protect suggestion routes",
+      "api-key-suggest-tooltip": "Require a valid signed nonce on /api/suggest and /api/suggest/opensearch",
       "streaming-heading": "Streaming results",
       "streaming-desc": "Load results progressively as each engine responds instead of waiting for all engines to finish. This is an experimental feature.",
       "streaming-enable": "Enable streaming results (experimental)",
@@ -116,7 +136,7 @@
       "unreachable-title": "Proxy unreachable.",
       "unreachable-detail": "Direct IP: {directIp}",
       "unreachable-hint": "The proxy server could not be contacted. Check your proxy URL and that the proxy is running.",
-      "match-title": "IPs match — proxy may not be working.",
+      "match-title": "IPs match - proxy may not be working.",
       "match-detail": "Direct: {directIp} · Proxy: {proxyIp}",
       "match-hint": "Both routes returned the same IP. The proxy might not be changing your exit IP.",
       "ok-title": "Proxy is working.",
@@ -170,7 +190,8 @@
       "password-placeholder": "Password",
       "unlock": "Unlock",
       "incorrect-password": "Incorrect password.",
-      "network-error": "Something went wrong. Please try again."
+      "network-error": "Something went wrong. Please try again.",
+      "misconfigured": "Settings authentication is misconfigured: the configured gate references a middleware that is not loaded. Contact the administrator to fix the gate setting or set DEGOOG_SETTINGS_PASSWORDS."
     },
     "public": {
       "engines-heading": "Engines"

@@ -52,7 +52,12 @@
       </header>
 
       <div class="settings-layout">
-        <div class="settings-nav-mobile">
+        <div class="settings-sidebar">
+          <div class="settings-nav-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="settings-global-search" class="settings-nav-search-input" placeholder="{{t:settings-page.tab-search.placeholder}}" autocomplete="off" />
+          </div>
+          <div class="settings-nav-mobile">
           <select
             id="settings-tab-select"
             class="settings-tab-select"
@@ -108,10 +113,11 @@
             {{t:settings-page.nav.store}}
           </button>
         </nav>
+        </div>
 
         <main class="settings-page-main">
           <div class="settings-tab-panel active" id="tab-general">
-            <section class="settings-section ext-card">
+<section class="settings-section ext-card">
               <div class="setting-section-heading-wrapper">
                 <h2 class="settings-section-heading">
                   {{t:settings-page.appearance.heading}}
@@ -232,23 +238,23 @@
           </div>
 
           <div class="settings-tab-panel" id="tab-engines">
-            <div id="engines-content"></div>
+<div id="engines-content"></div>
           </div>
 
           <div class="settings-tab-panel" id="tab-plugins">
-            <div id="plugins-content"></div>
+<div id="plugins-content"></div>
           </div>
 
           <div class="settings-tab-panel" id="tab-transports">
-            <div id="transports-content"></div>
+<div id="transports-content"></div>
           </div>
 
           <div class="settings-tab-panel" id="tab-themes">
-            <div id="themes-content"></div>
+<div id="themes-content"></div>
           </div>
 
           <div class="settings-tab-panel" id="tab-server">
-            <section class="settings-section ext-card">
+<section class="settings-section ext-card">
               <div class="setting-section-heading-wrapper">
                 <h2 class="settings-section-heading">
                   {{t:settings-page.server.cache-heading}}
@@ -265,6 +271,59 @@
               >
                 {{t:settings-page.server.cache-clear}}
               </button>
+            </section>
+
+            <section
+              class="settings-section ext-card"
+              id="settings-section-api-key"
+            >
+              <div class="setting-section-heading-wrapper">
+                <h2 class="settings-section-heading">
+                  {{t:settings-page.server.api-key-heading}}
+                </h2>
+                <div class="floating-section-icon">
+                  <i class="fa-solid fa-key"></i>
+                </div>
+              </div>
+
+              <p class="settings-desc">
+                {{t:settings-page.server.api-key-desc}}
+              </p>
+              <div class="settings-toggle-wrap settings-desc">
+                __API_KEY_SECTION__
+              </div>
+              <fieldset class="settings-fieldset">
+                <label
+                  class="settings-toggle-wrap"
+                  title="{{t:settings-page.server.api-key-search-tooltip}}"
+                >
+                  <input
+                    type="checkbox"
+                    id="settings-api-key-search-enabled"
+                    class="settings-toggle"
+                    aria-label="{{t:settings-page.server.api-key-search-aria}}"
+                  />
+                  <span class="toggle-slider"></span>
+                  <span class="settings-toggle-label"
+                    >{{t:settings-page.server.api-key-search-enable}}</span
+                  >
+                </label>
+                <label
+                  class="settings-toggle-wrap"
+                  title="{{t:settings-page.server.api-key-suggest-tooltip}}"
+                >
+                  <input
+                    type="checkbox"
+                    id="settings-api-key-suggest-enabled"
+                    class="settings-toggle"
+                    aria-label="{{t:settings-page.server.api-key-suggest-aria}}"
+                  />
+                  <span class="toggle-slider"></span>
+                  <span class="settings-toggle-label"
+                    >{{t:settings-page.server.api-key-suggest-enable}}</span
+                  >
+                </label>
+              </fieldset>
             </section>
 
             <section
@@ -633,7 +692,7 @@
                       id="settings-proxy-urls"
                       class="settings-proxy-urls"
                       rows="4"
-                      placeholder="http://proxy1:8080&#10;socks5://proxy2:1080"
+                      placeholder="http://proxy1:8080&#10;http://user:pass@proxy2:8080&#10;socks5://proxy3:1080"
                     ></textarea>
                     <button
                       class="btn btn--secondary proxy-test-btn"

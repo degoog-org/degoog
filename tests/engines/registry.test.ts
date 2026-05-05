@@ -50,9 +50,9 @@ describe("engines registry", () => {
     expect("duckduckgo" in config || "google" in config).toBe(true);
   });
 
-  test("getOutgoingAllowlist returns non-empty array", () => {
+  test("getOutgoingAllowlist returns deduped hostnames array", () => {
     const list = getOutgoingAllowlist();
     expect(Array.isArray(list)).toBe(true);
-    expect(list.length).toBeGreaterThan(0);
+    expect(list).toEqual([...new Set(list)]);
   });
 });

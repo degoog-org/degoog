@@ -31,6 +31,8 @@ export interface StoreItem {
   updateAvailable?: boolean;
   pluginType?: string;
   engineType?: string;
+  minDegoogVersion?: string;
+  requiresNewerVersion?: boolean;
 }
 
 export interface InstalledItem {
@@ -40,6 +42,7 @@ export interface InstalledItem {
   installedAs: string;
   installedAt: string;
   version: string;
+  minDegoogVersion?: string;
 }
 
 export interface ReposData {
@@ -58,6 +61,7 @@ export interface RepoPackageJson {
     version?: string;
     type?: string;
     dependencies?: string[];
+    minDegoogVersion?: string;
   }>;
   themes?: Array<{
     path: string;
@@ -65,6 +69,7 @@ export interface RepoPackageJson {
     description?: string;
     version?: string;
     dependencies?: string[];
+    minDegoogVersion?: string;
   }>;
   engines?: Array<{
     path: string;
@@ -73,6 +78,7 @@ export interface RepoPackageJson {
     version?: string;
     type?: string;
     dependencies?: string[];
+    minDegoogVersion?: string;
   }>;
   transports?: Array<{
     path: string;
@@ -80,6 +86,7 @@ export interface RepoPackageJson {
     description?: string;
     version?: string;
     dependencies?: string[];
+    minDegoogVersion?: string;
   }>;
   "repo-image"?: string;
 }

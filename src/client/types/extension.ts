@@ -33,6 +33,7 @@ export interface ExtensionMeta {
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
   defaultFeedUrls?: string[];
+  requiresNewerVersion?: boolean;
 }
 
 export interface AllExtensions {
@@ -60,6 +61,6 @@ export interface Command {
 }
 
 export interface EngineRegistry {
-  engines: Array<{ id: string; displayName: string }>;
+  engines: Array<{ id: string; displayName: string; searchType?: string }>;
   defaults?: Record<string, boolean>;
 }

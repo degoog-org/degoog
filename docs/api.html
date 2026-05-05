@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>API reference — Degoog docs</title>
+    <title>API reference - Degoog docs</title>
     <script>
       (function () {
         try {
@@ -152,6 +152,28 @@
             Server, and these limits will apply to every caller.
           </p>
 
+          <h2>API key protection (optional)</h2>
+          <p>
+            In Settings -> Server you can require authentication for search, search
+            stream, search retry, and suggest. When that is enabled for a route,
+            requests without valid credentials receive
+            <code>401</code> and a JSON body such as
+            <code>{"error":"Unauthorized"}</code>.
+          </p>
+          <p>
+            For external callers (scripts, integrations,
+            <code>curl</code>, Open WebUI, etc.), use the API key from the same
+            settings screen (the 64-character hexadecimal value) as a Bearer token.
+            The server compares it to the stored secret; only that exact key is
+            accepted.
+          </p>
+          <pre><code>curl -H "Authorization: Bearer YOUR_API_KEY_HERE" \
+  "http://localhost:4444/api/search?q=hello"</code></pre>
+          <p>
+            The in-browser UI does not rely on this header; it uses a separate
+            short-lived nonce supplied with the page when protection is on.
+          </p>
+
           <h2><code>GET /api/search</code></h2>
           <p>Run a metasearch and get merged and scored results.</p>
           <table>
@@ -295,6 +317,12 @@
           <p>
             Just remember to replace <code>http://127.0.0.1:4444</code> with
             your actual Degoog address.
+          </p>
+          <p>
+            If you enabled API key protection for search, configure your client to
+            send <code>Authorization: Bearer …</code> with your instance key as
+            described above (Open WebUI must support custom headers for the search
+            URL if you use that mode).
           </p>
         </main>
       </div>

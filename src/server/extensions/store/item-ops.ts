@@ -1,6 +1,7 @@
-import { readFile, writeFile, mkdir, readdir, stat, rm } from "fs/promises";
-import { join, resolve, dirname, relative } from "path";
+import { readFile, mkdir, readdir, stat, rm } from "fs/promises";
+import { join, resolve, dirname } from "path";
 import { removeSettings } from "../../utils/plugin-settings";
+import { isVersionAtLeast, getAppVersion } from "../../utils/version";
 import { reloadCommands } from "../commands/registry";
 import { reloadSlotPlugins } from "../slots/registry";
 import { reloadSearchResultTabs } from "../search-result-tabs/registry";
@@ -10,8 +11,7 @@ import { reloadMiddlewareRegistry } from "../middleware/registry";
 import { reloadThemes } from "../themes/registry";
 import { reloadEngines } from "../engines/registry";
 import { reloadTransports } from "../transports/registry";
-import { ExtensionStoreType } from "../../types";
-import type { StoreItem, InstalledItem, RepoPackageJson, AuthorJson } from "../../types";
+import { ExtensionStoreType, type StoreItem, type InstalledItem, type RepoPackageJson, type AuthorJson } from "../../types";
 import {
   pluginsDir,
   themesDir,
@@ -86,7 +86,7 @@ function getDestDir(type: ExtensionStoreType): string {
 function getEntriesForType(
   pkg: RepoPackageJson,
   type: ExtensionStoreType,
-): Array<{ path: string; name: string; description?: string; version?: string; type?: string; dependencies?: string[] }> | undefined {
+): Array<{ path: string; name: string; description?: string; version?: string; type?: string; dependencies?: string[]; minDegoogVersion?: string }> | undefined {
   if (type === ExtensionStoreType.Plugin) return pkg.plugins;
   if (type === ExtensionStoreType.Theme) return pkg.themes;
   if (type === ExtensionStoreType.Transport) return pkg.transports;
@@ -192,7 +192,7 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
 
     const push = async (
       type: ExtensionStoreType,
-      entries: Array<{ path: string; name: string; description?: string; version?: string; type?: string }>,
+      entries: Array<{ path: string; name: string; description?: string; version?: string; type?: string; minDegoogVersion?: string }>,
     ) => {
       for (const ent of entries) {
         const itemPath = ent.path.replace(/\/$/, "");
@@ -210,6 +210,7 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
         const folderName = itemPath.split("/").pop() ?? itemPath;
         const isInstalled = installedSet.has(key);
         const repoVersion = ent.version ?? "0.0.0";
+        const minDegoogVersion = ent.minDegoogVersion;
         const item: StoreItem = {
           repoUrl: repo.url,
           repoSlug: repo.localPath,
@@ -226,6 +227,10 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
           installed: isInstalled,
           installedVersion: inst?.version,
           updateAvailable: isInstalled && !!inst?.version && inst.version !== repoVersion,
+          ...(minDegoogVersion ? {
+            minDegoogVersion,
+            requiresNewerVersion: !isVersionAtLeast(getAppVersion(), minDegoogVersion),
+          } : {}),
         };
         if (type === ExtensionStoreType.Plugin && ent.type) item.pluginType = ent.type;
         if (type === ExtensionStoreType.Engine) {
@@ -296,6 +301,7 @@ export async function installItem(
     installedAs: folderName,
     installedAt: new Date().toISOString(),
     version: manifest.version ?? "0.0.0",
+    ...(manifest.minDegoogVersion ? { minDegoogVersion: manifest.minDegoogVersion } : {}),
   });
   await writeReposData(freshData);
   _installingSet.delete(key);
@@ -317,7 +323,7 @@ export async function uninstallItem(
   );
   if (!inst) throw new Error("Item is not installed.");
   const destDir = join(getDestDir(type), inst.installedAs);
-  await rm(destDir, { recursive: true, force: true }).catch(() => {});
+  await rm(destDir, { recursive: true, force: true }).catch(() => { });
   const settingsIds: string[] = [];
   if (type === ExtensionStoreType.Plugin) {
     settingsIds.push(`plugin-${inst.installedAs}`, `slot-${inst.installedAs}`);
@@ -363,9 +369,10 @@ export async function updateItem(
   const entries = getEntriesForType(pkg, type);
   const manifest = entries?.find((e) => e.path.replace(/\/$/, "") === normalizedPath);
   const destDir = join(getDestDir(type), inst.installedAs);
-  await rm(destDir, { recursive: true, force: true }).catch(() => {});
+  await rm(destDir, { recursive: true, force: true }).catch(() => { });
   await copyItemDir(srcDir, destDir, STORE_METADATA);
   if (manifest?.version) inst.version = manifest.version;
+  if (manifest?.minDegoogVersion) inst.minDegoogVersion = manifest.minDegoogVersion;
   await writeReposData(data);
   await reloadAfterAction(type);
 }

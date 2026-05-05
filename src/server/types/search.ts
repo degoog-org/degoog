@@ -83,6 +83,7 @@ export interface EngineContext {
     baseUrl?: string,
     selectors?: string[],
   ) => string;
+  signProxyUrl?: (url: string) => string;
 }
 
 export interface SearchResponse {

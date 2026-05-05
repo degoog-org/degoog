@@ -17,6 +17,10 @@
       "themes": "Thèmes",
       "store": "Boutique"
     },
+    "tab-search": {
+      "placeholder": "Rechercher dans les paramètres...",
+      "no-results": "Aucun résultat"
+    },
     "appearance": {
       "heading": "Apparence",
       "desc": "Choisissez le thème souhaité.",
@@ -50,6 +54,22 @@
       "cache-clear": "Vider le cache de recherche",
       "cache-cleared": "Vidé",
       "cache-failed": "Échec",
+      "api-key-heading": "Clé API",
+      "api-key-desc": "Protégez les points de terminaison de recherche et de suggestion avec un nonce signé dérivé de cette clé. Activez les boutons ci-dessous pour exiger un nonce valide sur ces routes.",
+      "api-key-no-password": "Définissez un mot de passe via la variable d'environnement DEGOOG_SETTINGS_PASSWORDS pour afficher et gérer la clé API.",
+      "api-key-reveal": "Afficher",
+      "api-key-hide": "Masquer",
+      "api-key-copy": "Copier",
+      "api-key-copied": "Copié",
+      "api-key-regenerate": "Regénérer",
+      "api-key-regenerated": "Regénéré",
+      "api-key-regenerate-failed": "Échec",
+      "api-key-search-enable": "Protéger les routes de recherche",
+      "api-key-search-aria": "Protéger les routes de recherche",
+      "api-key-search-tooltip": "Exiger un nonce signé valide sur /api/search, /api/search/stream et /api/search/retry",
+      "api-key-suggest-enable": "Protéger les routes de suggestion",
+      "api-key-suggest-aria": "Protéger les routes de suggestion",
+      "api-key-suggest-tooltip": "Exiger un nonce signé valide sur /api/suggest et /api/suggest/opensearch",
       "streaming-heading": "Résultats en flux",
       "streaming-desc": "Chargez les résultats au fil à mesure que chaque moteur répond, plutôt que d'attendre la fin de tous les moteurs. Fonctionnalité expérimentale.",
       "streaming-enable": "Activer les résultats en flux (expérimental)",
@@ -84,6 +104,8 @@
       "domain-block-enable": "Activer le blocage de domaines",
       "domain-block-enable-aria": "Activer le blocage de domaines",
       "domain-block-list-label": "Domaines bloqués (un par ligne)",
+      "domain-block-ui-enable": "Autoriser le blocage depuis les résultats de recherche",
+      "domain-block-ui-desc": "Lorsque activé, les utilisateurs authentifiés peuvent bloquer un domaine directement depuis un menu en forme de hamburger sur chaque ligne de résultat. Masqué sur les instances publiques ou non authentifiées indépendamment de ce paramètre.",
       "domain-replace-ui-enable": "Autoriser le remplacement depuis les résultats de recherche",
       "domain-replace-ui-desc": "Lorsque activé, les utilisateurs authentifiés peuvent remplacer un domaine directement depuis un menu en forme de hamburger sur chaque ligne de résultat. Masqué sur les instances publiques ou non authentifiées indépendamment de ce paramètre.",
       "domain-score-heading": "Scoring de domaines",
@@ -114,7 +136,7 @@
       "unreachable-title": "Proxy injoignable.",
       "unreachable-detail": "IP directe : {directIp}",
       "unreachable-hint": "Le serveur proxy n'a pas pu être contacté. Vérifiez l'URL du proxy et qu'il est bien démarré.",
-      "match-title": "Les IP correspondent — le proxy ne semble pas fonctionner.",
+      "match-title": "Les IP correspondent - le proxy ne semble pas fonctionner.",
       "match-detail": "Direct : {directIp} · Proxy : {proxyIp}",
       "match-hint": "Les deux chemins ont renvoyé la même IP. Le proxy ne modifie peut-être pas votre IP de sortie.",
       "ok-title": "Le proxy fonctionne.",
@@ -154,7 +176,8 @@
       "group-transports": "Transports",
       "group-builtin-transports": "Transports intégrés",
       "group-themes": "Thèmes",
-      "apply-failed": "Échec"
+      "apply-failed": "Échec",
+      "save-defaults": "Enregistrer comme valeur par défaut de l'instance"
     },
     "errors": {
       "load-extensions": "Impossible de charger les extensions.",
@@ -163,6 +186,7 @@
       "load-engines": "Impossible de charger les moteurs."
     },
     "gate": {
+      "misconfigured": "L'authentification des paramètres est mal configurée : la porte configurée fait référence à un middleware qui n'est pas chargé. Contactez l'administrateur pour corriger le paramètre de la porte ou définissez DEGOOG_SETTINGS_PASSWORDS.",
       "desc": "Saisissez le mot de passe pour accéder aux paramètres.",
       "password-placeholder": "Mot de passe",
       "unlock": "Déverrouiller",

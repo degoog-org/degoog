@@ -12,7 +12,7 @@ COPY . .
 RUN bun run build
 
 FROM base AS release
-RUN apk add --no-cache git ca-certificates gosu curl
+RUN apk add --no-cache git ca-certificates su-exec curl
 
 COPY --from=install /app/node_modules ./node_modules
 COPY --from=build /app/src ./src
