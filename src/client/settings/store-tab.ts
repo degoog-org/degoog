@@ -247,7 +247,7 @@ export async function initStoreTab(
             </button>
             <button class="btn btn--primary degoog-btn degoog-btn--primary store-btn-update-all" type="button">Update all</button>
           </div>
-          <div class="store-updates-body">${rows}</div>`;
+          <div class="store-updates-body degoog-accordion-body degoog-accordion-body--flex">${rows}</div>`;
         updatesPanel
           .querySelector<HTMLButtonElement>(".store-updates-toggle")
           ?.addEventListener("click", () => {

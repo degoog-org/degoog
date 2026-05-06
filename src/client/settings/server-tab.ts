@@ -57,7 +57,7 @@ const _scoreRowTemplate = (domain: string, score: string): HTMLDivElement => {
 
   const remove = document.createElement("button");
   remove.type = "button";
-  remove.className="settings-score-remove";
+  remove.className="settings-score-remove degoog-icon-btn";
   remove.setAttribute(
     "aria-label",
     _scoreT("settings-page.server.domain-score-remove-aria"),

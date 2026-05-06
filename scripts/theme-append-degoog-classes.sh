@@ -48,7 +48,11 @@ declare -A MAP=(
 
   ["toggle-slider"]="degoog-toggle"
 
+  ["sidebar-accordion"]="degoog-accordion"
+  ["sidebar-accordion-body"]="degoog-accordion-body"
   ["sidebar-accordion-toggle"]="degoog-accordion-toggle degoog-accordion-toggle--sidebar"
+  ["store-updates-panel"]="degoog-accordion"
+  ["store-updates-body"]="degoog-accordion-body degoog-accordion-body--flex"
   ["store-updates-toggle"]="degoog-accordion-toggle"
 
   ["results-tab"]="degoog-tab"

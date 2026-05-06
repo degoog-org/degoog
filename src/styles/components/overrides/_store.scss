@@ -182,19 +182,11 @@
 }
 
 .store-updates-body {
-  display: none;
   padding: 0 $space-4 $space-4;
   flex-direction: column;
   gap: $space-2;
 }
 
-.store-updates-panel.open .store-updates-body {
-  display: flex;
-}
-
-.store-updates-panel.open .accordion-chevron {
-  transform: rotate(180deg);
-}
 
 .store-updates-row {
   display: flex;

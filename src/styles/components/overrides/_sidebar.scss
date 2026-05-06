@@ -1,22 +1,9 @@
 .sidebar-accordion-body {
-  display: none;
   padding: 0 $space-4 $space-4;
 
   @media (min-width: 768px) {
     display: block;
     padding: $space-4;
-  }
-}
-
-.sidebar-accordion {
-  &.open {
-    .sidebar-accordion-body {
-      display: block;
-    }
-
-    .accordion-chevron {
-      transform: rotate(180deg);
-    }
   }
 }
 

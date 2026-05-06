@@ -1,0 +1,135 @@
+.degoog-result {
+  padding: $space-4 0;
+  position: relative;
+
+  &:hover .degoog-result--actions-toggle,
+  &:focus-within .degoog-result--actions-toggle {
+    opacity: 1;
+  }
+
+  &--inner {
+    display: flow-root;
+
+    @media (min-width: 768px) {
+      display: flex;
+      align-items: flex-start;
+      gap: $space-4;
+    }
+  }
+
+  &--body {
+    @media (min-width: 768px) {
+      flex: 1;
+      min-width: 0;
+      order: 1;
+    }
+  }
+
+  &--thumb {
+    float: right;
+    margin: 2px 0 $space-2 $space-3;
+    width: 5rem;
+    height: 3.75rem;
+    border-radius: $radius-lg;
+    overflow: hidden;
+    background: var(--bg-light, #f0f0f0);
+
+    @media (min-width: 768px) {
+      float: none;
+      margin: 0;
+      flex-shrink: 0;
+      order: 2;
+      width: 7.5rem;
+      height: 5.625rem;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &--url-row {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+  }
+
+  &--favicon {
+    width: 1.625rem;
+    height: 1.625rem;
+    flex-shrink: 0;
+    border-radius: $radius-full;
+    object-fit: cover;
+  }
+
+  &--cite {
+    font-size: $font-size-base;
+    color: var(--text-cite);
+    font-style: normal;
+    @include truncate;
+  }
+
+  &--title {
+    display: block;
+    font-size: $font-size-xl;
+    color: var(--text-link);
+    text-decoration: none;
+    line-height: 1.3;
+    margin-top: $space-1;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:visited {
+      color: var(--text-link-visited);
+    }
+  }
+
+  &--snippet {
+    font-size: $font-size-base;
+    color: var(--text-snippet);
+    line-height: 1.58;
+    margin: $space-1 0 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  &--engines {
+    display: flex;
+    gap: $space-2;
+    margin-top: $space-2;
+  }
+
+  &--actions {
+    position: relative;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  &--actions-toggle {
+    @include button-reset;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: $radius-full;
+    color: var(--text-secondary);
+    font-size: $font-size-md;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity $transition-fast, background $transition-fast,
+      color $transition-fast;
+
+    &:hover,
+    &:focus,
+    &[aria-expanded="true"] {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+      opacity: 1;
+    }
+  }
+}

@@ -83,8 +83,8 @@ export function initUrlList(container: HTMLElement): void {
       const parsed = JSON.parse(hiddenInput?.value || "[]") as unknown;
       return Array.isArray(parsed)
         ? (parsed as unknown[]).filter(
-            (u): u is string => typeof u === "string",
-          )
+          (u): u is string => typeof u === "string",
+        )
         : [];
     } catch {
       return [];
@@ -108,7 +108,7 @@ export function initUrlList(container: HTMLElement): void {
     urls.push(trimmed);
     setUrls(urls);
     const li = document.createElement("li");
-    li.className="ext-field-urllist-item";
+    li.className = "ext-field-urllist-item";
     li.dataset.url = trimmed;
     li.innerHTML = `<span class="ext-field-urllist-url">${escapeHtml(trimmed)}</span><button type="button" class="ext-field-urllist-remove" aria-label="${escapeHtml(t("settings-page.modal.field-remove-aria"))}">×</button>`;
     li.querySelector(".ext-field-urllist-remove")?.addEventListener(
@@ -175,7 +175,7 @@ export const renderField = (
       <div class="ext-field" data-key="${escapeHtml(field.key)}" data-type="toggle">
         <label class="ext-field-toggle-row">
           <span class="ext-field-label">${escapeHtml(field.label)}</span>
-          <label class="engine-toggle degoog-toggle-wrap">
+          <label class="engine-toggle degoog-toggle-wrap degoog-toggle-wrap--transparent">
             <input type="checkbox" id="field-${escapeHtml(field.key)}" ${checked}>
             <span class="toggle-slider degoog-toggle"></span>
           </label>
@@ -228,7 +228,7 @@ export const renderField = (
   return `
     <div class="ext-field" data-key="${escapeHtml(field.key)}" data-type="${escapeHtml(field.type)}" data-secret="${isSecret}" data-was-set="${isSet}">
       <label class="ext-field-label" for="field-${escapeHtml(field.key)}">${escapeHtml(field.label)}${field.required ? " <span class='ext-required'>*</span>" : ""}</label>
-      <input class="ext-field-input${configuredClass}" type="${inputType}" id="field-${escapeHtml(field.key)}" value="${escapeHtml(displayValue)}" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
+      <input class="ext-field-input${configuredClass} degoog-input" type="${inputType}" id="field-${escapeHtml(field.key)}" value="${escapeHtml(displayValue)}" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
       ${descHtml}
     </div>`;
 };

@@ -1,0 +1,19 @@
+/**
+ * @fccview here, this is a bunch of overrides for the generic styling.
+ * It'll be here as long as the "migration" is happening, shouldn't affect you unless you are developing stuff in degoog.
+ */
+
+@import "overrides/header";
+@import "overrides/logo";
+@import "overrides/search-bar";
+@import "overrides/results";
+@import "overrides/glance";
+@import "overrides/skeleton";
+@import "overrides/settings";
+@import "overrides/extension-cards";
+@import "overrides/sidebar";
+@import "overrides/media";
+@import "overrides/commands";
+@import "overrides/store";
+@import "overrides/home-feed";
+@import "overrides/uovadipasqua";

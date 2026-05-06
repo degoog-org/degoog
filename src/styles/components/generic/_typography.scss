@@ -1,0 +1,61 @@
+.degoog-text {
+  color: var(--text-primary);
+  font-size: $font-size-base;
+  line-height: 1.5;
+
+  &--md {
+    font-size: $font-size-md;
+  }
+
+  &--sm {
+    font-size: $font-size-small;
+  }
+
+  &--secondary {
+    color: var(--text-secondary);
+  }
+
+  &--spaced {
+    margin: $space-2 0 0;
+  }
+}
+
+.degoog-link {
+  color: var(--text-link);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.degoog-link-btn {
+  @include button-reset;
+  color: var(--text-link);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.degoog-badge {
+  display: inline-block;
+  font-size: $font-size-xs;
+  color: var(--text-secondary);
+  background: var(--bg-light);
+  border-radius: $radius-sm;
+  padding: 2px $space-2;
+
+  &--engine-tag {
+    border-radius: $radius-xs;
+    box-shadow: $box-shadow;
+    border: 1px solid transparent;
+  }
+
+  &--store-type {
+    font-weight: 500;
+    background: var(--bg-hover);
+    text-transform: capitalize;
+  }
+}

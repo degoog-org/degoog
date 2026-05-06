@@ -1,0 +1,110 @@
+.degoog-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg);
+  border: 0;
+  border-radius: $radius-md;
+  box-shadow: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: $font-size-small;
+  padding: $space-2 $space-3;
+  transition: color $transition-fast, background $transition-fast,
+    opacity $transition-fast;
+
+  &:hover {
+    background: var(--bg-light);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  &--secondary {
+    background: var(--bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--bg);
+    border-radius: $radius-sm;
+    padding: $space-2 $space-4;
+    font-size: $font-size-small;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text-primary);
+      background: var(--bg);
+    }
+  }
+
+  &--primary {
+    background: $primary;
+    color: var(--white);
+
+    &:hover {
+      color: var(--white);
+      background: var(--primary-hover);
+    }
+  }
+
+  &--danger {
+    background: rgba($danger, 0.14);
+    color: $danger;
+
+    &:hover:not(:disabled) {
+      background: rgba($danger, 0.2);
+      color: $danger;
+    }
+  }
+}
+
+.degoog-icon-btn {
+  @include button-reset;
+  color: var(--text-secondary);
+
+  &:hover {
+    color: var(--text-primary);
+  }
+
+  &--padded {
+    padding: $space-2;
+  }
+
+  &--results-gear {
+    position: absolute;
+    top: $space-4;
+    right: $space-4;
+
+    @media (min-width: 768px) {
+      position: static;
+      margin-left: auto;
+    }
+  }
+
+  &--lightbox-close {
+    position: absolute;
+    top: $space-4;
+    right: $space-5;
+    z-index: 2;
+    font-size: $space-7;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.7);
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  &--media-preview-close {
+    position: absolute;
+    top: $space-3;
+    right: $space-3;
+    font-size: $space-6;
+    z-index: 1;
+  }
+}

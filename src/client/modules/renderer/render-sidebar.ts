@@ -29,7 +29,7 @@ const _sidebarAccordion = (title: string, content: string): string =>
       <span>${escapeHtml(title)}</span>
       <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
-    <div class="sidebar-accordion-body">${content}</div>
+    <div class="sidebar-accordion-body degoog-accordion-body">${content}</div>
   </div>`;
 
 export function renderSidebar(

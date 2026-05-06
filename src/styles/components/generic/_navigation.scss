@@ -1,0 +1,134 @@
+.degoog-dropdown {
+  background: var(--bg-light);
+  border: 1px solid transparent;
+  border-radius: $radius-lg;
+  box-shadow: $box-shadow;
+  padding: $space-1 0;
+
+  &--menu {
+    z-index: 200;
+    min-width: 11.25rem;
+  }
+
+  &--submenu {
+    z-index: 201;
+    min-width: 12.5rem;
+    padding: $space-2 0;
+    overflow: hidden;
+  }
+
+  &--actions-menu {
+    position: absolute;
+    top: calc(100% + #{$space-1});
+    right: 0;
+    z-index: 50;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+}
+
+.degoog-tab {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-3 $space-4;
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: color $transition-fast, border-color $transition-fast;
+  white-space: nowrap;
+
+  &.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--text-primary);
+  }
+
+  &:hover:not(.active) {
+    color: var(--text-primary);
+  }
+}
+
+.degoog-accordion-toggle {
+  @include button-reset;
+  @include flex-between;
+  width: 100%;
+  padding: $space-3 $space-4;
+  font-size: $font-size-base;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+
+  .accordion-chevron {
+    transition: transform $transition-fast;
+    flex-shrink: 0;
+  }
+
+  &--sidebar {
+    @media (min-width: 768px) {
+      display: none;
+    }
+  }
+}
+
+.degoog-accordion-body {
+  display: none;
+}
+
+.degoog-accordion {
+  &.open {
+    .degoog-accordion-body {
+      display: block;
+    }
+
+    .degoog-accordion-body--flex {
+      display: flex;
+    }
+
+    .accordion-chevron {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.degoog-menu-item {
+  @include button-reset;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: $space-2 $space-3;
+  font-size: $font-size-small;
+  color: var(--text-primary);
+  text-align: left;
+
+  &:hover {
+    background: var(--bg-hover);
+  }
+
+  &:focus {
+    background: var(--bg-hover);
+  }
+
+  &--lg {
+    gap: $space-2;
+    padding: $space-3 $space-3;
+  }
+
+  &--option {
+    padding: $space-2 $space-4;
+
+    &.active {
+      font-weight: 500;
+
+      &::before {
+        content: "\2713";
+        margin-right: $space-2;
+        font-size: $font-size-small;
+      }
+    }
+  }
+}

@@ -1,0 +1,134 @@
+.degoog-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-light);
+  border: none;
+  border-radius: $radius-md;
+  color: var(--text-primary);
+  font-size: $font-size-base;
+  outline: none;
+  padding: $space-2 $space-3;
+  width: 100%;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: var(--text-secondary);
+  }
+
+  &:focus {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
+
+  &--sm {
+    font-size: $font-size-small;
+    padding: $space-1 $space-2;
+  }
+
+  &--tools {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: $radius-sm;
+  }
+
+  &--tools-filter {
+    display: block;
+    width: calc(100% - $space-6);
+    margin: $space-1 $space-3 2px;
+    box-sizing: border-box;
+  }
+
+  &--tools-date {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &--chat {
+    background: var(--bg);
+    border-radius: $radius-lg;
+    padding: $space-3 $space-4;
+    resize: none;
+    overflow: hidden;
+    line-height: 1.5;
+    font-family: inherit;
+  }
+}
+
+.degoog-select-wrap {
+  position: relative;
+
+  &::after {
+    content: '\f0d7';
+    font-family: 'Font Awesome 7 Free';
+    font-weight: 900;
+    font-size: $font-size-base;
+    color: var(--text-secondary);
+    position: absolute;
+    inset-inline-end: $space-4;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  &--flex {
+    flex: 1;
+    margin-top: 0;
+  }
+
+  &--mobile-only {
+    @media (min-width: 768px) {
+      display: none;
+    }
+  }
+}
+
+.degoog-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  cursor: pointer;
+  background: var(--bg);
+  padding: $space-3;
+  border-radius: $radius-md;
+
+  input {
+    display: none;
+  }
+
+  &--transparent {
+    background: transparent;
+  }
+}
+
+.degoog-toggle {
+  width: $space-8;
+  height: $space-4;
+  background: var(--border);
+  border-radius: $radius-xl;
+  position: relative;
+  transition: background $transition-fast;
+  flex-shrink: 0;
+  order: 2;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: $space-6;
+    height: $space-6;
+    border-radius: $radius-full;
+    background: var(--white);
+    border: 1px solid var(--border);
+    transition: left $transition-fast;
+    left: 0;
+    transform: translate(0, -50%);
+  }
+
+  input:checked + & {
+    background: $primary;
+
+    &::after {
+      left: 55%;
+    }
+  }
+}

@@ -25,7 +25,7 @@ function _ensureDocsButton(): HTMLButtonElement | null {
   if (docsBtn) return docsBtn;
   docsBtn = document.createElement("button");
   docsBtn.type = "button";
-  docsBtn.className="btn btn--secondary degoog-btn degoog-btn--secondary ext-docs-btn";
+  docsBtn.className = "btn btn--secondary degoog-btn degoog-btn--secondary ext-docs-btn";
   docsBtn.textContent = "Docs";
   docsBtn.style.display = "none";
   footerEl.insertBefore(docsBtn, footerEl.firstChild);
@@ -49,7 +49,7 @@ const _initTestButton = (container: HTMLElement): void => {
     btn.disabled = true;
     if (resultEl) {
       resultEl.textContent = t("settings-page.modal.test-testing");
-      resultEl.className="ext-test-result";
+      resultEl.className = "ext-test-result";
     }
     try {
       const res = await fetch(
@@ -187,7 +187,7 @@ export function openModal(ext: ExtensionMeta): void {
       html += `<div class="ext-advanced-section">
         <label class="ext-field-toggle-row ext-advanced-header">
           <span class="ext-field-label">${t("settings-page.modal.advanced")}</span>
-          <label class="engine-toggle degoog-toggle-wrap">
+          <label class="engine-toggle degoog-toggle-wrap degoog-toggle-wrap--transparent">
             <input type="checkbox" class="ext-advanced-toggle"${showAdvanced ? " checked" : ""}>
             <span class="toggle-slider degoog-toggle"></span>
           </label>

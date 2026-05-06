@@ -1,0 +1,52 @@
+.degoog-search-bar {
+  @include search-bar-base;
+  width: 100%;
+  position: relative;
+  border: 1px solid transparent;
+  box-shadow: $box-shadow;
+
+  .search-icon {
+    flex-shrink: 0;
+    margin-right: $space-3;
+  }
+
+  .search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: $font-size-md;
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .degoog-icon-btn {
+    @include flex-center;
+    width: $space-6;
+    height: $space-6;
+    margin-left: $space-3;
+    flex-shrink: 0;
+  }
+
+  &--square {
+    --degoog-search-bar-radius: #{$radius-lg};
+    box-shadow: none;
+  }
+
+  &--results {
+    flex: none;
+    width: 100%;
+
+    @media (min-width: 768px) {
+      flex: 1;
+      max-width: 43.25rem;
+      width: auto;
+    }
+  }
+}

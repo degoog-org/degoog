@@ -96,7 +96,7 @@ export function updateEngineTimings(
         <span>Engine Performance</span>
         <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-      <div class="sidebar-accordion-body"></div>`;
+      <div class="sidebar-accordion-body degoog-accordion-body"></div>`;
     panel
       .querySelector(".sidebar-accordion-toggle")
       ?.addEventListener("click", () => {

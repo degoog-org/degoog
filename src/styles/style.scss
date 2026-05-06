@@ -11,19 +11,7 @@
 @import "fonts";
 @import "mixins";
 @import "components/generic";
-@import "components/header";
-@import "components/logo";
-@import "components/search-bar";
-@import "components/results";
-@import "components/glance";
-@import "components/skeleton";
-@import "components/settings";
-@import "components/extension-cards";
-@import "components/sidebar";
-@import "components/media";
-@import "components/commands";
-@import "components/store";
-@import "components/uovadipasqua";
+@import "components/overrides";
 
 *,
 *::before,

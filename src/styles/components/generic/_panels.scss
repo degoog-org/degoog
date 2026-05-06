@@ -1,0 +1,93 @@
+.degoog-panel {
+  background: var(--bg-light);
+  border: 1px solid transparent;
+  border-radius: $radius-lg;
+  box-shadow: $box-shadow;
+  overflow: hidden;
+  padding: $space-3;
+
+  &--stack-item {
+    margin-bottom: $space-4;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &--slot {
+    padding: 0;
+    flex: 1 1 100%;
+    min-width: 0;
+    margin-bottom: $space-4;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &[data-grid="1"] {
+      flex: 1 1 0;
+      min-width: min(100%, 10rem);
+    }
+
+    &[data-grid="2"] {
+      flex: 2 1 0;
+      min-width: min(100%, 14rem);
+    }
+
+    &[data-grid="3"] {
+      flex: 3 1 0;
+      min-width: min(100%, 18rem);
+    }
+
+    @media (max-width: 767px) {
+      &[data-grid] {
+        flex-basis: 100%;
+      }
+    }
+  }
+
+  &--slot-title {
+    font-size: $font-size-base;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: $space-4;
+    margin-bottom: 0;
+  }
+
+  &--slot-body {
+    font-size: $font-size-small;
+    color: var(--text-primary);
+    line-height: 1.5;
+
+    a {
+      color: $primary;
+      text-decoration: none;
+    }
+  }
+
+  &--slot-body-padded {
+    padding: $space-4;
+  }
+
+  &--ext-card {
+    padding: $space-4;
+  }
+
+  &--accordion {
+    padding: 0;
+  }
+}
+
+.degoog-vstack {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+
+  &--sm {
+    gap: $space-1;
+  }
+
+  &--lg {
+    gap: $space-3;
+  }
+}
