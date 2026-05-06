@@ -3,6 +3,7 @@ import { getMiddleware } from "../extensions/middleware/registry";
 import { asString, getSettings } from "../utils/plugin-settings";
 import { isPublicInstance } from "../utils/public-instance";
 import { logger } from "../utils/logger";
+import { getBasePath } from "../utils/base-url";
 import {
   TOKEN_TTL_MS,
   checkAuthRate,
@@ -171,7 +172,7 @@ router.get("/api/settings/auth", async (c) => {
 
 router.get("/api/settings/auth/callback", async (c) => {
   const m = await getSelectedMiddlewareForSettingsGate();
-  if (!m) return c.redirect("/settings");
+  if (!m) return c.redirect(`${getBasePath()}/settings`);
   const result = await m.handle(c.req.raw, { route: "settings-auth-callback" });
   if (
     result !== null &&
@@ -185,7 +186,7 @@ router.get("/api/settings/auth/callback", async (c) => {
     return c.redirect(`${result.redirect}${sep}token=${sessionToken}`);
   }
   if (result instanceof Response) return result;
-  return c.redirect("/settings");
+  return c.redirect(`${getBasePath()}/settings`);
 });
 
 router.post("/api/settings/auth", async (c) => {

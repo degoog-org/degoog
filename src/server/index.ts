@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
+import { trimTrailingSlash } from "hono/trailing-slash";
 import pkg from "../../package.json";
 import { getBasePath } from "./utils/base-url";
 import { initPlugins } from "./extensions/commands/registry";
@@ -22,6 +23,8 @@ import { initServerKey } from "./utils/server-key";
 const BASE_PATH = getBasePath();
 
 const app = new Hono();
+
+app.use(trimTrailingSlash());
 
 app.use("*", async (c, next) => {
   await next();

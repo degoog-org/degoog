@@ -1,6 +1,7 @@
 import { escapeHtml, getConfigStatus } from "../utils/dom";
 import { openModal } from "../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, AllExtensions } from "../types";
+import { getBase } from "../utils/base-url";
 
 const t = window.scopedT("core");
 
@@ -85,7 +86,7 @@ export function initTransportsTab(allExtensions: AllExtensions): void {
         if (!id) return;
         const disabled = !input.checked;
         const res = await fetch(
-          `/api/extensions/${encodeURIComponent(id)}/settings`,
+          `${getBase()}/api/extensions/${encodeURIComponent(id)}/settings`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

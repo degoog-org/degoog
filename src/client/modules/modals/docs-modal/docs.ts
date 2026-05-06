@@ -1,5 +1,6 @@
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
+import { getBase } from "../../../utils/base-url";
 
 let overlay: HTMLDivElement | null = null;
 let titleEl: HTMLHeadingElement | null = null;
@@ -65,7 +66,7 @@ export async function openExtensionDocs(options: {
 
   try {
     const res = await fetch(
-      `/api/extensions/${encodeURIComponent(options.id)}/readme`,
+      `${getBase()}/api/extensions/${encodeURIComponent(options.id)}/readme`,
       { headers: jsonHeaders(getStoredToken) },
     );
     if (!res.ok) throw new Error("Failed");

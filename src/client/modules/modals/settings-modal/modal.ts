@@ -252,7 +252,7 @@ async function _save(): Promise<void> {
   if (statusEl) statusEl.textContent = t("settings-page.modal.saving");
   try {
     const res = await fetch(
-      `/api/extensions/${encodeURIComponent(currentExt.id)}/settings`,
+      `${getBase()}/api/extensions/${encodeURIComponent(currentExt.id)}/settings`,
       {
         method: "POST",
         headers: jsonHeaders(getStoredToken),
