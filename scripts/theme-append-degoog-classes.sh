@@ -112,6 +112,8 @@ append_for_file() {
       my $old = $ENV{OLD_CLASS};
       my $new = $ENV{NEW_CLASS};
       s/(class=(["'\''"]))(.*?)(\2)/$1 . _append($3, $old, $new) . $4/ge;
+      s/(\bclassName\s*=\s*)(["'\''"])(.*?)(\2)/$1 . $2 . _append($3, $old, $new) . $4/ge;
+      s/(setAttribute\(\s*(["'\''"])class\2\s*,\s*(["'\''"]))(.*?)(\3\s*\))/$1 . _append($4, $old, $new) . $5/ge;
       sub _append {
         my ($v, $old, $new) = @_;
         my @c = grep { length } split(/\s+/, $v);
@@ -147,7 +149,7 @@ export TARGET DRY_RUN
 while IFS= read -r -d '' file; do
   append_for_file "$file"
 done < <(find "$TARGET" \
-  -not \( -path "*/node_modules/*" -o -path "*/stores/*" -o -path "*/.git/*" \) \
-  \( -name "*.html" -o -name "*.htm" \) \
+  -not \( -path "*/node_modules/*" -o -path "*/.git/*" \) \
+  \( -name "*.html" -o -name "*.htm" -o -name "*.js" -o -name "*.mjs" -o -name "*.cjs" \) \
   -print0)
 
