@@ -16,8 +16,7 @@
   }
 
   &:focus {
-    outline: 2px solid $primary;
-    outline-offset: 2px;
+    outline: none;
   }
 
   &--sm {
