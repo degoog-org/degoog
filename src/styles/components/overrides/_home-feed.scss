@@ -24,7 +24,9 @@
   }
 
   @media (min-width: 768px) {
-    display: none !important;
+    &:not(.home-news-feed--desktop) {
+      display: none !important;
+    }
   }
 }
 

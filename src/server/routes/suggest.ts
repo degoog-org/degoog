@@ -1,7 +1,32 @@
 import { Hono } from "hono";
 import type { SuggestPostBody } from "../types/search";
-import { _applyRateLimit } from "../utils/search";
 import { guardApiKey } from "../utils/api-key-guard";
+import { DEGOOG_SETTINGS_ID } from "../utils/search";
+import { asString, getSettings } from "../utils/plugin-settings";
+import { checkRateLimit } from "../utils/rate-limit";
+import { getClientIp } from "../utils/request";
+
+async function _applySuggestRateLimit(c: Parameters<typeof getClientIp>[0]) {
+  const settings = await getSettings(DEGOOG_SETTINGS_ID);
+  if (asString(settings.rateLimitSuggestEnabled) !== "true") return null;
+  const ip = getClientIp(c) ?? "unknown";
+  const opts = {
+    rateLimitEnabled: "true",
+    rateLimitBurstWindow: asString(settings.rateLimitSuggestBurstWindow) || "20",
+    rateLimitBurstMax: asString(settings.rateLimitSuggestBurstMax) || "60",
+    rateLimitLongWindow: asString(settings.rateLimitSuggestLongWindow) || "60",
+    rateLimitLongMax: asString(settings.rateLimitSuggestLongMax) || "120",
+  };
+  const result = checkRateLimit(ip, opts);
+  if (!result.allowed && result.retryAfterSec !== undefined) {
+    return (c as Parameters<typeof getClientIp>[0] & { json: Function }).json(
+      { error: "Too many requests" },
+      429,
+      { "Retry-After": String(result.retryAfterSec) },
+    );
+  }
+  return null;
+}
 
 const router = new Hono();
 
@@ -42,7 +67,7 @@ async function getSuggestions(query: string): Promise<string[]> {
 }
 
 router.get("/api/suggest", async (c) => {
-  const limitRes = await _applyRateLimit(c);
+  const limitRes = await _applySuggestRateLimit(c);
   if (limitRes) return limitRes;
   const authRes = await guardApiKey(c, "apiKeySuggestEnabled");
   if (authRes) return authRes;
@@ -51,7 +76,7 @@ router.get("/api/suggest", async (c) => {
 });
 
 router.post("/api/suggest", async (c) => {
-  const limitRes = await _applyRateLimit(c);
+  const limitRes = await _applySuggestRateLimit(c);
   if (limitRes) return limitRes;
   const authRes = await guardApiKey(c, "apiKeySuggestEnabled");
   if (authRes) return authRes;
@@ -65,7 +90,7 @@ router.post("/api/suggest", async (c) => {
 });
 
 router.get("/api/suggest/opensearch", async (c) => {
-  const limitRes = await _applyRateLimit(c);
+  const limitRes = await _applySuggestRateLimit(c);
   if (limitRes) return limitRes;
   const authRes = await guardApiKey(c, "apiKeySuggestEnabled");
   if (authRes) return authRes;

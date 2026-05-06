@@ -400,6 +400,18 @@
   margin: 0;
 }
 
+.settings-rl-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: $space-2 $space-3;
+  align-items: center;
+
+  .settings-rate-limit-input--inline {
+    width: 100px;
+    min-width: 0;
+  }
+}
+
 .settings-rate-limit-input {
   display: block;
   width: 100%;

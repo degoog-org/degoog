@@ -14,6 +14,12 @@ type ServerSettingsData = {
   rateLimitBurstMax?: string;
   rateLimitLongWindow?: string;
   rateLimitLongMax?: string;
+  rateLimitSuggestEnabled?: string;
+  rateLimitSuggestBurstWindow?: string;
+  rateLimitSuggestBurstMax?: string;
+  rateLimitSuggestLongWindow?: string;
+  rateLimitSuggestLongMax?: string;
+  acDebounceMs?: string;
   languagesEnabled?: string;
   languages?: string;
   streamingEnabled?: string;
@@ -149,6 +155,7 @@ export async function initServerTab(
   _bindToggle("proxy-enabled", "proxy-urls-wrap");
   _bindToggle("languages-enabled", "languages-wrap");
   _bindToggle("rate-limit-enabled", "rate-limit-options");
+  _bindToggle("rate-limit-suggest-enabled", "rate-limit-suggest-options");
   _bindToggle("streaming-enabled", "streaming-options");
   _bindToggle("streaming-auto-retry", "streaming-retry-wrap");
   _bindToggle("domain-block-enabled", "domain-block-wrap");
@@ -182,6 +189,12 @@ export async function initServerTab(
       _setVal("rate-limit-burst-max", data.rateLimitBurstMax);
       _setVal("rate-limit-long-window", data.rateLimitLongWindow);
       _setVal("rate-limit-long-max", data.rateLimitLongMax);
+      _setToggle("rate-limit-suggest-enabled", data.rateLimitSuggestEnabled);
+      _setVal("rate-limit-suggest-burst-window", data.rateLimitSuggestBurstWindow);
+      _setVal("rate-limit-suggest-burst-max", data.rateLimitSuggestBurstMax);
+      _setVal("rate-limit-suggest-long-window", data.rateLimitSuggestLongWindow);
+      _setVal("rate-limit-suggest-long-max", data.rateLimitSuggestLongMax);
+      _setVal("ac-debounce-ms", data.acDebounceMs);
 
       _setToggle("streaming-enabled", data.streamingEnabled);
       _setToggle("streaming-auto-retry", data.streamingAutoRetry);
@@ -238,6 +251,18 @@ export async function initServerTab(
         rateLimitLongWindow: _rl("rate-limit-long-window"),
         rateLimitLongMax: _rl("rate-limit-long-max"),
       });
+
+      const suggestEnabled = el("rate-limit-suggest-enabled")?.checked;
+      payload.rateLimitSuggestEnabled = suggestEnabled ? "true" : "false";
+      if (suggestEnabled) {
+        Object.assign(payload, {
+          rateLimitSuggestBurstWindow: _rl("rate-limit-suggest-burst-window"),
+          rateLimitSuggestBurstMax: _rl("rate-limit-suggest-burst-max"),
+          rateLimitSuggestLongWindow: _rl("rate-limit-suggest-long-window"),
+          rateLimitSuggestLongMax: _rl("rate-limit-suggest-long-max"),
+        });
+      }
+      payload.acDebounceMs = _rl("ac-debounce-ms");
     }
 
     return payload;

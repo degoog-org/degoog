@@ -3,6 +3,9 @@ import { escapeHtml } from "./dom";
 import { searchAuthHeaders } from "./request";
 import { getBase } from "./base-url";
 
+const _w = window as Window & { __DEGOOG_AC_DEBOUNCE__?: number };
+const _acDebounce = (): number => _w.__DEGOOG_AC_DEBOUNCE__ ?? 150;
+
 let acController: AbortController | null = null;
 let acTimeout: ReturnType<typeof setTimeout> | null = null;
 let acSelectedIdx = -1;
@@ -34,7 +37,10 @@ async function _fetchSuggestions(
       ? await fetch(`${getBase()}/api/suggest`, {
           method: "POST",
           body: JSON.stringify({ query }),
-          headers: { "Content-Type": "application/json", ...searchAuthHeaders() },
+          headers: {
+            "Content-Type": "application/json",
+            ...searchAuthHeaders(),
+          },
           signal: acController.signal,
         })
       : await fetch(`${getBase()}/api/suggest?q=${encodeURIComponent(query)}`, {
@@ -86,7 +92,7 @@ export function initAutocomplete(
     }
     acTimeout = setTimeout(
       () => void _fetchSuggestions(q, input, dropdown, performSearch),
-      150,
+      _acDebounce(),
     );
   });
 
@@ -110,7 +116,7 @@ export function initAutocomplete(
   });
 
   input.addEventListener("blur", () => {
-    setTimeout(() => hideAcDropdown(dropdown), 150);
+    setTimeout(() => hideAcDropdown(dropdown), 300);
   });
 
   input.addEventListener("focus", () => {

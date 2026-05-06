@@ -229,6 +229,11 @@ async function applyPagePlaceholders(
 
   result = translateHTML(result, t);
 
+  const acDebounceMs = parseInt(asString(pageSettings.acDebounceMs), 10);
+  const acDebounce = Number.isFinite(acDebounceMs) && acDebounceMs >= 0 ? acDebounceMs : 150;
+  const acScript = `<script>window.__DEGOOG_AC_DEBOUNCE__=${acDebounce}</script>`;
+  result = result.replace("</head>", `${acScript}\n  </head>`);
+
   if (BASE_URL) {
     const baseScript = `<script>window.__DEGOOG_BASE_URL__=${JSON.stringify(BASE_URL)}</script>`;
     result = result.replace("</head>", `${baseScript}\n  </head>`);

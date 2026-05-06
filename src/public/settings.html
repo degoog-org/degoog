@@ -60,7 +60,7 @@
             <input
               type="text"
               id="settings-global-search"
-              class="settings-nav-search-input search-input"
+              class="settings-nav-search-input search-input degoog-input"
               placeholder="{{t:settings-page.tab-search.placeholder}}"
               autocomplete="off"
             />
@@ -70,7 +70,7 @@
           >
             <select
               id="settings-tab-select"
-              class="settings-tab-select"
+              class="settings-tab-select degoog-select"
               aria-label="{{t:settings-page.nav.aria-section}}"
             >
               <option value="general">{{t:settings-page.nav.general}}</option>
@@ -780,60 +780,154 @@
                       class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
                     >
                       <p class="settings-rate-limit-defaults">
+                        {{t:settings-page.server.rate-limit-search-group}} —
                         {{t:settings-page.server.rate-limit-defaults}}
                       </p>
-                      <label
-                        for="settings-rate-limit-burst-window"
-                        class="settings-proxy-urls-label"
-                        >{{t:settings-page.server.rate-limit-burst-window}}</label
-                      >
-                      <input
-                        type="number"
-                        id="settings-rate-limit-burst-window"
-                        class="settings-rate-limit-input degoog-input"
-                        min="1"
-                        max="3600"
-                        placeholder="20"
-                      />
-                      <label
-                        for="settings-rate-limit-burst-max"
-                        class="settings-proxy-urls-label"
-                        >{{t:settings-page.server.rate-limit-burst-max}}</label
-                      >
-                      <input
-                        type="number"
-                        id="settings-rate-limit-burst-max"
-                        class="settings-rate-limit-input degoog-input"
-                        min="1"
-                        max="1000"
-                        placeholder="15"
-                      />
-                      <label
-                        for="settings-rate-limit-long-window"
-                        class="settings-proxy-urls-label"
-                        >{{t:settings-page.server.rate-limit-long-window}}</label
-                      >
-                      <input
-                        type="number"
-                        id="settings-rate-limit-long-window"
-                        class="settings-rate-limit-input degoog-input"
-                        min="1"
-                        max="3600"
-                        placeholder="600"
-                      />
-                      <label
-                        for="settings-rate-limit-long-max"
-                        class="settings-proxy-urls-label"
-                        >{{t:settings-page.server.rate-limit-long-max}}</label
-                      >
-                      <input
-                        type="number"
-                        id="settings-rate-limit-long-max"
-                        class="settings-rate-limit-input degoog-input"
-                        min="1"
-                        max="1000"
-                        placeholder="150"
-                      />
+                      <div class="settings-rl-grid">
+                        <label
+                          for="settings-rate-limit-burst-window"
+                          class="settings-proxy-urls-label"
+                          >{{t:settings-page.server.rate-limit-burst-window}}</label
+                        >
+                        <input
+                          type="number"
+                          id="settings-rate-limit-burst-window"
+                          class="settings-rate-limit-input settings-rate-limit-input--inline degoog-input"
+                          min="1"
+                          max="3600"
+                          placeholder="20"
+                        />
+                        <label
+                          for="settings-rate-limit-burst-max"
+                          class="settings-proxy-urls-label"
+                          >{{t:settings-page.server.rate-limit-burst-max}}</label
+                        >
+                        <input
+                          type="number"
+                          id="settings-rate-limit-burst-max"
+                          class="settings-rate-limit-input settings-rate-limit-input--inline degoog-input"
+                          min="1"
+                          max="1000"
+                          placeholder="15"
+                        />
+                        <label
+                          for="settings-rate-limit-long-window"
+                          class="settings-proxy-urls-label"
+                          >{{t:settings-page.server.rate-limit-long-window}}</label
+                        >
+                        <input
+                          type="number"
+                          id="settings-rate-limit-long-window"
+                          class="settings-rate-limit-input settings-rate-limit-input--inline degoog-input"
+                          min="1"
+                          max="3600"
+                          placeholder="600"
+                        />
+                        <label
+                          for="settings-rate-limit-long-max"
+                          class="settings-proxy-urls-label"
+                          >{{t:settings-page.server.rate-limit-long-max}}</label
+                        >
+                        <input
+                          type="number"
+                          id="settings-rate-limit-long-max"
+                          class="settings-rate-limit-input settings-rate-limit-input--inline degoog-input"
+                          min="1"
+                          max="1000"
+                          placeholder="150"
+                        />
+                      </div>
+                    </fieldset>
+                  </div>
+                  <label class="settings-toggle-wrap degoog-toggle-wrap">
+                    <input
+                      type="checkbox"
+                      id="settings-rate-limit-suggest-enabled"
+                      class="settings-toggle"
+                    />
+                    <span class="toggle-slider degoog-toggle"></span>
+                    <span class="settings-toggle-label"
+                      >{{t:settings-page.server.rate-limit-suggest-enable}}</span
+                    >
+                  </label>
+                  <div
+                    id="settings-rate-limit-suggest-options"
+                    style="display: none"
+                  >
+                    <fieldset
+                      class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
+                    >
+                      <p class="settings-rate-limit-defaults">
+                        {{t:settings-page.server.rate-limit-suggest-group}} —
+                        {{t:settings-page.server.rate-limit-suggest-defaults}}
+                      </p>
+                      <div class="settings-rl-grid">
+                        <label
+                          for="settings-rate-limit-suggest-burst-window"
+                          class="settings-proxy-urls-label"
+                          >{{t:settings-page.server.rate-limit-burst-window}}</label
+                        >
+                        <input
+                          type="number"
+                          id="settings-rate-limit-suggest-burst-window"
+                          class="settings-rate-limit-input settings-rate-limit-input--inline degoog-input"
+                          min="1"
+                          max="3600"
+                          placeholder="20"
+                        />
+                        <label
+                          for="settings-rate-limit-suggest-burst-max"
+                          class="settings-proxy-urls-label"
+                          >{{t:settings-page.server.rate-limit-burst-max}}</label
+                        >
+                        <input
+                          type="number"
+                          id="settings-rate-limit-suggest-burst-max"
+                          class="settings-rate-limit-input settings-rate-limit-input--inline degoog-input"
+                          min="1"
+                          max="1000"
+                          placeholder="60"
+                        />
+                        <label
+                          for="settings-rate-limit-suggest-long-window"
+                          class="settings-proxy-urls-label"
+                          >{{t:settings-page.server.rate-limit-long-window}}</label
+                        >
+                        <input
+                          type="number"
+                          id="settings-rate-limit-suggest-long-window"
+                          class="settings-rate-limit-input settings-rate-limit-input--inline degoog-input"
+                          min="1"
+                          max="3600"
+                          placeholder="60"
+                        />
+                        <label
+                          for="settings-rate-limit-suggest-long-max"
+                          class="settings-proxy-urls-label"
+                          >{{t:settings-page.server.rate-limit-long-max}}</label
+                        >
+                        <input
+                          type="number"
+                          id="settings-rate-limit-suggest-long-max"
+                          class="settings-rate-limit-input settings-rate-limit-input--inline degoog-input"
+                          min="1"
+                          max="1000"
+                          placeholder="120"
+                        />
+                        <label
+                          for="settings-ac-debounce-ms"
+                          class="settings-proxy-urls-label"
+                          >{{t:settings-page.server.ac-debounce}}</label
+                        >
+                        <input
+                          type="number"
+                          id="settings-ac-debounce-ms"
+                          class="settings-rate-limit-input settings-rate-limit-input--inline degoog-input"
+                          min="0"
+                          max="2000"
+                          placeholder="150"
+                        />
+                      </div>
                     </fieldset>
                   </div>
                 </fieldset>
