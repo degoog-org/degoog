@@ -152,22 +152,28 @@ export async function performTabSearch(
     if (data.totalPages && data.totalPages > 1 && pagination && !isMediaTab) {
       _renderTabPagination(pagination, data.totalPages, page, query, tabId);
     }
-
-    const panels = await fetchSlotPanels(query, data.results);
-    const kpPanels = panels.filter(
-      (p) => p.position === SlotPanelPosition.KnowledgePanel,
-    );
-    renderSidebar(
-      state.currentData,
-      (q) => void performTabSearch(q, tabId),
-      kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
-    );
-  } catch {
+  } catch (err) {
+    console.error("[tab-search] search failed", err);
     if (resultsMeta) resultsMeta.textContent = "";
     if (resultsList)
       resultsList.innerHTML =
         '<div class="no-results">Search failed. Please try again.</div>';
+    return;
   }
+
+  void (async () => {
+    const panels = await fetchSlotPanels(query, state.currentResults);
+    const kpPanels = panels.filter(
+      (p) => p.position === SlotPanelPosition.KnowledgePanel,
+    );
+    try {
+      renderSidebar(
+        state.currentData,
+        (q) => void performTabSearch(q, tabId),
+        kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
+      );
+    } catch {}
+  })();
 }
 
 function _renderTabResults(

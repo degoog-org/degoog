@@ -18,6 +18,7 @@ import type {
   TimeFilter,
 } from "./types";
 import { extractImageUrl } from "./utils/extract-image";
+import { logger } from "./utils/logger";
 import { outgoingFetch, parseOutgoingTransport } from "./utils/outgoing";
 import { stripHtml } from "./utils/text";
 import { asString, getSettings } from "./utils/plugin-settings";
@@ -282,8 +283,9 @@ export const searchSingleEngine = async (
       results,
       timing: { name: engine.name, time: elapsed, resultCount: results.length },
     };
-  } catch {
+  } catch (err) {
     const elapsed = Math.round(performance.now() - t0);
+    logger.warn("engine", `${engine.name} failed after ${elapsed}ms`, err);
     return {
       results: [],
       timing: { name: engine.name, time: elapsed, resultCount: 0 },

@@ -88,7 +88,8 @@ export async function goToPage(pageNum: number): Promise<void> {
     }
     renderResults(state.currentResults);
     window.scrollTo(0, 0);
-  } catch {
+  } catch (err) {
+    console.error("[search] page failed", err);
     if (resultsList)
       resultsList.innerHTML =
         '<div class="no-results">Search failed. Please try again.</div>';

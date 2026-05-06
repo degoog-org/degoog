@@ -279,7 +279,8 @@ export async function performSearch(
       if (glanceEl) glanceEl.innerHTML = "";
     }
     renderResults(data.results);
-  } catch {
+  } catch (err) {
+    console.error("[search] search failed", err);
     if (resultsMeta) resultsMeta.textContent = "";
     if (resultsList)
       resultsList.innerHTML =
@@ -344,7 +345,8 @@ async function _performSearchWithBang(
         runScriptsInContainer(glanceEl);
       }
     }
-  } catch {
+  } catch (err) {
+    console.error("[search] bang search failed", err);
     if (resultsMeta) resultsMeta.textContent = "";
     if (resultsList)
       resultsList.innerHTML =

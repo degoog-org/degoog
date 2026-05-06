@@ -248,7 +248,8 @@ export async function performStreamingSearch(
     renderPagination(MAX_PAGE, state.currentPage);
   });
 
-  source.addEventListener("error", () => {
+  source.addEventListener("error", (e) => {
+    console.error("[streaming-search] stream error", e);
     source.close();
     _activeSource = null;
     if (firstResult) {
