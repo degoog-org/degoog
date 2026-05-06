@@ -228,19 +228,16 @@ export async function initServerTab(
     };
 
     if (enabled) {
-      const bw = val("rate-limit-burst-window");
-      const bm = val("rate-limit-burst-max");
-      const lw = val("rate-limit-long-window");
-      const lm = val("rate-limit-long-max");
-
-      if (bw && bm && lw && lm) {
-        Object.assign(payload, {
-          rateLimitBurstWindow: bw,
-          rateLimitBurstMax: bm,
-          rateLimitLongWindow: lw,
-          rateLimitLongMax: lm,
-        });
-      }
+      const _rl = (id: string) => {
+        const input = el(id);
+        return input?.value.trim() || input?.placeholder || "";
+      };
+      Object.assign(payload, {
+        rateLimitBurstWindow: _rl("rate-limit-burst-window"),
+        rateLimitBurstMax: _rl("rate-limit-burst-max"),
+        rateLimitLongWindow: _rl("rate-limit-long-window"),
+        rateLimitLongMax: _rl("rate-limit-long-max"),
+      });
     }
 
     return payload;

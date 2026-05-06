@@ -249,14 +249,13 @@ export async function performStreamingSearch(
   });
 
   source.addEventListener("error", (e) => {
+    if (_activeSource !== source) return;
     console.error("[streaming-search] stream error", e);
     source.close();
     _activeSource = null;
-    if (firstResult) {
-      if (resultsMeta) resultsMeta.textContent = "";
-      if (resultsList)
-        resultsList.innerHTML =
-          '<div class="no-results">Search failed. Please try again.</div>';
-    }
+    if (resultsMeta) resultsMeta.textContent = "";
+    if (resultsList)
+      resultsList.innerHTML =
+        '<div class="no-results">Search failed. Please try again.</div>';
   });
 }

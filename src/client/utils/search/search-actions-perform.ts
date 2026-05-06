@@ -254,7 +254,14 @@ export async function performSearch(
     if (!res.ok) {
       const body = await res.text().catch(() => "(unreadable)");
       console.error("[search] non-ok response", res.status, body);
-      throw new Error(`Search request failed with status ${res.status}`);
+      const msg =
+        res.status === 429
+          ? "Too many requests. Please slow down."
+          : "Search failed. Please try again.";
+      if (resultsMeta) resultsMeta.textContent = "";
+      if (resultsList)
+        resultsList.innerHTML = `<div class="no-results">${msg}</div>`;
+      return;
     }
     const data = (await res.json()) as SearchResponse;
     state.currentResults = data.results;

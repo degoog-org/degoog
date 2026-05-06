@@ -56,7 +56,7 @@ export function initGlobalSearch(): void {
     const noResults = _getOrCreateNoResults(main);
 
     if (!q) {
-      main.classList.remove("settings-search-active", "settings-search-empty");
+      main.classList.remove("settings-search-active", "settings-search-empty", "settings-search-has-save");
       noResults.hidden = true;
       document
         .querySelectorAll<HTMLElement>(".settings-section, .ext-card, .ext-group")
@@ -80,6 +80,9 @@ export function initGlobalSearch(): void {
     matches.forEach((r) => {
       r.el.style.display = "";
     });
+
+    const needsSave = matches.some((r) => r.tab === "server");
+    main.classList.toggle("settings-search-has-save", needsSave);
 
     document.querySelectorAll<HTMLElement>(".ext-group").forEach((group) => {
       const anyVisible = Array.from(

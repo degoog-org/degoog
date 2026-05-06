@@ -194,6 +194,10 @@
   display: none;
 }
 
+.settings-search-active.settings-search-has-save .settings-page-actions:not(#engines-content .settings-page-actions) {
+  display: block;
+}
+
 .settings-search-active.settings-search-empty .settings-tab-panel {
   display: none;
 }
