@@ -8,7 +8,7 @@ import type {
 import {
   initPlugin,
   loadPluginAssets,
-  registerPluginNamespace,
+  lockinNameSpace,
 } from "../../utils/plugin-assets";
 import {
   asString,
@@ -88,7 +88,7 @@ const registry = createRegistry<CommandEntry>({
     entry.id = (source === "plugin" ? "plugin-" : "") + folderName;
     commandSourceMap.set(entry.id, source);
     entry.instance.t = await createTranslatorFromPath(entryPath);
-    registerPluginNamespace(folderName, `commands/${entry.id}`);
+    lockinNameSpace(folderName, `commands/${entry.id}`);
     if (!(await isDisabled(entry.id))) {
       const template = await loadPluginAssets(
         entryPath,

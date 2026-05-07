@@ -8,12 +8,13 @@ import { pluginsDir } from "../../utils/paths";
 import {
   initPlugin,
   loadPluginAssets,
-  registerPluginNamespace,
-  registerPluginSettingsId,
+  lockinNameSpace,
+  lockinSettingsId,
 } from "../../utils/plugin-assets";
-import { isDisabled } from "../../utils/plugin-settings";
+import { isDisabledWithFallback } from "../../utils/plugin-settings";
 import { createTranslatorFromPath } from "../../utils/translation";
 import { createRegistry } from "../registry-factory";
+import { stupidSettingIDtoAvoidConflicts } from "../extension-id";
 
 const builtinsDir = join(
   process.cwd(),
@@ -37,8 +38,6 @@ function isSlotPlugin(val: unknown): val is SlotPlugin {
       slot.slotPositions.length > 0 &&
       slot.slotPositions.every((p) => validPositions.has(p)));
   return (
-    "id" in slot &&
-    typeof slot.id === "string" &&
     "name" in slot &&
     typeof slot.name === "string" &&
     positionOk &&
@@ -64,20 +63,45 @@ const registry = createRegistry<SlotPlugin>({
       (mod.default as Record<string, unknown>)?.slot;
     return isSlotPlugin(s) ? s : null;
   },
-  onLoad: async (slot, { entryPath, folderName, source }) => {
-    const settingsId = slot.settingsId ?? `slot-${slot.id}`;
-    slotSourceMap.set(slot.id, source);
+  canonicalIdKind: "slot",
+  onLoad: async (slot, { entryPath, folderName, source, canonicalId }) => {
+    const legacyId = typeof slot.id === "string" ? slot.id : "";
+    const id = canonicalId ?? folderName;
+    slot.id = id;
+
+    const { settingsId, fallbackSettingsIds } = stupidSettingIDtoAvoidConflicts(
+      {
+        kind: "slot",
+        canonicalId: id,
+        folderName,
+        legacyDevId: legacyId,
+        explicitSettingsId: slot.settingsId,
+      },
+    );
+
+    slot.settingsId = settingsId;
+    slot.settingsFallbackIds = fallbackSettingsIds;
+    slotSourceMap.set(id, source);
     slot.t = await createTranslatorFromPath(entryPath);
-    registerPluginNamespace(folderName, `slots/${slot.id}`);
-    registerPluginSettingsId(folderName, settingsId);
-    if (!(await isDisabled(settingsId))) {
+
+    lockinNameSpace(folderName, `slots/${id}`);
+    lockinSettingsId(folderName, settingsId);
+
+    if (!(await isDisabledWithFallback(settingsId, fallbackSettingsIds))) {
       const template = await loadPluginAssets(
         entryPath,
         folderName,
         settingsId,
         source,
       );
-      await initPlugin(slot, entryPath, settingsId, template);
+
+      await initPlugin(
+        slot,
+        entryPath,
+        settingsId,
+        template,
+        fallbackSettingsIds,
+      );
     }
   },
   debugTag: "slots",

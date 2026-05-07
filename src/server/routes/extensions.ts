@@ -24,6 +24,7 @@ import { getSearchBarActionExtensionMeta } from "../extensions/search-bar/regist
 import { getThemeExtensionMeta } from "../extensions/themes/registry";
 import {
   getSettings,
+  dumbFallbackBecauseIDontThink,
   isDisabled,
   setSettings,
   mergeSecrets,
@@ -47,6 +48,7 @@ import { readFile } from "fs/promises";
 import { extensionReadmeExists } from "../utils/extension-docs";
 import { getInstalledItems } from "../extensions/store/item-ops";
 import { isVersionAtLeast, getAppVersion } from "../utils/version";
+import { logger } from "../utils/logger";
 
 const router = new Hono();
 
@@ -56,6 +58,13 @@ async function getSlotExtensionMeta(
   const slots = getSlotPlugins();
   const out: ExtensionMeta[] = [];
   for (const slot of slots) {
+    if (!slot.id) {
+      logger.warn(
+        "extensions",
+        `Skipping slot extension meta: missing id (name="${slot.name}")`,
+      );
+      continue;
+    }
     const baseSchema = slot.settingsSchema ?? [];
     const hasPositionChoice = (slot.slotPositions?.length ?? 0) > 0;
     const fullSchema: SettingField[] = [...baseSchema];
@@ -74,7 +83,9 @@ async function getSlotExtensionMeta(
       });
     }
     const id = slot.settingsId ?? `slot-${slot.id}`;
-    const raw = await getSettings(id);
+    const raw = slot.settingsFallbackIds?.length
+      ? await dumbFallbackBecauseIDontThink(id, slot.settingsFallbackIds)
+      : await getSettings(id);
     const settings = maskSecrets(raw, fullSchema);
     if (raw["disabled"]) settings["disabled"] = raw["disabled"];
     if (hasPositionChoice) {
@@ -109,29 +120,49 @@ router.get("/api/extensions", async (c) => {
     setEnginesLocale(locale);
     coreT.setLocale(locale);
   }
-  const [engines, plugins, slotMeta, searchBarMeta, themes, transports, installedItems] =
-    await Promise.all([
-      getEngineExtensionMeta(coreT),
-      getPluginExtensionMeta(coreT),
-      getSlotExtensionMeta(coreT),
-      getSearchBarActionExtensionMeta(),
-      getThemeExtensionMeta(),
-      getTransportExtensionMeta(),
-      getInstalledItems(),
-    ]);
+  const [
+    engines,
+    plugins,
+    slotMeta,
+    searchBarMeta,
+    themes,
+    transports,
+    installedItems,
+  ] = await Promise.all([
+    getEngineExtensionMeta(coreT),
+    getPluginExtensionMeta(coreT),
+    getSlotExtensionMeta(coreT),
+    getSearchBarActionExtensionMeta(),
+    getThemeExtensionMeta(),
+    getTransportExtensionMeta(),
+    getInstalledItems(),
+  ]);
 
-  const allMetas = [...engines, ...plugins, ...slotMeta, ...searchBarMeta, ...themes, ...transports];
+  const allMetas = [
+    ...engines,
+    ...plugins,
+    ...slotMeta,
+    ...searchBarMeta,
+    ...themes,
+    ...transports,
+  ];
   for (const meta of allMetas) {
     const inst = installedItems.find((i) => {
       const prefixes =
-        i.type === ExtensionStoreType.Plugin ? ["plugin-", "slot-"] :
-        i.type === ExtensionStoreType.Theme ? ["theme-"] :
-        i.type === ExtensionStoreType.Engine ? ["engine-"] :
-        ["transport-"];
+        i.type === ExtensionStoreType.Plugin
+          ? ["plugin-", "slot-"]
+          : i.type === ExtensionStoreType.Theme
+            ? ["theme-"]
+            : i.type === ExtensionStoreType.Engine
+              ? ["engine-"]
+              : ["transport-"];
       return prefixes.some((p) => meta.id === p + i.installedAs);
     });
     if (inst?.minDegoogVersion) {
-      meta.requiresNewerVersion = !isVersionAtLeast(getAppVersion(), inst.minDegoogVersion);
+      meta.requiresNewerVersion = !isVersionAtLeast(
+        getAppVersion(),
+        inst.minDegoogVersion,
+      );
     }
   }
 

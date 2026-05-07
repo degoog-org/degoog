@@ -47,8 +47,29 @@ export const getSettings = async (
   return store[id] ?? {};
 };
 
+export const dumbFallbackBecauseIDontThink = async (
+  preferredId: string,
+  fallbacks: string[],
+): Promise<Record<string, SettingValue>> => {
+  const store = await load();
+  if (store[preferredId]) return store[preferredId] ?? {};
+  for (const id of fallbacks) {
+    if (!id || id === preferredId) continue;
+    if (store[id]) return store[id] ?? {};
+  }
+  return {};
+};
+
 export const isDisabled = async (id: string): Promise<boolean> => {
   const settings = await getSettings(id);
+  return settings["disabled"] === "true";
+};
+
+export const isDisabledWithFallback = async (
+  preferredId: string,
+  fallbacks: string[],
+): Promise<boolean> => {
+  const settings = await dumbFallbackBecauseIDontThink(preferredId, fallbacks);
   return settings["disabled"] === "true";
 };
 

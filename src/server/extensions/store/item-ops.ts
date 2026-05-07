@@ -11,7 +11,13 @@ import { reloadMiddlewareRegistry } from "../middleware/registry";
 import { reloadThemes } from "../themes/registry";
 import { reloadEngines } from "../engines/registry";
 import { reloadTransports } from "../transports/registry";
-import { ExtensionStoreType, type StoreItem, type InstalledItem, type RepoPackageJson, type AuthorJson } from "../../types";
+import {
+  ExtensionStoreType,
+  type StoreItem,
+  type InstalledItem,
+  type RepoPackageJson,
+  type AuthorJson,
+} from "../../types";
 import {
   pluginsDir,
   themesDir,
@@ -26,6 +32,28 @@ import {
   getRepoByUrl,
 } from "./persistence";
 import { addRepo } from "./repo-ops";
+
+function slugifyIdPart(input: string): string {
+  return (
+    input
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 64) || "unknown"
+  );
+}
+
+function repoAuthorAndName(repoUrl: string): { author: string; name: string } {
+  try {
+    const u = new URL(repoUrl.replace(/\.git$/, ""));
+    const parts = u.pathname.split("/").filter(Boolean);
+    const authorRaw = parts[0] ?? "unknown";
+    const repoRaw = (parts[1] ?? "repo").replace(/\.git$/, "");
+    return { author: slugifyIdPart(authorRaw), name: slugifyIdPart(repoRaw) };
+  } catch {
+    return { author: "unknown", name: "repo" };
+  }
+}
 
 async function readAuthorJson(dir: string): Promise<AuthorJson | null> {
   try {
@@ -60,11 +88,16 @@ async function inferEngineTypeFromFolder(dir: string): Promise<string | null> {
   return null;
 }
 
-async function copyItemDir(srcDir: string, destDir: string, exclude: string[]): Promise<void> {
+async function copyItemDir(
+  srcDir: string,
+  destDir: string,
+  exclude: string[],
+): Promise<void> {
   await mkdir(destDir, { recursive: true });
   const entries = await readdir(srcDir, { withFileTypes: true });
   for (const e of entries) {
-    if (exclude.some((x) => e.name === x || e.name.startsWith(x + "/"))) continue;
+    if (exclude.some((x) => e.name === x || e.name.startsWith(x + "/")))
+      continue;
     const src = join(srcDir, e.name);
     const dest = join(destDir, e.name);
     if (e.isDirectory()) {
@@ -86,7 +119,17 @@ function getDestDir(type: ExtensionStoreType): string {
 function getEntriesForType(
   pkg: RepoPackageJson,
   type: ExtensionStoreType,
-): Array<{ path: string; name: string; description?: string; version?: string; type?: string; dependencies?: string[]; minDegoogVersion?: string }> | undefined {
+):
+  | Array<{
+      path: string;
+      name: string;
+      description?: string;
+      version?: string;
+      type?: string;
+      dependencies?: string[];
+      minDegoogVersion?: string;
+    }>
+  | undefined {
   if (type === ExtensionStoreType.Plugin) return pkg.plugins;
   if (type === ExtensionStoreType.Theme) return pkg.themes;
   if (type === ExtensionStoreType.Transport) return pkg.transports;
@@ -122,7 +165,10 @@ function parseDependencyUrl(depUrl: string): {
     { type: ExtensionStoreType.Plugin, pattern: /^(.+?)\/(plugins\/[^/]+)$/ },
     { type: ExtensionStoreType.Theme, pattern: /^(.+?)\/(themes\/[^/]+)$/ },
     { type: ExtensionStoreType.Engine, pattern: /^(.+?)\/(engines\/[^/]+)$/ },
-    { type: ExtensionStoreType.Transport, pattern: /^(.+?)\/(transports\/[^/]+)$/ },
+    {
+      type: ExtensionStoreType.Transport,
+      pattern: /^(.+?)\/(transports\/[^/]+)$/,
+    },
   ];
   for (const { type, pattern } of typePatterns) {
     const match = cleaned.match(pattern);
@@ -150,7 +196,11 @@ async function installDependencies(dependencies: string[]): Promise<void> {
     if (isInstalled) continue;
     let repo = getRepoByUrl(data, parsed.repoUrl);
     if (!repo) {
-      try { repo = await addRepo(parsed.repoUrl); } catch { continue; }
+      try {
+        repo = await addRepo(parsed.repoUrl);
+      } catch {
+        continue;
+      }
     }
     try {
       await installItem(parsed.repoUrl, parsed.itemPath, parsed.type);
@@ -164,7 +214,9 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
   const data = await readReposData();
   const repos = repoUrl ? [getRepoByUrl(data, repoUrl)] : data.repos;
   const installedSet = new Set(
-    data.installed.map((i) => `${normalizeRepoUrl(i.repoUrl)}::${i.type}::${i.itemPath}`),
+    data.installed.map(
+      (i) => `${normalizeRepoUrl(i.repoUrl)}::${i.type}::${i.itemPath}`,
+    ),
   );
   const installedMap = new Map(
     data.installed.map((i) => [
@@ -192,7 +244,14 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
 
     const push = async (
       type: ExtensionStoreType,
-      entries: Array<{ path: string; name: string; description?: string; version?: string; type?: string; minDegoogVersion?: string }>,
+      entries: Array<{
+        path: string;
+        name: string;
+        description?: string;
+        version?: string;
+        type?: string;
+        minDegoogVersion?: string;
+      }>,
     ) => {
       for (const ent of entries) {
         const itemPath = ent.path.replace(/\/$/, "");
@@ -226,13 +285,20 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
           screenshots,
           installed: isInstalled,
           installedVersion: inst?.version,
-          updateAvailable: isInstalled && !!inst?.version && inst.version !== repoVersion,
-          ...(minDegoogVersion ? {
-            minDegoogVersion,
-            requiresNewerVersion: !isVersionAtLeast(getAppVersion(), minDegoogVersion),
-          } : {}),
+          updateAvailable:
+            isInstalled && !!inst?.version && inst.version !== repoVersion,
+          ...(minDegoogVersion
+            ? {
+                minDegoogVersion,
+                requiresNewerVersion: !isVersionAtLeast(
+                  getAppVersion(),
+                  minDegoogVersion,
+                ),
+              }
+            : {}),
         };
-        if (type === ExtensionStoreType.Plugin && ent.type) item.pluginType = ent.type;
+        if (type === ExtensionStoreType.Plugin && ent.type)
+          item.pluginType = ent.type;
         if (type === ExtensionStoreType.Engine) {
           if (ent.type) item.engineType = ent.type;
           else {
@@ -247,7 +313,8 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
     if (pkg.plugins) await push(ExtensionStoreType.Plugin, pkg.plugins);
     if (pkg.themes) await push(ExtensionStoreType.Theme, pkg.themes);
     if (pkg.engines) await push(ExtensionStoreType.Engine, pkg.engines);
-    if (pkg.transports) await push(ExtensionStoreType.Transport, pkg.transports);
+    if (pkg.transports)
+      await push(ExtensionStoreType.Transport, pkg.transports);
   }
 
   return items;
@@ -264,12 +331,18 @@ export async function installItem(
   const normalizedPath = itemPath.replace(/\/$/, "");
   const key = `${normalizeRepoUrl(repoUrl)}::${type}::${normalizedPath}`;
   if (_installingSet.has(key)) return;
-  if (data.installed.some((i) => `${normalizeRepoUrl(i.repoUrl)}::${i.type}::${i.itemPath}` === key)) return;
+  if (
+    data.installed.some(
+      (i) => `${normalizeRepoUrl(i.repoUrl)}::${i.type}::${i.itemPath}` === key,
+    )
+  )
+    return;
   _installingSet.add(key);
   const storeDir = getStoreDir();
   const srcDir = join(storeDir, repo.localPath, normalizedPath);
   const repoBase = resolve(join(storeDir, repo.localPath));
-  if (!resolve(srcDir).startsWith(repoBase + "/")) throw new Error("Invalid item path.");
+  if (!resolve(srcDir).startsWith(repoBase + "/"))
+    throw new Error("Invalid item path.");
   try {
     await stat(srcDir);
   } catch {
@@ -279,17 +352,24 @@ export async function installItem(
     await readFile(join(storeDir, repo.localPath, "package.json"), "utf-8"),
   ) as RepoPackageJson;
   const entries = getEntriesForType(pkg, type);
-  const manifest = entries?.find((e) => e.path.replace(/\/$/, "") === normalizedPath);
+  const manifest = entries?.find(
+    (e) => e.path.replace(/\/$/, "") === normalizedPath,
+  );
   if (!manifest) throw new Error("Item not listed in package.json.");
-  if (manifest.dependencies?.length) await installDependencies(manifest.dependencies);
+  if (manifest.dependencies?.length)
+    await installDependencies(manifest.dependencies);
   const freshData = await readReposData();
-  const folderName = normalizedPath.split("/").pop() ?? normalizedPath;
+  const itemFolder = normalizedPath.split("/").pop() ?? normalizedPath;
+  const { author, name } = repoAuthorAndName(repo.url);
+  const folderName = `${author}-${name}-${slugifyIdPart(itemFolder)}`;
   const destBase = getDestDir(type);
   await mkdir(destBase, { recursive: true });
   const destDir = join(destBase, folderName);
   try {
     await stat(destDir);
-    throw new Error(`A ${type} named "${folderName}" already exists. Remove it first.`);
+    throw new Error(
+      `A ${type} named "${folderName}" already exists. Remove it first.`,
+    );
   } catch (e) {
     if (e instanceof Error && e.message.includes("already exists")) throw e;
   }
@@ -301,7 +381,9 @@ export async function installItem(
     installedAs: folderName,
     installedAt: new Date().toISOString(),
     version: manifest.version ?? "0.0.0",
-    ...(manifest.minDegoogVersion ? { minDegoogVersion: manifest.minDegoogVersion } : {}),
+    ...(manifest.minDegoogVersion
+      ? { minDegoogVersion: manifest.minDegoogVersion }
+      : {}),
   });
   await writeReposData(freshData);
   _installingSet.delete(key);
@@ -323,7 +405,7 @@ export async function uninstallItem(
   );
   if (!inst) throw new Error("Item is not installed.");
   const destDir = join(getDestDir(type), inst.installedAs);
-  await rm(destDir, { recursive: true, force: true }).catch(() => { });
+  await rm(destDir, { recursive: true, force: true }).catch(() => {});
   const settingsIds: string[] = [];
   if (type === ExtensionStoreType.Plugin) {
     settingsIds.push(`plugin-${inst.installedAs}`, `slot-${inst.installedAs}`);
@@ -367,12 +449,15 @@ export async function updateItem(
     await readFile(join(storeDir, repo.localPath, "package.json"), "utf-8"),
   ) as RepoPackageJson;
   const entries = getEntriesForType(pkg, type);
-  const manifest = entries?.find((e) => e.path.replace(/\/$/, "") === normalizedPath);
+  const manifest = entries?.find(
+    (e) => e.path.replace(/\/$/, "") === normalizedPath,
+  );
   const destDir = join(getDestDir(type), inst.installedAs);
-  await rm(destDir, { recursive: true, force: true }).catch(() => { });
+  await rm(destDir, { recursive: true, force: true }).catch(() => {});
   await copyItemDir(srcDir, destDir, STORE_METADATA);
   if (manifest?.version) inst.version = manifest.version;
-  if (manifest?.minDegoogVersion) inst.minDegoogVersion = manifest.minDegoogVersion;
+  if (manifest?.minDegoogVersion)
+    inst.minDegoogVersion = manifest.minDegoogVersion;
   await writeReposData(data);
   await reloadAfterAction(type);
 }
@@ -380,7 +465,8 @@ export async function updateItem(
 export async function updateAllItems(): Promise<{ updated: number }> {
   const items = await listRepoItems();
   const updatable = items.filter((i) => i.updateAvailable);
-  for (const item of updatable) await updateItem(item.repoUrl, item.path, item.type);
+  for (const item of updatable)
+    await updateItem(item.repoUrl, item.path, item.type);
   return { updated: updatable.length };
 }
 

@@ -2,16 +2,23 @@ import { Transport, ExtensionMeta, ExtensionStoreType } from "../../types";
 import { FetchTransport } from "./builtins/fetch";
 import { CurlTransport } from "./builtins/curl";
 import { AutoTransport } from "./builtins/auto";
-import { getSettings, maskSecrets } from "../../utils/plugin-settings";
+import {
+  getSettings,
+  dumbFallbackBecauseIDontThink,
+  maskSecrets,
+} from "../../utils/plugin-settings";
 import { transportsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 import { extensionReadmeExists } from "../../utils/extension-docs";
+import { stupidSettingIDtoAvoidConflicts } from "../extension-id";
 
 const _builtins: Transport[] = [
   new FetchTransport(),
   new CurlTransport(),
   new AutoTransport(),
 ];
+
+const _legacyNameByCanonical = new Map<string, string>();
 
 function _isTransport(val: unknown): val is Transport {
   return (
@@ -35,13 +42,29 @@ const registry = createRegistry<Transport>({
         ? new (Export as new () => Transport)()
         : (Export as Transport);
     if (!_isTransport(instance)) return null;
-    if (_builtins.some((t) => t.name === instance.name)) return null;
-    if (registry.items().some((t) => t.name === instance.name)) return null;
     return instance;
   },
-  onLoad: async (instance) => {
+  canonicalIdKind: "transport",
+  onLoad: async (instance, { folderName, canonicalId }) => {
+    const legacyName = instance.name;
+    const name = canonicalId ?? folderName;
+    if (_builtins.some((t) => t.name === name)) return;
+    instance.name = name;
+    _legacyNameByCanonical.set(name, legacyName);
     if (instance.configure) {
-      const stored = await getSettings(`transport-${instance.name}`);
+      const { settingsId, fallbackSettingsIds } =
+        stupidSettingIDtoAvoidConflicts({
+          kind: "transport",
+          canonicalId: instance.name,
+          folderName,
+          legacyDevId: legacyName,
+        });
+
+      const stored = await dumbFallbackBecauseIDontThink(
+        settingsId,
+        fallbackSettingsIds,
+      );
+
       if (Object.keys(stored).length > 0) instance.configure(stored);
     }
   },
@@ -83,7 +106,11 @@ export async function getTransportExtensionMeta(): Promise<ExtensionMeta[]> {
   for (const t of _all()) {
     const schema = t.settingsSchema ?? [];
     const id = _settingsId(t);
-    const rawSettings = await getSettings(id);
+    const legacy = _legacyNameByCanonical.get(t.name);
+    const rawSettings =
+      legacy && legacy !== t.name
+        ? await dumbFallbackBecauseIDontThink(id, [`transport-${legacy}`])
+        : await getSettings(id);
     const settings = maskSecrets(rawSettings, schema);
     if (rawSettings["disabled"]) settings["disabled"] = rawSettings["disabled"];
     const { exists } = await extensionReadmeExists(id);

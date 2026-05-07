@@ -162,6 +162,13 @@ export async function runSlotPlugins(
   const exclude = options?.excludePosition;
   const locale = options?.locale;
   for (const plugin of plugins) {
+    if (!plugin.id) {
+      logger.warn(
+        "slots",
+        `Skipping slot plugin: missing id (name="${plugin.name}")`,
+      );
+      continue;
+    }
     const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
     let effectivePosition: SlotPanelPosition = plugin.position;
     if (plugin.slotPositions?.length) {
@@ -204,7 +211,7 @@ export async function runSlotPlugins(
         position: effectivePosition,
         gridSize: plugin.gridSize,
       });
-    } catch { }
+    } catch {}
   }
   return panels;
 }
