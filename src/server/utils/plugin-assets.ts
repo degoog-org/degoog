@@ -20,10 +20,7 @@ export function registerPluginScript(
   }
 }
 
-export function registerPluginNamespace(
-  folderName: string,
-  namespace: string,
-): void {
+export function lockinNameSpace(folderName: string, namespace: string): void {
   folderNamespaces.set(folderName, namespace);
 }
 
@@ -31,10 +28,7 @@ export function getPluginNamespace(folderName: string): string | null {
   return folderNamespaces.get(folderName) ?? null;
 }
 
-export function registerPluginSettingsId(
-  folderName: string,
-  settingsId: string,
-): void {
+export function lockinSettingsId(folderName: string, settingsId: string): void {
   const existing = folderSettingsIds.get(folderName) ?? new Set();
   existing.add(settingsId);
   folderSettingsIds.set(folderName, existing);
@@ -73,6 +67,7 @@ import { outgoingFetch } from "./outgoing";
 import { buildSignedProxyUrl } from "./proxy-sign";
 import {
   getSettings,
+  dumbFallbackBecauseIDontThink,
   mergeDefaults,
   type SettingValue,
 } from "./plugin-settings";
@@ -108,6 +103,7 @@ export async function initPlugin(
   entryPath: string,
   settingsId: string,
   template: string,
+  fallbackSettingsIds: string[] = [],
 ): Promise<void> {
   const { readFile } = await import("fs/promises");
   if (plugin.init) {
@@ -123,7 +119,9 @@ export async function initPlugin(
     await Promise.resolve(plugin.init(ctx));
   }
   if (plugin.configure && plugin.settingsSchema?.length) {
-    const stored = await getSettings(settingsId);
+    const stored = fallbackSettingsIds.length
+      ? await dumbFallbackBecauseIDontThink(settingsId, fallbackSettingsIds)
+      : await getSettings(settingsId);
     plugin.configure(mergeDefaults(stored, plugin.settingsSchema));
   }
 }

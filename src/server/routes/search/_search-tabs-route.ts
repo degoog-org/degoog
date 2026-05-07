@@ -1,9 +1,8 @@
 import type { Hono } from "hono";
 import { getCustomEngineTypes } from "../../extensions/engines/registry";
-import {
-  getSearchResultTabs,
-} from "../../extensions/search-result-tabs/registry";
-import { isDisabled } from "../../utils/plugin-settings";
+import { getSearchResultTabs } from "../../extensions/search-result-tabs/registry";
+import { isDisabledWithFallback } from "../../utils/plugin-settings";
+import { logger } from "../../utils/logger";
 
 export function registerSearchTabsRoutes(router: Hono): void {
   router.get("/api/search-tabs", async (c) => {
@@ -21,6 +20,13 @@ export function registerSearchTabsRoutes(router: Hono): void {
 
     const tabs = getSearchResultTabs();
     for (const tab of tabs) {
+      if (!tab.id) {
+        logger.warn(
+          "search-tabs",
+          `Skipping tab: missing id (name="${tab.name}")`,
+        );
+        continue;
+      }
       if (tab.engineType && seen.has(tab.engineType)) {
         const existing = list.find((t) => t.id === `engine:${tab.engineType}`);
         if (existing) {
@@ -31,7 +37,8 @@ export function registerSearchTabsRoutes(router: Hono): void {
         continue;
       }
       const settingsId = tab.settingsId ?? `tab-${tab.id}`;
-      if (await isDisabled(settingsId)) continue;
+      const fallbacks = tab.settingsFallbackIds ?? [];
+      if (await isDisabledWithFallback(settingsId, fallbacks)) continue;
       list.push({ id: tab.id, name: tab.name, icon: tab.icon ?? null });
     }
     return c.json({ tabs: list });

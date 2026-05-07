@@ -27,7 +27,7 @@ export const TranslateFunction: Translate = Object.assign(
     return key;
   },
   {
-    setLocale(_locale: string) { },
+    setLocale(_locale: string) {},
     locale: "",
     translations: undefined as TranslationRecord | undefined,
   },
@@ -44,13 +44,13 @@ export interface SettingField {
   key: string;
   label: string;
   type:
-  | "text"
-  | "number"
-  | "password"
-  | "url"
-  | "toggle"
-  | "textarea"
-  | "select";
+    | "text"
+    | "number"
+    | "password"
+    | "url"
+    | "toggle"
+    | "textarea"
+    | "select";
   required?: boolean;
   placeholder?: string;
   description?: string;
@@ -126,12 +126,13 @@ export interface SlotPluginContext {
 }
 
 export interface SlotPlugin {
-  id: string;
+  id?: string;
   name: string;
   description: string;
   position: SlotPanelPosition;
   slotPositions?: SlotPanelPosition[];
   settingsId?: string;
+  settingsFallbackIds?: string[];
   trigger: (query: string) => boolean | Promise<boolean>;
   waitForResults?: boolean;
   gridSize?: 1 | 2 | 3 | 4;
@@ -173,11 +174,12 @@ export interface BangCommand {
 }
 
 export interface SearchResultTab {
-  id: string;
+  id?: string;
   name: string;
   icon?: string;
   engineType?: string;
   settingsId?: string;
+  settingsFallbackIds?: string[];
   executeSearch?(
     query: string,
     page?: number,
@@ -194,9 +196,10 @@ export interface MiddlewareResult {
 }
 
 export interface RequestMiddleware {
-  id: string;
+  id?: string;
   name: string;
   settingsId?: string;
+  settingsFallbackIds?: string[];
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, string | string[]>): void;
   init?(context: PluginContext): void | Promise<void>;
@@ -269,7 +272,7 @@ export interface UovadipasquaSearchQueryTrigger {
 
 export type UovadipasquaTrigger = UovadipasquaSearchQueryTrigger;
 export interface Uovadipasqua {
-  id: string;
+  id?: string;
   triggers: UovadipasquaTrigger[];
   waitForResults?: boolean;
 }

@@ -2,18 +2,19 @@ import type { SearchResultTab, Translate } from "../../types";
 import {
   initPlugin,
   loadPluginAssets,
-  registerPluginNamespace,
-  registerPluginSettingsId,
+  lockinNameSpace,
+  lockinSettingsId,
 } from "../../utils/plugin-assets";
-import { isDisabled } from "../../utils/plugin-settings";
+import { isDisabledWithFallback } from "../../utils/plugin-settings";
 import { createTranslatorFromPath } from "../../utils/translation";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
+import { stupidSettingIDtoAvoidConflicts } from "../extension-id";
 
 function isSearchResultTab(val: unknown): val is SearchResultTab {
   if (typeof val !== "object" || val === null) return false;
   const t = val as SearchResultTab;
-  if (typeof t.id !== "string" || typeof t.name !== "string") return false;
+  if (typeof t.name !== "string") return false;
   const hasExecute = typeof t.executeSearch === "function";
   const hasEngineType =
     typeof t.engineType === "string" && t.engineType.trim() !== "";
@@ -29,19 +30,39 @@ const registry = createRegistry<SearchResultTab>({
       (mod.default as Record<string, unknown>)?.tab;
     return isSearchResultTab(t) ? t : null;
   },
-  onLoad: async (tab, { entryPath, folderName, source }) => {
-    const settingsId = tab.settingsId ?? `tab-${tab.id}`;
+  canonicalIdKind: "tab",
+  onLoad: async (tab, { entryPath, folderName, source, canonicalId }) => {
+    const legacyId = typeof tab.id === "string" ? tab.id : "";
+    const id = canonicalId ?? folderName;
+    tab.id = id;
+    const { settingsId, fallbackSettingsIds } = stupidSettingIDtoAvoidConflicts(
+      {
+        kind: "tab",
+        canonicalId: id,
+        folderName,
+        legacyDevId: legacyId,
+        explicitSettingsId: tab.settingsId,
+      },
+    );
+    tab.settingsId = settingsId;
+    tab.settingsFallbackIds = fallbackSettingsIds;
     tab.t = await createTranslatorFromPath(entryPath);
-    registerPluginNamespace(folderName, `tabs/${tab.id}`);
-    registerPluginSettingsId(folderName, settingsId);
-    if (!(await isDisabled(settingsId))) {
+    lockinNameSpace(folderName, `tabs/${id}`);
+    lockinSettingsId(folderName, settingsId);
+    if (!(await isDisabledWithFallback(settingsId, fallbackSettingsIds))) {
       const template = await loadPluginAssets(
         entryPath,
         folderName,
         settingsId,
         source,
       );
-      await initPlugin(tab, entryPath, settingsId, template);
+      await initPlugin(
+        tab,
+        entryPath,
+        settingsId,
+        template,
+        fallbackSettingsIds,
+      );
     }
   },
   debugTag: "search-result-tabs",

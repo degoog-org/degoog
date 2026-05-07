@@ -8,6 +8,7 @@ import { readdir, stat } from "fs/promises";
 import { join } from "path";
 import { pathToFileURL } from "url";
 import { logger } from "../utils/logger";
+import { makeExtID, dedupeExtID, type ExtensionKind } from "./extension-id";
 
 /**
  * A directory to scan for extensions, along with its source label.
@@ -30,6 +31,7 @@ export interface RegistryLoadMeta {
   /** Folder or base filename, used as the extension's natural ID. */
   folderName: string;
   source: "plugin" | "builtin";
+  canonicalId?: string;
 }
 
 /**
@@ -58,7 +60,7 @@ export interface RegistryLoadMeta {
  *   },
  *   onLoad: async (slot, { entryPath, folderName, source }) => {
  *     const settingsId = slot.settingsId ?? `slot-${slot.id}`;
- *     registerPluginSettingsId(folderName, settingsId);
+ *     lockinSettingsId(folderName, settingsId);
  *     if (!(await isDisabled(settingsId))) {
  *       const template = await loadPluginAssets(entryPath, folderName, settingsId, source);
  *       await initPlugin(slot, entryPath, settingsId, template);
@@ -91,6 +93,7 @@ export interface RegistryOptions<T> {
    * or mutating the entry (e.g. assigning its `id`).
    */
   onLoad?(item: T, meta: RegistryLoadMeta): Promise<void>;
+  canonicalIdKind?: ExtensionKind;
   /**
    * When `true`, plain `.js/.ts/.mjs/.cjs` files in the directory are
    * loaded in addition to `index.*` files inside subdirectories.
@@ -166,6 +169,7 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
   reload: () => Promise<void>;
 } {
   let _items: T[] = [];
+  const _canonicalIds = new Set<string>();
 
   async function loadFromDir(registryDir: RegistryDir): Promise<void> {
     let entries: string[];
@@ -189,10 +193,24 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
         const extracted = opts.match(mod);
         if (extracted == null) continue;
         if (opts.onLoad) {
+          const entryPath = join(registryDir.dir, resolved.base);
+          const canonicalId = opts.canonicalIdKind
+            ? dedupeExtID(
+                makeExtID(
+                  resolved.base,
+                  registryDir.source,
+                  opts.canonicalIdKind,
+                ),
+                _canonicalIds,
+                resolved.fullPath,
+              )
+            : undefined;
+          if (canonicalId) _canonicalIds.add(canonicalId);
           await opts.onLoad(extracted, {
-            entryPath: join(registryDir.dir, resolved.base),
+            entryPath,
             folderName: resolved.base,
             source: registryDir.source,
+            canonicalId,
           });
         }
         _items.push(extracted);
@@ -204,6 +222,7 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
 
   async function init(): Promise<void> {
     _items = [];
+    _canonicalIds.clear();
     const dirs = typeof opts.dirs === "function" ? opts.dirs() : opts.dirs;
     for (const d of dirs) {
       await loadFromDir(d);

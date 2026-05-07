@@ -6,6 +6,7 @@ type ExtensionDocsPath = { readmePath: string; exists: boolean };
 
 const _destDirFromId = (id: string): string | null => {
   if (id.startsWith("plugin-") || id.startsWith("slot-")) return pluginsDir();
+  if (id.startsWith("tab-") || id.startsWith("middleware-")) return pluginsDir();
   if (id.startsWith("theme-")) return themesDir();
   if (id.startsWith("transport-")) return transportsDir();
   if (id.startsWith("engine-")) return enginesDir();
