@@ -38,7 +38,11 @@ export class BingEngine implements SearchEngine {
     const lang = context?.lang;
     let url = `https://www.bing.com/search?q=${encodeURIComponent(query)}&count=50&first=${first}`;
     if (lang) url += `&setlang=${lang}`;
-    if (this.safeSearch !== "off") url += `&adlt=${this.safeSearch}`;
+    const adlt =
+      this.safeSearch === "strict" || this.safeSearch === "moderate"
+        ? this.safeSearch
+        : "off";
+    url += `&adlt=${adlt}`;
     if (timeFilter && timeFilter !== "any" && timeFilter !== "custom") {
       const freshMap: Record<string, string> = {
         hour: "Hour",
