@@ -24,6 +24,10 @@
     background: var(--search-bar-bg-hover);
   }
 
+  &:focus-visible {
+    outline: none;
+  }
+
   &.ac-open {
     border-radius: var(--degoog-search-bar-radius, #{$search-bar-radius}) var(
         --degoog-search-bar-radius,

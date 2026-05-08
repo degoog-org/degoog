@@ -290,7 +290,7 @@ export async function initStoreTab(
   addBtn?.addEventListener("click", () => {
     if (addWrap)
       addWrap.style.display =
-        addWrap.style.display === "none" ? "block" : "none";
+        addWrap.style.display === "none" ? "flex" : "none";
   });
   addConfirmBtn?.addEventListener("click", () => {
     if (addConfirmBtn)

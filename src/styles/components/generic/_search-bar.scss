@@ -15,7 +15,6 @@
     background: transparent;
     border: none;
     outline: none;
-    color: var(--text-primary);
     font-size: $font-size-md;
     height: 100%;
     width: 100%;
@@ -37,12 +36,22 @@
   &--square {
     --degoog-search-bar-radius: #{$radius-lg};
     box-shadow: none;
+
+    &:hover,
+    &:focus-within {
+      background: var(--search-bar-bg);
+    }
   }
 
   &--square-advanced {
     --degoog-search-bar-radius: #{$radius-lg};
     background: var(--bg-hover);
     box-shadow: $box-shadow;
+
+    &:hover,
+    &:focus-within {
+      background: var(--bg-hover);
+    }
   }
 
   &--results {

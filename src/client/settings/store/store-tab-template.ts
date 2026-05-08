@@ -11,7 +11,7 @@ export function getStoreTabHtml(): string {
         </div>
       </div>
       <div class="store-add-repo-wrap" style="display:none">
-        <input type="text" class="store-input-url degoog-input" placeholder="https://github.com/user/repo.git">
+        <input type="text" class="store-search-input degoog-search-bar degoog-search-bar--square-advanced store-input-url" placeholder="https://github.com/user/repo.git">
         <button class="btn btn--primary degoog-btn degoog-btn--primary store-btn-add-confirm" type="button">Add</button>
         <span class="store-inline-error"></span>
       </div>
