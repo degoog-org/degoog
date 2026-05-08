@@ -34,11 +34,19 @@ export function createCache<T>(defaultTtlMs: number): TtlCache<T> {
 export type CreateCache = typeof createCache;
 
 const _searchCache = createCache<SearchResponse>(TTL_MS);
+export const autocompleteCache = createCache<{
+  text: string;
+  source: string;
+  rich?: import("../types").RichSuggestion;
+}[]>(TTL_MS);
 
 export const get = (key: string): SearchResponse | null => _searchCache.get(key);
 export const set = (key: string, value: SearchResponse, ttlMs: number = TTL_MS): void =>
   _searchCache.set(key, value, ttlMs);
-export const clear = (): void => _searchCache.clear();
+export const clear = (): void => {
+  _searchCache.clear();
+  autocompleteCache.clear();
+};
 
 export function hasFailedEngines(response: SearchResponse): boolean {
   return response.engineTimings.some((et) => et.resultCount === 0);

@@ -161,8 +161,8 @@
             </li>
             <li>
               <strong>getSuggestions(query, context)</strong> (async): Returns a
-              <code>Promise&lt;string[]&gt;</code>. The array should contain
-              plain suggestion strings. Return an empty array if no suggestions
+              <code>Promise&lt;AutocompleteSuggestion[]&gt;</code>. The array should contain
+              plain suggestion strings or rich suggestion objects (<code>{ text: string, rich?: RichSuggestion }</code>). Return an empty array if no suggestions
               are available — never throw.
             </li>
           </ul>
@@ -214,8 +214,30 @@
                   unset.
                 </td>
               </tr>
+              <tr>
+                <td><code>context.createCache</code></td>
+                <td><code>CreateCache</code></td>
+                <td>
+                  A factory function to create a TTL cache instance. Useful for caching
+                  upstream autocomplete API responses natively using the same system
+                  engine results use.
+                </td>
+              </tr>
             </tbody>
           </table>
+
+          <h2>Rich suggestions</h2>
+          <p>
+            Providers can return entity cards (images, subtitles, and descriptions) that appear at the very top of the autocomplete dropdown. To do this, return an object instead of a string:
+          </p>
+          <pre><code>export interface RichSuggestion {
+  description?: string;
+  thumbnail?: string;
+  type?: string;
+}
+
+export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggestion };
+</code></pre>
 
           <h2>Minimal example</h2>
           <pre><code>export default class MyAutocompleteProvider {

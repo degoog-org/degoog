@@ -1,6 +1,7 @@
 import { escapeHtml } from "../../utils/dom";
 import { screenshotUrl } from "../store-lightbox";
 import type { RepoInfo, StoreItem } from "../../types/store-tab";
+import { getBase } from "../../utils/base-url";
 
 const OFFICIAL_REPO_URL =
   "https://github.com/degoog-org/official-extensions.git";
@@ -34,7 +35,7 @@ export function repoImageSrc(
   if (/^https?:\/\//i.test(img)) return img;
   const token = getToken();
   const q = token ? `&token=${encodeURIComponent(token)}` : "";
-  return `/api/store/repos/${encodeURIComponent(repo.localPath)}/asset?path=${encodeURIComponent(img)}${q}`;
+  return `${getBase()}/api/store/repos/${encodeURIComponent(repo.localPath)}/asset?path=${encodeURIComponent(img)}${q}`;
 }
 
 export function pluginTypeLabel(t: string): string {

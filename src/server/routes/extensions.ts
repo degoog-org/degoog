@@ -203,16 +203,23 @@ router.post("/api/extensions/:id/settings", async (c) => {
     setEnginesLocale(locale);
     coreT.setLocale(locale);
   }
-  const [engines, plugins, slotMeta, searchBarMeta, themes, transportMeta, autocompleteMeta] =
-    await Promise.all([
-      getEngineExtensionMeta(coreT),
-      getPluginExtensionMeta(coreT),
-      getSlotExtensionMeta(coreT),
-      getSearchBarActionExtensionMeta(),
-      getThemeExtensionMeta(),
-      getTransportExtensionMeta(),
-      getAutocompleteExtensionMeta(),
-    ]);
+  const [
+    engines,
+    plugins,
+    slotMeta,
+    searchBarMeta,
+    themes,
+    transportMeta,
+    autocompleteMeta,
+  ] = await Promise.all([
+    getEngineExtensionMeta(coreT),
+    getPluginExtensionMeta(coreT),
+    getSlotExtensionMeta(coreT),
+    getSearchBarActionExtensionMeta(),
+    getThemeExtensionMeta(),
+    getTransportExtensionMeta(),
+    getAutocompleteExtensionMeta(),
+  ]);
   const ext = [
     ...engines,
     ...plugins,

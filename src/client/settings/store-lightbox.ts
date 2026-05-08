@@ -1,3 +1,5 @@
+import { getBase } from "../utils/base-url";
+
 export const screenshotUrl = (
   repoSlug: string,
   type: string,
@@ -6,7 +8,7 @@ export const screenshotUrl = (
   token: string | null,
 ): string => {
   const q = token ? `?token=${encodeURIComponent(token)}` : "";
-  return `/api/store/screenshots/${encodeURIComponent(repoSlug)}/${encodeURIComponent(type)}/${encodeURIComponent(itemSlug)}/${encodeURIComponent(filename)}${q}`;
+  return `${getBase()}/api/store/screenshots/${encodeURIComponent(repoSlug)}/${encodeURIComponent(type)}/${encodeURIComponent(itemSlug)}/${encodeURIComponent(filename)}${q}`;
 };
 
 export const buildScreenshotUrls = (

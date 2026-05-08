@@ -13,6 +13,7 @@ import {
 } from "../../utils/plugin-settings";
 import { autocompleteDir } from "../../utils/paths";
 import { outgoingFetch, parseOutgoingTransport } from "../../utils/outgoing";
+import { autocompleteCache, createCache } from "../../utils/cache";
 import { getTransportNames } from "../transports/registry";
 import { createRegistry } from "../registry-factory";
 import { logger } from "../../utils/logger";
@@ -28,12 +29,12 @@ interface BuiltinDefinition {
 
 const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
   {
-    id: "google",
+    id: "autocomplete-builtin-google",
     displayName: "Google",
     ProviderClass: GoogleAutocompleteProvider,
   },
   {
-    id: "duckduckgo",
+    id: "autocomplete-builtin-duckduckgo",
     displayName: "DuckDuckGo",
     ProviderClass: DuckDuckGoAutocompleteProvider,
   },
@@ -134,6 +135,7 @@ async function _buildContext(providerId: string): Promise<AutocompleteContext> {
         transportName,
       ),
     lang,
+    createCache,
   };
 }
 
@@ -154,9 +156,23 @@ export function getAutocompleteProviderById(
   return _all().find((p) => p.id === id)?.instance;
 }
 
-export async function getSuggestionsFromProviders(
-  query: string,
-): Promise<{ text: string; source: string }[]> {
+export async function getSuggestionsFromProviders(query: string): Promise<
+  {
+    text: string;
+    source: string;
+    rich?: import("../../types").RichSuggestion;
+  }[]
+> {
+  const cacheKey = `ac:${query}`;
+  const cached = autocompleteCache.get(cacheKey);
+  if (cached) {
+    logger.debug(
+      "autocomplete",
+      `cache hit key="${cacheKey}" qLen=${query.length} suggestions=${cached.length}`,
+    );
+    return cached;
+  }
+
   const all = _all();
 
   const tasks = await Promise.all(
@@ -201,52 +217,97 @@ export async function getSuggestionsFromProviders(
 
   const lower = query.toLowerCase();
 
-  const perProvider: { text: string; source: string }[][] = [];
+  type NormItem = {
+    text: string;
+    source: string;
+    rich?: import("../../types").RichSuggestion;
+  };
+
+  const richItems = new Map<
+    string,
+    {
+      text: string;
+      sources: string[];
+      rich: import("../../types").RichSuggestion;
+    }
+  >();
+  const perProvider: NormItem[][] = [];
+
   for (let i = 0; i < settled.length; i++) {
     const result = settled[i];
     if (result.status === "rejected") {
       logger.warn("autocomplete", `${active[i].name} failed`, result.reason);
       perProvider.push([]);
-    } else {
-      const { results, name } = result.value;
-      perProvider.push(
-        results
-          .filter((s) => String(s).toLowerCase() !== lower)
-          .map((s) => ({ text: String(s), source: name })),
-      );
+      continue;
     }
+    const { results, name } = result.value;
+    const plain: NormItem[] = [];
+    for (const s of results) {
+      const text = typeof s === "string" ? s : s.text;
+      const rich = typeof s === "object" ? s.rich : undefined;
+      if (text.toLowerCase() === lower) continue;
+      if (rich && (rich.description || rich.thumbnail)) {
+        const key = text.toLowerCase();
+        const existing = richItems.get(key);
+        if (existing) {
+          if (!existing.sources.includes(name)) existing.sources.push(name);
+          if (!existing.rich.description && rich.description)
+            existing.rich.description = rich.description;
+          if (!existing.rich.thumbnail && rich.thumbnail)
+            existing.rich.thumbnail = rich.thumbnail;
+          if (!existing.rich.type && rich.type) existing.rich.type = rich.type;
+        } else if (richItems.size < 2) {
+          richItems.set(key, { text, sources: [name], rich });
+        }
+      } else {
+        plain.push({ text, source: name });
+      }
+    }
+    perProvider.push(plain);
   }
 
   const seen = new Map<string, { text: string; sources: string[] }>();
   const maxLen = perProvider.reduce((m, p) => Math.max(m, p.length), 0);
+  const plainCap = 10 - richItems.size;
 
   outer: for (let i = 0; i < maxLen; i++) {
     for (const providerResults of perProvider) {
       if (i >= providerResults.length) continue;
       const item = providerResults[i];
       const key = item.text.toLowerCase();
+      if (richItems.has(key)) continue;
       const existing = seen.get(key);
       if (existing) {
-        if (!existing.sources.includes(item.source)) {
+        if (!existing.sources.includes(item.source))
           existing.sources.push(item.source);
-        }
       } else {
-        if (seen.size >= 10) break outer;
+        if (seen.size >= plainCap) break outer;
         seen.set(key, { text: item.text, sources: [item.source] });
       }
     }
   }
 
-  const merged = Array.from(seen.values()).map((entry) => ({
+  const richMerged: NormItem[] = Array.from(richItems.values()).map(
+    (entry) => ({
+      text: entry.text,
+      source: entry.sources.join(", "),
+      rich: entry.rich,
+    }),
+  );
+
+  const plainMerged: NormItem[] = Array.from(seen.values()).map((entry) => ({
     text: entry.text,
     source: entry.sources.join(", "),
   }));
 
+  const merged = [...richMerged, ...plainMerged];
+
   logger.debug(
     "autocomplete",
-    `merged ${merged.length} unique suggestion(s) for "${query}"`,
+    `merged ${merged.length} suggestion(s) (${richMerged.length} rich) for "${query}"`,
   );
 
+  autocompleteCache.set(cacheKey, merged);
   return merged;
 }
 

@@ -102,13 +102,25 @@ export interface SearchEngine {
 export interface AutocompleteContext {
   fetch: typeof fetch;
   lang?: string;
+  createCache: CreateCache;
 }
+
+export interface RichSuggestion {
+  description?: string;
+  thumbnail?: string;
+  type?: string;
+}
+
+export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggestion };
 
 export interface AutocompleteProvider {
   name: string;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, string | string[]>): void;
-  getSuggestions(query: string, context?: AutocompleteContext): Promise<string[]>;
+  getSuggestions(
+    query: string,
+    context?: AutocompleteContext,
+  ): Promise<AutocompleteSuggestion[]>;
 }
 
 export enum SlotPanelPosition {

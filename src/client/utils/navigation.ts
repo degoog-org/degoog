@@ -30,6 +30,10 @@ export function navigateSettingsBack(): void {
       window.location.href = `${getBase()}/`;
       return;
     }
+    if (!parsed.search && !parsed.hash) {
+      window.history.back();
+      return;
+    }
     window.location.href = `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
     window.location.href = `${getBase()}/`;

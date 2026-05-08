@@ -1,12 +1,3 @@
-@use "../public/icons/fontawesome/scss/variables" with (
-  $font-path: "/public/icons/fontawesome/webfonts"
-);
-@use "../public/icons/fontawesome/scss/fontawesome";
-@use "../public/icons/fontawesome/scss/solid";
-@use "../public/icons/fontawesome/scss/regular";
-@use "../public/icons/fontawesome/scss/brands";
-@use "../public/icons/fontawesome/scss/v4-shims";
-
 @import "variables";
 @import "fonts";
 @import "mixins";

@@ -48,6 +48,7 @@ const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
 const CORE_LOCALES_ROOT = "src";
 const BASE_URL = getBaseUrl();
 const BASE_PATH = getBasePath();
+const BASE_PREFIX = BASE_PATH || (BASE_URL && !/^https?:\/\//i.test(BASE_URL) ? BASE_URL : "");
 
 interface DefaultThemeManifest {
   templates?: Record<string, string>;
@@ -234,12 +235,17 @@ async function applyPagePlaceholders(
   const acScript = `<script>window.__DEGOOG_AC_DEBOUNCE__=${acDebounce}</script>`;
   result = result.replace("</head>", `${acScript}\n  </head>`);
 
-  if (BASE_URL) {
-    const baseScript = `<script>window.__DEGOOG_BASE_URL__=${JSON.stringify(BASE_URL)}</script>`;
+  result = result.replace(
+    "</head>",
+    `<link rel="stylesheet" href="/public/icons/fontawesome/css/all.min.css?v=${pkg.version}">\n  </head>`,
+  );
+
+  if (BASE_PREFIX) {
+    const baseScript = `<script>window.__DEGOOG_BASE_URL__=${JSON.stringify(BASE_PREFIX)}</script>`;
     result = result.replace("</head>", `${baseScript}\n  </head>`);
     result = result.replace(
       /(<(?:link|script|a|form)[^>]*(?:href|src|action)=")\/(?!\/)/g,
-      `$1${BASE_URL}/`,
+      `$1${BASE_PREFIX}/`,
     );
   }
 

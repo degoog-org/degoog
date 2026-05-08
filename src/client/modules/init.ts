@@ -24,6 +24,13 @@ import { renderPageTemplates } from "./renderer/render-page";
 import { initResultActions } from "./result-actions";
 import { getBase } from "../utils/base-url";
 
+type DegoogHistoryState = {
+  degoog: boolean;
+  query: string;
+  type: string;
+  page: number;
+};
+
 export function init(): void {
   renderPageTemplates();
 
@@ -93,7 +100,14 @@ export function init(): void {
   initAutocomplete(
     searchInput,
     document.getElementById("ac-dropdown-home"),
-    (q) => void performSearch(q),
+    (q) => {
+      if (searchInput) searchInput.value = q;
+      document
+        .getElementById("search-form-home")
+        ?.dispatchEvent(
+          new Event("submit", { cancelable: true, bubbles: true }),
+        );
+    },
   );
   initAutocomplete(
     resultsInput,
@@ -166,29 +180,53 @@ export function init(): void {
     } else {
       void performSearch(resolvedQ, type, page);
     }
+  } else if (state.postMethodEnabled && !state.currentQuery) {
+    const hs = window.history.state as DegoogHistoryState | null;
+    if (hs?.degoog && hs.query) {
+      state.isInitialLoad = true;
+      if (searchInput) searchInput.value = hs.query;
+      if (resultsInput) resultsInput.value = hs.query;
+      if (hs.type?.startsWith("tab:")) {
+        void performTabSearch(hs.query, hs.type.slice(4), hs.page);
+      } else {
+        void performSearch(hs.query, hs.type, hs.page);
+      }
+    }
   }
 
   window.addEventListener("pageshow", () => {
     const restoredParams = new URLSearchParams(window.location.search);
     const restoredQ = restoredParams.get("q");
-    if (!restoredQ) return;
-    if (searchInput && !searchInput.value) {
-      searchInput.value = restoredQ;
-      searchInput.defaultValue = restoredQ;
+    if (restoredQ) {
+      if (searchInput && !searchInput.value) {
+        searchInput.value = restoredQ;
+        searchInput.defaultValue = restoredQ;
+      }
+      if (resultsInput && !resultsInput.value) {
+        resultsInput.value = restoredQ;
+        resultsInput.defaultValue = restoredQ;
+      }
+      return;
     }
-    if (resultsInput && !resultsInput.value) {
-      resultsInput.value = restoredQ;
-      resultsInput.defaultValue = restoredQ;
+
+    if (!state.postMethodEnabled) return;
+    if (state.currentQuery || state.currentData) return;
+
+    const hs = window.history.state as DegoogHistoryState | null;
+    if (hs?.degoog && hs.query) {
+      state.isInitialLoad = true;
+      if (searchInput && !searchInput.value) searchInput.value = hs.query;
+      if (resultsInput && !resultsInput.value) resultsInput.value = hs.query;
+      if (hs.type?.startsWith("tab:")) {
+        void performTabSearch(hs.query, hs.type.slice(4), hs.page);
+      } else {
+        void performSearch(hs.query, hs.type, hs.page);
+      }
     }
   });
 
   window.addEventListener("popstate", (e) => {
-    const hs = e.state as {
-      degoog: boolean;
-      query: string;
-      type: string;
-      page: number;
-    } | null;
+    const hs = e.state as DegoogHistoryState | null;
     if (hs?.degoog) {
       state.isInitialLoad = true;
       if (hs.type?.startsWith("tab:")) {
