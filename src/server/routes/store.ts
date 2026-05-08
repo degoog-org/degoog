@@ -33,6 +33,21 @@ function isValidType(type: string): type is ExtensionStoreType {
   return (VALID_TYPES as readonly string[]).includes(type);
 }
 
+function getStoreItemPath(type: ExtensionStoreType, item: string): string {
+  switch (type) {
+    case ExtensionStoreType.Plugin:
+      return `plugins/${item}`;
+    case ExtensionStoreType.Theme:
+      return `themes/${item}`;
+    case ExtensionStoreType.Transport:
+      return `transports/${item}`;
+    case ExtensionStoreType.Autocomplete:
+      return `autocomplete/${item}`;
+    case ExtensionStoreType.Engine:
+      return `engines/${item}`;
+  }
+}
+
 router.get("/api/store/repos", async (c) => {
   if (!(await validateSettingsToken(getSettingsTokenFromRequest(c))))
     return c.json({ error: "Unauthorized" }, 401);
@@ -247,14 +262,7 @@ router.get(
     const type = typeParam;
     const item = c.req.param("item");
     const filename = c.req.param("filename");
-    const itemPath =
-      type === ExtensionStoreType.Plugin
-        ? `plugins/${item}`
-        : type === ExtensionStoreType.Theme
-          ? `themes/${item}`
-          : type === ExtensionStoreType.Transport
-            ? `transports/${item}`
-            : `engines/${item}`;
+    const itemPath = getStoreItemPath(type, item);
     const resolved = resolveScreenshotPath(repoSlug, itemPath, filename);
     if (!resolved || !existsSync(resolved)) {
       return c.json({ error: "Not found" }, 404);
