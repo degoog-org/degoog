@@ -610,6 +610,17 @@
             loads, meaning your <code>script.js</code> can call them immediately
             using fetch.
           </p>
+          <p>
+            When installed from the store, the plugin folder name is
+            <code>&lt;author&gt;-&lt;repo&gt;-&lt;plugin-name&gt;</code>. Never
+            hardcode that in your API URLs — use the injected
+            <strong><code>__PLUGIN_ID__</code></strong> constant instead.
+            Degoog injects it automatically into every plugin script at serve
+            time.
+          </p>
+          <pre><code>const MY_API = `/api/plugin/${__PLUGIN_ID__}/data`;
+
+fetch(MY_API).then(r => r.json()).then(data => { /* ... */ });</code></pre>
 
           <h2>Request middleware</h2>
           <p>

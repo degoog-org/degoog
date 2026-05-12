@@ -45,6 +45,7 @@ export interface LoadedTheme {
 import { themesDir } from "../../utils/paths";
 import { createTranslatorFromPath } from "../../utils/translation";
 import { extensionReadmeExists } from "../../utils/extension-docs";
+import { rewriteThemePaths } from "../../utils/extension-id";
 
 const THEMES_DIR = themesDir();
 
@@ -63,7 +64,7 @@ async function compileThemeCss(
 
   const fullPath = join(theme.dir, cssFile);
   try {
-    return await readFile(fullPath, "utf-8");
+    return rewriteThemePaths(await readFile(fullPath, "utf-8"), theme.id);
   } catch (err) {
     logger.debug("themes", `Failed to compile CSS for theme ${theme.id}`, err);
     return undefined;
@@ -171,7 +172,7 @@ export async function getThemeHtml(
   if (!htmlFile) return null;
 
   try {
-    return await readFile(join(theme.dir, htmlFile), "utf-8");
+    return rewriteThemePaths(await readFile(join(theme.dir, htmlFile), "utf-8"), theme.id);
   } catch {
     return null;
   }
@@ -239,7 +240,7 @@ export async function getThemeTemplatesHtml(): Promise<string> {
   const parts: string[] = [];
   for (const [id, filePath] of Object.entries(theme.manifest.templates)) {
     try {
-      const content = await readFile(join(theme.dir, filePath), "utf-8");
+      const content = rewriteThemePaths(await readFile(join(theme.dir, filePath), "utf-8"), theme.id);
       parts.push(`<template id="degoog-${id}">${content}</template>`);
     } catch {
       logger.debug(

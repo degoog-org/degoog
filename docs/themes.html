@@ -351,14 +351,21 @@
             files.
           </p>
           <p>
-            You can use this to load your custom fonts, images, or scripts
-            directly from your theme CSS or HTML:
+            When installed from the store, the theme folder is named
+            <code>&lt;author&gt;-&lt;repo&gt;-&lt;theme-name&gt;</code>. Never
+            hardcode that path — use <strong>relative URLs</strong> in CSS and
+            <strong><code>__THEME_PATH__</code></strong> in HTML templates
+            instead. Degoog rewrites both at serve time to the correct installed
+            path automatically.
           </p>
+          <p>In CSS, use relative URLs:</p>
           <pre><code>@font-face {
   font-family: "My Font";
-  src: url("/themes/my-theme/fonts/my-font.woff2") format("woff2");
+  src: url("fonts/my-font.woff2") format("woff2");
   font-display: swap;
 }</code></pre>
+          <p>In HTML templates, use <code>__THEME_PATH__</code>:</p>
+          <pre><code>&lt;img src="__THEME_PATH__/images/logo.png" /&gt;</code></pre>
           <p>
             Note that <code>theme.json</code> is never served to the client.
           </p>
