@@ -126,7 +126,7 @@ export async function performSearch(
 
   if (query.trim().startsWith("!")) {
     state.currentQuery = query;
-    return _performBangCommand(query, resolvedType, page || 1);
+    return _performBangCommand(query, resolvedType, page || 1, isInit);
   }
 
   const commands = await _fetchCommands();
@@ -370,6 +370,7 @@ async function _performBangCommand(
   query: string,
   _type: string,
   page = 1,
+  isInit = false,
 ): Promise<void> {
   closeMediaPreview();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
@@ -400,14 +401,19 @@ async function _performBangCommand(
 
   const urlParams = new URLSearchParams({ q: query });
   if (page > 1) urlParams.set("page", String(page));
+  const historyState = { degoog: true, query, type: "web", page };
   if (state.postMethodEnabled) {
-    history.pushState(
-      { degoog: true, query, type: "web", page },
-      "",
-      `${getBase()}/search`,
-    );
+    if (isInit) {
+      history.replaceState(historyState, "", `${getBase()}/search`);
+    } else {
+      history.pushState(historyState, "", `${getBase()}/search`);
+    }
   } else {
-    history.replaceState(null, "", `${getBase()}/search?${urlParams.toString()}`);
+    if (isInit) {
+      history.replaceState(historyState, "", `${getBase()}/search?${urlParams.toString()}`);
+    } else {
+      history.pushState(historyState, "", `${getBase()}/search?${urlParams.toString()}`);
+    }
   }
 
   try {

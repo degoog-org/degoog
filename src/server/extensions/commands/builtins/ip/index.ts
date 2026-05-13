@@ -4,6 +4,7 @@ import {
   type CommandContext,
   type CommandResult,
 } from "../../../../types";
+import { getBaseUrl } from "../../../../utils/base-url";
 import { outgoingFetch } from "../../../../utils/outgoing";
 
 export const ipCommand: BangCommand = {
@@ -32,7 +33,7 @@ export const ipCommand: BangCommand = {
       const detecting = this.t!("ip.detecting");
       const detectFailed = this.t!("ip.detect-failed");
       const detectFailedHint = this.t!("ip.detect-failed-hint");
-      const detectHtml = `<div id="ip-detect-root"><p>${detecting}</p></div><script>(function(){var c=document.getElementById('ip-detect-root');if(!c)return;fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){return fetch('/api/command?q='+encodeURIComponent('!ip '+d.ip));}).then(function(r){return r.json();}).then(function(d){if(d&&d.html)c.innerHTML=d.html;else c.innerHTML='<p>${detectFailed}</p>';}).catch(function(){c.innerHTML='<p>${detectFailedHint}</p>';});})();<\/script>`;
+      const detectHtml = `<div id="ip-detect-root"><p>${detecting}</p></div><script>(function(){var c=document.getElementById('ip-detect-root');if(!c)return;fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){return fetch('${getBaseUrl()}/api/command?q='+encodeURIComponent('!ip '+d.ip));}).then(function(r){return r.json();}).then(function(d){if(d&&d.html)c.innerHTML=d.html;else c.innerHTML='<p>${detectFailed}</p>';}).catch(function(){c.innerHTML='<p>${detectFailedHint}</p>';});})();<\/script>`;
       return {
         title: this.t!("ip.title"),
         html: detectHtml,
