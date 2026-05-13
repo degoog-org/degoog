@@ -360,6 +360,7 @@ export async function getPluginExtensionMeta(
           ? translatedDesc
           : entry.instance.description,
       type: "command",
+      trigger: entry.trigger,
       configurable: schema.length > 0,
       settingsSchema: translatedSchema,
       settings: maskedSettings,

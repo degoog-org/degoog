@@ -67,6 +67,7 @@ export interface ExtensionMeta {
   displayName: string;
   description: string;
   type: ExtensionStoreType | "command" | "interceptor";
+  trigger?: string;
   configurable: boolean;
   settingsSchema: SettingField[];
   settings: Record<string, string | string[]>;

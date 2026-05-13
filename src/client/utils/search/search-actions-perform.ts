@@ -399,6 +399,7 @@ async function _performBangCommand(
   if (sidebar) sidebar.innerHTML = "";
   clearSlotPanels();
   document.title = `${query} - degoog`;
+  setTabsForBang(null);
 
   state.currentBangQuery = query;
 

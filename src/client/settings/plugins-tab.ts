@@ -17,8 +17,8 @@ const _renderPluginCard = (
 ): string => {
   const isEnabled = plugin.settings["disabled"] !== "true";
   const trigger =
-    plugin.settingsSchema.length === 0
-      ? `<span class="ext-card-trigger">!${escapeHtml(plugin.id)}</span>`
+    plugin.type === "command" && plugin.trigger
+      ? `<span class="ext-card-trigger">!${escapeHtml(plugin.trigger)}</span>`
       : "";
   const builtinBadge =
     plugin.source === "builtin"
