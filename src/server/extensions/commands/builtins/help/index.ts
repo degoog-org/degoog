@@ -31,8 +31,10 @@ export const helpCommand: BangCommand = {
   },
 
   async execute(): Promise<CommandResult> {
-    const commands = await getFilteredCommandRegistry();
-    const engineTypes = getCustomEngineTypes();
+    const [commands, engineTypes] = await Promise.all([
+      getFilteredCommandRegistry(),
+      getCustomEngineTypes(),
+    ]);
 
     const groups: Record<string, typeof commands> = {};
     for (const c of commands) {

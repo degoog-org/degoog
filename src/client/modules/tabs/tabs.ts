@@ -54,10 +54,16 @@ async function _refreshBuiltinTabVisibility(): Promise<void> {
 
 const _loadPluginTabs = async (): Promise<void> => {
   try {
-    const res = await fetch(`${getBase()}/api/search-tabs`);
+    const [res, enabledTypes] = await Promise.all([
+      fetch(`${getBase()}/api/search-tabs`),
+      getEnabledSearchTypes(),
+    ]);
     if (!res.ok) return;
     const data = (await res.json()) as { tabs: TabInfo[] };
-    pluginTabs = data.tabs || [];
+    pluginTabs = (data.tabs || []).filter((tab) => {
+      if (!tab.id.startsWith("engine:")) return true;
+      return enabledTypes.has(tab.id.slice(7));
+    });
     _renderPluginTabs();
   } catch {}
 };

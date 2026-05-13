@@ -123,7 +123,7 @@ router.get("/api/search/stream", async (c) => {
             instance: e.instance,
             score: 1,
           }))
-        : getEnginesForCustomType(searchType).map((e) => ({
+        : (await getEnginesForCustomType(searchType)).map((e) => ({
             id: e.id,
             instance: e.instance,
             score: 1,

@@ -10,6 +10,7 @@ import {
 import {
   asString,
   getSettings,
+  isDisabled,
   maskSecrets,
   mergeDefaults,
 } from "../../utils/plugin-settings";
@@ -246,21 +247,27 @@ function engineSearchTypeFromSearchType(
   return null;
 }
 
-export function getEnginesForCustomType(
+export async function getEnginesForCustomType(
   engineType: string,
-): { id: string; instance: SearchEngine }[] {
-  return engineRegistry
+): Promise<{ id: string; instance: SearchEngine }[]> {
+  const candidates = engineRegistry
     .items()
-    .filter((e) => e.searchType === engineType)
-    .map((e) => ({ id: e.id, instance: e.instance }));
+    .filter((e) => e.searchType === engineType);
+  const results: { id: string; instance: SearchEngine }[] = [];
+  for (const e of candidates) {
+    if (!(await isDisabled(e.id))) results.push({ id: e.id, instance: e.instance });
+  }
+  return results;
 }
 
 const BUILTIN_TYPES = new Set(["web", "news", "images", "videos"]);
 
-export function getCustomEngineTypes(): string[] {
+export async function getCustomEngineTypes(): Promise<string[]> {
   const types = new Set<string>();
   for (const e of engineRegistry.items()) {
-    if (!BUILTIN_TYPES.has(e.searchType)) types.add(e.searchType);
+    if (!BUILTIN_TYPES.has(e.searchType) && !(await isDisabled(e.id))) {
+      types.add(e.searchType);
+    }
   }
   return [...types];
 }
