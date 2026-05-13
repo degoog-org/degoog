@@ -2,12 +2,11 @@ import { createHash } from "node:crypto";
 import {
   SlotPanelPosition,
   TranslateFunction,
-  type PluginContext,
   type ScoredResult,
   type SettingField,
   type SlotPlugin,
 } from "../../../../types";
-import { SHORT_TTL_MS, type TtlCache } from "../../../../utils/cache";
+import { createCache, SHORT_TTL_MS, type TtlCache } from "../../../../utils/cache";
 import { logger } from "../../../../utils/logger";
 import { asString, getSettings } from "../../../../utils/plugin-settings";
 
@@ -115,7 +114,7 @@ function escapeHtml(s: string): string {
 const DEFAULT_SYSTEM_PROMPT =
   "You are a helpful assistant that summarises web search results. Write a concise 2–3 sentence summary answering the query based on the provided snippets. Do not invent facts. Do not include citations.";
 
-let _summaryCache!: TtlCache<string>;
+let _summaryCache: TtlCache<string> = createCache<string>(SHORT_TTL_MS);
 
 function _summaryCacheKey(query: string, results: ScoredResult[]): string {
   const fp = results
@@ -215,10 +214,6 @@ const aiSummarySlot: SlotPlugin = {
   position: SlotPanelPosition.AtAGlance,
 
   t: TranslateFunction,
-
-  init(ctx: PluginContext): void {
-    _summaryCache = ctx.createCache<string>(SHORT_TTL_MS);
-  },
 
   async trigger(): Promise<boolean> {
     const settings = await getAISummarySettings();
