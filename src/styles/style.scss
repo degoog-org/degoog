@@ -101,6 +101,10 @@ body {
   min-height: 100vh;
 }
 
+i {
+  line-height: 1!important;
+}
+
 #app {
   display: flex;
   flex-direction: column;
