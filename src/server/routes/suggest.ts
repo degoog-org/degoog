@@ -21,11 +21,17 @@ async function _applySuggestRateLimit(c: Parameters<typeof getClientIp>[0]) {
   };
   const result = checkRateLimit(ip, opts);
   if (!result.allowed && result.retryAfterSec !== undefined) {
-    return (c as Parameters<typeof getClientIp>[0] & { json: Function }).json(
-      { error: "Too many requests" },
-      429,
-      { "Retry-After": String(result.retryAfterSec) },
-    );
+    return (
+      c as Parameters<typeof getClientIp>[0] & {
+        json: (
+          body: unknown,
+          status: number,
+          headers: Record<string, string>,
+        ) => Response;
+      }
+    ).json({ error: "Too many requests" }, 429, {
+      "Retry-After": String(result.retryAfterSec),
+    });
   }
   return null;
 }

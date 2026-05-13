@@ -6,7 +6,11 @@ import {
   type SettingField,
   type SlotPlugin,
 } from "../../../../types";
-import { createCache, SHORT_TTL_MS, type TtlCache } from "../../../../utils/cache";
+import {
+  createCache,
+  SHORT_TTL_MS,
+  type TtlCache,
+} from "../../../../utils/cache";
 import { logger } from "../../../../utils/logger";
 import { asString, getSettings } from "../../../../utils/plugin-settings";
 
@@ -79,8 +83,7 @@ export async function getAISummarySettings(): Promise<AISummarySettings> {
   const stored = await getSettings(AI_SUMMARY_ID);
   const timeoutSeconds =
     parseFloat(asString(stored["timeoutSeconds"]) || "") || 30;
-  const maxTokens =
-    parseInt(asString(stored["maxTokens"]) || "", 10) || 256;
+  const maxTokens = parseInt(asString(stored["maxTokens"]) || "", 10) || 256;
   return {
     baseUrl: asString(stored["baseUrl"]),
     model: asString(stored["model"]),
@@ -114,7 +117,7 @@ function escapeHtml(s: string): string {
 const DEFAULT_SYSTEM_PROMPT =
   "You are a helpful assistant that summarises web search results. Write a concise 2–3 sentence summary answering the query based on the provided snippets. Do not invent facts. Do not include citations.";
 
-let _summaryCache: TtlCache<string> = createCache<string>(SHORT_TTL_MS);
+const _summaryCache: TtlCache<string> = createCache<string>(SHORT_TTL_MS);
 
 function _summaryCacheKey(query: string, results: ScoredResult[]): string {
   const fp = results

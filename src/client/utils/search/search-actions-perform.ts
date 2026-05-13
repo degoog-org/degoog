@@ -247,7 +247,10 @@ export async function performSearch(
           body: JSON.stringify(
             buildSearchBody(query, engines, resolvedType, resolvedPage),
           ),
-          headers: { "Content-Type": "application/json", ...searchAuthHeaders() },
+          headers: {
+            "Content-Type": "application/json",
+            ...searchAuthHeaders(),
+          },
         })
       : await fetch(appendSearchAuthParams(url));
 
@@ -410,9 +413,17 @@ async function _performBangCommand(
     }
   } else {
     if (isInit) {
-      history.replaceState(historyState, "", `${getBase()}/search?${urlParams.toString()}`);
+      history.replaceState(
+        historyState,
+        "",
+        `${getBase()}/search?${urlParams.toString()}`,
+      );
     } else {
-      history.pushState(historyState, "", `${getBase()}/search?${urlParams.toString()}`);
+      history.pushState(
+        historyState,
+        "",
+        `${getBase()}/search?${urlParams.toString()}`,
+      );
     }
   }
 
@@ -449,10 +460,10 @@ async function _performBangCommand(
       setActiveTab(engineType);
       setTabsForBang(engineType);
       if (isMedia) {
-        const glanceEl = document.getElementById("at-a-glance");
-        if (glanceEl) glanceEl.innerHTML = "";
-        const sidebar = document.getElementById("results-sidebar");
-        if (sidebar) sidebar.innerHTML = "";
+        const glanceElMedia = document.getElementById("at-a-glance");
+        if (glanceElMedia) glanceElMedia.innerHTML = "";
+        const sidebarMedia = document.getElementById("results-sidebar");
+        if (sidebarMedia) sidebarMedia.innerHTML = "";
         renderMediaEngineBar(data.engineTimings ?? []);
       }
       if (resultsMeta)

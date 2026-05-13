@@ -17,8 +17,10 @@ import {
   getSlotPluginById,
   getSlotSource,
 } from "../extensions/slots/registry";
-import { getInterceptorBySettingsId } from "../extensions/interceptors/registry";
-import { getInterceptorMeta } from "../extensions/interceptors/registry";
+import {
+  getInterceptorMeta,
+  getInterceptorBySettingsId,
+} from "../extensions/interceptors/registry";
 import { getSearchBarActionExtensionMeta } from "../extensions/search-bar/registry";
 import { getThemeExtensionMeta } from "../extensions/themes/registry";
 import {
