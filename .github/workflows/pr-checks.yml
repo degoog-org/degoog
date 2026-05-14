@@ -48,7 +48,7 @@ jobs:
         run: bun run typecheck
 
       - name: Run tests
-        run: bun test
+        run: yarn test
 
       - name: Run stress tests
-        run: bun test:rate-limit
+        run: yarn test:rate-limit
