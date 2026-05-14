@@ -95,8 +95,8 @@ export async function performSearch(
   const resolvedType = type || state.currentType || "web";
   if (!query.trim()) return;
 
-  void import("../../modules/filters/image-filters").then(({ syncImgFilters }) =>
-    syncImgFilters(resolvedType),
+  void import("../../modules/filters/image-filters").then(
+    ({ syncImgFilters }) => syncImgFilters(resolvedType),
   );
   void triggerUovadipasqua(query);
 
@@ -215,7 +215,8 @@ export async function performSearch(
     query,
     type: resolvedType,
     page: resolvedPage,
-    imageFilter: resolvedType === "images" ? { ...state.imageFilter } : undefined,
+    imageFilter:
+      resolvedType === "images" ? { ...state.imageFilter } : undefined,
   };
   if (state.postMethodEnabled) {
     if (isInit) {

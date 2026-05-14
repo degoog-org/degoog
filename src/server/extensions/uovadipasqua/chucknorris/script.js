@@ -18,13 +18,13 @@ const applyEffect = async (on) => {
   const homeLogo = document.getElementById("home-logo");
   if (!homeLogo || !on) return;
 
-  const randomJoke = await window
+  const chuckme = await window
     .fetch("https://api.chucknorris.io/jokes/random")
     .then((res) => res.json());
-  if (randomJoke?.value) {
-    const joke = document.createElement("div");
-    joke.textContent = randomJoke.value;
-    homeLogo.appendChild(joke);
+  if (chuckme?.value) {
+    const allHailChuck = document.createElement("div");
+    allHailChuck.textContent = chuckme.value;
+    homeLogo.appendChild(allHailChuck);
   }
 };
 
