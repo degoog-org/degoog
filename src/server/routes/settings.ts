@@ -6,6 +6,7 @@ import { asString, getSettings, setSettings } from "../utils/plugin-settings";
 import { getRandomUserAgent } from "../utils/user-agents";
 import { DEFAULT_LANGUAGES, DEGOOG_SETTINGS_ID } from "../utils/search";
 import { getServerKeyHex, regenerateServerKey } from "../utils/server-key";
+import { syncBlocklist } from "../utils/bot-trap";
 import { guardSettingsRoute, isPasswordRequired } from "./settings-auth";
 
 const router = new Hono();
@@ -43,6 +44,8 @@ const GENERAL_ALLOWED_KEYS = [
   "customCss",
   "apiKeySearchEnabled",
   "apiKeySuggestEnabled",
+  "honeypotEnabled",
+  "honeypotBlocklist",
 ] as const;
 
 const _normalizeHostname = (raw: string): string =>
@@ -158,6 +161,7 @@ router.post("/api/settings/general", async (c) => {
     }
   }
   await setSettings(DEGOOG_SETTINGS_ID, { ...existing, ...updates });
+  await syncBlocklist();
   return c.json({ ok: true });
 });
 

@@ -28,7 +28,7 @@ import {
   getPluginSettingsIds,
 } from "../utils/plugin-assets";
 import { asString, getSettings, isDisabled } from "../utils/plugin-settings";
-import { isPublicInstance } from "../utils/public-instance";
+import { getAdminPath, isPublicInstance } from "../utils/public-instance";
 import {
   collectTranslationsForLocale,
   createTranslatorFromPath,
@@ -41,6 +41,9 @@ import {
   shouldServeSettingsGate,
   gandalf,
 } from "./settings-auth";
+import { mintToken, ping, verifyToken } from "../utils/link-token";
+import { logger } from "../utils/logger";
+import { getClientIp } from "../utils/request";
 import { generateSearchNonce } from "../utils/search-nonce";
 import { getBasePath, getBaseUrl } from "../utils/base-url";
 
@@ -50,6 +53,7 @@ const BASE_URL = getBaseUrl();
 const BASE_PATH = getBasePath();
 const BASE_PREFIX =
   BASE_PATH || (BASE_URL && !/^https?:\/\//i.test(BASE_URL) ? BASE_URL : "");
+const ADMIN_PATH = getAdminPath();
 
 interface DefaultThemeManifest {
   templates?: Record<string, string>;
@@ -242,6 +246,13 @@ async function applyPagePlaceholders(
     `<link rel="stylesheet" href="/public/icons/fontawesome/css/all.min.css?v=${pkg.version}">\n  </head>`,
   );
 
+  try {
+    const tok = mintToken();
+    result = result.replace("</head>", `<link rel="stylesheet" href="/ping/${tok}">\n  </head>`);
+  } catch (e) {
+    logger.error("link-token", `failed to mint token: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
   if (BASE_PREFIX) {
     const baseScript = `<script>window.__DEGOOG_BASE_URL__=${JSON.stringify(BASE_PREFIX)}</script>`;
     result = result.replace("</head>", `${baseScript}\n  </head>`);
@@ -312,6 +323,13 @@ async function buildPage(filename: string, locale?: string): Promise<string> {
   const t = await getTranslator(locale);
   return applyPagePlaceholders(html, t);
 }
+
+router.get("/ping/:token", async (c) => {
+  const token = c.req.param("token");
+  const ip = getClientIp(c);
+  if (ip && verifyToken(token)) ping(ip);
+  return new Response("", { status: 200, headers: { "Content-Type": "text/css", "Cache-Control": "no-store" } });
+});
 
 router.get("/", async (c) => {
   const q = c.req.query("q");
@@ -387,6 +405,8 @@ router.get("/settings", async (c) => {
   const locale = getLocale(c);
   if (isPublicInstance())
     return c.html(await buildPage("settings-public.html", locale));
+  if (ADMIN_PATH !== "settings")
+    return c.redirect(`${BASE_URL || BASE_PATH}/${ADMIN_PATH}`, 302);
   if (await shouldServeSettingsGate(c)) {
     return c.html(await buildPage("settings-gate.html", locale));
   }
@@ -397,6 +417,12 @@ router.get("/settings/:tab", async (c) => {
   if (isPublicInstance())
     return c.redirect(`${BASE_URL || BASE_PATH}/settings`, 302);
   const tab = c.req.param("tab");
+  if (ADMIN_PATH !== "settings") {
+    const dest = (SETTINGS_TABS as readonly string[]).includes(tab)
+      ? `${BASE_URL || BASE_PATH}/${ADMIN_PATH}/${tab}`
+      : `${BASE_URL || BASE_PATH}/${ADMIN_PATH}`;
+    return c.redirect(dest, 302);
+  }
   if (!(SETTINGS_TABS as readonly string[]).includes(tab)) {
     return c.redirect(`${BASE_URL || BASE_PATH}/settings`, 302);
   }
@@ -406,6 +432,36 @@ router.get("/settings/:tab", async (c) => {
   }
   return c.html(await buildPage("settings.html", locale));
 });
+
+if (ADMIN_PATH !== "settings") {
+  router.get(`/${ADMIN_PATH}/`, (c) =>
+    c.redirect(`${BASE_URL || BASE_PATH}/${ADMIN_PATH}`, 301),
+  );
+
+  router.get(`/${ADMIN_PATH}`, async (c) => {
+    if (isPublicInstance() && !isPasswordRequired())
+      return c.text("Not Found", 404);
+    const locale = getLocale(c);
+    if (await shouldServeSettingsGate(c)) {
+      return c.html(await buildPage("settings-gate.html", locale));
+    }
+    return c.html(await buildPage("settings.html", locale));
+  });
+
+  router.get(`/${ADMIN_PATH}/:tab`, async (c) => {
+    if (isPublicInstance() && !isPasswordRequired())
+      return c.text("Not Found", 404);
+    const tab = c.req.param("tab");
+    if (!(SETTINGS_TABS as readonly string[]).includes(tab)) {
+      return c.redirect(`${BASE_URL || BASE_PATH}/${ADMIN_PATH}`, 302);
+    }
+    const locale = getLocale(c);
+    if (await shouldServeSettingsGate(c)) {
+      return c.html(await buildPage("settings-gate.html", locale));
+    }
+    return c.html(await buildPage("settings.html", locale));
+  });
+}
 
 router.get("/api/engines", async (c) => {
   return c.json({

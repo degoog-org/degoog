@@ -37,6 +37,8 @@ type ServerSettingsData = {
   customCss?: string;
   apiKeySearchEnabled?: string;
   apiKeySuggestEnabled?: string;
+  honeypotEnabled?: string;
+  honeypotBlocklist?: string;
 };
 
 const _scoreT = window.scopedT("core");
@@ -161,6 +163,7 @@ export async function initServerTab(
   _bindToggle("domain-block-enabled", "domain-block-wrap");
   _bindToggle("domain-replace-enabled", "domain-replace-wrap");
   _bindToggle("domain-score-enabled", "domain-score-wrap");
+  _bindToggle("honeypot-enabled", "honeypot-blocklist-wrap");
 
   document
     .getElementById("settings-domain-score-add")
@@ -216,6 +219,9 @@ export async function initServerTab(
 
       _setToggle("api-key-search-enabled", data.apiKeySearchEnabled);
       _setToggle("api-key-suggest-enabled", data.apiKeySuggestEnabled);
+
+      _setToggle("honeypot-enabled", data.honeypotEnabled ?? "true");
+      _setVal("honeypot-blocklist", data.honeypotBlocklist);
     }
   } catch {}
 
@@ -322,6 +328,8 @@ export async function initServerTab(
           customCss: val("custom-css"),
           apiKeySearchEnabled: boolStr("api-key-search-enabled"),
           apiKeySuggestEnabled: boolStr("api-key-suggest-enabled"),
+          honeypotEnabled: boolStr("honeypot-enabled"),
+          honeypotBlocklist: val("honeypot-blocklist"),
         }),
       });
     },

@@ -1,6 +1,6 @@
 {
   "name": "degoog",
-  "version": "0.18.0-dev.0.1",
+  "version": "0.18.0-dev.0.2",
   "type": "module",
   "scripts": {
     "dev": "bun run --watch src/server/index.ts",
@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/ tests/",
     "lint:fix": "eslint src/ tests/ --fix",
-    "test": "LOG_LEVEL= bun test $(find tests -name '*.test.ts' ! -path '*/stress/*' | sort | tr '\\n' ' ')",
+    "test": "LOG_LEVEL= DEGOOG_SETTINGS_PATH= bun test $(find tests -name '*.test.ts' ! -path '*/stress/*' | sort | tr '\\n' ' ')",
     "test:rate-limit": "LOG_LEVEL=debug bun test tests/stress/"
   },
   "dependencies": {

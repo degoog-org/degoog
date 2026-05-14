@@ -133,6 +133,12 @@
       "custom-css-heading": "Custom CSS",
       "custom-css-desc": "Inject custom CSS into every page. Loaded after theme and plugin styles, so it overrides them. Use !important when you need to beat selectors with higher specificity.",
       "custom-css-label": "Custom CSS",
+      "honeypot-heading": "Bot Honeypot",
+      "honeypot-desc": "Lure and permanently block bots and scrapers probing your instance. Any IP that hits a honeypot path is blocked instantly on every subsequent request.",
+      "honeypot-enable": "Enable honeypot",
+      "honeypot-enable-aria": "Enable bot honeypot",
+      "honeypot-blocklist-label": "Blocked IPs",
+      "honeypot-blocklist-desc": "One IP address per line. Add IPs manually or remove false positives. Blocked IPs are rejected on every request.",
       "saved": "Saved",
       "save-failed-network": "Save failed. Please try again."
     },
