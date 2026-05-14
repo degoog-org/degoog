@@ -222,6 +222,23 @@ export function getEngineRegistry(): {
   ];
 }
 
+export async function getEffectiveEngineRegistry(): Promise<{
+  id: string;
+  displayName: string;
+  disabledByDefault?: boolean;
+  searchType?: EngineSearchType;
+}[]> {
+  const plugins = await Promise.all(
+    engineRegistry.items().map(async (e) => ({
+      id: e.id,
+      displayName: e.displayName,
+      disabledByDefault: e.disabledByDefault,
+      searchType: ((await getTypeOverride(e.id)) ?? e.searchType) as EngineSearchType,
+    })),
+  );
+  return [...builtinRegistry, ...plugins];
+}
+
 export function getOutgoingAllowlist(): string[] {
   const fromBuiltins = BUILTIN_DEFINITIONS.flatMap(
     (d) => d.outgoingHosts ?? [],
@@ -332,25 +349,31 @@ export async function getEnginesForSearchType(
 export const getActiveWebEngines = async (
   config: EngineConfig,
 ): Promise<{ id: string; instance: SearchEngine; score: number }[]> => {
-  const allDefinitions = [
-    ...BUILTIN_DEFINITIONS.filter((d) => d.searchType === "web"),
-    ...engineRegistry.items().filter((e) => e.searchType === "web"),
-  ];
   const engineMap = getEngineMap();
   const active: { id: string; instance: SearchEngine; score: number }[] = [];
-  for (const def of allDefinitions) {
+
+  for (const def of BUILTIN_DEFINITIONS.filter((d) => d.searchType === "web")) {
     if (!config[def.id]) continue;
     const instance = engineMap[def.id];
     if (!instance) continue;
-    if (
-      engineRequiresConfig(instance) &&
-      !(await hasRequiredConfig(def.id, instance))
-    )
-      continue;
+    if (engineRequiresConfig(instance) && !(await hasRequiredConfig(def.id, instance))) continue;
     const stored = await getSettings(def.id);
     const score = Math.max(parseFloat(asString(stored["score"])) || 1, 0.1);
     active.push({ id: def.id, instance, score });
   }
+
+  for (const e of engineRegistry.items()) {
+    if (!config[e.id]) continue;
+    const effectiveType = (await getTypeOverride(e.id)) ?? e.searchType;
+    if (effectiveType !== "web") continue;
+    const instance = engineMap[e.id];
+    if (!instance) continue;
+    if (engineRequiresConfig(instance) && !(await hasRequiredConfig(e.id, instance))) continue;
+    const stored = await getSettings(e.id);
+    const score = Math.max(parseFloat(asString(stored["score"])) || 1, 0.1);
+    active.push({ id: e.id, instance, score });
+  }
+
   return active;
 };
 

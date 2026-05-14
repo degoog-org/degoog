@@ -69,8 +69,7 @@ export async function retryEngine(engineName: string): Promise<void> {
       renderResults(data.results);
     }
 
-    const isMediaType =
-      state.currentType === "images" || state.currentType === "videos";
+    const isMediaType = state.currentType === "images";
     if (isMediaType && state.currentData) {
       renderMediaEngineBar(state.currentData.engineTimings ?? []);
     } else if (state.currentData) {
