@@ -71,12 +71,12 @@ export function init(): void {
     "results-search-clear-btn",
   ) as HTMLButtonElement | null;
 
-  clearSearchButton?.addEventListener("click", (e) => {
-	if (resultsInput) {
+  clearSearchButton?.addEventListener("click", () => {
+    if (resultsInput) {
       resultsInput.value = "";
-      clearSearchButton?.setAttribute("style","display:none")
-	}
-  })
+      clearSearchButton?.setAttribute("style", "display:none");
+    }
+  });
 
   document
     .getElementById("search-form-home")
@@ -98,13 +98,12 @@ export function init(): void {
       void performSearch(resultsInput.value);
   });
 
-  resultsInput?.addEventListener("input", (e) => {
-	if (resultsInput) {
+  resultsInput?.addEventListener("input", () => {
+    if (resultsInput) {
       if (resultsInput.value && resultsInput.value.length > 0)
-        clearSearchButton?.setAttribute("style","")
-      else
-        clearSearchButton?.setAttribute("style","display:none")
-	}
+        clearSearchButton?.setAttribute("style", "");
+      else clearSearchButton?.setAttribute("style", "display:none");
+    }
   });
 
   document
@@ -235,8 +234,8 @@ export function init(): void {
         resultsInput.value = restoredQ;
         resultsInput.defaultValue = restoredQ;
       }
-	    if (resultsInput && resultsInput.value.length > 0)
-		    clearSearchButton?.setAttribute("style","")
+      if (resultsInput && resultsInput.value.length > 0)
+        clearSearchButton?.setAttribute("style", "");
       return;
     }
 
