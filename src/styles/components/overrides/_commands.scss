@@ -34,28 +34,13 @@
 }
 
 .help-search-wrap {
-  margin-bottom: 1em;
-}
-
-.help-search {
-  width: 100%;
-  padding: 0.6em 1em;
-  font-size: $font-size-base;
-  background: var(--search-bar-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--border-light);
-  border-radius: $search-bar-radius;
-  outline: none;
-
-  &:focus {
-    border-color: $primary;
-  }
+  margin-bottom: $space-4;
 }
 
 .help-hint {
   font-size: $font-size-small;
   color: var(--text-secondary);
-  margin-bottom: 1em;
+  margin-bottom: $space-4;
 
   code {
     background: var(--bg-light);
@@ -68,94 +53,95 @@
 .help-layout {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  border: 1px solid var(--border-light);
-  border-radius: $radius-lg;
-  overflow: hidden;
-  min-height: 18.75rem;
+  gap: $space-4;
 
   @media (min-width: 601px) {
     flex-direction: row;
+    gap: $space-6;
+    align-items: flex-start;
   }
 }
 
 .help-tabs {
   display: flex;
   flex-direction: row;
-  border-right: none;
-  border-bottom: 1px solid var(--border-light);
-  background: var(--bg-light);
-  flex-shrink: 0;
-  min-width: 0;
+  gap: 2px;
   overflow-x: auto;
+  flex-shrink: 0;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   @media (min-width: 601px) {
     flex-direction: column;
-    border-right: 1px solid var(--border-light);
-    border-bottom: none;
-    min-width: 10rem;
+    width: 11rem;
     overflow-x: initial;
+    position: sticky;
+    top: $space-4;
   }
 }
 
 .help-tab {
-  padding: $space-3 $space-4;
-  font-size: $font-size-base;
-  color: var(--text-secondary);
   background: none;
   border: none;
-  border-right: 1px solid var(--border-light);
+  border-radius: $radius-lg;
+  color: var(--text-secondary);
   cursor: pointer;
-  text-align: left;
-  transition: background $transition-fast, color $transition-fast;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: $space-2;
+  font-size: $font-size-base;
+  padding: $space-2 $space-3;
+  text-align: start;
+  transition: color $transition-fast, background $transition-fast;
+  flex-shrink: 0;
   white-space: nowrap;
 
   &:hover {
-    background: var(--bg-hover);
+    color: var(--text-primary);
+    background: var(--bg-light);
   }
 
   &.active {
     color: var(--text-primary);
-    background: var(--bg);
-    font-weight: 600;
-    border-right: 1px solid var(--border-light);
+    font-weight: 500;
     border-bottom: 2px solid $primary;
+    border-radius: 0;
+
+    @media (min-width: 601px) {
+      background: var(--bg-hover);
+      border-bottom: none;
+      border-radius: $radius-lg;
+    }
   }
 
   @media (min-width: 601px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border-light);
+    width: 100%;
     white-space: normal;
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    &.active {
-      border-right: 2px solid $primary;
-      border-bottom: none;
-    }
+    padding: $space-3 $space-3;
   }
 }
 
 .help-tab-count {
   font-size: $font-size-small;
   color: var(--text-secondary);
-  background: var(--bg-hover);
+  background: var(--bg-light);
+  border: 1px solid var(--border-light);
   padding: 0.1em $space-2;
   border-radius: $radius-xl;
   min-width: $space-5;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .help-panels {
   flex: 1;
-  overflow-y: auto;
-  max-height: 60vh;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
 }
 
 .help-panel {
@@ -164,6 +150,13 @@
   &.active {
     display: block;
   }
+}
+
+.help-panel-card {
+  background: var(--bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: $radius-lg;
+  overflow: hidden;
 }
 
 .help-row {

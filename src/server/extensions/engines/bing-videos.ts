@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import type { Element } from "domhandler";
 import type {
   SearchEngine,
   SearchResult,
@@ -7,6 +8,32 @@ import type {
   SettingField,
 } from "../../types";
 import { getRandomUserAgent } from "../../utils/user-agents";
+
+const BING_VIDEO_RESULTS_SCP = '[data-svcptid="VideoResults"]';
+
+const parseMmetaObject = (raw: string): Record<string, string> | null => {
+  try {
+    return JSON.parse(raw) as Record<string, string>;
+  } catch {
+    return null;
+  }
+};
+
+const readBingVideoTileTitle = ($tile: cheerio.Cheerio<Element>): string => {
+  const aria = $tile.find("a[aria-label]").first().attr("aria-label")?.trim();
+  if (aria) {
+    const head = aria.split(/\bfrom\s+/i)[0]?.trim() ?? aria;
+    return head.replace(/^[\s"'“‘]+|[\s"'”’]+$/g, "").trim();
+  }
+  const titled = $tile.find("[title]").not("img").first().attr("title")?.trim();
+  if (titled) return titled;
+  return $tile.text().replace(/\s+/g, " ").trim();
+};
+
+const readBingVideoTileDuration = ($tile: cheerio.Cheerio<Element>): string => {
+  const hit = $tile.text().match(/\b\d{1,3}:\d{2}(:\d{2})?\b/);
+  return hit?.[0] ?? "";
+};
 
 export class BingVideosEngine implements SearchEngine {
   name = "Bing Videos";
@@ -33,9 +60,10 @@ export class BingVideosEngine implements SearchEngine {
     timeFilter?: TimeFilter,
     context?: EngineContext,
   ): Promise<SearchResult[]> {
-    const first = (page - 1) * 40;
+    const pageSize = 40;
+    const first = (page - 1) * pageSize;
     const lang = context?.lang;
-    let url = `https://www.bing.com/videos/search?q=${encodeURIComponent(query)}&count=40&first=${first}`;
+    let url = `https://www.bing.com/videos/search?q=${encodeURIComponent(query)}&count=${pageSize}&first=${first}&FORM=HDRSC3`;
     if (lang) url += `&setlang=${lang}`;
     if (this.safeSearch !== "off") url += `&adlt=${this.safeSearch}`;
     if (timeFilter && timeFilter !== "any" && timeFilter !== "custom") {
@@ -73,39 +101,34 @@ export class BingVideosEngine implements SearchEngine {
     const results: SearchResult[] = [];
     const seen = new Set<string>();
 
-    $(".mc_vtvc").each((_, el) => {
+    const $tiles = $(BING_VIDEO_RESULTS_SCP).find("[mmeta]");
+    $tiles.each((_, el) => {
       const $el = $(el);
+      const mmeta = $el.attr("mmeta") ?? "";
+      const data = parseMmetaObject(mmeta);
+      const videoUrl = data?.murl || data?.pgurl || "";
+      if (!videoUrl.startsWith("http")) return;
 
-      const mmeta = $el.attr("mmeta") || "";
-      let videoUrl = "";
-      let thumbnail = "";
-
-      if (mmeta) {
-        try {
-          const data = JSON.parse(mmeta) as Record<string, string>;
-          videoUrl = data.murl || data.pgurl || "";
-          thumbnail = data.turl || "";
-        } catch {}
-      }
-
-      const title = $el.find(".mc_vtvc_title").first().text().trim();
-
+      let thumbnail = data?.turl ?? "";
       if (!thumbnail) {
         const img = $el.find("img").first();
         thumbnail = img.attr("data-src-hq") || img.attr("src") || "";
       }
 
-      let duration = "";
-      $el.find(".mc_vtvc_meta_row").each((__, row) => {
-        if (duration) return;
-        const text = $(row).text().trim();
-        if (/^\d{1,3}:\d{2}(:\d{2})?$/.test(text)) duration = text;
-      });
+      const title = readBingVideoTileTitle($el);
+      const duration = readBingVideoTileDuration($el);
 
-      if (!title || !videoUrl || seen.has(videoUrl)) return;
+      if (!title || seen.has(videoUrl)) return;
       seen.add(videoUrl);
 
-      results.push({ title, url: videoUrl, snippet: "", source: this.name, thumbnail, duration });
+      results.push({
+        title,
+        url: videoUrl,
+        snippet: "",
+        source: this.name,
+        thumbnail,
+        duration,
+      });
     });
 
     return results;
