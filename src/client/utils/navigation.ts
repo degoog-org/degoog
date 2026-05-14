@@ -45,6 +45,10 @@ export function showHome(): void {
   window.location.href = `${getBase()}/`;
 }
 
+let _bangMatchType: string | null | undefined = undefined;
+
+export const getBangMatchType = (): string | null | undefined => _bangMatchType;
+
 export function setActiveTab(type: string): void {
   document.querySelectorAll<HTMLElement>(".results-tab").forEach((tab) => {
     const tabType = tab.dataset.type ?? "";
@@ -60,6 +64,7 @@ function _updateTabVisibility(tab: HTMLElement): void {
 }
 
 export function setTabsForBang(matchType: string | null): void {
+  _bangMatchType = matchType;
   document.querySelectorAll<HTMLElement>(".results-tab").forEach((tab) => {
     const tabType = tab.dataset.type ?? "";
     const visible =
@@ -71,6 +76,7 @@ export function setTabsForBang(matchType: string | null): void {
 }
 
 export function showAllTabs(): void {
+  _bangMatchType = undefined;
   document.querySelectorAll<HTMLElement>(".results-tab").forEach((tab) => {
     delete tab.dataset.bangHidden;
     _updateTabVisibility(tab);
