@@ -1,6 +1,10 @@
 import { stat } from "fs/promises";
 import { join } from "path";
-import type { Uovadipasqua, UovadipasquaMatch } from "../../types";
+import type {
+  Uovadipasqua,
+  UovadipasquaClientStorageBinding,
+  UovadipasquaMatch,
+} from "../../types";
 import { createRegistry } from "../registry-factory";
 import { getBasePath } from "../../utils/base-url";
 import { logger } from "../../utils/logger";
@@ -18,11 +22,11 @@ const _hasStyle = new Map<string, boolean>();
 
 const _isUovadipasqua = (val: unknown): val is Uovadipasqua => {
   if (typeof val !== "object" || val === null) return false;
-  const egg = val as Uovadipasqua;
+  const item = val as Uovadipasqua;
   return (
-    typeof egg.id === "string" &&
-    Array.isArray(egg.triggers) &&
-    egg.triggers.every(
+    typeof item.id === "string" &&
+    Array.isArray(item.triggers) &&
+    item.triggers.every(
       (t) => t.type === "search-query" && typeof t.pattern === "string",
     )
   );
@@ -38,10 +42,10 @@ const registry = createRegistry<Uovadipasqua>({
     return _isUovadipasqua(val) ? val : null;
   },
   canonicalIdKind: "uovadipasqua",
-  onLoad: async (egg, { entryPath, folderName, canonicalId }) => {
-    const legacyId = egg.id;
+  onLoad: async (item, { entryPath, folderName, canonicalId }) => {
+    const legacyId = item.id;
     const id = canonicalId ?? folderName;
-    egg.id = id;
+    item.id = id;
     _entryPaths.set(id, entryPath);
     if (legacyId && legacyId !== id) _entryPaths.delete(legacyId);
     const styleStat = await stat(join(entryPath, "style.css")).catch(
@@ -58,10 +62,13 @@ export async function initUovadipasquas(): Promise<void> {
   await registry.init();
 }
 
+const ALLOWED_ASSETS = /^[\w.-]+\.(js|css|png|jpg|jpeg|gif|webp|svg)$/;
+
 export function getUovadipasquaAssetPath(
   id: string,
-  filename: "script.js" | "style.css",
+  filename: string,
 ): string | null {
+  if (!ALLOWED_ASSETS.test(filename)) return null;
   const dir = _entryPaths.get(id);
   if (!dir) return null;
   if (filename === "style.css" && !_hasStyle.get(id)) return null;
@@ -70,13 +77,20 @@ export function getUovadipasquaAssetPath(
 
 const _normalize = (query: string): string => query.trim().toLowerCase();
 
-export const matchSearchQueryEggs = (query: string): UovadipasquaMatch[] => {
+const _clientStorageBindingFor = (
+  item: Uovadipasqua,
+): UovadipasquaClientStorageBinding | undefined => {
+  if (!item.id || !item.clientStorage) return undefined;
+  return { extensionId: item.id };
+};
+
+export const matchUovadipasqua = (query: string): UovadipasquaMatch[] => {
   const normalized = _normalize(query);
   if (!normalized) return [];
   const matches: UovadipasquaMatch[] = [];
-  for (const egg of registry.items()) {
-    if (!egg.id) {
-      const patterns = egg.triggers
+  for (const item of registry.items()) {
+    if (!item.id) {
+      const patterns = item.triggers
         .map((t) => t.pattern)
         .filter(Boolean)
         .slice(0, 3)
@@ -87,7 +101,7 @@ export const matchSearchQueryEggs = (query: string): UovadipasquaMatch[] => {
       );
       continue;
     }
-    const trigger = egg.triggers.find(
+    const trigger = item.triggers.find(
       (t) =>
         t.type === "search-query" && t.pattern.toLowerCase() === normalized,
     );
@@ -97,13 +111,25 @@ export const matchSearchQueryEggs = (query: string): UovadipasquaMatch[] => {
     }
     const basePath = getBasePath();
     matches.push({
-      id: egg.id,
-      scriptUrl: `${basePath}/uovadipasqua/${egg.id}/script.js`,
-      styleUrl: _hasStyle.get(egg.id)
-        ? `${basePath}/uovadipasqua/${egg.id}/style.css`
-        : null,
-      waitForResults: !!egg.waitForResults,
+      id: item.id,
+      scriptUrl: `${basePath}/uovadipasqua/${item.id}/script.js`,
+      waitForResults: !!item.waitForResults,
+      repeatOnQuery: !!item.repeatOnQuery,
     });
   }
   return matches;
 };
+
+export function listUovadipasquaClientStorageBindings(): UovadipasquaClientStorageBinding[] {
+  const out: UovadipasquaClientStorageBinding[] = [];
+  const seen = new Set<string>();
+  for (const item of registry.items()) {
+    const b = _clientStorageBindingFor(item);
+    if (!b) continue;
+    const dedupe = b.extensionId;
+    if (seen.has(dedupe)) continue;
+    seen.add(dedupe);
+    out.push(b);
+  }
+  return out;
+}

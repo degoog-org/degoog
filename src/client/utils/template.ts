@@ -1,7 +1,7 @@
 import { escapeHtml } from "./dom";
 
-const PLACEHOLDER_RE = /\{\{\s*([^#/}][^}]*?)\s*\}\}/g;
-const BLOCK_RE = /\{\{#(\w+)\s+([\w.]+)\}\}([\s\S]*?)\{\{\/\1\s+\2\}\}/g;
+const PLACEHOLDER_RE = /\{\{\s*([^#/^}][^}]*?)\s*\}\}/g;
+const BLOCK_RE = /\{\{([#^])(\w+)\s+([\w.]+)\}\}([\s\S]*?)\{\{\/\2\s+\3\}\}/g;
 
 const _resolve = (key: string, ctx: Record<string, unknown>): unknown => {
   if (key === "." || key === "@index") return ctx[key];
@@ -13,17 +13,20 @@ const _resolve = (key: string, ctx: Record<string, unknown>): unknown => {
   return val;
 };
 
+const _isTruthy = (val: unknown): boolean =>
+  !!val && !(Array.isArray(val) && val.length === 0);
+
 const _processBlocks = (
   tpl: string,
   ctx: Record<string, unknown>,
 ): string =>
-  tpl.replace(BLOCK_RE, (_, type: string, key: string, inner: string) => {
+  tpl.replace(BLOCK_RE, (_, prefix: string, type: string, key: string, inner: string) => {
     const val = _resolve(key, ctx);
     if (type === "if") {
-      if (!val || (Array.isArray(val) && val.length === 0)) return "";
-      return _processBlocks(inner, ctx);
+      const show = prefix === "^" ? !_isTruthy(val) : _isTruthy(val);
+      return show ? _processBlocks(inner, ctx) : "";
     }
-    if (type === "each") {
+    if (type === "each" && prefix === "#") {
       if (!Array.isArray(val)) return "";
       return val
         .map((item, i) => {

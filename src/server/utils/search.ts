@@ -3,6 +3,7 @@ import { getEngineRegistry } from "../extensions/engines/registry";
 import { getSlotPlugins } from "../extensions/slots/registry";
 import {
   EngineConfig,
+  ImageFilter,
   ScoredResult,
   SearchType,
   SLOT_POSITION_SETTING_KEY,
@@ -146,9 +147,13 @@ export function cacheKey(
   lang = "",
   dateFrom = "",
   dateTo = "",
+  imageFilter?: ImageFilter,
 ): string {
   const q = query.trim().toLowerCase();
-  return `${q}|${JSON.stringify(engines)}|${type}|${page}|${timeFilter}|${lang}|${dateFrom}|${dateTo}`;
+  const imgKey = imageFilter
+    ? `${imageFilter.color || ""}|${imageFilter.size || ""}|${imageFilter.type || ""}|${imageFilter.layout || ""}`
+    : "";
+  return `${q}|${JSON.stringify(engines)}|${type}|${page}|${timeFilter}|${lang}|${dateFrom}|${dateTo}|${imgKey}`;
 }
 
 export async function runSlotPlugins(

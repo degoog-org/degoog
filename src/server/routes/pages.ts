@@ -7,7 +7,7 @@ import { getAllCommandTranslators } from "../extensions/commands/registry";
 import {
   getAllEngineTranslators,
   getDefaultEngineConfig,
-  getEngineRegistry,
+  getEffectiveEngineRegistry,
 } from "../extensions/engines/registry";
 import { getAllMiddlewareTranslators } from "../extensions/middleware/registry";
 import { getAllSearchBarTranslators } from "../extensions/search-bar/registry";
@@ -407,9 +407,9 @@ router.get("/settings/:tab", async (c) => {
   return c.html(await buildPage("settings.html", locale));
 });
 
-router.get("/api/engines", (c) => {
+router.get("/api/engines", async (c) => {
   return c.json({
-    engines: getEngineRegistry(),
+    engines: await getEffectiveEngineRegistry(),
     defaults: getDefaultEngineConfig(),
   });
 });

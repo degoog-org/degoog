@@ -1,0 +1,26 @@
+#image-filters-bar {
+  display: none;
+  padding: 0 $results-inline-gutter;
+}
+
+.degoog-img-filter-bar {
+  display: flex;
+  gap: $space-2;
+  padding: $space-3 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-wrap: nowrap;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.degoog-img-filter-select-wrap {
+  flex-shrink: 0;
+
+  .degoog-input {
+    width: auto;
+    min-width: 8rem;
+  }
+}

@@ -3,7 +3,6 @@ import {
   skeletonImageGrid,
   skeletonResults,
   skeletonSidebar,
-  skeletonVideoGrid,
 } from "../../animations/skeleton";
 import { BUILTIN_SEARCH_TYPES, MAX_PAGE } from "../../constants";
 import {
@@ -24,7 +23,7 @@ import {
   type SearchResponse,
 } from "../../types";
 import { hideAcDropdown } from "../autocomplete";
-import { triggerSearchQueryEggs } from "../uovadipasqua";
+import { triggerUovadipasqua } from "../uovadipasqua";
 import { getEngines } from "../engines";
 import { setActiveTab, setTabsForBang, showAllTabs } from "../navigation";
 import { buildPaginationHtml } from "../pagination";
@@ -44,7 +43,7 @@ import {
   abortStreamingSearch,
   performStreamingSearch,
 } from "../streaming-search";
-import { buildSearchBody, buildSearchUrl } from "../url";
+import { buildSearchBody, buildSearchUrl, imgFilterRecord } from "../url";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
 import { getBase } from "../base-url";
 
@@ -96,7 +95,10 @@ export async function performSearch(
   const resolvedType = type || state.currentType || "web";
   if (!query.trim()) return;
 
-  void triggerSearchQueryEggs(query);
+  void import("../../modules/filters/image-filters").then(
+    ({ syncImgFilters }) => syncImgFilters(resolvedType),
+  );
+  void triggerUovadipasqua(query);
 
   const isInit = state.isInitialLoad;
   state.isInitialLoad = false;
@@ -178,7 +180,7 @@ export async function performSearch(
     resultsInput.defaultValue = query;
   }
   const layout = document.getElementById("results-layout");
-  if (resolvedType === "images" || resolvedType === "videos") {
+  if (resolvedType === "images") {
     layout?.classList.add("media-mode");
   } else {
     layout?.classList.remove("media-mode");
@@ -186,7 +188,7 @@ export async function performSearch(
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   clearSlotPanels();
-  if (resolvedType === "images" || resolvedType === "videos") {
+  if (resolvedType === "images") {
     abortGlancePanels();
     abortSlotPanels();
   }
@@ -195,12 +197,8 @@ export async function performSearch(
     glanceEl.innerHTML = resolvedType === "web" ? skeletonGlance() : "";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    if (resolvedType === "web" || resolvedType === "news") {
-      resultsList.innerHTML = skeletonResults();
-    } else if (resolvedType === "images") {
+    if (resolvedType === "images") {
       resultsList.innerHTML = skeletonImageGrid();
-    } else if (resolvedType === "videos") {
-      resultsList.innerHTML = skeletonVideoGrid();
     } else {
       resultsList.innerHTML = skeletonResults();
     }
@@ -208,7 +206,7 @@ export async function performSearch(
   const pagination = document.getElementById("pagination");
   if (pagination) pagination.innerHTML = "";
   const sidebar = document.getElementById("results-sidebar");
-  const isMediaType = resolvedType === "images" || resolvedType === "videos";
+  const isMediaType = resolvedType === "images";
   if (sidebar) sidebar.innerHTML = isMediaType ? "" : skeletonSidebar();
   document.title = `${query} - degoog`;
 
@@ -217,6 +215,8 @@ export async function performSearch(
     query,
     type: resolvedType,
     page: resolvedPage,
+    imageFilter:
+      resolvedType === "images" ? { ...state.imageFilter } : undefined,
   };
   if (state.postMethodEnabled) {
     if (isInit) {
@@ -228,6 +228,11 @@ export async function performSearch(
     const urlParams = new URLSearchParams({ q: query });
     if (resolvedType !== "web") urlParams.set("type", resolvedType);
     if (resolvedPage > 1) urlParams.set("page", String(resolvedPage));
+    if (resolvedType === "images") {
+      for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
+        urlParams.set(k, v);
+      }
+    }
     const getUrl = `${getBase()}/search?${urlParams.toString()}`;
     if (isInit) {
       history.replaceState(historyState, "", getUrl);
@@ -323,7 +328,7 @@ async function _performSearchWithBang(
     state.currentData = searchData;
     const metaText = `About ${searchData.results.length} results (${(searchData.totalTime / 1000).toFixed(2)} seconds)`;
     setResultsMeta(metaText);
-    const isMediaType = type === "images" || type === "videos";
+    const isMediaType = type === "images";
     if (isMediaType) {
       if (glanceEl) glanceEl.innerHTML = "";
       renderMediaEngineBar(searchData.engineTimings ?? []);
@@ -449,7 +454,7 @@ async function _performBangCommand(
     };
     if (data.type === "engine") {
       const engineType = data.searchType ?? "web";
-      const isMedia = engineType === "images" || engineType === "videos";
+      const isMedia = engineType === "images";
       state.currentResults = data.results ?? [];
       state.currentData = data as unknown as SearchResponse;
       state.currentType = engineType;

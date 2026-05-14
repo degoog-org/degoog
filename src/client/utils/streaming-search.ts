@@ -3,7 +3,6 @@ import {
   skeletonImageGrid,
   skeletonResults,
   skeletonSidebar,
-  skeletonVideoGrid,
 } from "../animations/skeleton";
 import { MAX_PAGE } from "../constants";
 import {
@@ -11,6 +10,7 @@ import {
   destroyMediaObserver,
 } from "../modules/media/media";
 import {
+  attachVideoPlayers,
   clearSlotPanels,
   renderPagination,
   renderResults,
@@ -33,7 +33,7 @@ import {
   fetchGlancePanels,
   fetchSlotPanels,
 } from "./search-utils";
-import { buildSearchUrl } from "./url";
+import { buildSearchUrl, imgFilterRecord } from "./url";
 import { appendSearchAuthParams } from "./request";
 import {
   updateEngineTimings,
@@ -105,9 +105,9 @@ export async function performStreamingSearch(
     resultsInput.value = query;
     resultsInput.defaultValue = query;
   }
-  const isMediaType = type === "images" || type === "videos";
+  const isImageType = type === "images";
   const layout = document.getElementById("results-layout");
-  if (isMediaType) {
+  if (isImageType) {
     layout?.classList.add("media-mode");
   } else {
     layout?.classList.remove("media-mode");
@@ -118,8 +118,6 @@ export async function performStreamingSearch(
   if (resultsList) {
     if (type === "images") {
       resultsList.innerHTML = skeletonImageGrid();
-    } else if (type === "videos") {
-      resultsList.innerHTML = skeletonVideoGrid();
     } else {
       resultsList.innerHTML = skeletonResults();
     }
@@ -127,9 +125,9 @@ export async function performStreamingSearch(
   const pagination = document.getElementById("pagination");
   if (pagination) pagination.innerHTML = "";
   const sidebar = document.getElementById("results-sidebar");
-  if (sidebar) sidebar.innerHTML = isMediaType ? "" : skeletonSidebar();
+  if (sidebar) sidebar.innerHTML = isImageType ? "" : skeletonSidebar();
   clearSlotPanels();
-  if (isMediaType) {
+  if (isImageType) {
     abortGlancePanels();
     abortSlotPanels();
   }
@@ -139,7 +137,18 @@ export async function performStreamingSearch(
 
   const urlParams = new URLSearchParams({ q: query });
   if (type !== "web") urlParams.set("type", type);
-  const historyState = { degoog: true, query, type, page: 1 };
+  if (type === "images") {
+    for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
+      urlParams.set(k, v);
+    }
+  }
+  const historyState = {
+    degoog: true,
+    query,
+    type,
+    page: 1,
+    imageFilter: type === "images" ? { ...state.imageFilter } : undefined,
+  };
   const searchUrl = `/search?${urlParams.toString()}`;
   if (isInitialLoad) {
     history.replaceState(historyState, "", searchUrl);
@@ -173,17 +182,18 @@ export async function performStreamingSearch(
       if (resultsList) resultsList.innerHTML = "";
     }
 
-    if (isMediaType) {
+    if (isImageType) {
       renderResults(currentResults);
     } else {
       updateResults(resultsList, currentResults, renderedUrls);
+      if (resultsList) attachVideoPlayers(resultsList);
     }
 
     if (resultsMeta) {
       resultsMeta.textContent = `About ${currentResults.length} results (streaming...)`;
     }
 
-    if (isMediaType) {
+    if (isImageType) {
       renderMediaEngineBar(engineTimings);
     } else {
       updateEngineTimings(sidebar, engineTimings);
@@ -221,7 +231,7 @@ export async function performStreamingSearch(
       resultsMeta.textContent = `About ${currentResults.length} results (${(data.totalTime / 1000).toFixed(2)} seconds)`;
     }
 
-    if (isMediaType) {
+    if (isImageType) {
       renderMediaEngineBar(data.engineTimings);
       if (sidebar) sidebar.innerHTML = "";
     } else if (type === "web") {
@@ -245,6 +255,7 @@ export async function performStreamingSearch(
       resultsList.innerHTML = '<div class="no-results">No results found.</div>';
     }
 
+    if (resultsList) attachVideoPlayers(resultsList);
     renderPagination(MAX_PAGE, state.currentPage);
   });
 

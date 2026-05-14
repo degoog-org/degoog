@@ -53,7 +53,7 @@ export const helpCommand: BangCommand = {
     const tabButtons = sortedCategories
       .map(
         (cat, i) =>
-          `<button class="help-tab${i === 0 ?" active" : ""}" data-help-cat="${_escapeHtml(cat)}">${_escapeHtml(cat)} <span class="help-tab-count">${groups[cat].length}</span></button>`,
+          `<button class="help-tab${i === 0 ? " active" : ""}" data-help-cat="${_escapeHtml(cat)}">${_escapeHtml(cat)} <span class="help-tab-count">${groups[cat].length}</span></button>`,
       )
       .join("");
 
@@ -77,7 +77,7 @@ export const helpCommand: BangCommand = {
           </div>`;
         })
         .join("");
-      panels += `<div class="help-panel${i === 0 ?" active" : ""}" data-help-panel="${_escapeHtml(cat)}">${rows}</div>`;
+      panels += `<div class="help-panel${i === 0 ? " active" : ""}" data-help-panel="${_escapeHtml(cat)}"><div class="help-panel-card">${rows}</div></div>`;
     }
 
     const prefixHint =
@@ -96,10 +96,9 @@ export const helpCommand: BangCommand = {
     return {
       title: this.t!("help.title"),
       html: `<div class="command-result help-container">
-        <div class="help-search-wrap"><input type="text" class="help-search" placeholder="${_escapeHtml(this.t!("help.search-placeholder"))}" id="help-search-input"></div>
+        <div class="help-search-wrap degoog-search-bar degoog-search-bar--square-advanced"><i class="fa-solid fa-magnifying-glass search-icon"></i><input type="text" class="search-input" placeholder="${_escapeHtml(this.t!("help.search-placeholder"))}" id="help-search-input"></div>
         ${prefixHint}
-        <div class="help-layout"><div class="help-tabs">${tabButtons}</div><div class="help-panels">${panels}</div></div>
-      </div>`,
+        <div class="help-layout"><div class="help-tabs">${tabButtons}</div><div class="help-panels">${panels}</div></div></div>`,
     };
   },
 };

@@ -1,6 +1,22 @@
 <div class="result-item degoog-result">
   <div class="result-item-inner degoog-result--inner">
     {{#if thumbnail_url}}
+    {{#if is_video}}
+    <div class="result-thumbnail-wrap degoog-result--thumb degoog-result--thumb--video" role="button" tabindex="0" aria-label="Play video" data-url="{{ url }}">
+      <img
+        class="result-thumbnail-img"
+        src="{{ thumbnail_url }}"
+        alt=""
+        loading="lazy"
+        onerror="this.parentElement.style.display = 'none'"
+      />
+      {{#if duration}}<span class="degoog-result--video-duration">{{ duration }}</span>{{/if duration}}
+      <div class="degoog-result--video-play" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+      </div>
+    </div>
+    {{/if is_video}}
+    {{^if is_video}}
     <div class="result-thumbnail-wrap degoog-result--thumb">
       <img
         class="result-thumbnail-img"
@@ -10,6 +26,7 @@
         onerror="this.parentElement.style.display = 'none'"
       />
     </div>
+    {{/if is_video}}
     {{/if thumbnail_url}}
 
     <div class="result-body degoog-result--body">

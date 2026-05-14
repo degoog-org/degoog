@@ -235,9 +235,12 @@ export async function getFilteredCommandRegistry(): Promise<
     }),
   );
 
-  for (const [shortcut] of getEngineShortcuts()) {
-    configuredTriggers.add(shortcut);
-  }
+  await Promise.all(
+    [...getEngineShortcuts().entries()].map(async ([shortcut, engineId]) => {
+      if (await isDisabled(engineId)) return;
+      configuredTriggers.add(shortcut);
+    }),
+  );
 
   return full.filter((c) => configuredTriggers.has(c.trigger));
 }

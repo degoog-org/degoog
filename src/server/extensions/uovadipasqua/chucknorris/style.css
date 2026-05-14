@@ -1,0 +1,26 @@
+.chuck-norris.logo-o1 {
+  color: transparent;
+  background-image: url(chuck.png);
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  background-position: center 80%;
+  width: 80px;
+  margin-right: -5px;
+}
+
+#results-header .chuck-norris.logo-o1 {
+  width: 30px;
+  margin-right: -2px;
+}
+
+#home-logo {
+  flex-direction: column;
+}
+
+#home-logo div {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 2rem 0 0 0;
+  max-width: 300px;
+  text-align: center;
+}

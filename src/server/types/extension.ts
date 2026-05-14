@@ -113,7 +113,9 @@ export interface RichSuggestion {
   type?: string;
 }
 
-export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggestion };
+export type AutocompleteSuggestion =
+  | string
+  | { text: string; rich?: RichSuggestion };
 
 export interface AutocompleteProvider {
   name: string;
@@ -324,14 +326,23 @@ export interface UovadipasquaSearchQueryTrigger {
 }
 
 export type UovadipasquaTrigger = UovadipasquaSearchQueryTrigger;
+
+export interface UovadipasquaClientStorageBinding {
+  extensionId: string;
+}
+
 export interface Uovadipasqua {
   id?: string;
   triggers: UovadipasquaTrigger[];
   waitForResults?: boolean;
+  repeatOnQuery?: boolean;
+  clientStorage?: {
+    localStorageKey: string;
+  };
 }
 export interface UovadipasquaMatch {
   id: string;
   scriptUrl: string;
-  styleUrl: string | null;
   waitForResults: boolean;
+  repeatOnQuery?: boolean;
 }

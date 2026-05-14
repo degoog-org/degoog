@@ -102,6 +102,30 @@ export const getAllSettings = async (): Promise<PluginSettingsStore> => {
   return load();
 };
 
+const TYPE_OVERRIDE_KEY = "searchTypeOverride";
+
+export const getTypeOverride = async (id: string): Promise<string | null> => {
+  const settings = await getSettings(id);
+  const v = settings[TYPE_OVERRIDE_KEY];
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+};
+
+export const setTypeOverride = async (
+  id: string,
+  type: string,
+): Promise<void> => {
+  await setSettings(id, { [TYPE_OVERRIDE_KEY]: type.trim() });
+};
+
+export const clearTypeOverride = async (id: string): Promise<void> => {
+  const store = await load();
+  if (store[id]) {
+    delete store[id][TYPE_OVERRIDE_KEY];
+    cache = store;
+    await persist(store);
+  }
+};
+
 export async function removeSettings(id: string): Promise<void> {
   const store = await load();
   if (id in store) {
