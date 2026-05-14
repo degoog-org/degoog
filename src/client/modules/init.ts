@@ -61,6 +61,9 @@ export function init(): void {
   const resultsInput = document.getElementById(
     "results-search-input",
   ) as HTMLInputElement | null;
+  const clearSearchButton = document.getElementById(
+    "results-search-clear-btn",
+  ) as HTMLButtonElement | null;
 
   document
     .getElementById("search-form-home")
@@ -76,10 +79,26 @@ export function init(): void {
         window.location.href = `${getBase()}/search?${new URLSearchParams({ q: query }).toString()}`;
       }
     });
+	
+  clearSearchButton?.addEventListener("click", (e) => {
+	if (resultsInput) {
+      resultsInput.value = "";
+      clearSearchButton?.setAttribute("style","display:none")
+	}
+  })
 
   resultsInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && resultsInput)
       void performSearch(resultsInput.value);
+  });
+  
+  resultsInput?.addEventListener("input", (e) => {
+	if (resultsInput) {
+      if (resultsInput.value && resultsInput.value.length > 0)
+        clearSearchButton?.setAttribute("style","")
+      else
+        clearSearchButton?.setAttribute("style","display:none")
+	}
   });
 
   document
@@ -205,6 +224,8 @@ export function init(): void {
       if (resultsInput && !resultsInput.value) {
         resultsInput.value = restoredQ;
         resultsInput.defaultValue = restoredQ;
+		if (resultsInput.value.length > 0)
+			clearSearchButton.setAttribute("style","")
       }
       return;
     }
