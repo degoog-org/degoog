@@ -19,7 +19,7 @@
   "dependencies": {
     "cheerio": "1.2.0",
     "dompurify": "^3.4.2",
-    "hono": "4.12.16",
+    "hono": "4.12.18",
     "marked": "^18.0.3",
     "sass": "1.85.0",
     "socks": "2.8.7"
