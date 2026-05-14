@@ -2,7 +2,7 @@ import { state } from "../../state";
 import { getBase } from "../../utils/base-url";
 import { performSearch } from "../../utils/search-actions";
 import { getEnabledSearchTypes } from "../../utils/engines";
-import { setTabTypeDisabled } from "../../utils/navigation";
+import { getBangMatchType, setTabTypeDisabled } from "../../utils/navigation";
 import { performTabSearch } from "./tab-search";
 
 interface TabInfo {
@@ -77,12 +77,24 @@ function _renderPluginTabs(): void {
     .querySelectorAll(".results-tab[data-plugin-tab]")
     .forEach((el) => el.remove());
 
+  const bangMatchType = getBangMatchType();
+
   for (const tab of pluginTabs) {
     const el = document.createElement("div");
-    el.className="results-tab degoog-tab";
+    el.className = "results-tab degoog-tab";
     el.dataset.type = `tab:${tab.id}`;
     el.dataset.pluginTab = "true";
     el.textContent = tab.name;
+
+    if (bangMatchType !== undefined) {
+      const tabType = el.dataset.type ?? "";
+      const visible =
+        bangMatchType !== null &&
+        (tabType === bangMatchType || tabType === `tab:engine:${bangMatchType}`);
+      el.dataset.bangHidden = visible ? "" : "true";
+      if (!visible) el.style.display = "none";
+    }
+
     tabsContainer.insertBefore(el, toolsWrap);
 
     el.addEventListener("click", () => {

@@ -215,3 +215,20 @@
 .search-bar-action-label {
   white-space: nowrap;
 }
+
+.search-input {
+  &:focus+div+div+button+button {
+    position: relative;
+    animation: 0.5s infinite alternate animate-arrow;
+  }
+}
+
+@keyframes animate-arrow {
+  from {
+      right: 0;
+  }
+
+  to {
+      right: -0.2em;
+  }
+}

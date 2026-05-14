@@ -17,7 +17,7 @@ import {
   maskSecrets,
 } from "../../utils/plugin-settings";
 import { createTranslatorFromPath } from "../../utils/translation";
-import { getEngineMap as getSearchEngineMap } from "../engines/registry";
+import { getDefaultEngineConfig, getEngineMap as getSearchEngineMap } from "../engines/registry";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 import { extensionReadmeExists } from "../../utils/extension-docs";
@@ -235,12 +235,11 @@ export async function getFilteredCommandRegistry(): Promise<
     }),
   );
 
-  await Promise.all(
-    [...getEngineShortcuts().entries()].map(async ([shortcut, engineId]) => {
-      if (await isDisabled(engineId)) return;
-      configuredTriggers.add(shortcut);
-    }),
-  );
+  const engineConfig = getDefaultEngineConfig();
+  for (const [shortcut, engineId] of getEngineShortcuts()) {
+    if (engineConfig[engineId] === false) continue;
+    configuredTriggers.add(shortcut);
+  }
 
   return full.filter((c) => configuredTriggers.has(c.trigger));
 }
