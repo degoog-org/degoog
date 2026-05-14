@@ -45,7 +45,7 @@ describe("honeypot traps — enabled (default)", () => {
   test("GET /package.json returns 200 with fake package.json", async () => {
     const res = await router.request("http://localhost/package.json");
     expect(res.status).toBe(200);
-    const body = await res.json<{ name: string }>();
+    const body = await res.json() as Promise<{ name: string }>;
     expect(typeof body.name).toBe("string");
   });
 
@@ -66,7 +66,7 @@ describe("honeypot traps — enabled (default)", () => {
   test("GET /api/degoog-search returns 200 with Catullus JSON", async () => {
     const res = await router.request("http://localhost/api/degoog-search");
     expect(res.status).toBe(200);
-    const body = await res.json<{ results: unknown[] }>();
+    const body = await res.json() as Promise<{ results: unknown[] }>;
     expect(Array.isArray(body.results)).toBe(true);
     expect(body.results.length).toBeGreaterThan(0);
   });

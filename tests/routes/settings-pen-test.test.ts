@@ -144,7 +144,7 @@ describe("public instance — password set", () => {
   test("POST /api/settings/auth with correct password returns token and sets secure cookie", async () => {
     const res = await authPost(CORRECT_PASSWORD, "10.4.0.1");
     expect(res.status).toBe(200);
-    const body = await res.json<{ ok: boolean; token: string }>();
+    const body = await res.json() as Promise<{ ok: boolean; token: string }>;
     expect(body.ok).toBe(true);
     expect(typeof body.token).toBe("string");
     expect(body.token.length).toBeGreaterThan(0);
@@ -176,7 +176,7 @@ describe("public instance — password set", () => {
   test("GET /api/settings/auth without token reports valid: false", async () => {
     const res = await authRouter.request("http://localhost/api/settings/auth");
     expect(res.status).toBe(200);
-    const body = await res.json<{ required: boolean; valid: boolean }>();
+    const body = await res.json() as Promise<{ required: boolean; valid: boolean }>;
     expect(body.required).toBe(true);
     expect(body.valid).toBe(false);
   });
@@ -190,7 +190,7 @@ describe("public instance — password set", () => {
       }),
     );
     expect(res.status).toBe(200);
-    const body = await res.json<{ required: boolean; valid: boolean }>();
+    const body = await res.json() as Promise<{ required: boolean; valid: boolean }>;
     expect(body.required).toBe(true);
     expect(body.valid).toBe(true);
   });
