@@ -144,7 +144,7 @@ describe("public instance — password set", () => {
   test("POST /api/settings/auth with correct password returns token and sets secure cookie", async () => {
     const res = await authPost(CORRECT_PASSWORD, "10.4.0.1");
     expect(res.status).toBe(200);
-    const body = await res.json() as Promise<{ ok: boolean; token: string }>;
+    const body = await res.json() as { ok: boolean; token: string };
     expect(body.ok).toBe(true);
     expect(typeof body.token).toBe("string");
     expect(body.token.length).toBeGreaterThan(0);
@@ -155,14 +155,14 @@ describe("public instance — password set", () => {
 
   test("valid token grants access to protected API routes", async () => {
     const authRes = await authPost(CORRECT_PASSWORD, "10.5.0.1");
-    const { token } = await authRes.json<{ ok: boolean; token: string }>();
+    const { token } = await authRes.json() as { ok: boolean; token: string };
     const res = await apiGet("/api/settings/general", token);
     expect(res.status).toBe(200);
   });
 
   test("tampered token returns 401", async () => {
     const authRes = await authPost(CORRECT_PASSWORD, "10.6.0.1");
-    const { token } = await authRes.json<{ ok: boolean; token: string }>();
+    const { token } = await authRes.json() as { ok: boolean; token: string };
     const tampered = token.slice(0, -4) + "0000";
     const res = await apiGet("/api/settings/general", tampered);
     expect(res.status).toBe(401);
@@ -176,21 +176,21 @@ describe("public instance — password set", () => {
   test("GET /api/settings/auth without token reports valid: false", async () => {
     const res = await authRouter.request("http://localhost/api/settings/auth");
     expect(res.status).toBe(200);
-    const body = await res.json() as Promise<{ required: boolean; valid: boolean }>;
+    const body = await res.json() as { required: boolean; valid: boolean };
     expect(body.required).toBe(true);
     expect(body.valid).toBe(false);
   });
 
   test("GET /api/settings/auth with valid token reports valid: true", async () => {
     const authRes = await authPost(CORRECT_PASSWORD, "10.7.0.1");
-    const { token } = await authRes.json<{ ok: boolean; token: string }>();
+    const { token } = await authRes.json() as { ok: boolean; token: string };
     const res = await authRouter.request(
       new Request("http://localhost/api/settings/auth", {
         headers: { "x-settings-token": token },
       }),
     );
     expect(res.status).toBe(200);
-    const body = await res.json() as Promise<{ required: boolean; valid: boolean }>;
+    const body = await res.json() as { required: boolean; valid: boolean };
     expect(body.required).toBe(true);
     expect(body.valid).toBe(true);
   });
