@@ -1,6 +1,11 @@
 import { state } from "../../state";
 
 const FILTER_BAR_ID = "image-filters-bar";
+const T_NS = "themes/degoog";
+const T_PFX = "search-templates.image-filters";
+
+const t = window.scopedT(T_NS);
+const tf = (key: string): string => t(`${T_PFX}.${key}`);
 
 const FILTER_GROUPS: {
   key: string;
@@ -9,58 +14,58 @@ const FILTER_GROUPS: {
   {
     key: "size",
     opts: [
-      { value: "any", label: "Size" },
-      { value: "small", label: "Small" },
-      { value: "medium", label: "Medium" },
-      { value: "large", label: "Large" },
-      { value: "wallpaper", label: "Wallpaper" },
+      { value: "any", label: tf("size") },
+      { value: "small", label: tf("small") },
+      { value: "medium", label: tf("medium") },
+      { value: "large", label: tf("large") },
+      { value: "wallpaper", label: tf("wallpaper") },
     ],
   },
   {
     key: "color",
     opts: [
-      { value: "any", label: "Color" },
-      { value: "monochrome", label: "B&W" },
-      { value: "red", label: "Red" },
-      { value: "orange", label: "Orange" },
-      { value: "yellow", label: "Yellow" },
-      { value: "green", label: "Green" },
-      { value: "teal", label: "Teal" },
-      { value: "blue", label: "Blue" },
-      { value: "purple", label: "Purple" },
-      { value: "pink", label: "Pink" },
-      { value: "brown", label: "Brown" },
-      { value: "gray", label: "Gray" },
-      { value: "black", label: "Black" },
-      { value: "white", label: "White" },
+      { value: "any", label: tf("color") },
+      { value: "monochrome", label: tf("bw") },
+      { value: "red", label: tf("red") },
+      { value: "orange", label: tf("orange") },
+      { value: "yellow", label: tf("yellow") },
+      { value: "green", label: tf("green") },
+      { value: "teal", label: tf("teal") },
+      { value: "blue", label: tf("blue") },
+      { value: "purple", label: tf("purple") },
+      { value: "pink", label: tf("pink") },
+      { value: "brown", label: tf("brown") },
+      { value: "gray", label: tf("gray") },
+      { value: "black", label: tf("black") },
+      { value: "white", label: tf("white") },
     ],
   },
   {
     key: "type",
     opts: [
-      { value: "any", label: "Type" },
-      { value: "photo", label: "Photo" },
-      { value: "clipart", label: "Clipart" },
-      { value: "lineart", label: "Line art" },
-      { value: "animated", label: "Animated" },
+      { value: "any", label: tf("type") },
+      { value: "photo", label: tf("photo") },
+      { value: "clipart", label: tf("clipart") },
+      { value: "lineart", label: tf("lineart") },
+      { value: "animated", label: tf("animated") },
     ],
   },
   {
     key: "layout",
     opts: [
-      { value: "any", label: "Layout" },
-      { value: "square", label: "Square" },
-      { value: "wide", label: "Wide" },
-      { value: "tall", label: "Tall" },
+      { value: "any", label: tf("layout") },
+      { value: "square", label: tf("square") },
+      { value: "wide", label: tf("wide") },
+      { value: "tall", label: tf("tall") },
     ],
   },
   {
     key: "nsfw",
     opts: [
-      { value: "any", label: "SafeSearch" },
-      { value: "on", label: "Strict" },
-      { value: "moderate", label: "Moderate" },
-      { value: "off", label: "Off" },
+      { value: "any", label: tf("nsfw") },
+      { value: "on", label: tf("strict") },
+      { value: "moderate", label: tf("moderate") },
+      { value: "off", label: tf("off") },
     ],
   },
 ];

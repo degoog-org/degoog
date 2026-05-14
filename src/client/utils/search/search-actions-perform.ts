@@ -43,7 +43,7 @@ import {
   abortStreamingSearch,
   performStreamingSearch,
 } from "../streaming-search";
-import { buildSearchBody, buildSearchUrl } from "../url";
+import { buildSearchBody, buildSearchUrl, imgFilterRecord } from "../url";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
 import { getBase } from "../base-url";
 
@@ -215,6 +215,7 @@ export async function performSearch(
     query,
     type: resolvedType,
     page: resolvedPage,
+    imageFilter: resolvedType === "images" ? { ...state.imageFilter } : undefined,
   };
   if (state.postMethodEnabled) {
     if (isInit) {
@@ -226,6 +227,11 @@ export async function performSearch(
     const urlParams = new URLSearchParams({ q: query });
     if (resolvedType !== "web") urlParams.set("type", resolvedType);
     if (resolvedPage > 1) urlParams.set("page", String(resolvedPage));
+    if (resolvedType === "images") {
+      for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
+        urlParams.set(k, v);
+      }
+    }
     const getUrl = `${getBase()}/search?${urlParams.toString()}`;
     if (isInit) {
       history.replaceState(historyState, "", getUrl);

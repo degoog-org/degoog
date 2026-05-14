@@ -33,7 +33,7 @@ import {
   fetchGlancePanels,
   fetchSlotPanels,
 } from "./search-utils";
-import { buildSearchUrl } from "./url";
+import { buildSearchUrl, imgFilterRecord } from "./url";
 import { appendSearchAuthParams } from "./request";
 import {
   updateEngineTimings,
@@ -137,7 +137,18 @@ export async function performStreamingSearch(
 
   const urlParams = new URLSearchParams({ q: query });
   if (type !== "web") urlParams.set("type", type);
-  const historyState = { degoog: true, query, type, page: 1 };
+  if (type === "images") {
+    for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
+      urlParams.set(k, v);
+    }
+  }
+  const historyState = {
+    degoog: true,
+    query,
+    type,
+    page: 1,
+    imageFilter: type === "images" ? { ...state.imageFilter } : undefined,
+  };
   const searchUrl = `/search?${urlParams.toString()}`;
   if (isInitialLoad) {
     history.replaceState(historyState, "", searchUrl);

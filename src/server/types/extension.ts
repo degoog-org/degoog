@@ -113,7 +113,9 @@ export interface RichSuggestion {
   type?: string;
 }
 
-export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggestion };
+export type AutocompleteSuggestion =
+  | string
+  | { text: string; rich?: RichSuggestion };
 
 export interface AutocompleteProvider {
   name: string;
