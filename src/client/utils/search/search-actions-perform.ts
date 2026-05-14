@@ -95,6 +95,9 @@ export async function performSearch(
   const resolvedType = type || state.currentType || "web";
   if (!query.trim()) return;
 
+  void import("../../modules/filters/image-filters").then(({ syncImgFilters }) =>
+    syncImgFilters(resolvedType),
+  );
   void triggerSearchQueryEggs(query);
 
   const isInit = state.isInitialLoad;

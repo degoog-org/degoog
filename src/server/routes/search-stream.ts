@@ -28,7 +28,7 @@ import {
 import { guardApiKey } from "../utils/api-key-guard";
 import { applyDomainRules } from "./search/_domain-rules";
 import { signResultThumbnails } from "../utils/proxy-sign";
-import { parsePage } from "./search/_parsers";
+import { parseImageFilter, parsePage } from "./search/_parsers";
 import { runIntercepts } from "../utils/run-interceptors";
 
 const router = new Hono();
@@ -51,6 +51,13 @@ router.get("/api/search/stream", async (c) => {
   const lang = c.req.query("lang") || "";
   const dateFrom = c.req.query("dateFrom") || "";
   const dateTo = c.req.query("dateTo") || "";
+  const imageFilter = parseImageFilter(
+    c.req.query("imgColor"),
+    c.req.query("imgSize"),
+    c.req.query("imgType"),
+    c.req.query("imgLayout"),
+    c.req.query("imgNsfw"),
+  );
 
   const { query } = await runIntercepts(origQ, lang);
 
@@ -63,6 +70,7 @@ router.get("/api/search/stream", async (c) => {
     lang,
     dateFrom,
     dateTo,
+    imageFilter,
   );
 
   const cached = cache.get(key);
@@ -187,6 +195,7 @@ router.get("/api/search/stream", async (c) => {
               lang,
               dateFrom,
               dateTo,
+              imageFilter,
             );
             lastTiming = timing;
 

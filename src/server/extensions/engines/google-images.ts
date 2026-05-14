@@ -1,15 +1,69 @@
 import type {
+  EngineContext,
+  ImageFilter,
   SearchEngine,
   SearchResult,
-  TimeFilter,
-  EngineContext,
   SettingField,
+  TimeFilter,
 } from "../../types";
 import { getRandomGsaAgent } from "../../utils/user-agents";
 import {
-  resolveGoogleTbs,
   resolveGoogleCustomDateTbs,
+  resolveGoogleTbs,
 } from "../../utils/google-utils";
+
+const GOOGLE_SIZE_MAP: Record<string, string> = {
+  small: "imgsz:small",
+  medium: "imgsz:medium",
+  large: "imgsz:large",
+  wallpaper: "imgsz:xlarge",
+};
+
+const GOOGLE_COLOR_MAP: Record<string, string> = {
+  monochrome: "ic:gray",
+  red: "ic:specific,isc:red",
+  orange: "ic:specific,isc:orange",
+  yellow: "ic:specific,isc:yellow",
+  green: "ic:specific,isc:green",
+  teal: "ic:specific,isc:teal",
+  blue: "ic:specific,isc:blue",
+  purple: "ic:specific,isc:purple",
+  pink: "ic:specific,isc:pink",
+  white: "ic:specific,isc:white",
+  gray: "ic:specific,isc:gray",
+  brown: "ic:specific,isc:brown",
+  black: "ic:specific,isc:black",
+};
+
+const GOOGLE_TYPE_MAP: Record<string, string> = {
+  photo: "itp:photo",
+  clipart: "itp:clipart",
+  lineart: "itp:lineart",
+  animated: "itp:animated",
+};
+
+const GOOGLE_LAYOUT_MAP: Record<string, string> = {
+  square: "iar:s",
+  wide: "iar:w",
+  tall: "iar:t",
+};
+
+const buildImgTbs = (imgFilter?: ImageFilter): string => {
+  const parts: string[] = [];
+  if (imgFilter?.size && imgFilter.size !== "any" && GOOGLE_SIZE_MAP[imgFilter.size]) {
+    parts.push(GOOGLE_SIZE_MAP[imgFilter.size]);
+  }
+  if (imgFilter?.color && imgFilter.color !== "any" && GOOGLE_COLOR_MAP[imgFilter.color]) {
+    parts.push(GOOGLE_COLOR_MAP[imgFilter.color]);
+  }
+  if (imgFilter?.type && imgFilter.type !== "any" && GOOGLE_TYPE_MAP[imgFilter.type]) {
+    parts.push(GOOGLE_TYPE_MAP[imgFilter.type]);
+  }
+  if (imgFilter?.layout && imgFilter.layout !== "any" && GOOGLE_LAYOUT_MAP[imgFilter.layout]) {
+    parts.push(GOOGLE_LAYOUT_MAP[imgFilter.layout]);
+  }
+  return parts.join(",");
+};
 
 interface GoogleImageResult {
   result?: {
@@ -61,13 +115,18 @@ export class GoogleImagesEngine implements SearchEngine {
       async: `_fmt:json,p:1,ijn:${ijn}`,
     });
 
-    const tbs =
+    const timeTbs =
       timeFilter === "custom"
         ? resolveGoogleCustomDateTbs(context?.dateFrom, context?.dateTo)
         : resolveGoogleTbs(timeFilter);
+    const imgTbs = buildImgTbs(context?.imageFilter);
+    const tbs = [timeTbs, imgTbs].filter(Boolean).join(",");
     if (tbs) params.set("tbs", tbs);
     if (context?.lang) params.set("hl", context.lang);
-    if (this.safeSearch === "on") params.set("safe", "active");
+    const nsfwOverride = context?.imageFilter?.nsfw;
+    if (nsfwOverride === "on") params.set("safe", "active");
+    else if (nsfwOverride === "off") params.delete("safe");
+    else if (this.safeSearch === "on") params.set("safe", "active");
 
     const ua = getRandomGsaAgent();
     const doFetch = context?.fetch ?? fetch;

@@ -12,6 +12,7 @@ import { recordSettingsReturn, showHome } from "../utils/navigation";
 import { performSearch } from "../utils/search-actions";
 import { initTheme } from "../utils/theme";
 import { initOptionsDropdown } from "../utils/time-filter";
+import { initImgFilters } from "./filters/image-filters";
 import { initMediaPreview } from "./media/media-preview";
 import { performTabSearch } from "./tabs/tab-search";
 import { initTabs } from "./tabs/tabs";
@@ -122,6 +123,7 @@ export function init(): void {
   initMediaPreview();
   void initTheme();
   initOptionsDropdown();
+  initImgFilters((q, t) => void performSearch(q, t));
   initInstallPrompt();
   initResultActions();
 

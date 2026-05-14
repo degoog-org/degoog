@@ -48,6 +48,14 @@ export const buildSearchParams = (
   if (state.currentLanguage) {
     params.set("lang", state.currentLanguage);
   }
+  if (type === "images") {
+    const f = state.imageFilter;
+    if (f.color && f.color !== "any") params.set("imgColor", f.color);
+    if (f.size && f.size !== "any") params.set("imgSize", f.size);
+    if (f.type && f.type !== "any") params.set("imgType", f.type);
+    if (f.layout && f.layout !== "any") params.set("imgLayout", f.layout);
+    if (f.nsfw && f.nsfw !== "any") params.set("imgNsfw", f.nsfw);
+  }
   return params;
 };
 
@@ -82,6 +90,14 @@ export const buildSearchBody = (
     if (state.customDateTo) body.dateTo = state.customDateTo;
   }
   if (state.currentLanguage) body.lang = state.currentLanguage;
+  if (type === "images") {
+    const f = state.imageFilter;
+    if (f.color && f.color !== "any") body.imgColor = f.color;
+    if (f.size && f.size !== "any") body.imgSize = f.size;
+    if (f.type && f.type !== "any") body.imgType = f.type;
+    if (f.layout && f.layout !== "any") body.imgLayout = f.layout;
+    if (f.nsfw && f.nsfw !== "any") body.imgNsfw = f.nsfw;
+  }
 
   return body;
 };

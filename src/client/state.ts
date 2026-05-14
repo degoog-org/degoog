@@ -22,4 +22,5 @@ export const state: AppState = {
   displaySearchSuggestions: true,
   postMethodEnabled: false,
   isInitialLoad: false,
+  imageFilter: {},
 };
