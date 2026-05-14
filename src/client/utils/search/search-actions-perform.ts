@@ -23,7 +23,7 @@ import {
   type SearchResponse,
 } from "../../types";
 import { hideAcDropdown } from "../autocomplete";
-import { triggerSearchQueryEggs } from "../uovadipasqua";
+import { triggerUovadipasqua } from "../uovadipasqua";
 import { getEngines } from "../engines";
 import { setActiveTab, setTabsForBang, showAllTabs } from "../navigation";
 import { buildPaginationHtml } from "../pagination";
@@ -98,7 +98,7 @@ export async function performSearch(
   void import("../../modules/filters/image-filters").then(({ syncImgFilters }) =>
     syncImgFilters(resolvedType),
   );
-  void triggerSearchQueryEggs(query);
+  void triggerUovadipasqua(query);
 
   const isInit = state.isInitialLoad;
   state.isInitialLoad = false;

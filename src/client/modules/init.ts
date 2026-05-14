@@ -10,6 +10,7 @@ import { initAutocomplete } from "../utils/autocomplete";
 import { idbGet } from "../utils/db";
 import { recordSettingsReturn, showHome } from "../utils/navigation";
 import { performSearch } from "../utils/search-actions";
+import { applyUovaStorage } from "../utils/uovadipasqua";
 import { initTheme } from "../utils/theme";
 import { initOptionsDropdown } from "../utils/time-filter";
 import { initImgFilters } from "./filters/image-filters";
@@ -37,6 +38,7 @@ type DegoogHistoryState = {
 
 export function init(): void {
   renderPageTemplates();
+  void applyUovaStorage();
 
   document.body.addEventListener(
     "click",

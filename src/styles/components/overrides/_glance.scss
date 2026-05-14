@@ -17,3 +17,56 @@
   margin: 0;
   padding: 0;
 }
+
+.glance-ai-footer {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin-top: $space-2;
+}
+
+.glance-ai-badge {
+  display: inline-block;
+  font-size: $font-size-xs;
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  border-radius: $radius-sm;
+  padding: 2px 7px;
+}
+
+.glance-ai-dive {
+  border: none;
+  background: none;
+  color: var(--text-link);
+  font-size: $font-size-xs;
+  cursor: pointer;
+  padding: $space-1 $space-2;
+  border-radius: $radius-sm;
+}
+
+.glance-ai-dive:hover {
+  text-decoration: underline;
+}
+
+.glance-ai-reply {
+  margin-top: $space-3;
+  color: var(--text-primary);
+  line-height: 1.5;
+  border-radius: $radius-md;
+  clear: both;
+}
+
+.glance-ai-user {
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  width: auto;
+  display: inline-block;
+  padding: $space-2;
+  margin-bottom: $space-2;
+}
+
+.glance-ai-typing {
+  margin-top: $space-3;
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+}
