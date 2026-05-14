@@ -325,7 +325,7 @@ export const search = async (
   const rawActiveEngines =
     type === "web"
       ? await getActiveWebEngines(config)
-      : getEnginesForSearchType(type, config).map((e) => ({
+      : (await getEnginesForSearchType(type, config)).map((e) => ({
         id: e.id,
         instance: e.instance,
         score: 1,

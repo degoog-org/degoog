@@ -56,7 +56,7 @@ router.get("/api/command", async (c) => {
     return c.json({
       type: "engine",
       engineId: match.engineId,
-      searchType: getEngineSearchType(match.engineId) ?? "web",
+      searchType: (await getEngineSearchType(match.engineId)) ?? "web",
       results: results.map((r, i) => ({
         ...r,
         score: Math.max(10 - i, 1),

@@ -118,7 +118,7 @@ router.get("/api/search/stream", async (c) => {
     searchType === "web"
       ? await getActiveWebEngines(engines)
       : builtinTypes.has(searchType)
-        ? getEnginesForSearchType(searchType, engines).map((e) => ({
+        ? (await getEnginesForSearchType(searchType, engines)).map((e) => ({
             id: e.id,
             instance: e.instance,
             score: 1,

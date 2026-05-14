@@ -119,9 +119,9 @@ export async function loadMoreMedia(type: string): Promise<void> {
   }
 }
 
-const _getEmbedUrl = (url: string): string | null => {
+export const getEmbedUrl = (url: string): string | null => {
   const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
-  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  if (ytMatch) return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}`;
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
   if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
   return null;
@@ -149,7 +149,7 @@ export function openMediaPreview(
   );
   imgWrap?.querySelector(".media-preview-embed")?.remove();
 
-  const embedUrl = isVideo ? _getEmbedUrl(item.url) : null;
+  const embedUrl = isVideo ? getEmbedUrl(item.url) : null;
 
   if (img) {
     if (embedUrl) {

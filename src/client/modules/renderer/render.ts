@@ -8,7 +8,7 @@ import { renderTemplate } from "../../utils/template";
 import { attachFaviconFallback } from "../../utils/favicon";
 import { faviconHostname, faviconUrl, proxyImageUrl } from "../../utils/url";
 import { destroyMediaObserver, setupMediaObserver } from "../media/media";
-import { renderImageGrid, renderVideoGrid } from "./render-media";
+import { renderImageGrid } from "./render-media";
 
 import { clearSlotPanels as _clearSlots } from "./render-slots";
 
@@ -49,6 +49,7 @@ export const buildResultContext = (
     thumbnail_url: r.thumbnail ? proxyImageUrl(r.thumbnail) : "",
     sources: r.sources,
     duration: r.duration || "",
+    is_video: state.currentType === "videos" || !!r.duration,
     link_target: state.openInNewTab ? "_blank" : "_self",
     link_rel: state.openInNewTab ? "noopener" : "",
     insecure: !!r.insecure,
@@ -70,7 +71,7 @@ export function renderResults(results: ScoredResult[]): void {
   const layout = document.getElementById("results-layout");
   if (!container || !layout) return;
 
-  if (state.currentType === "images" || state.currentType === "videos") {
+  if (state.currentType === "images") {
     layout.classList.add("media-mode");
   } else {
     layout.classList.remove("media-mode");
@@ -78,24 +79,15 @@ export function renderResults(results: ScoredResult[]): void {
 
   if (results.length === 0) {
     container.innerHTML = '<div class="no-results">No results found.</div>';
-    if (state.currentType !== "images" && state.currentType !== "videos") {
+    if (state.currentType !== "images") {
       renderPagination(MAX_PAGE, state.currentPage);
     }
-
     return;
   }
 
   if (state.currentType === "images") {
     renderImageGrid(results, container);
     setupMediaObserver("images");
-    _clearSlots();
-    const pagination = document.getElementById("pagination");
-    if (pagination) pagination.innerHTML = "";
-    return;
-  }
-  if (state.currentType === "videos") {
-    renderVideoGrid(results, container);
-    setupMediaObserver("videos");
     _clearSlots();
     const pagination = document.getElementById("pagination");
     if (pagination) pagination.innerHTML = "";
@@ -111,10 +103,26 @@ export function renderResults(results: ScoredResult[]): void {
     .join("");
 
   _hydrateFavicons(container);
+  attachVideoPlayers(container);
 
   renderPagination(MAX_PAGE, state.currentPage);
   window.dispatchEvent(new CustomEvent("degoog-results-ready"));
 }
+
+export const attachVideoPlayers = (container: HTMLElement): void => {
+  container
+    .querySelectorAll<HTMLElement>(
+      ".degoog-result--thumb--video:not([data-player-ready])",
+    )
+    .forEach((thumb) => {
+      const url = thumb.dataset.url;
+      if (!url) return;
+      thumb.dataset.playerReady = "1";
+      thumb.addEventListener("click", () => {
+        window.open(url, "_blank", "noopener");
+      });
+    });
+};
 
 export function renderPagination(totalPages: number, activePage: number): void {
   const container = document.getElementById("pagination");

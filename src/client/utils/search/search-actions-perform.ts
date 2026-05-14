@@ -3,7 +3,6 @@ import {
   skeletonImageGrid,
   skeletonResults,
   skeletonSidebar,
-  skeletonVideoGrid,
 } from "../../animations/skeleton";
 import { BUILTIN_SEARCH_TYPES, MAX_PAGE } from "../../constants";
 import {
@@ -178,7 +177,7 @@ export async function performSearch(
     resultsInput.defaultValue = query;
   }
   const layout = document.getElementById("results-layout");
-  if (resolvedType === "images" || resolvedType === "videos") {
+  if (resolvedType === "images") {
     layout?.classList.add("media-mode");
   } else {
     layout?.classList.remove("media-mode");
@@ -186,7 +185,7 @@ export async function performSearch(
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   clearSlotPanels();
-  if (resolvedType === "images" || resolvedType === "videos") {
+  if (resolvedType === "images") {
     abortGlancePanels();
     abortSlotPanels();
   }
@@ -195,12 +194,8 @@ export async function performSearch(
     glanceEl.innerHTML = resolvedType === "web" ? skeletonGlance() : "";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    if (resolvedType === "web" || resolvedType === "news") {
-      resultsList.innerHTML = skeletonResults();
-    } else if (resolvedType === "images") {
+    if (resolvedType === "images") {
       resultsList.innerHTML = skeletonImageGrid();
-    } else if (resolvedType === "videos") {
-      resultsList.innerHTML = skeletonVideoGrid();
     } else {
       resultsList.innerHTML = skeletonResults();
     }
@@ -208,7 +203,7 @@ export async function performSearch(
   const pagination = document.getElementById("pagination");
   if (pagination) pagination.innerHTML = "";
   const sidebar = document.getElementById("results-sidebar");
-  const isMediaType = resolvedType === "images" || resolvedType === "videos";
+  const isMediaType = resolvedType === "images";
   if (sidebar) sidebar.innerHTML = isMediaType ? "" : skeletonSidebar();
   document.title = `${query} - degoog`;
 
@@ -323,7 +318,7 @@ async function _performSearchWithBang(
     state.currentData = searchData;
     const metaText = `About ${searchData.results.length} results (${(searchData.totalTime / 1000).toFixed(2)} seconds)`;
     setResultsMeta(metaText);
-    const isMediaType = type === "images" || type === "videos";
+    const isMediaType = type === "images";
     if (isMediaType) {
       if (glanceEl) glanceEl.innerHTML = "";
       renderMediaEngineBar(searchData.engineTimings ?? []);
@@ -449,7 +444,7 @@ async function _performBangCommand(
     };
     if (data.type === "engine") {
       const engineType = data.searchType ?? "web";
-      const isMedia = engineType === "images" || engineType === "videos";
+      const isMedia = engineType === "images";
       state.currentResults = data.results ?? [];
       state.currentData = data as unknown as SearchResponse;
       state.currentType = engineType;
