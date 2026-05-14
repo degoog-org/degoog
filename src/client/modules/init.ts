@@ -224,9 +224,9 @@ export function init(): void {
       if (resultsInput && !resultsInput.value) {
         resultsInput.value = restoredQ;
         resultsInput.defaultValue = restoredQ;
-		if (resultsInput.value.length > 0)
-			clearSearchButton.setAttribute("style","")
       }
+	  if (resultsInput && resultsInput.value.length > 0)
+		clearSearchButton?.setAttribute("style","")
       return;
     }
 
