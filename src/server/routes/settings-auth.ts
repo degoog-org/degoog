@@ -4,6 +4,8 @@ import { asString, getSettings } from "../utils/plugin-settings";
 import { isPublicInstance } from "../utils/public-instance";
 import { logger } from "../utils/logger";
 import { getBasePath } from "../utils/base-url";
+import { getAdminPath } from "../utils/public-instance";
+import { getClientIp } from "../utils/request";
 import {
   TOKEN_TTL_MS,
   checkAuthRate,
@@ -19,10 +21,11 @@ const COOKIE_NAME = "settings-token";
 const MIDDLEWARE_SETTINGS_ID = "middleware";
 const SETTINGS_GATE_KEY = "settingsGate";
 
-const _clientIp = (c: Context): string =>
-  c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ||
-  c.req.header("x-real-ip") ||
-  "unknown";
+const adminSettingsPath = (): string => {
+  const base = getBasePath();
+  const admin = getAdminPath();
+  return base ? `${base}/${admin}` : `/${admin}`;
+};
 
 function getTokenFromCookie(c: Context): string | undefined {
   const raw = c.req.header("cookie");
@@ -169,7 +172,7 @@ router.get("/api/settings/auth", async (c) => {
 
 router.get("/api/settings/auth/callback", async (c) => {
   const m = await getSelectedMiddlewareForSettingsGate();
-  if (!m) return c.redirect(`${getBasePath()}/settings`);
+  if (!m) return c.redirect(adminSettingsPath());
   const result = await m.handle(c.req.raw, { route: "settings-auth-callback" });
   if (
     result !== null &&
@@ -183,12 +186,12 @@ router.get("/api/settings/auth/callback", async (c) => {
     return c.redirect(`${result.redirect}${sep}token=${sessionToken}`);
   }
   if (result instanceof Response) return result;
-  return c.redirect(`${getBasePath()}/settings`);
+  return c.redirect(adminSettingsPath());
 });
 
 router.post("/api/settings/auth", async (c) => {
   if (isPublicInstance() && !isPasswordRequired()) return c.json({ error: "You shall not pass!" }, 401);
-  const ip = _clientIp(c);
+  const ip = getClientIp(c) ?? "unknown";
   const rate = checkAuthRate(ip);
   if (!rate.allowed) {
     logger.warn(

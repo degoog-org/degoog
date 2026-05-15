@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 
-import { honeypotOn, isBlocked } from "../utils/bot-trap";
+import { cssCheckOn, isBlocked } from "../utils/bot-trap";
 import { hasPinged, strike } from "../utils/link-token";
 import { getClientIp } from "../utils/request";
 import commands from "./commands";
@@ -32,8 +32,7 @@ const globalRouter = new Hono();
 globalRouter.use("*", async (c, next) => {
   const ip = getClientIp(c);
   if (ip && (await isBlocked(ip))) return c.text("Forbidden", 403);
-  if (!(await honeypotOn())) return next();
-  if (ip && c.req.path === "/search" && c.req.query("q") && !hasPinged(ip)) {
+  if (ip && (await cssCheckOn()) && c.req.path === "/search" && c.req.query("q") && !hasPinged(ip)) {
     await strike(ip);
   }
   return next();

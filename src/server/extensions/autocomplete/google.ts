@@ -4,6 +4,8 @@ import type {
   AutocompleteSuggestion,
   RichSuggestion,
 } from "../../types";
+import { asBoolean } from "../../utils/plugin-settings";
+import type { SettingValue } from "../../utils/plugin-settings";
 
 export class GoogleAutocompleteProvider implements AutocompleteProvider {
   name = "Google";
@@ -22,8 +24,8 @@ export class GoogleAutocompleteProvider implements AutocompleteProvider {
 
   private richEnabled = false;
 
-  configure(settings: Record<string, string | string[]>): void {
-    this.richEnabled = settings.richSuggestions === "true";
+  configure(settings: Record<string, SettingValue>): void {
+    this.richEnabled = asBoolean(settings.richSuggestions);
   }
 
   async getSuggestions(

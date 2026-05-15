@@ -1,4 +1,5 @@
 import type { CreateCache } from "../utils/cache";
+import type { SettingValue } from "../utils/plugin-settings";
 import type {
   SearchResult,
   ScoredResult,
@@ -70,7 +71,7 @@ export interface ExtensionMeta {
   trigger?: string;
   configurable: boolean;
   settingsSchema: SettingField[];
-  settings: Record<string, string | string[]>;
+  settings: Record<string, SettingValue>;
   source?: "builtin" | "plugin";
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
@@ -91,7 +92,7 @@ export interface SearchEngine {
   name: string;
   bangShortcut?: string;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   executeSearch(
     query: string,
     page?: number,
@@ -120,7 +121,7 @@ export type AutocompleteSuggestion =
 export interface AutocompleteProvider {
   name: string;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   getSuggestions(
     query: string,
     context?: AutocompleteContext,
@@ -171,7 +172,7 @@ export interface SlotPlugin {
     context?: SlotPluginContext,
   ): Promise<{ title?: string; html: string }>;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   init?(context: PluginContext): void | Promise<void>;
   t?: Translate;
 }
@@ -196,7 +197,7 @@ export interface BangCommand {
   aliases?: string[];
   naturalLanguagePhrases?: string[];
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   isConfigured?(): Promise<boolean>;
   init?(context: PluginContext): void | Promise<void>;
   execute(args: string, context?: CommandContext): Promise<CommandResult>;
@@ -216,7 +217,7 @@ export interface SearchResultTab {
     context?: { clientIp?: string },
   ): Promise<{ results: SearchResult[]; totalPages?: number }>;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   init?(context: PluginContext): void | Promise<void>;
   t?: Translate;
 }
@@ -231,7 +232,7 @@ export interface RequestMiddleware {
   settingsId?: string;
   settingsFallbackIds?: string[];
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   init?(context: PluginContext): void | Promise<void>;
   handle(
     req: Request,
@@ -285,7 +286,7 @@ export interface Transport {
   description?: string;
   timeoutMs?: number;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   available(): boolean | Promise<boolean>;
   fetch(
     url: string,
@@ -310,7 +311,7 @@ export interface QueryInterceptor {
   settingsId?: string;
   settingsSchema?: SettingField[];
   priority?: number;
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   init?(context: PluginContext): void | Promise<void>;
   intercept(
     query: string,

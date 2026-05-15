@@ -25,6 +25,7 @@ import { initSearchBarActions } from "../utils/search-bar-actions";
 import { renderPageTemplates } from "./renderer/render-page";
 import { initResultActions } from "./result-actions";
 import { getBase } from "../utils/base-url";
+import { isSettingsPathname } from "../utils/settings-path";
 import type { ImageFilter } from "../types/search";
 import { readImgFilter } from "../utils/url";
 
@@ -55,7 +56,7 @@ export function init(): void {
         return;
       }
       if (url.origin !== location.origin) return;
-      if (!url.pathname.startsWith("/settings")) return;
+      if (!isSettingsPathname(url.pathname)) return;
       recordSettingsReturn();
     },
     true,

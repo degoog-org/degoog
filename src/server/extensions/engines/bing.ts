@@ -22,7 +22,7 @@ export class BingEngine implements SearchEngine {
     },
   ];
 
-  configure(settings: Record<string, string | string[]>): void {
+  configure(settings: Record<string, string | string[] | boolean>): void {
     if (typeof settings.safeSearch === "string") {
       this.safeSearch = settings.safeSearch;
     }

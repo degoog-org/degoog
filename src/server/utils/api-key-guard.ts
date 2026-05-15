@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { asString, getSettings } from "./plugin-settings";
+import { asBoolean, didSettingsLoadFail, getSettings } from "./plugin-settings";
 import { DEGOOG_SETTINGS_ID } from "./search";
 import { verifySearchNonce } from "./search-nonce";
 import { verifyServerKeyHex } from "./server-key";
@@ -23,7 +23,8 @@ export async function guardApiKey(
   settingKey: string,
 ): Promise<Response | null> {
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  if (asString(settings[settingKey]) !== "true") return null;
+  if (didSettingsLoadFail()) return c.json({ error: "You shall not pass!" }, 401);
+  if (!asBoolean(settings[settingKey])) return null;
   if (_verifyNonce(c) || _bearerMatches(c)) return null;
   return c.json({ error: "You shall not pass!" }, 401);
 }
