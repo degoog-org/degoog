@@ -35,9 +35,9 @@ const load = async (): Promise<PluginSettingsStore> => {
     const raw = await readFile(SETTINGS_PATH, "utf-8");
     cache = JSON.parse(raw) as PluginSettingsStore;
     loadFailed = false;
-  } catch {
+  } catch (e: unknown) {
     cache = {};
-    loadFailed = true;
+    loadFailed = (e as NodeJS.ErrnoException).code !== "ENOENT";
   }
   return cache;
 };
@@ -105,6 +105,7 @@ export async function setSettings(
   cache = store;
 
   await persist(store);
+  loadFailed = false;
 }
 
 export const getAllSettings = async (): Promise<PluginSettingsStore> => {

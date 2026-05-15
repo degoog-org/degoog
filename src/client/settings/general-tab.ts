@@ -117,22 +117,21 @@ export async function initAppearanceSettings(): Promise<void> {
   }
 }
 
-// Gets the current release tag
-async function getNewestRelease() : Promise<string>{
-  const tags = await fetch("https://api.github.com/repos/degoog-org/degoog/tags")
-  if (tags){
-    const json = await tags.json()
-    if (json){
+async function getNewestRelease(): Promise<string> {
+  const tags = await fetch(
+    "https://api.github.com/repos/degoog-org/degoog/tags",
+  );
+  if (tags) {
+    const json = await tags.json();
+    if (json) {
       const value = json[0].name;
-      if (value)
-        return value;
+      if (value) return value;
     }
   }
   return "Unknown";
 }
 
-// Initialize the things needed for the version checker
-export async function initVersionChecker() : Promise<void>{
+export async function initVersionChecker(): Promise<void> {
   const newestVersionB = document.getElementById(
     "settings-update-check-newestversion",
   ) as HTMLBRElement | null;
@@ -146,49 +145,39 @@ export async function initVersionChecker() : Promise<void>{
     "settings-update-check-newversionavailable",
   ) as HTMLParagraphElement | null;
 
-  let latestDate = new Date(0)
+  let latestDate = new Date(0);
   const latest = localStorage.getItem("last-update-check");
-  if (latest)
-    latestDate = new Date(latest)
+  if (latest) latestDate = new Date(latest);
   const now = new Date();
 
-  // If the latest date is more than 1 day ago, fetch the newest version and save it
-  if (+now - +latestDate > (24 * 60 * 60 * 1000)){
-    console.log("test")
+  if (+now - +latestDate > 24 * 60 * 60 * 1000) {
     latestDate = new Date();
     localStorage.setItem("last-update-check", latestDate.toUTCString());
     const newCheck = await getNewestRelease();
-    if (newestVersionB)
-      newestVersionB.innerHTML = newCheck;
+    if (newestVersionB) newestVersionB.innerHTML = newCheck;
     localStorage.setItem("last-update-check-version", newCheck);
   }
 
-  if (lastCheckedB)
-    lastCheckedB.innerHTML = latestDate.toLocaleDateString();
+  if (lastCheckedB) lastCheckedB.innerHTML = latestDate.toLocaleDateString();
   const currentVersion = localStorage.getItem("last-update-check-version");
   if (pkg.version != currentVersion && newAvailableP)
-      newAvailableP.setAttribute("style","")
+    newAvailableP.setAttribute("style", "");
 
-  // Update the visual for the latest version
   const latestVersion = localStorage.getItem("last-update-check-version");
-  if (latestVersion && newestVersionB)
-    newestVersionB.innerHTML = latestVersion;
+  if (latestVersion && newestVersionB) newestVersionB.innerHTML = latestVersion;
 
-  // Manual recheck button
   checkNowButton?.addEventListener("click", async () => {
     const newest = await getNewestRelease();
-    if (newestVersionB)
-      newestVersionB.innerHTML = newest;
+    if (newestVersionB) newestVersionB.innerHTML = newest;
     localStorage.setItem("last-update-check-version", newest);
 
     const newLatest = new Date();
     localStorage.setItem("last-update-check", newLatest.toUTCString());
-    if (lastCheckedB)
-      lastCheckedB.innerHTML = newLatest.toLocaleDateString();
+    if (lastCheckedB) lastCheckedB.innerHTML = newLatest.toLocaleDateString();
 
     if (pkg.version != newest && newAvailableP)
-      newAvailableP.setAttribute("style","")
-  })
+      newAvailableP.setAttribute("style", "");
+  });
 }
 
 export async function initGeneralTab(): Promise<void> {
