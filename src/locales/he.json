@@ -49,11 +49,12 @@
       "prompt-button": "הצג הודעת התקנה"
     },
     "update-check": {
-      "heading": "?",
-      "desc": "?",
-      "check-now-button": "?",
-      "open-link-button": "?",
-      "last-checked": "?"
+      "heading": "גִרְסָה",
+      "desc": "גרסה חדשה יותר זמינה!",
+      "new-desc": "מותקן כעת. הגרסה החדשה ביותר הזמינה היא",
+      "check-now-button": "בדוק עכשיו",
+      "open-link-button": "ראה שחרור",
+      "last-checked": "נבדק לאחרונה"
     },
     "server": {
       "cache-heading": "מטמון (Cache)",

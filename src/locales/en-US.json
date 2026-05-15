@@ -51,6 +51,7 @@
     },
     "update-check": {
       "heading": "Version",
+      "new-desc": "A newer version is available!",
       "desc": " is currently installed. The newest version available is ",
       "check-now-button": "Check Now",
       "open-link-button": "See release",

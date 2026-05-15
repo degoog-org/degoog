@@ -49,11 +49,12 @@
       "prompt-button": "Mostra invito all’installazione"
     },
     "update-check": {
-      "heading": "?",
-      "desc": "?",
-      "check-now-button": "?",
-      "open-link-button": "?",
-      "last-checked": "?"
+      "heading": "Versione",
+      "desc": "È disponibile una versione più recente!",
+      "new-desc": "è attualmente installato. La versione più recente disponibile è",
+      "check-now-button": "Controlla ora",
+      "open-link-button": "Vedi comunicato",
+      "last-checked": "Ultimo controllo"
     },
     "server": {
       "cache-heading": "Cache",
