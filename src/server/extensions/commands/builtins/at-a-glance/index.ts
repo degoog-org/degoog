@@ -227,6 +227,7 @@ const atAGlanceSlot: SlotPlugin = {
   },
   position: SlotPanelPosition.AtAGlance,
   waitForResults: true,
+  externalNetworkAccess: { server: true },
 
   t: TranslateFunction,
 

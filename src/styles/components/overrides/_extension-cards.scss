@@ -356,7 +356,7 @@
   border: 1px solid var(--border);
   border-radius: $radius-md;
   color: var(--text-secondary);
-  cursor: pointer;  
+  cursor: pointer;
   font-size: $font-size-small;
   padding: $space-2 $space-3;
   transition: color $transition-fast, border-color $transition-fast;
@@ -404,6 +404,15 @@ select.ext-field-input.ext-field-select {
 
 .ext-version-warning {
   font-size: $font-size-small;
+  color: $warning;
+}
+
+.ext-network-disclosure {
+  cursor: help;
+  line-height: 1.4;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: $radius-xs;
   color: $warning;
 }
 

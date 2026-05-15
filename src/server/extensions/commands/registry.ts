@@ -367,6 +367,7 @@ export async function getPluginExtensionMeta(
       settingsSchema: translatedSchema,
       settings: maskedSettings,
       source: commandSourceMap.get(entry.id) ?? "plugin",
+      externalNetworkAccess: entry.instance.externalNetworkAccess,
     };
     const { exists } = await extensionReadmeExists(entry.id);
     meta.extensionDocsAvailable = exists;

@@ -82,6 +82,7 @@ export const getInterceptorMeta = async (): Promise<ExtensionMeta[]> => {
       settingsSchema: schema,
       settings,
       source: "plugin",
+      externalNetworkAccess: interceptor.externalNetworkAccess,
       extensionDocsAvailable: exists,
     });
   }

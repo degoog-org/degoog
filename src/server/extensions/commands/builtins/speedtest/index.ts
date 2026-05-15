@@ -21,6 +21,7 @@ export const speedtestCommand: BangCommand = {
     "run a speed test",
     "test my internet speed",
   ],
+  externalNetworkAccess: { client: true },
 
   t: TranslateFunction,
 

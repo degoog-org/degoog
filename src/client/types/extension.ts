@@ -22,6 +22,11 @@ export interface SettingField {
   visibleWhen?: { key: string; equals: string };
 }
 
+export interface ExternalNetworkAccess {
+  client?: boolean;
+  server?: boolean;
+}
+
 export interface ExtensionMeta {
   id: string;
   displayName: string;
@@ -35,6 +40,7 @@ export interface ExtensionMeta {
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
   defaultFeedUrls?: string[];
+  externalNetworkAccess?: ExternalNetworkAccess;
   requiresNewerVersion?: boolean;
 }
 

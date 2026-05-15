@@ -11,6 +11,27 @@ const _priority = (plugin: ExtensionMeta): number => {
   return isNaN(n) ? 0 : n;
 };
 
+const _externalNetworkDisclosure = (plugin: ExtensionMeta): string => {
+  const access = plugin.externalNetworkAccess;
+  if (!access?.client && !access?.server) return "";
+  const badges: string[] = [];
+  if (access.client) {
+    const title = "Browser requests";
+    const message = "May contact external services from the browser";
+    badges.push(
+      `<span class="degoog-badge ext-network-disclosure ext-network-disclosure--client" title="${escapeHtml(message)}" aria-label="${escapeHtml(message)}">${escapeHtml(title)}</span>`,
+    );
+  }
+  if (access.server) {
+    const title = "Server requests";
+    const message = "May contact external services from this server";
+    badges.push(
+      `<span class="degoog-badge ext-network-disclosure ext-network-disclosure--server" title="${escapeHtml(message)}" aria-label="${escapeHtml(message)}">${escapeHtml(title)}</span>`,
+    );
+  }
+  return badges.join("");
+};
+
 const _renderPluginCard = (
   plugin: ExtensionMeta,
   orderable: boolean,
@@ -24,6 +45,7 @@ const _renderPluginCard = (
     plugin.source === "builtin"
       ? `<span class="degoog-badge">Built-in</span>`
       : "";
+  const externalNetworkDisclosure = _externalNetworkDisclosure(plugin);
   const desc = plugin.description
     ? `<span class="ext-card-desc">${escapeHtml(plugin.description)}</span>`
     : "";
@@ -65,6 +87,7 @@ const _renderPluginCard = (
           <div class="ext-card-name-row">
             <label for="plugin-toggle-${escapeHtml(plugin.id)}" class="ext-card-name plugin-toggle-label">${escapeHtml(plugin.displayName)}</label>
             ${builtinBadge}
+            ${externalNetworkDisclosure}
           </div>
           ${trigger}
           ${desc}
