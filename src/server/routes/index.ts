@@ -5,6 +5,7 @@ import { hasPinged, strike } from "../utils/link-token";
 import { getClientIp } from "../utils/request";
 import commands from "./commands";
 import honeypot from "./honeypot";
+import { buildGandalf } from "./pages";
 import uovadipasqua from "./uovadipasqua";
 import extensions from "./extensions";
 import pages from "./pages";
@@ -31,7 +32,10 @@ const globalRouter = new Hono();
 
 globalRouter.use("*", async (c, next) => {
   const ip = getClientIp(c);
-  if (ip && (await isBlocked(ip))) return c.text("Forbidden", 403);
+  if (ip && (await isBlocked(ip))) {
+    const locale = c.req.header("accept-language")?.split(",")[0]?.split("-")[0]?.trim();
+    return c.html(await buildGandalf(locale), 403);
+  }
   if (ip && (await cssCheckOn()) && c.req.path === "/search" && c.req.query("q") && !hasPinged(ip)) {
     await strike(ip);
   }

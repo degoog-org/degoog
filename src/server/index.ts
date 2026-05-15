@@ -19,6 +19,7 @@ import { initTransports } from "./extensions/transports/registry";
 import { initAutocomplete } from "./extensions/autocomplete/registry";
 import { initInterceptors } from "./extensions/interceptors/registry";
 import globalRouter from "./routes";
+import { build404 } from "./routes/pages";
 import { setOutgoingAllowlist } from "./utils/outgoing";
 import { initServerKey } from "./utils/server-key";
 
@@ -46,6 +47,11 @@ app.use(
   }),
 );
 app.route(BASE_PATH || "/", globalRouter);
+
+app.notFound(async (c) => {
+  const locale = c.req.header("accept-language")?.split(",")[0]?.split("-")[0]?.trim();
+  return c.html(await build404(locale), 404);
+});
 
 const port = Number(process.env.DEGOOG_PORT) || 4444;
 

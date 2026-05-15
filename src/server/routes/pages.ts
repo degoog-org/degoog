@@ -47,6 +47,7 @@ import { logger } from "../utils/logger";
 import { getClientIp } from "../utils/request";
 import { generateSearchNonce } from "../utils/search-nonce";
 import { getBasePath, getBaseUrl } from "../utils/base-url";
+import { FAKE_RESULTS } from "../../shared/fake-results";
 
 const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
 const CORE_LOCALES_ROOT = "src";
@@ -506,5 +507,44 @@ router.post("/api/cache/clear", async (c) => {
   cache.clear();
   return c.json({ ok: true });
 });
+
+const renderTakeoverResults = (): string =>
+  FAKE_RESULTS.map((r) => `
+    <div class="result-item degoog-result">
+      <div class="result-item-inner degoog-result--inner">
+        <div class="result-body degoog-result--body">
+          <div class="result-url-row degoog-result--url-row">
+            <cite class="result-cite degoog-result--cite">${r.url}</cite>
+          </div>
+          <a class="result-title degoog-result--title" href="${r.url}" rel="noopener noreferrer" target="_blank">${r.title}</a>
+          <p class="result-snippet degoog-result--snippet">${r.snippet}</p>
+        </div>
+      </div>
+    </div>`).join("\n");
+
+router.get("/robots-takeover", async (c) => {
+  const locale = getLocale(c);
+  const override = await getThemeHtml("robots-takeover");
+  const raw = override ?? await Bun.file(`${DEFAULT_THEME_DIR}/easter-eggs/robots-takeover.html`).text();
+  const withResults = raw.replace("__ROBOTS_RESULTS__", renderTakeoverResults());
+  const layout = await getLayout();
+  const html = layout
+    .replace("__PAGE_CONTENT__", withResults)
+    .replace("__BODY_CLASS__", 'class="has-results"');
+  const t = await getTranslator(locale, !!override);
+  return c.html(await applyPagePlaceholders(html, t));
+});
+
+export const build404 = async (locale?: string): Promise<string> => {
+  const override = await getThemeHtml("404");
+  if (override) return buildThemedLayoutPage(override, locale);
+  return buildLayoutPage("404.html", locale);
+};
+
+export const buildGandalf = async (locale?: string): Promise<string> => {
+  const override = await getThemeHtml("gandalf");
+  if (override) return buildThemedLayoutPage(override, locale);
+  return buildLayoutPage("easter-eggs/gandalf.html", locale);
+};
 
 export default router;
