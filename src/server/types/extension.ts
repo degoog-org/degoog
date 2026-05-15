@@ -28,7 +28,7 @@ export const TranslateFunction: Translate = Object.assign(
     return key;
   },
   {
-    setLocale(_locale: string) {},
+    setLocale(_locale: string) { },
     locale: "",
     translations: undefined as TranslationRecord | undefined,
   },
@@ -46,13 +46,13 @@ export interface SettingField {
   key: string;
   label: string;
   type:
-    | "text"
-    | "number"
-    | "password"
-    | "url"
-    | "toggle"
-    | "textarea"
-    | "select";
+  | "text"
+  | "number"
+  | "password"
+  | "url"
+  | "toggle"
+  | "textarea"
+  | "select";
   required?: boolean;
   placeholder?: string;
   description?: string;

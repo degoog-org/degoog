@@ -1,6 +1,7 @@
 import { Transport, ExtensionMeta, ExtensionStoreType } from "../../types";
 import { FetchTransport } from "./builtins/fetch";
 import { CurlTransport } from "./builtins/curl";
+import { CurlImpersonateTransport } from "./builtins/curl-impersonate";
 import { AutoTransport } from "./builtins/auto";
 import {
   getSettings,
@@ -15,6 +16,7 @@ import { stupidSettingIDtoAvoidConflicts } from "../extension-id";
 const _builtins: Transport[] = [
   new FetchTransport(),
   new CurlTransport(),
+  new CurlImpersonateTransport(),
   new AutoTransport(),
 ];
 

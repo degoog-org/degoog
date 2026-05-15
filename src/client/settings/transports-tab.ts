@@ -56,6 +56,7 @@ export function initTransportsTab(allExtensions: AllExtensions): void {
   const BUILTIN_IDS = new Set([
     "transport-fetch",
     "transport-curl",
+    "transport-curl-impersonate",
     "transport-curl-fallback",
   ]);
   const custom = transports.filter(
