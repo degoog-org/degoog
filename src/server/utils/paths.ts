@@ -29,3 +29,6 @@ export const settingsTokensFile = (): string =>
 
 export const autocompleteDir = (): string =>
   process.env.DEGOOG_AUTOCOMPLETE_DIR ?? join(_dataDir(), "autocomplete");
+
+export const blocklistFile = (): string =>
+  process.env.DEGOOG_BLOCKLIST_FILE ?? join(_dataDir(), "blocklist.json");

@@ -17,7 +17,7 @@ import {
   TimeFilter,
 } from "../types";
 import * as cache from "../utils/cache";
-import { asString, getSettings } from "../utils/plugin-settings";
+import { asBoolean, asString, getSettings } from "../utils/plugin-settings";
 import {
   _applyRateLimit,
   cacheKey,
@@ -115,7 +115,7 @@ router.get("/api/search/stream", async (c) => {
   }
 
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  const autoRetry = asString(settings.streamingAutoRetry) === "true";
+  const autoRetry = asBoolean(settings.streamingAutoRetry);
   const maxRetries = Math.min(
     5,
     Math.max(1, parseInt(asString(settings.streamingMaxRetries) || "2", 10)),

@@ -1,5 +1,5 @@
 import type { ScoredResult } from "../types";
-import { getSettings, asString } from "./plugin-settings";
+import { getSettings, asBoolean, asString } from "./plugin-settings";
 
 const DEGOOG_SETTINGS_ID = "degoog-settings";
 
@@ -33,7 +33,7 @@ export const filterBlockedDomains = async (
   results: ScoredResult[],
 ): Promise<ScoredResult[]> => {
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  if (asString(settings.domainBlockEnabled) !== "true") return results;
+  if (!asBoolean(settings.domainBlockEnabled)) return results;
 
   const patterns = _parseBlockList(asString(settings.domainBlockList));
   if (patterns.length === 0) return results;
@@ -52,7 +52,7 @@ export const applyDomainReplacements = async (
   results: ScoredResult[],
 ): Promise<ScoredResult[]> => {
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  if (asString(settings.domainReplaceEnabled) !== "true") return results;
+  if (!asBoolean(settings.domainReplaceEnabled)) return results;
 
   const rules = _parseReplaceList(asString(settings.domainReplaceList));
   if (rules.length === 0) return results;
@@ -89,7 +89,7 @@ export const applyDomainScores = async (
   results: ScoredResult[],
 ): Promise<ScoredResult[]> => {
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  if (asString(settings.domainScoreEnabled) !== "true") return results;
+  if (!asBoolean(settings.domainScoreEnabled)) return results;
 
   const entries = _parseScoreList(asString(settings.domainScoreList));
   if (entries.length === 0) return results;

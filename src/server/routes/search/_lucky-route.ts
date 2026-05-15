@@ -4,10 +4,13 @@ import type { SearchType } from "../../types";
 import * as cache from "../../utils/cache";
 import { cacheKey, parseEngineConfig } from "../../utils/search";
 import { logger } from "../../utils/logger";
+import { guardApiKey } from "../../utils/api-key-guard";
 import { applyDomainRules } from "./_domain-rules";
 
 export function registerLuckyRoute(router: Hono): void {
   router.get("/api/lucky", async (c) => {
+    const authRes = await guardApiKey(c, "apiKeySearchEnabled");
+    if (authRes) return authRes;
     const query = c.req.query("q");
     if (!query) return c.json({ error: "Missing query parameter 'q'" }, 400);
 

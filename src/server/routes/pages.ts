@@ -27,7 +27,7 @@ import {
   getPluginScriptFolders,
   getPluginSettingsIds,
 } from "../utils/plugin-assets";
-import { asString, getSettings, isDisabled } from "../utils/plugin-settings";
+import { asBoolean, asString, getSettings, isDisabled } from "../utils/plugin-settings";
 import { getAdminPath, isPublicInstance } from "../utils/public-instance";
 import {
   collectTranslationsForLocale,
@@ -42,6 +42,7 @@ import {
   gandalf,
 } from "./settings-auth";
 import { mintToken, ping, verifyToken } from "../utils/link-token";
+import { cssCheckOn } from "../utils/bot-trap";
 import { logger } from "../utils/logger";
 import { getClientIp } from "../utils/request";
 import { generateSearchNonce } from "../utils/search-nonce";
@@ -223,8 +224,8 @@ async function applyPagePlaceholders(
 
   const pageSettings = await getSettings(_DEGOOG_SETTINGS_ID);
   const anyApiKeyEnabled =
-    asString(pageSettings.apiKeySearchEnabled) === "true" ||
-    asString(pageSettings.apiKeySuggestEnabled) === "true";
+    asBoolean(pageSettings.apiKeySearchEnabled) ||
+    asBoolean(pageSettings.apiKeySuggestEnabled);
   if (anyApiKeyEnabled) {
     const auth = generateSearchNonce();
     const nonceScript = `<script>window.__DEGOOG_SEARCH_AUTH__=${JSON.stringify(auth)}</script>`;
@@ -246,11 +247,13 @@ async function applyPagePlaceholders(
     `<link rel="stylesheet" href="/public/icons/fontawesome/css/all.min.css?v=${pkg.version}">\n  </head>`,
   );
 
-  try {
-    const tok = mintToken();
-    result = result.replace("</head>", `<link rel="stylesheet" href="/ping/${tok}">\n  </head>`);
-  } catch (e) {
-    logger.error("link-token", `failed to mint token: ${e instanceof Error ? e.message : String(e)}`);
+  if (await cssCheckOn()) {
+    try {
+      const tok = mintToken();
+      result = result.replace("</head>", `<link rel="stylesheet" href="/ping/${tok}">\n  </head>`);
+    } catch (e) {
+      logger.error("link-token", `failed to mint token: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   if (BASE_PREFIX) {
@@ -360,9 +363,9 @@ const _buildResultActionsScript = async (c: Context): Promise<string> => {
   let scoreUi = false;
   if (authenticated) {
     const settings = await getSettings("degoog-settings");
-    blockUi = asString(settings.domainBlockUiEnabled) === "true";
-    replaceUi = asString(settings.domainReplaceUiEnabled) === "true";
-    scoreUi = asString(settings.domainScoreUiEnabled) === "true";
+    blockUi = asBoolean(settings.domainBlockUiEnabled);
+    replaceUi = asBoolean(settings.domainReplaceUiEnabled);
+    scoreUi = asBoolean(settings.domainScoreUiEnabled);
   }
   const payload = JSON.stringify({
     authenticated,

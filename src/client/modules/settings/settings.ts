@@ -14,9 +14,12 @@ import { initServerTab } from "../../settings/server-tab";
 import { initStoreTab } from "../../settings/store-tab";
 import { initGlobalSearch } from "../../settings/settings-search";
 import "../modals/settings-modal/modal";
-import { SETTINGS_TABS } from "../../../shared/settings-tabs";
 import type { AllExtensions } from "../../types";
 import { navigateSettingsBack } from "../../utils/navigation";
+import {
+  getActiveSettingsTab,
+  getSettingsRoot,
+} from "../../utils/settings-path";
 
 declare global {
   interface Window {
@@ -154,7 +157,8 @@ export function switchSettingsTab(value: string, updateUrl = true): void {
   if (select) select.value = value;
 
   if (updateUrl) {
-    const path = value === "general" ? `${getBase()}/settings` : `${getBase()}/settings/${value}`;
+    const root = getSettingsRoot();
+    const path = value === "general" ? root : `${root}/${value}`;
     window.history.replaceState({}, "", path);
   }
 }
@@ -171,13 +175,9 @@ function _initTabs(): void {
     );
   });
 
-  const path = window.location.pathname;
-  const match = path.match(/^\/settings\/(\w+)$/);
-  if (match) {
-    const tab = match[1];
-    if ((SETTINGS_TABS as readonly string[]).includes(tab)) {
-      switchSettingsTab(tab, false);
-    }
+  const tab = getActiveSettingsTab();
+  if (tab && tab !== "general") {
+    switchSettingsTab(tab, false);
   }
 }
 
@@ -271,7 +271,7 @@ async function _init(): Promise<void> {
   const tokenFromUrl = params.get("token");
   if (tokenFromUrl) {
     sessionStorage.setItem(TOKEN_KEY, tokenFromUrl);
-    window.history.replaceState({}, "", `${getBase()}/settings`);
+    window.history.replaceState({}, "", getSettingsRoot());
   }
   const auth = await _checkAuth();
   if (auth.required && !auth.valid) {
