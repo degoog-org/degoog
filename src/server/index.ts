@@ -43,13 +43,19 @@ app.use(
   `${BASE_PATH}/public/*`,
   serveStatic({
     root: "src/",
-    rewriteRequestPath: BASE_PATH ? (p) => p.slice(BASE_PATH.length) : undefined,
+    rewriteRequestPath: BASE_PATH
+      ? (p) => p.slice(BASE_PATH.length)
+      : undefined,
   }),
 );
 app.route(BASE_PATH || "/", globalRouter);
 
 app.notFound(async (c) => {
-  const locale = c.req.header("accept-language")?.split(",")[0]?.split("-")[0]?.trim();
+  const locale = c.req
+    .header("accept-language")
+    ?.split(",")[0]
+    ?.split("-")[0]
+    ?.trim();
   return c.html(await build404(locale), 404);
 });
 

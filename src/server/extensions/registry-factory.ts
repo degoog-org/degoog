@@ -229,7 +229,6 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
       return;
     }
 
-    // onLoad calls run in parallel — no one plugin can jam the rest
     const results = await Promise.allSettled(
       toInit.map(({ extracted, meta }) => opts.onLoad!(extracted, meta)),
     );

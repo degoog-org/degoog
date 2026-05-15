@@ -1,8 +1,23 @@
-import { describe, test, expect, beforeAll, afterAll, afterEach } from "bun:test";
-import { getServerKeyHex, initServerKey } from "../../src/server/utils/server-key";
-import { getSettings, setSettings } from "../../src/server/utils/plugin-settings";
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+} from "bun:test";
+import {
+  getServerKeyHex,
+  initServerKey,
+} from "../../src/server/utils/server-key";
+import {
+  getSettings,
+  setSettings,
+} from "../../src/server/utils/plugin-settings";
 
-type Router = { request: (req: Request | string) => Response | Promise<Response> };
+type Router = {
+  request: (req: Request | string) => Response | Promise<Response>;
+};
 
 const SETTINGS_ID = "degoog-settings";
 
@@ -50,10 +65,18 @@ const _bearer = (): Record<string, string> => {
 const _enable = async (key: "apiKeySuggestEnabled" | "apiKeySearchEnabled") =>
   setSettings(SETTINGS_ID, { [key]: true });
 
-const _get = (router: Router, path: string, headers: Record<string, string> = {}) =>
-  router.request(new Request(`http://localhost${path}`, { headers }));
+const _get = (
+  router: Router,
+  path: string,
+  headers: Record<string, string> = {},
+) => router.request(new Request(`http://localhost${path}`, { headers }));
 
-const _post = (router: Router, path: string, body: string, headers: Record<string, string> = {}) =>
+const _post = (
+  router: Router,
+  path: string,
+  body: string,
+  headers: Record<string, string> = {},
+) =>
   router.request(
     new Request(`http://localhost${path}`, {
       method: "POST",
@@ -62,14 +85,26 @@ const _post = (router: Router, path: string, body: string, headers: Record<strin
     }),
   );
 
-describe("guardApiKey — suggest endpoints", () => {
+describe("guardApiKey - suggest endpoints", () => {
   const SUGGEST_ENDPOINTS = [
-    { label: "GET /api/suggest", fn: (h: Record<string, string>) => _get(suggestRouter, "/api/suggest?q=x", h) },
-    { label: "POST /api/suggest", fn: (h: Record<string, string>) => _post(suggestRouter, "/api/suggest", '{"query":"x"}', h) },
-    { label: "GET /api/suggest/opensearch", fn: (h: Record<string, string>) => _get(suggestRouter, "/api/suggest/opensearch?q=x", h) },
+    {
+      label: "GET /api/suggest",
+      fn: (h: Record<string, string>) =>
+        _get(suggestRouter, "/api/suggest?q=x", h),
+    },
+    {
+      label: "POST /api/suggest",
+      fn: (h: Record<string, string>) =>
+        _post(suggestRouter, "/api/suggest", '{"query":"x"}', h),
+    },
+    {
+      label: "GET /api/suggest/opensearch",
+      fn: (h: Record<string, string>) =>
+        _get(suggestRouter, "/api/suggest/opensearch?q=x", h),
+    },
   ];
 
-  describe("protection disabled — all pass through", () => {
+  describe("protection disabled - all pass through", () => {
     for (const { label, fn } of SUGGEST_ENDPOINTS) {
       test(label, async () => {
         const res = await fn({});
@@ -78,7 +113,7 @@ describe("guardApiKey — suggest endpoints", () => {
     }
   });
 
-  describe("protection enabled — no auth → 401", () => {
+  describe("protection enabled - no auth → 401", () => {
     for (const { label, fn } of SUGGEST_ENDPOINTS) {
       test(label, async () => {
         await _enable("apiKeySuggestEnabled");
@@ -88,7 +123,7 @@ describe("guardApiKey — suggest endpoints", () => {
     }
   });
 
-  describe("protection enabled — valid bearer → passes", () => {
+  describe("protection enabled - valid bearer → passes", () => {
     for (const { label, fn } of SUGGEST_ENDPOINTS) {
       test(label, async () => {
         await _enable("apiKeySuggestEnabled");
@@ -98,7 +133,7 @@ describe("guardApiKey — suggest endpoints", () => {
     }
   });
 
-  describe("protection enabled — boolean true (not string) still gates", () => {
+  describe("protection enabled - boolean true (not string) still gates", () => {
     test("GET /api/suggest blocked with boolean true setting", async () => {
       await setSettings(SETTINGS_ID, { apiKeySuggestEnabled: true });
       const res = await _get(suggestRouter, "/api/suggest?q=x");
@@ -106,7 +141,7 @@ describe("guardApiKey — suggest endpoints", () => {
     });
   });
 
-  describe("protection enabled — boolean false allows through", () => {
+  describe("protection enabled - boolean false allows through", () => {
     test("GET /api/suggest passes with boolean false setting", async () => {
       await setSettings(SETTINGS_ID, { apiKeySuggestEnabled: false });
       const res = await _get(suggestRouter, "/api/suggest?q=x");
@@ -115,16 +150,40 @@ describe("guardApiKey — suggest endpoints", () => {
   });
 });
 
-describe("guardApiKey — search endpoints", () => {
+describe("guardApiKey - search endpoints", () => {
   const SEARCH_ENDPOINTS = [
-    { label: "GET /api/search", fn: (h: Record<string, string>) => _get(searchRouter, "/api/search", h) },
-    { label: "POST /api/search", fn: (h: Record<string, string>) => _post(searchRouter, "/api/search", '{"query":"x"}', h) },
-    { label: "GET /api/search/retry", fn: (h: Record<string, string>) => _get(searchRouter, "/api/search/retry?q=x&engine=google", h) },
-    { label: "POST /api/search/retry", fn: (h: Record<string, string>) => _post(searchRouter, "/api/search/retry", '{"query":"x","engine":"google"}', h) },
-    { label: "GET /api/search/stream", fn: (h: Record<string, string>) => _get(streamRouter, "/api/search/stream?q=x", h) },
+    {
+      label: "GET /api/search",
+      fn: (h: Record<string, string>) => _get(searchRouter, "/api/search", h),
+    },
+    {
+      label: "POST /api/search",
+      fn: (h: Record<string, string>) =>
+        _post(searchRouter, "/api/search", '{"query":"x"}', h),
+    },
+    {
+      label: "GET /api/search/retry",
+      fn: (h: Record<string, string>) =>
+        _get(searchRouter, "/api/search/retry?q=x&engine=google", h),
+    },
+    {
+      label: "POST /api/search/retry",
+      fn: (h: Record<string, string>) =>
+        _post(
+          searchRouter,
+          "/api/search/retry",
+          '{"query":"x","engine":"google"}',
+          h,
+        ),
+    },
+    {
+      label: "GET /api/search/stream",
+      fn: (h: Record<string, string>) =>
+        _get(streamRouter, "/api/search/stream?q=x", h),
+    },
   ];
 
-  describe("protection disabled — all pass through", () => {
+  describe("protection disabled - all pass through", () => {
     for (const { label, fn } of SEARCH_ENDPOINTS) {
       test(label, async () => {
         const res = await fn({});
@@ -133,7 +192,7 @@ describe("guardApiKey — search endpoints", () => {
     }
   });
 
-  describe("protection enabled — no auth → 401", () => {
+  describe("protection enabled - no auth → 401", () => {
     for (const { label, fn } of SEARCH_ENDPOINTS) {
       test(label, async () => {
         await _enable("apiKeySearchEnabled");
@@ -143,7 +202,7 @@ describe("guardApiKey — search endpoints", () => {
     }
   });
 
-  describe("protection enabled — valid bearer → passes", () => {
+  describe("protection enabled - valid bearer → passes", () => {
     for (const { label, fn } of SEARCH_ENDPOINTS) {
       test(label, async () => {
         await _enable("apiKeySearchEnabled");
@@ -154,10 +213,11 @@ describe("guardApiKey — search endpoints", () => {
   });
 });
 
-describe("guardApiKey — bearer token edge cases", () => {
+describe("guardApiKey - bearer token edge cases", () => {
   const hit = async (authHeader?: string) => {
     await _enable("apiKeySuggestEnabled");
-    const headers: Record<string, string> = authHeader !== undefined ? { Authorization: authHeader } : {};
+    const headers: Record<string, string> =
+      authHeader !== undefined ? { Authorization: authHeader } : {};
     return _get(suggestRouter, "/api/suggest?q=x", headers);
   };
 
@@ -202,7 +262,9 @@ describe("guardApiKey — bearer token edge cases", () => {
 
   test("token with embedded whitespace → 401 (regex stops at first space)", async () => {
     const key = getServerKeyHex()!;
-    expect((await hit(`Bearer ${key.slice(0, 32)} ${key.slice(32)}`)).status).toBe(401);
+    expect(
+      (await hit(`Bearer ${key.slice(0, 32)} ${key.slice(32)}`)).status,
+    ).toBe(401);
   });
 
   test("BEARER uppercase keyword → still accepted (regex is /i)", async () => {
@@ -235,7 +297,7 @@ describe("guardApiKey — bearer token edge cases", () => {
   });
 });
 
-describe("guardApiKey — POST body attacks when protection disabled", () => {
+describe("guardApiKey - POST body attacks when protection disabled", () => {
   test("invalid JSON body → 400", async () => {
     const res = await suggestRouter.request(
       new Request("http://localhost/api/suggest", {
@@ -261,38 +323,53 @@ describe("guardApiKey — POST body attacks when protection disabled", () => {
 
   test("extremely long query → handled without crashing", async () => {
     const longQ = "a".repeat(100_000);
-    const res = await _get(suggestRouter, `/api/suggest?q=${encodeURIComponent(longQ)}`);
+    const res = await _get(
+      suggestRouter,
+      `/api/suggest?q=${encodeURIComponent(longQ)}`,
+    );
     expect([200, 400, 413, 429]).toContain(res.status);
   });
 });
 
-describe("guardApiKey — suggest and search use independent keys", () => {
-  test("suggest protected, search open — suggest blocked, search passes", async () => {
-    await setSettings(SETTINGS_ID, { apiKeySuggestEnabled: true, apiKeySearchEnabled: false });
+describe("guardApiKey - suggest and search use independent keys", () => {
+  test("suggest protected, search open - suggest blocked, search passes", async () => {
+    await setSettings(SETTINGS_ID, {
+      apiKeySuggestEnabled: true,
+      apiKeySearchEnabled: false,
+    });
     const suggestRes = await _get(suggestRouter, "/api/suggest?q=x");
     const searchRes = await _get(searchRouter, "/api/search");
     expect(suggestRes.status).toBe(401);
     expect(searchRes.status).not.toBe(401);
   });
 
-  test("search protected, suggest open — search blocked, suggest passes", async () => {
-    await setSettings(SETTINGS_ID, { apiKeySuggestEnabled: false, apiKeySearchEnabled: true });
+  test("search protected, suggest open - search blocked, suggest passes", async () => {
+    await setSettings(SETTINGS_ID, {
+      apiKeySuggestEnabled: false,
+      apiKeySearchEnabled: true,
+    });
     const suggestRes = await _get(suggestRouter, "/api/suggest?q=x");
     const searchRes = await _get(searchRouter, "/api/search");
     expect(suggestRes.status).not.toBe(401);
     expect(searchRes.status).toBe(401);
   });
 
-  test("both protected — both blocked without auth", async () => {
-    await setSettings(SETTINGS_ID, { apiKeySuggestEnabled: true, apiKeySearchEnabled: true });
+  test("both protected - both blocked without auth", async () => {
+    await setSettings(SETTINGS_ID, {
+      apiKeySuggestEnabled: true,
+      apiKeySearchEnabled: true,
+    });
     const suggestRes = await _get(suggestRouter, "/api/suggest?q=x");
     const searchRes = await _get(searchRouter, "/api/search");
     expect(suggestRes.status).toBe(401);
     expect(searchRes.status).toBe(401);
   });
 
-  test("both protected — same key unlocks both", async () => {
-    await setSettings(SETTINGS_ID, { apiKeySuggestEnabled: true, apiKeySearchEnabled: true });
+  test("both protected - same key unlocks both", async () => {
+    await setSettings(SETTINGS_ID, {
+      apiKeySuggestEnabled: true,
+      apiKeySearchEnabled: true,
+    });
     const h = _bearer();
     const suggestRes = await _get(suggestRouter, "/api/suggest?q=x", h);
     const searchRes = await _get(searchRouter, "/api/search", h);

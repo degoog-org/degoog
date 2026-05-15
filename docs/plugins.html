@@ -613,7 +613,7 @@
           <p>
             When installed from the store, the plugin folder name is
             <code>&lt;author&gt;-&lt;repo&gt;-&lt;plugin-name&gt;</code>. Never
-            hardcode that in your API URLs — use the injected
+            hardcode that in your API URLs - use the injected
             <strong><code>__PLUGIN_ID__</code></strong> constant instead.
             Degoog injects it automatically into every plugin script at serve
             time.
@@ -651,12 +651,12 @@ fetch(MY_API).then(r => r.json()).then(data => { /* ... */ });</code></pre>
 
   async intercept(query, context) {
     // context: { fetch, createCache, lang }
-    // return the query to actually search — may be the original or anything else
+    // return the query to actually search - may be the original or anything else
     return { query };
   },
 };</code></pre>
           <p>
-            Interceptors are a plugin subtype — they live in the same
+            Interceptors are a plugin subtype - they live in the same
             <code>data/plugins/</code> directory as bang commands and slots. A
             single plugin folder can export an <code>interceptor</code> alongside
             a <code>slot</code> or <code>command</code> if needed. There are no

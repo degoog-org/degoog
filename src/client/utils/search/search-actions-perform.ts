@@ -46,27 +46,9 @@ import {
 import { buildSearchBody, buildSearchUrl, imgFilterRecord } from "../url";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
 import { getBase } from "../base-url";
+import { fetchStreamingConfig } from "../streaming-config";
 
 let commandsCache: Command[] | null = null;
-let _streamingConfig: { enabled: boolean } | null = null;
-
-const _fetchStreamingConfig = async (): Promise<boolean> => {
-  if (_streamingConfig) return _streamingConfig.enabled;
-  try {
-    const res = await fetch(`${getBase()}/api/settings/streaming`);
-    if (res.ok) {
-      _streamingConfig = (await res.json()) as { enabled: boolean };
-      return _streamingConfig.enabled;
-    }
-  } catch {}
-  return false;
-};
-
-if (typeof window !== "undefined") {
-  window.addEventListener("extensions-saved", () => {
-    _streamingConfig = null;
-  });
-}
 
 if (typeof window !== "undefined") {
   window.addEventListener("extensions-saved", () => {
@@ -140,7 +122,7 @@ export async function performSearch(
     !naturalBangQuery &&
     !state.postMethodEnabled &&
     (!page || page === 1) &&
-    (await _fetchStreamingConfig())
+    (await fetchStreamingConfig())
   ) {
     abortStreamingSearch();
     return performStreamingSearch(

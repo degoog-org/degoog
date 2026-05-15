@@ -285,7 +285,7 @@ export async function initServerTab(
           data.banHours > 0
             ? _fmtDate(new Date(banned.getTime() + data.banHours * 3_600_000))
             : t("settings-page.server.honeypot-ban-permanent");
-        info.textContent = `${entry.ip} — ${t("settings-page.server.honeypot-ban-since")} ${_fmtDate(banned)} · ${t("settings-page.server.honeypot-ban-expires")} ${expiry}`;
+        info.textContent = `${entry.ip} - ${t("settings-page.server.honeypot-ban-since")} ${_fmtDate(banned)} · ${t("settings-page.server.honeypot-ban-expires")} ${expiry}`;
 
         const unbanBtn = document.createElement("button");
         unbanBtn.type = "button";

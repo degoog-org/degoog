@@ -163,7 +163,7 @@
               <strong>getSuggestions(query, context)</strong> (async): Returns a
               <code>Promise&lt;AutocompleteSuggestion[]&gt;</code>. The array should contain
               plain suggestion strings or rich suggestion objects (<code>{ text: string, rich?: RichSuggestion }</code>). Return an empty array if no suggestions
-              are available — never throw.
+              are available - never throw.
             </li>
           </ul>
           <p><strong>Optional:</strong></p>
@@ -279,7 +279,7 @@ export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggest
             format: <code>[query, [suggestion, suggestion, ...]]</code>. This
             means your browser address bar can use Degoog directly as a search
             engine with autocomplete. Custom providers do not need to do
-            anything special — the registry wraps all results automatically.
+            anything special - the registry wraps all results automatically.
           </p>
 
           <h2>Aggregation and scoring</h2>
@@ -386,9 +386,9 @@ export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggest
             cannot be uninstalled:
           </p>
           <ul>
-            <li><strong>Google</strong> — uses the Firefox suggest endpoint.</li>
+            <li><strong>Google</strong> - uses the Firefox suggest endpoint.</li>
             <li>
-              <strong>DuckDuckGo</strong> — uses the public DuckDuckGo
+              <strong>DuckDuckGo</strong> - uses the public DuckDuckGo
               autocomplete API.
             </li>
           </ul>

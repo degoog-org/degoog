@@ -20,7 +20,7 @@ afterAll(() => {
   else delete process.env.DEGOOG_PUBLIC_INSTANCE;
 });
 
-describe("honeypot traps — enabled (default)", () => {
+describe("honeypot traps - enabled (default)", () => {
   test("GET /wp-login.php returns 200 with fake WordPress HTML", async () => {
     const res = await router.request("http://localhost/wp-login.php");
     expect(res.status).toBe(200);
@@ -45,7 +45,7 @@ describe("honeypot traps — enabled (default)", () => {
   test("GET /package.json returns 200 with fake package.json", async () => {
     const res = await router.request("http://localhost/package.json");
     expect(res.status).toBe(200);
-    const body = await res.json() as { name: string };
+    const body = (await res.json()) as { name: string };
     expect(typeof body.name).toBe("string");
   });
 
@@ -66,7 +66,7 @@ describe("honeypot traps — enabled (default)", () => {
   test("GET /api/degoog-search returns 200 with Catullus JSON", async () => {
     const res = await router.request("http://localhost/api/degoog-search");
     expect(res.status).toBe(200);
-    const body = await res.json() as { results: unknown[] };
+    const body = (await res.json()) as { results: unknown[] };
     expect(Array.isArray(body.results)).toBe(true);
     expect(body.results.length).toBeGreaterThan(0);
   });
@@ -94,7 +94,7 @@ describe("honeypot traps — enabled (default)", () => {
     expect(body).toContain("/api/degoog-search");
   });
 
-  test("sitemap.xml only contains honeypot paths — no real app routes", async () => {
+  test("sitemap.xml only contains honeypot paths - no real app routes", async () => {
     const res = await router.request("http://localhost/sitemap.xml");
     const body = await res.text();
     expect(body).not.toContain("<loc>/search</loc>");
@@ -109,11 +109,10 @@ describe("honeypot traps — enabled (default)", () => {
   });
 });
 
-describe("honeypot traps — disabled", () => {
+describe("honeypot traps - disabled", () => {
   beforeAll(async () => {
-    const { setSettings, getSettings } = await import(
-      "../../src/server/utils/plugin-settings"
-    );
+    const { setSettings, getSettings } =
+      await import("../../src/server/utils/plugin-settings");
     const { syncBlocklist } = await import("../../src/server/utils/bot-trap");
     const existing = await getSettings("degoog-settings");
     await setSettings("degoog-settings", {
@@ -124,9 +123,8 @@ describe("honeypot traps — disabled", () => {
   });
 
   afterAll(async () => {
-    const { setSettings, getSettings } = await import(
-      "../../src/server/utils/plugin-settings"
-    );
+    const { setSettings, getSettings } =
+      await import("../../src/server/utils/plugin-settings");
     const { syncBlocklist } = await import("../../src/server/utils/bot-trap");
     const existing = await getSettings("degoog-settings");
     await setSettings("degoog-settings", {

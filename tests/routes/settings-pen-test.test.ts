@@ -35,7 +35,8 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
-  if (savedPublic !== undefined) process.env.DEGOOG_PUBLIC_INSTANCE = savedPublic;
+  if (savedPublic !== undefined)
+    process.env.DEGOOG_PUBLIC_INSTANCE = savedPublic;
   else delete process.env.DEGOOG_PUBLIC_INSTANCE;
   if (savedPasswords !== undefined)
     process.env.DEGOOG_SETTINGS_PASSWORDS = savedPasswords;
@@ -58,7 +59,7 @@ const apiGet = (path: string, token?: string) =>
     }),
   );
 
-describe("public instance — no password", () => {
+describe("public instance - no password", () => {
   beforeAll(() => {
     delete process.env.DEGOOG_SETTINGS_PASSWORDS;
   });
@@ -74,7 +75,7 @@ describe("public instance — no password", () => {
     expect(html).toContain("settings-page");
   });
 
-  test("GET /admin returns 404 — does not reveal admin exists", async () => {
+  test("GET /admin returns 404 - does not reveal admin exists", async () => {
     const res = await pagesRouter.request("http://localhost/admin");
     expect(res.status).toBe(404);
   });
@@ -101,7 +102,7 @@ describe("public instance — no password", () => {
   });
 });
 
-describe("public instance — password set", () => {
+describe("public instance - password set", () => {
   test("GET /settings still returns public settings HTML", async () => {
     const res = await pagesRouter.request("http://localhost/settings");
     expect(res.status).toBe(200);
@@ -129,9 +130,7 @@ describe("public instance — password set", () => {
 
   test("POST /api/settings/auth brute force triggers 429 after threshold", async () => {
     const ip = "10.3.0.99";
-    const attempts = Array.from({ length: 10 }, () =>
-      authPost("badpass", ip),
-    );
+    const attempts = Array.from({ length: 10 }, () => authPost("badpass", ip));
     const results = await Promise.all(attempts);
     for (const r of results) {
       expect([401, 429]).toContain(r.status);
@@ -144,7 +143,7 @@ describe("public instance — password set", () => {
   test("POST /api/settings/auth with correct password returns token and sets secure cookie", async () => {
     const res = await authPost(CORRECT_PASSWORD, "10.4.0.1");
     expect(res.status).toBe(200);
-    const body = await res.json() as { ok: boolean; token: string };
+    const body = (await res.json()) as { ok: boolean; token: string };
     expect(body.ok).toBe(true);
     expect(typeof body.token).toBe("string");
     expect(body.token.length).toBeGreaterThan(0);
@@ -155,14 +154,14 @@ describe("public instance — password set", () => {
 
   test("valid token grants access to protected API routes", async () => {
     const authRes = await authPost(CORRECT_PASSWORD, "10.5.0.1");
-    const { token } = await authRes.json() as { ok: boolean; token: string };
+    const { token } = (await authRes.json()) as { ok: boolean; token: string };
     const res = await apiGet("/api/settings/general", token);
     expect(res.status).toBe(200);
   });
 
   test("tampered token returns 401", async () => {
     const authRes = await authPost(CORRECT_PASSWORD, "10.6.0.1");
-    const { token } = await authRes.json() as { ok: boolean; token: string };
+    const { token } = (await authRes.json()) as { ok: boolean; token: string };
     const tampered = token.slice(0, -4) + "0000";
     const res = await apiGet("/api/settings/general", tampered);
     expect(res.status).toBe(401);
@@ -176,21 +175,21 @@ describe("public instance — password set", () => {
   test("GET /api/settings/auth without token reports valid: false", async () => {
     const res = await authRouter.request("http://localhost/api/settings/auth");
     expect(res.status).toBe(200);
-    const body = await res.json() as { required: boolean; valid: boolean };
+    const body = (await res.json()) as { required: boolean; valid: boolean };
     expect(body.required).toBe(true);
     expect(body.valid).toBe(false);
   });
 
   test("GET /api/settings/auth with valid token reports valid: true", async () => {
     const authRes = await authPost(CORRECT_PASSWORD, "10.7.0.1");
-    const { token } = await authRes.json() as { ok: boolean; token: string };
+    const { token } = (await authRes.json()) as { ok: boolean; token: string };
     const res = await authRouter.request(
       new Request("http://localhost/api/settings/auth", {
         headers: { "x-settings-token": token },
       }),
     );
     expect(res.status).toBe(200);
-    const body = await res.json() as { required: boolean; valid: boolean };
+    const body = (await res.json()) as { required: boolean; valid: boolean };
     expect(body.required).toBe(true);
     expect(body.valid).toBe(true);
   });
