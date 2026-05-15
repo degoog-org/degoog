@@ -48,6 +48,13 @@
       "desc": "Aggiungi degoog alla schermata home. Se il browser non ha mostrato l’invito all’installazione, usa questo pulsante per riprovare. Questo non funzionerà a meno che tu non stia servendo il tuo sito via https e il tuo browser supporta PWA.",
       "prompt-button": "Mostra invito all’installazione"
     },
+    "update-check": {
+      "heading": "?",
+      "desc": "?",
+      "check-now-button": "?",
+      "open-link-button": "?",
+      "last-checked": "?"
+    },
     "server": {
       "cache-heading": "Cache",
       "cache-desc": "Cancella i risultati di ricerca memorizzati.",
