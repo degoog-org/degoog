@@ -49,6 +49,14 @@
       "desc": "Add degoog to your home screen. If your browser did not show the install prompt, use this to try again. This won't work unless you are serving your site via https and your browser supports PWA.",
       "prompt-button": "Show install prompt"
     },
+    "update-check": {
+      "heading": "Version",
+      "new-desc": "A newer version is available!",
+      "desc": " is currently installed. The newest version available is ",
+      "check-now-button": "Check Now",
+      "open-link-button": "See release",
+      "last-checked": "Last checked"
+    },
     "server": {
       "cache-heading": "Cache",
       "cache-desc": "Clear stored search results.",

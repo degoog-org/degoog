@@ -48,6 +48,14 @@
       "desc": "Ajoutez degoog à l'écran d'accueil. Si votre navigateur n'a pas affiché l'invite d'installation, utilisez ce bouton pour réessayer. Cela ne fonctionnera pas sauf si vous servez votre site via https et que votre navigateur prend en charge les PWA.",
       "prompt-button": "Afficher l'invite d'installation"
     },
+    "update-check": {
+      "heading": "Version",
+      "desc": "Une version plus récente est disponible !",
+      "new-desc": "est actuellement installée. La version la plus récente disponible est",
+      "check-now-button": "Vérifier maintenant",
+      "open-link-button": "Voir le communiqué",
+      "last-checked": "Dernière vérification"
+    },
     "server": {
       "cache-heading": "Cache",
       "cache-desc": "Effacer les résultats de recherche stockés.",
