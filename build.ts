@@ -14,7 +14,7 @@ await esbuild.build({
   outdir: "src/public",
   format: "esm",
   target: ["es2022"],
-  minify: false,
+  minify: true,
   sourcemap: false,
   define: {
     "process.env.LOG_LEVEL": JSON.stringify(process.env.LOG_LEVEL ?? "info"),

@@ -77,11 +77,20 @@ export function getUovadipasquaAssetPath(
 
 const _normalize = (query: string): string => query.trim().toLowerCase();
 
+const _styleUrl = (id: string): string | undefined => {
+  if (!_hasStyle.get(id)) return undefined;
+  return `${getBasePath()}/uovadipasqua/${id}/style.css`;
+};
+
 const _clientStorageBindingFor = (
   item: Uovadipasqua,
 ): UovadipasquaClientStorageBinding | undefined => {
   if (!item.id || !item.clientStorage) return undefined;
-  return { extensionId: item.id };
+  return {
+    extensionId: item.id,
+    styleUrl: _styleUrl(item.id),
+    localStorageKey: item.clientStorage.localStorageKey,
+  };
 };
 
 export const matchUovadipasqua = (query: string): UovadipasquaMatch[] => {
@@ -113,6 +122,7 @@ export const matchUovadipasqua = (query: string): UovadipasquaMatch[] => {
     matches.push({
       id: item.id,
       scriptUrl: `${basePath}/uovadipasqua/${item.id}/script.js`,
+      styleUrl: _styleUrl(item.id),
       waitForResults: !!item.waitForResults,
       repeatOnQuery: !!item.repeatOnQuery,
     });

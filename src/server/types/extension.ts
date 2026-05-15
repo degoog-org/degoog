@@ -330,6 +330,8 @@ export type UovadipasquaTrigger = UovadipasquaSearchQueryTrigger;
 
 export interface UovadipasquaClientStorageBinding {
   extensionId: string;
+  styleUrl?: string;
+  localStorageKey?: string;
 }
 
 export interface Uovadipasqua {
@@ -344,6 +346,7 @@ export interface Uovadipasqua {
 export interface UovadipasquaMatch {
   id: string;
   scriptUrl: string;
+  styleUrl?: string;
   waitForResults: boolean;
   repeatOnQuery?: boolean;
 }

@@ -1,17 +1,7 @@
 const KEY = "degoog:uovadipasqua:chucknorris";
 const VAL = "1";
 
-const injectCss = () => {
-  const href = new URL("style.css", import.meta.url).href;
-  if (document.querySelector(`link[href="${href}"]`)) return;
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = href;
-  document.head.appendChild(link);
-};
-
 const applyEffect = async (on) => {
-  if (on) injectCss();
   document
     .querySelectorAll(".logo-o1")
     .forEach((el) => el.classList.toggle("chuck-norris", on));

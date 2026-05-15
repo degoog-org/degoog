@@ -37,7 +37,7 @@ app.use("*", async (c, next) => {
 
 app.use(`${BASE_PATH}/public/*.js`, async (c, next) => {
   await next();
-  c.res.headers.set("Cache-Control", "no-cache");
+  c.res.headers.set("Cache-Control", "public, max-age=31536000, immutable");
 });
 app.use(
   `${BASE_PATH}/public/*`,

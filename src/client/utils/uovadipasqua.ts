@@ -5,8 +5,30 @@ import { getBase } from "./base-url";
 interface UovadipasquaMatchPayload {
   id: string;
   scriptUrl: string;
+  styleUrl?: string;
   waitForResults: boolean;
   repeatOnQuery?: boolean;
+}
+
+interface UovadipasquaStorageBindingPayload {
+  extensionId: string;
+  styleUrl?: string;
+  localStorageKey?: string;
+}
+
+const _injectedStyleUrls = new Set<string>();
+
+export function injectUovadipasquaStyle(styleUrl: string | undefined): void {
+  if (!styleUrl || _injectedStyleUrls.has(styleUrl)) return;
+  if (document.querySelector(`link[href="${styleUrl}"]`)) {
+    _injectedStyleUrls.add(styleUrl);
+    return;
+  }
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = styleUrl;
+  document.head.appendChild(link);
+  _injectedStyleUrls.add(styleUrl);
 }
 
 type UovadRunContext = {
@@ -32,10 +54,13 @@ async function _ensureClientStorageBindings(): Promise<
       return _clientStorageBindings;
     }
     const data = (await res.json()) as {
-      bindings?: UovadipasquaClientStorageBinding[];
+      bindings?: UovadipasquaStorageBindingPayload[];
     };
     _clientStorageBindings = Array.isArray(data.bindings)
-      ? data.bindings.filter((b) => typeof b.extensionId === "string")
+      ? data.bindings.filter(
+          (b): b is UovadipasquaClientStorageBinding =>
+            typeof b.extensionId === "string",
+        )
       : [];
   } catch {
     _clientStorageBindings = [];
@@ -46,7 +71,14 @@ async function _ensureClientStorageBindings(): Promise<
 export async function applyUovaStorage(): Promise<void> {
   const bindings = await _ensureClientStorageBindings();
   await Promise.all(
-    bindings.map(async ({ extensionId }) => {
+    bindings.map(async ({ extensionId, styleUrl, localStorageKey }) => {
+      if (
+        styleUrl &&
+        localStorageKey &&
+        localStorage.getItem(localStorageKey)
+      ) {
+        injectUovadipasquaStyle(styleUrl);
+      }
       const url = `${getBase()}/uovadipasqua/${extensionId}/script.js`;
       try {
         const mod = (await import(url)) as {
@@ -99,6 +131,7 @@ export async function triggerUovadipasqua(query: string): Promise<void> {
       }
       void (async () => {
         if (match.waitForResults) await _waitForResults();
+        injectUovadipasquaStyle(match.styleUrl);
         try {
           const mod = (await import(match.scriptUrl)) as {
             run?: (ctx: UovadRunContext) => void | Promise<void>;
