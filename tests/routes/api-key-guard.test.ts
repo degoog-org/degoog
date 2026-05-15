@@ -155,11 +155,8 @@ describe("guardApiKey — search endpoints", () => {
 });
 
 describe("guardApiKey — bearer token edge cases", () => {
-  beforeAll(async () => {
+  const hit = async (authHeader?: string) => {
     await _enable("apiKeySuggestEnabled");
-  });
-
-  const hit = (authHeader?: string) => {
     const headers: Record<string, string> = authHeader !== undefined ? { Authorization: authHeader } : {};
     return _get(suggestRouter, "/api/suggest?q=x", headers);
   };
