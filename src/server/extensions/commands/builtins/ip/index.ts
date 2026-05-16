@@ -14,7 +14,7 @@ export const ipCommand: BangCommand = {
   },
   trigger: "ip",
   naturalLanguagePhrases: ["what's my ip", "my ip"],
-  externalNetworkAccess: { client: true, server: true },
+  isClientExposed: true,
 
   t: TranslateFunction,
 

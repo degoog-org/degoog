@@ -238,6 +238,65 @@
 
 export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggestion };
 </code></pre>
+          <p>
+            Plain string suggestions are fetched on the server via
+            <code>context.fetch</code>. When you include a
+            <code>rich.thumbnail</code> URL, the autocomplete dropdown renders an
+            <code>&lt;img&gt;</code> in the browser and the user's browser contacts
+            that host directly.
+          </p>
+
+          <h2 id="declaring-client-exposure">Declaring client exposure</h2>
+          <p>
+            The settings page shows a network indicator on plugin cards when an
+            extension declares <code>isClientExposed</code>. Autocomplete providers
+            do not use that field; instead, you control exposure by what you return
+            from <code>getSuggestions</code>.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>What you return</th>
+                <th>Server requests</th>
+                <th>Browser requests</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Plain strings only</td>
+                <td>Your provider uses <code>context.fetch</code> to call upstream APIs.</td>
+                <td>None from the provider itself.</td>
+              </tr>
+              <tr>
+                <td>Rich suggestions with <code>thumbnail</code></td>
+                <td>Same as above for suggestion text and metadata.</td>
+                <td>The browser loads each <code>thumbnail</code> URL shown in the dropdown.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Only include <code>rich.thumbnail</code> when you are comfortable with
+            the user's browser contacting that host. Omit thumbnails, or point them
+            at URLs you control, if you want to avoid direct browser exposure.
+          </p>
+          <pre><code>async getSuggestions(query, context) {
+  const doFetch = context?.fetch ?? fetch;
+  const res = await doFetch(`https://example.com/suggest?q=${encodeURIComponent(query)}`);
+  const items = await res.json();
+  return items.map((item) =&gt; ({
+    text: item.title,
+    rich: {
+      description: item.subtitle,
+      thumbnail: item.imageUrl, // browser will fetch this URL
+    },
+  }));
+}</code></pre>
+          <pre><code>async getSuggestions(query, context) {
+  const doFetch = context?.fetch ?? fetch;
+  const res = await doFetch(`https://example.com/suggest?q=${encodeURIComponent(query)}`);
+  const items = await res.json();
+  return items.map((item) =&gt; item.title); // no rich thumbnails, no browser exposure
+}</code></pre>
 
           <h2>Minimal example</h2>
           <pre><code>export default class MyAutocompleteProvider {

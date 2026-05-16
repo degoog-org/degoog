@@ -107,7 +107,7 @@ export async function getSearchBarActionExtensionMeta(): Promise<
       settingsSchema: schema,
       settings,
       source: "plugin",
-      externalNetworkAccess: action.externalNetworkAccess,
+      isClientExposed: action.isClientExposed,
     });
   }
   return out;

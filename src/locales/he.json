@@ -201,7 +201,12 @@
       "group-builtin-transports": "דרכי העברה מובנות",
       "group-themes": "ערכות נושא",
       "apply-failed": "נכשל",
-      "save-defaults": "שמור כברירות מחדל עבור המופע"
+      "save-defaults": "שמור כברירות מחדל עבור המופע",
+      "exposure-exposed": "הדפדפן עשוי לפנות לשירותים חיצוניים ישירות",
+      "exposure-safe": "בקשות הדפדפן עוברות דרך השרת",
+      "exposure-unknown": "התנהגות הרשת לא הוצהרה",
+      "status-configured": "מוגדר",
+      "status-needs-config": "נדרשת הגדרה"
     },
     "errors": {
       "load-extensions": "טעינת התוספים נכשלה.",

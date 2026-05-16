@@ -201,7 +201,12 @@
       "group-builtin-transports": "Trasporti integrati",
       "group-themes": "Temi",
       "apply-failed": "Operazione non riuscita",
-      "save-defaults": "Salva come predefinito dell'istanza"
+      "save-defaults": "Salva come predefinito dell'istanza",
+      "exposure-exposed": "Il browser può contattare servizi esterni direttamente",
+      "exposure-safe": "Le richieste del browser passano per il server",
+      "exposure-unknown": "Comportamento di rete non dichiarato",
+      "status-configured": "Configurato",
+      "status-needs-config": "Configurazione necessaria"
     },
     "errors": {
       "load-extensions": "Impossibile caricare le estensioni.",

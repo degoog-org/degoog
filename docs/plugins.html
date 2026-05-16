@@ -742,6 +742,60 @@ export default {
             <a href="styling.html">Styling</a> page.
           </p>
 
+          <h2 id="declaring-client-exposure">Declaring client exposure</h2>
+          <p>
+            The settings page shows a small icon on each extension card indicating
+            whether the extension causes the user's browser to contact external
+            services directly. Set <code>isClientExposed</code> on your exported
+            object so users know what to expect:
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Value</th>
+                <th>Meaning</th>
+                <th>Badge</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>true</code></td>
+                <td>The browser makes direct requests to external services (images, APIs, scripts rendered into HTML).</td>
+                <td><i class="fa-solid fa-triangle-exclamation" style="color: var(--warning)"></i> Orange triangle</td>
+              </tr>
+              <tr>
+                <td><code>false</code></td>
+                <td>All network access goes through the server. Nothing contacts the outside from the browser.</td>
+                <td><i class="fa-solid fa-circle-check" style="color: var(--success)"></i> Green checkmark</td>
+              </tr>
+              <tr>
+                <td><em>not set</em></td>
+                <td>The extension does not declare its network behaviour. Users see an ambiguous indicator.</td>
+                <td><i class="fa-solid fa-circle-info" style="color: var(--warning); opacity: 0.6"></i> Grey info</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Use <code>context.signProxyUrl(url)</code> to route external images
+            through the server proxy. Doing so means you can declare
+            <code>isClientExposed: false</code>.
+          </p>
+          <pre><code>export const slot = {
+  name: "My Slot",
+  isClientExposed: false, // all images are proxied via signProxyUrl
+  async execute(query, context) {
+    const imgUrl = context.signProxyUrl("https://example.com/cover.jpg");
+    return { html: `&lt;img src="${imgUrl}"&gt;` };
+  },
+};</code></pre>
+          <pre><code>export const slot = {
+  name: "My Slot",
+  isClientExposed: true, // renders raw external URLs the browser will fetch
+  async execute(query, context) {
+    return { html: `&lt;img src="https://example.com/cover.jpg"&gt;` };
+  },
+};</code></pre>
+
           <h2>Debugging plugins</h2>
           <p>
             If you need to troubleshoot, set <code>LOG_LEVEL=debug</code> to

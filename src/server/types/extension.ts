@@ -42,10 +42,6 @@ export enum ExtensionStoreType {
   Autocomplete = "autocomplete",
 }
 
-export interface ExternalNetworkAccess {
-  client?: boolean;
-  server?: boolean;
-}
 
 export interface SettingField {
   key: string;
@@ -81,7 +77,7 @@ export interface ExtensionMeta {
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
   defaultFeedUrls?: string[];
-  externalNetworkAccess?: ExternalNetworkAccess;
+  isClientExposed?: boolean;
   requiresNewerVersion?: boolean;
 }
 
@@ -169,7 +165,7 @@ export interface SlotPlugin {
   slotPositions?: SlotPanelPosition[];
   settingsId?: string;
   settingsFallbackIds?: string[];
-  externalNetworkAccess?: ExternalNetworkAccess;
+  isClientExposed?: boolean;
   priority?: number;
   trigger: (query: string) => boolean | Promise<boolean>;
   waitForResults?: boolean;
@@ -203,7 +199,7 @@ export interface BangCommand {
   trigger: string;
   aliases?: string[];
   naturalLanguagePhrases?: string[];
-  externalNetworkAccess?: ExternalNetworkAccess;
+  isClientExposed?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
   isConfigured?(): Promise<boolean>;
@@ -217,7 +213,7 @@ export interface SearchResultTab {
   name: string;
   icon?: string;
   engineType?: string;
-  externalNetworkAccess?: ExternalNetworkAccess;
+  isClientExposed?: boolean;
   settingsId?: string;
   settingsFallbackIds?: string[];
   executeSearch?(
@@ -240,7 +236,7 @@ export interface RequestMiddleware {
   name: string;
   settingsId?: string;
   settingsFallbackIds?: string[];
-  externalNetworkAccess?: ExternalNetworkAccess;
+  isClientExposed?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
   init?(context: PluginContext): void | Promise<void>;
@@ -260,7 +256,7 @@ export interface SearchBarAction {
   type: SearchBarActionType;
   url?: string;
   trigger?: string;
-  externalNetworkAccess?: ExternalNetworkAccess;
+  isClientExposed?: boolean;
   t?: Translate;
 }
 
@@ -320,7 +316,7 @@ export interface QueryInterceptor {
   name: string;
   description: string;
   settingsId?: string;
-  externalNetworkAccess?: ExternalNetworkAccess;
+  isClientExposed?: boolean;
   settingsSchema?: SettingField[];
   priority?: number;
   configure?(settings: Record<string, SettingValue>): void;

@@ -329,6 +329,22 @@
   // transform and return a Response
 }</code></pre>
 
+          <h2>Client exposure</h2>
+          <p>
+            Transports run entirely on the server. They never render HTML or URLs
+            into the page, and they do not appear in the plugin network indicator
+            in Settings. Every outbound call should go through
+            <code>context.fetch</code> in your <code>fetch(url, options, context)</code>
+            implementation so proxy and transport settings apply.
+          </p>
+          <p>
+            Choosing a custom transport for an engine or autocomplete provider only
+            changes how the <strong>server</strong> reaches upstream services. It does
+            not by itself add browser-side requests. For plugin slots and commands
+            that render external assets, see
+            <a href="plugins.html#declaring-client-exposure">Declaring client exposure</a>.
+          </p>
+
           <h2>Setup</h2>
           <p>
             Create your <code>data/transports/</code> directory or set your

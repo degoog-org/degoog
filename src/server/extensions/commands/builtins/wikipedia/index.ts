@@ -92,7 +92,7 @@ const wikipediaSlot: SlotPlugin = {
     return this.t!("wikipedia.description");
   },
   position: SlotPanelPosition.KnowledgePanel,
-  externalNetworkAccess: { server: true },
+  isClientExposed: false,
 
   t: TranslateFunction,
 

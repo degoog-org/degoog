@@ -112,7 +112,7 @@ async function getSlotExtensionMeta(
       settingsSchema: fullSchema,
       settings,
       source: getSlotSource(slot.id),
-      externalNetworkAccess: slot.externalNetworkAccess,
+      isClientExposed: slot.isClientExposed,
     });
   }
   return out;
