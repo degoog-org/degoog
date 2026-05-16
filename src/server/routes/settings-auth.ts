@@ -1,10 +1,9 @@
 import { Hono, type Context } from "hono";
 import { getMiddleware } from "../extensions/middleware/registry";
 import { asString, getSettings } from "../utils/plugin-settings";
-import { isPublicInstance } from "../utils/public-instance";
+import { getAdminPath, isPublicInstance } from "../utils/public-instance";
 import { logger } from "../utils/logger";
 import { getBasePath } from "../utils/base-url";
-import { getAdminPath } from "../utils/public-instance";
 import { getClientIp } from "../utils/request";
 import {
   TOKEN_TTL_MS,
@@ -190,7 +189,8 @@ router.get("/api/settings/auth/callback", async (c) => {
 });
 
 router.post("/api/settings/auth", async (c) => {
-  if (isPublicInstance() && !isPasswordRequired()) return c.json({ error: "You shall not pass!" }, 401);
+  if (isPublicInstance() && !isPasswordRequired())
+    return c.json({ error: "You shall not pass!" }, 401);
   const ip = getClientIp(c) ?? "unknown";
   const rate = checkAuthRate(ip);
   if (!rate.allowed) {
