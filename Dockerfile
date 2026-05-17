@@ -12,7 +12,11 @@ COPY . .
 RUN bun run build
 
 FROM base AS release
-RUN apk add --no-cache git ca-certificates su-exec curl
+COPY scripts/install-curl-impersonate.sh /app/
+RUN apk add --no-cache git ca-certificates su-exec curl bash \
+  && chmod +x /app/install-curl-impersonate.sh \
+  && /app/install-curl-impersonate.sh \
+  && rm /app/install-curl-impersonate.sh
 
 COPY --from=install /app/node_modules ./node_modules
 COPY --from=build /app/src ./src

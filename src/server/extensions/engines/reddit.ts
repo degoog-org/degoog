@@ -29,7 +29,7 @@ export class RedditEngine implements SearchEngine {
     },
   ];
 
-  configure(settings: Record<string, string | string[]>): void {
+  configure(settings: Record<string, string | string[] | boolean>): void {
     if (typeof settings.includeNsfw === "string") {
       this.includeNsfw = settings.includeNsfw;
     }

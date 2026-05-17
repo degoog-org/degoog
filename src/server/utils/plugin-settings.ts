@@ -5,12 +5,16 @@ import { pluginSettingsFile } from "./paths";
 const SETTINGS_PATH = pluginSettingsFile();
 
 type PluginSettingsStore = Record<string, Record<string, SettingValue>>;
-export type SettingValue = string | string[];
+export type SettingValue = string | string[] | boolean;
 
 export const asString = (v: SettingValue | undefined): string => {
   if (v === undefined || v === null) return "";
+  if (typeof v === "boolean") return v ? "true" : "false";
   return typeof v === "string" ? v : (v[0] ?? "");
 };
+
+export const asBoolean = (v: SettingValue | undefined): boolean =>
+  v === true || v === "true";
 
 export const settingsAsStrings = (
   settings: Record<string, SettingValue>,
@@ -23,17 +27,22 @@ export const settingsAsStrings = (
 };
 
 let cache: PluginSettingsStore | null = null;
+let loadFailed = false;
 
 const load = async (): Promise<PluginSettingsStore> => {
   if (cache) return cache;
   try {
     const raw = await readFile(SETTINGS_PATH, "utf-8");
     cache = JSON.parse(raw) as PluginSettingsStore;
-  } catch {
+    loadFailed = false;
+  } catch (e: unknown) {
     cache = {};
+    loadFailed = (e as NodeJS.ErrnoException).code !== "ENOENT";
   }
   return cache;
 };
+
+export const didSettingsLoadFail = (): boolean => loadFailed;
 
 async function persist(store: PluginSettingsStore): Promise<void> {
   await mkdir(dirname(SETTINGS_PATH), { recursive: true });
@@ -62,7 +71,7 @@ export const dumbFallbackBecauseIDontThink = async (
 
 export const isDisabled = async (id: string): Promise<boolean> => {
   const settings = await getSettings(id);
-  return settings["disabled"] === "true";
+  return asBoolean(settings["disabled"]);
 };
 
 export const isDisabledWithFallback = async (
@@ -70,7 +79,7 @@ export const isDisabledWithFallback = async (
   fallbacks: string[],
 ): Promise<boolean> => {
   const settings = await dumbFallbackBecauseIDontThink(preferredId, fallbacks);
-  return settings["disabled"] === "true";
+  return asBoolean(settings["disabled"]);
 };
 
 export const mergeDefaults = (
@@ -96,10 +105,35 @@ export async function setSettings(
   cache = store;
 
   await persist(store);
+  loadFailed = false;
 }
 
 export const getAllSettings = async (): Promise<PluginSettingsStore> => {
   return load();
+};
+
+const TYPE_OVERRIDE_KEY = "searchTypeOverride";
+
+export const getTypeOverride = async (id: string): Promise<string | null> => {
+  const settings = await getSettings(id);
+  const v = settings[TYPE_OVERRIDE_KEY];
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+};
+
+export const setTypeOverride = async (
+  id: string,
+  type: string,
+): Promise<void> => {
+  await setSettings(id, { [TYPE_OVERRIDE_KEY]: type.trim() });
+};
+
+export const clearTypeOverride = async (id: string): Promise<void> => {
+  const store = await load();
+  if (store[id]) {
+    delete store[id][TYPE_OVERRIDE_KEY];
+    cache = store;
+    await persist(store);
+  }
 };
 
 export async function removeSettings(id: string): Promise<void> {

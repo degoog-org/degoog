@@ -16,9 +16,9 @@ const _renderTransportCard = (transport: ExtensionMeta): string => {
   const status = transport.configurable ? getConfigStatus(transport) : null;
   const badge =
     status === "configured"
-      ? '<span class="ext-configured-badge"></span>'
+      ? '<span class="ext-configured-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-configured")) + '"></span>'
       : status === "needs-config"
-        ? '<span class="ext-needs-config-badge"></span>'
+        ? '<span class="ext-needs-config-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-needs-config")) + '"></span>'
         : "";
   const configureBtn = transport.configurable
     ? `<button class="ext-card-configure btn btn--secondary degoog-btn degoog-btn--secondary" data-id="${escapeHtml(transport.id)}" type="button">${escapeHtml(t("settings-page.extensions.configure"))}</button>`
@@ -56,6 +56,7 @@ export function initTransportsTab(allExtensions: AllExtensions): void {
   const BUILTIN_IDS = new Set([
     "transport-fetch",
     "transport-curl",
+    "transport-curl-impersonate",
     "transport-curl-fallback",
   ]);
   const custom = transports.filter(

@@ -6,8 +6,8 @@ import {
   type SearchResponse,
 } from "../../types";
 import { hideAcDropdown } from "../../utils/autocomplete";
-import { getBase } from "../../utils/base-url";
 import { setActiveTab } from "../../utils/navigation";
+import { fetchStreamingConfig } from "../../utils/streaming-config";
 import { buildPaginationHtml } from "../../utils/pagination";
 import { fetchSlotPanels } from "../../utils/search-utils";
 import {
@@ -21,26 +21,7 @@ import {
   clearSlotPanels,
   renderSidebar,
 } from "../renderer/render";
-
-let _streamingConfig: { enabled: boolean } | null = null;
-
-const _fetchStreamingConfig = async (): Promise<boolean> => {
-  if (_streamingConfig) return _streamingConfig.enabled;
-  try {
-    const res = await fetch(`${getBase()}/api/settings/streaming`);
-    if (res.ok) {
-      _streamingConfig = (await res.json()) as { enabled: boolean };
-      return _streamingConfig.enabled;
-    }
-  } catch {}
-  return false;
-};
-
-if (typeof window !== "undefined") {
-  window.addEventListener("extensions-saved", () => {
-    _streamingConfig = null;
-  });
-}
+import { getBase } from "../../utils/base-url";
 
 export async function performTabSearch(
   query: string,
@@ -55,7 +36,7 @@ export async function performTabSearch(
   if (
     tabId.startsWith("engine:") &&
     page === 1 &&
-    (await _fetchStreamingConfig())
+    (await fetchStreamingConfig())
   ) {
     const engineType = tabId.replace("engine:", "");
     abortStreamingSearch();

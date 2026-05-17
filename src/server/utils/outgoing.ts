@@ -21,7 +21,7 @@ import type {
 } from "../types";
 import { fetchViaHttpProxy } from "./http-proxy-fetch";
 import { logger } from "./logger";
-import { getSettings } from "./plugin-settings";
+import { asBoolean, getSettings } from "./plugin-settings";
 import { fetchViaSocks, isSocksProxy } from "./socks-fetch";
 
 export type { TransportFetchOptions as OutgoingFetchOptions };
@@ -143,7 +143,7 @@ async function buildTransportContext(
   const proxyOverrideEnabled = opts?.proxyOverrideEnabled === true;
   const proxyOverrideRaw = opts?.proxyOverrideUrls;
 
-  const globalEnabled = settings.proxyEnabled === "true";
+  const globalEnabled = asBoolean(settings.proxyEnabled);
   const globalProxyUrlsRaw = settings.proxyUrls;
   const globalUrls = parseProxyUrls(
     typeof globalProxyUrlsRaw === "string" ? globalProxyUrlsRaw : "",

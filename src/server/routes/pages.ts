@@ -7,7 +7,7 @@ import { getAllCommandTranslators } from "../extensions/commands/registry";
 import {
   getAllEngineTranslators,
   getDefaultEngineConfig,
-  getEngineRegistry,
+  getEffectiveEngineRegistry,
 } from "../extensions/engines/registry";
 import { getAllMiddlewareTranslators } from "../extensions/middleware/registry";
 import { getAllSearchBarTranslators } from "../extensions/search-bar/registry";
@@ -27,8 +27,8 @@ import {
   getPluginScriptFolders,
   getPluginSettingsIds,
 } from "../utils/plugin-assets";
-import { asString, getSettings, isDisabled } from "../utils/plugin-settings";
-import { isPublicInstance } from "../utils/public-instance";
+import { asBoolean, asString, getSettings, isDisabled } from "../utils/plugin-settings";
+import { getAdminPath, isPublicInstance } from "../utils/public-instance";
 import {
   collectTranslationsForLocale,
   createTranslatorFromPath,
@@ -41,8 +41,13 @@ import {
   shouldServeSettingsGate,
   gandalf,
 } from "./settings-auth";
+import { mintToken, ping, verifyToken } from "../utils/link-token";
+import { cssCheckOn } from "../utils/bot-trap";
+import { logger } from "../utils/logger";
+import { getClientIp } from "../utils/request";
 import { generateSearchNonce } from "../utils/search-nonce";
 import { getBasePath, getBaseUrl } from "../utils/base-url";
+import { FAKE_RESULTS } from "../../shared/fake-results";
 
 const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
 const CORE_LOCALES_ROOT = "src";
@@ -50,6 +55,7 @@ const BASE_URL = getBaseUrl();
 const BASE_PATH = getBasePath();
 const BASE_PREFIX =
   BASE_PATH || (BASE_URL && !/^https?:\/\//i.test(BASE_URL) ? BASE_URL : "");
+const ADMIN_PATH = getAdminPath();
 
 interface DefaultThemeManifest {
   templates?: Record<string, string>;
@@ -219,8 +225,8 @@ async function applyPagePlaceholders(
 
   const pageSettings = await getSettings(_DEGOOG_SETTINGS_ID);
   const anyApiKeyEnabled =
-    asString(pageSettings.apiKeySearchEnabled) === "true" ||
-    asString(pageSettings.apiKeySuggestEnabled) === "true";
+    asBoolean(pageSettings.apiKeySearchEnabled) ||
+    asBoolean(pageSettings.apiKeySuggestEnabled);
   if (anyApiKeyEnabled) {
     const auth = generateSearchNonce();
     const nonceScript = `<script>window.__DEGOOG_SEARCH_AUTH__=${JSON.stringify(auth)}</script>`;
@@ -241,6 +247,15 @@ async function applyPagePlaceholders(
     "</head>",
     `<link rel="stylesheet" href="/public/icons/fontawesome/css/all.min.css?v=${pkg.version}">\n  </head>`,
   );
+
+  if (await cssCheckOn()) {
+    try {
+      const tok = mintToken();
+      result = result.replace("</head>", `<link rel="stylesheet" href="/ping/${tok}">\n  </head>`);
+    } catch (e) {
+      logger.error("link-token", `failed to mint token: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
 
   if (BASE_PREFIX) {
     const baseScript = `<script>window.__DEGOOG_BASE_URL__=${JSON.stringify(BASE_PREFIX)}</script>`;
@@ -313,6 +328,13 @@ async function buildPage(filename: string, locale?: string): Promise<string> {
   return applyPagePlaceholders(html, t);
 }
 
+router.get("/ping/:token", async (c) => {
+  const token = c.req.param("token");
+  const ip = getClientIp(c);
+  if (ip && verifyToken(token)) ping(ip);
+  return new Response("", { status: 200, headers: { "Content-Type": "text/css", "Cache-Control": "no-store" } });
+});
+
 router.get("/", async (c) => {
   const q = c.req.query("q");
   if (q?.trim()) {
@@ -342,9 +364,9 @@ const _buildResultActionsScript = async (c: Context): Promise<string> => {
   let scoreUi = false;
   if (authenticated) {
     const settings = await getSettings("degoog-settings");
-    blockUi = asString(settings.domainBlockUiEnabled) === "true";
-    replaceUi = asString(settings.domainReplaceUiEnabled) === "true";
-    scoreUi = asString(settings.domainScoreUiEnabled) === "true";
+    blockUi = asBoolean(settings.domainBlockUiEnabled);
+    replaceUi = asBoolean(settings.domainReplaceUiEnabled);
+    scoreUi = asBoolean(settings.domainScoreUiEnabled);
   }
   const payload = JSON.stringify({
     authenticated,
@@ -387,6 +409,8 @@ router.get("/settings", async (c) => {
   const locale = getLocale(c);
   if (isPublicInstance())
     return c.html(await buildPage("settings-public.html", locale));
+  if (ADMIN_PATH !== "settings")
+    return c.redirect(`${BASE_URL || BASE_PATH}/${ADMIN_PATH}`, 302);
   if (await shouldServeSettingsGate(c)) {
     return c.html(await buildPage("settings-gate.html", locale));
   }
@@ -397,6 +421,12 @@ router.get("/settings/:tab", async (c) => {
   if (isPublicInstance())
     return c.redirect(`${BASE_URL || BASE_PATH}/settings`, 302);
   const tab = c.req.param("tab");
+  if (ADMIN_PATH !== "settings") {
+    const dest = (SETTINGS_TABS as readonly string[]).includes(tab)
+      ? `${BASE_URL || BASE_PATH}/${ADMIN_PATH}/${tab}`
+      : `${BASE_URL || BASE_PATH}/${ADMIN_PATH}`;
+    return c.redirect(dest, 302);
+  }
   if (!(SETTINGS_TABS as readonly string[]).includes(tab)) {
     return c.redirect(`${BASE_URL || BASE_PATH}/settings`, 302);
   }
@@ -407,9 +437,43 @@ router.get("/settings/:tab", async (c) => {
   return c.html(await buildPage("settings.html", locale));
 });
 
-router.get("/api/engines", (c) => {
+const _adminPaths = Array.from(
+  new Set(["admin", ADMIN_PATH].filter((p) => p !== "settings")),
+);
+
+for (const ap of _adminPaths) {
+  router.get(`/${ap}/`, (c) =>
+    c.redirect(`${BASE_URL || BASE_PATH}/${ap}`, 301),
+  );
+
+  router.get(`/${ap}`, async (c) => {
+    if (isPublicInstance() && !isPasswordRequired())
+      return c.text("Not Found", 404);
+    const locale = getLocale(c);
+    if (await shouldServeSettingsGate(c)) {
+      return c.html(await buildPage("settings-gate.html", locale));
+    }
+    return c.html(await buildPage("settings.html", locale));
+  });
+
+  router.get(`/${ap}/:tab`, async (c) => {
+    if (isPublicInstance() && !isPasswordRequired())
+      return c.text("Not Found", 404);
+    const tab = c.req.param("tab");
+    if (!(SETTINGS_TABS as readonly string[]).includes(tab)) {
+      return c.redirect(`${BASE_URL || BASE_PATH}/${ap}`, 302);
+    }
+    const locale = getLocale(c);
+    if (await shouldServeSettingsGate(c)) {
+      return c.html(await buildPage("settings-gate.html", locale));
+    }
+    return c.html(await buildPage("settings.html", locale));
+  });
+}
+
+router.get("/api/engines", async (c) => {
   return c.json({
-    engines: getEngineRegistry(),
+    engines: await getEffectiveEngineRegistry(),
     defaults: getDefaultEngineConfig(),
   });
 });
@@ -443,5 +507,44 @@ router.post("/api/cache/clear", async (c) => {
   cache.clear();
   return c.json({ ok: true });
 });
+
+const renderTakeoverResults = (): string =>
+  FAKE_RESULTS.map((r) => `
+    <div class="result-item degoog-result">
+      <div class="result-item-inner degoog-result--inner">
+        <div class="result-body degoog-result--body">
+          <div class="result-url-row degoog-result--url-row">
+            <cite class="result-cite degoog-result--cite">${r.url}</cite>
+          </div>
+          <a class="result-title degoog-result--title" href="${r.url}" rel="noopener noreferrer" target="_blank">${r.title}</a>
+          <p class="result-snippet degoog-result--snippet">${r.snippet}</p>
+        </div>
+      </div>
+    </div>`).join("\n");
+
+router.get("/robots-takeover", async (c) => {
+  const locale = getLocale(c);
+  const override = await getThemeHtml("robots-takeover");
+  const raw = override ?? await Bun.file(`${DEFAULT_THEME_DIR}/easter-eggs/robots-takeover.html`).text();
+  const withResults = raw.replace("__ROBOTS_RESULTS__", renderTakeoverResults());
+  const layout = await getLayout();
+  const html = layout
+    .replace("__PAGE_CONTENT__", withResults)
+    .replace("__BODY_CLASS__", 'class="has-results"');
+  const t = await getTranslator(locale, !!override);
+  return c.html(await applyPagePlaceholders(html, t));
+});
+
+export const build404 = async (locale?: string): Promise<string> => {
+  const override = await getThemeHtml("404");
+  if (override) return buildThemedLayoutPage(override, locale);
+  return buildLayoutPage("404.html", locale);
+};
+
+export const buildGandalf = async (locale?: string): Promise<string> => {
+  const override = await getThemeHtml("gandalf");
+  if (override) return buildThemedLayoutPage(override, locale);
+  return buildLayoutPage("easter-eggs/gandalf.html", locale);
+};
 
 export default router;

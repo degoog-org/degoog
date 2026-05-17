@@ -17,7 +17,7 @@ import {
   TimeFilter,
 } from "../types";
 import * as cache from "../utils/cache";
-import { asString, getSettings } from "../utils/plugin-settings";
+import { asBoolean, asString, getSettings } from "../utils/plugin-settings";
 import {
   _applyRateLimit,
   cacheKey,
@@ -28,7 +28,7 @@ import {
 import { guardApiKey } from "../utils/api-key-guard";
 import { applyDomainRules } from "./search/_domain-rules";
 import { signResultThumbnails } from "../utils/proxy-sign";
-import { parsePage } from "./search/_parsers";
+import { parseImageFilter, parsePage } from "./search/_parsers";
 import { runIntercepts } from "../utils/run-interceptors";
 
 const router = new Hono();
@@ -51,6 +51,13 @@ router.get("/api/search/stream", async (c) => {
   const lang = c.req.query("lang") || "";
   const dateFrom = c.req.query("dateFrom") || "";
   const dateTo = c.req.query("dateTo") || "";
+  const imageFilter = parseImageFilter(
+    c.req.query("imgColor"),
+    c.req.query("imgSize"),
+    c.req.query("imgType"),
+    c.req.query("imgLayout"),
+    c.req.query("imgNsfw"),
+  );
 
   const { query } = await runIntercepts(origQ, lang);
 
@@ -63,6 +70,7 @@ router.get("/api/search/stream", async (c) => {
     lang,
     dateFrom,
     dateTo,
+    imageFilter,
   );
 
   const cached = cache.get(key);
@@ -107,7 +115,7 @@ router.get("/api/search/stream", async (c) => {
   }
 
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  const autoRetry = asString(settings.streamingAutoRetry) === "true";
+  const autoRetry = asBoolean(settings.streamingAutoRetry);
   const maxRetries = Math.min(
     5,
     Math.max(1, parseInt(asString(settings.streamingMaxRetries) || "2", 10)),
@@ -118,12 +126,12 @@ router.get("/api/search/stream", async (c) => {
     searchType === "web"
       ? await getActiveWebEngines(engines)
       : builtinTypes.has(searchType)
-        ? getEnginesForSearchType(searchType, engines).map((e) => ({
+        ? (await getEnginesForSearchType(searchType, engines)).map((e) => ({
             id: e.id,
             instance: e.instance,
             score: 1,
           }))
-        : getEnginesForCustomType(searchType).map((e) => ({
+        : (await getEnginesForCustomType(searchType)).map((e) => ({
             id: e.id,
             instance: e.instance,
             score: 1,
@@ -187,6 +195,7 @@ router.get("/api/search/stream", async (c) => {
               lang,
               dateFrom,
               dateTo,
+              imageFilter,
             );
             lastTiming = timing;
 

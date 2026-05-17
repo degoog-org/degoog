@@ -37,17 +37,27 @@ type ServerSettingsData = {
   customCss?: string;
   apiKeySearchEnabled?: string;
   apiKeySuggestEnabled?: string;
+  honeypotEnabled?: string;
+  honeypotCssCheck?: string;
+  honeypotBanDuration?: string;
+};
+
+const _fmtDate = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}/${m}/${day}`;
 };
 
 const _scoreT = window.scopedT("core");
 
 const _scoreRowTemplate = (domain: string, score: string): HTMLDivElement => {
   const row = document.createElement("div");
-  row.className="settings-score-row";
+  row.className = "settings-score-row";
 
   const domainInput = document.createElement("input");
   domainInput.type = "text";
-  domainInput.className="settings-score-domain degoog-input";
+  domainInput.className = "settings-score-domain degoog-input";
   domainInput.placeholder = _scoreT(
     "settings-page.server.domain-score-domain-placeholder",
   );
@@ -55,7 +65,7 @@ const _scoreRowTemplate = (domain: string, score: string): HTMLDivElement => {
 
   const scoreInput = document.createElement("input");
   scoreInput.type = "number";
-  scoreInput.className="settings-score-value degoog-input";
+  scoreInput.className = "settings-score-value degoog-input";
   scoreInput.placeholder = _scoreT(
     "settings-page.server.domain-score-value-placeholder",
   );
@@ -63,7 +73,7 @@ const _scoreRowTemplate = (domain: string, score: string): HTMLDivElement => {
 
   const remove = document.createElement("button");
   remove.type = "button";
-  remove.className="settings-score-remove degoog-icon-btn";
+  remove.className = "settings-score-remove degoog-icon-btn";
   remove.setAttribute(
     "aria-label",
     _scoreT("settings-page.server.domain-score-remove-aria"),
@@ -190,9 +200,15 @@ export async function initServerTab(
       _setVal("rate-limit-long-window", data.rateLimitLongWindow);
       _setVal("rate-limit-long-max", data.rateLimitLongMax);
       _setToggle("rate-limit-suggest-enabled", data.rateLimitSuggestEnabled);
-      _setVal("rate-limit-suggest-burst-window", data.rateLimitSuggestBurstWindow);
+      _setVal(
+        "rate-limit-suggest-burst-window",
+        data.rateLimitSuggestBurstWindow,
+      );
       _setVal("rate-limit-suggest-burst-max", data.rateLimitSuggestBurstMax);
-      _setVal("rate-limit-suggest-long-window", data.rateLimitSuggestLongWindow);
+      _setVal(
+        "rate-limit-suggest-long-window",
+        data.rateLimitSuggestLongWindow,
+      );
       _setVal("rate-limit-suggest-long-max", data.rateLimitSuggestLongMax);
       _setVal("ac-debounce-ms", data.acDebounceMs);
 
@@ -216,6 +232,10 @@ export async function initServerTab(
 
       _setToggle("api-key-search-enabled", data.apiKeySearchEnabled);
       _setToggle("api-key-suggest-enabled", data.apiKeySuggestEnabled);
+
+      _setToggle("honeypot-enabled", data.honeypotEnabled ?? "true");
+      _setToggle("honeypot-css-check", data.honeypotCssCheck ?? "true");
+      _setVal("honeypot-ban-duration", data.honeypotBanDuration);
     }
   } catch {}
 
@@ -233,6 +253,98 @@ export async function initServerTab(
       _renderApiKey();
     }
   } catch {}
+
+  const loadBlocklist = async (): Promise<void> => {
+    const wrap = document.getElementById("settings-honeypot-blocklist-rows");
+    if (!wrap) return;
+    try {
+      const res = await fetch(`${getBase()}/api/settings/honeypot/blocklist`, {
+        headers: authHeaders(getToken),
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        entries: { ip: string; time: string }[];
+        banHours: number;
+      };
+      wrap.innerHTML = "";
+      if (data.entries.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "settings-desc";
+        empty.textContent = t("settings-page.server.honeypot-blocklist-empty");
+        wrap.appendChild(empty);
+        return;
+      }
+      for (const entry of data.entries) {
+        const row = document.createElement("div");
+        row.className = "settings-honeypot-ban-entry";
+
+        const info = document.createElement("span");
+        info.className = "settings-proxy-urls-label";
+        const banned = new Date(entry.time);
+        const expiry =
+          data.banHours > 0
+            ? _fmtDate(new Date(banned.getTime() + data.banHours * 3_600_000))
+            : t("settings-page.server.honeypot-ban-permanent");
+        info.textContent = `${entry.ip} - ${t("settings-page.server.honeypot-ban-since")} ${_fmtDate(banned)} · ${t("settings-page.server.honeypot-ban-expires")} ${expiry}`;
+
+        const unbanBtn = document.createElement("button");
+        unbanBtn.type = "button";
+        unbanBtn.className = "degoog-btn degoog-btn--sm degoog-btn--danger";
+        unbanBtn.ariaLabel = t("settings-page.server.honeypot-unban");
+        unbanBtn.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+        unbanBtn.addEventListener("click", async () => {
+          try {
+            await fetch(`${getBase()}/api/settings/honeypot/unban`, {
+              method: "POST",
+              headers: {
+                ...authHeaders(getToken),
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ ip: entry.ip }),
+            });
+            row.remove();
+            if (!wrap.querySelector(".settings-honeypot-ban-entry")) {
+              const empty = document.createElement("p");
+              empty.className = "settings-desc";
+              empty.textContent = t(
+                "settings-page.server.honeypot-blocklist-empty",
+              );
+              wrap.appendChild(empty);
+            }
+          } catch {}
+        });
+
+        row.append(info, unbanBtn);
+        wrap.appendChild(row);
+      }
+    } catch {}
+  };
+
+  void loadBlocklist();
+
+  document
+    .getElementById("settings-honeypot-ban-add")
+    ?.addEventListener("click", async () => {
+      const input = document.getElementById(
+        "settings-honeypot-ban-ip",
+      ) as HTMLInputElement | null;
+      const ip = input?.value.trim() ?? "";
+      if (!ip) return;
+      try {
+        const res = await fetch(`${getBase()}/api/settings/honeypot/ban`, {
+          method: "POST",
+          headers: {
+            ...authHeaders(getToken),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ip }),
+        });
+        if (res.ok) {
+          if (input) input.value = "";
+          await loadBlocklist();
+        }
+      } catch {}
+    });
 
   const getRateLimitPayload = () => {
     const enabled = el("rate-limit-enabled")?.checked;
@@ -322,6 +434,9 @@ export async function initServerTab(
           customCss: val("custom-css"),
           apiKeySearchEnabled: boolStr("api-key-search-enabled"),
           apiKeySuggestEnabled: boolStr("api-key-suggest-enabled"),
+          honeypotEnabled: boolStr("honeypot-enabled"),
+          honeypotCssCheck: boolStr("honeypot-css-check"),
+          honeypotBanDuration: val("honeypot-ban-duration"),
         }),
       });
     },

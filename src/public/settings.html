@@ -268,6 +268,46 @@
                 {{t:settings-page.install.prompt-button}}
               </button>
             </section>
+
+            <section
+              class="settings-section ext-card degoog-panel degoog-panel--ext-card"
+            >
+              <div class="setting-section-heading-wrapper">
+                <h2 class="settings-section-heading">
+                  {{t:settings-page.update-check.heading}}
+                </h2>
+                <div class="floating-section-icon">
+                  <i class="fa-solid fa-bell"></i>
+                </div>
+              </div>
+              <p id="settings-update-check-newversionavailable" style="display:none">
+                <b>{{t:settings-page.update-check.new-desc}}</b>
+              </p>
+              <p class="settings-desc">
+                <b>__APP_VERSION__</b>
+                {{t:settings-page.update-check.desc}}
+                <b id="settings-update-check-newestversion">Unknown</b>
+              </p>
+              <p class="settings-desc">
+                {{t:settings-page.update-check.last-checked}}:
+                <b id="settings-update-check-lastchecked">Never</b>
+              </p>
+              <button
+                class="btn btn--secondary degoog-btn degoog-btn--secondary settings-install-prompt"
+                id="settings-update-check-check"
+                type="button"
+              >
+                {{t:settings-page.update-check.check-now-button}}
+              </button>
+              <a
+                class="btn btn--secondary degoog-btn degoog-btn--secondary settings-install-prompt"
+                type="button"
+                target="_blank"
+                href="https://github.com/degoog-org/degoog/releases/latest"
+              >
+                {{t:settings-page.update-check.open-link-button}}
+              </a>
+            </section>
           </div>
 
           <div class="settings-tab-panel" id="tab-engines">
@@ -947,6 +987,96 @@
                   </div>
                 </fieldset>
               </div>
+            </section>
+
+            <section
+              class="settings-section ext-card degoog-panel degoog-panel--ext-card"
+              id="settings-section-honeypot"
+            >
+              <div class="setting-section-heading-wrapper">
+                <h2 class="settings-section-heading">
+                  {{t:settings-page.server.honeypot-heading}}
+                </h2>
+                <div class="floating-section-icon">
+                  <i class="fa-solid fa-robot"></i>
+                </div>
+              </div>
+              <p class="settings-desc">
+                {{t:settings-page.server.honeypot-desc}}
+              </p>
+              <fieldset class="settings-fieldset">
+                <label class="settings-toggle-wrap degoog-toggle-wrap">
+                  <input
+                    type="checkbox"
+                    id="settings-honeypot-enabled"
+                    class="settings-toggle"
+                    aria-label="{{t:settings-page.server.honeypot-enable-aria}}"
+                  />
+                  <span class="toggle-slider degoog-toggle"></span>
+                  <span class="settings-toggle-label"
+                    >{{t:settings-page.server.honeypot-enable}}</span
+                  >
+                </label>
+                <label class="settings-toggle-wrap degoog-toggle-wrap">
+                  <input
+                    type="checkbox"
+                    id="settings-honeypot-css-check"
+                    class="settings-toggle"
+                    checked
+                    aria-label="{{t:settings-page.server.honeypot-css-check-aria}}"
+                  />
+                  <span class="toggle-slider degoog-toggle"></span>
+                  <span class="settings-toggle-label"
+                    >{{t:settings-page.server.honeypot-css-check-enable}}</span
+                  >
+                </label>
+                <fieldset
+                  class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
+                >
+                  <label
+                    for="settings-honeypot-ban-duration"
+                    class="settings-proxy-urls-label"
+                    >{{t:settings-page.server.honeypot-ban-duration-label}}</label
+                  >
+                  <p class="settings-desc">
+                    {{t:settings-page.server.honeypot-ban-duration-desc}}
+                  </p>
+                  <input
+                    type="number"
+                    id="settings-honeypot-ban-duration"
+                    class="degoog-input"
+                    min="0"
+                    placeholder="0"
+                  />
+                </fieldset>
+                <fieldset
+                  class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
+                >
+                  <label class="settings-proxy-urls-label"
+                    >{{t:settings-page.server.honeypot-blocklist-label}}</label
+                  >
+                  <p class="settings-desc">
+                    {{t:settings-page.server.honeypot-blocklist-desc}}
+                  </p>
+                  <div class="settings-honeypot-ban-row">
+                    <input
+                      type="text"
+                      id="settings-honeypot-ban-ip"
+                      class="degoog-input"
+                      placeholder="192.168.1.100"
+                      spellcheck="false"
+                    />
+                    <button
+                      type="button"
+                      id="settings-honeypot-ban-add"
+                      class="degoog-btn degoog-btn--primary degoog-btn--sm"
+                    >
+                      {{t:settings-page.server.honeypot-ban-add}}
+                    </button>
+                  </div>
+                  <div id="settings-honeypot-blocklist-rows"></div>
+                </fieldset>
+              </fieldset>
             </section>
 
             <section

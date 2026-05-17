@@ -17,6 +17,7 @@ export async function handleSearch(params: SearchParams) {
     lang,
     dateFrom,
     dateTo,
+    imageFilter,
   } = params;
 
   const { query } = await runIntercepts(origQ, lang);
@@ -30,6 +31,7 @@ export async function handleSearch(params: SearchParams) {
     lang,
     dateFrom,
     dateTo,
+    imageFilter,
   );
 
   const cached = cache.get(key);
@@ -55,6 +57,7 @@ export async function handleSearch(params: SearchParams) {
     lang,
     dateFrom,
     dateTo,
+    imageFilter,
   );
 
   const ttl = cache.hasFailedEngines(response)
@@ -83,6 +86,7 @@ export async function handleRetry(
     lang,
     dateFrom,
     dateTo,
+    imageFilter,
   } = params;
 
   const { results: newResults, timing } = await searchSingleEngine(
@@ -93,6 +97,7 @@ export async function handleRetry(
     lang,
     dateFrom,
     dateTo,
+    imageFilter,
   );
   const key = cacheKey(
     query,
@@ -103,6 +108,7 @@ export async function handleRetry(
     lang,
     dateFrom,
     dateTo,
+    imageFilter,
   );
   const cached = cache.get(key);
 

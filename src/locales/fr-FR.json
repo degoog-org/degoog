@@ -48,6 +48,14 @@
       "desc": "Ajoutez degoog à l'écran d'accueil. Si votre navigateur n'a pas affiché l'invite d'installation, utilisez ce bouton pour réessayer. Cela ne fonctionnera pas sauf si vous servez votre site via https et que votre navigateur prend en charge les PWA.",
       "prompt-button": "Afficher l'invite d'installation"
     },
+    "update-check": {
+      "heading": "Version",
+      "desc": "Une version plus récente est disponible !",
+      "new-desc": "est actuellement installée. La version la plus récente disponible est",
+      "check-now-button": "Vérifier maintenant",
+      "open-link-button": "Voir le communiqué",
+      "last-checked": "Dernière vérification"
+    },
     "server": {
       "cache-heading": "Cache",
       "cache-desc": "Effacer les résultats de recherche stockés.",
@@ -124,6 +132,22 @@
       "domain-replace-enable": "Activer le remplacement de domaines",
       "domain-replace-enable-aria": "Activer le remplacement de domaines",
       "domain-replace-list-label": "Règles de remplacement (une par ligne)",
+      "honeypot-heading": "Contrôle des bots",
+      "honeypot-desc": "Protégez votre instance des bots et scrapers. Les pièges honeypot attirent et bloquent les crawlers ; la vérification navigateur s'assure que les requêtes proviennent d'un vrai navigateur grâce à un jeton CSS signé injecté dans chaque page.",
+      "honeypot-enable": "Activer les pièges honeypot",
+      "honeypot-enable-aria": "Activer les pièges honeypot",
+      "honeypot-css-check-enable": "Activer la vérification navigateur (HMAC CSS)",
+      "honeypot-css-check-aria": "Activer la vérification HMAC CSS",
+      "honeypot-ban-duration-label": "Durée du bannissement (heures)",
+      "honeypot-ban-duration-desc": "Durée pendant laquelle une IP bannie reste bloquée. Mettre 0 pour un bannissement permanent.",
+      "honeypot-blocklist-label": "IPs bloquées",
+      "honeypot-blocklist-desc": "IPs actuellement bloquées. Les bans expirés sont supprimés automatiquement à la prochaine requête. Ajoutez une IP manuellement ou débannissez des entrées ci-dessous.",
+      "honeypot-ban-add": "Bannir l'IP",
+      "honeypot-ban-since": "banni le",
+      "honeypot-ban-expires": "expire le",
+      "honeypot-ban-permanent": "permanent",
+      "honeypot-unban": "Débannir",
+      "honeypot-blocklist-empty": "Aucune IP n'est actuellement bloquée.",
       "custom-css-heading": "CSS personnalisé",
       "custom-css-desc": "Injectez du CSS personnalisé dans chaque page. Chargé après les styles du thème et des plugins, il les remplace donc. Utilisez !important pour surpasser des sélecteurs à spécificité plus élevée.",
       "custom-css-label": "CSS personnalisé",
@@ -177,7 +201,12 @@
       "group-builtin-transports": "Transports intégrés",
       "group-themes": "Thèmes",
       "apply-failed": "Échec",
-      "save-defaults": "Enregistrer comme valeur par défaut de l'instance"
+      "save-defaults": "Enregistrer comme valeur par défaut de l'instance",
+      "exposure-exposed": "Le navigateur peut contacter des services externes directement",
+      "exposure-safe": "Les requêtes du navigateur passent par le serveur",
+      "exposure-unknown": "Comportement réseau non déclaré",
+      "status-configured": "Configuré",
+      "status-needs-config": "Configuration requise"
     },
     "errors": {
       "load-extensions": "Impossible de charger les extensions.",

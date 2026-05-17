@@ -4,13 +4,27 @@ import { getBase } from "./base-url";
 import type { EngineRecord, EngineRegistry } from "../types";
 
 let cachedRegistry: EngineRegistry | null = null;
+let inflightRegistry: Promise<EngineRegistry> | null = null;
+
+if (typeof window !== "undefined") {
+  window.addEventListener("extensions-saved", () => {
+    cachedRegistry = null;
+    inflightRegistry = null;
+  });
+}
 
 export const getRegistry = async (): Promise<EngineRegistry> => {
   if (cachedRegistry) return cachedRegistry;
-  const res = await fetch(`${getBase()}/api/engines`);
-  const data = (await res.json()) as EngineRegistry;
-  cachedRegistry = data;
-  return cachedRegistry;
+  if (!inflightRegistry) {
+    inflightRegistry = fetch(`${getBase()}/api/engines`)
+      .then((res) => res.json() as Promise<EngineRegistry>)
+      .then((data) => {
+        cachedRegistry = data;
+        inflightRegistry = null;
+        return data;
+      });
+  }
+  return inflightRegistry;
 };
 
 export const getEngines = async (): Promise<EngineRecord> => {
@@ -24,7 +38,8 @@ export const getEngines = async (): Promise<EngineRecord> => {
 };
 
 export const getEnabledSearchTypes = async (): Promise<Set<string>> => {
-  const [engines, reg] = await Promise.all([getEngines(), getRegistry()]);
+  const engines = await getEngines();
+  const reg = await getRegistry();
   const types = new Set<string>();
   for (const { id, searchType } of reg.engines) {
     if (engines[id] && searchType) types.add(searchType);

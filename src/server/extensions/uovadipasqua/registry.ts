@@ -1,8 +1,15 @@
 import { stat } from "fs/promises";
 import { join } from "path";
-import type { Uovadipasqua, UovadipasquaMatch } from "../../types";
+import type {
+  Uovadipasqua,
+  UovadipasquaClientStorageBinding,
+  UovadipasquaMatch,
+  PluginRoute,
+  PluginRouteMethod,
+} from "../../types";
 import { createRegistry } from "../registry-factory";
 import { getBasePath } from "../../utils/base-url";
+import { buildSignedProxyUrl } from "../../utils/proxy-sign";
 import { logger } from "../../utils/logger";
 
 const builtinsDir = join(
@@ -15,14 +22,32 @@ const builtinsDir = join(
 
 const _entryPaths = new Map<string, string>();
 const _hasStyle = new Map<string, boolean>();
+const _routes = new Map<string, PluginRoute[]>();
+
+const VALID_METHODS: PluginRouteMethod[] = ["get", "post", "put", "delete", "patch"];
+
+const _normalizePath = (p: string): string => {
+  const s = p.trim().replace(/^\/+/, "").replace(/\/+$/, "") || "";
+  return s ? `/${s}` : "/";
+};
+
+const _isValidRoute = (r: unknown): r is PluginRoute => {
+  if (typeof r !== "object" || r === null) return false;
+  const route = r as Record<string, unknown>;
+  return (
+    VALID_METHODS.includes(route.method as PluginRouteMethod) &&
+    typeof route.path === "string" &&
+    typeof route.handler === "function"
+  );
+};
 
 const _isUovadipasqua = (val: unknown): val is Uovadipasqua => {
   if (typeof val !== "object" || val === null) return false;
-  const egg = val as Uovadipasqua;
+  const item = val as Uovadipasqua;
   return (
-    typeof egg.id === "string" &&
-    Array.isArray(egg.triggers) &&
-    egg.triggers.every(
+    typeof item.id === "string" &&
+    Array.isArray(item.triggers) &&
+    item.triggers.every(
       (t) => t.type === "search-query" && typeof t.pattern === "string",
     )
   );
@@ -38,16 +63,25 @@ const registry = createRegistry<Uovadipasqua>({
     return _isUovadipasqua(val) ? val : null;
   },
   canonicalIdKind: "uovadipasqua",
-  onLoad: async (egg, { entryPath, folderName, canonicalId }) => {
-    const legacyId = egg.id;
+  onLoad: async (item, { entryPath, folderName, canonicalId }) => {
+    const legacyId = item.id;
     const id = canonicalId ?? folderName;
-    egg.id = id;
+    item.id = id;
     _entryPaths.set(id, entryPath);
-    if (legacyId && legacyId !== id) _entryPaths.delete(legacyId);
+    if (legacyId && legacyId !== id) {
+      _entryPaths.delete(legacyId);
+      _routes.delete(legacyId);
+    }
     const styleStat = await stat(join(entryPath, "style.css")).catch(
       () => null,
     );
     _hasStyle.set(id, !!styleStat?.isFile());
+    const raw = item.routes;
+    if (Array.isArray(raw) && raw.every(_isValidRoute)) {
+      _routes.set(id, raw.map((r) => ({ ...r, path: _normalizePath(r.path) })));
+    } else {
+      _routes.delete(id);
+    }
   },
   debugTag: "uovadipasqua",
 });
@@ -55,13 +89,32 @@ const registry = createRegistry<Uovadipasqua>({
 export async function initUovadipasquas(): Promise<void> {
   _entryPaths.clear();
   _hasStyle.clear();
+  _routes.clear();
   await registry.init();
 }
 
+export function findUovadipasquaRoute(
+  id: string,
+  method: string,
+  path: string,
+): PluginRoute | null {
+  const routes = _routes.get(id);
+  if (!routes) return null;
+  const normalized = _normalizePath(path);
+  return (
+    routes.find(
+      (r) => r.method === method.toLowerCase() && r.path === normalized,
+    ) ?? null
+  );
+}
+
+const ALLOWED_ASSETS = /^[\w.-]+\.(js|css|png|jpg|jpeg|gif|webp|svg)$/;
+
 export function getUovadipasquaAssetPath(
   id: string,
-  filename: "script.js" | "style.css",
+  filename: string,
 ): string | null {
+  if (!ALLOWED_ASSETS.test(filename)) return null;
   const dir = _entryPaths.get(id);
   if (!dir) return null;
   if (filename === "style.css" && !_hasStyle.get(id)) return null;
@@ -70,13 +123,40 @@ export function getUovadipasquaAssetPath(
 
 const _normalize = (query: string): string => query.trim().toLowerCase();
 
-export const matchSearchQueryEggs = (query: string): UovadipasquaMatch[] => {
+const _styleUrl = (id: string): string | undefined => {
+  if (!_hasStyle.get(id)) return undefined;
+  return `${getBasePath()}/uovadipasqua/${id}/style.css`;
+};
+
+const _buildAssets = (
+  item: Uovadipasqua,
+): Record<string, string> | undefined => {
+  if (!item.proxyImages || Object.keys(item.proxyImages).length === 0) return undefined;
+  return Object.fromEntries(
+    Object.entries(item.proxyImages).map(([key, url]) => [key, buildSignedProxyUrl(url)]),
+  );
+};
+
+const _clientStorageBindingFor = (
+  item: Uovadipasqua,
+): UovadipasquaClientStorageBinding | undefined => {
+  if (!item.id || !item.clientStorage) return undefined;
+  const hasRoutes = (_routes.get(item.id)?.length ?? 0) > 0;
+  return {
+    extensionId: item.id,
+    styleUrl: _styleUrl(item.id),
+    localStorageKey: item.clientStorage.localStorageKey,
+    ...(hasRoutes ? { apiBase: `${getBasePath()}/api/uovadipasqua/${item.id}` } : {}),
+  };
+};
+
+export const matchUovadipasqua = (query: string): UovadipasquaMatch[] => {
   const normalized = _normalize(query);
   if (!normalized) return [];
   const matches: UovadipasquaMatch[] = [];
-  for (const egg of registry.items()) {
-    if (!egg.id) {
-      const patterns = egg.triggers
+  for (const item of registry.items()) {
+    if (!item.id) {
+      const patterns = item.triggers
         .map((t) => t.pattern)
         .filter(Boolean)
         .slice(0, 3)
@@ -87,7 +167,7 @@ export const matchSearchQueryEggs = (query: string): UovadipasquaMatch[] => {
       );
       continue;
     }
-    const trigger = egg.triggers.find(
+    const trigger = item.triggers.find(
       (t) =>
         t.type === "search-query" && t.pattern.toLowerCase() === normalized,
     );
@@ -96,14 +176,30 @@ export const matchSearchQueryEggs = (query: string): UovadipasquaMatch[] => {
       continue;
     }
     const basePath = getBasePath();
+    const hasRoutes = (_routes.get(item.id)?.length ?? 0) > 0;
     matches.push({
-      id: egg.id,
-      scriptUrl: `${basePath}/uovadipasqua/${egg.id}/script.js`,
-      styleUrl: _hasStyle.get(egg.id)
-        ? `${basePath}/uovadipasqua/${egg.id}/style.css`
-        : null,
-      waitForResults: !!egg.waitForResults,
+      id: item.id,
+      scriptUrl: `${basePath}/uovadipasqua/${item.id}/script.js`,
+      styleUrl: _styleUrl(item.id),
+      waitForResults: !!item.waitForResults,
+      repeatOnQuery: !!item.repeatOnQuery,
+      assets: _buildAssets(item),
+      ...(hasRoutes ? { apiBase: `${basePath}/api/uovadipasqua/${item.id}` } : {}),
     });
   }
   return matches;
 };
+
+export function listUovadipasquaClientStorageBindings(): UovadipasquaClientStorageBinding[] {
+  const out: UovadipasquaClientStorageBinding[] = [];
+  const seen = new Set<string>();
+  for (const item of registry.items()) {
+    const b = _clientStorageBindingFor(item);
+    if (!b) continue;
+    const dedupe = b.extensionId;
+    if (seen.has(dedupe)) continue;
+    seen.add(dedupe);
+    out.push(b);
+  }
+  return out;
+}

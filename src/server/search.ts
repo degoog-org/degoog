@@ -10,6 +10,7 @@ import type {
   EngineConfig,
   EngineContext,
   EngineTiming,
+  ImageFilter,
   ScoredResult,
   SearchEngine,
   SearchResponse,
@@ -215,6 +216,7 @@ export const createSearchEngineContext = (
   lang?: string,
   dateFrom?: string,
   dateTo?: string,
+  imageFilter?: ImageFilter,
 ): EngineContext => {
   const resolvedLang =
     lang ||
@@ -260,6 +262,7 @@ export const createSearchEngineContext = (
     buildAcceptLanguage: () => _buildAcceptLanguage(resolvedLang),
     extractImageUrl: extractImageUrl as EngineContext["extractImageUrl"],
     signProxyUrl: buildSignedProxyUrl,
+    imageFilter,
   };
 };
 
@@ -271,6 +274,7 @@ export const searchSingleEngine = async (
   lang?: string,
   dateFrom?: string,
   dateTo?: string,
+  imageFilter?: ImageFilter,
 ): Promise<{ results: SearchResult[]; timing: EngineTiming }> => {
   const engine = resolveEngine(engineName);
   if (!engine) {
@@ -287,6 +291,7 @@ export const searchSingleEngine = async (
     lang,
     dateFrom,
     dateTo,
+    imageFilter,
   );
   try {
     const timeout = await _getEngineTimeout(engineSettingsId);
@@ -318,6 +323,7 @@ export const search = async (
   lang?: string,
   dateFrom?: string,
   dateTo?: string,
+  imageFilter?: ImageFilter,
 ): Promise<SearchResponse> => {
   const start = performance.now();
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
@@ -325,7 +331,7 @@ export const search = async (
   const rawActiveEngines =
     type === "web"
       ? await getActiveWebEngines(config)
-      : getEnginesForSearchType(type, config).map((e) => ({
+      : (await getEnginesForSearchType(type, config)).map((e) => ({
         id: e.id,
         instance: e.instance,
         score: 1,
@@ -345,7 +351,7 @@ export const search = async (
   const settled = await Promise.allSettled(
     rawActiveEngines.map(async ({ instance, id }) => {
       const t0 = performance.now();
-      const ctx = createSearchEngineContext(id, lang, dateFrom, dateTo);
+      const ctx = createSearchEngineContext(id, lang, dateFrom, dateTo, imageFilter);
       const timeout = await _getEngineTimeout(id);
       const results = await _withTimeout(
         instance.executeSearch(query, p, timeFilter, ctx),

@@ -43,7 +43,7 @@ export function registerTabSearchRoute(router: Hono): void {
       let totalPages = 1;
 
       if (engineType) {
-        const engines = getEnginesForCustomType(engineType);
+        const engines = await getEnginesForCustomType(engineType);
         const outcomes = await Promise.all(
           engines.map(async ({ id, instance: e }) => {
             const start = performance.now();

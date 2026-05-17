@@ -6,6 +6,7 @@ import {
   type SettingField,
 } from "../../types";
 import {
+  asBoolean,
   asString,
   getSettings,
   maskSecrets,
@@ -17,6 +18,7 @@ import { autocompleteCache, createCache } from "../../utils/cache";
 import { getTransportNames } from "../transports/registry";
 import { createRegistry } from "../registry-factory";
 import { logger } from "../../utils/logger";
+import { buildSignedProxyUrl } from "../../utils/proxy-sign";
 import { GoogleAutocompleteProvider } from "./google";
 import { DuckDuckGoAutocompleteProvider } from "./duckduckgo";
 
@@ -145,7 +147,7 @@ export async function getEnabledAutocompleteProviders(): Promise<
   const providers: AutocompleteProvider[] = [];
   for (const p of _all()) {
     const stored = await getSettings(p.id);
-    if (asString(stored.disabled) !== "true") providers.push(p.instance);
+    if (!asBoolean(stored.disabled)) providers.push(p.instance);
   }
   return providers;
 }
@@ -178,7 +180,7 @@ export async function getSuggestionsFromProviders(query: string): Promise<
   const tasks = await Promise.all(
     all.map(async (p) => {
       const stored = await getSettings(p.id);
-      if (asString(stored.disabled) === "true") return null;
+      if (asBoolean(stored.disabled)) return null;
       const score = Math.max(parseFloat(asString(stored.score)) || 1, 0.1);
       return {
         provider: p.instance,
@@ -290,11 +292,19 @@ export async function getSuggestionsFromProviders(query: string): Promise<
   }
 
   const richMerged: NormItem[] = Array.from(richItems.values()).map(
-    (entry) => ({
-      text: entry.text,
-      source: entry.sources.join(", "),
-      rich: entry.rich,
-    }),
+    (entry) => {
+      const thumb = entry.rich.thumbnail;
+      return {
+        text: entry.text,
+        source: entry.sources.join(", "),
+        rich: {
+          ...entry.rich,
+          ...(thumb && !thumb.includes("/api/proxy/")
+            ? { thumbnail: buildSignedProxyUrl(thumb) }
+            : {}),
+        },
+      };
+    },
   );
 
   const plainMerged: NormItem[] = Array.from(seen.values()).map((entry) => ({

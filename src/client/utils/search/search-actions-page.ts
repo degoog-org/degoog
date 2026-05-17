@@ -1,7 +1,6 @@
 import {
   skeletonImageGrid,
   skeletonResults,
-  skeletonVideoGrid,
 } from "../../animations/skeleton";
 import { getEngines } from "../engines";
 import { state } from "../../state";
@@ -19,12 +18,8 @@ export async function goToPage(pageNum: number): Promise<void> {
   const resultsList = document.getElementById("results-list");
   const pagination = document.getElementById("pagination");
   if (resultsList) {
-    if (state.currentType === "web" || state.currentType === "news") {
-      resultsList.innerHTML = skeletonResults();
-    } else if (state.currentType === "images") {
+    if (state.currentType === "images") {
       resultsList.innerHTML = skeletonImageGrid();
-    } else if (state.currentType === "videos") {
-      resultsList.innerHTML = skeletonVideoGrid();
     } else {
       resultsList.innerHTML = skeletonResults();
     }

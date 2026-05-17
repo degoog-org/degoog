@@ -433,6 +433,36 @@ bun run start</code></pre>
             web browser and go to <code>http://localhost:4444</code> to see your
             brand new search engine.
           </p>
+          <h2>Bot prevention and scraper prevention</h2>
+          <p>
+            Degoog ships with two layers of bot and scraper protection that work
+            together without affecting real users.
+          </p>
+          <p>
+            <strong>Honeypot traps.</strong> A set of paths that no legitimate
+            browser should ever request, such as <code>/wp-login.php</code>,
+            <code>/.env</code>, or <code>/.git/config</code>. Any IP that hits
+            one of these paths gets added to a persistent blocklist. From that
+            point on, every single request from that IP returns
+            <code>403 Forbidden</code>, across all routes. The blocklist
+            survives restarts and can be managed from the settings panel. You
+            can also disable the traps entirely while keeping the blocklist
+            enforced, useful if you want to stop catching new IPs but keep
+            blocking the ones already flagged.
+          </p>
+          <p>
+            <strong>HMAC browser verification.</strong> Every page Degoog
+            renders embeds a signed stylesheet link in the document head. The
+            URL contains a short-lived HMAC token derived from a timestamp and
+            the server secret key. A real browser fetches that stylesheet as a
+            natural side effect of rendering the page, which registers the IP
+            as verified. Bots and scrapers that send requests directly to
+            <code>/search</code> without loading a page first never trigger
+            that fetch, so they stay unverified. After a small number of
+            unverified search requests, the IP is automatically added to the
+            same blocklist as the honeypot. No CAPTCHAs, no impact on people
+            using the site normally.
+          </p>
         </main>
       </div>
       <div id="degoog-docs-backdrop" class="degoog-docs-backdrop"></div>

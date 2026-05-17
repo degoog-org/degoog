@@ -1,6 +1,32 @@
 import { SearchBody } from "../../server/types";
+import type { ImageFilter } from "../types/search";
 import { state } from "../state";
 import { getBase } from "./base-url";
+
+export const imgFilterRecord = (f: ImageFilter): Record<string, string> => {
+  const r: Record<string, string> = {};
+  if (f.color && f.color !== "any") r.imgColor = f.color;
+  if (f.size && f.size !== "any") r.imgSize = f.size;
+  if (f.type && f.type !== "any") r.imgType = f.type;
+  if (f.layout && f.layout !== "any") r.imgLayout = f.layout;
+  if (f.nsfw && f.nsfw !== "any") r.imgNsfw = f.nsfw;
+  return r;
+};
+
+export const readImgFilter = (p: URLSearchParams): ImageFilter => {
+  const f: ImageFilter = {};
+  const color = p.get("imgColor");
+  const size = p.get("imgSize");
+  const type = p.get("imgType");
+  const layout = p.get("imgLayout");
+  const nsfw = p.get("imgNsfw");
+  if (color && color !== "any") f.color = color;
+  if (size && size !== "any") f.size = size;
+  if (type && type !== "any") f.type = type;
+  if (layout && layout !== "any") f.layout = layout;
+  if (nsfw && nsfw !== "any") f.nsfw = nsfw;
+  return f;
+};
 
 export const proxyImageUrl = (url: string): string => {
   if (!url) return "";
@@ -48,6 +74,11 @@ export const buildSearchParams = (
   if (state.currentLanguage) {
     params.set("lang", state.currentLanguage);
   }
+  if (type === "images") {
+    for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
+      params.set(k, v);
+    }
+  }
   return params;
 };
 
@@ -82,6 +113,7 @@ export const buildSearchBody = (
     if (state.customDateTo) body.dateTo = state.customDateTo;
   }
   if (state.currentLanguage) body.lang = state.currentLanguage;
+  if (type === "images") Object.assign(body, imgFilterRecord(state.imageFilter));
 
   return body;
 };

@@ -2,10 +2,12 @@ import { readFile, writeFile } from "fs/promises";
 import { Hono } from "hono";
 import { outgoingFetch } from "../utils/outgoing";
 import { defaultEnginesFile } from "../utils/paths";
-import { asString, getSettings, setSettings } from "../utils/plugin-settings";
+import { asBoolean, asString, getSettings, setSettings } from "../utils/plugin-settings";
 import { getRandomUserAgent } from "../utils/user-agents";
 import { DEFAULT_LANGUAGES, DEGOOG_SETTINGS_ID } from "../utils/search";
 import { getServerKeyHex, regenerateServerKey } from "../utils/server-key";
+import { syncBlocklist } from "../utils/bot-trap";
+import { addEntry, listActive, removeEntry } from "../utils/blocklist";
 import { guardSettingsRoute, isPasswordRequired } from "./settings-auth";
 
 const router = new Hono();
@@ -43,7 +45,30 @@ const GENERAL_ALLOWED_KEYS = [
   "customCss",
   "apiKeySearchEnabled",
   "apiKeySuggestEnabled",
+  "honeypotEnabled",
+  "honeypotCssCheck",
+  "honeypotBanDuration",
 ] as const;
+
+const BOOLEAN_SETTING_KEYS = new Set<typeof GENERAL_ALLOWED_KEYS[number]>([
+  "proxyEnabled",
+  "rateLimitEnabled",
+  "rateLimitSuggestEnabled",
+  "languagesEnabled",
+  "streamingEnabled",
+  "streamingAutoRetry",
+  "postMethodEnabled",
+  "domainBlockEnabled",
+  "domainBlockUiEnabled",
+  "domainReplaceEnabled",
+  "domainReplaceUiEnabled",
+  "domainScoreEnabled",
+  "domainScoreUiEnabled",
+  "apiKeySearchEnabled",
+  "apiKeySuggestEnabled",
+  "honeypotEnabled",
+  "honeypotCssCheck",
+]);
 
 const _normalizeHostname = (raw: string): string =>
   raw
@@ -115,15 +140,15 @@ const fetchIp = async (useFn: typeof fetch): Promise<string | null> => {
 router.get("/api/settings/streaming", async (c) => {
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
   return c.json({
-    enabled: asString(settings.streamingEnabled) === "true",
-    autoRetry: asString(settings.streamingAutoRetry) === "true",
+    enabled: asBoolean(settings.streamingEnabled),
+    autoRetry: asBoolean(settings.streamingAutoRetry),
     maxRetries: parseInt(asString(settings.streamingMaxRetries) || "2", 10),
   });
 });
 
 router.get("/api/settings/languages", async (c) => {
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  if (asString(settings["languagesEnabled"] ?? "") !== "true") {
+  if (!asBoolean(settings["languagesEnabled"])) {
     return c.json({ languages: DEFAULT_LANGUAGES });
   }
   const raw = asString(settings["languages"] ?? "");
@@ -151,13 +176,14 @@ router.post("/api/settings/general", async (c) => {
     return c.json({ error: "Invalid JSON" }, 400);
   }
   const existing = await getSettings(DEGOOG_SETTINGS_ID);
-  const updates: Record<string, string> = {};
+  const updates: Record<string, string | boolean> = {};
   for (const key of GENERAL_ALLOWED_KEYS) {
     if (key in body && typeof body[key] === "string") {
-      updates[key] = body[key];
+      updates[key] = BOOLEAN_SETTING_KEYS.has(key) ? body[key] === "true" : body[key];
     }
   }
   await setSettings(DEGOOG_SETTINGS_ID, { ...existing, ...updates });
+  await syncBlocklist();
   return c.json({ ok: true });
 });
 
@@ -188,7 +214,7 @@ router.post("/api/settings/domain-action", async (c) => {
   const updates: Record<string, string> = {};
 
   if (kind === "block") {
-    if (asString(existing.domainBlockUiEnabled) !== "true") {
+    if (!asBoolean(existing.domainBlockUiEnabled)) {
       return c.json({ error: "Forbidden" }, 403);
     }
     updates.domainBlockList = _appendBlock(
@@ -196,7 +222,7 @@ router.post("/api/settings/domain-action", async (c) => {
       source,
     );
   } else if (kind === "replace") {
-    if (asString(existing.domainReplaceUiEnabled) !== "true") {
+    if (!asBoolean(existing.domainReplaceUiEnabled)) {
       return c.json({ error: "Forbidden" }, 403);
     }
     const target = _normalizeHostname(body.target ?? "");
@@ -207,7 +233,7 @@ router.post("/api/settings/domain-action", async (c) => {
       target,
     );
   } else if (kind === "score") {
-    if (asString(existing.domainScoreUiEnabled) !== "true") {
+    if (!asBoolean(existing.domainScoreUiEnabled)) {
       return c.json({ error: "Forbidden" }, 403);
     }
     const score = Number(body.score);
@@ -234,8 +260,8 @@ router.get("/api/settings/api-key", async (c) => {
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
   return c.json({
     key: getServerKeyHex() ?? "",
-    searchEnabled: asString(settings.apiKeySearchEnabled) === "true",
-    suggestEnabled: asString(settings.apiKeySuggestEnabled) === "true",
+    searchEnabled: asBoolean(settings.apiKeySearchEnabled),
+    suggestEnabled: asBoolean(settings.apiKeySuggestEnabled),
   });
 });
 
@@ -255,7 +281,7 @@ router.get("/api/settings/proxy-test", async (c) => {
   if (denied) return denied;
 
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  const enabled = asString(settings.proxyEnabled) === "true";
+  const enabled = asBoolean(settings.proxyEnabled);
   const proxyUrls = asString(settings.proxyUrls);
 
   const directIp = await fetchIp(fetch);
@@ -277,6 +303,46 @@ router.get("/api/settings/proxy-test", async (c) => {
     proxyIp,
     match: directIp !== null && proxyIp !== null && directIp === proxyIp,
   });
+});
+
+router.get("/api/settings/honeypot/blocklist", async (c) => {
+  const denied = await guardSettingsRoute(c, "GET /api/settings/honeypot/blocklist");
+  if (denied) return denied;
+  const settings = await getSettings(DEGOOG_SETTINGS_ID);
+  const raw = parseInt(asString(settings.honeypotBanDuration ?? ""), 10);
+  const banHours = Number.isFinite(raw) && raw >= 0 ? raw : 0;
+  const entries = await listActive(banHours);
+  return c.json({ entries, banHours });
+});
+
+router.post("/api/settings/honeypot/ban", async (c) => {
+  const denied = await guardSettingsRoute(c, "POST /api/settings/honeypot/ban");
+  if (denied) return denied;
+  let body: { ip?: string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
+  const ip = (body.ip ?? "").trim();
+  if (!ip) return c.json({ error: "Missing ip" }, 400);
+  await addEntry(ip);
+  return c.json({ ok: true });
+});
+
+router.post("/api/settings/honeypot/unban", async (c) => {
+  const denied = await guardSettingsRoute(c, "POST /api/settings/honeypot/unban");
+  if (denied) return denied;
+  let body: { ip?: string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
+  const ip = (body.ip ?? "").trim();
+  if (!ip) return c.json({ error: "Missing ip" }, 400);
+  await removeEntry(ip);
+  return c.json({ ok: true });
 });
 
 router.get("/api/settings/appearance", async (c) => {

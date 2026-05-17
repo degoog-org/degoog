@@ -49,6 +49,14 @@
       "desc": "Add degoog to your home screen. If your browser did not show the install prompt, use this to try again. This won't work unless you are serving your site via https and your browser supports PWA.",
       "prompt-button": "Show install prompt"
     },
+    "update-check": {
+      "heading": "Version",
+      "new-desc": "A newer version is available!",
+      "desc": " is currently installed. The newest version available is ",
+      "check-now-button": "Check Now",
+      "open-link-button": "See release",
+      "last-checked": "Last checked"
+    },
     "server": {
       "cache-heading": "Cache",
       "cache-desc": "Clear stored search results.",
@@ -133,6 +141,22 @@
       "custom-css-heading": "Custom CSS",
       "custom-css-desc": "Inject custom CSS into every page. Loaded after theme and plugin styles, so it overrides them. Use !important when you need to beat selectors with higher specificity.",
       "custom-css-label": "Custom CSS",
+      "honeypot-heading": "Bot Control",
+      "honeypot-desc": "Protect your instance from bots and scrapers. Honeypot traps bait and block crawlers; the browser check verifies that requests come from a real browser by injecting a signed CSS token into every page.",
+      "honeypot-enable": "Enable honeypot traps",
+      "honeypot-enable-aria": "Enable honeypot traps",
+      "honeypot-css-check-enable": "Enable browser verification (CSS HMAC)",
+      "honeypot-css-check-aria": "Enable CSS HMAC browser check",
+      "honeypot-ban-duration-label": "Ban duration (hours)",
+      "honeypot-ban-duration-desc": "How long a banned IP stays blocked. Set to 0 for a permanent ban.",
+      "honeypot-blocklist-label": "Blocked IPs",
+      "honeypot-blocklist-desc": "IPs currently blocked. Expired bans are removed automatically on the next request. Add an IP manually or unban entries below.",
+      "honeypot-ban-add": "Ban IP",
+      "honeypot-ban-since": "banned",
+      "honeypot-ban-expires": "expires",
+      "honeypot-ban-permanent": "permanent",
+      "honeypot-unban": "Unban",
+      "honeypot-blocklist-empty": "No IPs are currently blocked.",
       "saved": "Saved",
       "save-failed-network": "Save failed. Please try again."
     },
@@ -185,7 +209,12 @@
       "group-builtin-autocomplete": "Built-in providers",
       "group-themes": "Themes",
       "apply-failed": "Failed",
-      "save-defaults": "Save as instance defaults"
+      "save-defaults": "Save as instance defaults",
+      "exposure-exposed": "Browser may contact external services directly",
+      "exposure-safe": "Browser requests go through the server",
+      "exposure-unknown": "Network behaviour not declared",
+      "status-configured": "Configured",
+      "status-needs-config": "Needs configuration"
     },
     "errors": {
       "load-extensions": "Failed to load extensions.",

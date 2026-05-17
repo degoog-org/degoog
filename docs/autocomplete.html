@@ -163,7 +163,7 @@
               <strong>getSuggestions(query, context)</strong> (async): Returns a
               <code>Promise&lt;AutocompleteSuggestion[]&gt;</code>. The array should contain
               plain suggestion strings or rich suggestion objects (<code>{ text: string, rich?: RichSuggestion }</code>). Return an empty array if no suggestions
-              are available — never throw.
+              are available - never throw.
             </li>
           </ul>
           <p><strong>Optional:</strong></p>
@@ -238,6 +238,66 @@
 
 export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggestion };
 </code></pre>
+          <p>
+            Plain string suggestions are fetched on the server via
+            <code>context.fetch</code> (which respects the provider's outgoing
+            transport). When you include <code>rich.thumbnail</code>, return the
+            upstream image URL from <code>getSuggestions</code>. Degoog rewrites it
+            to a signed <code>/api/proxy/image</code> URL before the suggest API
+            responds, so the dropdown loads the image through the server.
+          </p>
+
+          <h2 id="declaring-client-exposure">Declaring client exposure</h2>
+          <p>
+            The settings page shows a network indicator on plugin cards when an
+            extension declares <code>isClientExposed</code>. Autocomplete providers
+            do not use that field. Return upstream thumbnail URLs as usual; Degoog
+            signs them for the image proxy when suggestions are merged.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>What you return</th>
+                <th>Server requests</th>
+                <th>Browser requests</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Plain strings only</td>
+                <td>Your provider uses <code>context.fetch</code> to call upstream APIs.</td>
+                <td>None from the provider itself.</td>
+              </tr>
+              <tr>
+                <td>Rich suggestions with <code>thumbnail</code></td>
+                <td>Your provider fetches suggestions; Degoog signs each thumbnail for <code>/api/proxy/image</code>.</td>
+                <td>The browser loads the signed proxy URL only. Degoog fetches the upstream image on the server.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            You do not need to call <code>signProxyUrl</code> or build proxy URLs
+            yourself in a provider. Omit <code>rich.thumbnail</code> entirely if you
+            do not want image cards in the dropdown.
+          </p>
+          <pre><code>async getSuggestions(query, context) {
+  const doFetch = context?.fetch ?? fetch;
+  const res = await doFetch(`https://example.com/suggest?q=${encodeURIComponent(query)}`);
+  const items = await res.json();
+  return items.map((item) =&gt; ({
+    text: item.title,
+    rich: {
+      description: item.subtitle,
+      thumbnail: item.imageUrl,
+    },
+  }));
+}</code></pre>
+          <pre><code>async getSuggestions(query, context) {
+  const doFetch = context?.fetch ?? fetch;
+  const res = await doFetch(`https://example.com/suggest?q=${encodeURIComponent(query)}`);
+  const items = await res.json();
+  return items.map((item) =&gt; item.title);
+}</code></pre>
 
           <h2>Minimal example</h2>
           <pre><code>export default class MyAutocompleteProvider {
@@ -279,7 +339,7 @@ export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggest
             format: <code>[query, [suggestion, suggestion, ...]]</code>. This
             means your browser address bar can use Degoog directly as a search
             engine with autocomplete. Custom providers do not need to do
-            anything special — the registry wraps all results automatically.
+            anything special - the registry wraps all results automatically.
           </p>
 
           <h2>Aggregation and scoring</h2>
@@ -386,9 +446,9 @@ export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggest
             cannot be uninstalled:
           </p>
           <ul>
-            <li><strong>Google</strong> — uses the Firefox suggest endpoint.</li>
+            <li><strong>Google</strong> - uses the Firefox suggest endpoint.</li>
             <li>
-              <strong>DuckDuckGo</strong> — uses the public DuckDuckGo
+              <strong>DuckDuckGo</strong> - uses the public DuckDuckGo
               autocomplete API.
             </li>
           </ul>

@@ -48,6 +48,14 @@
       "desc": "הוסף את degoog למסך הבית שלך. אם הדפדפן שלך לא הציג את הודעת ההתקנה, השתמש בלחצן זה כדי לנסות שוב. זה לא יעבוד אלא אם אתה מספק את האתר דרך https והדפדפן שלך תומך ב-PWA.",
       "prompt-button": "הצג הודעת התקנה"
     },
+    "update-check": {
+      "heading": "גִרְסָה",
+      "desc": "גרסה חדשה יותר זמינה!",
+      "new-desc": "מותקן כעת. הגרסה החדשה ביותר הזמינה היא",
+      "check-now-button": "בדוק עכשיו",
+      "open-link-button": "ראה שחרור",
+      "last-checked": "נבדק לאחרונה"
+    },
     "server": {
       "cache-heading": "מטמון (Cache)",
       "cache-desc": "נקה תוצאות חיפוש מאוחסנות.",
@@ -124,6 +132,22 @@
       "domain-score-remove-aria": "הסר כלל",
       "domain-score-ui-enable": "אפשר ניקוד מתוצאות חיפוש",
       "domain-score-ui-desc": "כאשר מופעל, משתמשים מאומתים יכולים לנקוד דומיין ישירות מתוך תפריט מערבב על כל שורת תוצאות. מוסתר במופעים ציבוריים או לא מאומתים ללא קשר לפרמטר זה.",
+      "honeypot-heading": "בקרת בוטים",
+      "honeypot-desc": "הגן על המופע שלך מפני בוטים וסקרייפרים. מלכודות ה-honeypot פותות ובלוקות את הזוחלים; בדיקת הדפדפן מוודאת שהבקשות מגיעות מדפדפן אמיתי באמצעות אסימון CSS חתום המוזרק לכל עמוד.",
+      "honeypot-enable": "הפעל מלכודות honeypot",
+      "honeypot-enable-aria": "הפעל מלכודות honeypot",
+      "honeypot-css-check-enable": "הפעל אימות דפדפן (HMAC CSS)",
+      "honeypot-css-check-aria": "הפעל בדיקת HMAC CSS",
+      "honeypot-ban-duration-label": "משך החסימה (שעות)",
+      "honeypot-ban-duration-desc": "כמה זמן כתובת IP חסומה נשארת חסומה. הגדר 0 לחסימה קבועה.",
+      "honeypot-blocklist-label": "כתובות IP חסומות",
+      "honeypot-blocklist-desc": "כתובות IP החסומות כרגע. חסימות שפגו תוקפן מוסרות אוטומטית בבקשה הבאה. הוסף כתובת IP ידנית או הסר חסימות מהרשימה למטה.",
+      "honeypot-ban-add": "חסום IP",
+      "honeypot-ban-since": "נחסם ב",
+      "honeypot-ban-expires": "פג תוקף ב",
+      "honeypot-ban-permanent": "קבוע",
+      "honeypot-unban": "הסר חסימה",
+      "honeypot-blocklist-empty": "אין כתובות IP חסומות כרגע.",
       "custom-css-heading": "CSS מותאם אישית",
       "custom-css-desc": "הזרק CSS מותאם אישית לכל עמוד. נטען אחרי סגנונות הנושא והתוספים, כך שהוא עוקף אותם. השתמש ב-!important כשצריך להכריע סלקטורים עם ספציפיות גבוהה יותר.",
       "custom-css-label": "CSS מותאם אישית",
@@ -177,7 +201,12 @@
       "group-builtin-transports": "דרכי העברה מובנות",
       "group-themes": "ערכות נושא",
       "apply-failed": "נכשל",
-      "save-defaults": "שמור כברירות מחדל עבור המופע"
+      "save-defaults": "שמור כברירות מחדל עבור המופע",
+      "exposure-exposed": "הדפדפן עשוי לפנות לשירותים חיצוניים ישירות",
+      "exposure-safe": "בקשות הדפדפן עוברות דרך השרת",
+      "exposure-unknown": "התנהגות הרשת לא הוצהרה",
+      "status-configured": "מוגדר",
+      "status-needs-config": "נדרשת הגדרה"
     },
     "errors": {
       "load-extensions": "טעינת התוספים נכשלה.",

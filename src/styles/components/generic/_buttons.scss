@@ -61,6 +61,10 @@
       color: $danger;
     }
   }
+
+  &--sm {
+    padding: $space-1 $space-3;
+  }
 }
 
 .degoog-icon-btn {

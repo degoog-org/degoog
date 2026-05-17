@@ -10,6 +10,8 @@ import {
 import {
   asString,
   getSettings,
+  getTypeOverride,
+  isDisabled,
   maskSecrets,
   mergeDefaults,
 } from "../../utils/plugin-settings";
@@ -220,6 +222,23 @@ export function getEngineRegistry(): {
   ];
 }
 
+export async function getEffectiveEngineRegistry(): Promise<{
+  id: string;
+  displayName: string;
+  disabledByDefault?: boolean;
+  searchType?: EngineSearchType;
+}[]> {
+  const plugins = await Promise.all(
+    engineRegistry.items().map(async (e) => ({
+      id: e.id,
+      displayName: e.displayName,
+      disabledByDefault: e.disabledByDefault,
+      searchType: ((await getTypeOverride(e.id)) ?? e.searchType) as EngineSearchType,
+    })),
+  );
+  return [...builtinRegistry, ...plugins];
+}
+
 export function getOutgoingAllowlist(): string[] {
   const fromBuiltins = BUILTIN_DEFINITIONS.flatMap(
     (d) => d.outgoingHosts ?? [],
@@ -246,30 +265,36 @@ function engineSearchTypeFromSearchType(
   return null;
 }
 
-export function getEnginesForCustomType(
+export async function getEnginesForCustomType(
   engineType: string,
-): { id: string; instance: SearchEngine }[] {
-  return engineRegistry
-    .items()
-    .filter((e) => e.searchType === engineType)
-    .map((e) => ({ id: e.id, instance: e.instance }));
+): Promise<{ id: string; instance: SearchEngine }[]> {
+  const results: { id: string; instance: SearchEngine }[] = [];
+  for (const e of engineRegistry.items()) {
+    if (await isDisabled(e.id)) continue;
+    const effectiveType = (await getTypeOverride(e.id)) ?? e.searchType;
+    if (effectiveType === engineType) results.push({ id: e.id, instance: e.instance });
+  }
+  return results;
 }
 
 const BUILTIN_TYPES = new Set(["web", "news", "images", "videos"]);
 
-export function getCustomEngineTypes(): string[] {
+export async function getCustomEngineTypes(): Promise<string[]> {
   const types = new Set<string>();
   for (const e of engineRegistry.items()) {
-    if (!BUILTIN_TYPES.has(e.searchType)) types.add(e.searchType);
+    if (await isDisabled(e.id)) continue;
+    const effectiveType = (await getTypeOverride(e.id)) ?? e.searchType;
+    if (!BUILTIN_TYPES.has(effectiveType)) types.add(effectiveType);
   }
   return [...types];
 }
 
-export function getEngineSearchType(engineId: string): string | null {
+export async function getEngineSearchType(engineId: string): Promise<string | null> {
   const builtin = BUILTIN_DEFINITIONS.find((d) => d.id === engineId);
   if (builtin) return builtin.searchType;
   const plugin = engineRegistry.items().find((e) => e.id === engineId);
-  return plugin?.searchType ?? null;
+  if (!plugin) return null;
+  return (await getTypeOverride(engineId)) ?? plugin.searchType;
 }
 
 function engineRequiresConfig(engine: SearchEngine): boolean {
@@ -292,51 +317,63 @@ async function hasRequiredConfig(
   });
 }
 
-export function getEnginesForSearchType(
+export async function getEnginesForSearchType(
   type: SearchType,
   config: EngineConfig,
-): { id: string; instance: SearchEngine }[] {
+): Promise<{ id: string; instance: SearchEngine }[]> {
   const engineType = engineSearchTypeFromSearchType(type);
   if (!engineType) return [];
 
-  const allDefinitions = [
-    ...BUILTIN_DEFINITIONS.filter((d) => d.searchType === engineType),
-    ...engineRegistry.items().filter((e) => e.searchType === engineType),
-  ];
   const engineMap = getEngineMap();
-
   const active: { id: string; instance: SearchEngine }[] = [];
-  for (const def of allDefinitions) {
+
+  for (const def of BUILTIN_DEFINITIONS.filter((d) => d.searchType === engineType)) {
     if (config[def.id]) {
       const instance = engineMap[def.id];
       if (instance) active.push({ id: def.id, instance });
     }
   }
+
+  for (const e of engineRegistry.items()) {
+    if (!config[e.id]) continue;
+    const effectiveType = (await getTypeOverride(e.id)) ?? e.searchType;
+    if (effectiveType === engineType) {
+      const instance = engineMap[e.id];
+      if (instance) active.push({ id: e.id, instance });
+    }
+  }
+
   return active;
 }
 
 export const getActiveWebEngines = async (
   config: EngineConfig,
 ): Promise<{ id: string; instance: SearchEngine; score: number }[]> => {
-  const allDefinitions = [
-    ...BUILTIN_DEFINITIONS.filter((d) => d.searchType === "web"),
-    ...engineRegistry.items().filter((e) => e.searchType === "web"),
-  ];
   const engineMap = getEngineMap();
   const active: { id: string; instance: SearchEngine; score: number }[] = [];
-  for (const def of allDefinitions) {
+
+  for (const def of BUILTIN_DEFINITIONS.filter((d) => d.searchType === "web")) {
     if (!config[def.id]) continue;
     const instance = engineMap[def.id];
     if (!instance) continue;
-    if (
-      engineRequiresConfig(instance) &&
-      !(await hasRequiredConfig(def.id, instance))
-    )
-      continue;
+    if (engineRequiresConfig(instance) && !(await hasRequiredConfig(def.id, instance))) continue;
     const stored = await getSettings(def.id);
     const score = Math.max(parseFloat(asString(stored["score"])) || 1, 0.1);
     active.push({ id: def.id, instance, score });
   }
+
+  for (const e of engineRegistry.items()) {
+    if (!config[e.id]) continue;
+    const effectiveType = (await getTypeOverride(e.id)) ?? e.searchType;
+    if (effectiveType !== "web") continue;
+    const instance = engineMap[e.id];
+    if (!instance) continue;
+    if (engineRequiresConfig(instance) && !(await hasRequiredConfig(e.id, instance))) continue;
+    const stored = await getSettings(e.id);
+    const score = Math.max(parseFloat(asString(stored["score"])) || 1, 0.1);
+    active.push({ id: e.id, instance, score });
+  }
+
   return active;
 };
 
@@ -542,12 +579,31 @@ export async function getEngineExtensionMeta(
       })
       : engineSchemaFiltered;
 
+    const isPlugin = !!pluginEntry;
+    const effectiveType = isPlugin
+      ? ((await getTypeOverride(def.id)) ?? def.searchType)
+      : def.searchType;
+
+    const typeOverrideField: SettingField | null = isPlugin
+      ? {
+        key: "searchTypeOverride",
+        label: "Engine type",
+        type: "text",
+        default: def.searchType,
+        description:
+          "Override the tab this engine belongs to (e.g. 'image' can be changed to 'file'). Changing this affects the tab and trigger used to search with it. Leave blank to use the default.",
+        advanced: true,
+        placeholder: def.searchType,
+      }
+      : null;
+
     const schema: SettingField[] = [
       scoreField,
       transportField,
       CUSTOM_USER_AGENTS_FIELD,
       PROXY_OVERRIDE_ENABLED_FIELD,
       PROXY_OVERRIDE_URLS_FIELD,
+      ...(typeOverrideField ? [typeOverrideField] : []),
       ...translatedEngineSchema,
     ];
     const rawSettings = await getSettings(def.id);
@@ -557,7 +613,7 @@ export async function getEngineExtensionMeta(
     results.push({
       id: def.id,
       displayName: def.displayName,
-      description: `${def.searchType} search engine`,
+      description: `${effectiveType} search engine`,
       type: ExtensionStoreType.Engine,
       configurable: true,
       settingsSchema: schema,

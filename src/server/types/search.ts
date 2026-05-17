@@ -1,5 +1,60 @@
 import type { SlotPanelResult } from "./extension";
 
+export enum ImgColor {
+  ANY = "any",
+  BLACK = "black",
+  BLUE = "blue",
+  BROWN = "brown",
+  GRAY = "gray",
+  GREEN = "green",
+  MONOCHROME = "monochrome",
+  ORANGE = "orange",
+  PINK = "pink",
+  PURPLE = "purple",
+  RED = "red",
+  TEAL = "teal",
+  WHITE = "white",
+  YELLOW = "yellow",
+}
+
+export enum ImgSize {
+  ANY = "any",
+  LARGE = "large",
+  MEDIUM = "medium",
+  SMALL = "small",
+  WALLPAPER = "wallpaper",
+}
+
+export enum ImgType {
+  ANIMATED = "animated",
+  ANY = "any",
+  CLIPART = "clipart",
+  LINEART = "lineart",
+  PHOTO = "photo",
+}
+
+export enum ImgLayout {
+  ANY = "any",
+  SQUARE = "square",
+  TALL = "tall",
+  WIDE = "wide",
+}
+
+export enum ImgNsfw {
+  ANY = "any",
+  MODERATE = "moderate",
+  OFF = "off",
+  ON = "on",
+}
+
+export interface ImageFilter {
+  color?: ImgColor;
+  size?: ImgSize;
+  type?: ImgType;
+  layout?: ImgLayout;
+  nsfw?: ImgNsfw;
+}
+
 export interface SearchResult {
   title: string;
   url: string;
@@ -19,6 +74,11 @@ export interface SearchBody {
   dateFrom?: string;
   dateTo?: string;
   lang?: string;
+  imgColor?: string;
+  imgSize?: string;
+  imgType?: string;
+  imgLayout?: string;
+  imgNsfw?: string;
 }
 
 export interface RetryPostBody extends SearchBody {
@@ -38,6 +98,7 @@ export interface SearchParams {
   lang: string;
   dateFrom: string;
   dateTo: string;
+  imageFilter?: ImageFilter;
 }
 
 export interface ScoredResult extends SearchResult {
@@ -84,6 +145,7 @@ export interface EngineContext {
     selectors?: string[],
   ) => string;
   signProxyUrl?: (url: string) => string;
+  imageFilter?: ImageFilter;
 }
 
 export interface SearchResponse {

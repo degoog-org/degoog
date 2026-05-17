@@ -1,0 +1,113 @@
+#not-found-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: $space-7;
+  text-align: center;
+  gap: $space-3;
+}
+
+.degoog-404-robot {
+  font-family: monospace;
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
+  line-height: 1.5;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  margin: 0 0 $space-4;
+  transition: transform $transition-fast;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &--wobble {
+    animation: degoog-robot-wobble 0.35s ease-in-out;
+  }
+
+  &--dancing {
+    animation: degoog-robot-dance 0.4s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes degoog-robot-wobble {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-8deg); }
+  50%  { transform: rotate(8deg); }
+  75%  { transform: rotate(-5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes degoog-robot-dance {
+  from { transform: rotate(-6deg) translateY(0); }
+  to   { transform: rotate(6deg)  translateY(-4px); }
+}
+
+.degoog-404-dance-msg {
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+  min-height: 1.25rem;
+}
+
+.degoog-404-code {
+  font-size: clamp(4rem, 12vw, 8rem);
+  font-weight: 700;
+  margin: 0;
+  line-height: 1;
+  color: var(--brand-blue);
+  letter-spacing: -4px;
+}
+
+.degoog-takeover-header {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  padding: $space-4 $results-inline-gutter 0;
+  gap: $space-4;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    padding: $space-4 $space-5 0;
+    gap: $space-3;
+  }
+}
+
+.degoog-takeover-tabs {
+  display: flex;
+  align-items: center;
+  padding: 0 $results-inline-gutter;
+  margin-top: $space-2;
+  border-bottom: 1px solid var(--border-light);
+  gap: $space-1;
+}
+
+.degoog-takeover-logo {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.degoog-takeover-bot {
+  font-family: monospace;
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1;
+  color: var(--brand-blue);
+}
+
+.degoog-takeover-wordmark {
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  color: var(--danger);
+}
+
+.degoog-takeover-bar .search-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

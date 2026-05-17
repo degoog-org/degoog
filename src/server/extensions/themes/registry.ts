@@ -30,6 +30,9 @@ export interface ThemeManifest {
     index?: string;
     search?: string;
     settings?: string;
+    gandalf?: string;
+    "robots-takeover"?: string;
+    "404"?: string;
   };
   templates?: Record<string, string>;
 }
@@ -164,7 +167,7 @@ export function getThemeById(id: string): LoadedTheme | null {
 }
 
 export async function getThemeHtml(
-  page: "layout" | "index" | "search" | "settings",
+  page: "layout" | "index" | "search" | "settings" | "gandalf" | "robots-takeover" | "404",
 ): Promise<string | null> {
   const theme = getActiveTheme();
   if (!theme) return null;

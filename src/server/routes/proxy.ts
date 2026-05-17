@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { getSettings, asString } from "../utils/plugin-settings";
 import { outgoingFetch, isUrlAllowedForOutgoing } from "../utils/outgoing";
 import { verifyProxyUrl } from "../utils/proxy-sign";
 import { getRandomUserAgent } from "../utils/user-agents";
@@ -63,7 +62,6 @@ router.get("/api/proxy/image", async (c) => {
     return c.body("URL not allowed for outgoing fetch", 403);
   }
 
-  const authId = c.req.query("auth_id");
   const headers: Record<string, string> = {
     "User-Agent": getRandomUserAgent(),
     Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
@@ -73,21 +71,6 @@ router.get("/api/proxy/image", async (c) => {
     "Sec-Fetch-Site": "cross-site",
     Referer: parsed.origin + "/",
   };
-
-  if (authId) {
-    const stored = await getSettings(authId);
-    const apiKey = asString(stored["apiKey"]);
-    const serverUrl = asString(stored["url"]);
-    const headerName = asString(stored["headerName"]);
-    if (apiKey && serverUrl && headerName && /^[A-Za-z0-9-]+$/.test(headerName)) {
-      try {
-        const serverHost = new URL(serverUrl).hostname;
-        if (parsed.hostname === serverHost) {
-          headers[headerName] = apiKey;
-        }
-      } catch { }
-    }
-  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), PROXY_TIMEOUT_MS);

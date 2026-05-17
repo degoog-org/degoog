@@ -1,4 +1,5 @@
 import type { CreateCache } from "../utils/cache";
+import type { SettingValue } from "../utils/plugin-settings";
 import type {
   SearchResult,
   ScoredResult,
@@ -27,7 +28,7 @@ export const TranslateFunction: Translate = Object.assign(
     return key;
   },
   {
-    setLocale(_locale: string) {},
+    setLocale(_locale: string) { },
     locale: "",
     translations: undefined as TranslationRecord | undefined,
   },
@@ -41,17 +42,18 @@ export enum ExtensionStoreType {
   Autocomplete = "autocomplete",
 }
 
+
 export interface SettingField {
   key: string;
   label: string;
   type:
-    | "text"
-    | "number"
-    | "password"
-    | "url"
-    | "toggle"
-    | "textarea"
-    | "select";
+  | "text"
+  | "number"
+  | "password"
+  | "url"
+  | "toggle"
+  | "textarea"
+  | "select";
   required?: boolean;
   placeholder?: string;
   description?: string;
@@ -67,13 +69,15 @@ export interface ExtensionMeta {
   displayName: string;
   description: string;
   type: ExtensionStoreType | "command" | "interceptor";
+  trigger?: string;
   configurable: boolean;
   settingsSchema: SettingField[];
-  settings: Record<string, string | string[]>;
+  settings: Record<string, SettingValue>;
   source?: "builtin" | "plugin";
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
   defaultFeedUrls?: string[];
+  isClientExposed?: boolean;
   requiresNewerVersion?: boolean;
 }
 
@@ -90,7 +94,7 @@ export interface SearchEngine {
   name: string;
   bangShortcut?: string;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   executeSearch(
     query: string,
     page?: number,
@@ -112,12 +116,14 @@ export interface RichSuggestion {
   type?: string;
 }
 
-export type AutocompleteSuggestion = string | { text: string; rich?: RichSuggestion };
+export type AutocompleteSuggestion =
+  | string
+  | { text: string; rich?: RichSuggestion };
 
 export interface AutocompleteProvider {
   name: string;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   getSuggestions(
     query: string,
     context?: AutocompleteContext,
@@ -159,6 +165,7 @@ export interface SlotPlugin {
   slotPositions?: SlotPanelPosition[];
   settingsId?: string;
   settingsFallbackIds?: string[];
+  isClientExposed?: boolean;
   priority?: number;
   trigger: (query: string) => boolean | Promise<boolean>;
   waitForResults?: boolean;
@@ -168,7 +175,7 @@ export interface SlotPlugin {
     context?: SlotPluginContext,
   ): Promise<{ title?: string; html: string }>;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   init?(context: PluginContext): void | Promise<void>;
   t?: Translate;
 }
@@ -192,8 +199,9 @@ export interface BangCommand {
   trigger: string;
   aliases?: string[];
   naturalLanguagePhrases?: string[];
+  isClientExposed?: boolean;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   isConfigured?(): Promise<boolean>;
   init?(context: PluginContext): void | Promise<void>;
   execute(args: string, context?: CommandContext): Promise<CommandResult>;
@@ -205,6 +213,7 @@ export interface SearchResultTab {
   name: string;
   icon?: string;
   engineType?: string;
+  isClientExposed?: boolean;
   settingsId?: string;
   settingsFallbackIds?: string[];
   executeSearch?(
@@ -213,7 +222,7 @@ export interface SearchResultTab {
     context?: { clientIp?: string },
   ): Promise<{ results: SearchResult[]; totalPages?: number }>;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   init?(context: PluginContext): void | Promise<void>;
   t?: Translate;
 }
@@ -227,8 +236,9 @@ export interface RequestMiddleware {
   name: string;
   settingsId?: string;
   settingsFallbackIds?: string[];
+  isClientExposed?: boolean;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   init?(context: PluginContext): void | Promise<void>;
   handle(
     req: Request,
@@ -246,6 +256,7 @@ export interface SearchBarAction {
   type: SearchBarActionType;
   url?: string;
   trigger?: string;
+  isClientExposed?: boolean;
   t?: Translate;
 }
 
@@ -282,7 +293,7 @@ export interface Transport {
   description?: string;
   timeoutMs?: number;
   settingsSchema?: SettingField[];
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   available(): boolean | Promise<boolean>;
   fetch(
     url: string,
@@ -305,9 +316,10 @@ export interface QueryInterceptor {
   name: string;
   description: string;
   settingsId?: string;
+  isClientExposed?: boolean;
   settingsSchema?: SettingField[];
   priority?: number;
-  configure?(settings: Record<string, string | string[]>): void;
+  configure?(settings: Record<string, SettingValue>): void;
   init?(context: PluginContext): void | Promise<void>;
   intercept(
     query: string,
@@ -323,14 +335,31 @@ export interface UovadipasquaSearchQueryTrigger {
 }
 
 export type UovadipasquaTrigger = UovadipasquaSearchQueryTrigger;
+
+export interface UovadipasquaClientStorageBinding {
+  extensionId: string;
+  styleUrl?: string;
+  localStorageKey?: string;
+  apiBase?: string;
+}
+
 export interface Uovadipasqua {
   id?: string;
   triggers: UovadipasquaTrigger[];
   waitForResults?: boolean;
+  repeatOnQuery?: boolean;
+  clientStorage?: {
+    localStorageKey: string;
+  };
+  proxyImages?: Record<string, string>;
+  routes?: PluginRoute[];
 }
 export interface UovadipasquaMatch {
   id: string;
   scriptUrl: string;
-  styleUrl: string | null;
+  styleUrl?: string;
   waitForResults: boolean;
+  repeatOnQuery?: boolean;
+  assets?: Record<string, string>;
+  apiBase?: string;
 }

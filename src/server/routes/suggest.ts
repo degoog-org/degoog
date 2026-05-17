@@ -2,14 +2,14 @@ import { Hono } from "hono";
 import type { SuggestPostBody } from "../types/search";
 import { guardApiKey } from "../utils/api-key-guard";
 import { DEGOOG_SETTINGS_ID } from "../utils/search";
-import { asString, getSettings } from "../utils/plugin-settings";
+import { asBoolean, asString, getSettings } from "../utils/plugin-settings";
 import { checkRateLimit } from "../utils/rate-limit";
 import { getClientIp } from "../utils/request";
 import { getSuggestionsFromProviders } from "../extensions/autocomplete/registry";
 
 async function _applySuggestRateLimit(c: Parameters<typeof getClientIp>[0]) {
   const settings = await getSettings(DEGOOG_SETTINGS_ID);
-  if (asString(settings.rateLimitSuggestEnabled) !== "true") return null;
+  if (!asBoolean(settings.rateLimitSuggestEnabled)) return null;
   const ip = getClientIp(c) ?? "unknown";
   const opts = {
     rateLimitEnabled: "true",
@@ -21,11 +21,17 @@ async function _applySuggestRateLimit(c: Parameters<typeof getClientIp>[0]) {
   };
   const result = checkRateLimit(ip, opts);
   if (!result.allowed && result.retryAfterSec !== undefined) {
-    return (c as Parameters<typeof getClientIp>[0] & { json: Function }).json(
-      { error: "Too many requests" },
-      429,
-      { "Retry-After": String(result.retryAfterSec) },
-    );
+    return (
+      c as Parameters<typeof getClientIp>[0] & {
+        json: (
+          body: unknown,
+          status: number,
+          headers: Record<string, string>,
+        ) => Response;
+      }
+    ).json({ error: "Too many requests" }, 429, {
+      "Retry-After": String(result.retryAfterSec),
+    });
   }
   return null;
 }

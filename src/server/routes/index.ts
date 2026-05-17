@@ -1,9 +1,13 @@
 import { Hono } from "hono";
 
+import { cssCheckOn, isBlocked } from "../utils/bot-trap";
+import { hasPinged, strike } from "../utils/link-token";
+import { getClientIp } from "../utils/request";
 import commands from "./commands";
+import honeypot from "./honeypot";
+import pages, { buildGandalf } from "./pages";
 import uovadipasqua from "./uovadipasqua";
 import extensions from "./extensions";
-import pages from "./pages";
 import pluginAssets from "./plugin-assets";
 import pluginRoutes from "./plugin-routes";
 import proxy from "./proxy";
@@ -25,6 +29,29 @@ const globalRouter = new Hono();
 // e.g. globalRouter.route("/", commands); becomes globalRouter.route("/commands/", commands);
 // needs a full refactor of the client-side code to match the new API endpoints, but it would be more maintainable and scalable in the long run
 
+globalRouter.use("*", async (c, next) => {
+  const ip = getClientIp(c);
+  if (ip && (await isBlocked(ip))) {
+    const locale = c.req
+      .header("accept-language")
+      ?.split(",")[0]
+      ?.split("-")[0]
+      ?.trim();
+    return c.html(await buildGandalf(locale), 403);
+  }
+  if (
+    ip &&
+    (await cssCheckOn()) &&
+    c.req.path === "/search" &&
+    c.req.query("q") &&
+    !hasPinged(ip)
+  ) {
+    await strike(ip);
+  }
+  return next();
+});
+
+globalRouter.route("/", honeypot);
 globalRouter.route("/", commands);
 globalRouter.route("/", uovadipasqua);
 globalRouter.route("/", extensions);

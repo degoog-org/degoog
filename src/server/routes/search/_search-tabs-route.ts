@@ -9,7 +9,7 @@ export function registerSearchTabsRoutes(router: Hono): void {
     const seen = new Set<string>();
     const list: { id: string; name: string; icon: string | null }[] = [];
 
-    for (const engineType of getCustomEngineTypes()) {
+    for (const engineType of await getCustomEngineTypes()) {
       seen.add(engineType);
       list.push({
         id: `engine:${engineType}`,

@@ -1,0 +1,27 @@
+[data-tooltip] {
+  position: relative;
+
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--tooltip-bg, #1a1a1a);
+    color: var(--tooltip-text, #fff);
+    font-size: $font-size-xs;
+    font-weight: 400;
+    white-space: nowrap;
+    padding: 4px $space-2;
+    border-radius: $radius-sm;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity $transition-fast;
+    z-index: 200;
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    opacity: 1;
+  }
+}

@@ -27,6 +27,7 @@ export interface ExtensionMeta {
   displayName: string;
   description: string;
   type: string;
+  trigger?: string;
   configurable: boolean;
   settingsSchema: SettingField[];
   settings: Record<string, string | string[]>;
@@ -34,6 +35,7 @@ export interface ExtensionMeta {
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
   defaultFeedUrls?: string[];
+  isClientExposed?: boolean;
   requiresNewerVersion?: boolean;
 }
 

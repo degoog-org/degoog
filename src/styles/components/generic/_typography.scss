@@ -58,4 +58,25 @@
     background: var(--bg-hover);
     text-transform: capitalize;
   }
+
+  &--proxy-exposed,
+  &--proxy-safe,
+  &--proxy-unknown {
+    background: transparent;
+    cursor: help;
+    line-height: 1;
+    padding: 0;
+  }
+
+  &--proxy-exposed { 
+    color: $warning; 
+  }
+
+  &--proxy-safe { 
+    color: $success; 
+  }
+
+  &--proxy-unknown { 
+    color: var(--text-secondary);
+  }
 }

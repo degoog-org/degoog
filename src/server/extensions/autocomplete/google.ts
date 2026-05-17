@@ -4,6 +4,8 @@ import type {
   AutocompleteSuggestion,
   RichSuggestion,
 } from "../../types";
+import { asBoolean } from "../../utils/plugin-settings";
+import type { SettingValue } from "../../utils/plugin-settings";
 
 export class GoogleAutocompleteProvider implements AutocompleteProvider {
   name = "Google";
@@ -22,8 +24,8 @@ export class GoogleAutocompleteProvider implements AutocompleteProvider {
 
   private richEnabled = false;
 
-  configure(settings: Record<string, string | string[]>): void {
-    this.richEnabled = settings.richSuggestions === "true";
+  configure(settings: Record<string, SettingValue>): void {
+    this.richEnabled = asBoolean(settings.richSuggestions);
   }
 
   async getSuggestions(
@@ -46,21 +48,25 @@ export class GoogleAutocompleteProvider implements AutocompleteProvider {
         const data = JSON.parse(text);
         const suggestionsData = data[0] || [];
 
-        return suggestionsData.map((item: any): AutocompleteSuggestion => {
-          const rawText = (item[0] || "")
-            .replace(/<\/?b>/gi, "")
-            .replace(/&#39;/g, "'");
-          const meta = item[3];
-          if (!meta) return rawText;
+        return suggestionsData.map(
+          (
+            item: [string, string, string, { zi?: string; zs?: string }],
+          ): AutocompleteSuggestion => {
+            const rawText = (item[0] || "")
+              .replace(/<\/?b>/gi, "")
+              .replace(/&#39;/g, "'");
+            const meta = item[3];
+            if (!meta) return rawText;
 
-          const rich: RichSuggestion = {};
-          if (meta.zi) rich.description = meta.zi;
-          if (meta.zs) rich.thumbnail = meta.zs;
+            const rich: RichSuggestion = {};
+            if (meta.zi) rich.description = meta.zi;
+            if (meta.zs) rich.thumbnail = meta.zs;
 
-          return Object.keys(rich).length > 0
-            ? { text: rawText, rich }
-            : rawText;
-        });
+            return Object.keys(rich).length > 0
+              ? { text: rawText, rich }
+              : rawText;
+          },
+        );
       } else {
         const data = JSON.parse(text);
         return (data as [unknown, string[]])[1] ?? [];

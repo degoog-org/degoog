@@ -19,6 +19,7 @@ import { initTransports } from "./extensions/transports/registry";
 import { initAutocomplete } from "./extensions/autocomplete/registry";
 import { initInterceptors } from "./extensions/interceptors/registry";
 import globalRouter from "./routes";
+import { build404 } from "./routes/pages";
 import { setOutgoingAllowlist } from "./utils/outgoing";
 import { initServerKey } from "./utils/server-key";
 
@@ -36,16 +37,27 @@ app.use("*", async (c, next) => {
 
 app.use(`${BASE_PATH}/public/*.js`, async (c, next) => {
   await next();
-  c.res.headers.set("Cache-Control", "no-cache");
+  c.res.headers.set("Cache-Control", "public, max-age=31536000, immutable");
 });
 app.use(
   `${BASE_PATH}/public/*`,
   serveStatic({
     root: "src/",
-    rewriteRequestPath: BASE_PATH ? (p) => p.slice(BASE_PATH.length) : undefined,
+    rewriteRequestPath: BASE_PATH
+      ? (p) => p.slice(BASE_PATH.length)
+      : undefined,
   }),
 );
 app.route(BASE_PATH || "/", globalRouter);
+
+app.notFound(async (c) => {
+  const locale = c.req
+    .header("accept-language")
+    ?.split(",")[0]
+    ?.split("-")[0]
+    ?.trim();
+  return c.html(await build404(locale), 404);
+});
 
 const port = Number(process.env.DEGOOG_PORT) || 4444;
 

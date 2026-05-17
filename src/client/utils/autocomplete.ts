@@ -35,18 +35,18 @@ async function _fetchSuggestions(
   try {
     const res = state.postMethodEnabled
       ? await fetch(`${getBase()}/api/suggest`, {
-          method: "POST",
-          body: JSON.stringify({ query }),
-          headers: {
-            "Content-Type": "application/json",
-            ...searchAuthHeaders(),
-          },
-          signal: acController.signal,
-        })
+        method: "POST",
+        body: JSON.stringify({ query }),
+        headers: {
+          "Content-Type": "application/json",
+          ...searchAuthHeaders(),
+        },
+        signal: acController.signal,
+      })
       : await fetch(`${getBase()}/api/suggest?q=${encodeURIComponent(query)}`, {
-          headers: searchAuthHeaders(),
-          signal: acController.signal,
-        });
+        headers: searchAuthHeaders(),
+        signal: acController.signal,
+      });
 
     const raw = (await res.json()) as {
       text: string;
@@ -95,7 +95,7 @@ async function _fetchSuggestions(
         performSearch(text);
       });
     });
-  } catch {}
+  } catch { }
 }
 
 export function initAutocomplete(
