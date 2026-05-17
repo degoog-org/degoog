@@ -3,7 +3,9 @@ import {
   getUovadipasquaAssetPath,
   listUovadipasquaClientStorageBindings,
   matchUovadipasqua,
+  findUovadipasquaRoute,
 } from "../extensions/uovadipasqua/registry";
+import { logger } from "../utils/logger";
 
 const router = new Hono();
 
@@ -28,6 +30,28 @@ const CONTENT_TYPES: Record<string, string> = {
   webp: "image/webp",
   svg: "image/svg+xml",
 };
+
+router.all("/api/uovadipasqua/:id/*", async (c) => {
+  const id = c.req.param("id");
+  const prefix = `/api/uovadipasqua/${id}`;
+  const suffix = c.req.path.startsWith(prefix)
+    ? c.req.path.slice(prefix.length) || "/"
+    : "/";
+  const method = c.req.method.toLowerCase();
+  const route = findUovadipasquaRoute(id, method, suffix);
+  if (!route) return c.notFound();
+  try {
+    const res = await route.handler(c.req.raw);
+    return new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: res.headers,
+    });
+  } catch (err) {
+    logger.error(`[uovadipasqua] route error [${id}] ${method} ${suffix}:`, err);
+    return c.json({ error: "Route failed" }, 500);
+  }
+});
 
 router.get("/uovadipasqua/:id/:asset", async (c) => {
   const id = c.req.param("id");

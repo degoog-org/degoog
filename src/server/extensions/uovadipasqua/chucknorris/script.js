@@ -1,24 +1,31 @@
 const KEY = "degoog:uovadipasqua:chucknorris";
 const VAL = "1";
 
+let _apiBase = null;
+
 const applyEffect = async (on) => {
   document
     .querySelectorAll(".logo-o1")
     .forEach((el) => el.classList.toggle("chuck-norris", on));
   const homeLogo = document.getElementById("home-logo");
-  if (!homeLogo || !on) return;
+  if (!homeLogo || !on || !_apiBase) return;
 
-  const chuckme = await window
-    .fetch("https://api.chucknorris.io/jokes/random")
-    .then((res) => res.json());
-  if (chuckme?.value) {
-    const allHailChuck = document.createElement("div");
-    allHailChuck.textContent = chuckme.value;
-    homeLogo.appendChild(allHailChuck);
+  try {
+    const res = await fetch(`${_apiBase}/joke`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data?.value) {
+      const allHailChuck = document.createElement("div");
+      allHailChuck.textContent = data.value;
+      homeLogo.appendChild(allHailChuck);
+    }
+  } catch {
+    return;
   }
 };
 
 export const run = async (ctx) => {
+  if (ctx?.apiBase) _apiBase = ctx.apiBase;
   const q = String(ctx?.query ?? "")
     .trim()
     .toLowerCase();
@@ -31,4 +38,7 @@ export const run = async (ctx) => {
   await applyEffect(true);
 };
 
-export const restore = () => applyEffect(localStorage.getItem(KEY) === VAL);
+export const restore = async (ctx) => {
+  if (ctx?.apiBase) _apiBase = ctx.apiBase;
+  await applyEffect(localStorage.getItem(KEY) === VAL);
+};

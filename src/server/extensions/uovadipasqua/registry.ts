@@ -4,9 +4,12 @@ import type {
   Uovadipasqua,
   UovadipasquaClientStorageBinding,
   UovadipasquaMatch,
+  PluginRoute,
+  PluginRouteMethod,
 } from "../../types";
 import { createRegistry } from "../registry-factory";
 import { getBasePath } from "../../utils/base-url";
+import { buildSignedProxyUrl } from "../../utils/proxy-sign";
 import { logger } from "../../utils/logger";
 
 const builtinsDir = join(
@@ -19,6 +22,24 @@ const builtinsDir = join(
 
 const _entryPaths = new Map<string, string>();
 const _hasStyle = new Map<string, boolean>();
+const _routes = new Map<string, PluginRoute[]>();
+
+const VALID_METHODS: PluginRouteMethod[] = ["get", "post", "put", "delete", "patch"];
+
+const _normalizePath = (p: string): string => {
+  const s = p.trim().replace(/^\/+/, "").replace(/\/+$/, "") || "";
+  return s ? `/${s}` : "/";
+};
+
+const _isValidRoute = (r: unknown): r is PluginRoute => {
+  if (typeof r !== "object" || r === null) return false;
+  const route = r as Record<string, unknown>;
+  return (
+    VALID_METHODS.includes(route.method as PluginRouteMethod) &&
+    typeof route.path === "string" &&
+    typeof route.handler === "function"
+  );
+};
 
 const _isUovadipasqua = (val: unknown): val is Uovadipasqua => {
   if (typeof val !== "object" || val === null) return false;
@@ -47,11 +68,20 @@ const registry = createRegistry<Uovadipasqua>({
     const id = canonicalId ?? folderName;
     item.id = id;
     _entryPaths.set(id, entryPath);
-    if (legacyId && legacyId !== id) _entryPaths.delete(legacyId);
+    if (legacyId && legacyId !== id) {
+      _entryPaths.delete(legacyId);
+      _routes.delete(legacyId);
+    }
     const styleStat = await stat(join(entryPath, "style.css")).catch(
       () => null,
     );
     _hasStyle.set(id, !!styleStat?.isFile());
+    const raw = item.routes;
+    if (Array.isArray(raw) && raw.every(_isValidRoute)) {
+      _routes.set(id, raw.map((r) => ({ ...r, path: _normalizePath(r.path) })));
+    } else {
+      _routes.delete(id);
+    }
   },
   debugTag: "uovadipasqua",
 });
@@ -59,7 +89,23 @@ const registry = createRegistry<Uovadipasqua>({
 export async function initUovadipasquas(): Promise<void> {
   _entryPaths.clear();
   _hasStyle.clear();
+  _routes.clear();
   await registry.init();
+}
+
+export function findUovadipasquaRoute(
+  id: string,
+  method: string,
+  path: string,
+): PluginRoute | null {
+  const routes = _routes.get(id);
+  if (!routes) return null;
+  const normalized = _normalizePath(path);
+  return (
+    routes.find(
+      (r) => r.method === method.toLowerCase() && r.path === normalized,
+    ) ?? null
+  );
 }
 
 const ALLOWED_ASSETS = /^[\w.-]+\.(js|css|png|jpg|jpeg|gif|webp|svg)$/;
@@ -82,14 +128,25 @@ const _styleUrl = (id: string): string | undefined => {
   return `${getBasePath()}/uovadipasqua/${id}/style.css`;
 };
 
+const _buildAssets = (
+  item: Uovadipasqua,
+): Record<string, string> | undefined => {
+  if (!item.proxyImages || Object.keys(item.proxyImages).length === 0) return undefined;
+  return Object.fromEntries(
+    Object.entries(item.proxyImages).map(([key, url]) => [key, buildSignedProxyUrl(url)]),
+  );
+};
+
 const _clientStorageBindingFor = (
   item: Uovadipasqua,
 ): UovadipasquaClientStorageBinding | undefined => {
   if (!item.id || !item.clientStorage) return undefined;
+  const hasRoutes = (_routes.get(item.id)?.length ?? 0) > 0;
   return {
     extensionId: item.id,
     styleUrl: _styleUrl(item.id),
     localStorageKey: item.clientStorage.localStorageKey,
+    ...(hasRoutes ? { apiBase: `${getBasePath()}/api/uovadipasqua/${item.id}` } : {}),
   };
 };
 
@@ -119,12 +176,15 @@ export const matchUovadipasqua = (query: string): UovadipasquaMatch[] => {
       continue;
     }
     const basePath = getBasePath();
+    const hasRoutes = (_routes.get(item.id)?.length ?? 0) > 0;
     matches.push({
       id: item.id,
       scriptUrl: `${basePath}/uovadipasqua/${item.id}/script.js`,
       styleUrl: _styleUrl(item.id),
       waitForResults: !!item.waitForResults,
       repeatOnQuery: !!item.repeatOnQuery,
+      assets: _buildAssets(item),
+      ...(hasRoutes ? { apiBase: `${basePath}/api/uovadipasqua/${item.id}` } : {}),
     });
   }
   return matches;

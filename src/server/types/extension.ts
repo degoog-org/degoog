@@ -340,6 +340,7 @@ export interface UovadipasquaClientStorageBinding {
   extensionId: string;
   styleUrl?: string;
   localStorageKey?: string;
+  apiBase?: string;
 }
 
 export interface Uovadipasqua {
@@ -350,6 +351,8 @@ export interface Uovadipasqua {
   clientStorage?: {
     localStorageKey: string;
   };
+  proxyImages?: Record<string, string>;
+  routes?: PluginRoute[];
 }
 export interface UovadipasquaMatch {
   id: string;
@@ -357,4 +360,6 @@ export interface UovadipasquaMatch {
   styleUrl?: string;
   waitForResults: boolean;
   repeatOnQuery?: boolean;
+  assets?: Record<string, string>;
+  apiBase?: string;
 }
