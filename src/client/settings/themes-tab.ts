@@ -18,9 +18,9 @@ const _renderThemeCard = (
   const status = themeExt.configurable ? getConfigStatus(themeExt) : null;
   const badge =
     status === "configured"
-      ? '<span class="ext-configured-badge"></span>'
+      ? '<span class="ext-configured-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-configured")) + '"></span>'
       : status === "needs-config"
-        ? '<span class="ext-needs-config-badge"></span>'
+        ? '<span class="ext-needs-config-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-needs-config")) + '"></span>'
         : "";
   const configureBtn = themeExt.configurable
     ? `<button class="ext-card-configure btn btn--secondary degoog-btn degoog-btn--secondary" data-id="${escapeHtml(themeExt.id)}" type="button">${escapeHtml(t("settings-page.extensions.configure"))}</button>`

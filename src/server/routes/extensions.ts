@@ -112,6 +112,7 @@ async function getSlotExtensionMeta(
       settingsSchema: fullSchema,
       settings,
       source: getSlotSource(slot.id),
+      isClientExposed: slot.isClientExposed,
     });
   }
   return out;

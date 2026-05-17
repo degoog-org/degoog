@@ -18,6 +18,7 @@ import { autocompleteCache, createCache } from "../../utils/cache";
 import { getTransportNames } from "../transports/registry";
 import { createRegistry } from "../registry-factory";
 import { logger } from "../../utils/logger";
+import { buildSignedProxyUrl } from "../../utils/proxy-sign";
 import { GoogleAutocompleteProvider } from "./google";
 import { DuckDuckGoAutocompleteProvider } from "./duckduckgo";
 
@@ -291,11 +292,19 @@ export async function getSuggestionsFromProviders(query: string): Promise<
   }
 
   const richMerged: NormItem[] = Array.from(richItems.values()).map(
-    (entry) => ({
-      text: entry.text,
-      source: entry.sources.join(", "),
-      rich: entry.rich,
-    }),
+    (entry) => {
+      const thumb = entry.rich.thumbnail;
+      return {
+        text: entry.text,
+        source: entry.sources.join(", "),
+        rich: {
+          ...entry.rich,
+          ...(thumb && !thumb.includes("/api/proxy/")
+            ? { thumbnail: buildSignedProxyUrl(thumb) }
+            : {}),
+        },
+      };
+    },
   );
 
   const plainMerged: NormItem[] = Array.from(seen.values()).map((entry) => ({

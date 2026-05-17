@@ -209,7 +209,12 @@
       "group-builtin-autocomplete": "Built-in providers",
       "group-themes": "Themes",
       "apply-failed": "Failed",
-      "save-defaults": "Save as instance defaults"
+      "save-defaults": "Save as instance defaults",
+      "exposure-exposed": "Browser may contact external services directly",
+      "exposure-safe": "Browser requests go through the server",
+      "exposure-unknown": "Network behaviour not declared",
+      "status-configured": "Configured",
+      "status-needs-config": "Needs configuration"
     },
     "errors": {
       "load-extensions": "Failed to load extensions.",

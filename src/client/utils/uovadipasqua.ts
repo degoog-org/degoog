@@ -8,12 +8,15 @@ interface UovadipasquaMatchPayload {
   styleUrl?: string;
   waitForResults: boolean;
   repeatOnQuery?: boolean;
+  assets?: Record<string, string>;
+  apiBase?: string;
 }
 
 interface UovadipasquaStorageBindingPayload {
   extensionId: string;
   styleUrl?: string;
   localStorageKey?: string;
+  apiBase?: string;
 }
 
 const _injectedStyleUrls = new Set<string>();
@@ -33,6 +36,8 @@ export function injectUovadipasquaStyle(styleUrl: string | undefined): void {
 
 type UovadRunContext = {
   query: string;
+  assets?: Record<string, string>;
+  apiBase?: string;
 };
 
 const _fired = new Set<string>();
@@ -71,7 +76,7 @@ async function _ensureClientStorageBindings(): Promise<
 export async function applyUovaStorage(): Promise<void> {
   const bindings = await _ensureClientStorageBindings();
   await Promise.all(
-    bindings.map(async ({ extensionId, styleUrl, localStorageKey }) => {
+    bindings.map(async ({ extensionId, styleUrl, localStorageKey, apiBase }) => {
       if (
         styleUrl &&
         localStorageKey &&
@@ -82,9 +87,9 @@ export async function applyUovaStorage(): Promise<void> {
       const url = `${getBase()}/uovadipasqua/${extensionId}/script.js`;
       try {
         const mod = (await import(url)) as {
-          restore?: () => void | Promise<void>;
+          restore?: (ctx?: { apiBase?: string }) => void | Promise<void>;
         };
-        await mod.restore?.();
+        await mod.restore?.({ apiBase });
       } catch (err) {
         logger.warn("uovadipasqua", `restore failed for "${extensionId}"`, err);
       }
@@ -137,7 +142,7 @@ export async function triggerUovadipasqua(query: string): Promise<void> {
             run?: (ctx: UovadRunContext) => void | Promise<void>;
           };
           if (typeof mod.run === "function") {
-            await mod.run({ query: trimmed });
+            await mod.run({ query: trimmed, assets: match.assets, apiBase: match.apiBase });
           }
         } catch (err) {
           logger.warn("uovadipasqua", `failed to run "${match.id}"`, err);

@@ -107,6 +107,7 @@ export async function getSearchBarActionExtensionMeta(): Promise<
       settingsSchema: schema,
       settings,
       source: "plugin",
+      isClientExposed: action.isClientExposed,
     });
   }
   return out;

@@ -201,7 +201,12 @@
       "group-builtin-transports": "Transports intégrés",
       "group-themes": "Thèmes",
       "apply-failed": "Échec",
-      "save-defaults": "Enregistrer comme valeur par défaut de l'instance"
+      "save-defaults": "Enregistrer comme valeur par défaut de l'instance",
+      "exposure-exposed": "Le navigateur peut contacter des services externes directement",
+      "exposure-safe": "Les requêtes du navigateur passent par le serveur",
+      "exposure-unknown": "Comportement réseau non déclaré",
+      "status-configured": "Configuré",
+      "status-needs-config": "Configuration requise"
     },
     "errors": {
       "load-extensions": "Impossible de charger les extensions.",

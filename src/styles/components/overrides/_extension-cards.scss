@@ -23,6 +23,12 @@
     align-items: center;
     justify-content: space-between;
     gap: $space-3;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: $space-2;
+    }
   }
 
   &-info {
@@ -54,8 +60,7 @@
     font-size: $font-size-small;
     color: var(--text-secondary);
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-wrap: wrap;
   }
 
   &-actions {
@@ -63,6 +68,11 @@
     align-items: center;
     gap: $space-3;
     flex-shrink: 0;
+
+    @media (max-width: 768px) {
+      justify-content: space-between;
+      width: 100%;
+    }
   }
 
   &-apply {
@@ -97,6 +107,12 @@
       opacity: 0.2;
       pointer-events: none;
     }
+  }
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
   }
 }
 
@@ -356,7 +372,7 @@
   border: 1px solid var(--border);
   border-radius: $radius-md;
   color: var(--text-secondary);
-  cursor: pointer;  
+  cursor: pointer;
   font-size: $font-size-small;
   padding: $space-2 $space-3;
   transition: color $transition-fast, border-color $transition-fast;

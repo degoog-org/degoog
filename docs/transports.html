@@ -329,6 +329,39 @@
   // transform and return a Response
 }</code></pre>
 
+          <h2>Client exposure</h2>
+          <p>
+            Transports run entirely on the server. They fetch pages and APIs on
+            behalf of engines and autocomplete providers. They do not render content
+            into the search UI themselves and do not appear in the plugin network
+            indicator in Settings. Use <code>context.fetch</code> in your
+            <code>fetch(url, options, context)</code> implementation so outgoing
+            proxy and transport settings apply.
+          </p>
+          <p>
+            Picking a transport for an engine or autocomplete provider only changes
+            how the <strong>server</strong> reaches upstream services. It does not
+            mean the user's browser skips Degoog's image proxy:
+          </p>
+          <ul>
+            <li>
+              <strong>Search results</strong>: thumbnails and image URLs are served
+              through <code>/api/proxy/image</code> when results are rendered.
+            </li>
+            <li>
+              <strong>Rich autocomplete</strong>: return upstream
+              <code>rich.thumbnail</code> URLs from your provider as usual. Degoog
+              signs them before the suggest API responds so the dropdown loads images
+              via <code>/api/proxy/image</code>. See
+              <a href="autocomplete.html#declaring-client-exposure">Autocomplete</a>.
+            </li>
+            <li>
+              <strong>Plugins</strong>: slots and commands that embed external URLs
+              in HTML declare <code>isClientExposed</code>. See
+              <a href="plugins.html#declaring-client-exposure">Declaring client exposure</a>.
+            </li>
+          </ul>
+
           <h2>Setup</h2>
           <p>
             Create your <code>data/transports/</code> directory or set your

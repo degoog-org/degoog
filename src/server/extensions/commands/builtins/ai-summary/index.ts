@@ -215,6 +215,7 @@ const aiSummarySlot: SlotPlugin = {
     return this.t!("ai-summary.description");
   },
   position: SlotPanelPosition.AtAGlance,
+  isClientExposed: false,
 
   t: TranslateFunction,
 

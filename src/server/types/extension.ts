@@ -42,6 +42,7 @@ export enum ExtensionStoreType {
   Autocomplete = "autocomplete",
 }
 
+
 export interface SettingField {
   key: string;
   label: string;
@@ -76,6 +77,7 @@ export interface ExtensionMeta {
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
   defaultFeedUrls?: string[];
+  isClientExposed?: boolean;
   requiresNewerVersion?: boolean;
 }
 
@@ -163,6 +165,7 @@ export interface SlotPlugin {
   slotPositions?: SlotPanelPosition[];
   settingsId?: string;
   settingsFallbackIds?: string[];
+  isClientExposed?: boolean;
   priority?: number;
   trigger: (query: string) => boolean | Promise<boolean>;
   waitForResults?: boolean;
@@ -196,6 +199,7 @@ export interface BangCommand {
   trigger: string;
   aliases?: string[];
   naturalLanguagePhrases?: string[];
+  isClientExposed?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
   isConfigured?(): Promise<boolean>;
@@ -209,6 +213,7 @@ export interface SearchResultTab {
   name: string;
   icon?: string;
   engineType?: string;
+  isClientExposed?: boolean;
   settingsId?: string;
   settingsFallbackIds?: string[];
   executeSearch?(
@@ -231,6 +236,7 @@ export interface RequestMiddleware {
   name: string;
   settingsId?: string;
   settingsFallbackIds?: string[];
+  isClientExposed?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
   init?(context: PluginContext): void | Promise<void>;
@@ -250,6 +256,7 @@ export interface SearchBarAction {
   type: SearchBarActionType;
   url?: string;
   trigger?: string;
+  isClientExposed?: boolean;
   t?: Translate;
 }
 
@@ -309,6 +316,7 @@ export interface QueryInterceptor {
   name: string;
   description: string;
   settingsId?: string;
+  isClientExposed?: boolean;
   settingsSchema?: SettingField[];
   priority?: number;
   configure?(settings: Record<string, SettingValue>): void;
@@ -332,6 +340,7 @@ export interface UovadipasquaClientStorageBinding {
   extensionId: string;
   styleUrl?: string;
   localStorageKey?: string;
+  apiBase?: string;
 }
 
 export interface Uovadipasqua {
@@ -342,6 +351,8 @@ export interface Uovadipasqua {
   clientStorage?: {
     localStorageKey: string;
   };
+  proxyImages?: Record<string, string>;
+  routes?: PluginRoute[];
 }
 export interface UovadipasquaMatch {
   id: string;
@@ -349,4 +360,6 @@ export interface UovadipasquaMatch {
   styleUrl?: string;
   waitForResults: boolean;
   repeatOnQuery?: boolean;
+  assets?: Record<string, string>;
+  apiBase?: string;
 }

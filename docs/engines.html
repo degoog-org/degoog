@@ -423,6 +423,18 @@ async executeSearch(query, page = 1, timeFilter, context) {
             You should still use <code>context.fetch</code> in your custom
             engines so this setting applies automatically.
           </p>
+          <p>
+            <strong>Client exposure:</strong> The network indicator on extension
+            cards in Settings applies to plugins only, not search engines. Your
+            <code>executeSearch</code> calls always run on the server when you use
+            <code>context.fetch</code>. If your results include
+            <code>thumbnail</code> or <code>imageUrl</code> fields, the search
+            theme may load those URLs in the user's browser. Use
+            <code>context.signProxyUrl(url)</code> so images are served through
+            the server instead. See
+            <a href="plugins.html#declaring-client-exposure">Declaring client exposure</a>
+            for how plugins declare <code>isClientExposed</code>.
+          </p>
 
           <h2>Setup</h2>
           <p>

@@ -41,9 +41,9 @@ const _renderEngineCard = (
     allowConfigure && engine.configurable ? getConfigStatus(engine) : null;
   const badge =
     status === "configured"
-      ? '<span class="ext-configured-badge"></span>'
+      ? '<span class="ext-configured-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-configured")) + '"></span>'
       : status === "needs-config"
-        ? '<span class="ext-needs-config-badge"></span>'
+        ? '<span class="ext-needs-config-badge" data-tooltip="' + escapeHtml(t("settings-page.extensions.status-needs-config")) + '"></span>'
         : "";
   const configureBtn =
     allowConfigure && engine.configurable

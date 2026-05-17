@@ -11,6 +11,16 @@ const _priority = (plugin: ExtensionMeta): number => {
   return isNaN(n) ? 0 : n;
 };
 
+const _exposureIcon = (plugin: ExtensionMeta): string => {
+  if (plugin.isClientExposed === true) {
+    return `<span class="degoog-badge degoog-badge--proxy-exposed" data-tooltip="${escapeHtml(t("settings-page.extensions.exposure-exposed"))}"><i class="fa-solid fa-triangle-exclamation"></i></span>`;
+  }
+  if (plugin.isClientExposed === false) {
+    return `<span class="degoog-badge degoog-badge--proxy-safe" data-tooltip="${escapeHtml(t("settings-page.extensions.exposure-safe"))}"><i class="fa-solid fa-circle-check"></i></span>`;
+  }
+  return `<span class="degoog-badge degoog-badge--proxy-unknown" data-tooltip="${escapeHtml(t("settings-page.extensions.exposure-unknown"))}"><i class="fa-solid fa-circle-info"></i></span>`;
+};
+
 const _renderPluginCard = (
   plugin: ExtensionMeta,
   orderable: boolean,
@@ -24,6 +34,7 @@ const _renderPluginCard = (
     plugin.source === "builtin"
       ? `<span class="degoog-badge">Built-in</span>`
       : "";
+  const exposureIcon = _exposureIcon(plugin);
   const desc = plugin.description
     ? `<span class="ext-card-desc">${escapeHtml(plugin.description)}</span>`
     : "";
@@ -33,9 +44,9 @@ const _renderPluginCard = (
   const status = plugin.configurable ? getConfigStatus(plugin) : null;
   const badge =
     status === "configured"
-      ? '<span class="ext-configured-badge"></span>'
+      ? `<span class="ext-configured-badge" data-tooltip="${escapeHtml(t("settings-page.extensions.status-configured"))}"></span>`
       : status === "needs-config"
-        ? '<span class="ext-needs-config-badge"></span>'
+        ? `<span class="ext-needs-config-badge" data-tooltip="${escapeHtml(t("settings-page.extensions.status-needs-config"))}"></span>`
         : "";
   const configureBtn = plugin.configurable
     ? `<button class="ext-card-configure btn btn--secondary degoog-btn degoog-btn--secondary" data-id="${escapeHtml(plugin.id)}" type="button">${escapeHtml(t("settings-page.extensions.configure"))}</button>`
@@ -65,6 +76,7 @@ const _renderPluginCard = (
           <div class="ext-card-name-row">
             <label for="plugin-toggle-${escapeHtml(plugin.id)}" class="ext-card-name plugin-toggle-label">${escapeHtml(plugin.displayName)}</label>
             ${builtinBadge}
+            ${exposureIcon}
           </div>
           ${trigger}
           ${desc}

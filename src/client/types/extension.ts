@@ -35,6 +35,7 @@ export interface ExtensionMeta {
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
   defaultFeedUrls?: string[];
+  isClientExposed?: boolean;
   requiresNewerVersion?: boolean;
 }
 
