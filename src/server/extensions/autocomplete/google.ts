@@ -36,14 +36,11 @@ export class GoogleAutocompleteProvider implements AutocompleteProvider {
     const encoded = encodeURIComponent(query);
 
     try {
-      const url = this.richEnabled
-        ? `https://www.google.com/complete/search?q=${encoded}&client=gws-wiz&xssi=t&hl=${context?.lang || "en"}`
-        : `https://suggestqueries.google.com/complete/search?client=firefox&q=${encoded}`;
-      const res = await doFetch(url);
-      const buf = await res.arrayBuffer();
-      let text = new TextDecoder("utf-8").decode(buf);
-
       if (this.richEnabled) {
+        const url = `https://www.google.com/complete/search?q=${encoded}&client=gws-wiz&xssi=t&hl=${context?.lang || "en"}`;
+        const res = await doFetch(url);
+        const buf = await res.arrayBuffer();
+        let text = new TextDecoder("iso-8859-1").decode(buf);
         if (text.startsWith(")]}'")) text = text.substring(4);
         const data = JSON.parse(text);
         const suggestionsData = data[0] || [];
@@ -68,8 +65,11 @@ export class GoogleAutocompleteProvider implements AutocompleteProvider {
           },
         );
       } else {
-        const data = JSON.parse(text);
-        return (data as [unknown, string[]])[1] ?? [];
+        const url = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encoded}`;
+        const res = await doFetch(url);
+        const buf = await res.arrayBuffer();
+        const text = new TextDecoder("iso-8859-1").decode(buf);
+        return (JSON.parse(text) as [unknown, string[]])[1] ?? [];
       }
     } catch {
       return [];
