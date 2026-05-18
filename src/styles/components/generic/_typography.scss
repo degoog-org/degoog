@@ -20,7 +20,6 @@
   }
 }
 
-a,
 .degoog-link {
   color: var(--text-link);
   text-decoration: none;
@@ -28,6 +27,11 @@ a,
   &:hover {
     text-decoration: underline;
   }
+}
+
+a {
+  color: var(--text-link);
+  text-decoration: none;
 }
 
 .degoog-link-btn {
