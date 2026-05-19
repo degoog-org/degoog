@@ -1,6 +1,12 @@
 export const stripHtml = (text: string): string =>
   text.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 
+const _CSS_BLOCK_RE =
+  /(?:[.#][\w-]+\s*\{[^{}]*\}|@[^{]+\{(?:[^{}]|\{[^{}]*\})*\})\s*/g;
+
+export const stripCssBlocks = (text: string): string =>
+  text.replace(_CSS_BLOCK_RE, "").trim();
+
 const _DATE_PREFIX =
   /^(?:\d{1,2}\s+)?(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s+\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4}|\d+\s+(?:second|minute|hour|day|week|month|year)s?\s+ago/i;
 

@@ -21,7 +21,7 @@ import type {
 import { extractImageUrl } from "./utils/extract-image";
 import { logger } from "./utils/logger";
 import { outgoingFetch, parseOutgoingTransport } from "./utils/outgoing";
-import { stripHtml } from "./utils/text";
+import { stripHtml, stripCssBlocks } from "./utils/text";
 import { asString, getSettings } from "./utils/plugin-settings";
 import { buildSignedProxyUrl } from "./utils/proxy-sign";
 
@@ -113,7 +113,7 @@ const _mergeIntoMap = (
       if (!existing.sources.includes(r.source)) {
         existing.sources.push(r.source);
       }
-      const cleanSnippet = stripHtml(r.snippet);
+      const cleanSnippet = stripCssBlocks(stripHtml(r.snippet));
       if (cleanSnippet.length > existing.snippet.length) {
         existing.snippet = cleanSnippet;
       }
@@ -125,7 +125,7 @@ const _mergeIntoMap = (
       urlMap.set(normalized, {
         ...r,
         title: stripHtml(r.title),
-        snippet: stripHtml(r.snippet),
+        snippet: stripCssBlocks(stripHtml(r.snippet)),
         url: _cleanUrl(r.url),
         score: positionScore,
         sources: [r.source],
