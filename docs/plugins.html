@@ -164,11 +164,11 @@
           <h2>Folder structure</h2>
           <pre><code>data/plugins/
   my-plugin/
-    index.js        
-    template.html   
-    style.css       
-    script.js       
-    card.html       
+    index.js
+    template.html
+    style.css
+    script.js
+    card.html
     author.json     </code></pre>
           <p>
             Your entry file needs to be <code>index.js</code>,
@@ -261,7 +261,7 @@
           <h2 id="bang-commands">Bang commands</h2>
           <p>
             Bang commands run whenever you type
-            <code>!trigger something</code> into the search bar. You need to
+            <code>!trigger something</code> or <code>something !trigger</code> into the search bar. You need to
             export a single object using <code>export default</code> or
             <code>export const command</code> containing these properties:
           </p>
@@ -277,8 +277,8 @@
             </li>
             <li>
               <strong>execute(args, context)</strong> (async): The
-              <code>args</code> parameter contains whatever text follows your
-              trigger. You must return an object containing a
+              <code>args</code> parameter contains whatever text follows or precedes
+              your trigger. You must return an object containing a
               <code>title</code> string and an <code>html</code> string. You can
               also include an optional <code>totalPages</code> number.
             </li>
