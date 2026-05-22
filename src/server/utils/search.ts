@@ -19,7 +19,7 @@ import { asString, getSettings, isDisabled } from "./plugin-settings";
 import { checkRateLimit } from "./rate-limit";
 import { buildSignedProxyUrl } from "./proxy-sign";
 import { getClientIp } from "./request";
-import { injectScope, translateHTML } from "./translation";
+import { applyFilter, syncVortexSignal } from "./translation-circuit";
 import { getInstanceSettings, setInstanceSettings } from "./server-settings";
 
 export const DEFAULT_LANGUAGES = [
@@ -191,7 +191,6 @@ export async function runSlotPlugins(
       if (await isDisabled(slotSettingsId)) continue;
       const ok = await Promise.resolve(plugin.trigger(query.trim()));
       if (!ok) continue;
-      if (plugin.t && locale) plugin.t.setLocale(locale);
       const context: SlotPluginContext = {
         clientIp,
         results: plugin.waitForResults ? results : undefined,
@@ -209,8 +208,8 @@ export async function runSlotPlugins(
       panels.push({
         id: plugin.id,
         title: out.title,
-        html: injectScope(
-          plugin.t ? translateHTML(out.html, plugin.t) : out.html,
+        html: applyFilter(
+          plugin.t ? syncVortexSignal(out.html, plugin.t, locale) : out.html,
           `slots/${plugin.id}`,
         ),
         position: effectivePosition,

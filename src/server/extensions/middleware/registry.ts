@@ -6,7 +6,7 @@ import {
   lockinSettingsId,
 } from "../../utils/plugin-assets";
 import { isDisabled } from "../../utils/plugin-settings";
-import { createTranslatorFromPath } from "../../utils/translation";
+import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 
@@ -28,7 +28,7 @@ const registry = createRegistry<RequestMiddleware>({
     const id = canonicalId ?? folderName;
     m.id = id;
     m.settingsId = id;
-    m.t = await createTranslatorFromPath(entryPath);
+    m.t = await bootCircuitFromPath(entryPath);
     lockinNameSpace(folderName, `middleware/${id}`);
     lockinSettingsId(folderName, id);
     if (!(await isDisabled(id))) {

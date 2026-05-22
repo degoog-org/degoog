@@ -2,16 +2,13 @@ import { Hono } from "hono";
 import {
   getEngineExtensionMeta,
   getEngineMap,
-  setEnginesLocale,
 } from "../extensions/engines/registry";
 import { canBalrogPass, gandalf } from "./settings-auth";
 import {
   getPluginExtensionMeta,
   getCommandInstanceById,
-  setCommandsLocale,
 } from "../extensions/commands/registry";
 import { getCoreTranslator } from "./pages";
-import { getLocale } from "../utils/hono";
 import {
   getSlotPlugins,
   getSlotPluginById,
@@ -116,13 +113,7 @@ async function getSlotExtensionMeta(
 }
 
 router.get("/api/extensions", async (c) => {
-  const locale = getLocale(c);
   const coreT = await getCoreTranslator();
-  if (locale) {
-    setCommandsLocale(locale);
-    setEnginesLocale(locale);
-    coreT.setLocale(locale);
-  }
   const [
     engines,
     plugins,
@@ -202,13 +193,7 @@ router.post("/api/extensions/:id/settings", async (c) => {
     return c.json({ error: "Invalid JSON" }, 400);
   }
 
-  const locale = getLocale(c);
   const coreT = await getCoreTranslator();
-  if (locale) {
-    setCommandsLocale(locale);
-    setEnginesLocale(locale);
-    coreT.setLocale(locale);
-  }
   const [
     engines,
     plugins,

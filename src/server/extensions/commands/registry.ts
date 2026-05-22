@@ -16,8 +16,11 @@ import {
   isDisabled,
   maskSecrets,
 } from "../../utils/plugin-settings";
-import { createTranslatorFromPath } from "../../utils/translation";
-import { getDefaultEngineConfig, getEngineMap as getSearchEngineMap } from "../engines/registry";
+import { bootCircuitFromPath } from "../../utils/translation-circuit";
+import {
+  getDefaultEngineConfig,
+  getEngineMap as getSearchEngineMap,
+} from "../engines/registry";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 import { extensionReadmeExists } from "../../utils/extension-docs";
@@ -64,10 +67,7 @@ function isBangCommand(val: unknown): val is BangCommand {
 const commandSourceMap = new Map<string, "builtin" | "plugin">();
 
 const registry = createRegistry<CommandEntry>({
-  dirs: () => [
-    { dir: builtinsDir, source: "builtin" },
-    { dir: pluginsDir() },
-  ],
+  dirs: () => [{ dir: builtinsDir, source: "builtin" }, { dir: pluginsDir() }],
   match: (mod) => {
     const Export = mod.default ?? mod.command ?? mod.Command;
     const instance: BangCommand =
@@ -87,7 +87,7 @@ const registry = createRegistry<CommandEntry>({
   onLoad: async (entry, { entryPath, folderName, source }) => {
     entry.id = (source === "plugin" ? "plugin-" : "") + folderName;
     commandSourceMap.set(entry.id, source);
-    entry.instance.t = await createTranslatorFromPath(entryPath);
+    entry.instance.t = await bootCircuitFromPath(entryPath);
     lockinNameSpace(folderName, `commands/${entry.id}`);
     if (!(await isDisabled(entry.id))) {
       const template = await loadPluginAssets(
@@ -180,12 +180,6 @@ export type CommandRegistryEntry = {
   naturalLanguagePhrases?: string[];
   category?: string;
 };
-
-export function setCommandsLocale(locale: string): void {
-  for (const entry of registry.items()) {
-    entry.instance.t?.setLocale(locale);
-  }
-}
 
 export function getCommandRegistry(): CommandRegistryEntry[] {
   const entries: CommandRegistryEntry[] = registry.items().map((c) => {

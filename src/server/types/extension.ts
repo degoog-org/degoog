@@ -15,22 +15,22 @@ export interface Translate {
   (
     key: string,
     vars?: Record<string, TranslationVars> | TranslationVars[],
+    locale?: string,
   ): string;
-  setLocale(locale: string): void;
-  locale: string;
-  translations?: TranslationRecord;
+  defaultLocale: string;
+  translations: TranslationRecord;
 }
 export const TranslateFunction: Translate = Object.assign(
   function (
     key: string,
     _vars?: Record<string, TranslationVars> | TranslationVars[],
+    _locale?: string,
   ): string {
     return key;
   },
   {
-    setLocale(_locale: string) { },
-    locale: "",
-    translations: undefined as TranslationRecord | undefined,
+    defaultLocale: "",
+    translations: {} as TranslationRecord,
   },
 );
 

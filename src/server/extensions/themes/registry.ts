@@ -46,7 +46,7 @@ export interface LoadedTheme {
 }
 
 import { themesDir } from "../../utils/paths";
-import { createTranslatorFromPath } from "../../utils/translation";
+import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import { extensionReadmeExists } from "../../utils/extension-docs";
 import { rewriteThemePaths } from "../../utils/extension-id";
 
@@ -116,7 +116,7 @@ export async function initThemes(): Promise<void> {
         };
 
         theme.compiledCss = await compileThemeCss(theme);
-        theme.t = await createTranslatorFromPath(themeDir);
+        theme.t = await bootCircuitFromPath(themeDir);
 
         themes.push(theme);
       } catch (err) {
@@ -160,7 +160,14 @@ export function getThemeById(id: string): LoadedTheme | null {
 }
 
 export async function getThemeHtml(
-  page: "layout" | "index" | "search" | "settings" | "gandalf" | "robots-takeover" | "404",
+  page:
+    | "layout"
+    | "index"
+    | "search"
+    | "settings"
+    | "gandalf"
+    | "robots-takeover"
+    | "404",
 ): Promise<string | null> {
   const theme = getActiveTheme();
   if (!theme) return null;
@@ -168,7 +175,10 @@ export async function getThemeHtml(
   if (!htmlFile) return null;
 
   try {
-    return rewriteThemePaths(await readFile(join(theme.dir, htmlFile), "utf-8"), theme.id);
+    return rewriteThemePaths(
+      await readFile(join(theme.dir, htmlFile), "utf-8"),
+      theme.id,
+    );
   } catch {
     return null;
   }
@@ -236,7 +246,10 @@ export async function getThemeTemplatesHtml(): Promise<string> {
   const parts: string[] = [];
   for (const [id, filePath] of Object.entries(theme.manifest.templates)) {
     try {
-      const content = rewriteThemePaths(await readFile(join(theme.dir, filePath), "utf-8"), theme.id);
+      const content = rewriteThemePaths(
+        await readFile(join(theme.dir, filePath), "utf-8"),
+        theme.id,
+      );
       parts.push(`<template id="degoog-${id}">${content}</template>`);
     } catch {
       logger.debug(

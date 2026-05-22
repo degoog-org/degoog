@@ -27,14 +27,14 @@ import {
   getPluginScriptFolders,
   getPluginSettingsIds,
 } from "../utils/plugin-assets";
-import { asBoolean, asString, getSettings, isDisabled } from "../utils/plugin-settings";
+import { asBoolean, asString, isDisabled } from "../utils/plugin-settings";
 import { getAdminPath, isPublicInstance } from "../utils/public-instance";
 import {
-  collectTranslationsForLocale,
-  createTranslatorFromPath,
-  translateHTML,
-  withFallback,
-} from "../utils/translation";
+  compileLexicons,
+  bootCircuitFromPath,
+  syncVortexSignal,
+  withBuffer,
+} from "../utils/translation-circuit";
 import {
   canBalrogPass,
   isPasswordRequired,
@@ -48,7 +48,7 @@ import { getClientIp } from "../utils/request";
 import { generateSearchNonce } from "../utils/search-nonce";
 import { getBasePath, getBaseUrl } from "../utils/base-url";
 import { FAKE_RESULTS } from "../../shared/fake-results";
-import { getInstanceSettings, setInstanceSettings } from "../utils/server-settings";
+import { getInstanceSettings } from "../utils/server-settings";
 
 const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
 const CORE_LOCALES_ROOT = "src";
@@ -86,29 +86,27 @@ async function getDefaultTemplatesHtml(): Promise<string> {
 
 async function getDefaultThemeTranslator(): Promise<Translate> {
   if (!defaultThemeTranslator) {
-    defaultThemeTranslator = await createTranslatorFromPath(DEFAULT_THEME_DIR);
+    defaultThemeTranslator = await bootCircuitFromPath(DEFAULT_THEME_DIR);
   }
   return defaultThemeTranslator;
 }
 
 export async function getCoreTranslator(): Promise<Translate> {
   if (!coreTranslator) {
-    coreTranslator = await createTranslatorFromPath(CORE_LOCALES_ROOT);
+    coreTranslator = await bootCircuitFromPath(CORE_LOCALES_ROOT);
   }
   return coreTranslator;
 }
 
 async function getTranslator(
-  locale?: string,
+  _locale?: string,
   themed = false,
 ): Promise<Translate> {
   const baseT = await getDefaultThemeTranslator();
   const theme = getActiveTheme();
-  const themeChain = themed && theme?.t ? withFallback(theme.t, baseT) : baseT;
+  const themeChain = themed && theme?.t ? withBuffer(theme.t, baseT) : baseT;
   const coreT = await getCoreTranslator();
-  const t = withFallback(themeChain, coreT);
-  if (locale) t.setLocale(locale);
-  return t;
+  return withBuffer(themeChain, coreT);
 }
 
 function getTextDirection(locale: string): "rtl" | "ltr" {
@@ -136,7 +134,6 @@ function themeCssPlaceholder(): string {
   if (!theme?.manifest.css) return "";
   return `<link rel="stylesheet" href="/theme/style.css?v=${pkg.version}">`;
 }
-
 
 const customCssPlaceholder = async (): Promise<string> => {
   const settings = await getInstanceSettings();
@@ -171,9 +168,10 @@ async function pluginAssetsPlaceholder(): Promise<string> {
 async function applyPagePlaceholders(
   html: string,
   t: Translate,
+  locale?: string,
 ): Promise<string> {
   const themeAttrs = await getActiveThemeDataAttrs();
-  const locale = t.locale || "en";
+  const resolvedLocale = locale || "en";
 
   // Collect all translations for the current locale (namespaced)
   const entries: { namespace: string; translator: Translate }[] = [
@@ -201,7 +199,7 @@ async function applyPagePlaceholders(
     });
   }
 
-  const clientTranslations = collectTranslationsForLocale(entries, locale);
+  const clientTranslations = compileLexicons(entries, resolvedLocale);
   const safeJson = JSON.stringify(clientTranslations).replace(/<\//g, "<\\/");
   const translationsScript = `<script>window.__DEGOOG_T__=${safeJson}</script>\n  <script src="/public/t.js?v=${pkg.version}"></script>`;
 
@@ -210,7 +208,7 @@ async function applyPagePlaceholders(
     .replace("__THEME_ATTRS__", themeAttrs)
     .replace("__PLUGIN_ASSETS__", await pluginAssetsPlaceholder())
     .replace("__CUSTOM_CSS__", await customCssPlaceholder())
-    .replace("__RTL_SUPPORT__", `dir=${getTextDirection(locale)}`);
+    .replace("__RTL_SUPPORT__", `dir=${getTextDirection(resolvedLocale)}`);
   const defaultTemplates = await getDefaultTemplatesHtml();
   const themeTemplates = await getThemeTemplatesHtml();
   const allTemplates = [defaultTemplates, themeTemplates]
@@ -235,7 +233,7 @@ async function applyPagePlaceholders(
 
   result = result.replace("</head>", `${translationsScript}\n  </head>`);
 
-  result = translateHTML(result, t);
+  result = syncVortexSignal(result, t, resolvedLocale);
 
   const acDebounceMs = parseInt(asString(pageSettings.acDebounceMs), 10);
   const acDebounce =
@@ -251,9 +249,15 @@ async function applyPagePlaceholders(
   if (await cssCheckOn()) {
     try {
       const tok = mintToken();
-      result = result.replace("</head>", `<link rel="stylesheet" href="/ping/${tok}">\n  </head>`);
+      result = result.replace(
+        "</head>",
+        `<link rel="stylesheet" href="/ping/${tok}">\n  </head>`,
+      );
     } catch (e) {
-      logger.error("link-token", `failed to mint token: ${e instanceof Error ? e.message : String(e)}`);
+      logger.error(
+        "link-token",
+        `failed to mint token: ${e instanceof Error ? e.message : String(e)}`,
+      );
     }
   }
 
@@ -291,7 +295,7 @@ async function buildLayoutPage(
     .replace("__PAGE_CONTENT__", pageContent)
     .replace("__BODY_CLASS__", bodyClass ? `class="${bodyClass}"` : "");
   const t = await getTranslator(locale);
-  return applyPagePlaceholders(html, t);
+  return applyPagePlaceholders(html, t, locale);
 }
 
 async function buildThemedLayoutPage(
@@ -304,7 +308,7 @@ async function buildThemedLayoutPage(
     .replace("__PAGE_CONTENT__", themePageHtml)
     .replace("__BODY_CLASS__", bodyClass ? `class="${bodyClass}"` : "");
   const t = await getTranslator(locale, true);
-  return applyPagePlaceholders(html, t);
+  return applyPagePlaceholders(html, t, locale);
 }
 
 const _apiKeySection = `<code id="settings-api-key-value" class="settings-toggle-label"></code>
@@ -325,14 +329,17 @@ async function buildPage(filename: string, locale?: string): Promise<string> {
     html = html.replace("__API_KEY_SECTION__", content);
   }
   const t = await getTranslator(locale);
-  return applyPagePlaceholders(html, t);
+  return applyPagePlaceholders(html, t, locale);
 }
 
 router.get("/ping/:token", async (c) => {
   const token = c.req.param("token");
   const ip = getClientIp(c);
   if (ip && verifyToken(token)) ping(ip);
-  return new Response("", { status: 200, headers: { "Content-Type": "text/css", "Cache-Control": "no-store" } });
+  return new Response("", {
+    status: 200,
+    headers: { "Content-Type": "text/css", "Cache-Control": "no-store" },
+  });
 });
 
 router.get("/", async (c) => {
@@ -349,7 +356,7 @@ router.get("/", async (c) => {
   if (override) {
     if (isFullDocument(override)) {
       const t = await getTranslator(locale, true);
-      return c.html(await applyPagePlaceholders(override, t));
+      return c.html(await applyPagePlaceholders(override, t, locale));
     }
     return c.html(await buildThemedLayoutPage(override, locale));
   }
@@ -392,7 +399,7 @@ router.get("/search", async (c) => {
   if (override) {
     if (isFullDocument(override)) {
       const t = await getTranslator(locale, true);
-      html = await applyPagePlaceholders(override, t);
+      html = await applyPagePlaceholders(override, t, locale);
     } else {
       html = await buildThemedLayoutPage(override, locale, "has-results");
     }
@@ -509,7 +516,8 @@ router.post("/api/cache/clear", async (c) => {
 });
 
 const renderTakeoverResults = (): string =>
-  FAKE_RESULTS.map((r) => `
+  FAKE_RESULTS.map(
+    (r) => `
     <div class="result-item degoog-result">
       <div class="result-item-inner degoog-result--inner">
         <div class="result-body degoog-result--body">
@@ -520,19 +528,27 @@ const renderTakeoverResults = (): string =>
           <p class="result-snippet degoog-result--snippet">${r.snippet}</p>
         </div>
       </div>
-    </div>`).join("\n");
+    </div>`,
+  ).join("\n");
 
 router.get("/robots-takeover", async (c) => {
   const locale = getLocale(c);
   const override = await getThemeHtml("robots-takeover");
-  const raw = override ?? await Bun.file(`${DEFAULT_THEME_DIR}/easter-eggs/robots-takeover.html`).text();
-  const withResults = raw.replace("__ROBOTS_RESULTS__", renderTakeoverResults());
+  const raw =
+    override ??
+    (await Bun.file(
+      `${DEFAULT_THEME_DIR}/easter-eggs/robots-takeover.html`,
+    ).text());
+  const withResults = raw.replace(
+    "__ROBOTS_RESULTS__",
+    renderTakeoverResults(),
+  );
   const layout = await getLayout();
   const html = layout
     .replace("__PAGE_CONTENT__", withResults)
     .replace("__BODY_CLASS__", 'class="has-results"');
   const t = await getTranslator(locale, !!override);
-  return c.html(await applyPagePlaceholders(html, t));
+  return c.html(await applyPagePlaceholders(html, t, locale));
 });
 
 export const build404 = async (locale?: string): Promise<string> => {

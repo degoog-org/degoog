@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import {
   getCommandsApiResponse,
   matchBangCommand,
-  setCommandsLocale,
 } from "../extensions/commands/registry";
 import { getEngineSearchType } from "../extensions/engines/registry";
 import { searchSingleEngine } from "../search";
@@ -12,13 +11,11 @@ import { logger } from "../utils/logger";
 import { isDisabled } from "../utils/plugin-settings";
 import { buildSignedProxyUrl } from "../utils/proxy-sign";
 import { getClientIp } from "../utils/request";
-import { injectScope, translateHTML } from "../utils/translation";
+import { applyFilter, syncVortexSignal } from "../utils/translation-circuit";
 
 const router = new Hono();
 
 router.get("/api/commands", async (c) => {
-  const locale = getLocale(c);
-  if (locale) setCommandsLocale(locale);
   return c.json(await getCommandsApiResponse());
 });
 
@@ -74,9 +71,12 @@ router.get("/api/command", async (c) => {
   const t0 = performance.now();
 
   const language = getLocale(c);
-  if (language) match.command.t?.setLocale(language);
 
-  const result = await match.command.execute(match.args, { clientIp, page, signProxyUrl: buildSignedProxyUrl });
+  const result = await match.command.execute(match.args, {
+    clientIp,
+    page,
+    signProxyUrl: buildSignedProxyUrl,
+  });
   logger.debug(
     "plugin",
     `${match.command.trigger} executed in ${Math.round(performance.now() - t0)}ms`,
@@ -85,9 +85,9 @@ router.get("/api/command", async (c) => {
     type: "command",
     trigger: match.command.trigger,
     title: result.title,
-    html: injectScope(
+    html: applyFilter(
       match.command.t
-        ? translateHTML(result.html, match.command.t)
+        ? syncVortexSignal(result.html, match.command.t, language)
         : result.html,
       `commands/${match.commandId}`,
     ),

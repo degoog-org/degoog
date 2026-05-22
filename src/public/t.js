@@ -6,7 +6,7 @@
    * @param {object} translations - Flat translation object for a single locale
    * @returns {function(string, object=): string}
    */
-  function createTranslator(translations) {
+  function bootCircuit(translations) {
     return function (key, vars) {
       var keys = key.split(".");
       var value = translations;
@@ -39,7 +39,7 @@
    * @returns {function(string, object=): string}
    */
   window.scopedT = function (namespace) {
-    return createTranslator(namespaces[namespace] || {});
+    return bootCircuit(namespaces[namespace] || {});
   };
 
   /**
@@ -56,5 +56,5 @@
     });
   });
 
-  window.t = createTranslator(merged);
+  window.t = bootCircuit(merged);
 })();

@@ -15,8 +15,11 @@ import {
   maskSecrets,
   mergeDefaults,
 } from "../../utils/plugin-settings";
-import { createTranslatorFromPath } from "../../utils/translation";
-import { getTransportNames, getTransportDisplayNames } from "../transports/registry";
+import { bootCircuitFromPath } from "../../utils/translation-circuit";
+import {
+  getTransportNames,
+  getTransportDisplayNames,
+} from "../transports/registry";
 import { enginesDir, defaultEnginesFile } from "../../utils/paths";
 import { readFileSync } from "fs";
 import { createRegistry } from "../registry-factory";
@@ -76,7 +79,7 @@ const engineRegistry = createRegistry<PluginEntry>({
   },
   onLoad: async (entry, { entryPath, canonicalId, folderName }) => {
     entry.id = canonicalId ?? `${folderName}-engine`;
-    entry.instance.t = await createTranslatorFromPath(entryPath);
+    entry.instance.t = await bootCircuitFromPath(entryPath);
     if (entry.instance.configure && entry.instance.settingsSchema?.length) {
       const stored = await getSettings(entry.id);
       entry.instance.configure(
@@ -101,18 +104,21 @@ export const getEngineRegistry = (): {
     searchType: e.searchType,
   }));
 
-export const getEffectiveEngineRegistry = async (): Promise<{
-  id: string;
-  displayName: string;
-  disabledByDefault?: boolean;
-  searchType?: EngineSearchType;
-}[]> => {
+export const getEffectiveEngineRegistry = async (): Promise<
+  {
+    id: string;
+    displayName: string;
+    disabledByDefault?: boolean;
+    searchType?: EngineSearchType;
+  }[]
+> => {
   return Promise.all(
     engineRegistry.items().map(async (e) => ({
       id: e.id,
       displayName: e.displayName,
       disabledByDefault: e.disabledByDefault,
-      searchType: ((await getTypeOverride(e.id)) ?? e.searchType) as EngineSearchType,
+      searchType: ((await getTypeOverride(e.id)) ??
+        e.searchType) as EngineSearchType,
     })),
   );
 };
@@ -135,7 +141,8 @@ export const getEnginesForCustomType = async (
   for (const e of engineRegistry.items()) {
     if (await isDisabled(e.id)) continue;
     const effectiveType = (await getTypeOverride(e.id)) ?? e.searchType;
-    if (effectiveType === engineType) results.push({ id: e.id, instance: e.instance });
+    if (effectiveType === engineType)
+      results.push({ id: e.id, instance: e.instance });
   }
   return results;
 };
@@ -152,7 +159,9 @@ export const getCustomEngineTypes = async (): Promise<string[]> => {
   return [...types];
 };
 
-export const getEngineSearchType = async (engineId: string): Promise<string | null> => {
+export const getEngineSearchType = async (
+  engineId: string,
+): Promise<string | null> => {
   const plugin = engineRegistry.items().find((e) => e.id === engineId);
   if (!plugin) return null;
   return (await getTypeOverride(engineId)) ?? plugin.searchType;
@@ -204,7 +213,11 @@ export const getActiveWebEngines = async (
     if (!config[e.id]) continue;
     const effectiveType = (await getTypeOverride(e.id)) ?? e.searchType;
     if (effectiveType !== "web") continue;
-    if (engineRequiresConfig(e.instance) && !(await hasRequiredConfig(e.id, e.instance))) continue;
+    if (
+      engineRequiresConfig(e.instance) &&
+      !(await hasRequiredConfig(e.id, e.instance))
+    )
+      continue;
     const stored = await getSettings(e.id);
     const score = Math.max(parseFloat(asString(stored["score"])) || 1, 0.1);
     active.push({ id: e.id, instance: e.instance, score });
@@ -253,8 +266,7 @@ const OUTGOING_TRANSPORT_FIELD: SettingField = {
   type: "select",
   options: ["fetch", "curl", "curl-fallback"],
   default: "fetch",
-  description:
-    "The outgoing HTTP client to use for this engine.",
+  description: "The outgoing HTTP client to use for this engine.",
   advanced: true,
 };
 
@@ -319,24 +331,24 @@ export const getEngineExtensionMeta = async (
 
   const baseScoreField = coreT
     ? {
-      ...SCORE_FIELD,
-      label: coreT("settings-page.schema.score.label") || SCORE_FIELD.label,
-      description:
-        coreT("settings-page.schema.score.description") ||
-        SCORE_FIELD.description,
-    }
+        ...SCORE_FIELD,
+        label: coreT("settings-page.schema.score.label") || SCORE_FIELD.label,
+        description:
+          coreT("settings-page.schema.score.description") ||
+          SCORE_FIELD.description,
+      }
     : SCORE_FIELD;
 
   const baseTransportField = coreT
     ? {
-      ...OUTGOING_TRANSPORT_FIELD,
-      label:
-        coreT("settings-page.schema.outgoing-transport.label") ||
-        OUTGOING_TRANSPORT_FIELD.label,
-      description:
-        coreT("settings-page.schema.outgoing-transport.description") ||
-        OUTGOING_TRANSPORT_FIELD.description,
-    }
+        ...OUTGOING_TRANSPORT_FIELD,
+        label:
+          coreT("settings-page.schema.outgoing-transport.label") ||
+          OUTGOING_TRANSPORT_FIELD.label,
+        description:
+          coreT("settings-page.schema.outgoing-transport.description") ||
+          OUTGOING_TRANSPORT_FIELD.description,
+      }
     : OUTGOING_TRANSPORT_FIELD;
 
   const defaults = getDefaultEngineConfig();
@@ -361,9 +373,9 @@ export const getEngineExtensionMeta = async (
 
     const scoreField: SettingField = engineScoreField
       ? {
-        ...baseScoreField,
-        default: engineScoreField.default ?? baseScoreField.default,
-      }
+          ...baseScoreField,
+          default: engineScoreField.default ?? baseScoreField.default,
+        }
       : baseScoreField;
 
     const pluginT = entry.instance.t;
@@ -372,27 +384,28 @@ export const getEngineExtensionMeta = async (
     );
     const translatedEngineSchema = pluginT
       ? engineSchemaFiltered.map((field) => {
-        const base = `${entry.id}.settings.${field.key}`;
-        const label = pluginT(`${base}.label`);
-        const desc =
-          field.description !== undefined
-            ? pluginT(`${base}.description`)
-            : undefined;
-        const placeholder =
-          field.placeholder !== undefined
-            ? pluginT(`${base}.placeholder`)
-            : undefined;
-        return {
-          ...field,
-          label: label !== `${base}.label` ? label : field.label,
-          ...(desc !== undefined && desc !== `${base}.description`
-            ? { description: desc }
-            : {}),
-          ...(placeholder !== undefined && placeholder !== `${base}.placeholder`
-            ? { placeholder }
-            : {}),
-        };
-      })
+          const base = `${entry.id}.settings.${field.key}`;
+          const label = pluginT(`${base}.label`);
+          const desc =
+            field.description !== undefined
+              ? pluginT(`${base}.description`)
+              : undefined;
+          const placeholder =
+            field.placeholder !== undefined
+              ? pluginT(`${base}.placeholder`)
+              : undefined;
+          return {
+            ...field,
+            label: label !== `${base}.label` ? label : field.label,
+            ...(desc !== undefined && desc !== `${base}.description`
+              ? { description: desc }
+              : {}),
+            ...(placeholder !== undefined &&
+            placeholder !== `${base}.placeholder`
+              ? { placeholder }
+              : {}),
+          };
+        })
       : engineSchemaFiltered;
 
     const effectiveType = (await getTypeOverride(entry.id)) ?? entry.searchType;
@@ -444,12 +457,6 @@ export const initEngines = async (): Promise<void> => {
 
 export const reloadEngines = async (): Promise<void> => {
   await initEngines();
-};
-
-export const setEnginesLocale = (locale: string): void => {
-  for (const entry of engineRegistry.items()) {
-    entry.instance.t?.setLocale(locale);
-  }
 };
 
 export const getAllEngineTranslators = (): {

@@ -12,7 +12,7 @@ import {
   lockinSettingsId,
 } from "../../utils/plugin-assets";
 import { getSettings, isDisabled } from "../../utils/plugin-settings";
-import { createTranslatorFromPath } from "../../utils/translation";
+import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import { createRegistry } from "../registry-factory";
 
 const builtinsDir = join(
@@ -51,10 +51,7 @@ function isSlotPlugin(val: unknown): val is SlotPlugin {
 const slotSourceMap = new Map<string, "builtin" | "plugin">();
 
 const registry = createRegistry<SlotPlugin>({
-  dirs: () => [
-    { dir: builtinsDir, source: "builtin" },
-    { dir: pluginsDir() },
-  ],
+  dirs: () => [{ dir: builtinsDir, source: "builtin" }, { dir: pluginsDir() }],
   match: (mod) => {
     const s =
       mod.slot ??
@@ -71,13 +68,18 @@ const registry = createRegistry<SlotPlugin>({
     const p = parseInt(String(rawSettings["priority"] ?? "0"), 10);
     slot.priority = isNaN(p) ? 0 : p;
     slotSourceMap.set(id, source);
-    slot.t = await createTranslatorFromPath(entryPath);
+    slot.t = await bootCircuitFromPath(entryPath);
 
     lockinNameSpace(folderName, `slots/${id}`);
     lockinSettingsId(folderName, id);
 
     if (!(await isDisabled(id))) {
-      const template = await loadPluginAssets(entryPath, folderName, id, source);
+      const template = await loadPluginAssets(
+        entryPath,
+        folderName,
+        id,
+        source,
+      );
       await initPlugin(slot, entryPath, id, template);
     }
   },

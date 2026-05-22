@@ -14,7 +14,7 @@ import { isDisabled } from "../utils/plugin-settings";
 import { buildSignedProxyUrl } from "../utils/proxy-sign";
 import { getClientIp } from "../utils/request";
 import { _applyRateLimit, runSlotPlugins } from "../utils/search";
-import { injectScope, translateHTML } from "../utils/translation";
+import { applyFilter, syncVortexSignal } from "../utils/translation-circuit";
 
 const router = new Hono();
 
@@ -72,7 +72,6 @@ router.post("/api/slots/glance", async (c) => {
       if (await isDisabled(slotSettingsId)) continue;
       const ok = await Promise.resolve(plugin.trigger(body.query!.trim()));
       if (!ok) continue;
-      if (plugin.t && locale) plugin.t.setLocale(locale);
       const context: SlotPluginContext = {
         clientIp: clientIp ?? undefined,
         results: body.results,
@@ -90,8 +89,8 @@ router.post("/api/slots/glance", async (c) => {
       panels.push({
         id: plugin.id,
         title: out.title,
-        html: injectScope(
-          plugin.t ? translateHTML(out.html, plugin.t) : out.html,
+        html: applyFilter(
+          plugin.t ? syncVortexSignal(out.html, plugin.t, locale) : out.html,
           `slots/${plugin.id}`,
         ),
         position: plugin.position,

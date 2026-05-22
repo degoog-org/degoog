@@ -10,7 +10,7 @@ import {
   isDisabled,
   maskSecrets,
 } from "../../utils/plugin-settings";
-import { createTranslatorFromPath } from "../../utils/translation";
+import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 
@@ -43,7 +43,7 @@ const registry = createRegistry<PluginActions>({
     return isSearchBarActionArray(actions) ? { pluginId: "", actions } : null;
   },
   onLoad: async (item, { entryPath, folderName }) => {
-    const t = await createTranslatorFromPath(entryPath);
+    const t = await bootCircuitFromPath(entryPath);
     item.pluginId = folderName;
     item.actions = item.actions.map((action) => ({
       ...action,

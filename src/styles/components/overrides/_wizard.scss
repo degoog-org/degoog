@@ -1,7 +1,12 @@
 $wizard-z: 2147483000;
+$wizard-z-interactive: 180;
 
 .degoog-wizard-open {
   overflow: hidden;
+}
+
+.degoog-wizard-open--interactive {
+  overflow: auto;
 }
 
 .degoog-wizard {
@@ -14,16 +19,16 @@ $wizard-z: 2147483000;
     position: fixed;
     background: var(--overlay-bg);
     pointer-events: auto;
+    transition: opacity 0.2s ease;
   }
 
   &__ring {
     position: fixed;
     pointer-events: none;
-    border-radius: $radius-md;
-    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.6),
-      0 0 0 4px rgba(var(--primary-rgb), 0.2);
+    border-radius: $radius-sm;
+    box-shadow: 0 0 0 2px var(--primary);
     transition: top 0.2s ease, left 0.2s ease, width 0.2s ease,
-      height 0.2s ease;
+      height 0.2s ease, box-shadow 0.2s ease;
   }
 
   &__popover {
@@ -59,7 +64,37 @@ $wizard-z: 2147483000;
     font-size: $font-size-base;
     color: var(--text-secondary);
     line-height: 1.5;
-    margin: 0 0 $space-5;
+    margin: 0 0 $space-3;
+  }
+
+  &__hint {
+    font-size: $font-size-small;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin: 0 0 $space-4;
+    background: var(--bg);
+    padding: $space-2 $space-3;
+    border-radius: $radius-sm;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  &__link {
+    display: inline-block;
+    font-size: $font-size-small;
+    color: var(--primary);
+    text-decoration: underline;
+    margin: 0 0 $space-3;
+
+    &:hover {
+      color: var(--primary-hover);
+    }
+
+    &[hidden] {
+      display: none;
+    }
   }
 
   &__footer {
@@ -67,6 +102,7 @@ $wizard-z: 2147483000;
     align-items: center;
     justify-content: space-between;
     gap: $space-3;
+    margin-top: $space-2;
   }
 
   &__nav {
@@ -82,6 +118,14 @@ $wizard-z: 2147483000;
     &:hover {
       background: transparent;
       color: var(--danger);
+    }
+  }
+
+  &--interactive {
+    z-index: $wizard-z-interactive;
+
+    .degoog-wizard__mask {
+      display: none;
     }
   }
 }
