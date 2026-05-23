@@ -32,13 +32,6 @@ describe("slots registry", () => {
     expect(getSlotPluginById("unknown-slot")).toBeNull();
   });
 
-  test("built-in ai-summary slot has position at-a-glance and settingsId", () => {
-    const slot = getSlotPluginById("ai-summary-slot");
-    expect(slot).not.toBeNull();
-    expect(slot!.position).toBe(SlotPanelPosition.AtAGlance);
-    expect(slot!.settingsId).toBe("ai-summary-slot");
-  });
-
   test("built-in at-a-glance slot has position at-a-glance and waitForResults", () => {
     const slot = getSlotPluginById("at-a-glance-slot");
     expect(slot).not.toBeNull();

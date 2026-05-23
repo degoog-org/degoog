@@ -3,6 +3,7 @@ import { runStoreDirRename052026 } from "./2026-05-store-dir-rename";
 import { runItemDirRename052026 } from "./2026-05-item-dir-rename";
 import { runServerSettingsExtract052026 } from "./2026-05-server-settings-extract";
 import { runCanonicalIds052026 } from "./2026-05-canonical-ids";
+import { runBuiltinMigrations052026 } from "./2026-05-builtin-migrations";
 
 /**
  * Self-contained migrations live in this directory.
@@ -35,5 +36,10 @@ export const runMigrations = async (): Promise<void> => {
     await runCanonicalIds052026();
   } catch (err) {
     logger.error("migrations", "canonical-ids failed", err);
+  }
+  try {
+    await runBuiltinMigrations052026();
+  } catch (err) {
+    logger.error("migrations", "builtin-migrations failed", err);
   }
 };

@@ -14,6 +14,30 @@ const CLONE_TIMEOUT_MS = 60_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const OFFICIAL_REPO_URL = "https://github.com/degoog-org/official-extensions.git";
 const OLD_OFFICIAL_REPO_URL = "https://github.com/fccview/fccview-degoog-extensions.git";
+const DEGOOG_BETA_STORE = process.env.DEGOOG_BETA_STORE === "1";
+const BETA_BRANCH = "develop";
+
+const probeBranch = async (url: string, branch: string): Promise<boolean> => {
+  const proc = Bun.spawn(["git", "ls-remote", "--heads", url, branch], {
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  await Promise.race([
+    proc.exited,
+    new Promise<void>((_, rej) => setTimeout(() => { proc.kill(); rej(); }, FETCH_TIMEOUT_MS)),
+  ]).catch(() => {});
+  const out = await new Response(proc.stdout).text();
+  return out.trim().length > 0;
+};
+
+const branchExists = async (repoPath: string, ref: string): Promise<boolean> => {
+  const proc = Bun.spawn(["git", "-C", repoPath, "rev-parse", "--verify", ref], {
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  const exit = await proc.exited;
+  return exit === 0;
+};
 
 function _sanitizeGitError(raw: string): string {
   if (!raw) return raw;
@@ -66,7 +90,11 @@ export async function addRepo(url: string): Promise<RepoInfo> {
   const slug = slugFromUrl(url);
   const storeDir = getStoreDir();
   const dest = join(storeDir, slug);
-  const proc = Bun.spawn(["git", "clone", "--depth", "1", normalized, dest], {
+  const useBeta = DEGOOG_BETA_STORE && await probeBranch(normalized, BETA_BRANCH);
+  const cloneArgs = useBeta
+    ? ["git", "clone", "--depth", "1", "--branch", BETA_BRANCH, normalized, dest]
+    : ["git", "clone", "--depth", "1", normalized, dest];
+  const proc = Bun.spawn(cloneArgs, {
     cwd: storeDir,
     stdout: "ignore",
     stderr: "pipe",
@@ -133,7 +161,11 @@ export async function refreshRepo(url?: string): Promise<void> {
   for (const repo of toRefresh) {
     const repoPath = join(getStoreDir(), repo.localPath);
     try {
-      const proc = Bun.spawn(["git", "-C", repoPath, "pull"], {
+      const betaPull = DEGOOG_BETA_STORE && await branchExists(repoPath, `origin/${BETA_BRANCH}`);
+      const pullArgs = betaPull
+        ? ["git", "-C", repoPath, "pull", "origin", BETA_BRANCH]
+        : ["git", "-C", repoPath, "pull"];
+      const proc = Bun.spawn(pullArgs, {
         stdout: "ignore",
         stderr: "pipe",
       });
@@ -181,7 +213,10 @@ export interface RepoStatus {
 
 async function getBehindCount(repoPath: string): Promise<number> {
   let remoteRef = "origin/HEAD";
-  for (const ref of ["origin/HEAD", "origin/main", "origin/master"]) {
+  const refs = DEGOOG_BETA_STORE
+    ? [`origin/${BETA_BRANCH}`, "origin/HEAD", "origin/main", "origin/master"]
+    : ["origin/HEAD", "origin/main", "origin/master"];
+  for (const ref of refs) {
     const proc = Bun.spawn(["git", "-C", repoPath, "rev-parse", ref], {
       stdout: "ignore",
       stderr: "ignore",
