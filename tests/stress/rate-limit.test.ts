@@ -1,17 +1,26 @@
-import { describe, test, expect, afterEach } from "bun:test";
-import { setSettings, removeSettings } from "../../src/server/utils/plugin-settings";
+import { describe, test, expect, beforeAll, afterEach } from "bun:test";
+import {
+  getInstanceSettings,
+  setInstanceSettings,
+  updateInstanceSettings,
+  type ServerSettingValue,
+} from "../../src/server/utils/server-settings";
 import { clearRateLimitState } from "../../src/server/utils/rate-limit";
 
-const SETTINGS_ID = "degoog-settings";
+let savedSettings: Record<string, ServerSettingValue>;
 
 describe("routes/rate-limit", () => {
+  beforeAll(async () => {
+    savedSettings = await getInstanceSettings();
+  });
+
   afterEach(async () => {
     clearRateLimitState();
-    await removeSettings(SETTINGS_ID);
+    await setInstanceSettings(savedSettings);
   });
 
   test("GET /api/rate-limit/test when rate limit disabled returns 200 with rateLimitEnabled false", async () => {
-    await removeSettings(SETTINGS_ID);
+    await updateInstanceSettings({ rateLimitEnabled: "false" });
     const { default: router } = await import("../../src/server/routes/rate-limit");
     const res = await router.request(
       "http://localhost/api/rate-limit/test",
@@ -22,7 +31,7 @@ describe("routes/rate-limit", () => {
   });
 
   test("GET /api/rate-limit/test when rate limit enabled returns 200 then 429 after burst exceeded", async () => {
-    await setSettings(SETTINGS_ID, {
+    await updateInstanceSettings({
       rateLimitEnabled: "true",
       rateLimitBurstWindow: "20",
       rateLimitBurstMax: "3",
