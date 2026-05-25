@@ -59,7 +59,7 @@ app.notFound(async (c) => {
   return c.html(await build404(locale), 404);
 });
 
-const port = Number(process.env.DEGOOG_PORT || process.env.PORT) || 4444;
+const port = Number(process.env.DEGOOG_PORT) || 4444;
 
 const _noColor = !!process.env.NO_COLOR;
 const _ansi = (code: string): string => (_noColor ? "" : code);
@@ -74,14 +74,14 @@ console.log(
   `
    ${ANSI_BLUE}    ░██ ${ANSI_RESET} degoog ${ANSI_GRAY}${pkg.version}
   ${ANSI_BLUE}     ░██ ${ANSI_RESET} Running on ${ANSI_GRAY}http://localhost:${port} ${ANSI_RESET}${"           ".repeat(5)}\n` +
-    `${ANSI_BLUE}       ░██ ${ANSI_RESET}${"           ".repeat(5)}\n` +
-    `${ANSI_BLUE} ░████████ ${ANSI_RED} ░███████  ${ANSI_YELLOW} ░████████ ${ANSI_BLUE} ░███████  ${ANSI_GREEN} ░███████  ${ANSI_RED} ░████████ ${ANSI_RESET}\n` +
-    `${ANSI_BLUE}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_YELLOW}░██    ░██ ${ANSI_BLUE}░██    ░██ ${ANSI_GREEN}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_RESET}\n` +
-    `${ANSI_BLUE}░██    ░██ ${ANSI_RED}░█████████ ${ANSI_YELLOW}░██    ░██ ${ANSI_BLUE}░██    ░██ ${ANSI_GREEN}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_RESET}\n` +
-    `${ANSI_BLUE}░██    ░██ ${ANSI_RED}░██        ${ANSI_YELLOW}░██    ░██ ${ANSI_BLUE}░██    ░██ ${ANSI_GREEN}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_RESET}\n` +
-    `${ANSI_BLUE} ░████████ ${ANSI_RED} ░███████  ${ANSI_YELLOW} ░████████ ${ANSI_BLUE} ░███████  ${ANSI_GREEN} ░███████  ${ANSI_RED} ░████████ ${ANSI_RESET}\n` +
-    `${"           ".repeat(2)}${ANSI_YELLOW}       ░██ ${ANSI_RESET}${"           ".repeat(2)}${ANSI_RED}       ░██ ${ANSI_RESET}\n` +
-    `${"           ".repeat(2)}${ANSI_YELLOW} ░███████  ${ANSI_RESET}${"           ".repeat(2)}${ANSI_RED} ░███████  ${ANSI_RESET}
+  `${ANSI_BLUE}       ░██ ${ANSI_RESET}${"           ".repeat(5)}\n` +
+  `${ANSI_BLUE} ░████████ ${ANSI_RED} ░███████  ${ANSI_YELLOW} ░████████ ${ANSI_BLUE} ░███████  ${ANSI_GREEN} ░███████  ${ANSI_RED} ░████████ ${ANSI_RESET}\n` +
+  `${ANSI_BLUE}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_YELLOW}░██    ░██ ${ANSI_BLUE}░██    ░██ ${ANSI_GREEN}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_RESET}\n` +
+  `${ANSI_BLUE}░██    ░██ ${ANSI_RED}░█████████ ${ANSI_YELLOW}░██    ░██ ${ANSI_BLUE}░██    ░██ ${ANSI_GREEN}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_RESET}\n` +
+  `${ANSI_BLUE}░██    ░██ ${ANSI_RED}░██        ${ANSI_YELLOW}░██    ░██ ${ANSI_BLUE}░██    ░██ ${ANSI_GREEN}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_RESET}\n` +
+  `${ANSI_BLUE} ░████████ ${ANSI_RED} ░███████  ${ANSI_YELLOW} ░████████ ${ANSI_BLUE} ░███████  ${ANSI_GREEN} ░███████  ${ANSI_RED} ░████████ ${ANSI_RESET}\n` +
+  `${"           ".repeat(2)}${ANSI_YELLOW}       ░██ ${ANSI_RESET}${"           ".repeat(2)}${ANSI_RED}       ░██ ${ANSI_RESET}\n` +
+  `${"           ".repeat(2)}${ANSI_YELLOW} ░███████  ${ANSI_RESET}${"           ".repeat(2)}${ANSI_RED} ░███████  ${ANSI_RESET}
 
 ${ANSI_GRAY}█████████████████████████████████████████████████████████████████${ANSI_RESET}
  `,

@@ -29,4 +29,19 @@ describe("writeJsonAtomic", () => {
     await writeJsonAtomic(target, { v: 2 });
     expect(JSON.parse(await readFile(target, "utf-8"))).toEqual({ v: 2 });
   });
+
+  test("concurrent writes to the same file do not collide or leak temps", async () => {
+    const target = join(dir, "race.json");
+    await Promise.all(
+      Array.from({ length: 25 }, (_, i) => writeJsonAtomic(target, { i })),
+    );
+
+    const parsed = JSON.parse(await readFile(target, "utf-8")) as { i: number };
+    expect(typeof parsed.i).toBe("number");
+
+    const leftover = (await readdir(dir)).filter((f) =>
+      f.startsWith("race.json.tmp-"),
+    );
+    expect(leftover).toEqual([]);
+  });
 });
