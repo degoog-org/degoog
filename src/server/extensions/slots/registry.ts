@@ -80,7 +80,7 @@ const registry = createRegistry<SlotPlugin>({
         id,
         source,
       );
-      await initPlugin(slot, entryPath, id, template);
+      await initPlugin(slot, entryPath, id, template, { pluginId: folderName });
     }
   },
   debugTag: "slots",

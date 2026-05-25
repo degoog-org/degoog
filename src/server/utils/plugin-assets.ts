@@ -79,6 +79,17 @@ type PluginLike = {
 
 const _initedPlugins = new WeakSet<object>();
 
+export const PLUGIN_API_PREFIX = "/api/plugin";
+
+export const buildApiBase = (pluginId: string): string =>
+  `${PLUGIN_API_PREFIX}/${pluginId}`;
+
+export const buildRouteUrl = (pluginId: string, path = ""): string => {
+  const apiBase = buildApiBase(pluginId);
+  const suffix = String(path || "").replace(/^\/+/, "");
+  return suffix ? `${apiBase}/${suffix}` : apiBase;
+};
+
 export const forgetPluginInit = (plugin: object): void => {
   _initedPlugins.delete(plugin);
 };
@@ -108,11 +119,17 @@ export async function initPlugin(
   entryPath: string,
   settingsId: string,
   template: string,
+  options: { pluginId: string },
 ): Promise<void> {
   const { readFile } = await import("fs/promises");
+  const { pluginId } = options;
   const alreadyInited = _initedPlugins.has(plugin as object);
   if (plugin.init && !alreadyInited) {
     const ctx: PluginContext = {
+      id: pluginId,
+      pluginId,
+      apiBase: buildApiBase(pluginId),
+      routeUrl: (path = "") => buildRouteUrl(pluginId, path),
       dir: entryPath,
       template,
       readFile: (filename: string) =>

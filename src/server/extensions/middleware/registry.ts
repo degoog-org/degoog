@@ -33,7 +33,7 @@ const registry = createRegistry<RequestMiddleware>({
     lockinSettingsId(folderName, id);
     if (!(await isDisabled(id))) {
       const template = await loadPluginAssets(entryPath, folderName, id);
-      await initPlugin(m, entryPath, id, template);
+      await initPlugin(m, entryPath, id, template, { pluginId: folderName });
     }
   },
   debugTag: "middleware",

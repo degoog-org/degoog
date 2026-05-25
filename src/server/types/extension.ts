@@ -84,6 +84,10 @@ export interface ExtensionMeta {
 }
 
 export interface PluginContext {
+  id: string;
+  pluginId: string;
+  apiBase: string;
+  routeUrl: (path?: string) => string;
   dir: string;
   template: string;
   readFile: (filename: string) => Promise<string>;

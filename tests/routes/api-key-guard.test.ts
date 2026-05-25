@@ -304,6 +304,47 @@ describe("guardApiKey - bearer token edge cases", () => {
   });
 });
 
+describe("guardApiKey - browser nonce path", () => {
+  test("valid nonce via headers passes when protection enabled", async () => {
+    const { generateSearchNonce } = await import(
+      "../../src/server/utils/search-nonce"
+    );
+    await _enable("apiKeySearchEnabled");
+    const { n, s } = generateSearchNonce();
+    const res = await _get(searchRouter, "/api/search", {
+      "x-search-nonce": n,
+      "x-search-sig": s,
+    });
+    expect(res.status).not.toBe(401);
+  });
+
+  test("valid nonce via query params passes when protection enabled", async () => {
+    const { generateSearchNonce } = await import(
+      "../../src/server/utils/search-nonce"
+    );
+    await _enable("apiKeySearchEnabled");
+    const { n, s } = generateSearchNonce();
+    const res = await _get(
+      searchRouter,
+      `/api/search?searchNonce=${n}&searchSig=${s}`,
+    );
+    expect(res.status).not.toBe(401);
+  });
+
+  test("tampered nonce signature → 401", async () => {
+    const { generateSearchNonce } = await import(
+      "../../src/server/utils/search-nonce"
+    );
+    await _enable("apiKeySearchEnabled");
+    const { n } = generateSearchNonce();
+    const res = await _get(searchRouter, "/api/search", {
+      "x-search-nonce": n,
+      "x-search-sig": "deadbeef",
+    });
+    expect(res.status).toBe(401);
+  });
+});
+
 describe("guardApiKey - POST body attacks when protection disabled", () => {
   test("invalid JSON body → 400", async () => {
     const res = await suggestRouter.request(

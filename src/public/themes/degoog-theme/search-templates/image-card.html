@@ -5,7 +5,7 @@
     data-fallback="{{ fallback_url }}"
     alt="{{ title }}"
     loading="lazy"
-    onerror="this.src!==this.dataset.fallback?(this.src=this.dataset.fallback):this.closest('.image-card').style.display='none'"
+    onerror="this.dataset.triedFallback||this.dataset.fallback===''?this.closest('.image-card').style.display='none':(this.dataset.triedFallback='1',this.src=this.dataset.fallback)"
   />
 </div>
 <div class="image-info">

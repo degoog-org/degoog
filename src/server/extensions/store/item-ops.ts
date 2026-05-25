@@ -2,17 +2,6 @@ import { readFile, mkdir, readdir, stat, rm } from "fs/promises";
 import { join, resolve, dirname } from "path";
 import { removeSettings } from "../../utils/plugin-settings";
 import { isVersionAtLeast, getAppVersion } from "../../utils/version";
-import { reloadCommands } from "../commands/registry";
-import { reloadSlotPlugins } from "../slots/registry";
-import { reloadInterceptors } from "../interceptors/registry";
-import { reloadSearchResultTabs } from "../search-result-tabs/registry";
-import { reloadSearchBarActions } from "../search-bar/registry";
-import { reloadPluginRoutes } from "../plugin-routes/registry";
-import { reloadMiddlewareRegistry } from "../middleware/registry";
-import { reloadThemes } from "../themes/registry";
-import { reloadEngines } from "../engines/registry";
-import { reloadTransports } from "../transports/registry";
-import { reloadAutocomplete } from "../autocomplete/registry";
 import {
   ExtensionStoreType,
   type StoreItem,
@@ -21,13 +10,6 @@ import {
   type AuthorJson,
 } from "../../types";
 import {
-  pluginsDir,
-  themesDir,
-  enginesDir,
-  transportsDir,
-  autocompleteDir,
-} from "../../utils/paths";
-import {
   normalizeRepoUrl,
   getStoreDir,
   readReposData,
@@ -35,6 +17,10 @@ import {
   getRepoByUrl,
 } from "./persistence";
 import { addRepo } from "./repo-ops";
+import { STORE_TYPE_SPECS } from "./store-types";
+import { createMutex } from "../../utils/mutex";
+
+const _storeMutex = createMutex();
 
 function slugifyIdPart(input: string): string {
   return (
@@ -100,11 +86,14 @@ async function copyItemDir(
 }
 
 function getDestDir(type: ExtensionStoreType): string {
-  if (type === ExtensionStoreType.Plugin) return pluginsDir();
-  if (type === ExtensionStoreType.Theme) return themesDir();
-  if (type === ExtensionStoreType.Transport) return transportsDir();
-  if (type === ExtensionStoreType.Autocomplete) return autocompleteDir();
-  return enginesDir();
+  return STORE_TYPE_SPECS[type].destDir();
+}
+
+export function settingsIdsForInstalled(
+  type: ExtensionStoreType,
+  installedAs: string,
+): string[] {
+  return STORE_TYPE_SPECS[type].settingsIds(installedAs);
 }
 
 function getEntriesForType(
@@ -121,34 +110,14 @@ function getEntriesForType(
       minDegoogVersion?: string;
     }>
   | undefined {
-  if (type === ExtensionStoreType.Plugin) return pkg.plugins;
-  if (type === ExtensionStoreType.Theme) return pkg.themes;
-  if (type === ExtensionStoreType.Transport) return pkg.transports;
-  if (type === ExtensionStoreType.Autocomplete) return pkg.autocomplete;
-  return pkg.engines;
+  return pkg[STORE_TYPE_SPECS[type].manifestKey];
 }
 
 export async function reloadAfterAction(
   type: ExtensionStoreType,
   bust = true,
 ): Promise<void> {
-  if (type === ExtensionStoreType.Plugin) {
-    await reloadSlotPlugins(bust);
-    await reloadInterceptors(bust);
-    await reloadSearchResultTabs(bust);
-    await reloadCommands(bust);
-    await reloadSearchBarActions(bust);
-    await reloadPluginRoutes(bust);
-    await reloadMiddlewareRegistry(bust);
-  } else if (type === ExtensionStoreType.Theme) {
-    await reloadThemes();
-  } else if (type === ExtensionStoreType.Transport) {
-    await reloadTransports();
-  } else if (type === ExtensionStoreType.Autocomplete) {
-    await reloadAutocomplete();
-  } else {
-    await reloadEngines();
-  }
+  await STORE_TYPE_SPECS[type].reload(bust);
 }
 
 const STORE_METADATA = ["author.json", "screenshots"];
@@ -205,7 +174,7 @@ async function installDependencies(dependencies: string[]): Promise<void> {
       }
     }
     try {
-      await installItem(parsed.repoUrl, parsed.itemPath, parsed.type);
+      await _installItem(parsed.repoUrl, parsed.itemPath, parsed.type);
     } catch {
       //
     }
@@ -320,7 +289,15 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
   return items;
 }
 
-export async function installItem(
+export function installItem(
+  repoUrl: string,
+  itemPath: string,
+  type: ExtensionStoreType,
+): Promise<void> {
+  return _storeMutex(() => _installItem(repoUrl, itemPath, type));
+}
+
+async function _installItem(
   repoUrl: string,
   itemPath: string,
   type: ExtensionStoreType,
@@ -393,7 +370,15 @@ export async function installItem(
   }
 }
 
-export async function uninstallItem(
+export function uninstallItem(
+  repoUrl: string,
+  itemPath: string,
+  type: ExtensionStoreType,
+): Promise<void> {
+  return _storeMutex(() => _uninstallItem(repoUrl, itemPath, type));
+}
+
+async function _uninstallItem(
   repoUrl: string,
   itemPath: string,
   type: ExtensionStoreType,
@@ -409,25 +394,22 @@ export async function uninstallItem(
   if (!inst) throw new Error("Item is not installed.");
   const destDir = join(getDestDir(type), inst.installedAs);
   await rm(destDir, { recursive: true, force: true }).catch(() => {});
-  const settingsIds: string[] = [];
-  if (type === ExtensionStoreType.Plugin) {
-    settingsIds.push(`plugin-${inst.installedAs}`, `slot-${inst.installedAs}`);
-  } else if (type === ExtensionStoreType.Theme) {
-    settingsIds.push(`theme-${inst.installedAs}`);
-  } else if (type === ExtensionStoreType.Transport) {
-    settingsIds.push(`transport-${inst.installedAs}`);
-  } else if (type === ExtensionStoreType.Autocomplete) {
-    settingsIds.push(`autocomplete-${inst.installedAs}`);
-  } else {
-    settingsIds.push(`engine-${inst.installedAs}`);
-  }
-  for (const id of settingsIds) await removeSettings(id);
+  for (const id of settingsIdsForInstalled(type, inst.installedAs))
+    await removeSettings(id);
   data.installed = data.installed.filter((i) => i !== inst);
   await writeReposData(data);
   await reloadAfterAction(type);
 }
 
-export async function updateItem(
+export function updateItem(
+  repoUrl: string,
+  itemPath: string,
+  type: ExtensionStoreType,
+): Promise<void> {
+  return _storeMutex(() => _updateItem(repoUrl, itemPath, type));
+}
+
+async function _updateItem(
   repoUrl: string,
   itemPath: string,
   type: ExtensionStoreType,

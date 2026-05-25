@@ -1,0 +1,46 @@
+import { describe, test, expect } from "bun:test";
+import { mergeSuggestions } from "../../src/server/extensions/autocomplete/merge";
+
+describe("mergeSuggestions", () => {
+  test("drops the exact query echo and dedupes across providers", () => {
+    const merged = mergeSuggestions(
+      [
+        { results: ["cat", "cats", "cat food"], name: "A" },
+        { results: ["cat", "cats"], name: "B" },
+      ],
+      "cat",
+    );
+    const texts = merged.map((m) => m.text);
+    expect(texts).not.toContain("cat");
+    expect(texts).toContain("cats");
+    const cats = merged.find((m) => m.text === "cats");
+    expect(cats?.source).toContain("A");
+    expect(cats?.source).toContain("B");
+  });
+
+  test("caps total suggestions at 10", () => {
+    const many = Array.from({ length: 20 }, (_, i) => `s${i}`);
+    const merged = mergeSuggestions([{ results: many, name: "A" }], "q");
+    expect(merged.length).toBeLessThanOrEqual(10);
+  });
+
+  test("keeps rich suggestions first and limits them to 2", () => {
+    const merged = mergeSuggestions(
+      [
+        {
+          results: [
+            { text: "alpha", rich: { description: "a" } },
+            { text: "beta", rich: { thumbnail: "b.png" } },
+            { text: "gamma", rich: { description: "c" } },
+            "plain1",
+          ],
+          name: "A",
+        },
+      ],
+      "q",
+    );
+    const richCount = merged.filter((m) => m.rich).length;
+    expect(richCount).toBe(2);
+    expect(merged[0].rich).toBeDefined();
+  });
+});

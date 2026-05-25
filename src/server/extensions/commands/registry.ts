@@ -65,6 +65,7 @@ function isBangCommand(val: unknown): val is BangCommand {
 }
 
 const commandSourceMap = new Map<string, "builtin" | "plugin">();
+const seenTriggers = new Set<string>();
 
 const registry = createRegistry<CommandEntry>({
   dirs: () => [{ dir: builtinsDir, source: "builtin" }, { dir: pluginsDir() }],
@@ -75,8 +76,6 @@ const registry = createRegistry<CommandEntry>({
         ? new (Export as new () => BangCommand)()
         : (Export as BangCommand);
     if (!isBangCommand(instance)) return null;
-    if (registry.items().some((c) => c.trigger === instance.trigger))
-      return null;
     return {
       id: "",
       trigger: instance.trigger,
@@ -85,6 +84,8 @@ const registry = createRegistry<CommandEntry>({
     };
   },
   onLoad: async (entry, { entryPath, folderName, source }) => {
+    if (seenTriggers.has(entry.trigger)) return false;
+    seenTriggers.add(entry.trigger);
     entry.id = (source === "plugin" ? "plugin-" : "") + folderName;
     commandSourceMap.set(entry.id, source);
     entry.instance.t = await bootCircuitFromPath(entryPath);
@@ -96,7 +97,9 @@ const registry = createRegistry<CommandEntry>({
         entry.id,
         source,
       );
-      await initPlugin(entry.instance, entryPath, entry.id, template);
+      await initPlugin(entry.instance, entryPath, entry.id, template, {
+        pluginId: folderName,
+      });
     }
   },
   debugTag: "commands",
@@ -124,12 +127,14 @@ async function loadAliases(): Promise<void> {
 export async function initPlugins(): Promise<void> {
   await loadAliases();
   commandSourceMap.clear();
+  seenTriggers.clear();
   await registry.init();
 }
 
 export async function reloadCommands(bust = false): Promise<void> {
   await loadAliases();
   commandSourceMap.clear();
+  seenTriggers.clear();
   await (bust ? registry.reload() : registry.refresh());
 }
 

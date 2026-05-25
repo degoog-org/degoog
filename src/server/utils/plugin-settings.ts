@@ -1,6 +1,6 @@
-import { readFile, writeFile, mkdir } from "fs/promises";
-import { dirname } from "path";
+import { readFile } from "fs/promises";
 import { pluginSettingsFile } from "./paths";
+import { writeJsonAtomic } from "./atomic-json";
 import {
   INVALIDATE_SCOPE,
   onInvalidate,
@@ -53,9 +53,7 @@ const load = async (): Promise<PluginSettingsStore> => {
 export const didSettingsLoadFail = (): boolean => loadFailed;
 
 async function persist(store: PluginSettingsStore): Promise<void> {
-  const path = pluginSettingsFile();
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, JSON.stringify(store, null, 2), "utf-8");
+  await writeJsonAtomic(pluginSettingsFile(), store);
 }
 
 export const getSettings = async (

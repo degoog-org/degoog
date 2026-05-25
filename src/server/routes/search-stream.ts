@@ -1,14 +1,10 @@
 import { Hono } from "hono";
 import {
-  getActiveWebEngines,
-  getEnginesForCustomType,
-  getEnginesForSearchType,
-} from "../extensions/engines/registry";
-import {
   fetchRelatedSearches,
   scoreResults,
   searchSingleEngine,
 } from "../search";
+import { selectActiveEngines } from "../search/engine-selection";
 import {
   EngineTiming,
   SearchResponse,
@@ -128,21 +124,7 @@ router.get("/api/search/stream", async (c) => {
     Math.max(1, parseInt(asString(settings.streamingMaxRetries) || "2", 10)),
   );
 
-  const builtinTypes = new Set(["web", "images", "videos", "news"]);
-  const rawActiveEngines =
-    searchType === "web"
-      ? await getActiveWebEngines(engines)
-      : builtinTypes.has(searchType)
-        ? (await getEnginesForSearchType(searchType, engines)).map((e) => ({
-            id: e.id,
-            instance: e.instance,
-            score: 1,
-          }))
-        : (await getEnginesForCustomType(searchType)).map((e) => ({
-            id: e.id,
-            instance: e.instance,
-            score: 1,
-          }));
+  const rawActiveEngines = await selectActiveEngines(searchType, engines, true);
 
   if (rawActiveEngines.length === 0) {
     return c.json({
@@ -158,6 +140,7 @@ router.get("/api/search/stream", async (c) => {
   const start = performance.now();
 
   let closed = false;
+  const cancelController = new AbortController();
 
   const stream = new ReadableStream({
     start(controller) {
@@ -203,6 +186,7 @@ router.get("/api/search/stream", async (c) => {
               dateFrom,
               dateTo,
               imageFilter,
+              cancelController.signal,
             );
             lastTiming = timing;
 
@@ -280,6 +264,7 @@ router.get("/api/search/stream", async (c) => {
     },
     cancel() {
       closed = true;
+      cancelController.abort();
     },
   });
 

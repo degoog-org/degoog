@@ -1,11 +1,10 @@
 import {
-  getActiveWebEngines,
   getEngineDefaultTransport,
   getEngineIdByInstance,
   getEngineMap,
-  getEnginesForSearchType,
 } from "./extensions/engines/registry";
 import { resolveTransport } from "./extensions/transports/registry";
+import { selectActiveEngines } from "./search/engine-selection";
 import type {
   EngineConfig,
   EngineContext,
@@ -178,13 +177,19 @@ export const fetchRelatedSearches = async (
   }
 };
 
-const _withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Engine timeout")), ms),
-    ),
-  ]);
+const _withTimeout = <T>(
+  promise: Promise<T>,
+  ms: number,
+  onTimeout?: () => void,
+): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      onTimeout?.();
+      reject(new Error("Engine timeout"));
+    }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 };
 
 const _classifyReject = (
@@ -261,6 +266,7 @@ export const createSearchEngineContext = (
   dateFrom?: string,
   dateTo?: string,
   imageFilter?: ImageFilter,
+  signal?: AbortSignal,
 ): EngineContext => {
   const resolvedLang =
     lang ||
@@ -288,7 +294,8 @@ export const createSearchEngineContext = (
         raw = getEngineDefaultTransport(engineSettingsId) ?? undefined;
       }
       const transport = parseOutgoingTransport(raw);
-      const baseInit = init ?? {};
+      const baseInit = { ...(init ?? {}) };
+      if (signal && !baseInit.signal) baseInit.signal = signal;
       if (!customUa)
         return outgoingFetch(url, baseInit, transport, {
           proxyOverrideEnabled,
@@ -324,6 +331,7 @@ export const searchSingleEngine = async (
   dateFrom?: string,
   dateTo?: string,
   imageFilter?: ImageFilter,
+  signal?: AbortSignal,
 ): Promise<{ results: SearchResult[]; timing: EngineTiming }> => {
   const engine = resolveEngine(engineName);
   if (!engine) {
@@ -335,18 +343,25 @@ export const searchSingleEngine = async (
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
   const t0 = performance.now();
   const engineSettingsId = getEngineIdByInstance(engine);
+  const ac = new AbortController();
+  if (signal) {
+    if (signal.aborted) ac.abort();
+    else signal.addEventListener("abort", () => ac.abort(), { once: true });
+  }
   const engineContext = createSearchEngineContext(
     engineSettingsId,
     lang,
     dateFrom,
     dateTo,
     imageFilter,
+    ac.signal,
   );
   try {
     const timeout = await _getEngineTimeout(engineSettingsId);
     const results = await _withTimeout(
       engine.executeSearch(query, p, timeFilter, engineContext),
       timeout,
+      () => ac.abort(),
     );
     const elapsed = Math.round(performance.now() - t0);
     return {
@@ -377,14 +392,7 @@ export const search = async (
   const start = performance.now();
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
 
-  const rawActiveEngines =
-    type === "web"
-      ? await getActiveWebEngines(config)
-      : (await getEnginesForSearchType(type, config)).map((e) => ({
-        id: e.id,
-        instance: e.instance,
-        score: 1,
-      }));
+  const rawActiveEngines = await selectActiveEngines(type, config);
 
   if (rawActiveEngines.length === 0) {
     return {
@@ -400,11 +408,20 @@ export const search = async (
   const settled = await Promise.allSettled(
     rawActiveEngines.map(async ({ instance, id }) => {
       const t0 = performance.now();
-      const ctx = createSearchEngineContext(id, lang, dateFrom, dateTo, imageFilter);
+      const ac = new AbortController();
+      const ctx = createSearchEngineContext(
+        id,
+        lang,
+        dateFrom,
+        dateTo,
+        imageFilter,
+        ac.signal,
+      );
       const timeout = await _getEngineTimeout(id);
       const results = await _withTimeout(
         instance.executeSearch(query, p, timeFilter, ctx),
         timeout,
+        () => ac.abort(),
       );
       return { results, elapsed: Math.round(performance.now() - t0) };
     }),

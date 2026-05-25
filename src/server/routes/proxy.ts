@@ -2,6 +2,9 @@ import { Hono } from "hono";
 import { outgoingFetch } from "../utils/outgoing";
 import { verifyProxyUrl } from "../utils/proxy-sign";
 import { getRandomUserAgent } from "../utils/user-agents";
+import { isSafeHost, type LocalImageAccess } from "../utils/ssrf";
+import { asBoolean, asString } from "../utils/plugin-settings";
+import { getInstanceSettings } from "../utils/server-settings";
 
 const router = new Hono();
 
@@ -73,15 +76,28 @@ const ALLOWED_CONTENT_TYPES = [
   "image/x-icon",
 ];
 
+const _localImageAccess = async (): Promise<LocalImageAccess> => {
+  const settings = await getInstanceSettings();
+  return {
+    enabled: asBoolean(settings.imageProxyAllowLocal),
+    patterns: asString(settings.imageProxyAllowList).split("\n"),
+  };
+};
+
 const followRedirects = async (
   initial: string,
-  init: { headers: Record<string, string>; signal: AbortSignal },
+  init: {
+    headers: Record<string, string>;
+    signal: AbortSignal;
+    access: LocalImageAccess;
+  },
 ): Promise<Response | null> => {
   let target = initial;
   for (let hop = 0; hop <= MAX_REDIRECT_HOPS; hop++) {
     try {
       const parsed = new URL(target);
       if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+      if (!(await isSafeHost(parsed.hostname, init.access))) return null;
     } catch {
       return null;
     }
@@ -138,6 +154,7 @@ router.get("/api/proxy/image", async (c) => {
     const res = await followRedirects(url, {
       signal: controller.signal,
       headers,
+      access: await _localImageAccess(),
     });
     clearTimeout(timeout);
 

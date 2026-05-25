@@ -39,7 +39,7 @@ const registry = createRegistry<SearchResultTab>({
     lockinSettingsId(folderName, id);
     if (!(await isDisabled(id))) {
       const template = await loadPluginAssets(entryPath, folderName, id);
-      await initPlugin(tab, entryPath, id, template);
+      await initPlugin(tab, entryPath, id, template, { pluginId: folderName });
     }
   },
   debugTag: "search-result-tabs",

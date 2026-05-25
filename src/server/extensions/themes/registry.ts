@@ -10,7 +10,6 @@ import { logger } from "../../utils/logger";
 import {
   asString,
   getSettings,
-  maskSecrets,
   setSettings,
 } from "../../utils/plugin-settings";
 
@@ -47,7 +46,7 @@ export interface LoadedTheme {
 
 import { themesDir } from "../../utils/paths";
 import { bootCircuitFromPath } from "../../utils/translation-circuit";
-import { extensionReadmeExists } from "../../utils/extension-docs";
+import { buildExtensionMeta } from "../extension-meta";
 import { rewriteThemePaths } from "../../utils/extension-id";
 
 const THEMES_DIR = themesDir();
@@ -190,20 +189,16 @@ export async function getThemeExtensionMeta(): Promise<ExtensionMeta[]> {
   for (const theme of themes) {
     const schema = theme.manifest.settingsSchema ?? [];
     const id = settingsId(theme.id);
-    const rawSettings = schema.length > 0 ? await getSettings(id) : {};
-    const maskedSettings = maskSecrets(rawSettings, schema);
-    const { exists } = await extensionReadmeExists(id);
-
-    results.push({
-      id,
-      displayName: theme.manifest.name,
-      description: theme.manifest.description ?? "Custom theme",
-      type: ExtensionStoreType.Theme,
-      configurable: schema.length > 0,
-      settingsSchema: schema,
-      settings: maskedSettings,
-      extensionDocsAvailable: exists,
-    });
+    results.push(
+      await buildExtensionMeta({
+        id,
+        displayName: theme.manifest.name,
+        description: theme.manifest.description ?? "Custom theme",
+        type: ExtensionStoreType.Theme,
+        schema,
+        rawSettings: schema.length > 0 ? await getSettings(id) : {},
+      }),
+    );
   }
 
   return results;

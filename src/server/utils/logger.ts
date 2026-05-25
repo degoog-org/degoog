@@ -19,6 +19,10 @@ const CONSOLE_COLORS: Record<string, string> = {
   translation: "\x1b[35m",
 };
 
+const NO_COLOR = !!process.env.NO_COLOR;
+const color = (c: string): string => (NO_COLOR ? "" : c);
+const RESET = NO_COLOR ? "" : "\x1b[0m";
+
 const fmt = (namespace: string, ...args: unknown[]) =>
   args.map((e) => (e instanceof Error ? ["\n", e] : [e])).flat();
 
@@ -53,9 +57,9 @@ const tryCycle = (buf: string[]): string[] | null => {
 const printCycleCount = (cycles: number, period: number) => {
   const suffix = period > 1 ? ` (${period}-line cycle)` : "";
   if (IS_TTY && _cycleLineActive) {
-    process.stdout.write(`\x1b[1A\r\x1b[2K\x1b[90m  ↑ x${cycles}${suffix}\x1b[0m\n`);
+    process.stdout.write(`\x1b[1A\r\x1b[2K${color("\x1b[90m")}  ↑ x${cycles}${suffix}${RESET}\n`);
   } else {
-    process.stdout.write(`\x1b[90m  ↑ x${cycles}${suffix}\x1b[0m\n`);
+    process.stdout.write(`${color("\x1b[90m")}  ↑ x${cycles}${suffix}${RESET}\n`);
     _cycleLineActive = true;
   }
 };
@@ -94,7 +98,7 @@ export const logger: Record<string, (namespace: string, ...args: unknown[]) => v
         if (LEVELS.indexOf(LOG_LEVEL) < LEVELS.indexOf(level)) return;
         emit(msgKey(level, namespace, args), () =>
           CONSOLE_LEVELS[level](
-            `${CONSOLE_COLORS[level]}${level.toUpperCase()} [${namespace}]\x1b[0m`,
+            `${color(CONSOLE_COLORS[level])}${level.toUpperCase()} [${namespace}]${RESET}`,
             ...fmt(namespace, ...args),
           ),
         );
@@ -107,7 +111,7 @@ export const logger: Record<string, (namespace: string, ...args: unknown[]) => v
     if (!LOG_TRANSLATION) return;
     emit(msgKey("translation", namespace, args), () =>
       console.debug(
-        `${CONSOLE_COLORS.translation}TRANSLATION [${namespace}]\x1b[0m`,
+        `${color(CONSOLE_COLORS.translation)}TRANSLATION [${namespace}]${RESET}`,
         ...fmt(namespace, ...args),
       ),
     );

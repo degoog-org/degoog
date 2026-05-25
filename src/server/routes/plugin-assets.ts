@@ -3,6 +3,7 @@ import { join } from "path";
 import {
   pluginsDir as getPluginsDir,
   themesDir as getThemesDir,
+  resolveContained,
 } from "../utils/paths";
 import {
   getPluginNamespace,
@@ -51,7 +52,8 @@ router.get("/plugins/:folder/*", async (c) => {
   if (!mime) return c.notFound();
   const source = getScriptFolderSource(folder);
   const rootDir = source === "builtin" ? builtinsDir : pluginsDir;
-  const filePath = join(rootDir, folder, rest);
+  const filePath = resolveContained(rootDir, folder, rest);
+  if (!filePath) return c.notFound();
   const file = Bun.file(filePath);
   if (!(await file.exists())) return c.notFound();
   c.header("Content-Type", mime);
@@ -83,7 +85,8 @@ router.get("/themes/:folder/*", async (c) => {
   const ext = rest.substring(rest.lastIndexOf("."));
   const mime = MIME_TYPES[ext];
   if (!mime) return c.notFound();
-  const filePath = join(themesDataDir, folder, rest);
+  const filePath = resolveContained(themesDataDir, folder, rest);
+  if (!filePath) return c.notFound();
   const file = Bun.file(filePath);
   if (!(await file.exists())) return c.notFound();
   c.header("Content-Type", mime);

@@ -857,6 +857,42 @@
                     ></div>
                   </fieldset>
                 </div>
+                <label class="settings-toggle-wrap degoog-toggle-wrap">
+                  <input
+                    type="checkbox"
+                    id="settings-image-proxy-allow-local"
+                    class="settings-toggle"
+                    aria-label="{{t:settings-page.server.image-proxy-allow-local-aria}}"
+                  />
+                  <span class="toggle-slider degoog-toggle"></span>
+                  <span class="settings-toggle-label"
+                    >{{t:settings-page.server.image-proxy-allow-local}}</span
+                  >
+                </label>
+                <div
+                  class="settings-proxy-urls-wrap"
+                  id="settings-image-proxy-allow-list-wrap"
+                  style="display: none"
+                >
+                  <fieldset
+                    class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
+                  >
+                    <label
+                      for="settings-image-proxy-allow-list"
+                      class="settings-proxy-urls-label"
+                      >{{t:settings-page.server.image-proxy-allow-list-label}}</label
+                    >
+                    <p class="settings-desc">
+                      {{t:settings-page.server.image-proxy-allow-list-desc}}
+                    </p>
+                    <textarea
+                      id="settings-image-proxy-allow-list"
+                      class="settings-proxy-urls degoog-input"
+                      rows="4"
+                      placeholder="^192\.168\.&#10;^10\.&#10;jellyfin\.lan"
+                    ></textarea>
+                  </fieldset>
+                </div>
               </fieldset>
             </section>
 
@@ -1064,7 +1100,7 @@
                   {{t:settings-page.server.honeypot-heading}}
                 </h2>
                 <div class="floating-section-icon">
-                  <i class="fa-solid fa-robot"></i>
+                  <i class="fa-solid fa-spider"></i>
                 </div>
               </div>
               <p class="settings-desc">
@@ -1112,7 +1148,7 @@
                     id="settings-honeypot-ban-duration"
                     class="degoog-input"
                     min="0"
-                    placeholder="0"
+                    placeholder="72"
                   />
                 </fieldset>
                 <fieldset

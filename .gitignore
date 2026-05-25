@@ -1,4 +1,6 @@
 .env
+.claude
+docs
 docker-compose.test.yml
 node_modules/
 src/public/themes/degoog-theme/style.css

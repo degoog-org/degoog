@@ -288,7 +288,10 @@ export async function performStreamingSearch(
   });
 
   source.addEventListener("error", (e) => {
-    if (_activeSource !== source) return;
+    if (_activeSource !== source) {
+      source.close();
+      return;
+    }
     console.error("[streaming-search] stream error", e);
     source.close();
     _activeSource = null;

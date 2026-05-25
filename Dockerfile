@@ -24,7 +24,10 @@ COPY --from=build /app/package.json ./package.json
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-ENV PORT=4444
+ENV DEGOOG_PORT=4444
 EXPOSE 4444
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD curl -fsS "http://127.0.0.1:${DEGOOG_PORT:-4444}/readyz"
 
 ENTRYPOINT ["/entrypoint.sh"]

@@ -13,14 +13,14 @@ import {
   mergeDefaults,
 } from "../../utils/plugin-settings";
 import { autocompleteDir } from "../../utils/paths";
-import { outgoingFetch, parseOutgoingTransport } from "../../utils/outgoing";
-import { autocompleteCache, createCache, useCache } from "../../utils/cache";
+import { autocompleteCache } from "../../utils/cache";
 import { getTransportNames, getTransportDisplayNames } from "../transports/registry";
 import { createRegistry } from "../registry-factory";
 import { logger } from "../../utils/logger";
 import { signSuggestionThumbnails } from "../../utils/proxy-sign";
-import { getRandomUserAgent } from "../../utils/user-agents";
-import { getInstanceSettings } from "../../utils/server-settings";
+import { buildProviderContext } from "./context";
+import { mergeSuggestions } from "./merge";
+import { AUTOCOMPLETE_TIMEOUT_MS, withTimeout } from "../../utils/with-timeout";
 
 interface PluginEntry {
   id: string;
@@ -92,40 +92,6 @@ function _all(): {
   return pluginRegistry.items();
 }
 
-async function _buildContext(providerId: string): Promise<AutocompleteContext> {
-  const stored = await getSettings(providerId);
-  const raw = asString(stored.outgoingTransport) || undefined;
-  const transportName = parseOutgoingTransport(raw);
-  const globalSettings = await getInstanceSettings();
-  const lang = (() => {
-    if (asBoolean(globalSettings.languagesEnabled)) {
-      const first = asString(globalSettings.languages ?? "")
-        .split(/[\n,]/)
-        .map((s) => s.trim().toLowerCase())
-        .find((s) => /^[a-z]{2,3}$/.test(s));
-      if (first) return first;
-    }
-    return (
-      (process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE || "")
-        .trim()
-        .split(/[-_]/)[0]
-        .toLowerCase() || "en"
-    );
-  })();
-  return {
-    fetch: (url, init) =>
-      outgoingFetch(
-        url as string,
-        (init ?? {}) as Parameters<typeof outgoingFetch>[1],
-        transportName,
-      ),
-    lang,
-    userAgent: () => getRandomUserAgent(),
-    createCache,
-    useCache,
-  };
-}
-
 export async function getEnabledAutocompleteProviders(): Promise<
   AutocompleteProvider[]
 > {
@@ -169,7 +135,7 @@ export async function getSuggestionsFromProviders(query: string): Promise<
       const score = Math.max(parseFloat(asString(stored.score)) || 1, 0.1);
       return {
         provider: p.instance,
-        ctx: await _buildContext(p.id),
+        ctx: await buildProviderContext(p.id),
         score,
         name: p.displayName,
       };
@@ -193,7 +159,11 @@ export async function getSuggestionsFromProviders(query: string): Promise<
   const settled = await Promise.allSettled(
     active.map(async ({ provider, ctx, name }) => {
       const t0 = performance.now();
-      const results = await provider.getSuggestions(query, ctx);
+      const results = await withTimeout(
+        Promise.resolve(provider.getSuggestions(query, ctx)),
+        AUTOCOMPLETE_TIMEOUT_MS,
+        `autocomplete ${name}`,
+      );
       logger.debug(
         "autocomplete",
         `${name} returned ${results.length} suggestion(s) in ${Math.round(performance.now() - t0)}ms`,
@@ -202,98 +172,19 @@ export async function getSuggestionsFromProviders(query: string): Promise<
     }),
   );
 
-  const lower = query.toLowerCase();
-
-  type NormItem = {
-    text: string;
-    source: string;
-    rich?: import("../../types").RichSuggestion;
-  };
-
-  const richItems = new Map<
-    string,
-    {
-      text: string;
-      sources: string[];
-      rich: import("../../types").RichSuggestion;
-    }
-  >();
-  const perProvider: NormItem[][] = [];
-
-  for (let i = 0; i < settled.length; i++) {
-    const result = settled[i];
+  const providerResults = settled.map((result, i) => {
     if (result.status === "rejected") {
       logger.warn("autocomplete", `${active[i].name} failed`, result.reason);
-      perProvider.push([]);
-      continue;
+      return { results: [], name: active[i].name };
     }
-    const { results, name } = result.value;
-    const plain: NormItem[] = [];
-    for (const s of results) {
-      const text = typeof s === "string" ? s : s.text;
-      const rich = typeof s === "object" ? s.rich : undefined;
+    return result.value;
+  });
 
-      if (text.toLowerCase() === lower) continue;
-
-      if (rich && (rich.description || rich.thumbnail)) {
-        const key = text.toLowerCase();
-        const existing = richItems.get(key);
-        if (existing) {
-          if (!existing.sources.includes(name)) existing.sources.push(name);
-          if (!existing.rich.description && rich.description)
-            existing.rich.description = rich.description;
-          if (!existing.rich.thumbnail && rich.thumbnail)
-            existing.rich.thumbnail = rich.thumbnail;
-          if (!existing.rich.type && rich.type) existing.rich.type = rich.type;
-        } else if (richItems.size < 2) {
-          richItems.set(key, { text, sources: [name], rich });
-        }
-      } else {
-        plain.push({ text, source: name });
-      }
-    }
-    perProvider.push(plain);
-  }
-
-  const seen = new Map<string, { text: string; sources: string[] }>();
-  const maxLen = perProvider.reduce((m, p) => Math.max(m, p.length), 0);
-  const plainCap = 10 - richItems.size;
-
-  outer: for (let i = 0; i < maxLen; i++) {
-    for (const providerResults of perProvider) {
-      if (i >= providerResults.length) continue;
-      const item = providerResults[i];
-      const key = item.text.toLowerCase();
-      if (richItems.has(key)) continue;
-      const existing = seen.get(key);
-      if (existing) {
-        if (!existing.sources.includes(item.source))
-          existing.sources.push(item.source);
-      } else {
-        if (seen.size >= plainCap) break outer;
-        seen.set(key, { text: item.text, sources: [item.source] });
-      }
-    }
-  }
-
-  const richMerged: NormItem[] = Array.from(richItems.values()).map(
-    (entry) => ({
-      text: entry.text,
-      source: entry.sources.join(", "),
-      rich: { ...entry.rich },
-    }),
-  );
-
-  const plainMerged: NormItem[] = Array.from(seen.values()).map((entry) => ({
-    text: entry.text,
-    source: entry.sources.join(", "),
-  }));
-
-  const merged = [...richMerged, ...plainMerged];
+  const merged = mergeSuggestions(providerResults, query);
 
   logger.debug(
     "autocomplete",
-    `merged ${merged.length} suggestion(s) (${richMerged.length} rich) for "${query}"`,
+    `merged ${merged.length} suggestion(s) for "${query}"`,
   );
 
   await autocompleteCache.set(cacheKey, merged);

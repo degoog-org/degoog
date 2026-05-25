@@ -1,8 +1,8 @@
-import { readFile, writeFile, mkdir } from "fs/promises";
-import { dirname } from "path";
+import { readFile } from "fs/promises";
 import { randomBytes } from "crypto";
 import { logger } from "./logger";
 import { serverSettingsFile } from "./paths";
+import { writeJsonAtomic } from "./atomic-json";
 import {
   INVALIDATE_SCOPE,
   onInvalidate,
@@ -33,12 +33,7 @@ onInvalidate((payload) => {
 });
 
 const _persist = async (settings: ServerSettings): Promise<void> => {
-  const path = serverSettingsFile();
-  await mkdir(dirname(path), { recursive: true });
-  const tmp = `${path}.tmp-${Date.now()}`;
-  await writeFile(tmp, JSON.stringify(settings, null, 2), "utf-8");
-  const { rename } = await import("fs/promises");
-  await rename(tmp, path);
+  await writeJsonAtomic(serverSettingsFile(), settings);
 };
 
 export const readServerSettings = async (): Promise<ServerSettings> => {

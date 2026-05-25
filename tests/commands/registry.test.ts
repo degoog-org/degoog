@@ -3,6 +3,7 @@ import {
   initPlugins,
   getFilteredCommandRegistry,
   getCommandInstanceById,
+  getCommandRegistry,
   matchBangCommand,
 } from "../../src/server/extensions/commands/registry";
 
@@ -62,6 +63,15 @@ describe("commands registry", () => {
 
   test("matchBangCommand trailing bang returns null without space before !", () => {
     expect(matchBangCommand("foo!help")).toBeNull();
+  });
+
+  test("loaded commands have no duplicate triggers", () => {
+    const reg = getCommandRegistry();
+    const builtinTriggers = reg
+      .filter((c) => c.category !== "Engine shortcuts")
+      .map((c) => c.trigger);
+    const unique = new Set(builtinTriggers);
+    expect(unique.size).toBe(builtinTriggers.length);
   });
 
   test("matchBangCommand leading bang still takes priority", () => {

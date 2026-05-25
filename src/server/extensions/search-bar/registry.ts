@@ -8,11 +8,11 @@ import {
   asString,
   getSettings,
   isDisabled,
-  maskSecrets,
 } from "../../utils/plugin-settings";
 import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
+import { buildExtensionMeta } from "../extension-meta";
 
 interface PluginActions {
   pluginId: string;
@@ -91,24 +91,22 @@ export async function getSearchBarActionExtensionMeta(): Promise<
       ).settingsSchema ?? [];
     if (schema.length === 0) continue;
     const id = `plugin-${pluginId}`;
-    const raw = await getSettings(id);
-    const settings = maskSecrets(raw, schema);
-    if (raw["disabled"]) settings["disabled"] = raw["disabled"];
     const name =
       (action as SearchBarAction & { name?: string }).name ?? pluginId;
     const description =
       (action as SearchBarAction & { description?: string }).description ?? "";
-    out.push({
-      id,
-      displayName: name,
-      description,
-      type: ExtensionStoreType.Plugin,
-      configurable: true,
-      settingsSchema: schema,
-      settings,
-      source: "plugin",
-      isClientExposed: action.isClientExposed,
-    });
+    out.push(
+      await buildExtensionMeta({
+        id,
+        displayName: name,
+        description,
+        type: ExtensionStoreType.Plugin,
+        schema,
+        rawSettings: await getSettings(id),
+        checkDocs: false,
+        extra: { source: "plugin", isClientExposed: action.isClientExposed },
+      }),
+    );
   }
   return out;
 }

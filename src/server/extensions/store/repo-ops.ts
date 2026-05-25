@@ -48,21 +48,39 @@ const headBranch = async (repoPath: string): Promise<string> => {
   return (await new Response(proc.stdout).text()).trim();
 };
 
-const fetchRef = async (repoPath: string, branch: string): Promise<boolean> => {
+const fetchRef = async (
+  repoPath: string,
+  branch: string,
+): Promise<{ ok: boolean; error: string }> => {
   const proc = Bun.spawn(
-    ["git", "-C", repoPath, "fetch", "--depth", "1", "origin", `${branch}:refs/remotes/origin/${branch}`],
-    { stdout: "ignore", stderr: "ignore" },
+    ["git", "-C", repoPath, "fetch", "--depth", "1", "origin", `+${branch}:refs/remotes/origin/${branch}`],
+    { stdout: "ignore", stderr: "pipe" },
   );
-  return (await proc.exited) === 0;
+  const exit = await proc.exited;
+  if (exit === 0) return { ok: true, error: "" };
+  return { ok: false, error: _sanitizeGitError(await new Response(proc.stderr).text()) };
 };
 
 const switchBranch = async (repoPath: string, branch: string): Promise<boolean> => {
-  if (!(await fetchRef(repoPath, branch))) return false;
+  if (!(await fetchRef(repoPath, branch)).ok) return false;
   const proc = Bun.spawn(
     ["git", "-C", repoPath, "checkout", "-B", branch, `origin/${branch}`],
     { stdout: "ignore", stderr: "ignore" },
   );
   return (await proc.exited) === 0;
+};
+
+const hardReset = async (
+  repoPath: string,
+  ref: string,
+): Promise<{ ok: boolean; error: string }> => {
+  const proc = Bun.spawn(["git", "-C", repoPath, "reset", "--hard", ref], {
+    stdout: "ignore",
+    stderr: "pipe",
+  });
+  const exit = await proc.exited;
+  if (exit === 0) return { ok: true, error: "" };
+  return { ok: false, error: _sanitizeGitError(await new Response(proc.stderr).text()) };
 };
 
 const syncBranch = async (repoPath: string): Promise<void> => {
@@ -205,18 +223,16 @@ export async function refreshRepo(url?: string): Promise<void> {
     const repoPath = join(getStoreDir(), repo.localPath);
     try {
       await syncBranch(repoPath);
-      const betaPull = DEGOOG_BETA_STORE && await branchExists(repoPath, `origin/${BETA_BRANCH}`);
-      const pullArgs = betaPull
-        ? ["git", "-C", repoPath, "pull", "origin", BETA_BRANCH]
-        : ["git", "-C", repoPath, "pull"];
-      const proc = Bun.spawn(pullArgs, {
-        stdout: "ignore",
-        stderr: "pipe",
-      });
-      const exit = await proc.exited;
-      if (exit !== 0) {
-        const err = _sanitizeGitError(await new Response(proc.stderr).text());
-        repo.error = err || `Git pull failed (${exit})`;
+      const useBeta = DEGOOG_BETA_STORE && await branchExists(repoPath, `origin/${BETA_BRANCH}`);
+      const branch = useBeta ? BETA_BRANCH : await headBranch(repoPath);
+      const fetched = await fetchRef(repoPath, branch);
+      if (!fetched.ok) {
+        repo.error = fetched.error || `Git fetch failed for ${branch}`;
+        continue;
+      }
+      const reset = await hardReset(repoPath, `origin/${branch}`);
+      if (!reset.ok) {
+        repo.error = reset.error || `Git reset failed for ${branch}`;
         continue;
       }
       repo.error = null;

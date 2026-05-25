@@ -1,4 +1,14 @@
-import { join } from "path";
+import { join, resolve, sep } from "path";
+
+export const resolveContained = (
+  root: string,
+  ...parts: string[]
+): string | null => {
+  const base = resolve(root);
+  const target = resolve(base, ...parts);
+  if (target !== base && !target.startsWith(base + sep)) return null;
+  return target;
+};
 
 const _dataDir = (): string =>
   process.env.DEGOOG_DATA_DIR ?? join(process.cwd(), "data");

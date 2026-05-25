@@ -1,6 +1,7 @@
-import { readFile, writeFile, mkdir } from "fs/promises";
-import { join, dirname } from "path";
+import { readFile, mkdir } from "fs/promises";
+import { join } from "path";
 import type { RepoInfo, ReposData } from "../../types";
+import { writeJsonAtomic } from "../../utils/atomic-json";
 
 function getDataDir(): string {
   return process.env.DEGOOG_DATA_DIR ?? join(process.cwd(), "data");
@@ -28,8 +29,7 @@ export async function ensureReposStructure(): Promise<void> {
     await readFile(reposPath, "utf-8");
   } catch {
     const initial: ReposData = { repos: [], installed: [] };
-    await mkdir(dirname(reposPath), { recursive: true });
-    await writeFile(reposPath, JSON.stringify(initial, null, 2), "utf-8");
+    await writeJsonAtomic(reposPath, initial);
   }
 }
 
@@ -54,7 +54,7 @@ export async function readReposData(): Promise<ReposData> {
 
 export async function writeReposData(data: ReposData): Promise<void> {
   await ensureReposStructure();
-  await writeFile(getReposPath(), JSON.stringify(data, null, 2), "utf-8");
+  await writeJsonAtomic(getReposPath(), data);
 }
 
 export function getRepoByUrl(data: ReposData, url: string): RepoInfo | undefined {

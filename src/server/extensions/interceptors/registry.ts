@@ -9,11 +9,10 @@ import {
 import {
   getSettings,
   isDisabled,
-  maskSecrets,
   asString,
 } from "../../utils/plugin-settings";
 import { createRegistry } from "../registry-factory";
-import { extensionReadmeExists } from "../../utils/extension-docs";
+import { buildExtensionMeta } from "../extension-meta";
 
 const SETTINGS_PREFIX = "interceptor-";
 
@@ -47,7 +46,9 @@ const registry = createRegistry<QueryInterceptor>({
         folderName,
         settingsId,
       );
-      await initPlugin(interceptor, entryPath, settingsId, template);
+      await initPlugin(interceptor, entryPath, settingsId, template, {
+        pluginId: folderName,
+      });
     }
   },
   debugTag: "interceptors",
@@ -70,22 +71,20 @@ export const getInterceptorMeta = async (): Promise<ExtensionMeta[]> => {
     const settingsId = interceptor.settingsId;
     if (!settingsId) continue;
     const schema: SettingField[] = interceptor.settingsSchema ?? [];
-    const raw = await getSettings(settingsId);
-    const settings = maskSecrets(raw, schema);
-    if (raw["disabled"]) settings["disabled"] = raw["disabled"];
-    const { exists } = await extensionReadmeExists(settingsId);
-    out.push({
-      id: settingsId,
-      displayName: interceptor.name,
-      description: interceptor.description,
-      type: "interceptor",
-      configurable: schema.length > 0,
-      settingsSchema: schema,
-      settings,
-      source: "plugin",
-      isClientExposed: interceptor.isClientExposed,
-      extensionDocsAvailable: exists,
-    });
+    out.push(
+      await buildExtensionMeta({
+        id: settingsId,
+        displayName: interceptor.name,
+        description: interceptor.description,
+        type: "interceptor",
+        schema,
+        rawSettings: await getSettings(settingsId),
+        extra: {
+          source: "plugin",
+          isClientExposed: interceptor.isClientExposed,
+        },
+      }),
+    );
   }
   return out;
 };

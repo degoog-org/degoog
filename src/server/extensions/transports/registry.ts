@@ -3,10 +3,11 @@ import { FetchTransport } from "./builtins/fetch";
 import { CurlTransport } from "./builtins/curl";
 import { CurlImpersonateTransport } from "./builtins/curl-impersonate";
 import { AutoTransport } from "./builtins/auto";
-import { getSettings, maskSecrets } from "../../utils/plugin-settings";
+import { getSettings } from "../../utils/plugin-settings";
 import { transportsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
-import { extensionReadmeExists, registerExtensionFolder } from "../../utils/extension-docs";
+import { registerExtensionFolder } from "../../utils/extension-docs";
+import { buildExtensionMeta } from "../extension-meta";
 
 const _builtins: Transport[] = [
   new FetchTransport(),
@@ -42,7 +43,7 @@ const registry = createRegistry<Transport>({
   canonicalIdKind: "transport",
   onLoad: async (instance, { folderName, canonicalId }) => {
     const name = canonicalId ?? folderName;
-    if (_builtins.some((t) => t.name === name)) return;
+    if (_builtins.some((t) => t.name === name)) return false;
     instance.name = name;
     registerExtensionFolder(`transport-${name}`, folderName);
     if (instance.configure) {
@@ -92,21 +93,16 @@ export async function getTransportExtensionMeta(): Promise<ExtensionMeta[]> {
   for (const t of _all()) {
     const schema = t.settingsSchema ?? [];
     const id = _settingsId(t);
-    const rawSettings = await getSettings(id);
-    const settings = maskSecrets(rawSettings, schema);
-    if (rawSettings["disabled"]) settings["disabled"] = rawSettings["disabled"];
-    const { exists } = await extensionReadmeExists(id);
-
-    results.push({
-      id,
-      displayName: t.displayName ?? t.name,
-      description: t.description ?? "",
-      type: ExtensionStoreType.Transport,
-      configurable: schema.length > 0,
-      settingsSchema: schema,
-      settings,
-      extensionDocsAvailable: exists,
-    });
+    results.push(
+      await buildExtensionMeta({
+        id,
+        displayName: t.displayName ?? t.name,
+        description: t.description ?? "",
+        type: ExtensionStoreType.Transport,
+        schema,
+        rawSettings: await getSettings(id),
+      }),
+    );
   }
   return results;
 }

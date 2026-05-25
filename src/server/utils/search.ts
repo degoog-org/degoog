@@ -21,6 +21,7 @@ import { buildSignedProxyUrl } from "./proxy-sign";
 import { getClientIp } from "./request";
 import { applyFilter, syncVortexSignal } from "./translation-circuit";
 import { getInstanceSettings } from "./server-settings";
+import { SLOT_PLUGIN_TIMEOUT_MS, withTimeout } from "./with-timeout";
 
 export const DEFAULT_LANGUAGES = [
   "af",
@@ -151,7 +152,7 @@ export function cacheKey(
 ): string {
   const q = query.trim().toLowerCase();
   const imgKey = imageFilter
-    ? `${imageFilter.color || ""}|${imageFilter.size || ""}|${imageFilter.type || ""}|${imageFilter.layout || ""}`
+    ? `${imageFilter.color || ""}|${imageFilter.size || ""}|${imageFilter.type || ""}|${imageFilter.layout || ""}|${imageFilter.nsfw || ""}`
     : "";
   return `${q}|${JSON.stringify(engines)}|${type}|${page}|${timeFilter}|${lang}|${dateFrom}|${dateTo}|${imgKey}`;
 }
@@ -200,7 +201,11 @@ export async function runSlotPlugins(
         useCache,
       };
       const t0 = performance.now();
-      const out = await plugin.execute(query, context);
+      const out = await withTimeout(
+        Promise.resolve(plugin.execute(query, context)),
+        SLOT_PLUGIN_TIMEOUT_MS,
+        `slot ${plugin.id}`,
+      );
       logger.debug(
         "plugin",
         `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`,
@@ -216,7 +221,9 @@ export async function runSlotPlugins(
         position: effectivePosition,
         gridSize: plugin.gridSize,
       });
-    } catch {}
+    } catch (err) {
+      logger.debug("plugin", `${plugin.id} skipped`, err);
+    }
   }
   return panels;
 }
