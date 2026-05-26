@@ -26,10 +26,6 @@ export const SHORT_TTL_MS = _readPositiveIntEnv(
   "DEGOOG_CACHE_SHORT_TTL_MS",
   2 * 60 * 1000,
 );
-export const NEWS_TTL_MS = _readPositiveIntEnv(
-  "DEGOOG_CACHE_NEWS_TTL_MS",
-  30 * 60 * 1000,
-);
 
 const NS = "cache";
 const SEARCH_NAMESPACE = "search";
@@ -55,8 +51,7 @@ export const CACHE_SCOPE = {
 export type CacheScope = (typeof CACHE_SCOPE)[keyof typeof CACHE_SCOPE];
 
 export const isCacheScope = (v: unknown): v is CacheScope =>
-  typeof v === "string" &&
-  (Object.values(CACHE_SCOPE) as string[]).includes(v);
+  typeof v === "string" && (Object.values(CACHE_SCOPE) as string[]).includes(v);
 
 export type TtlCache<T> = {
   get(key: string): T | null;
@@ -128,7 +123,11 @@ export const useCache = <T>(
         `Example: useCache<MyType>("ext:my-plugin:articles", 60_000)`,
     );
   }
-  if (typeof defaultTtlMs !== "number" || !Number.isFinite(defaultTtlMs) || defaultTtlMs <= 0) {
+  if (
+    typeof defaultTtlMs !== "number" ||
+    !Number.isFinite(defaultTtlMs) ||
+    defaultTtlMs <= 0
+  ) {
     throw new TypeError(
       `useCache(namespace, defaultTtlMs): "defaultTtlMs" must be a positive finite number (milliseconds). ` +
         `Received: ${typeof defaultTtlMs} (${String(defaultTtlMs)}).`,
@@ -147,7 +146,11 @@ export const useCache = <T>(
       }
       return mem.get(key);
     },
-    async set(key: string, value: T, ttlMs: number = defaultTtlMs): Promise<void> {
+    async set(
+      key: string,
+      value: T,
+      ttlMs: number = defaultTtlMs,
+    ): Promise<void> {
       mem.set(key, value, ttlMs);
       if (isValkeyEnabled()) await kvSet<T>(namespace, key, value, ttlMs);
     },
@@ -177,7 +180,10 @@ onInvalidate((payload) => {
   const entry = _registry.get(payload.key);
   if (!entry) return;
   entry.clearLocal();
-  logger.debug(NS, `cleared local memory for namespace=${payload.key} (peer invalidation)`);
+  logger.debug(
+    NS,
+    `cleared local memory for namespace=${payload.key} (peer invalidation)`,
+  );
 });
 
 const _searchCache = useCache<SearchResponse>(SEARCH_NAMESPACE, TTL_MS);
@@ -223,9 +229,14 @@ const _namespacesForScope = (scope: CacheScope): string[] => {
 export const clearByScope = async (scope: CacheScope): Promise<string[]> => {
   const namespaces = _namespacesForScope(scope);
   await Promise.all(
-    namespaces.map((ns) => _registry.get(ns)?.cache.clear() ?? Promise.resolve()),
+    namespaces.map(
+      (ns) => _registry.get(ns)?.cache.clear() ?? Promise.resolve(),
+    ),
   );
-  logger.info(NS, `cleared scope=${scope} namespaces=[${namespaces.join(", ")}]`);
+  logger.info(
+    NS,
+    `cleared scope=${scope} namespaces=[${namespaces.join(", ")}]`,
+  );
   return namespaces;
 };
 

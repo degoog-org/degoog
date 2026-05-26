@@ -56,15 +56,18 @@ router.get("/api/search/stream", async (c) => {
     c.req.query("imgNsfw"),
   );
 
-  const { query } = await runIntercepts(origQ, lang);
+  const { query, overrides } = await runIntercepts(origQ, lang);
+  const type = (overrides.searchType ?? searchType) as SearchType;
+  const resolvedLang = overrides.lang ?? lang;
+  const resolvedTime = (overrides.timeFilter ?? timeFilter) as TimeFilter;
 
   const key = cacheKey(
     query,
     engines,
-    searchType,
+    type,
     page,
-    timeFilter,
-    lang,
+    resolvedTime,
+    resolvedLang,
     dateFrom,
     dateTo,
     imageFilter,
@@ -76,9 +79,11 @@ router.get("/api/search/stream", async (c) => {
     const enginesOn = Object.values(engines).filter(Boolean).length;
     logger.debug(
       "search-stream",
-      `cache hit q="${qShort}" type=${searchType} page=${page} enginesOn=${enginesOn} results=${cached.results.length} timings=${cached.engineTimings.length}`,
+      `cache hit q="${qShort}" type=${type} page=${page} enginesOn=${enginesOn} results=${cached.results.length} timings=${cached.engineTimings.length}`,
     );
-    const liveResults = signResultThumbnails(await applyDomainRules(cached.results));
+    const liveResults = signResultThumbnails(
+      await applyDomainRules(cached.results),
+    );
     const encoder = new TextEncoder();
     const body = new ReadableStream({
       start(controller) {
@@ -124,14 +129,14 @@ router.get("/api/search/stream", async (c) => {
     Math.max(1, parseInt(asString(settings.streamingMaxRetries) || "2", 10)),
   );
 
-  const rawActiveEngines = await selectActiveEngines(searchType, engines, true);
+  const rawActiveEngines = await selectActiveEngines(type, engines, true);
 
   if (rawActiveEngines.length === 0) {
     return c.json({
       results: [],
       query,
       totalTime: 0,
-      type: searchType,
+      type,
       engineTimings: [],
       relatedSearches: [],
     });
@@ -164,7 +169,6 @@ router.get("/api/search/stream", async (c) => {
         }
       }
 
-
       const enginePromises = rawActiveEngines.map(
         async ({ instance, score, id }) => {
           const engineName = instance.name;
@@ -181,8 +185,8 @@ router.get("/api/search/stream", async (c) => {
               id,
               query,
               page,
-              timeFilter,
-              lang,
+              resolvedTime,
+              resolvedLang,
               dateFrom,
               dateTo,
               imageFilter,
@@ -196,7 +200,9 @@ router.get("/api/search/stream", async (c) => {
               _send("engine-result", {
                 engine: engineName,
                 timing,
-                results: signResultThumbnails(await applyDomainRules(scoreResults(allRawResults))),
+                results: signResultThumbnails(
+                  await applyDomainRules(scoreResults(allRawResults)),
+                ),
                 retry: isRetry,
                 attempt,
               });
@@ -229,7 +235,7 @@ router.get("/api/search/stream", async (c) => {
         const totalTime = Math.round(performance.now() - start);
         const rawScoredResults = scoreResults(allRawResults);
         let relatedSearches: string[] = [];
-        if (searchType === "web" && page === 1) {
+        if (type === "web" && page === 1) {
           relatedSearches = await fetchRelatedSearches(query).catch(
             () => [] as string[],
           );
@@ -239,16 +245,14 @@ router.get("/api/search/stream", async (c) => {
           results: rawScoredResults,
           query,
           totalTime,
-          type: searchType,
+          type,
           engineTimings: allTimings,
           relatedSearches,
         };
 
         const ttl = cache.hasFailedEngines(response)
           ? cache.SHORT_TTL_MS
-          : searchType === "news"
-            ? cache.NEWS_TTL_MS
-            : undefined;
+          : undefined;
         await cache.set(key, response, ttl);
 
         _send("done", {

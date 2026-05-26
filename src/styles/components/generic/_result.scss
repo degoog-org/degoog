@@ -129,6 +129,7 @@
 
   &--engines {
     display: flex;
+    flex-wrap: wrap;
     gap: $space-2;
     margin-top: $space-2;
   }

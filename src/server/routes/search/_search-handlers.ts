@@ -20,15 +20,19 @@ export async function handleSearch(params: SearchParams) {
     imageFilter,
   } = params;
 
-  const { query } = await runIntercepts(origQ, lang);
+  const { query, overrides } = await runIntercepts(origQ, lang);
+  const type = (overrides.searchType ?? searchType) as typeof searchType;
+  const resolvedLang = overrides.lang ?? lang;
+  const resolvedTime = (overrides.timeFilter ??
+    timeFilter) as typeof timeFilter;
 
   const key = cacheKey(
     query,
     engines,
-    searchType,
+    type,
     page,
-    timeFilter,
-    lang,
+    resolvedTime,
+    resolvedLang,
     dateFrom,
     dateTo,
     imageFilter,
@@ -40,7 +44,7 @@ export async function handleSearch(params: SearchParams) {
     const enginesOn = Object.values(engines).filter(Boolean).length;
     logger.debug(
       "search",
-      `cache hit q="${qShort}" type=${searchType} page=${page} enginesOn=${enginesOn} results=${cached.results.length} timings=${cached.engineTimings.length}`,
+      `cache hit q="${qShort}" type=${type} page=${page} enginesOn=${enginesOn} results=${cached.results.length} timings=${cached.engineTimings.length}`,
     );
     return {
       ...cached,
@@ -51,20 +55,16 @@ export async function handleSearch(params: SearchParams) {
   const response = await search(
     query,
     engines,
-    searchType,
+    type,
     page,
-    timeFilter,
-    lang,
+    resolvedTime,
+    resolvedLang,
     dateFrom,
     dateTo,
     imageFilter,
   );
 
-  const ttl = cache.hasFailedEngines(response)
-    ? cache.SHORT_TTL_MS
-    : searchType === "news"
-      ? cache.NEWS_TTL_MS
-      : undefined;
+  const ttl = cache.hasFailedEngines(response) ? cache.SHORT_TTL_MS : undefined;
   await cache.set(key, response, ttl);
 
   return {

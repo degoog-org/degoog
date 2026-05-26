@@ -126,14 +126,6 @@ export const getEffectiveEngineRegistry = async (): Promise<
 export const getEngineMap = (): Record<string, SearchEngine> =>
   Object.fromEntries(engineRegistry.items().map((e) => [e.id, e.instance]));
 
-const engineSearchTypeFromSearchType = (
-  type: SearchType,
-): EngineSearchType | null => {
-  if (type === "web") return "web";
-  if (type === "images" || type === "videos" || type === "news") return type;
-  return null;
-};
-
 export const getEnginesForCustomType = async (
   engineType: string,
 ): Promise<{ id: string; instance: SearchEngine }[]> => {
@@ -191,14 +183,13 @@ export const getEnginesForSearchType = async (
   type: SearchType,
   config: EngineConfig,
 ): Promise<{ id: string; instance: SearchEngine }[]> => {
-  const engineType = engineSearchTypeFromSearchType(type);
-  if (!engineType) return [];
+  if (!type) return [];
 
   const active: { id: string; instance: SearchEngine }[] = [];
   for (const e of engineRegistry.items()) {
     if (!config[e.id]) continue;
-    const effectiveType = (await getTypeOverride(e.id)) ?? e.searchType;
-    if (effectiveType === engineType) {
+    const typeOverride = (await getTypeOverride(e.id)) ?? e.searchType;
+    if (typeOverride === type) {
       active.push({ id: e.id, instance: e.instance });
     }
   }

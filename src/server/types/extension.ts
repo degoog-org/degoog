@@ -312,8 +312,15 @@ export interface Transport {
   ): Promise<Response>;
 }
 
+export interface InterceptorOverrides {
+  searchType?: string;
+  lang?: string;
+  timeFilter?: string;
+}
+
 export interface InterceptorResult {
   query: string;
+  overrides?: InterceptorOverrides;
 }
 
 export interface QueryInterceptorContext {
