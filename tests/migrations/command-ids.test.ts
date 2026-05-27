@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { runConsolidated052028 } from "../../src/server/migrations/2026-05-canonical-ids-migration";
+import { runCanonicalIdsMigration052028 } from "../../src/server/migrations/2026-05-canonical-ids-migration";
 import { ExtensionStoreType, type ReposData } from "../../src/server/types";
 
 type MigrationResult = {
@@ -24,7 +24,7 @@ const withMigration = async (
   try {
     writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
     writeFileSync(reposFile, JSON.stringify(repos, null, 2));
-    await runConsolidated052028();
+    await runCanonicalIdsMigration052028();
     return {
       settings: JSON.parse(readFileSync(settingsFile, "utf-8")) as Record<
         string,
