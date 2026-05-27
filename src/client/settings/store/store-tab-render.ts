@@ -138,12 +138,12 @@ export function renderItemCard(
   const token = getToken();
   const firstUrl = item.screenshots.length
     ? screenshotUrl(
-        item.repoSlug,
-        item.type,
-        itemSlug,
-        item.screenshots[0],
-        token,
-      )
+      item.repoSlug,
+      item.type,
+      itemSlug,
+      item.screenshots[0],
+      token,
+    )
     : "";
   const thumb = item.screenshots.length
     ? `<img src="${firstUrl}" alt="" class="store-card-thumb" loading="lazy">`
@@ -193,12 +193,18 @@ export function renderItemCard(
           <div class="store-card-name">${escapeHtml(item.name)}</div>
           <div class="store-card-meta">by ${author || "-"} · ${escapeHtml(item.repoName)}</div>
           <div class="store-card-desc">${renderMdInline(item.description || "")}</div>
-          <div class="store-card-version">${item.updateAvailable ? `<span class="store-card-version-old">v${escapeHtml(item.installedVersion || "?")}</span> → ` : ""}v${escapeHtml(item.version)}</div>
           ${item.requiresNewerVersion ? `<div class="store-card-version-warning">${escapeHtml(t("settings-page.extensions.requires-newer-version"))}</div>` : ""}
         </div>
         <div class="store-card-footer">
-          <span class="store-type-badge store-type-${item.type} degoog-badge degoog-badge--store-type">${typeLabel}</span>
-          ${subLabel ? `<span class="store-subtype-badge degoog-badge">${escapeHtml(subLabel)}</span>` : ""}
+          <div class="store-card-footer-main">
+            <div class="store-card-version">${item.updateAvailable ? `<span class="store-card-version-old">v${escapeHtml(item.installedVersion || "?")}</span> → ` : ""}v${escapeHtml(item.version)}</div>
+
+            <div class="store-card-footer-meta">
+              <span class="store-type-badge store-type-${item.type} degoog-badge degoog-badge--store-type">${typeLabel}</span>
+              ${subLabel ? `<span class="store-subtype-badge degoog-badge">${escapeHtml(subLabel)}</span>` : ""}
+            </div>
+          </div>
+          
           <div class="store-card-actions">${btn}</div>
         </div>
       </div>
@@ -211,6 +217,7 @@ export function filterItems(
   subtypeFilter: string,
   searchQuery: string,
   repoFilter: string | null,
+  installedFilter: string,
 ): StoreItem[] {
   let out = items;
   if (repoFilter) {
@@ -229,6 +236,11 @@ export function filterItems(
       }
       return true;
     });
+  }
+  if (installedFilter === "installed") {
+    out = out.filter((i) => i.installed);
+  } else if (installedFilter === "not-installed") {
+    out = out.filter((i) => !i.installed);
   }
   if (searchQuery && searchQuery.trim()) {
     const q = searchQuery.trim().toLowerCase();

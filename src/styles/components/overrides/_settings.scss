@@ -1,5 +1,31 @@
 .settings-page-body {
   min-height: 100vh;
+
+  &--public {
+    .settings-section-heading {
+      margin: 0 0 $space-6 0;
+    }
+
+    .settings-section:last-child {
+      margin-top: $space-6;
+    }
+
+    @media (max-width: 768px) {
+      .ext-card-main {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .settings-section-heading {
+        margin: $space-4 0;
+      }
+
+      .degoog-toggle-wrap {
+        align-items: center;
+      }
+    }
+  }
 }
 
 .settings-page {
@@ -559,4 +585,29 @@
 #settings-honeypot-blocklist-rows {
   max-height: 200px;
   overflow-y: auto;
+}
+
+.settings-field-save-btn {
+  display: block;
+  margin-top: $space-2;
+  background: $primary;
+  color: var(--white);
+  border: none;
+  border-radius: $radius-sm;
+  padding: $space-1 $space-4;
+  font-size: $font-size-small;
+  cursor: pointer;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &:hover:not(:disabled) {
+    background: $primary-hover;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
 }

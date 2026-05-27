@@ -37,6 +37,7 @@ export async function initStoreTab(
   let selectedRepoUrl: string | null = null;
   let typeFilter = "all";
   let subtypeFilter = "all";
+  let installedFilter = "all";
   let searchQuery = "";
   let updatesOpen = false;
 
@@ -113,6 +114,9 @@ export async function initStoreTab(
     const subtypeSelect = catalogSection?.querySelector<HTMLSelectElement>(
       ".store-filter-subtype",
     );
+    const statusSelect = catalogSection?.querySelector<HTMLSelectElement>(
+      ".store-filter-status",
+    );
     const grid = catalogSection?.querySelector<HTMLElement>(
       ".store-catalog-grid",
     );
@@ -127,7 +131,7 @@ export async function initStoreTab(
         autocomplete: items.filter((i) => i.type === "autocomplete").length,
       };
       typeSelect.innerHTML = [
-        { id: "all", label: "All", count: typeCounts.all },
+        { id: "all", label: "Extensions", count: typeCounts.all },
         { id: "plugin", label: "Plugins", count: typeCounts.plugin },
         { id: "theme", label: "Themes", count: typeCounts.theme },
         { id: "engine", label: "Engines", count: typeCounts.engine },
@@ -181,6 +185,24 @@ export async function initStoreTab(
       }
     }
 
+    if (statusSelect) {
+      const installed = items.filter((i) => i.installed).length;
+      statusSelect.innerHTML = [
+        { id: "all", label: "All", count: items.length },
+        { id: "installed", label: "Installed", count: installed },
+        { id: "not-installed", label: "Not Installed", count: items.length - installed },
+      ]
+        .map(
+          (s) =>
+            `<option value="${escapeHtml(s.id)}" ${installedFilter === s.id ? "selected" : ""}>${escapeHtml(s.label)} (${s.count})</option>`,
+        )
+        .join("");
+      statusSelect.onchange = () => {
+        installedFilter = statusSelect.value;
+        render();
+      };
+    }
+
     if (grid) {
       const filtered = filterItems(
         items,
@@ -188,6 +210,7 @@ export async function initStoreTab(
         subtypeFilter,
         searchQuery,
         selectedRepoUrl,
+        installedFilter,
       );
       grid.innerHTML = filtered
         .map((item) => renderItemCard(item, getToken))
@@ -359,7 +382,7 @@ export async function initStoreTab(
         method: "POST",
         headers: jsonHeaders(getToken),
         body: JSON.stringify({}),
-      }).catch(() => {});
+      }).catch(() => { });
       await loadRepos();
       await loadItems();
       await loadReposStatus();

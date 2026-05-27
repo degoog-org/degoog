@@ -224,6 +224,28 @@
   flex-wrap: wrap;
   gap: $space-2;
   margin-bottom: $space-4;
+
+  .store-search-input {
+    flex: 1;
+    width: 100%;
+  }
+
+  &-dropdowns {
+    display: flex;
+    gap: $space-2;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+
+    select {
+      flex: 1;
+      min-width: 0;
+    }
+
+    @media (min-width: 520px) {
+      width: auto;
+    }
+  }
 }
 
 .store-search-input {
@@ -374,6 +396,15 @@
   padding: $space-3 $space-4;
   margin-top: auto;
   background: var(--bg-card-footer, transparent);
+
+  &-main {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: $space-2;
+    width: 100%;
+  }
 }
 
 .store-card-actions {
@@ -381,7 +412,13 @@
   align-items: center;
   flex-wrap: wrap;
   gap: $space-2;
-  margin-left: auto;
+  width: 100%;
+  margin-top: $space-2;
+
+  button {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 .store-card-thumb-wrap--clickable {

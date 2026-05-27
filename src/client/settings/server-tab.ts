@@ -1,23 +1,17 @@
 import { copyTextToClipboard } from "../utils/clipboard";
 import { getBase } from "../utils/base-url";
-import { authHeaders, jsonHeaders } from "../utils/request";
+import { authHeaders } from "../utils/request";
 import { initProxyTest } from "./proxy-test";
 import {
   type BoolSetting,
-  boolStr,
   bindToggle,
   el,
   setToggle,
   setVal,
-  val,
 } from "./server/fields";
-import {
-  renderScoreRows,
-  scoreRowTemplate,
-  serializeScoreRows,
-} from "./server/domain-score";
+import { renderScoreRows, scoreRowTemplate } from "./server/domain-score";
 import { initHoneypot } from "./server/honeypot";
-import { getRateLimitPayload } from "./server/rate-limit";
+import { bindToggleAutoSave, injectFieldSaveBtns } from "./server/auto-save";
 
 const t = window.scopedT("core");
 
@@ -267,43 +261,8 @@ export async function initServerTab(
     });
   };
 
-  handleButtonState(
-    "settings-save",
-    async () => {
-      await fetch(`${getBase()}/api/settings/general`, {
-        method: "POST",
-        headers: jsonHeaders(getToken),
-        body: JSON.stringify({
-          proxyEnabled: boolStr("proxy-enabled"),
-          proxyUrls: val("proxy-urls"),
-          imageProxyAllowLocal: boolStr("image-proxy-allow-local"),
-          imageProxyAllowList: val("image-proxy-allow-list"),
-          languagesEnabled: boolStr("languages-enabled"),
-          languages: val("languages"),
-          ...getRateLimitPayload(),
-          streamingEnabled: boolStr("streaming-enabled"),
-          streamingAutoRetry: boolStr("streaming-auto-retry"),
-          streamingMaxRetries: val("streaming-max-retries"),
-          domainBlockEnabled: boolStr("domain-block-enabled"),
-          domainBlockList: val("domain-block-list"),
-          domainBlockUiEnabled: boolStr("domain-block-ui-enabled"),
-          domainReplaceEnabled: boolStr("domain-replace-enabled"),
-          domainReplaceList: val("domain-replace-list"),
-          domainReplaceUiEnabled: boolStr("domain-replace-ui-enabled"),
-          domainScoreEnabled: boolStr("domain-score-enabled"),
-          domainScoreList: serializeScoreRows(),
-          domainScoreUiEnabled: boolStr("domain-score-ui-enabled"),
-          customCss: val("custom-css"),
-          apiKeySearchEnabled: boolStr("api-key-search-enabled"),
-          apiKeySuggestEnabled: boolStr("api-key-suggest-enabled"),
-          honeypotEnabled: boolStr("honeypot-enabled"),
-          honeypotCssCheck: boolStr("honeypot-css-check"),
-          honeypotBanDuration: val("honeypot-ban-duration"),
-        }),
-      });
-    },
-    "settings-page.server.saved",
-  );
+  bindToggleAutoSave(getToken);
+  injectFieldSaveBtns(getToken);
 
   _initApiKeyControls(getToken, handleButtonState);
 
