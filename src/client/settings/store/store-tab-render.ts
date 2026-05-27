@@ -10,10 +10,10 @@ const OFFICIAL_REPO_URL =
   "https://github.com/degoog-org/official-extensions.git";
 
 export function normalizeRepoUrl(url: string): string {
-  const t = (url || "").trim();
-  return t.endsWith(".git")
-    ? t
-    : t + (t.includes("?") || t.includes("#") ? "" : ".git");
+  const normUrl = (url || "").trim();
+  return normUrl.endsWith(".git")
+    ? normUrl
+    : normUrl + (normUrl.includes("?") || normUrl.includes("#") ? "" : ".git");
 }
 
 export function formatRelativeTime(iso: string): string {
@@ -41,16 +41,16 @@ export function repoImageSrc(
   return `${getBase()}/api/store/repos/${encodeURIComponent(repo.localPath)}/asset?path=${encodeURIComponent(img)}${q}`;
 }
 
-export function pluginTypeLabel(t: string): string {
-  if (t === "command") return "Bang";
-  if (t === "slot") return "Slot";
-  if (t === "search-result-tab") return "Search tab";
-  if (t === "searchBarAction") return "Search bar";
-  return t.charAt(0).toUpperCase() + t.slice(1).replace(/-/g, " ");
+export function pluginTypeLabel(type: string): string {
+  if (type === "command") return "Bang";
+  if (type === "slot") return "Slot";
+  if (type === "search-result-tab") return "Search tab";
+  if (type === "searchBarAction") return "Search bar";
+  return type.charAt(0).toUpperCase() + type.slice(1).replace(/-/g, " ");
 }
 
-export function engineTypeLabel(t: string): string {
-  return t.charAt(0).toUpperCase() + t.slice(1);
+export function engineTypeLabel(type: string): string {
+  return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
 export function renderRepoDetail(
@@ -204,7 +204,7 @@ export function renderItemCard(
               ${subLabel ? `<span class="store-subtype-badge degoog-badge">${escapeHtml(subLabel)}</span>` : ""}
             </div>
           </div>
-          
+
           <div class="store-card-actions">${btn}</div>
         </div>
       </div>

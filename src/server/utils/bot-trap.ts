@@ -46,7 +46,17 @@ export const isBlocked = async (ip: string): Promise<boolean> => {
   return checkBlocked(ip, _banHours ?? DEFAULT_BAN_HOURS);
 };
 
+const LOOPBACK = /^(127\.|::1$|::ffff:127\.)/;
+
 export const blockIp = async (ip: string): Promise<void> => {
+  if (LOOPBACK.test(ip)) {
+    logger.warn(
+      "bot-trap",
+      `honeypot triggered from loopback address ${ip} - ban skipped to avoid blocking all users. ` +
+        "Your instance is likely behind a reverse proxy. Set DEGOOG_DISTRUST_PROXY=0 to enable real IP detection.",
+    );
+    return;
+  }
   await addEntry(ip);
 };
 
