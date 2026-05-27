@@ -9,7 +9,7 @@ import {
 } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { runThemeTransportIds052028 } from "../../src/server/migrations/2026-05-theme-transport-ids";
+import { runConsolidated052028 } from "../../src/server/migrations/2026-05-canonical-ids-migration";
 import { ExtensionStoreType, type ReposData } from "../../src/server/types";
 
 const reposFixture = (): ReposData => ({
@@ -116,7 +116,7 @@ const withMigration = async (
   writeFileSync(join(dir, "repos.json"), JSON.stringify(reposFixture(), null, 2));
   writeRepoPackages(dir);
   setup?.(dir);
-  await runThemeTransportIds052028();
+  await runConsolidated052028();
   const cleanup = (): void => {
     if (prevDataDir === undefined) delete process.env.DEGOOG_DATA_DIR;
     else process.env.DEGOOG_DATA_DIR = prevDataDir;
@@ -252,7 +252,7 @@ describe("theme-transport-ids migration", () => {
         join(first.dir, "plugin-settings.json"),
         JSON.stringify(first.settings, null, 2),
       );
-      await runThemeTransportIds052028();
+      await runConsolidated052028();
       const second = JSON.parse(
         readFileSync(join(first.dir, "plugin-settings.json"), "utf-8"),
       ) as Record<string, unknown>;
