@@ -1,14 +1,20 @@
 import type { SearchResult } from "../types";
+import type { Statement } from "bun:sqlite";
 import { statSync } from "fs";
 import { getIndexerConfig } from "./config";
-import { getIndexerDb } from "./db";
-import { indexerDbFile } from "../utils/paths";
+import { getDbForType, discoverTypes, checkpointType } from "./db";
+import { shouldIndex } from "./filters";
+import { indexerDbForType } from "../utils/paths";
 import { normalizeQuery } from "./normalize";
-import { runPrune } from "./prune";
-import { recorderFor, type IndexRow } from "./recorders";
+import { pruneOrphanUrls } from "./prune";
+import { recorderFor } from "./recorders";
+import { enqueue, mutexFor, invalidateTypes } from "./queue";
 import { logger } from "../utils/logger";
 
 export const DEGOOG_ENGINE_NAME = "Degoog";
+
+const PROTO_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+const STATS_TTL_MS = 10_000;
 
 export interface IndexerStats {
   totalHits: number;
@@ -18,16 +24,37 @@ export interface IndexerStats {
   dbSizeBytes: number;
 }
 
-export interface MergeReport {
-  inserted: number;
-  updated: number;
-  skipped: number;
-}
-
-export interface ExportRow extends IndexRow {
+export interface ExportRow {
+  query_norm: string;
+  engine_type: string;
+  url: string;
+  url_norm: string;
+  source_engine: string;
+  title: string;
+  snippet: string;
+  thumbnail: string | null;
+  image_url: string | null;
+  is_gif: number | null;
+  duration: string | null;
+  extras_json: string | null;
   first_seen: number;
   last_seen: number;
   source_instance: string | null;
+}
+
+export interface HitRow {
+  id: number;
+  query_norm: string;
+  engine_type: string;
+  url: string;
+  title: string;
+  snippet: string;
+  last_seen: number;
+}
+
+export interface DeleteItem {
+  id: number;
+  engine_type: string;
 }
 
 const FTS_ESCAPE = /["()]/g;
@@ -43,34 +70,8 @@ const buildFtsQuery = (queryNorm: string): string => {
   return terms.length > 0 ? terms.join(" OR ") : "";
 };
 
-const UPSERT_URL = `
-  INSERT INTO urls (
-    url_norm, url, source_engine, title, snippet,
-    thumbnail, image_url, is_gif, duration, extras_json,
-    first_seen, last_seen
-  ) VALUES (
-    $url_norm, $url, $source_engine, $title, $snippet,
-    $thumbnail, $image_url, $is_gif, $duration, $extras_json,
-    $first_seen, $last_seen
-  )
-  ON CONFLICT(url_norm) DO UPDATE SET
-    last_seen = excluded.last_seen,
-    title = CASE WHEN length(urls.title) >= length(excluded.title) THEN urls.title ELSE excluded.title END,
-    snippet = CASE WHEN length(urls.snippet) >= length(excluded.snippet) THEN urls.snippet ELSE excluded.snippet END,
-    thumbnail = COALESCE(urls.thumbnail, excluded.thumbnail),
-    image_url = COALESCE(urls.image_url, excluded.image_url),
-    is_gif = COALESCE(urls.is_gif, excluded.is_gif),
-    duration = COALESCE(urls.duration, excluded.duration),
-    extras_json = COALESCE(urls.extras_json, excluded.extras_json)
-  RETURNING id
-`;
-
-const UPSERT_HIT = `
-  INSERT INTO query_hits (query_norm, engine_type, url_id, first_seen, last_seen)
-  VALUES ($query_norm, $engine_type, $url_id, $first_seen, $last_seen)
-  ON CONFLICT(query_norm, engine_type, url_id) DO UPDATE SET
-    last_seen = excluded.last_seen
-`;
+const escapeLike = (s: string): string =>
+  s.replace(/[\\%_]/g, (ch) => `\\${ch}`);
 
 interface UrlRow {
   url: string;
@@ -98,7 +99,11 @@ const rowToResult = (row: UrlRow): SearchResult => {
   if (row.extras_json) {
     try {
       const extras = JSON.parse(row.extras_json) as Record<string, unknown>;
-      Object.assign(base, extras);
+      const target = base as unknown as Record<string, unknown>;
+      for (const [k, v] of Object.entries(extras)) {
+        if (PROTO_KEYS.has(k)) continue;
+        target[k] = v;
+      }
     } catch (err) {
       logger.debug("indexer", "extras_json parse failed", err);
     }
@@ -106,33 +111,62 @@ const rowToResult = (row: UrlRow): SearchResult => {
   return base;
 };
 
-const upsertRow = (
-  db: ReturnType<typeof getIndexerDb>,
-  row: IndexRow,
-  now: number,
-): void => {
-  const urlIdRow = db.prepare(UPSERT_URL).get({
-    $url_norm: row.url_norm,
-    $url: row.url,
-    $source_engine: row.source_engine,
-    $title: row.title,
-    $snippet: row.snippet,
-    $thumbnail: row.thumbnail,
-    $image_url: row.image_url,
-    $is_gif: row.is_gif,
-    $duration: row.duration,
-    $extras_json: row.extras_json,
-    $first_seen: now,
-    $last_seen: now,
-  }) as { id: number };
-  db.prepare(UPSERT_HIT).run({
-    $query_norm: row.query_norm,
-    $engine_type: row.engine_type,
-    $url_id: urlIdRow.id,
-    $first_seen: now,
-    $last_seen: now,
-  });
+const _exactQs = new Map<string, Statement>();
+const _fuzzyQs = new Map<string, Statement>();
+const _listAllQs = new Map<string, Statement>();
+const _listSearchQs = new Map<string, Statement>();
+const _countAllQs = new Map<string, Statement>();
+const _countSearchQs = new Map<string, Statement>();
+const _sampleQs = new Map<string, Statement>();
+
+let _statsCache: { data: IndexerStats; at: number } | null = null;
+
+export const wipeStatsCache = (): void => {
+  _statsCache = null;
 };
+
+const EXACT_SQL = `
+  SELECT u.url, u.source_engine, u.title, u.snippet, u.thumbnail,
+         u.image_url, u.is_gif, u.duration, u.extras_json
+  FROM query_hits h
+  JOIN urls u ON u.id = h.url_id
+  WHERE h.query_norm = ? AND h.engine_type = ?
+  ORDER BY h.last_seen DESC
+  LIMIT ?
+`;
+
+const FUZZY_SQL = `
+  SELECT u.url, u.source_engine, u.title, u.snippet, u.thumbnail,
+         u.image_url, u.is_gif, u.duration, u.extras_json
+  FROM urls_fts f
+  JOIN urls u ON u.id = f.rowid
+  JOIN query_hits h ON h.url_id = u.id
+  WHERE urls_fts MATCH ?
+    AND h.engine_type = ?
+    AND h.query_norm != ?
+  ORDER BY rank, h.last_seen DESC
+  LIMIT ?
+`;
+
+const LIST_SELECT = `
+  SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen
+  FROM query_hits h
+  JOIN urls u ON u.id = h.url_id
+`;
+
+const SEARCH_WHERE = `
+  WHERE h.query_norm LIKE $term ESCAPE '\\'
+     OR u.url LIKE $term ESCAPE '\\'
+     OR u.title LIKE $term ESCAPE '\\'
+`;
+
+const EXPORT_SQL = `
+  SELECT h.query_norm, h.engine_type, u.url, u.url_norm, u.source_engine,
+         u.title, u.snippet, u.thumbnail, u.image_url, u.is_gif, u.duration,
+         u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance
+  FROM query_hits h
+  JOIN urls u ON u.id = h.url_id
+`;
 
 export const recordResults = async (
   query: string,
@@ -143,22 +177,12 @@ export const recordResults = async (
   const queryNorm = normalizeQuery(query);
   if (!queryNorm) return;
   const cfg = await getIndexerConfig();
+  const allowed = results.filter((r) => shouldIndex(r, cfg));
   const capped =
-    cfg.maxPerSearch > 0 ? results.slice(0, cfg.maxPerSearch) : results;
+    cfg.maxPerSearch > 0 ? allowed.slice(0, cfg.maxPerSearch) : allowed;
   const recorder = recorderFor(engineType);
   const rows = recorder.toRows(queryNorm, engineType, capped);
-  if (rows.length === 0) return;
-  const now = Date.now();
-  try {
-    const db = getIndexerDb();
-    const tx = db.transaction((batch: IndexRow[]) => {
-      for (const row of batch) upsertRow(db, row, now);
-    });
-    tx(rows);
-    runPrune(db, cfg);
-  } catch (err) {
-    logger.warn("indexer", `recordResults failed for "${queryNorm}"`, err);
-  }
+  if (rows.length > 0) enqueue(rows);
 };
 
 export const queryIndex = async (
@@ -171,215 +195,238 @@ export const queryIndex = async (
   const cfg = await getIndexerConfig();
   const cap = limit ?? cfg.queryLimit;
   try {
-    const db = getIndexerDb();
-    const exactStmt = db.prepare(`
-      SELECT u.url, u.source_engine, u.title, u.snippet, u.thumbnail,
-             u.image_url, u.is_gif, u.duration, u.extras_json
-      FROM query_hits h
-      JOIN urls u ON u.id = h.url_id
-      WHERE h.query_norm = ? AND h.engine_type = ?
-      ORDER BY h.last_seen DESC
-      LIMIT ?
-    `);
-    const exact = exactStmt.all(queryNorm, engineType, cap) as UrlRow[];
+    const db = getDbForType(engineType);
+    let exactQ = _exactQs.get(engineType);
+    if (!exactQ) {
+      exactQ = db.prepare(EXACT_SQL);
+      _exactQs.set(engineType, exactQ);
+    }
+    const exact = exactQ.all(queryNorm, engineType, cap) as UrlRow[];
     const seen = new Set(exact.map((r) => r.url));
     const remaining = cap - exact.length;
     let fuzzy: UrlRow[] = [];
     if (remaining > 0 && cfg.fuzzyEnabled) {
       const ftsQuery = buildFtsQuery(queryNorm);
       if (ftsQuery) {
-        const fuzzyStmt = db.prepare(`
-          SELECT u.url, u.source_engine, u.title, u.snippet, u.thumbnail,
-                 u.image_url, u.is_gif, u.duration, u.extras_json
-          FROM urls_fts f
-          JOIN urls u ON u.id = f.rowid
-          JOIN query_hits h ON h.url_id = u.id
-          WHERE urls_fts MATCH ?
-            AND h.engine_type = ?
-            AND h.query_norm != ?
-          ORDER BY rank, h.last_seen DESC
-          LIMIT ?
-        `);
-        fuzzy = fuzzyStmt.all(ftsQuery, engineType, queryNorm, remaining) as UrlRow[];
+        let fuzzyQ = _fuzzyQs.get(engineType);
+        if (!fuzzyQ) {
+          fuzzyQ = db.prepare(FUZZY_SQL);
+          _fuzzyQs.set(engineType, fuzzyQ);
+        }
+        fuzzy = fuzzyQ.all(ftsQuery, engineType, queryNorm, remaining) as UrlRow[];
       }
     }
     return [...exact, ...fuzzy.filter((r) => !seen.has(r.url))].map(rowToResult);
   } catch (err) {
-    logger.warn("indexer", "queryIndex failed", err);
+    logger.warn("indexer", `queryIndex failed for type=${engineType}`, err);
     return [];
   }
 };
 
-export const getKnownTypes = (): string[] => {
-  try {
-    const db = getIndexerDb();
-    const rows = db
-      .prepare("SELECT DISTINCT engine_type FROM query_hits")
-      .all() as Array<{ engine_type: string }>;
-    return rows.map((r) => r.engine_type);
-  } catch (err) {
-    logger.warn("indexer", "getKnownTypes failed", err);
-    return [];
-  }
-};
+export const getKnownTypes = (): string[] => discoverTypes();
 
 export const getStats = (): IndexerStats => {
-  try {
-    const db = getIndexerDb();
-    const totalHits = (
-      db.prepare("SELECT COUNT(*) AS c FROM query_hits").get() as { c: number }
-    ).c;
-    const totalUrls = (
-      db.prepare("SELECT COUNT(*) AS c FROM urls").get() as { c: number }
-    ).c;
-    const queries = (
-      db.prepare("SELECT COUNT(DISTINCT query_norm) AS c FROM query_hits").get() as {
-        c: number;
-      }
-    ).c;
-    const byTypeRows = db
-      .prepare(
-        "SELECT engine_type, COUNT(*) AS c FROM query_hits GROUP BY engine_type",
-      )
-      .all() as Array<{ engine_type: string; c: number }>;
-    const byType: Record<string, number> = {};
-    for (const r of byTypeRows) byType[r.engine_type] = r.c;
-    let dbSizeBytes = 0;
+  if (_statsCache && Date.now() - _statsCache.at < STATS_TTL_MS) {
+    return _statsCache.data;
+  }
+  const types = discoverTypes();
+  let totalHits = 0;
+  let totalUrls = 0;
+  let totalQueries = 0;
+  const byType: Record<string, number> = {};
+  let dbSizeBytes = 0;
+
+  for (const type of types) {
     try {
-      dbSizeBytes = statSync(indexerDbFile()).size;
-    } catch {
-      dbSizeBytes = 0;
-    }
-    return { totalHits, totalUrls, totalQueries: queries, byType, dbSizeBytes };
-  } catch (err) {
-    logger.warn("indexer", "getStats failed", err);
-    return {
-      totalHits: 0,
-      totalUrls: 0,
-      totalQueries: 0,
-      byType: {},
-      dbSizeBytes: 0,
-    };
-  }
-};
-
-export const clearAll = (): void => {
-  try {
-    const db = getIndexerDb();
-    db.exec("DELETE FROM query_hits");
-    db.exec("DELETE FROM urls");
-    db.exec("INSERT INTO urls_fts(urls_fts) VALUES('rebuild')");
-    db.exec("VACUUM");
-  } catch (err) {
-    logger.error("indexer", "clearAll failed", err);
-    throw err;
-  }
-};
-
-export const mergeImport = (
-  rows: ExportRow[],
-  _sourceInstance: string,
-): MergeReport => {
-  if (rows.length === 0) {
-    return { inserted: 0, updated: 0, skipped: 0 };
-  }
-  const report: MergeReport = { inserted: 0, updated: 0, skipped: 0 };
-  try {
-    const db = getIndexerDb();
-    const hitExists = db.prepare(
-      "SELECT 1 FROM query_hits h JOIN urls u ON u.id = h.url_id WHERE h.query_norm = ? AND h.engine_type = ? AND u.url_norm = ?",
-    );
-    const tx = db.transaction((batch: ExportRow[]) => {
-      for (const row of batch) {
-        if (!row.url_norm || !row.query_norm || !row.engine_type) {
-          report.skipped++;
-          continue;
-        }
-        const existed =
-          hitExists.get(row.query_norm, row.engine_type, row.url_norm) !== null;
-        const urlIdRow = db.prepare(UPSERT_URL).get({
-          $url_norm: row.url_norm,
-          $url: row.url,
-          $source_engine: row.source_engine,
-          $title: row.title,
-          $snippet: row.snippet,
-          $thumbnail: row.thumbnail,
-          $image_url: row.image_url,
-          $is_gif: row.is_gif,
-          $duration: row.duration,
-          $extras_json: row.extras_json,
-          $first_seen: row.first_seen,
-          $last_seen: row.last_seen,
-        }) as { id: number };
-        db.prepare(UPSERT_HIT).run({
-          $query_norm: row.query_norm,
-          $engine_type: row.engine_type,
-          $url_id: urlIdRow.id,
-          $first_seen: row.first_seen,
-          $last_seen: row.last_seen,
-        });
-        if (existed) report.updated++;
-        else report.inserted++;
+      const db = getDbForType(type);
+      const hits = (db.prepare("SELECT COUNT(*) AS c FROM query_hits").get() as { c: number }).c;
+      const urls = (db.prepare("SELECT COUNT(*) AS c FROM urls").get() as { c: number }).c;
+      const queries = (
+        db.prepare("SELECT COUNT(DISTINCT query_norm) AS c FROM query_hits").get() as { c: number }
+      ).c;
+      totalHits += hits;
+      totalUrls += urls;
+      totalQueries += queries;
+      byType[type] = hits;
+      try {
+        dbSizeBytes += statSync(indexerDbForType(type)).size;
+      } catch {
+        // file not yet flushed to disk
       }
-    });
-    tx(rows);
-    void getIndexerConfig().then((cfg) => runPrune(db, cfg));
-    return report;
-  } catch (err) {
-    logger.error("indexer", "mergeImport failed", err);
-    throw err;
+    } catch (err) {
+      logger.warn("indexer", `getStats failed for type=${type}`, err);
+    }
   }
+
+  const data = { totalHits, totalUrls, totalQueries, byType, dbSizeBytes };
+  _statsCache = { data, at: Date.now() };
+  return data;
 };
 
-const EXPORT_SQL = `
-  SELECT h.query_norm, h.engine_type, u.url, u.url_norm, u.source_engine,
-         u.title, u.snippet, u.thumbnail, u.image_url, u.is_gif, u.duration,
-         u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance
-  FROM query_hits h
-  JOIN urls u ON u.id = h.url_id
-`;
-
-export const exportRows = (): ExportRow[] => {
+const shardHits = (
+  type: string,
+  q: string | undefined,
+  limit: number,
+): HitRow[] => {
   try {
-    const db = getIndexerDb();
-    return db.prepare(EXPORT_SQL).all() as ExportRow[];
+    const db = getDbForType(type);
+    const term = q?.trim();
+    const params: Record<string, string | number> = { $limit: limit, $offset: 0 };
+    if (term) {
+      let stmt = _listSearchQs.get(type);
+      if (!stmt) {
+        stmt = db.prepare(
+          `${LIST_SELECT} ${SEARCH_WHERE} ORDER BY h.last_seen DESC LIMIT $limit OFFSET $offset`,
+        );
+        _listSearchQs.set(type, stmt);
+      }
+      params.$term = `%${escapeLike(term.toLowerCase())}%`;
+      return stmt.all(params) as HitRow[];
+    }
+    let stmt = _listAllQs.get(type);
+    if (!stmt) {
+      stmt = db.prepare(
+        `${LIST_SELECT} ORDER BY h.last_seen DESC LIMIT $limit OFFSET $offset`,
+      );
+      _listAllQs.set(type, stmt);
+    }
+    return stmt.all(params) as HitRow[];
   } catch (err) {
-    logger.warn("indexer", "exportRows failed", err);
+    logger.warn("indexer", `shardHits failed for type=${type}`, err);
     return [];
   }
 };
 
-export const sampleRows = (limit = 5): ExportRow[] => {
+const shardCount = (type: string, q: string | undefined): number => {
   try {
-    const db = getIndexerDb();
-    return db
-      .prepare(`${EXPORT_SQL} ORDER BY h.last_seen DESC LIMIT ?`)
-      .all(limit) as ExportRow[];
+    const db = getDbForType(type);
+    const term = q?.trim();
+    if (term) {
+      let stmt = _countSearchQs.get(type);
+      if (!stmt) {
+        stmt = db.prepare(
+          `SELECT COUNT(*) AS c FROM query_hits h JOIN urls u ON u.id = h.url_id ${SEARCH_WHERE}`,
+        );
+        _countSearchQs.set(type, stmt);
+      }
+      return (stmt.get({ $term: `%${escapeLike(term.toLowerCase())}%` }) as { c: number }).c;
+    }
+    let stmt = _countAllQs.get(type);
+    if (!stmt) {
+      stmt = db.prepare(
+        "SELECT COUNT(*) AS c FROM query_hits h JOIN urls u ON u.id = h.url_id",
+      );
+      _countAllQs.set(type, stmt);
+    }
+    return (stmt.get() as { c: number }).c;
   } catch (err) {
-    logger.warn("indexer", "sampleRows failed", err);
+    logger.warn("indexer", `shardCount failed for type=${type}`, err);
+    return 0;
+  }
+};
+
+export const listHits = (opts: {
+  q?: string;
+  type?: string;
+  limit: number;
+  offset: number;
+}): HitRow[] => {
+  const types = opts.type ? [opts.type] : discoverTypes();
+  if (opts.type) {
+    return shardHits(opts.type, opts.q, opts.limit + opts.offset)
+      .slice(opts.offset, opts.offset + opts.limit);
+  }
+  const fetchLimit = opts.offset + opts.limit;
+  const merged: HitRow[] = [];
+  for (const type of types) merged.push(...shardHits(type, opts.q, fetchLimit));
+  merged.sort((a, b) => b.last_seen - a.last_seen);
+  return merged.slice(opts.offset, opts.offset + opts.limit);
+};
+
+export const countHits = (q?: string, type?: string): number => {
+  const types = type ? [type] : discoverTypes();
+  let total = 0;
+  for (const t of types) total += shardCount(t, q);
+  return total;
+};
+
+export const deleteHits = async (items: DeleteItem[]): Promise<number> => {
+  const clean = items.filter(
+    (it) => Number.isInteger(it.id) && it.id > 0 && typeof it.engine_type === "string",
+  );
+  if (clean.length === 0) return 0;
+
+  const byType = new Map<string, number[]>();
+  for (const { id, engine_type } of clean) {
+    let ids = byType.get(engine_type);
+    if (!ids) {
+      ids = [];
+      byType.set(engine_type, ids);
+    }
+    ids.push(id);
+  }
+
+  let deleted = 0;
+  await Promise.all(
+    Array.from(byType.entries()).map(([type, ids]) =>
+      mutexFor(type)(async () => {
+        try {
+          const db = getDbForType(type);
+          const placeholders = ids.map(() => "?").join(",");
+          const tx = db.transaction(() => {
+            db.prepare(`DELETE FROM query_hits WHERE id IN (${placeholders})`).run(...ids);
+            pruneOrphanUrls(db);
+          });
+          tx();
+          deleted += ids.length;
+          invalidateTypes();
+          wipeStatsCache();
+        } catch (err) {
+          logger.error("indexer", `deleteHits failed for type=${type}`, err);
+          throw err;
+        }
+      }),
+    ),
+  );
+
+  return deleted;
+};
+
+export const clearAll = async (): Promise<void> => {
+  const types = discoverTypes();
+  await Promise.all(
+    types.map((type) =>
+      mutexFor(type)(async () => {
+        try {
+          const db = getDbForType(type);
+          db.exec("DELETE FROM query_hits");
+          db.exec("DELETE FROM urls");
+          db.exec("INSERT INTO urls_fts(urls_fts) VALUES('rebuild')");
+          db.exec("VACUUM");
+        } catch (err) {
+          logger.error("indexer", `clearAll failed for type=${type}`, err);
+          throw err;
+        }
+      }),
+    ),
+  );
+  invalidateTypes();
+  wipeStatsCache();
+};
+
+export const sampleRows = (type: string, limit = 5): ExportRow[] => {
+  try {
+    const db = getDbForType(type);
+    let stmt = _sampleQs.get(type);
+    if (!stmt) {
+      stmt = db.prepare(`${EXPORT_SQL} ORDER BY h.last_seen DESC LIMIT ?`);
+      _sampleQs.set(type, stmt);
+    }
+    return stmt.all(limit) as ExportRow[];
+  } catch (err) {
+    logger.warn("indexer", `sampleRows failed for type=${type}`, err);
     return [];
   }
 };
 
-export const readRowsFromAttachedDb = (db: import("bun:sqlite").Database): ExportRow[] => {
-  const hasNew = db
-    .prepare(
-      "SELECT 1 FROM sqlite_master WHERE type='table' AND name='query_hits'",
-    )
-    .get();
-  if (hasNew) {
-    return db.prepare(EXPORT_SQL).all() as ExportRow[];
-  }
-  const hasLegacy = db
-    .prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='results'")
-    .get();
-  if (!hasLegacy) return [];
-  return db
-    .prepare(
-      `SELECT query_norm, engine_type, url, url_norm, source_engine,
-              title, snippet, thumbnail, image_url, is_gif, duration,
-              extras_json, first_seen, last_seen, source_instance
-       FROM results`,
-    )
-    .all() as ExportRow[];
-};
+export { checkpointType };

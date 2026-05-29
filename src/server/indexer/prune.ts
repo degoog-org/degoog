@@ -1,6 +1,10 @@
 import type { Database } from "bun:sqlite";
 import type { IndexerConfig } from "./config";
 
+export const pruneOrphanUrls = (db: Database): void => {
+  db.exec("DELETE FROM urls WHERE id NOT IN (SELECT url_id FROM query_hits)");
+};
+
 export const runPrune = (db: Database, cfg: IndexerConfig): void => {
   if (!cfg.pruneEnabled) return;
 
@@ -13,6 +17,7 @@ export const runPrune = (db: Database, cfg: IndexerConfig): void => {
           SELECT id FROM query_hits ORDER BY last_seen ASC LIMIT ?
         )`,
       ).run(excess);
+      pruneOrphanUrls(db);
     }
   }
 

@@ -149,6 +149,19 @@ export async function handleRetry(
       updated,
       cache.hasFailedEngines(updated) ? cache.SHORT_TTL_MS : undefined,
     );
+
+    const settings = await getInstanceSettings();
+    if (asBoolean(settings.degoogIndexerEnabled)) {
+      const toIndex = merged.filter(
+        (r) =>
+          r.source !== DEGOOG_ENGINE_NAME &&
+          !(r.sources ?? []).includes(DEGOOG_ENGINE_NAME),
+      );
+      if (toIndex.length > 0) {
+        queueMicrotask(() => void recordResults(query, type, toIndex));
+      }
+    }
+
     return {
       ...updated,
       results: signResultThumbnails(await applyDomainRules(merged)),

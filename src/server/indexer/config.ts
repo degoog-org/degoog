@@ -8,6 +8,9 @@ export interface IndexerConfig {
   pruneEnabled: boolean;
   fuzzyEnabled: boolean;
   queryLimit: number;
+  domainAllowlist: string[];
+  domainBlocklist: string[];
+  wordBlocklist: string[];
 }
 
 const clampInt = (raw: string | undefined, fallback: number, min: number, max: number): number => {
@@ -15,6 +18,15 @@ const clampInt = (raw: string | undefined, fallback: number, min: number, max: n
   if (!Number.isFinite(n)) return fallback;
   return Math.max(min, Math.min(max, n));
 };
+
+const parseLines = (raw: string | undefined): string[] =>
+  (raw ?? "")
+    .split(/\r?\n/)
+    .map((l) => l.trim().toLowerCase())
+    .filter(Boolean);
+
+const parseDomains = (raw: string | undefined): string[] =>
+  parseLines(raw).map((d) => d.replace(/^https?:\/\//, "").replace(/\/.*$/, ""));
 
 export const getIndexerConfig = async (): Promise<IndexerConfig> => {
   const s = await getInstanceSettings();
@@ -34,5 +46,8 @@ export const getIndexerConfig = async (): Promise<IndexerConfig> => {
     pruneEnabled,
     fuzzyEnabled: fuzzyRaw !== "false",
     queryLimit,
+    domainAllowlist: parseDomains(asString(s.degoogIndexerDomainAllowlist)),
+    domainBlocklist: parseDomains(asString(s.degoogIndexerDomainBlocklist)),
+    wordBlocklist: parseLines(asString(s.degoogIndexerWordBlocklist)),
   };
 };

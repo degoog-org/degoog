@@ -57,13 +57,15 @@ const GENERAL_ALLOWED_KEYS = [
   "honeypotBanDuration",
   "degoogIndexerEnabled",
   "degoogIndexerPublicExport",
-  "degoogIndexerAcceptIncoming",
   "degoogIndexerMaxPerSearch",
   "degoogIndexerMaxUrls",
   "degoogIndexerMaxHits",
   "degoogIndexerPruneEnabled",
   "degoogIndexerFuzzyEnabled",
   "degoogIndexerQueryLimit",
+  "degoogIndexerDomainAllowlist",
+  "degoogIndexerDomainBlocklist",
+  "degoogIndexerWordBlocklist",
 ] as const;
 
 const BOOLEAN_SETTING_KEYS = new Set<(typeof GENERAL_ALLOWED_KEYS)[number]>([
@@ -87,7 +89,6 @@ const BOOLEAN_SETTING_KEYS = new Set<(typeof GENERAL_ALLOWED_KEYS)[number]>([
   "honeypotCssCheck",
   "degoogIndexerEnabled",
   "degoogIndexerPublicExport",
-  "degoogIndexerAcceptIncoming",
   "degoogIndexerPruneEnabled",
   "degoogIndexerFuzzyEnabled",
 ]);

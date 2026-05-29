@@ -1,9 +1,17 @@
 import { Database } from "bun:sqlite";
-import { mkdirSync } from "fs";
-import { indexerDbFile, indexerDir } from "../utils/paths";
+import { mkdirSync, readdirSync } from "fs";
+import { indexerDir, indexerDbForType } from "../utils/paths";
 import { logger } from "../utils/logger";
 
-let _db: Database | null = null;
+const _dbs = new Map<string, Database>();
+
+const SAFE_TYPE = /^[a-z0-9][a-z0-9-]*$/;
+
+const safeType = (type: string): string => {
+  const slug = type.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+  if (!SAFE_TYPE.test(slug)) throw new Error(`invalid type: ${type}`);
+  return slug;
+};
 
 const MIGRATIONS = [
   `CREATE TABLE IF NOT EXISTS urls (
@@ -54,43 +62,62 @@ const MIGRATIONS = [
   END`,
 ];
 
-const _migrate = (db: Database): void => {
+const migrate = (db: Database): void => {
   for (const sql of MIGRATIONS) db.exec(sql);
 };
 
-export const getIndexerDb = (): Database => {
-  if (_db) return _db;
+const openDb = (type: string): Database => {
   mkdirSync(indexerDir(), { recursive: true });
-  const db = new Database(indexerDbFile(), { create: true });
+  const db = new Database(indexerDbForType(type), { create: true });
   db.exec("PRAGMA journal_mode = WAL");
   db.exec("PRAGMA synchronous = NORMAL");
   db.exec("PRAGMA foreign_keys = ON");
   try {
-    _migrate(db);
+    migrate(db);
   } catch (err) {
-    logger.error("indexer", "schema init failed", err);
+    logger.error("indexer", `schema init failed for type=${type}`, err);
     throw err;
   }
-  _db = db;
   return db;
 };
 
-export const closeIndexerDb = (): void => {
-  if (!_db) return;
-  try {
-    _db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
-    _db.close();
-  } catch (err) {
-    logger.warn("indexer", "close failed", err);
-  }
-  _db = null;
+export const getDbForType = (type: string): Database => {
+  const key = safeType(type);
+  const existing = _dbs.get(key);
+  if (existing) return existing;
+  const db = openDb(key);
+  _dbs.set(key, db);
+  return db;
 };
 
-export const checkpointWal = (): void => {
-  if (!_db) return;
+export const discoverTypes = (): string[] => {
   try {
-    _db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
-  } catch (err) {
-    logger.warn("indexer", "wal checkpoint failed", err);
+    return readdirSync(indexerDir())
+      .filter((f) => f.startsWith("index-") && f.endsWith(".db"))
+      .map((f) => f.slice(6, -3));
+  } catch {
+    return [];
   }
+};
+
+export const checkpointType = (type: string): void => {
+  const db = _dbs.get(safeType(type));
+  if (!db) return;
+  try {
+    db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+  } catch (err) {
+    logger.warn("indexer", `wal checkpoint failed for type=${type}`, err);
+  }
+};
+
+export const closeAllDbs = (): void => {
+  for (const [type, db] of _dbs) {
+    try {
+      db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+      db.close();
+    } catch (err) {
+      logger.warn("indexer", `close failed for type=${type}`, err);
+    }
+  }
+  _dbs.clear();
 };

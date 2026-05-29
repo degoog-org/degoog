@@ -671,3 +671,43 @@
     gap: $space-3;
   }
 }
+
+.degoog-manage-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: $space-3 0;
+  font-size: $font-size-small;
+
+  th,
+  td {
+    text-align: left;
+    padding: $space-2;
+    vertical-align: middle;
+  }
+
+  th {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  tbody tr {
+    background: var(--bg);
+  }
+
+  tbody tr:nth-child(even) {
+    background: var(--bg-secondary);
+  }
+
+  td a {
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  td a:hover {
+    text-decoration: underline;
+  }
+}
+
+.degoog-manage-pager {
+  justify-content: space-between;
+}

@@ -185,33 +185,7 @@
                 {{t:settings-page.indexer.export-btn}}
               </button>
             </div>
-
-            <fieldset
-              class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
-            >
-              <label class="settings-proxy-urls-label" for="indexer-public-target-url">
-                {{t:settings-page.indexer-public.push-label}}
-              </label>
-              <div class="degoog-action-row">
-                <input
-                  type="url"
-                  id="indexer-public-target-url"
-                  class="degoog-input"
-                  placeholder="{{t:settings-page.indexer-public.push-placeholder}}"
-                />
-                <button
-                  type="button"
-                  class="btn btn--secondary degoog-btn degoog-btn--secondary"
-                  id="indexer-public-push-btn"
-                >
-                  {{t:settings-page.indexer-public.push-btn}}
-                </button>
-              </div>
-              <p class="settings-desc">
-                {{t:settings-page.indexer-public.push-desc}}
-              </p>
-              <p id="indexer-public-push-status" class="settings-desc"></p>
-            </fieldset>
+            <p id="indexer-public-status" class="settings-desc"></p>
           </fieldset>
         </section>
       </main>

@@ -28,14 +28,14 @@ import { extensionReadmeExists } from "../../utils/extension-docs";
 import { logger } from "../../utils/logger";
 import { getInstanceSettings } from "../../utils/server-settings";
 
-const builtinsDir = join(
-  process.cwd(),
-  "src",
-  "server",
-  "extensions",
-  "engines",
-  "builtins",
-);
+const builtinsDir = join(import.meta.dir, "builtins");
+
+const TYPE_CACHE_TTL_MS = 60_000;
+const _typeCache = new Map<string, { types: string[]; at: number }>();
+
+const clearTypeCache = (): void => {
+  _typeCache.clear();
+};
 
 export type EngineSearchType = string;
 
@@ -74,6 +74,17 @@ const resolveTypes = (
 export const primaryType = (types: string[]): string =>
   types.length > 0 ? types[0] : "web";
 
+const DEGOOG_ENGINE_ID = "degoog-engine";
+
+const isEngineEnabled = (
+  id: string,
+  config: EngineConfig,
+  indexerOn: boolean,
+): boolean => {
+  if (id in config) return !!config[id];
+  return indexerOn && id === DEGOOG_ENGINE_ID;
+};
+
 export const resolveTabSearchType = (
   types: string[],
   preferred?: string,
@@ -98,6 +109,14 @@ const _coerceTypeList = (raw: unknown): string[] => {
 const _resolving = new Set<string>();
 
 const resolveEngineTypes = async (entry: PluginEntry): Promise<string[]> => {
+  const cached = _typeCache.get(entry.id);
+  if (cached && Date.now() - cached.at < TYPE_CACHE_TTL_MS) return cached.types;
+  const types = await computeEngineTypes(entry);
+  _typeCache.set(entry.id, { types, at: Date.now() });
+  return types;
+};
+
+const computeEngineTypes = async (entry: PluginEntry): Promise<string[]> => {
   const override = await getTypeOverride(entry.id);
   const dyn = (entry.instance as SearchEngine & { __typeFn?: TypeFn }).__typeFn;
   let base: string[] = entry.searchTypes;
@@ -200,8 +219,7 @@ export const getEnginesForCustomType = async (
   const settings = await getInstanceSettings();
   const indexerOn = asBoolean(settings.degoogIndexerEnabled);
   for (const e of engineRegistry.items()) {
-    const enabled =
-      !config || config[e.id] || (indexerOn && e.id === "degoog-engine");
+    const enabled = !config || isEngineEnabled(e.id, config, indexerOn);
     if (!enabled) continue;
     if (await isDisabled(e.id)) continue;
     const types = await resolveEngineTypes(e);
@@ -270,7 +288,7 @@ export const getActiveWebEngines = async (
   const indexerOn = asBoolean(settings.degoogIndexerEnabled);
   const active: { id: string; instance: SearchEngine; score: number }[] = [];
   for (const e of engineRegistry.items()) {
-    const enabled = config[e.id] || (indexerOn && e.id === "degoog-engine");
+    const enabled = isEngineEnabled(e.id, config, indexerOn);
     if (!enabled) continue;
     const types = await resolveEngineTypes(e);
     if (!types.includes("web")) continue;
@@ -517,6 +535,7 @@ export const getEngineExtensionMeta = async (
 };
 
 export const initEngines = async (bust = false): Promise<void> => {
+  clearTypeCache();
   await (bust ? engineRegistry.reload() : engineRegistry.init());
 };
 

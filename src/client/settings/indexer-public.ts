@@ -12,14 +12,29 @@ interface IndexerStats {
 const tr = (key: string, vars?: Record<string, string>): string =>
   t(`settings-page.indexer.${key}`, vars);
 
-const trPub = (key: string, vars?: Record<string, string>): string =>
-  t(`settings-page.indexer-public.${key}`, vars);
-
 const formatBytes = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+};
+
+const renderStats = (wrap: HTMLElement, stats: IndexerStats): void => {
+  wrap.replaceChildren();
+  const rows: Array<[string, string]> = [
+    [tr("total-results"), String(stats.totalResults)],
+    [tr("total-queries"), String(stats.totalQueries)],
+    [tr("db-size"), formatBytes(stats.dbSizeBytes)],
+  ];
+  for (const [label, value] of rows) {
+    const cell = document.createElement("div");
+    const dt = document.createElement("dt");
+    dt.textContent = label;
+    const dd = document.createElement("dd");
+    dd.textContent = value;
+    cell.append(dt, dd);
+    wrap.append(cell);
+  }
 };
 
 export const initIndexerPublic = async (): Promise<void> => {
@@ -41,58 +56,29 @@ export const initIndexerPublic = async (): Promise<void> => {
   section.hidden = false;
 
   const statsWrap = document.getElementById("indexer-public-stats");
-  if (statsWrap) {
-    statsWrap.innerHTML = `
-      <div><dt>${tr("total-results")}</dt><dd>${stats.totalResults}</dd></div>
-      <div><dt>${tr("total-queries")}</dt><dd>${stats.totalQueries}</dd></div>
-      <div><dt>${tr("db-size")}</dt><dd>${formatBytes(stats.dbSizeBytes)}</dd></div>
-    `;
-  }
+  if (statsWrap) renderStats(statsWrap, stats);
 
+  const status = document.getElementById("indexer-public-status");
   document
     .getElementById("indexer-public-export-btn")
-    ?.addEventListener("click", () => {
-      window.location.href = `${getBase()}/api/indexer/export`;
-    });
-
-  const pushBtn = document.getElementById(
-    "indexer-public-push-btn",
-  ) as HTMLButtonElement | null;
-  const targetInput = document.getElementById(
-    "indexer-public-target-url",
-  ) as HTMLInputElement | null;
-  const status = document.getElementById("indexer-public-push-status");
-  pushBtn?.addEventListener("click", async () => {
-    if (!targetInput || !status) return;
-    const targetUrl = targetInput.value.trim();
-    if (!targetUrl) return;
-    pushBtn.disabled = true;
-    status.textContent = "...";
-    try {
-      const res = await fetch(`${getBase()}/api/indexer/push`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetUrl }),
-      });
-      const data = (await res.json()) as {
-        inserted?: number;
-        updated?: number;
-        skipped?: number;
-        error?: string;
-      };
-      if (!res.ok) {
-        status.textContent = data.error ?? `Push failed (${res.status})`;
-      } else {
-        status.textContent = trPub("push-success", {
-          inserted: String(data.inserted ?? 0),
-          updated: String(data.updated ?? 0),
-          skipped: String(data.skipped ?? 0),
-        });
+    ?.addEventListener("click", async () => {
+      if (status) status.textContent = "";
+      try {
+        const res = await fetch(`${getBase()}/api/indexer/export`);
+        if (!res.ok) {
+          const data = (await res.json().catch(() => ({}))) as { error?: string };
+          if (status) status.textContent = data.error ?? `Download failed (${res.status})`;
+          return;
+        }
+        const blob = await res.blob();
+        const href = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = href;
+        a.download = "degoog-index.db";
+        a.click();
+        URL.revokeObjectURL(href);
+      } catch {
+        if (status) status.textContent = `Download failed`;
       }
-    } catch {
-      status.textContent = trPub("push-error");
-    } finally {
-      pushBtn.disabled = false;
-    }
-  });
+    });
 };

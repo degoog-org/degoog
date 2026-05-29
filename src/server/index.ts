@@ -22,6 +22,9 @@ import { initServerKey } from "./utils/server-key";
 import { initValkey } from "./utils/cache-valkey";
 import { getInstanceId } from "./utils/server-settings";
 import { runMigrations } from "./migrations";
+import { closeAllDbs } from "./indexer/db";
+import { startQueue, stopQueue } from "./indexer/queue";
+import { logger } from "./utils/logger";
 
 const BASE_PATH = getBasePath();
 
@@ -117,8 +120,21 @@ const initExtensionRegistries = async (): Promise<void> => {
   await initPluginRoutes();
 };
 
+const shutdown = (signal: string): void => {
+  logger.info("server", `received ${signal}, shutting down`);
+  stopQueue()
+    .finally(() => {
+      closeAllDbs();
+      process.exit(0);
+    });
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
 Promise.all([initServerKey(), initExtensionRegistries()])
   .then(() => {
+    startQueue();
     Bun.serve({ port, fetch: app.fetch, idleTimeout: 120 });
     markReady();
   })
