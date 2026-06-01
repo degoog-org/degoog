@@ -108,7 +108,8 @@ export interface ScoredResult extends SearchResult {
   insecure?: boolean;
 }
 
-export type SearchType = "web" | "images" | "videos" | "news";
+export type SearchType = string;
+
 export type TimeFilter =
   | "any"
   | "hour"

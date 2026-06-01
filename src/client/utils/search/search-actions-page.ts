@@ -2,7 +2,7 @@ import {
   skeletonImageGrid,
   skeletonResults,
 } from "../../animations/skeleton";
-import { getEngines } from "../engines";
+import { getEngines, isImageSearchType } from "../engines";
 import { state } from "../../state";
 import { buildSearchBody, buildSearchUrl } from "../url";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
@@ -18,7 +18,7 @@ export async function goToPage(pageNum: number): Promise<void> {
   const resultsList = document.getElementById("results-list");
   const pagination = document.getElementById("pagination");
   if (resultsList) {
-    if (state.currentType === "images") {
+    if (isImageSearchType(state.currentType)) {
       resultsList.innerHTML = skeletonImageGrid();
     } else {
       resultsList.innerHTML = skeletonResults();

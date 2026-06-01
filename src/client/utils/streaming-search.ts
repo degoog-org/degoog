@@ -25,7 +25,7 @@ import {
   SlotPanelPosition,
 } from "../types";
 import { abortAcReq, hideAcDropdown } from "./autocomplete";
-import { getEngines } from "./engines";
+import { getEngines, isImageSearchType } from "./engines";
 import { setActiveTab } from "./navigation";
 import {
   abortGlancePanels,
@@ -107,7 +107,7 @@ export async function performStreamingSearch(
     resultsInput.value = query;
     resultsInput.defaultValue = query;
   }
-  const isImageType = type === "images";
+  const isImageType = isImageSearchType(type);
   const layout = document.getElementById("results-layout");
   if (isImageType) {
     layout?.classList.add("media-mode");
@@ -118,11 +118,9 @@ export async function performStreamingSearch(
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    if (type === "images") {
-      resultsList.innerHTML = skeletonImageGrid();
-    } else {
-      resultsList.innerHTML = skeletonResults();
-    }
+    resultsList.innerHTML = isImageType
+      ? skeletonImageGrid()
+      : skeletonResults();
   }
   const pagination = document.getElementById("pagination");
   if (pagination) pagination.innerHTML = "";
@@ -139,7 +137,7 @@ export async function performStreamingSearch(
 
   const urlParams = new URLSearchParams({ q: query });
   if (type !== "web") urlParams.set("type", type);
-  if (type === "images") {
+  if (isImageType) {
     for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
       urlParams.set(k, v);
     }
@@ -149,7 +147,7 @@ export async function performStreamingSearch(
     query,
     type,
     page: 1,
-    imageFilter: type === "images" ? { ...state.imageFilter } : undefined,
+    imageFilter: isImageType ? { ...state.imageFilter } : undefined,
   };
   const searchUrl = `/search?${urlParams.toString()}`;
   if (isInitialLoad) {

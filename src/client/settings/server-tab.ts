@@ -64,7 +64,9 @@ function _renderApiKey(): void {
     : "•".repeat(Math.min(_apiKey.length, 32));
 }
 
-async function _loadServerSettings(getToken: () => string | null): Promise<void> {
+async function _loadServerSettings(
+  getToken: () => string | null,
+): Promise<void> {
   try {
     const res = await fetch(`${getBase()}/api/settings/general`, {
       headers: authHeaders(getToken),

@@ -2,6 +2,7 @@ import { SearchBody } from "../../server/types";
 import type { ImageFilter } from "../types/search";
 import { state } from "../state";
 import { getBase } from "./base-url";
+import { isImageSearchType } from "./engines";
 
 export const imgFilterRecord = (f: ImageFilter): Record<string, string> => {
   const r: Record<string, string> = {};
@@ -68,7 +69,7 @@ export const buildSearchParams = (
   if (state.currentLanguage) {
     params.set("lang", state.currentLanguage);
   }
-  if (type === "images") {
+  if (isImageSearchType(type)) {
     for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
       params.set(k, v);
     }
@@ -107,7 +108,9 @@ export const buildSearchBody = (
     if (state.customDateTo) body.dateTo = state.customDateTo;
   }
   if (state.currentLanguage) body.lang = state.currentLanguage;
-  if (type === "images") Object.assign(body, imgFilterRecord(state.imageFilter));
+  if (isImageSearchType(type)) {
+    Object.assign(body, imgFilterRecord(state.imageFilter));
+  }
 
   return body;
 };

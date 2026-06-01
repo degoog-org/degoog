@@ -16,7 +16,7 @@ import { triggerUovadipasqua } from "../uovadipasqua";
 import {
   getEngines,
   getKnownSearchTypePrefixes,
-  isBuiltinSearchType,
+  isImageSearchType,
 } from "../engines";
 import { setActiveTab, setTabsForBang } from "../navigation";
 import { buildPaginationHtml } from "../pagination";
@@ -83,9 +83,6 @@ export async function performSearch(
     if (actualQuery) {
       const knownTypes = await getKnownSearchTypePrefixes();
       if (knownTypes.has(prefix)) {
-        if (isBuiltinSearchType(prefix)) {
-          return performSearch(actualQuery, prefix, page);
-        }
         const { performTabSearch } =
           await import("../../modules/tabs/tab-search");
         return performTabSearch(actualQuery, `engine:${prefix}`, page);
@@ -174,9 +171,15 @@ export async function performSearch(
       return;
     }
     const data = (await res.json()) as SearchResponse;
-    renderSearchResponse(data, query, resolvedType, (q) => void performSearch(q), {
-      fetchGlance: true,
-    });
+    renderSearchResponse(
+      data,
+      query,
+      resolvedType,
+      (q) => void performSearch(q),
+      {
+        fetchGlance: true,
+      },
+    );
   } catch (err) {
     console.error("[search] search failed", err);
     if (resultsMeta) resultsMeta.textContent = "";
@@ -201,10 +204,16 @@ async function _performSearchWithBang(
       fetch(searchUrl),
     ]);
     const searchData = (await searchRes.json()) as SearchResponse;
-    const isMediaType = type === "images";
-    renderSearchResponse(searchData, query, type, (q) => void performSearch(q), {
-      fetchGlance: false,
-    });
+    const isMediaType = isImageSearchType(type);
+    renderSearchResponse(
+      searchData,
+      query,
+      type,
+      (q) => void performSearch(q),
+      {
+        fetchGlance: false,
+      },
+    );
 
     if (glanceEl && cmdRes.ok && !isMediaType) {
       const cmdData = (await cmdRes.json()) as {
@@ -312,7 +321,7 @@ async function _performBangCommand(
     };
     if (data.type === "engine") {
       const engineType = data.primaryType ?? "web";
-      const isMedia = engineType === "images";
+      const isMedia = isImageSearchType(engineType);
       state.currentResults = data.results ?? [];
       state.currentData = data as unknown as SearchResponse;
       state.currentType = engineType;

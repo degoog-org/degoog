@@ -1,4 +1,4 @@
-import { skeletonResults, skeletonSidebar } from "../../animations/skeleton";
+import { skeletonImageGrid, skeletonResults, skeletonSidebar } from "../../animations/skeleton";
 import { state } from "../../state";
 import {
   SlotPanelPosition,
@@ -6,6 +6,7 @@ import {
   type SearchResponse,
 } from "../../types";
 import { hideAcDropdown } from "../../utils/autocomplete";
+import { isImageSearchType } from "../../utils/engines";
 import { setActiveTab } from "../../utils/navigation";
 import { fetchStreamingConfig } from "../../utils/streaming-config";
 import { buildPaginationHtml } from "../../utils/pagination";
@@ -15,12 +16,14 @@ import {
   performStreamingSearch,
 } from "../../utils/streaming-search";
 import { renderTemplate } from "../../utils/template";
-import { closeMediaPreview, destroyMediaObserver } from "../media/media";
+import { closeMediaPreview, destroyMediaObserver, setupMediaObserver } from "../media/media";
 import {
   buildResultContext,
   clearSlotPanels,
+  renderResults,
   renderSidebar,
 } from "../renderer/render";
+import { renderMediaEngineBar } from "../renderer/render-media";
 import { getBase } from "../../utils/base-url";
 
 export async function performTabSearch(
@@ -30,8 +33,11 @@ export async function performTabSearch(
 ): Promise<void> {
   if (!query.trim()) return;
 
+  const tabType = `tab:${tabId}`;
+  const isImageType = isImageSearchType(tabType);
+
   void import("../filters/image-filters").then(({ syncImgFilters }) =>
-    syncImgFilters(`tab:${tabId}`),
+    syncImgFilters(tabType),
   );
 
   const isInit = state.isInitialLoad;
@@ -68,18 +74,25 @@ export async function performTabSearch(
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   const resultsList = document.getElementById("results-list");
-  if (resultsList) resultsList.innerHTML = skeletonResults();
+  if (resultsList) {
+    resultsList.innerHTML = isImageType
+      ? skeletonImageGrid()
+      : skeletonResults();
+  }
   const pagination = document.getElementById("pagination");
   if (pagination) pagination.innerHTML = "";
   const sidebar = document.getElementById("results-sidebar");
-  if (sidebar) sidebar.innerHTML = skeletonSidebar();
+  if (sidebar) sidebar.innerHTML = isImageType ? "" : skeletonSidebar();
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl) glanceEl.innerHTML = "";
   clearSlotPanels();
   document.title = `${query} - degoog`;
 
   const layout = document.getElementById("results-layout");
-  if (layout) layout.classList.remove("media-mode");
+  if (layout) {
+    if (isImageType) layout.classList.add("media-mode");
+    else layout.classList.remove("media-mode");
+  }
 
   const urlParams = new URLSearchParams({ q: query, type: `tab:${tabId}` });
   if (page > 1) urlParams.set("page", String(page));
@@ -132,10 +145,17 @@ export async function performTabSearch(
       relatedSearches: [],
     };
     state.currentData = currentData;
+
+    if (isImageType) {
+      renderMediaEngineBar(timings);
+      renderResults(data.results || []);
+      setupMediaObserver("images");
+      return;
+    }
+
     _renderTabResults(data.results || [], resultsList);
 
-    const isMediaTab = tabId === "engine:images" || tabId === "engine:videos";
-    if (data.totalPages && data.totalPages > 1 && pagination && !isMediaTab) {
+    if (data.totalPages && data.totalPages > 1 && pagination && !isImageType) {
       _renderTabPagination(pagination, data.totalPages, page, query, tabId);
     }
   } catch (err) {
@@ -148,7 +168,7 @@ export async function performTabSearch(
   }
 
   const currentData = state.currentData;
-  if (!currentData) return;
+  if (!currentData || isImageType) return;
 
   void (async () => {
     const panels = await fetchSlotPanels(query, state.currentResults);

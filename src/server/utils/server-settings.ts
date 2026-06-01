@@ -48,13 +48,19 @@ export const readServerSettings = async (): Promise<ServerSettings> => {
           ? parsed.instanceId
           : _defaults().instanceId,
       settings:
-        parsed.settings && typeof parsed.settings === "object" && !Array.isArray(parsed.settings)
+        parsed.settings &&
+        typeof parsed.settings === "object" &&
+        !Array.isArray(parsed.settings)
           ? (parsed.settings as Record<string, ServerSettingValue>)
           : {},
     };
     if (!parsed.instanceId) {
       await _persist(merged).catch((err) =>
-        logger.error("server-settings", "failed to persist generated instanceId", err),
+        logger.error(
+          "server-settings",
+          "failed to persist generated instanceId",
+          err,
+        ),
       );
     }
     _cache = merged;
@@ -62,11 +68,19 @@ export const readServerSettings = async (): Promise<ServerSettings> => {
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code !== "ENOENT") {
-      logger.error("server-settings", "failed to read server-settings.json", err);
+      logger.error(
+        "server-settings",
+        "failed to read server-settings.json",
+        err,
+      );
     }
     const fresh = _defaults();
     await _persist(fresh).catch((e) =>
-      logger.error("server-settings", "failed to write initial server-settings.json", e),
+      logger.error(
+        "server-settings",
+        "failed to write initial server-settings.json",
+        e,
+      ),
     );
     _cache = fresh;
     return fresh;
@@ -84,7 +98,9 @@ export const writeServerSettings = async (
         ? patch.instanceId
         : current.instanceId,
     settings:
-      patch.settings && typeof patch.settings === "object" && !Array.isArray(patch.settings)
+      patch.settings &&
+      typeof patch.settings === "object" &&
+      !Array.isArray(patch.settings)
         ? patch.settings
         : current.settings,
   };
@@ -94,7 +110,9 @@ export const writeServerSettings = async (
   return next;
 };
 
-export const getInstanceSettings = async (): Promise<Record<string, ServerSettingValue>> => {
+export const getInstanceSettings = async (): Promise<
+  Record<string, ServerSettingValue>
+> => {
   const s = await readServerSettings();
   return s.settings ?? {};
 };
@@ -113,7 +131,8 @@ export const updateInstanceSettings = async (
 };
 
 export const isWizardActive = async (): Promise<boolean> => {
-  if (String(process.env[WIZARD_ENV_VAR] ?? "").toLowerCase() === "false") return false;
+  if (String(process.env[WIZARD_ENV_VAR] ?? "").toLowerCase() === "false")
+    return false;
   const s = await readServerSettings();
   return s.wizard !== true;
 };

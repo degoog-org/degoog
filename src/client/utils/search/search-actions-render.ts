@@ -22,12 +22,15 @@ import {
   fetchGlancePanels,
   fetchSlotPanels,
 } from "../search-utils";
+import { isImageSearchType } from "../engines";
 import { imgFilterRecord } from "../url";
 import { getBase } from "../base-url";
 
 type Navigate = (query: string) => void;
 
 export const prepareResultsUi = (query: string, resolvedType: string): void => {
+  const isImageType = isImageSearchType(resolvedType);
+
   state.currentBangQuery = "";
   showAllTabs();
   setActiveTab(resolvedType);
@@ -45,7 +48,7 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
     resultsInput.defaultValue = query;
   }
   const layout = document.getElementById("results-layout");
-  if (resolvedType === "images") {
+  if (isImageType) {
     layout?.classList.add("media-mode");
   } else {
     layout?.classList.remove("media-mode");
@@ -53,7 +56,7 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   clearSlotPanels();
-  if (resolvedType === "images") {
+  if (isImageType) {
     abortGlancePanels();
     abortSlotPanels();
   }
@@ -62,14 +65,14 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
     glanceEl.innerHTML = resolvedType === "web" ? skeletonGlance() : "";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    resultsList.innerHTML =
-      resolvedType === "images" ? skeletonImageGrid() : skeletonResults();
+    resultsList.innerHTML = isImageType
+      ? skeletonImageGrid()
+      : skeletonResults();
   }
   const pagination = document.getElementById("pagination");
   if (pagination) pagination.innerHTML = "";
   const sidebar = document.getElementById("results-sidebar");
-  if (sidebar)
-    sidebar.innerHTML = resolvedType === "images" ? "" : skeletonSidebar();
+  if (sidebar) sidebar.innerHTML = isImageType ? "" : skeletonSidebar();
   document.title = `${query} - degoog`;
 };
 
@@ -79,13 +82,13 @@ export const pushSearchHistory = (
   resolvedPage: number,
   isInit: boolean,
 ): void => {
+  const isImageType = isImageSearchType(resolvedType);
   const historyState = {
     degoog: true,
     query,
     type: resolvedType,
     page: resolvedPage,
-    imageFilter:
-      resolvedType === "images" ? { ...state.imageFilter } : undefined,
+    imageFilter: isImageType ? { ...state.imageFilter } : undefined,
   };
   const apply = (url: string) =>
     isInit
@@ -99,7 +102,7 @@ export const pushSearchHistory = (
   const urlParams = new URLSearchParams({ q: query });
   if (resolvedType !== "web") urlParams.set("type", resolvedType);
   if (resolvedPage > 1) urlParams.set("page", String(resolvedPage));
-  if (resolvedType === "images") {
+  if (isImageType) {
     for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
       urlParams.set(k, v);
     }
@@ -122,9 +125,9 @@ export const renderSearchResponse = (
 
   const glanceEl = document.getElementById("at-a-glance");
   const sidebar = document.getElementById("results-sidebar");
-  const isMediaType = type === "images";
+  const isImageType = isImageSearchType(type);
 
-  if (isMediaType) {
+  if (isImageType) {
     if (glanceEl) glanceEl.innerHTML = "";
     renderMediaEngineBar(data.engineTimings ?? []);
     if (sidebar) sidebar.innerHTML = "";

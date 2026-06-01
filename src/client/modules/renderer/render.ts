@@ -7,6 +7,7 @@ import { goToPage } from "../../utils/search-actions";
 import { renderTemplate } from "../../utils/template";
 import { attachFaviconFallback } from "../../utils/favicon";
 import { faviconHostname, faviconUrl } from "../../utils/url";
+import { isImageSearchType } from "../../utils/engines";
 import { destroyMediaObserver, setupMediaObserver } from "../media/media";
 import { renderImageGrid } from "./render-media";
 
@@ -71,7 +72,9 @@ export function renderResults(results: ScoredResult[]): void {
   const layout = document.getElementById("results-layout");
   if (!container || !layout) return;
 
-  if (state.currentType === "images") {
+  const isImageType = isImageSearchType(state.currentType);
+
+  if (isImageType) {
     layout.classList.add("media-mode");
   } else {
     layout.classList.remove("media-mode");
@@ -79,13 +82,13 @@ export function renderResults(results: ScoredResult[]): void {
 
   if (results.length === 0) {
     container.innerHTML = '<div class="no-results">No results found.</div>';
-    if (state.currentType !== "images") {
+    if (!isImageType) {
       renderPagination(MAX_PAGE, state.currentPage);
     }
     return;
   }
 
-  if (state.currentType === "images") {
+  if (isImageType) {
     renderImageGrid(results, container);
     setupMediaObserver("images");
     _clearSlots();

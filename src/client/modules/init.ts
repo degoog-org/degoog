@@ -29,6 +29,7 @@ import { initHomeWizard } from "./wizard/wizard";
 import { getBase } from "../utils/base-url";
 import { isSettingsPathname } from "../utils/settings-path";
 import type { ImageFilter } from "../types/search";
+import { isImageSearchType } from "../utils/engines";
 import { readImgFilter } from "../utils/url";
 
 type DegoogHistoryState = {
@@ -201,7 +202,7 @@ export function init(): void {
   const type = params.get("type") || postType || "web";
   const page = parseInt(params.get("page") ?? postPage ?? "1", 10) || 1;
 
-  if (type === "images") state.imageFilter = readImgFilter(params);
+  if (isImageSearchType(type)) state.imageFilter = readImgFilter(params);
 
   if (resolvedQ) {
     state.isInitialLoad = true;
@@ -279,7 +280,7 @@ export function init(): void {
     if (popQ) {
       const popType = popParams.get("type") || "web";
       const popPage = parseInt(popParams.get("page") ?? "1", 10) || 1;
-      if (popType === "images") state.imageFilter = readImgFilter(popParams);
+      if (isImageSearchType(popType)) state.imageFilter = readImgFilter(popParams);
       else state.imageFilter = {};
       state.isInitialLoad = true;
       if (popType.startsWith("tab:")) {

@@ -2,7 +2,7 @@ import { state } from "../../state";
 import { getBase } from "../../utils/base-url";
 import type { ScoredResult } from "../../types";
 import { cleanHostname, escapeHtml } from "../../utils/dom";
-import { getEngines } from "../../utils/engines";
+import { getEngines, isImageSearchType } from "../../utils/engines";
 import { buildSearchBody, buildSearchUrl } from "../../utils/url";
 import { openLightbox } from "./lightbox";
 import { searchAuthHeaders, appendSearchAuthParams } from "../../utils/request";
@@ -55,8 +55,9 @@ export function setupMediaObserver(type: string): void {
 }
 
 export async function loadMoreMedia(type: string): Promise<void> {
-  const page = type === "images" ? state.imagePage : state.videoPage;
-  const lastPg = type === "images" ? state.imageLastPage : state.videoLastPage;
+  const isImage = isImageSearchType(type);
+  const page = isImage ? state.imagePage : state.videoPage;
+  const lastPg = isImage ? state.imageLastPage : state.videoLastPage;
   const nextPage = page + 1;
   if (nextPage > lastPg || state.mediaLoading) return;
 
@@ -103,22 +104,22 @@ export async function loadMoreMedia(type: string): Promise<void> {
     };
     const data = { results: raw.results ?? [] };
     if (data.results.length === 0) {
-      if (type === "images") state.imageLastPage = page;
+      if (isImage) state.imageLastPage = page;
       else state.videoLastPage = page;
     } else {
       state.currentResults = state.currentResults.concat(data.results);
-      if (type === "images") state.imagePage = nextPage;
+      if (isImage) state.imagePage = nextPage;
       else state.videoPage = nextPage;
 
       const container = document.getElementById("results-list");
       const grid = container?.querySelector<HTMLElement>(
-        type === "images" ? ".image-grid" : ".video-grid",
+        isImage ? ".image-grid" : ".video-grid",
       );
       if (grid && appendMediaCardsRef) {
         appendMediaCardsRef(
           grid,
           data.results,
-          type === "images" ? "image" : "video",
+          isImage ? "image" : "video",
         );
       }
     }

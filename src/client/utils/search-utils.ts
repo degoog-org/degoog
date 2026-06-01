@@ -3,13 +3,13 @@ import { state } from "../state";
 import { getBase } from "./base-url";
 import { SlotPanelPosition, type ScoredResult, type SlotPanel } from "../types";
 import { escapeHtml } from "./dom";
+import { isImageSearchType } from "./engines";
 import { runScriptsInContainer } from "./search-helpers";
 
 let glanceAbortController: AbortController | null = null;
 let slotsAbortController: AbortController | null = null;
 
-const _isMediaType = (type: string): boolean =>
-  type === "images" || type === "videos";
+const _skipSlotPanels = (type: string): boolean => isImageSearchType(type);
 
 export const abortGlancePanels = (): void => {
   if (glanceAbortController) {
@@ -47,7 +47,7 @@ export async function fetchGlancePanels(
     if (signal.aborted) return;
     const data = (await res.json()) as { panels?: SlotPanel[] };
     if (signal.aborted) return;
-    if (_isMediaType(state.currentType)) return;
+    if (_skipSlotPanels(state.currentType)) return;
     if (!glanceEl) return;
     if (data.panels && data.panels.length > 0) {
       const glancePanels = data.panels.filter(
@@ -91,7 +91,7 @@ export async function fetchSlotPanels(
     if (!res.ok) return [];
     const data = (await res.json()) as { panels?: SlotPanel[] };
     if (signal.aborted) return [];
-    if (_isMediaType(state.currentType)) return [];
+    if (_skipSlotPanels(state.currentType)) return [];
     const panels = data.panels ?? [];
     if (panels.length > 0) appendSlotPanels(panels);
     return panels;

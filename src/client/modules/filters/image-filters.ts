@@ -1,4 +1,5 @@
 import { state } from "../../state";
+import { isImageSearchType } from "../../utils/engines";
 
 const FILTER_BAR_ID = "image-filters-bar";
 const T_NS = "themes/degoog";
@@ -122,5 +123,5 @@ export const initImgFilters = (onSearch: SearchFn): void => {
 export const syncImgFilters = (type: string): void => {
   const bar = document.getElementById(FILTER_BAR_ID);
   if (!bar) return;
-  bar.style.display = type === "images" ? "block" : "none";
+  bar.style.display = isImageSearchType(type) ? "block" : "none";
 };

@@ -3,8 +3,6 @@ import { SETTINGS_KEY } from "../constants";
 import { getBase } from "./base-url";
 import type { EngineRecord, EngineRegistry } from "../types";
 
-const BUILTIN_SEARCH_TYPES = ["web", "images", "videos", "news"] as const;
-
 let cachedRegistry: EngineRegistry | null = null;
 let inflightRegistry: Promise<EngineRegistry> | null = null;
 
@@ -63,12 +61,18 @@ export const getEnabledSearchTypes = async (): Promise<Set<string>> => {
 
 export const getKnownSearchTypePrefixes = async (): Promise<Set<string>> => {
   const enabled = await getEnabledSearchTypes();
-  const prefixes = new Set<string>(BUILTIN_SEARCH_TYPES);
+  const prefixes = new Set<string>();
   for (const t of enabled) {
     prefixes.add(t);
   }
   return prefixes;
 };
 
-export const isBuiltinSearchType = (type: string): boolean =>
-  (BUILTIN_SEARCH_TYPES as readonly string[]).includes(type);
+export const resolveBuiltinSearchType = (type: string): string => {
+  if (type.startsWith("tab:engine:")) return type.slice("tab:engine:".length);
+  if (type.startsWith("engine:")) return type.slice("engine:".length);
+  return type;
+};
+
+export const isImageSearchType = (type: string): boolean =>
+  resolveBuiltinSearchType(type) === "images";
