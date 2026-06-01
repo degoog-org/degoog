@@ -292,8 +292,7 @@ router.get("/api/extensions/:id/readme", async (c) => {
   try {
     const markdown = await readFile(readmePath, "utf-8");
     return c.json({ markdown });
-  } catch (err) {
-    logger.debug("extensions", `readme read failed for ${id}`, err);
+  } catch {
     return c.json({ error: "Not found" }, 404);
   }
 });

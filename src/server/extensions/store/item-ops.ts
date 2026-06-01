@@ -53,8 +53,7 @@ async function readAuthorJson(dir: string): Promise<AuthorJson | null> {
     const raw = await readFile(join(dir, "author.json"), "utf-8");
     const parsed = JSON.parse(raw) as AuthorJson;
     return parsed?.name ? parsed : null;
-  } catch (err) {
-    logger.debug("store:item", "author.json read failed", err);
+  } catch {
     return null;
   }
 }
@@ -64,8 +63,7 @@ async function listScreenshots(dir: string): Promise<string[]> {
   try {
     const files = await readdir(screenshotsDir);
     return files.filter((f) => /\.(png|jpg|jpeg|gif|webp)$/i.test(f)).sort();
-  } catch (err) {
-    logger.debug("store:item", "screenshots dir read failed", err);
+  } catch {
     return [];
   }
 }

@@ -6,7 +6,8 @@ export type SettingFieldType =
   | "toggle"
   | "textarea"
   | "select"
-  | "urllist";
+  | "urllist"
+  | "info";
 
 export interface SettingField {
   key: string;

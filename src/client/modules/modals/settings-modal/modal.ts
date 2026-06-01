@@ -80,6 +80,7 @@ const _collectValues = (): Record<string, string | string[]> => {
     const key = fieldEl.dataset.key;
     if (!key) return;
     const type = fieldEl.dataset.type;
+    if (type === "info") return;
     const isSecret = fieldEl.dataset.secret === "true";
     const wasSet = fieldEl.dataset.wasSet === "true";
 

@@ -44,8 +44,7 @@ export const extensionReadmeExists = async (
   try {
     await access(readmePath);
     return { readmePath, exists: true };
-  } catch (err) {
-    logger.debug("extension-docs", `readme not found at ${readmePath}`, err);
+  } catch {
     return { readmePath, exists: false };
   }
 };

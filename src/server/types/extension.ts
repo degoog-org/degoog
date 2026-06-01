@@ -54,7 +54,8 @@ export interface SettingField {
   | "url"
   | "toggle"
   | "textarea"
-  | "select";
+  | "select"
+  | "info";
   required?: boolean;
   placeholder?: string;
   description?: string;
@@ -291,6 +292,18 @@ export interface TransportContext {
   fetch: ProxyAwareFetch;
 }
 
+export interface TransportWsSocket {
+  send(data: string): void;
+  close(code?: number, reason?: string): void;
+}
+
+export interface TransportWsHandlers {
+  onUpgrade?(passwordPath: string): boolean;
+  onOpen(ws: TransportWsSocket): void;
+  onMessage(ws: TransportWsSocket, msg: string): void;
+  onClose(ws: TransportWsSocket): void;
+}
+
 export interface Transport {
   name: string;
   displayName?: string;
@@ -304,6 +317,7 @@ export interface Transport {
     options: TransportFetchOptions,
     context: TransportContext,
   ): Promise<Response>;
+  wsHandler?: TransportWsHandlers;
 }
 
 export interface InterceptorOverrides {

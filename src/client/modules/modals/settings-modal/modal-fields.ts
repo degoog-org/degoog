@@ -245,6 +245,17 @@ export const renderField = (
     ? `<p class="ext-field-desc">${renderMdInline(field.description)}</p>`
     : "";
 
+  if (field.type === "info") {
+    const descHtml = field.description
+      ? `<p class="ext-field-desc">${renderMdInline(field.description)}</p>`
+      : "";
+    return `<div class="ext-field" data-key="${escapeHtml(field.key)}" data-type="info">
+      <label class="ext-field-label">${escapeHtml(field.label)}</label>
+      <input class="ext-field-input degoog-input" type="text" value="${escapeHtml(field.default ?? "")}" disabled>
+      ${descHtml}
+    </div>`;
+  }
+
   if (field.type === "urllist") {
     return _wrapVisibleWhen(field, _renderUrlListField(field, ext), ext);
   }

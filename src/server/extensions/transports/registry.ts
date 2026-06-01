@@ -8,6 +8,7 @@ import { transportsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 import { registerExtensionFolder } from "../../utils/extension-docs";
 import { buildExtensionMeta } from "../extension-meta";
+import { mountTransportWs } from "./ws-registry";
 
 const _builtins: Transport[] = [
   new FetchTransport(),
@@ -49,6 +50,9 @@ const registry = createRegistry<Transport>({
     if (instance.configure) {
       const stored = await getSettings(name);
       if (Object.keys(stored).length > 0) instance.configure(stored);
+    }
+    if (instance.wsHandler) {
+      mountTransportWs(name, instance.wsHandler);
     }
   },
   allowFlatFiles: true,
