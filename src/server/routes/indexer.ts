@@ -10,6 +10,10 @@ import {
   type DeleteItem,
 } from "../indexer/store";
 import { checkpointType, discoverTypes } from "../indexer/db";
+import { isPostgresMode } from "../indexer/db-factory";
+import { clearTypeCache } from "../extensions/engines/registry";
+import { importFromBuffer } from "../indexer/importer";
+import { buildSqliteExport } from "../indexer/export-builder";
 import { indexerDbForType } from "../utils/paths";
 import { getInstanceSettings } from "../utils/server-settings";
 import { asBoolean } from "../utils/plugin-settings";
@@ -22,6 +26,7 @@ const router = new Hono();
 
 const EXPORT_COOLDOWN_MS = 60_000;
 const MAX_ROWS_LIMIT = 100;
+const MAX_IMPORT_BYTES = 500 * 1024 * 1024;
 
 const _exportCooldown = new Map<string, number>();
 
@@ -52,7 +57,7 @@ router.get("/api/indexer/stats", async (c) => {
     if (denied) return denied;
   }
 
-  const stats = getStats();
+  const stats = await getStats();
   return c.json({ ...stats, totalResults: stats.totalHits });
 });
 
@@ -98,7 +103,7 @@ router.get("/api/indexer/sample", async (c) => {
     1,
     Math.min(20, parseInt(c.req.query("limit") ?? "5", 10) || 5),
   );
-  return c.json({ rows: sampleRows(type, limit) });
+  return c.json({ rows: await sampleRows(type, limit) });
 });
 
 router.get("/api/indexer/rows", async (c) => {
@@ -119,8 +124,8 @@ router.get("/api/indexer/rows", async (c) => {
   const page = Math.max(1, parseInt(c.req.query("page") ?? "1", 10) || 1);
   const offset = (page - 1) * limit;
 
-  const total = countHits(q, type);
-  const rows = listHits({ q, type, limit, offset });
+  const total = await countHits(q, type);
+  const rows = await listHits({ q, type, limit, offset });
   return c.json({ rows, total, page, limit });
 });
 
@@ -189,8 +194,13 @@ router.get("/api/indexer/export", async (c) => {
   }
 
   try {
-    checkpointType(type);
-    const buf = await readFile(indexerDbForType(type));
+    let buf: Buffer;
+    if (isPostgresMode()) {
+      buf = await buildSqliteExport(type);
+    } else {
+      checkpointType(type);
+      buf = await readFile(indexerDbForType(type));
+    }
     _exportCooldown.set(key, now);
     return new Response(buf, {
       headers: {
@@ -200,8 +210,46 @@ router.get("/api/indexer/export", async (c) => {
       },
     });
   } catch (err) {
-    logger.error("indexer", `export read failed for type=${type}`, err);
+    logger.error("indexer", `export failed for type=${type}`, err);
     return c.json({ error: "Export failed" }, 500);
+  }
+});
+
+router.post("/api/indexer/import", async (c) => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
+
+  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
+
+  const denied = await guardSettingsRoute(c, "POST /api/indexer/import");
+  if (denied) return denied;
+
+  let formData: FormData;
+  try {
+    formData = await c.req.formData();
+  } catch (err) {
+    logger.debug("indexer", "invalid form data on import", err);
+    return c.json({ error: "Invalid form data" }, 400);
+  }
+
+  const type = (formData.get("type") as string | null)?.trim();
+  if (!type) return c.json({ error: "type is required" }, 400);
+
+  const file = formData.get("file") as File | null;
+  if (!file) return c.json({ error: "file is required" }, 400);
+
+  if (file.size > MAX_IMPORT_BYTES) {
+    return c.json({ error: "File too large (max 500MB)" }, 413);
+  }
+
+  try {
+    const buffer = await file.arrayBuffer();
+    const result = await importFromBuffer(buffer, type);
+    clearTypeCache();
+    return c.json({ ok: true, type, ...result });
+  } catch (err) {
+    logger.error("indexer", `import failed for type=${type}`, err);
+    return c.json({ error: "Import failed" }, 500);
   }
 });
 

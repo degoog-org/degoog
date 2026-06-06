@@ -1,15 +1,9 @@
-import { getBase } from "../utils/base-url";
-import { escapeHtml } from "../utils/dom";
-import { authHeaders } from "../utils/request";
+import { getBase } from "../../utils/base-url";
+import { escapeHtml } from "../../utils/dom";
+import { authHeaders } from "../../utils/request";
+import type { ProxyTestResult } from "../../types/settings-proxy";
 
 const t = window.scopedT("core");
-
-interface ProxyTestResult {
-  enabled: boolean;
-  directIp: string | null;
-  proxyIp: string | null;
-  match: boolean | null;
-}
 
 function renderResult(el: HTMLElement, data: ProxyTestResult): void {
   if (!data.enabled) {

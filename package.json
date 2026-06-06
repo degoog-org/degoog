@@ -1,6 +1,6 @@
 {
   "name": "degoog",
-  "version": "0.20.0",
+  "version": "0.21.0-beta.1",
   "type": "module",
   "scripts": {
     "dev": "bun run --watch src/server/index.ts",
@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "cheerio": "1.2.0",
+    "postgres": "3.4.5",
     "dompurify": "3.4.5",
     "hono": "4.12.23",
     "immutable": "5.1.6",

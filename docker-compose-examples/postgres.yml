@@ -1,0 +1,46 @@
+# Degoog + PostgreSQL indexer backend.
+# Good for: busy public instances where the SQLite indexer gets slow at scale.
+# Postgres handles concurrent writes better and scales the full-text search further.
+#
+# Setup:
+#   mkdir -p ./data && sudo chown -R 1000:1000 ./data
+#   Change POSTGRES_PASSWORD below before starting.
+
+services:
+  degoog:
+    image: ghcr.io/degoog-org/degoog:latest
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "4444:4444"
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      DEGOOG_POSTGRES: "postgresql://degoog:changeme@degoog-postgres:5432/degoog"
+    depends_on:
+      degoog-postgres:
+        condition: service_healthy
+
+  degoog-postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: degoog
+      POSTGRES_USER: degoog
+      POSTGRES_PASSWORD: changeme
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    user: "70:70"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U degoog -d degoog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres-data:

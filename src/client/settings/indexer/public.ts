@@ -1,8 +1,5 @@
-import { getBase } from "../utils/base-url";
-
-const t = window.scopedT("core");
-
-const tr = (key: string): string => t(`settings-page.indexer.${key}`);
+import { getBase } from "../../utils/base-url";
+import { downloadIndexerExport } from "./download";
 
 const fetchPublicInfo = async (): Promise<string[]> => {
   try {
@@ -13,27 +10,6 @@ const fetchPublicInfo = async (): Promise<string[]> => {
     return Array.isArray(data.types) ? (data.types as string[]) : [];
   } catch {
     return [];
-  }
-};
-
-const downloadType = async (type: string, statusEl: HTMLElement | null): Promise<void> => {
-  if (statusEl) statusEl.textContent = "";
-  try {
-    const res = await fetch(`${getBase()}/api/indexer/export?type=${encodeURIComponent(type)}`);
-    if (!res.ok) {
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (statusEl) statusEl.textContent = data.error ?? `Download failed (${res.status})`;
-      return;
-    }
-    const blob = await res.blob();
-    const href = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = href;
-    a.download = `degoog-index-${type}.db`;
-    a.click();
-    URL.revokeObjectURL(href);
-  } catch {
-    if (statusEl) statusEl.textContent = "Download failed";
   }
 };
 
@@ -69,6 +45,6 @@ export const initIndexerPublic = async (): Promise<void> => {
   exportBtn?.addEventListener("click", async () => {
     const type = typeSelect?.value ?? types[0];
     if (!type) return;
-    await downloadType(type, statusEl);
+    await downloadIndexerExport(type, { statusEl });
   });
 };

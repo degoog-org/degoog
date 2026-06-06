@@ -256,8 +256,9 @@ router.get("/api/search/stream", async (c) => {
           }
         }
 
-        if (!cache.hasFailedEngines(response)) {
-          await cache.set(key, response);
+        if (!cache.allEnginesFailed(response)) {
+          const ttl = cache.someEnginesFailed(response) ? cache.SHORT_TTL_MS : undefined;
+          await cache.set(key, response, ttl);
         }
 
         _send("done", {

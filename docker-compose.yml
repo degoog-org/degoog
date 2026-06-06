@@ -1,3 +1,10 @@
+# @fccview here!
+# 
+# This is the very bare minimum docker-compose file for degoog.
+# You can leverage valkey and postgres to scale your instance to crazy highs, but obviously
+# the more you add, the heavier the instance will be.
+# Please navigate to the `docker-compose-examples/` folder for the various configurations.
+
 services:
   degoog:
     image: ghcr.io/degoog-org/degoog:latest
@@ -6,37 +13,3 @@ services:
     ports:
       - "4444:4444"
     restart: unless-stopped
-    environment:
-      # Remove this line to disable the shared cache.
-      DEGOOG_VALKEY_URL: "redis://valkey:6379"
-    # Comment out from here onwards to disable the shared cache.
-    depends_on:
-      - valkey
-
-  # Optional shared cache (highly recommended).
-  # Degoog uses this for cross-process settings invalidation when running more than one degoog replica.
-  # Without it, degoog falls back to per-process in-memory caching (the default, single-instance behaviour).
-  #
-  # We recommend Valkey, but any RESP-compatible server works (Redis, KeyDB, Dragonfly).
-  # Just point DEGOOG_VALKEY_URL at it.
-  #
-  # SECURITY: do NOT add `ports:` to this service unless you really know what you're doing.
-  # Without a `ports:` mapping the service is only reachable from other services on this
-  # compose network, which is what we want. The flags below drop the container's capabilities
-  # and make the rootfs read-only as defence-in-depth.
-  valkey:
-    image: valkey/valkey:8-alpine
-    command: ["valkey-server", "--save", "", "--appendonly", "no"]
-    restart: unless-stopped
-    user: "1000:1000"
-    read_only: true
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-
-  # Want persistence across Valkey restarts? Swap the `command:` above for
-  # `command: ["valkey-server", "/usr/local/etc/valkey/valkey.conf"]`, mount a
-  # config file with `dir /data`, `dbfilename dump.rdb`, `save 86400 1`, and add
-  # a `./valkey-data:/data` volume. Drop `read_only: true` or add a writable tmpfs
-  # mount for `/data` if you keep it on.

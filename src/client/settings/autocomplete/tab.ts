@@ -1,8 +1,8 @@
-import { escapeHtml } from "../utils/dom";
-import { extCardBadge, extCardConfigureBtn, extCardVersionWarning } from "./ext-card";
-import { openModal } from "../modules/modals/settings-modal/modal";
-import type { ExtensionMeta, AllExtensions } from "../types";
-import { getBase } from "../utils/base-url";
+import { escapeHtml } from "../../utils/dom";
+import { extCardBadge, extCardConfigureBtn, extCardVersionWarning } from "../shared/ext-card";
+import { openModal } from "../../modules/modals/settings-modal/modal";
+import type { ExtensionMeta, AllExtensions } from "../../types";
+import { getBase } from "../../utils/base-url";
 
 const t = window.scopedT("core");
 

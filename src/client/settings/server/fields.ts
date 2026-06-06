@@ -1,6 +1,5 @@
 import { getInputElement } from "../../utils/dom";
-
-export type BoolSetting = boolean | string;
+import type { BoolSetting } from "../../types/settings-server";
 
 export const el = (id: string) => getInputElement(`settings-${id}`);
 export const val = (id: string) => el(id)?.value.trim() ?? "";

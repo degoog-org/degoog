@@ -1,42 +1,12 @@
-import { escapeHtml } from "../utils/dom";
+import { escapeHtml } from "../../utils/dom";
+import type {
+  NumberOpts,
+  SectionOpts,
+  TextareaOpts,
+  ToggleOpts,
+} from "../../types/settings-section";
 
 const t = window.scopedT("core");
-
-export interface ToggleOpts {
-  id: string;
-  labelKey: string;
-  ariaKey?: string;
-  titleKey?: string;
-  checked?: boolean;
-}
-
-export interface TextareaOpts {
-  id: string;
-  labelKey: string;
-  rows?: number;
-  placeholder?: string;
-  descKey?: string;
-}
-
-export interface NumberOpts {
-  id: string;
-  labelKey: string;
-  min?: number;
-  max?: number;
-  step?: number;
-  placeholder?: string;
-  inline?: boolean;
-}
-
-export interface SectionOpts {
-  id?: string;
-  icon?: string;
-  headingKey: string;
-  descKey?: string;
-  content: string;
-  noFieldset?: boolean;
-  fieldsetClass?: string;
-}
 
 export const renderToggle = (opts: ToggleOpts): string => {
   const ariaAttr = opts.ariaKey ? ` aria-label="${escapeHtml(t(opts.ariaKey))}"` : "";

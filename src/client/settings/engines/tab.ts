@@ -1,12 +1,14 @@
-import { idbGet, idbSet } from "../utils/db";
-import { SETTINGS_KEY, TAB_ORDER_SAVED } from "../constants";
-import { escapeHtml, getConfigStatus } from "../utils/dom";
-import { openModal } from "../modules/modals/settings-modal/modal";
-import type { ExtensionMeta, EngineRecord, AllExtensions } from "../types";
-import { getBase } from "../utils/base-url";
-import { renderMdInline } from "../utils/md";
-import { getTabOrder, applyTabOrder } from "../utils/tab-order";
-import { openTabOrderModal, type TypeEntry } from "./tab-order-modal";
+import { idbGet, idbSet } from "../../utils/db";
+import { SETTINGS_KEY, TAB_ORDER_SAVED } from "../../constants";
+import { escapeHtml, getConfigStatus } from "../../utils/dom";
+import { openModal } from "../../modules/modals/settings-modal/modal";
+import type { ExtensionMeta, EngineRecord, AllExtensions } from "../../types";
+import type { GroupEntry, TypeEntry } from "../../types/engines-tab";
+import { getBase } from "../../utils/base-url";
+import { renderMdInline } from "../../utils/md";
+import { getTabOrder, applyTabOrder } from "../../utils/tab-order";
+import { getStoredToken } from "../../utils/settings-token";
+import { openTabOrderModal } from "../shared/tab-order-modal";
 
 const t = window.scopedT("core");
 const themeT = window.scopedT("themes/degoog");
@@ -25,8 +27,6 @@ const _engineTypes = (engine: ExtensionMeta): string[] => {
 
 const _primaryType = (types: string[]): string =>
   types.length > 0 ? types[0] : "web";
-
-type GroupEntry = { key: string; label: string; engines: ExtensionMeta[] };
 
 const _groupByType = (engines: ExtensionMeta[]): GroupEntry[] => {
   const map = new Map<string, ExtensionMeta[]>();
@@ -220,7 +220,7 @@ export async function initEnginesTab(
       ?.addEventListener("click", async () => {
         const btn = document.getElementById("save-default-engines");
         try {
-          const token = sessionStorage.getItem("degoog-settings-token");
+          const token = getStoredToken();
           const headers: Record<string, string> = {
             "Content-Type": "application/json",
           };
@@ -248,7 +248,7 @@ export async function initEnginesTab(
   document
     .getElementById("order-engine-tabs")
     ?.addEventListener("click", () => {
-      const token = sessionStorage.getItem("degoog-settings-token");
+      const token = getStoredToken();
       const allTypes = _allTypeEntries(allExtensions.engines);
       void openTabOrderModal(allTypes, token);
     });

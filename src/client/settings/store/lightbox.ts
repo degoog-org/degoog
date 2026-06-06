@@ -1,4 +1,4 @@
-import { getBase } from "../utils/base-url";
+import { getBase } from "../../utils/base-url";
 
 export const screenshotUrl = (
   repoSlug: string,

@@ -1,4 +1,4 @@
-import pkg from "../../../package.json";
+import pkg from "../../../../package.json";
 import {
   DISPLAY_ENGINE_PERFORMANCE,
   DISPLAY_SEARCH_SUGGESTIONS,
@@ -6,19 +6,16 @@ import {
   OPEN_IN_NEW_TAB_KEY,
   POST_METHOD_ENABLED,
   THEME_KEY,
-} from "../constants";
-import { getBase } from "../utils/base-url";
-import { idbGet, idbSet } from "../utils/db";
-import { requestInstallPrompt } from "../utils/install-prompt";
-import { applyTheme } from "../utils/theme";
-import { restartWizard } from "../modules/wizard/wizard";
-import { escapeHtml } from "../utils/dom";
-import {
-  renderSection,
-  renderToggle,
-  renderDesc,
-  type ToggleOpts,
-} from "./section";
+} from "../../constants";
+import { getBase } from "../../utils/base-url";
+import { idbGet, idbSet } from "../../utils/db";
+import { requestInstallPrompt } from "../../utils/install-prompt";
+import { applyTheme } from "../../utils/theme";
+import { restartWizard } from "../../modules/wizard/wizard";
+import { escapeHtml } from "../../utils/dom";
+import { getStoredToken } from "../../utils/settings-token";
+import type { ToggleOpts } from "../../types/settings-section";
+import { renderSection, renderToggle } from "../shared/section";
 
 const t = window.scopedT("core");
 
@@ -198,7 +195,7 @@ export async function initAppearanceSettings(): Promise<void> {
     const value =
       (document.getElementById("theme-select") as HTMLSelectElement | null)?.value ?? "system";
     try {
-      const token = sessionStorage.getItem("degoog-settings-token");
+      const token = getStoredToken();
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (token) headers["x-settings-token"] = token;
       const res = await fetch(`${getBase()}/api/settings/general`, {

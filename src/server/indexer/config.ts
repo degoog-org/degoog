@@ -35,7 +35,7 @@ export const getIndexerConfig = async (): Promise<IndexerConfig> => {
   const maxUrls = clampInt(asString(s.degoogIndexerMaxUrls), 0, 0, 100_000_000);
   const maxHits = clampInt(asString(s.degoogIndexerMaxHits), 0, 0, 100_000_000);
   const maxAgeDays = clampInt(asString(s.degoogIndexerMaxAgeDays), 0, 0, 3650);
-  const queryLimit = clampInt(asString(s.degoogIndexerQueryLimit), 30, 1, 100);
+  const queryLimit = clampInt(asString(s.degoogIndexerQueryLimit), 100, 1, 500);
   const limitsOn = maxUrls > 0 || maxHits > 0;
   const pruneSetting = asString(s.degoogIndexerPruneEnabled);
   const pruneEnabled =

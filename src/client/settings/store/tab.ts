@@ -1,8 +1,9 @@
-import { jsonHeaders, authHeaders } from "../utils/request";
-import { initLightbox } from "./store-lightbox";
-import type { RepoInfo, StoreItem } from "../types/store-tab";
-import { escapeHtml } from "../utils/dom";
-import { getStoreTabHtml } from "./store/store-tab-template";
+import { jsonHeaders, authHeaders } from "../../utils/request";
+import type { RepoInfo, StoreItem } from "../../types/store-tab";
+import { escapeHtml } from "../../utils/dom";
+import { getBase } from "../../utils/base-url";
+import { initLightbox } from "./lightbox";
+import { getStoreTabHtml } from "./template";
 import {
   confirmRemoveRepo,
   handleAddRepo,
@@ -13,7 +14,7 @@ import {
   handleUninstall,
   handleUpdate,
   handleUpdateAll,
-} from "./store/store-tab-handlers";
+} from "./handlers";
 import {
   collectSubtypes,
   engineTypeLabel,
@@ -22,8 +23,7 @@ import {
   pluginTypeLabel,
   renderItemCard,
   renderRepoList,
-} from "./store/store-tab-render";
-import { getBase } from "../utils/base-url";
+} from "./render";
 
 export async function initStoreTab(
   container: HTMLElement,

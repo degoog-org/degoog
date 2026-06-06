@@ -90,8 +90,9 @@ export async function handleSearch(params: SearchParams) {
     }
   }
 
-  if (!cache.hasFailedEngines(finalResponse)) {
-    await cache.set(key, finalResponse);
+  if (!cache.allEnginesFailed(finalResponse)) {
+    const ttl = cache.someEnginesFailed(finalResponse) ? cache.SHORT_TTL_MS : undefined;
+    await cache.set(key, finalResponse, ttl);
   }
 
   return {
@@ -159,7 +160,7 @@ export async function handleRetry(
     await cache.set(
       key,
       updated,
-      cache.hasFailedEngines(updated) ? cache.SHORT_TTL_MS : undefined,
+      cache.someEnginesFailed(updated) ? cache.SHORT_TTL_MS : undefined,
     );
 
     const settings = await getInstanceSettings();

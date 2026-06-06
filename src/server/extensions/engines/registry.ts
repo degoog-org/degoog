@@ -33,7 +33,7 @@ const builtinsDir = join(import.meta.dir, "builtins");
 const TYPE_CACHE_TTL_MS = 60_000;
 const _typeCache = new Map<string, { types: string[]; at: number }>();
 
-const clearTypeCache = (): void => {
+export const clearTypeCache = (): void => {
   _typeCache.clear();
 };
 

@@ -1,60 +1,19 @@
-import { copyTextToClipboard } from "../utils/clipboard";
-import { getBase } from "../utils/base-url";
-import { authHeaders } from "../utils/request";
+import { copyTextToClipboard } from "../../utils/clipboard";
+import { getBase } from "../../utils/base-url";
+import { authHeaders } from "../../utils/request";
+import type {
+  ButtonStateHandler,
+  ServerSettingsData,
+} from "../../types/settings-server";
+import { setIndexerNavVisible } from "../indexer/nav";
 import { initProxyTest } from "./proxy-test";
-import {
-  type BoolSetting,
-  bindToggle,
-  el,
-  setToggle,
-  setVal,
-} from "./server/fields";
-import { renderScoreRows, scoreRowTemplate } from "./server/domain-score";
-import { initHoneypot } from "./server/honeypot";
-import { bindToggleAutoSave, injectFieldSaveBtns } from "./server/auto-save";
-import { setIndexerNavVisible } from "./indexer-tab";
-import { renderServerContent } from "./server/render";
+import { bindToggle, el, setToggle, setVal } from "./fields";
+import { renderScoreRows, scoreRowTemplate } from "./domain-score";
+import { initHoneypot } from "./honeypot";
+import { bindToggleAutoSave, injectFieldSaveBtns } from "./auto-save";
+import { renderServerContent } from "./render";
 
 const t = window.scopedT("core");
-
-type ServerSettingsData = {
-  proxyEnabled?: BoolSetting;
-  proxyUrls?: string;
-  imageProxyAllowLocal?: BoolSetting;
-  imageProxyAllowList?: string;
-  rateLimitEnabled?: BoolSetting;
-  rateLimitBurstWindow?: string;
-  rateLimitBurstMax?: string;
-  rateLimitLongWindow?: string;
-  rateLimitLongMax?: string;
-  rateLimitSuggestEnabled?: BoolSetting;
-  rateLimitSuggestBurstWindow?: string;
-  rateLimitSuggestBurstMax?: string;
-  rateLimitSuggestLongWindow?: string;
-  rateLimitSuggestLongMax?: string;
-  acDebounceMs?: string;
-  languagesEnabled?: BoolSetting;
-  languages?: string;
-  streamingEnabled?: BoolSetting;
-  streamingAutoRetry?: BoolSetting;
-  streamingMaxRetries?: string;
-  domainBlockEnabled?: BoolSetting;
-  domainBlockList?: string;
-  domainBlockUiEnabled?: BoolSetting;
-  domainReplaceEnabled?: BoolSetting;
-  domainReplaceList?: string;
-  domainReplaceUiEnabled?: BoolSetting;
-  domainScoreEnabled?: BoolSetting;
-  domainScoreList?: string;
-  domainScoreUiEnabled?: BoolSetting;
-  customCss?: string;
-  apiKeySearchEnabled?: BoolSetting;
-  apiKeySuggestEnabled?: BoolSetting;
-  honeypotEnabled?: BoolSetting;
-  honeypotCssCheck?: BoolSetting;
-  honeypotBanDuration?: string;
-  degoogIndexerEnabled?: BoolSetting;
-};
 
 let _apiKey = "";
 let _keyRevealed = false;
@@ -143,13 +102,6 @@ const _bindToggles = (): void => {
   bindToggle("domain-replace-enabled", "domain-replace-wrap");
   bindToggle("domain-score-enabled", "domain-score-wrap");
 };
-
-type ButtonStateHandler = (
-  id: string,
-  action: () => Promise<void>,
-  successKey: string,
-  failKey?: string,
-) => void;
 
 const _initApiKeyControls = (
   getToken: () => string | null,

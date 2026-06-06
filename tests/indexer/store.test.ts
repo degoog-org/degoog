@@ -101,7 +101,7 @@ describe("indexer store", () => {
     await flushQueue();
     await prunePass();
     wipeStatsCache();
-    const stats = getStats();
+    const stats = await getStats();
     expect(stats.totalHits).toBe(1);
     expect(stats.totalUrls).toBe(1);
   });
@@ -109,11 +109,12 @@ describe("indexer store", () => {
   test("deleteHits removes the hit and orphaned url", async () => {
     await recordResults("solo", TYPE, [mk(1)]);
     await flushQueue();
-    const rows = listHits({ limit: 10, offset: 0 });
+    const rows = await listHits({ limit: 10, offset: 0 });
     expect(rows.length).toBe(1);
     const deleted = await deleteHits([{ id: rows[0].id, engine_type: rows[0].engine_type }]);
     expect(deleted).toBe(1);
-    const stats = getStats();
+    wipeStatsCache();
+    const stats = await getStats();
     expect(stats.totalHits).toBe(0);
     expect(stats.totalUrls).toBe(0);
   });
@@ -124,12 +125,12 @@ describe("indexer store", () => {
     await recordResults("gamma other", TYPE, [mk(3, "gamma.com")]);
     await flushQueue();
 
-    expect(countHits()).toBe(3);
-    expect(countHits("query")).toBe(2);
-    expect(countHits("alpha.com")).toBe(1);
+    expect(await countHits()).toBe(3);
+    expect(await countHits("query")).toBe(2);
+    expect(await countHits("alpha.com")).toBe(1);
 
-    const firstPage = listHits({ limit: 2, offset: 0 });
-    const secondPage = listHits({ limit: 2, offset: 2 });
+    const firstPage = await listHits({ limit: 2, offset: 0 });
+    const secondPage = await listHits({ limit: 2, offset: 2 });
     expect(firstPage.length).toBe(2);
     expect(secondPage.length).toBe(1);
   });

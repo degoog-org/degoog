@@ -1,5 +1,5 @@
 import { escapeHtml } from "../../utils/dom";
-import { screenshotUrl } from "../store-lightbox";
+import { screenshotUrl } from "./lightbox";
 import type { RepoInfo, StoreItem } from "../../types/store-tab";
 import { getBase } from "../../utils/base-url";
 import { renderMdInline } from "../../utils/md";

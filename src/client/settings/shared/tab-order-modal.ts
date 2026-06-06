@@ -1,12 +1,8 @@
-import { escapeHtml } from "../utils/dom";
-import { getTabOrder, saveTabOrder, applyTabOrder } from "../utils/tab-order";
-import { TAB_ORDER_SAVED } from "../constants";
-import { openCustomModal } from "../modules/modals/settings-modal/modal";
-
-export interface TypeEntry {
-  key: string;
-  label: string;
-}
+import { escapeHtml } from "../../utils/dom";
+import { getTabOrder, saveTabOrder, applyTabOrder } from "../../utils/tab-order";
+import { TAB_ORDER_SAVED } from "../../constants";
+import { openCustomModal } from "../../modules/modals/settings-modal/modal";
+import type { TypeEntry } from "../../types/engines-tab";
 
 const _renderItem = (entry: TypeEntry): string =>
   `<li class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact" data-key="${escapeHtml(entry.key)}">

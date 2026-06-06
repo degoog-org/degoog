@@ -1,8 +1,8 @@
-import { escapeHtml, getConfigStatus } from "../utils/dom";
-import { openModal } from "../modules/modals/settings-modal/modal";
-import type { ExtensionMeta, AllExtensions } from "../types";
-import { getBase } from "../utils/base-url";
-import { renderMdInline } from "../utils/md";
+import { escapeHtml, getConfigStatus } from "../../utils/dom";
+import { openModal } from "../../modules/modals/settings-modal/modal";
+import type { ExtensionMeta, AllExtensions } from "../../types";
+import { getBase } from "../../utils/base-url";
+import { renderMdInline } from "../../utils/md";
 
 const t = window.scopedT("core");
 

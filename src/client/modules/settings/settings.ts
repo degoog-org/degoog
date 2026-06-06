@@ -5,17 +5,21 @@ import {
   initGeneralTab,
   initAppearanceSettings,
   renderPublicSettingsTop,
-} from "../../settings/general-tab";
-import { initEnginesTab } from "../../settings/engines-tab";
-import { initPluginsTab } from "../../settings/plugins-tab";
-import { initTransportsTab } from "../../settings/transports-tab";
-import { initAutocompleteTab } from "../../settings/autocomplete-tab";
-import { initThemesTab } from "../../settings/themes-tab";
-import { initServerTab } from "../../settings/server-tab";
-import { initStoreTab } from "../../settings/store-tab";
-import { initIndexerTab } from "../../settings/indexer-tab";
-import { initIndexerPublic } from "../../settings/indexer-public";
-import { initGlobalSearch } from "../../settings/settings-search";
+} from "../../settings/general/tab";
+import { initEnginesTab } from "../../settings/engines/tab";
+import { initPluginsTab } from "../../settings/plugins/tab";
+import { initTransportsTab } from "../../settings/transports/tab";
+import { initAutocompleteTab } from "../../settings/autocomplete/tab";
+import { initThemesTab } from "../../settings/themes/tab";
+import { initServerTab } from "../../settings/server/tab";
+import { initStoreTab } from "../../settings/store/tab";
+import { initIndexerTab } from "../../settings/indexer/tab";
+import { initIndexerPublic } from "../../settings/indexer/public";
+import { initGlobalSearch } from "../../settings/shared/settings-search";
+import {
+  getStoredToken as _getStoredToken,
+  SETTINGS_TOKEN_KEY,
+} from "../../utils/settings-token";
 import { initSettingsWizard } from "../wizard/wizard";
 import "../modals/settings-modal/modal";
 import type { AllExtensions } from "../../types";
@@ -36,8 +40,6 @@ declare global {
 
 const t = window.scopedT("core");
 
-const TOKEN_KEY = "degoog-settings-token";
-
 function _initSettingsBackLink(): void {
   document.body.addEventListener("click", (e) => {
     const a = (e.target as HTMLElement).closest<HTMLAnchorElement>(
@@ -49,8 +51,7 @@ function _initSettingsBackLink(): void {
   });
 }
 
-export const getStoredToken = (): string | null =>
-  sessionStorage.getItem(TOKEN_KEY) || null;
+export const getStoredToken = _getStoredToken;
 
 const _checkAuth = async (): Promise<{
   required: boolean;
@@ -134,7 +135,7 @@ function _showAuthGate(): void {
         });
         const data = (await res.json()) as { ok?: boolean; token?: string };
         if (data.ok && data.token) {
-          sessionStorage.setItem(TOKEN_KEY, data.token);
+          sessionStorage.setItem(SETTINGS_TOKEN_KEY, data.token);
           window.location.reload();
         } else {
           if (errorEl)
@@ -282,7 +283,7 @@ async function _init(): Promise<void> {
   const params = new URLSearchParams(window.location.search);
   const tokenFromUrl = params.get("token");
   if (tokenFromUrl) {
-    sessionStorage.setItem(TOKEN_KEY, tokenFromUrl);
+    sessionStorage.setItem(SETTINGS_TOKEN_KEY, tokenFromUrl);
     window.history.replaceState({}, "", getSettingsRoot());
   }
   const auth = await _checkAuth();

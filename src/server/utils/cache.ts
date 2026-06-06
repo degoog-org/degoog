@@ -244,6 +244,9 @@ export const clear = (): Promise<string[]> => clearByScope(CACHE_SCOPE.ALL);
 
 export const listCacheNamespaces = (): string[] => Array.from(_registry.keys());
 
-export function hasFailedEngines(response: SearchResponse): boolean {
-  return response.engineTimings.some((et) => et.resultCount === 0);
-}
+export const someEnginesFailed = (response: SearchResponse): boolean =>
+  response.engineTimings.some((et) => et.resultCount === 0);
+
+export const allEnginesFailed = (response: SearchResponse): boolean =>
+  response.engineTimings.length > 0 &&
+  response.engineTimings.every((et) => et.resultCount === 0);

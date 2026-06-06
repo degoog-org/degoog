@@ -1,5 +1,5 @@
-import { escapeHtml, getConfigStatus } from "../utils/dom";
-import type { ExtensionMeta } from "../types";
+import { escapeHtml, getConfigStatus } from "../../utils/dom";
+import type { ExtensionMeta } from "../../types";
 
 const t = window.scopedT("core");
 

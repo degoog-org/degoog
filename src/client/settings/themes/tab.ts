@@ -1,8 +1,8 @@
-import { escapeHtml } from "../utils/dom";
-import { extCardBadge, extCardConfigureBtn, extCardVersionWarning } from "./ext-card";
-import { getBase } from "../utils/base-url";
-import { openModal } from "../modules/modals/settings-modal/modal";
-import type { ExtensionMeta } from "../types";
+import { escapeHtml } from "../../utils/dom";
+import { extCardBadge, extCardConfigureBtn, extCardVersionWarning } from "../shared/ext-card";
+import { getBase } from "../../utils/base-url";
+import { openModal } from "../../modules/modals/settings-modal/modal";
+import type { ExtensionMeta } from "../../types";
 
 const t = window.scopedT("core");
 const themeT = window.scopedT("themes/degoog");

@@ -37,16 +37,14 @@ sudo chown -R 1000:1000 ./data
 <details>
 <summary>Docker Compose</summary>
 
-```yaml
-services:
-  degoog:
-    image: ghcr.io/degoog-org/degoog:latest
-    volumes:
-      - ./data:/app/data
-    ports:
-      - "4444:4444"
-    restart: unless-stopped
-```
+Ready-to-use compose files live in [`docker-compose-examples/`](docker-compose-examples/). Pick the one that fits:
+
+| File | What it runs | When to use |
+| :--- | :----------- | :---------- |
+| [`simple.yml`](docker-compose-examples/simple.yml) | degoog only | Personal use, low-traffic |
+| [`valkey.yml`](docker-compose-examples/valkey.yml) | degoog + Valkey | Multi-replica or public instance - shared cache keeps settings and invalidation in sync |
+| [`postgres.yml`](docker-compose-examples/postgres.yml) | degoog + Postgres | Busy public instance with a large indexer - Postgres scales concurrent writes and FTS better than SQLite |
+| [`full.yml`](docker-compose-examples/full.yml) | degoog + Valkey + Postgres | High-traffic public instance - both shared cache and scalable indexer |
 
 </details>
 

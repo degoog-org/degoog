@@ -1,0 +1,31 @@
+# Degoog + Valkey shared cache.
+# Good for: multi-replica deployments, public instances that want fast consistent caching.
+# Valkey keeps cache and settings invalidation in sync across all degoog processes.
+#
+# Setup:
+#   mkdir -p ./data && sudo chown -R 1000:1000 ./data
+
+services:
+  degoog:
+    image: ghcr.io/degoog-org/degoog:latest
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "4444:4444"
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      DEGOOG_VALKEY_URL: "redis://degoog-valkey:6379"
+    depends_on:
+      - degoog-valkey
+
+  degoog-valkey:
+    image: valkey/valkey:8-alpine
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    restart: unless-stopped
+    user: "1000:1000"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
