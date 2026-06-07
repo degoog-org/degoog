@@ -23,11 +23,17 @@ export const queryIndex = async (
     const remaining = cap - exact.length;
     let fuzzy: UrlRow[] = [];
     if (remaining > 0 && cfg.fuzzyEnabled) {
+      const queryTerms = queryNorm.split(/\s+/).filter((t) => t.length >= 2);
+      const minHits = Math.max(1, Math.ceil(queryTerms.length * cfg.fuzzyMinTermRatio));
       fuzzy = (await adapter.queryFuzzy(engineType, queryNorm, cap, offset))
         .filter((r) => {
           if (seen.has(r.url)) return false;
           seen.add(r.url);
           return true;
+        })
+        .filter((r) => {
+          const text = `${r.title ?? ""} ${r.snippet ?? ""} ${r.url}`.toLowerCase();
+          return queryTerms.filter((t) => text.includes(t)).length >= minHits;
         })
         .slice(0, remaining);
     }

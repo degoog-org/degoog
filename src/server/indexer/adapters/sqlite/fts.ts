@@ -7,7 +7,7 @@ export const buildFtsQuery = (queryNorm: string): string => {
     .filter((t) => t.length >= 2)
     .map(safeFtsTerm)
     .filter(Boolean);
-  return terms.length > 0 ? terms.map((t) => `${t}*`).join(" OR ") : "";
+  return terms.length > 0 ? terms.map((t) => `${t}*`).join(" AND ") : "";
 };
 
 export const escapeLike = (s: string): string =>

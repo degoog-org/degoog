@@ -5,6 +5,7 @@ export interface IndexerConfig {
   maxAgeDays: number;
   pruneEnabled: boolean;
   fuzzyEnabled: boolean;
+  fuzzyMinTermRatio: number;
   queryLimit: number;
   domainAllowlist: string[];
   domainBlocklist: string[];

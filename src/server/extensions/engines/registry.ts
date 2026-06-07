@@ -82,6 +82,7 @@ const isEngineEnabled = (
   config: EngineConfig,
   indexerOn: boolean,
 ): boolean => {
+  if (id === DEGOOG_ENGINE_ID && !indexerOn) return false;
   if (id in config) return !!config[id];
   return indexerOn && id === DEGOOG_ENGINE_ID;
 };

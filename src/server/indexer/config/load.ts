@@ -29,6 +29,8 @@ export const getIndexerConfig = async (): Promise<IndexerConfig> => {
   const pruneEnabled =
     limitsOn && (pruneSetting === "" || pruneSetting === "true" || asBoolean(s.degoogIndexerPruneEnabled));
   const fuzzyRaw = asString(s.degoogIndexerFuzzyEnabled);
+  const ratioRaw = parseFloat(asString(s.degoogIndexerFuzzyMinTermRatio) || "0.6");
+  const fuzzyMinTermRatio = Math.max(0, Math.min(1, Number.isFinite(ratioRaw) ? ratioRaw : 0.6));
   return {
     maxPerSearch,
     maxUrls,
@@ -36,6 +38,7 @@ export const getIndexerConfig = async (): Promise<IndexerConfig> => {
     maxAgeDays,
     pruneEnabled,
     fuzzyEnabled: fuzzyRaw !== "false",
+    fuzzyMinTermRatio,
     queryLimit,
     domainAllowlist: parseDomains(asString(s.degoogIndexerDomainAllowlist)),
     domainBlocklist: parseDomains(asString(s.degoogIndexerDomainBlocklist)),
