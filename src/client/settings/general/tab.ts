@@ -268,7 +268,10 @@ async function initVersionChecker(): Promise<void> {
     const newLatest = new Date();
     localStorage.setItem("last-update-check", newLatest.toUTCString());
     if (lastCheckedEl) lastCheckedEl.textContent = newLatest.toLocaleDateString();
-    if (pkg.version !== newest && newAvailableEl) newAvailableEl.removeAttribute("style");
+    if (pkg.version !== newest && newAvailableEl && newest != "Unknown")
+      newAvailableEl.removeAttribute("style");
+    else
+      newAvailableEl?.setAttribute("style","display:none");
   });
 }
 
