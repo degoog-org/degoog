@@ -13,7 +13,6 @@ services:
     ports:
       - "4444:4444"
     restart: unless-stopped
-    user: "1000:1000"
     environment:
       DEGOOG_VALKEY_URL: "redis://degoog-valkey:6379"
     depends_on:
