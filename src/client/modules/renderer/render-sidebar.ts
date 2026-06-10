@@ -83,7 +83,7 @@ export function renderSidebar(
         </div>`;
       void barWidth;
     });
-    html += _sidebarAccordion("Engine Performance", statsContent);
+    html += sidebarAccordion("Engine Performance", statsContent);
   }
 
   if (
@@ -95,7 +95,7 @@ export function renderSidebar(
     data.relatedSearches.forEach((term) => {
       relContent += `<a class="related-search-link degoog-link" data-query="${escapeHtml(term)}">${escapeHtml(term)}</a>`;
     });
-    html += _sidebarAccordion("People also search for", relContent);
+    html += sidebarAccordion("People also search for", relContent);
   }
 
   sidebar.innerHTML = html;

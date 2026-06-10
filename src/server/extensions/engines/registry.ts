@@ -76,8 +76,6 @@ const resolveTypes = (
 export const primaryType = (types: string[]): string =>
   types.length > 0 ? types[0] : "web";
 
-const DEGOOG_ENGINE_ID = "degoog-engine";
-
 const isEngineEnabled = (
   id: string,
   config: EngineConfig,

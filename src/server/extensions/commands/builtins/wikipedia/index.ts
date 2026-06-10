@@ -44,7 +44,7 @@ const _proxyImageUrl = (url: string): string => {
 async function _fetchWikidataThumb(
   entityId: string,
   signal: AbortSignal,
-): Promise<{ source: string } | undefined> {
+): Promise<WikiPage["thumbnail"]> {
   try {
     const params = new URLSearchParams({
       action: "wbgetentities",
