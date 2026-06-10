@@ -16,7 +16,7 @@ import { clearSlotPanels as _clearSlots } from "./render-slots";
 
 const t = window.scopedT("themes/degoog");
 
-export { renderSidebar } from "./render-sidebar";
+export { renderSidebar, prependKnowledgePanels } from "./render-sidebar";
 export {
   appendSlotPanels,
   clearSlotPanels,

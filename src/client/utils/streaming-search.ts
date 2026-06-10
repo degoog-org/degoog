@@ -15,6 +15,7 @@ import {
   clearSlotPanels,
   renderPagination,
   renderSidebar,
+  prependKnowledgePanels,
 } from "../modules/renderer/render";
 import { appendMediaCards, renderMediaEngineBar } from "../modules/renderer/render-media";
 import { state } from "../state";
@@ -134,7 +135,10 @@ export async function performStreamingSearch(
     abortGlancePanels();
     abortSlotPanels();
   } else if (type === "web") {
-    void fetchSlotPanels(query);
+    void fetchSlotPanels(query).then((panels) => {
+      const kp = panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel);
+      if (kp.length > 0) prependKnowledgePanels(kp);
+    });
     void fetchGlancePanels(query);
   }
   const glanceEl = document.getElementById("at-a-glance");

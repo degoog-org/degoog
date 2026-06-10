@@ -27,7 +27,7 @@ export const setupRetryLinks = (container: HTMLElement): void => {
     });
 };
 
-const _sidebarAccordion = (title: string, content: string): string =>
+export const sidebarAccordion = (title: string, content: string): string =>
   `<div class="sidebar-panel sidebar-accordion degoog-panel degoog-panel--accordion degoog-panel--stack-item">
     <button class="sidebar-accordion-toggle degoog-accordion-toggle degoog-accordion-toggle--sidebar" type="button">
       <span>${escapeHtml(title)}</span>
@@ -52,7 +52,7 @@ export function renderSidebar(
   if (sidebarTop.length > 0) {
     for (const panel of sidebarTop) {
       const title = panel.title ?? "Info";
-      html += _sidebarAccordion(title, panel.html);
+      html += sidebarAccordion(title, panel.html);
     }
   }
 
@@ -129,4 +129,16 @@ export function renderSidebar(
         if (onRelatedSearch && q) onRelatedSearch(q);
       });
     });
+}
+
+export function prependKnowledgePanels(panels: SlotPanel[]): void {
+  const sidebar = document.getElementById("results-sidebar");
+  if (!sidebar || !panels.length) return;
+  const html = panels.map((p) => sidebarAccordion(p.title ?? "Info", p.html)).join("");
+  sidebar.insertAdjacentHTML("afterbegin", html);
+  if (window.innerWidth >= 768) {
+    sidebar
+      .querySelectorAll<HTMLElement>(".sidebar-accordion")
+      .forEach((el) => el.classList.add("open"));
+  }
 }

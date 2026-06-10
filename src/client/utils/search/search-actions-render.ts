@@ -9,6 +9,7 @@ import {
   clearSlotPanels,
   renderResults,
   renderSidebar,
+  prependKnowledgePanels,
 } from "../../modules/renderer/render";
 import { renderMediaEngineBar } from "../../modules/renderer/render-media";
 import { state } from "../../state";
@@ -60,7 +61,10 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
     abortGlancePanels();
     abortSlotPanels();
   } else if (resolvedType === "web") {
-    void fetchSlotPanels(query);
+    void fetchSlotPanels(query).then((panels) => {
+      const kp = panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel);
+      if (kp.length > 0) prependKnowledgePanels(kp);
+    });
     void fetchGlancePanels(query);
   }
   const glanceEl = document.getElementById("at-a-glance");
