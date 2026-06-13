@@ -244,13 +244,23 @@ router.post("/api/settings/api-key/regenerate", async (c) => {
   return c.json({ key: getServerKeyHex() ?? "" });
 });
 
-router.get("/api/settings/proxy-test", async (c) => {
-  const denied = await guardSettingsRoute(c, "GET /api/settings/proxy-test");
+router.post("/api/settings/proxy-test", async (c) => {
+  const denied = await guardSettingsRoute(c, "POST /api/settings/proxy-test");
   if (denied) return denied;
 
-  const settings = await getInstanceSettings();
-  const enabled = asBoolean(settings.proxyEnabled);
-  const proxyUrls = asString(settings.proxyUrls);
+  const body = await readObjectBody<{ proxyEnabled?: string; proxyUrls?: string }>(c);
+
+  let enabled: boolean;
+  let proxyUrls: string;
+
+  if (body) {
+    enabled = asBoolean(body.proxyEnabled);
+    proxyUrls = asString(body.proxyUrls);
+  } else {
+    const settings = await getInstanceSettings();
+    enabled = asBoolean(settings.proxyEnabled);
+    proxyUrls = asString(settings.proxyUrls);
+  }
 
   const directIp = await fetchIp(fetch);
 
@@ -263,7 +273,12 @@ router.get("/api/settings/proxy-test", async (c) => {
     });
   }
 
-  const proxyIp = await fetchIp(outgoingFetch as typeof fetch);
+  const overrideFetch = ((_url: RequestInfo | URL) =>
+    outgoingFetch(String(_url), {}, "fetch", {
+      proxyOverrideEnabled: true,
+      proxyOverrideUrls: proxyUrls,
+    })) as typeof fetch;
+  const proxyIp = await fetchIp(overrideFetch);
 
   return c.json({
     enabled: true,

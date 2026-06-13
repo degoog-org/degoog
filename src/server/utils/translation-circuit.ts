@@ -277,7 +277,7 @@ function fuseMatrices(
         sv as Record<string, unknown>,
       );
     } else {
-      target[key] = sv;
+      target[key] = typeof sv === "object" && sv !== null ? structuredClone(sv) : sv;
     }
   }
   return target;

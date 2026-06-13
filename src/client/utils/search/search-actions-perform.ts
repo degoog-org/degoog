@@ -34,6 +34,7 @@ import { searchAuthHeaders, appendSearchAuthParams } from "../request";
 import { getBase } from "../base-url";
 import { fetchStreamingConfig } from "../streaming-config";
 import {
+  loadSidebarSuggestions,
   prepareResultsUi,
   pushSearchHistory,
   renderSearchResponse,
@@ -137,6 +138,7 @@ export async function performSearch(
   const url = buildSearchUrl(query, engines, resolvedType, resolvedPage);
 
   prepareResultsUi(query, resolvedType);
+  loadSidebarSuggestions(query, resolvedType, (q) => void performSearch(q));
   pushSearchHistory(query, resolvedType, resolvedPage, isInit);
 
   if (naturalBangQuery) {

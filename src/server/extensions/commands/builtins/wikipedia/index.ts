@@ -3,10 +3,10 @@ import {
   TranslateFunction,
   type PluginContext,
   type SlotPlugin,
+  type SlotPluginContext,
 } from "../../../../types";
 import type { AsyncTtlCache } from "../../../../utils/cache";
 import { logger } from "../../../../utils/logger";
-
 const WIKI_NAMESPACE = "ext:wikipedia:page";
 const WIKI_TTL_MS = 60 * 60 * 1000;
 
@@ -25,9 +25,10 @@ interface WikiPage {
   title: string;
   description: string;
   extract: string;
-  thumbnail?: { source: string };
+  thumbnail?: { source: string; isLogo?: boolean };
   fullurl?: string;
   pageid: number;
+  wikibase_item?: string;
 }
 
 let _template = "";
@@ -40,6 +41,44 @@ const _proxyImageUrl = (url: string): string => {
   return _signProxyUrl(url);
 };
 
+async function _fetchWikidataThumb(
+  entityId: string,
+  signal: AbortSignal,
+): Promise<WikiPage["thumbnail"]> {
+  try {
+    const params = new URLSearchParams({
+      action: "wbgetentities",
+      ids: entityId,
+      props: "claims",
+      format: "json",
+    });
+    const res = await fetch(
+      `https://www.wikidata.org/w/api.php?${params.toString()}`,
+      { signal, headers: { "User-Agent": USER_AGENT } },
+    );
+    if (!res.ok) return undefined;
+    const data = (await res.json()) as {
+      entities: Record<string, {
+        claims: Record<string, Array<{ mainsnak: { datavalue?: { value: string } } }>>;
+      }>;
+    };
+    const claims = data.entities[entityId]?.claims ?? {};
+    const filename =
+      claims["P154"]?.[0]?.mainsnak?.datavalue?.value ??
+      claims["P18"]?.[0]?.mainsnak?.datavalue?.value;
+    if (!filename) return undefined;
+    const encoded = encodeURIComponent(filename.replace(/ /g, "_"));
+    const resolved = await fetch(
+      `https://commons.wikimedia.org/wiki/Special:FilePath/${encoded}`,
+      { method: "HEAD", redirect: "follow", signal, headers: { "User-Agent": USER_AGENT } },
+    ).then((r) => r.url).catch(() => null);
+    if (!resolved) return undefined;
+    return { source: resolved, isLogo: true };
+  } catch {
+    return undefined;
+  }
+}
+
 async function _fetchWikipedia(query: string): Promise<WikiPage | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -48,11 +87,12 @@ async function _fetchWikipedia(query: string): Promise<WikiPage | null> {
       action: "query",
       titles: query,
       redirects: "1",
-      prop: "extracts|pageimages|info|description",
+      prop: "extracts|pageimages|pageprops|info|description",
       exintro: "1",
       explaintext: "1",
       exsentences: "6",
-      pithumbsize: "120",
+      pithumbsize: "300",
+      pilicense: "any",
       inprop: "url",
       format: "json",
     });
@@ -69,16 +109,34 @@ async function _fetchWikipedia(query: string): Promise<WikiPage | null> {
     clearTimeout(timer);
     if (!res.ok) return null;
     const data = (await res.json()) as {
-      query: { pages: Record<string, WikiPage & { missing?: "" }> };
+      query: {
+        pages: Record<
+          string,
+          WikiPage & { missing?: ""; pageprops?: { wikibase_item?: string } }
+        >;
+      };
     };
-    const page = Object.values(data.query?.pages ?? {})[0];
-    if (
-      !page ||
-      page.pageid === undefined ||
-      "missing" in page ||
-      !page.extract
-    )
+    const raw = Object.values(data.query?.pages ?? {})[0];
+    if (!raw || raw.pageid === undefined || "missing" in raw || !raw.extract)
       return null;
+
+    const page: WikiPage = {
+      title: raw.title,
+      description: raw.description,
+      extract: raw.extract,
+      thumbnail: raw.thumbnail,
+      fullurl: raw.fullurl,
+      pageid: raw.pageid,
+      wikibase_item: raw.pageprops?.wikibase_item,
+    };
+
+    if (!page.thumbnail && page.wikibase_item) {
+      const wdController = new AbortController();
+      const wdTimer = setTimeout(() => wdController.abort(), TIMEOUT_MS);
+      page.thumbnail = await _fetchWikidataThumb(page.wikibase_item, wdController.signal);
+      clearTimeout(wdTimer);
+    }
+
     return page;
   } catch (err) {
     logger.debug("wikipedia", `fetch failed for "${query}"`, err);
@@ -122,7 +180,9 @@ const wikipediaSlot: SlotPlugin = {
     return true;
   },
 
-  async execute(query: string): Promise<{ title?: string; html: string }> {
+  async execute(query: string, ctx?: SlotPluginContext): Promise<{ title?: string; html: string }> {
+    const sign = ctx?.signProxyUrl ?? _signProxyUrl;
+    const proxy = (url: string) => (sign ? sign(url) : "");
     const q = query.trim();
     const key = q.toLowerCase();
     let page = await _wikiCache.get(key);
@@ -140,7 +200,7 @@ const wikipediaSlot: SlotPlugin = {
       description: escapeHtml(page.description || ""),
       extract: escapeHtml(page.extract),
       thumbnail: page.thumbnail
-        ? `<img class="wiki-thumb" src="${escapeHtml(_proxyImageUrl(page.thumbnail.source))}" alt="${escapeHtml(page.title)}" loading="lazy">`
+        ? `<img class="${page.thumbnail.isLogo ? "wiki-thumb--logo" : "wiki-thumb"}" src="${escapeHtml(proxy(page.thumbnail.source))}" alt="${escapeHtml(page.title)}" loading="lazy">`
         : "",
       url: page.fullurl ?? `https://en.wikipedia.org/?curid=${page.pageid}`,
     };

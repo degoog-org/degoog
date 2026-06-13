@@ -77,7 +77,6 @@ router.post("/api/slots/glance", async (c) => {
       );
       continue;
     }
-    if (withResults && !plugin.waitForResults) continue;
     if (!withResults && plugin.waitForResults) continue;
     try {
       const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;

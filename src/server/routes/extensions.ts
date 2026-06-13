@@ -268,8 +268,14 @@ router.post("/api/extensions/transports/:name/test", async (c) => {
     return c.json({ error: "You shall not pass!" }, 401);
 
   const name = c.req.param("name");
-  if (!getTransport(name))
+  const transport = getTransport(name);
+  if (!transport)
     return c.json({ ok: false, message: "Transport not found" }, 404);
+
+  const body = await readObjectBody<Record<string, string>>(c);
+  if (body && transport.configure) {
+    transport.configure(body);
+  }
 
   try {
     const res = await outgoingFetch("https://example.com", {}, name);
@@ -278,6 +284,11 @@ router.post("/api/extensions/transports/:name/test", async (c) => {
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Connection failed";
     return c.json({ ok: false, message: msg });
+  } finally {
+    if (body && transport.configure) {
+      const saved = await getSettings(name);
+      transport.configure(saved);
+    }
   }
 });
 

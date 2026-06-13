@@ -56,7 +56,11 @@ const _initTestButton = (container: HTMLElement): void => {
     try {
       const res = await fetch(
         `${getBase()}/api/extensions/transports/${encodeURIComponent(transport)}/test`,
-        { method: "POST", headers: jsonHeaders(getStoredToken) },
+        {
+          method: "POST",
+          headers: jsonHeaders(getStoredToken),
+          body: JSON.stringify(_collectValues()),
+        },
       );
       const data = (await res.json()) as { ok: boolean; message: string };
       if (resultEl) {

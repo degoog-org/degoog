@@ -80,6 +80,14 @@
       "black": "שחור",
       "white": "לבן"
     },
+    "sidebar": {
+      "engine-performance": "ביצועי מנועים",
+      "people-also-search": "אנשים מחפשים גם",
+      "info": "מידע",
+      "results": "{count} תוצאות",
+      "retry": "נסה שוב",
+      "retrying": "מנסה שוב..."
+    },
     "result": {
       "just-indexed": "אומת כעת",
       "insecure": "בלתי מאובטח",

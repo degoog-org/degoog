@@ -172,6 +172,7 @@ export async function applyPagePlaceholders(
   const translationsScript = `<script>window.__DEGOOG_T__=${safeJson}</script>\n  <script src="/public/t.js?v=${pkg.version}"></script>`;
 
   let result = html
+    .replace("__LANG_ATTR__", resolvedLocale)
     .replace("__THEME_CSS__", themeCssPlaceholder())
     .replace("__THEME_ATTRS__", themeAttrs)
     .replace("__PLUGIN_ASSETS__", await pluginAssetsPlaceholder())

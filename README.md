@@ -8,7 +8,7 @@ Search aggregator that queries multiple engines and shows results in one place. 
 
 **Now in stable beta.** You can use it in production but there may be _some_ inconsistent behaviour.
 
-Please check the docs [here](https://degoog-org.github.io/docs/) before raising issues, your questions may already have been answered.
+Please check the [documentation](https://degoog-org.github.io/docs/) before raising issues, your questions may already have been answered.
 
 ---
 

@@ -3,6 +3,8 @@ import type { EngineTiming, ScoredResult } from "../../types";
 import { renderTemplate } from "../../utils/template";
 import { buildResultContext } from "../../modules/renderer/render";
 
+const t = window.scopedT("themes/degoog");
+
 export function renderResultEl(
   r: ScoredResult,
   index: number,
@@ -93,7 +95,7 @@ export function updateEngineTimings(
     panel.className="sidebar-panel sidebar-accordion streaming-engine-panel open degoog-panel degoog-panel--accordion degoog-panel--stack-item";
     panel.innerHTML = `
       <button class="sidebar-accordion-toggle degoog-accordion-toggle degoog-accordion-toggle--sidebar" type="button">
-        <span>Engine Performance</span>
+        <span>${t("search-templates.sidebar.engine-performance")}</span>
         <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="sidebar-accordion-body degoog-accordion-body"></div>`;
@@ -117,8 +119,8 @@ export function updateEngineTimings(
         ? " engine-failed"
         : "";
     const meta = isRetrying
-      ? `retrying... · ${et.time}ms`
-      : `${et.resultCount} results · ${et.time}ms`;
+      ? `${t("search-templates.sidebar.retrying")} · ${et.time}ms`
+      : `${t("search-templates.sidebar.results", { count: String(et.resultCount) })} · ${et.time}ms`;
     html += `
       <div class="engine-stat-row${statusClass}">
         <div class="engine-stat-info">

@@ -51,6 +51,7 @@ export async function handleSearch(params: SearchParams) {
     );
     return {
       ...cached,
+      relatedSearches: [],
       results: signResultThumbnails(await applyDomainRules(cached.results)),
     };
   }
