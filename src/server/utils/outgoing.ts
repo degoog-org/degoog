@@ -19,6 +19,7 @@ import type {
   TransportContext,
   TransportFetchOptions,
 } from "../types";
+import { useCache } from "./cache";
 import { fetchViaHttpProxy } from "./http-proxy-fetch";
 import { logger } from "./logger";
 import { asBoolean } from "./plugin-settings";
@@ -168,6 +169,7 @@ async function buildTransportContext(
     context: {
       proxyUrl,
       fetch: _buildProxyFetch(proxyUrl, transport.timeoutMs),
+      useCache,
     },
   };
 }

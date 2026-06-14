@@ -290,6 +290,7 @@ export type ProxyAwareFetch = (
 export interface TransportContext {
   proxyUrl?: string;
   fetch: ProxyAwareFetch;
+  useCache: UseCache;
 }
 
 export interface TransportWsSocket {
