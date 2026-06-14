@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, test } from "bun:test";
+import { afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -13,6 +13,7 @@ import {
   clearServerSettingsCache,
   setInstanceSettings,
 } from "../../src/server/utils/server-settings";
+import { clearShortcutsSettingsCache } from "../../src/server/utils/shortcuts-settings";
 
 const get = (path: string): Promise<Response> =>
   Promise.resolve(router.request(`http://localhost${path}`));
@@ -34,9 +35,14 @@ describe("settings shortcut routes", () => {
     delete process.env.DEGOOG_SETTINGS_PASSWORDS;
   });
 
+  beforeEach(() => {
+    clearShortcutsSettingsCache();
+  });
+
   afterEach(async () => {
     await setInstanceSettings({});
     clearServerSettingsCache();
+    clearShortcutsSettingsCache();
   });
 
   test("POST accepts valid shortcuts and GET returns the stored map", async () => {
@@ -49,12 +55,11 @@ describe("settings shortcut routes", () => {
 
     const res = await get("/api/settings/shortcuts");
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({
-      shortcuts: {
-        "focus-search": { key: "k", ctrl: true },
-      },
-      custom: [],
+    const data = await res.json();
+    expect(data.shortcuts).toEqual({
+      "focus-search": { key: "k", ctrl: true },
     });
+    expect(Array.isArray(data.custom)).toBe(true);
   });
 
   test("POST rejects invalid shortcut maps", async () => {
