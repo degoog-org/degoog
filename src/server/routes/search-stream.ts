@@ -3,7 +3,7 @@ import {
   scoreResults,
   searchSingleEngine,
 } from "../search";
-import { selectActiveEngines } from "../search/engine-selection";
+import { selectActiveEngines, engineSettingsFingerprint } from "../search/engine-selection";
 import {
   EngineTiming,
   SearchResponse,
@@ -57,6 +57,7 @@ router.get("/api/search/stream", async (c) => {
     dateFrom,
     dateTo,
     imageFilter,
+    await engineSettingsFingerprint(type, engines),
   );
 
   const cached = await cache.get(key);

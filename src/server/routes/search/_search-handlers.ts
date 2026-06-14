@@ -9,6 +9,7 @@ import { runIntercepts } from "../../utils/run-interceptors";
 import { getInstanceSettings } from "../../utils/server-settings";
 import { asBoolean } from "../../utils/plugin-settings";
 import { DEGOOG_ENGINE_NAME, maybeIndex } from "../../indexer/store";
+import { engineSettingsFingerprint } from "../../search/engine-selection";
 
 export async function handleSearch(params: SearchParams) {
   const {
@@ -39,6 +40,7 @@ export async function handleSearch(params: SearchParams) {
     dateFrom,
     dateTo,
     imageFilter,
+    await engineSettingsFingerprint(type, engines),
   );
 
   const cached = await cache.get(key);
@@ -141,13 +143,14 @@ export async function handleRetry(
   const key = cacheKey(
     query,
     engines,
-    searchType,
+    type,
     page,
     timeFilter,
     lang,
     dateFrom,
     dateTo,
     imageFilter,
+    await engineSettingsFingerprint(type, engines),
   );
   const cached = await cache.get(key);
 

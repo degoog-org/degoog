@@ -6,6 +6,7 @@ import { _applyRateLimit, cacheKey, parseEngineConfig } from "../../utils/search
 import { logger } from "../../utils/logger";
 import { guardApiKey } from "../../utils/api-key-guard";
 import { applyDomainRules } from "./_domain-rules";
+import { engineSettingsFingerprint } from "../../search/engine-selection";
 
 export function registerLuckyRoute(router: Hono): void {
   router.get("/api/lucky", async (c) => {
@@ -17,7 +18,19 @@ export function registerLuckyRoute(router: Hono): void {
     if (!query) return c.json({ error: "Missing query parameter 'q'" }, 400);
 
     const engines = parseEngineConfig(new URL(c.req.url).searchParams);
-    const key = cacheKey(query, engines, "web" as SearchType, 1);
+    const type = "web" as SearchType;
+    const key = cacheKey(
+      query,
+      engines,
+      type,
+      1,
+      "any",
+      "",
+      "",
+      "",
+      undefined,
+      await engineSettingsFingerprint(type, engines),
+    );
     let response = await cache.get(key);
     if (response) {
       const qShort = query.trim().slice(0, 80);
@@ -27,7 +40,7 @@ export function registerLuckyRoute(router: Hono): void {
         `cache hit q="${qShort}" type=web page=1 enginesOn=${enginesOn} results=${response.results.length} timings=${response.engineTimings.length}`,
       );
     } else {
-      response = await search(query, engines, "web" as SearchType, 1);
+      response = await search(query, engines, type, 1);
       await cache.set(key, response);
     }
     const luckyResults = await applyDomainRules(response.results);
