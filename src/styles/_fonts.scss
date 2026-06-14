@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Google Sans";
-  src: url("fonts/google-sans/static/GoogleSans-Medium.ttf") format("truetype");
+  src: url("fonts/google-sans/static/GoogleSans-Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: block;
@@ -8,7 +8,7 @@
 
 @font-face {
   font-family: "Montserrat";
-  src: url("fonts/montserrat/Montserrat-VariableFont_wght.ttf") format("truetype");
+  src: url("fonts/montserrat/Montserrat-VariableFont_wght.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: block;
@@ -16,7 +16,7 @@
 
 @font-face {
   font-family: "Inter";
-  src: url("fonts/inter/Inter-VariableFont_opsz,wght.ttf") format("truetype");
+  src: url("fonts/inter/Inter-VariableFont_opsz,wght.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: block;

@@ -1,5 +1,6 @@
 const FLASH_ID = "degoog-flash";
 const DISMISS_MS = 3500;
+let dismissTimer: number | null = null;
 
 const _mount = (): HTMLElement => {
   const existing = document.getElementById(FLASH_ID);
@@ -16,9 +17,12 @@ const _flash = (msg: string, mod: "error" | "success"): void => {
   const el = _mount();
   el.textContent = msg;
   el.className = `degoog-flash degoog-flash--${mod} degoog-flash--visible`;
-  const timer = setTimeout(() => {
+
+  if (dismissTimer !== null) window.clearTimeout(dismissTimer);
+
+  dismissTimer = window.setTimeout(() => {
     el.className = "degoog-flash";
-    clearTimeout(timer);
+    dismissTimer = null;
   }, DISMISS_MS);
 };
 
