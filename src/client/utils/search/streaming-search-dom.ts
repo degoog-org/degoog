@@ -104,7 +104,14 @@ export function updateEngineTimings(
       ?.addEventListener("click", () => {
         panel!.classList.toggle("open");
       });
-    sidebar.appendChild(panel);
+    const relatedPanel = sidebar.querySelector<HTMLElement>(
+      ".related-searches-panel",
+    );
+    if (relatedPanel) {
+      sidebar.insertBefore(panel, relatedPanel);
+    } else {
+      sidebar.appendChild(panel);
+    }
   }
 
   const body = panel.querySelector<HTMLElement>(".sidebar-accordion-body");

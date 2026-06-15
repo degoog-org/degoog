@@ -201,6 +201,7 @@ router.get("/api/indexer/export", async (c) => {
       buf = await readFile(indexerDbForType(type));
     }
     _exportCooldown.set(key, now);
+    // @ts-expect-error - Buffer is not assignable to BodyInit
     return new Response(buf, {
       headers: {
         "Content-Type": "application/octet-stream",
