@@ -201,8 +201,12 @@ router.get("/api/indexer/export", async (c) => {
       buf = await readFile(indexerDbForType(type));
     }
     _exportCooldown.set(key, now);
-    // @ts-expect-error - Buffer is not assignable to BodyInit
-    return new Response(buf, {
+
+    // Honestly I hate casting types but for fuck sake this fucking thing is only allowing me to either 
+    // BREAK IT TO FIX TYPING or if I ignore it with @ts-expect-error it throws with Unused '@ts-expect-error' directive.
+    // Sometimes typescript makes no fucking sense.
+
+    return new Response(buf as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/octet-stream",
         "Content-Disposition": `attachment; filename="degoog-index-${type}.db"`,
