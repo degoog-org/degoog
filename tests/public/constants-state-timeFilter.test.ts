@@ -25,4 +25,18 @@ describe("public/state", () => {
     expect(state).toHaveProperty("currentTimeFilter", "any");
     expect(state).toHaveProperty("inlineGifPlayback", true);
   });
+
+  test("state.currentRelatedSearches is initialized as empty array", () => {
+    expect(state).toHaveProperty("currentRelatedSearches");
+    expect(Array.isArray(state.currentRelatedSearches)).toBe(true);
+    expect(state.currentRelatedSearches).toEqual([]);
+  });
+
+  test("state.currentRelatedSearches can be mutated to hold strings", () => {
+    const original = state.currentRelatedSearches;
+    state.currentRelatedSearches = ["rust programming", "rust tutorial"];
+    expect(state.currentRelatedSearches).toEqual(["rust programming", "rust tutorial"]);
+    // restore
+    state.currentRelatedSearches = original;
+  });
 });
