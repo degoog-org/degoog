@@ -14,12 +14,24 @@ import {
   getInstanceSettings,
   setInstanceSettings,
   updateInstanceSettings,
+  type ServerSettingValue,
 } from "../utils/server-settings";
 import {
   SETTINGS_SCHEMA,
   coerceSetting,
   type SettingKey,
 } from "../utils/settings-schema";
+import {
+  isIndexerListKey,
+  readIndexerLists,
+  writeIndexerList,
+} from "../indexer/config/lists";
+import {
+  MAX_INLINE_FIELD_CHARS,
+  OVERSIZED_FIELDS_KEY,
+  OVERSIZED_TEXT_FIELDS,
+  type OversizedFieldInfo,
+} from "../../shared/indexer";
 import { logger } from "../utils/logger";
 
 const router = new Hono();
@@ -99,9 +111,44 @@ const _applySchemaUpdates = (
   for (const [key, def] of Object.entries(SETTINGS_SCHEMA)) {
     const raw = body[key];
     if (raw === undefined || typeof raw !== "string") continue;
+    if (isIndexerListKey(key)) continue;
     updates[key] = coerceSetting(def, raw);
   }
   return updates;
+};
+
+const _countLines = (text: string): number => {
+  if (text.length === 0) return 0;
+  let lines = 1;
+  for (let i = 0; i < text.length; i++) {
+    if (text.charCodeAt(i) === 10) lines++;
+  }
+  return lines;
+};
+
+const trimBigFields = (
+  settings: Record<string, ServerSettingValue>,
+): Record<string, unknown> => {
+  const out: Record<string, unknown> = { ...settings };
+  const oversized: Record<string, OversizedFieldInfo> = {};
+  for (const key of OVERSIZED_TEXT_FIELDS) {
+    const value = settings[key];
+    if (typeof value === "string" && value.length > MAX_INLINE_FIELD_CHARS) {
+      oversized[key] = { chars: value.length, lines: _countLines(value) };
+      out[key] = "";
+    }
+  }
+  if (Object.keys(oversized).length > 0) out[OVERSIZED_FIELDS_KEY] = oversized;
+  return out;
+};
+
+const _persistListFields = async (
+  body: Record<string, string>,
+): Promise<void> => {
+  for (const key of OVERSIZED_TEXT_FIELDS) {
+    const raw = body[key];
+    if (typeof raw === "string") await writeIndexerList(key, raw);
+  }
 };
 
 router.get("/api/settings/streaming", async (c) => {
@@ -130,7 +177,8 @@ router.get("/api/settings/general", async (c) => {
   const denied = await guardSettingsRoute(c, "GET /api/settings/general");
   if (denied) return denied;
   const settings = await getInstanceSettings();
-  return c.json(settings);
+  const lists = await readIndexerLists();
+  return c.json(trimBigFields({ ...settings, ...lists }));
 });
 
 router.post("/api/settings/general", async (c) => {
@@ -141,6 +189,7 @@ router.post("/api/settings/general", async (c) => {
   const existing = await getInstanceSettings();
   const updates = _applySchemaUpdates(body);
   await setInstanceSettings({ ...existing, ...updates });
+  await _persistListFields(body);
   await syncBlocklist();
   return c.json({ ok: true });
 });
@@ -158,7 +207,11 @@ router.post("/api/settings/field", async (c) => {
     return c.json({ error: "Invalid value" }, 400);
   }
   const coerced = coerceSetting(SETTINGS_SCHEMA[key as SettingKey], value);
-  await updateInstanceSettings({ [key]: coerced });
+  if (isIndexerListKey(key)) {
+    await writeIndexerList(key, typeof coerced === "string" ? coerced : value);
+  } else {
+    await updateInstanceSettings({ [key]: coerced });
+  }
   await syncBlocklist();
   return c.json({ ok: true });
 });

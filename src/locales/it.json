@@ -303,6 +303,7 @@
       "domain-blocklist-desc": "Un dominio per riga. I risultati di questi domini non vengono mai indicizzati.",
       "word-blocklist": "Lista di parole bloccate",
       "word-blocklist-desc": "Una parola per riga. Se una parola appare nel titolo, nell'estratto o nell'URL di un risultato, quel risultato non viene mai indicizzato.",
+      "oversized": "<troppo grande da mostrare> {lines} voci ({size}). Modifica questa lista direttamente in data/indexer/indexer-config.json.",
       "storage-heading": "Archiviazione e limiti",
       "max-per-search": "Max risultati salvati per ricerca",
       "max-per-search-desc": "Solo i primi N risultati aggregati per ogni ricerca vengono indicizzati. 0 = nessun limite.",

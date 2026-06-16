@@ -38,3 +38,18 @@ export interface ServerIndexerStats {
   dbSizeBytes: number;
   backend: "sqlite" | "postgres";
 }
+
+export const OVERSIZED_FIELDS_KEY = "degoogOversizedFields";
+
+export const MAX_INLINE_FIELD_CHARS = 64_000;
+
+export const OVERSIZED_TEXT_FIELDS = [
+  "degoogIndexerDomainAllowlist",
+  "degoogIndexerDomainBlocklist",
+  "degoogIndexerWordBlocklist",
+] as const;
+
+export interface OversizedFieldInfo {
+  chars: number;
+  lines: number;
+}
