@@ -10,6 +10,14 @@ import {
   getScriptFolderSource,
 } from "../utils/plugin-assets";
 import { rewritePluginPaths, rewriteThemePaths } from "../utils/extension-id";
+import { TTL_MS } from "../utils/cache";
+
+const NO_CACHE = "no-cache";
+const STATIC_ASSET_CACHE = `public, max-age=${Math.floor(TTL_MS / 1000)}`;
+const REWRITTEN_EXTS = new Set([".js", ".mjs", ".css"]);
+
+const cacheFor = (ext: string): string =>
+  REWRITTEN_EXTS.has(ext) ? NO_CACHE : STATIC_ASSET_CACHE;
 
 const MIME_TYPES: Record<string, string> = {
   ".js": "application/javascript",
@@ -90,7 +98,7 @@ router.get("/themes/:folder/*", async (c) => {
   const file = Bun.file(filePath);
   if (!(await file.exists())) return c.notFound();
   c.header("Content-Type", mime);
-  c.header("Cache-Control", "no-cache");
+  c.header("Cache-Control", cacheFor(ext));
 
   if (ext === ".js" || ext === ".mjs") {
     const ns = `themes/${folder}`;

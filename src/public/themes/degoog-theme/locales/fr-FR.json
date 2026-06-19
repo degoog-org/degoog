@@ -80,6 +80,18 @@
       "black": "Noir",
       "white": "Blanc"
     },
+    "no-results": "Aucun résultat trouvé.",
+    "search-failed": "La recherche a échoué. Veuillez réessayer.",
+    "no-engines": "Aucun moteur de recherche installé. {store} pour en parcourir et en installer.",
+    "no-engines-store": "Aller au Store",
+    "sidebar": {
+      "engine-performance": "Performance des moteurs",
+      "people-also-search": "Les gens recherchent aussi",
+      "info": "Info",
+      "results": "{count} résultats",
+      "retry": "réessayer",
+      "retrying": "réessai en cours..."
+    },
     "result": {
       "just-indexed": "vient d'être indexé",
       "insecure": "Insecure",

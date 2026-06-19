@@ -69,7 +69,9 @@ export class SqliteAdapter implements IndexerAdapter {
         .filter((f) => f.startsWith("index-") && f.endsWith(".db"))
         .map((f) => f.slice(6, -3));
     } catch (err) {
-      logger.debug("indexer", "indexer dir discovery failed", err);
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+        logger.debug("indexer", "indexer dir discovery failed", err);
+      }
       return [];
     }
   }

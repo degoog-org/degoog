@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { cssCheckOn, isBlocked } from "../utils/bot-trap";
 import { hasPinged, strike } from "../utils/link-token";
 import { getClientIp } from "../utils/request";
+import { getLocale } from "../utils/hono";
 import commands from "./commands";
 import health from "./health";
 import honeypot from "./honeypot";
@@ -37,11 +38,7 @@ globalRouter.route("/", health);
 globalRouter.use("*", async (c, next) => {
   const ip = getClientIp(c);
   if (ip && (await isBlocked(ip))) {
-    const locale = c.req
-      .header("accept-language")
-      ?.split(",")[0]
-      ?.split("-")[0]
-      ?.trim();
+    const locale = getLocale(c);
     return c.html(await buildGandalf(locale), 403);
   }
   if (

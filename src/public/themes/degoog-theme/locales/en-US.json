@@ -84,6 +84,14 @@
     "search-failed": "Search failed. Please try again.",
     "no-engines": "No search engines installed. {store} to browse and install some.",
     "no-engines-store": "Go to the Store",
+    "sidebar": {
+      "engine-performance": "Engine Performance",
+      "people-also-search": "People also search for",
+      "info": "Info",
+      "results": "{count} results",
+      "retry": "retry",
+      "retrying": "retrying..."
+    },
     "result": {
       "just-indexed": "just indexed",
       "insecure": "Insecure",

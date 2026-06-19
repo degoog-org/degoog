@@ -51,6 +51,21 @@ import { logger } from "../utils/logger";
 
 const router = new Hono();
 
+type ExtensionGroupKey =
+  | "engines"
+  | "plugins"
+  | "themes"
+  | "transports"
+  | "autocomplete";
+
+const EXTENSION_TYPE_KEY: Record<ExtensionStoreType, ExtensionGroupKey> = {
+  [ExtensionStoreType.Engine]: "engines",
+  [ExtensionStoreType.Plugin]: "plugins",
+  [ExtensionStoreType.Theme]: "themes",
+  [ExtensionStoreType.Transport]: "transports",
+  [ExtensionStoreType.Autocomplete]: "autocomplete",
+};
+
 
 router.get("/api/extensions", async (c) => {
   const coreT = await getCoreTranslator();
@@ -117,13 +132,25 @@ router.get("/api/extensions", async (c) => {
   const redact = (items: ExtensionMeta[]): ExtensionMeta[] =>
     authenticated ? items : items.map((m) => ({ ...m, settings: {} }));
 
-  return c.json({
+  const full = {
     engines: redact(engines),
     plugins: redact([...plugins, ...slotMeta, ...interceptorMeta, ...searchBarMeta]),
     themes: redact(themes),
     transports: redact(transports),
     autocomplete: redact(autocomplete),
-  });
+  };
+
+  const requestedType = c.req.query("type");
+  if (requestedType) {
+    const key = EXTENSION_TYPE_KEY[requestedType as ExtensionStoreType];
+    if (!key) {
+      logger.debug("extensions", `unknown type filter '${requestedType}'`);
+      return c.json({ error: `Unknown extension type '${requestedType}'` }, 400);
+    }
+    return c.json({ [key]: full[key] });
+  }
+
+  return c.json(full);
 });
 
 router.post("/api/extensions/:id/settings", async (c) => {
@@ -268,8 +295,14 @@ router.post("/api/extensions/transports/:name/test", async (c) => {
     return c.json({ error: "You shall not pass!" }, 401);
 
   const name = c.req.param("name");
-  if (!getTransport(name))
+  const transport = getTransport(name);
+  if (!transport)
     return c.json({ ok: false, message: "Transport not found" }, 404);
+
+  const body = await readObjectBody<Record<string, string>>(c);
+  if (body && transport.configure) {
+    transport.configure(body);
+  }
 
   try {
     const res = await outgoingFetch("https://example.com", {}, name);
@@ -278,6 +311,11 @@ router.post("/api/extensions/transports/:name/test", async (c) => {
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Connection failed";
     return c.json({ ok: false, message: msg });
+  } finally {
+    if (body && transport.configure) {
+      const saved = await getSettings(name);
+      transport.configure(saved);
+    }
   }
 });
 

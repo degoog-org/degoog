@@ -51,7 +51,7 @@ const _renderApiKeySection = (): string => `
     ${_h("settings-page.server.api-key-heading", "fa-solid fa-key")}
     ${_desc("settings-page.server.api-key-desc")}
     <div class="settings-toggle-wrap settings-desc degoog-toggle-wrap">
-      <div id="settings-api-key-controls" class="settings-api-wrapper" hidden>
+      <div id="settings-api-key-controls" class="settings-api-wrapper" style="display:none">
         <code id="settings-api-key-value" class="settings-toggle-label"></code>
         <div>
           <button type="button" id="settings-api-key-reveal" class="btn btn--secondary degoog-btn degoog-btn--secondary" aria-label="${escapeHtml(t("settings-page.server.api-key-reveal"))}"><i class="fa-solid fa-eye fa-lg"></i></button>
@@ -63,7 +63,7 @@ const _renderApiKeySection = (): string => `
         ${escapeHtml(t("settings-page.server.api-key-no-password"))}
       </p>
     </div>
-    <fieldset class="settings-fieldset">
+    <fieldset class="settings-fieldset" id="settings-api-key-toggles" style="display:none">
       ${_toggle("settings-api-key-search-enabled", "settings-page.server.api-key-search-enable", { aria: "settings-page.server.api-key-search-aria", title: "settings-page.server.api-key-search-tooltip" })}
       ${_toggle("settings-api-key-suggest-enabled", "settings-page.server.api-key-suggest-enable", { aria: "settings-page.server.api-key-suggest-aria", title: "settings-page.server.api-key-suggest-tooltip" })}
     </fieldset>

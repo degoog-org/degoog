@@ -80,6 +80,18 @@
       "black": "שחור",
       "white": "לבן"
     },
+    "no-results": "לא נמצאו תוצאות.",
+    "search-failed": "החיפוש נכשל. אנא נסה שוב.",
+    "no-engines": "אין מנועי חיפוש מותקנים. {store} לעיון והתקנה.",
+    "no-engines-store": "עבור לחנות",
+    "sidebar": {
+      "engine-performance": "ביצועי מנועים",
+      "people-also-search": "אנשים מחפשים גם",
+      "info": "מידע",
+      "results": "{count} תוצאות",
+      "retry": "נסה שוב",
+      "retrying": "מנסה שוב..."
+    },
     "result": {
       "just-indexed": "אומת כעת",
       "insecure": "בלתי מאובטח",

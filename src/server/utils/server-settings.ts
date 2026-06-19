@@ -32,6 +32,10 @@ onInvalidate((payload) => {
   _cache = null;
 });
 
+export const clearServerSettingsCache = (): void => {
+  _cache = null;
+};
+
 const _persist = async (settings: ServerSettings): Promise<void> => {
   await writeJsonAtomic(serverSettingsFile(), settings);
 };

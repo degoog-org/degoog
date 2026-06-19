@@ -1,6 +1,6 @@
 {
   "name": "degoog",
-  "version": "0.21.0",
+  "version": "0.22.0-dev-0.3",
   "type": "module",
   "scripts": {
     "dev": "bun run --watch src/server/index.ts",
@@ -30,7 +30,7 @@
   "devDependencies": {
     "@types/bun": "1.2.0",
     "@types/dompurify": "3.2.0",
-    "esbuild": "0.28.0",
+    "esbuild": "0.28.1",
     "eslint": "10.0.3",
     "typescript": "5.7.3",
     "typescript-eslint": "8.56.1"

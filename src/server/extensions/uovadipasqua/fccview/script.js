@@ -20,10 +20,11 @@ function _spawnDrop(container, avatarUrl) {
   container.appendChild(img);
 }
 
-const AVATAR_PATH = "/uovadipasqua/builtin-fccview-uovadipasqua/avatar.png";
+const AVATAR_PATH = "/uovadipasqua/fccview-uovadipasqua/avatar.png";
 
-export function run() {
-  const avatarUrl = `${window.__DEGOOG_BASE_URL__ ?? ""}${AVATAR_PATH}`;
+export function run(ctx) {
+  const avatarUrl =
+    ctx?.assets?.avatar ?? `${window.__DEGOOG_BASE_URL__ ?? ""}${AVATAR_PATH}`;
   if (!avatarUrl) return;
   const container = document.createElement("div");
   container.className = "egg-fccview-rain";

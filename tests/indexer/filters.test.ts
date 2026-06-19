@@ -11,9 +11,9 @@ const baseCfg: IndexerConfig = {
   pruneEnabled: false,
   fuzzyEnabled: true,
   queryLimit: 30,
-  domainAllowlist: [],
+  domainAllowlist: new Set<string>(),
   maxAgeDays: 0,
-  domainBlocklist: [],
+  domainBlocklist: new Set<string>(),
   wordBlocklist: [],
 };
 
@@ -31,14 +31,25 @@ describe("indexer filters - shouldIndex", () => {
   });
 
   test("domain blocklist rejects matching host and subdomains", () => {
-    const cfg = { ...baseCfg, domainBlocklist: ["example.com"] };
+    const cfg = { ...baseCfg, domainBlocklist: new Set(["example.com"]) };
     expect(shouldIndex(result({ url: "https://example.com/a" }), cfg)).toBe(false);
     expect(shouldIndex(result({ url: "https://www.example.com/a" }), cfg)).toBe(false);
+    expect(shouldIndex(result({ url: "https://deep.nested.example.com/a" }), cfg)).toBe(false);
     expect(shouldIndex(result({ url: "https://other.org/a" }), cfg)).toBe(true);
+    expect(shouldIndex(result({ url: "https://notexample.com/a" }), cfg)).toBe(true);
+  });
+
+  test("domain blocklist stays fast with a large list", () => {
+    const big = new Set<string>();
+    for (let i = 0; i < 500_000; i++) big.add(`blocked-${i}.com`);
+    big.add("example.com");
+    const cfg = { ...baseCfg, domainBlocklist: big };
+    expect(shouldIndex(result({ url: "https://www.example.com/a" }), cfg)).toBe(false);
+    expect(shouldIndex(result({ url: "https://allowed.org/a" }), cfg)).toBe(true);
   });
 
   test("domain allowlist only indexes listed domains when non-empty", () => {
-    const cfg = { ...baseCfg, domainAllowlist: ["example.com"] };
+    const cfg = { ...baseCfg, domainAllowlist: new Set(["example.com"]) };
     expect(shouldIndex(result({ url: "https://sub.example.com/a" }), cfg)).toBe(true);
     expect(shouldIndex(result({ url: "https://elsewhere.net/a" }), cfg)).toBe(false);
   });
@@ -46,8 +57,8 @@ describe("indexer filters - shouldIndex", () => {
   test("blocklist wins over allowlist", () => {
     const cfg = {
       ...baseCfg,
-      domainAllowlist: ["example.com"],
-      domainBlocklist: ["example.com"],
+      domainAllowlist: new Set(["example.com"]),
+      domainBlocklist: new Set(["example.com"]),
     };
     expect(shouldIndex(result({ url: "https://example.com/a" }), cfg)).toBe(false);
   });
@@ -61,8 +72,8 @@ describe("indexer filters - shouldIndex", () => {
   });
 
   test("malformed url is rejected when any domain filter is active", () => {
-    expect(shouldIndex(result({ url: "not a url" }), { ...baseCfg, domainAllowlist: ["example.com"] })).toBe(false);
-    expect(shouldIndex(result({ url: "not a url" }), { ...baseCfg, domainBlocklist: ["x.com"] })).toBe(false);
+    expect(shouldIndex(result({ url: "not a url" }), { ...baseCfg, domainAllowlist: new Set(["example.com"]) })).toBe(false);
+    expect(shouldIndex(result({ url: "not a url" }), { ...baseCfg, domainBlocklist: new Set(["x.com"]) })).toBe(false);
     expect(shouldIndex(result({ url: "not a url" }), baseCfg)).toBe(true);
   });
 });

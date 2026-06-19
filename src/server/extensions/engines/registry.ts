@@ -27,6 +27,7 @@ import { createRegistry, type RegistrySource } from "../registry-factory";
 import { extensionReadmeExists } from "../../utils/extension-docs";
 import { logger } from "../../utils/logger";
 import { getInstanceSettings } from "../../utils/server-settings";
+import { DEGOOG_ENGINE_ID } from "./builtins/degoog";
 
 const builtinsDir = join(import.meta.dir, "builtins");
 
@@ -75,8 +76,6 @@ const resolveTypes = (
 export const primaryType = (types: string[]): string =>
   types.length > 0 ? types[0] : "web";
 
-const DEGOOG_ENGINE_ID = "degoog-engine";
-
 const isEngineEnabled = (
   id: string,
   config: EngineConfig,
@@ -123,20 +122,21 @@ const resolveEngineTypes = async (entry: PluginEntry): Promise<string[]> => {
 const computeEngineTypes = async (entry: PluginEntry): Promise<string[]> => {
   const override = await getTypeOverride(entry.id);
   const dyn = (entry.instance as SearchEngine & { __typeFn?: TypeFn }).__typeFn;
-  let base: string[] = entry.searchTypes;
+
   if (dyn && !_resolving.has(entry.id)) {
     _resolving.add(entry.id);
     try {
       const result = await dyn();
-      base = _coerceTypeList(result);
-      if (base.length === 0) base = entry.searchTypes;
+      return resolveTypes(_coerceTypeList(result), override);
     } catch (err) {
       logger.warn("engines", `dynamic type() failed for ${entry.id}`, err);
     } finally {
       _resolving.delete(entry.id);
     }
   }
-  return resolveTypes(base.length > 0 ? base : ["web"], override);
+
+  const base = entry.searchTypes.length > 0 ? entry.searchTypes : ["web"];
+  return resolveTypes(base, override);
 };
 
 const isSearchEngine = (val: unknown): val is SearchEngine => {
@@ -435,8 +435,12 @@ export const getEngineExtensionMeta = async (
       }
     : OUTGOING_TRANSPORT_FIELD;
 
+  const settings = await getInstanceSettings();
+  const indexerOn = asBoolean(settings.degoogIndexerEnabled);
+
   const defaults = getDefaultEngineConfig();
   for (const entry of items) {
+    if (entry.id === DEGOOG_ENGINE_ID && !indexerOn) continue;
     const instance = engineMap[entry.id];
     const engineSchema = instance?.settingsSchema ?? [];
 

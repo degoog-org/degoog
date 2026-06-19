@@ -1,16 +1,22 @@
 import { randomUUID } from "crypto";
-import { mkdirSync } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
 import type {
   Transport,
   TransportContext,
   TransportFetchOptions,
 } from "../../../../types";
+import type { AsyncTtlCache } from "../../../../utils/cache";
 import { logger } from "../../../../utils/logger";
+import {
+  appendCurlCookieStdoutDelimiters,
+  getCookieJar,
+  parseCurlStdoutWithCookieJar,
+  saveCookieJar,
+} from "../../utils/curl-cookie-cache";
 
-const DELIMITER = randomUUID();
-const COOKIE_JAR_DIR = join(tmpdir(), "degoog-cookies");
+const STATUS_DELIMITER = randomUUID();
+const COOKIE_DELIMITER = randomUUID();
+const COOKIE_NAMESPACE = "transport:curl-impersonate:cookies";
+const COOKIE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const BINARIES = [
   "curl_firefox135",
   "curl_firefox133",
@@ -21,17 +27,7 @@ const BINARIES = [
 ] as const;
 const STRIP_HEADERS = new Set(["user-agent", "accept-encoding", "accept"]);
 
-try {
-  mkdirSync(COOKIE_JAR_DIR, { recursive: true });
-} catch (err) {
-  logger.debug("transport:curl-impersonate", "cookie jar dir setup skipped", err);
-}
-
 const _warmedHosts = new Set<string>();
-
-function _cookieJarPath(host: string): string {
-  return join(COOKIE_JAR_DIR, host.replace(/[^a-z0-9.-]/gi, "_") + ".txt");
-}
 
 function _resolveBinary(): string | null {
   for (const bin of BINARIES) {
@@ -46,13 +42,15 @@ function _resolveBinary(): string | null {
   return null;
 }
 
+const _hasBody = (method: string): boolean =>
+  ["POST", "PUT", "PATCH"].includes(method);
+
 function _buildCurlArgs(
   url: string,
   options: TransportFetchOptions,
   proxyUrl: string | undefined,
-  cookieJar: string,
 ): string[] {
-  const method = options.method ?? "GET";
+  const method = (options.method ?? "GET").toUpperCase();
   const args = [
     "-sS",
     "-L",
@@ -60,16 +58,15 @@ function _buildCurlArgs(
     "5",
     "--max-time",
     "30",
-    "-w",
-    `\n${DELIMITER}%{http_code}`,
-    "-c",
-    cookieJar,
-    "-b",
-    cookieJar,
   ];
+
+  appendCurlCookieStdoutDelimiters(args, STATUS_DELIMITER, COOKIE_DELIMITER);
 
   if (proxyUrl?.trim()) args.push("--proxy", proxyUrl.trim());
   if (method !== "GET" && method !== "HEAD") args.push("-X", method);
+  if (options.body && _hasBody(method)) {
+    args.push("--data-binary", options.body);
+  }
 
   for (const [k, v] of Object.entries(options.headers ?? {})) {
     if (!STRIP_HEADERS.has(k.toLowerCase())) {
@@ -84,28 +81,30 @@ function _buildCurlArgs(
   return args;
 }
 
+interface CurlRunResult {
+  response: Response;
+  cookieJarText: string | null;
+}
+
 async function _run(
   binary: string,
   args: string[],
-  body: string | undefined,
-  method: string | undefined,
-): Promise<Response> {
+  cookieJarText: string,
+): Promise<CurlRunResult> {
   const proc = Bun.spawn([binary, ...args], {
-    stdin: body ? "pipe" : "ignore",
+    stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
   });
 
-  if (body && ["POST", "PUT", "PATCH"].includes(method ?? "")) {
-    const stdin = proc.stdin;
-    if (stdin) {
-      try {
-        stdin.write(body);
-        stdin.end();
-      } catch (err) {
-        logger.debug("transport:curl-impersonate", "stdin write failed, killing process", err);
-        proc.kill();
-      }
+  const stdin = proc.stdin;
+  if (stdin) {
+    try {
+      stdin.write(cookieJarText);
+      stdin.end();
+    } catch (err) {
+      logger.debug("transport:curl-impersonate", "stdin write failed, killing process", err);
+      proc.kill();
     }
   }
 
@@ -120,17 +119,19 @@ async function _run(
   }
 
   const output = new TextDecoder().decode(stdoutBuf);
-  const delimIdx = output.lastIndexOf(`\n${DELIMITER}`);
-  const bodyText = delimIdx >= 0 ? output.slice(0, delimIdx) : output;
-  const statusNum = parseInt(
-    delimIdx >= 0 ? output.slice(delimIdx + DELIMITER.length + 1) : "502",
-    10,
+  const parsed = parseCurlStdoutWithCookieJar(
+    output,
+    STATUS_DELIMITER,
+    COOKIE_DELIMITER,
   );
 
-  return new Response(bodyText, {
-    status: statusNum >= 100 ? statusNum : 502,
-    headers: { "Content-Type": "text/html; charset=utf-8" },
-  });
+  return {
+    response: new Response(parsed.bodyText, {
+      status: parsed.status,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    }),
+    cookieJarText: parsed.cookieJarText,
+  };
 }
 
 async function _fetchViaImpersonate(
@@ -138,10 +139,11 @@ async function _fetchViaImpersonate(
   options: TransportFetchOptions,
   proxyUrl: string | undefined,
   binary: string,
+  cookieCache: AsyncTtlCache<string>,
 ): Promise<Response> {
   const parsed = new URL(url);
-  const cookieJar = _cookieJarPath(parsed.hostname);
-  const method = options.method ?? "GET";
+  const cookieKey = parsed.hostname;
+  let jar = await getCookieJar(cookieCache, cookieKey);
 
   if (!_warmedHosts.has(parsed.hostname)) {
     _warmedHosts.add(parsed.hostname);
@@ -149,13 +151,18 @@ async function _fetchViaImpersonate(
       `${parsed.protocol}//${parsed.hostname}/`,
       {},
       proxyUrl,
-      cookieJar,
     );
-    await _run(binary, warmupArgs, undefined, "GET").catch(() => { });
+    const warmup = await _run(binary, warmupArgs, jar).catch(() => null);
+    if (warmup?.cookieJarText) {
+      jar = warmup.cookieJarText;
+      await saveCookieJar(cookieCache, cookieKey, jar, COOKIE_TTL_MS);
+    }
   }
 
-  const args = _buildCurlArgs(url, options, proxyUrl, cookieJar);
-  return _run(binary, args, options.body, method);
+  const args = _buildCurlArgs(url, options, proxyUrl);
+  const result = await _run(binary, args, jar);
+  await saveCookieJar(cookieCache, cookieKey, result.cookieJarText, COOKIE_TTL_MS);
+  return result.response;
 }
 
 export class CurlImpersonateTransport implements Transport {
@@ -180,6 +187,16 @@ export class CurlImpersonateTransport implements Transport {
       );
     }
     logger.debug("outgoing", `curl-impersonate ${new URL(url).hostname}`);
-    return _fetchViaImpersonate(url, options, context.proxyUrl, binary);
+    const cookieCache = context.useCache<string>(
+      COOKIE_NAMESPACE,
+      COOKIE_TTL_MS,
+    );
+    return _fetchViaImpersonate(
+      url,
+      options,
+      context.proxyUrl,
+      binary,
+      cookieCache,
+    );
   }
 }

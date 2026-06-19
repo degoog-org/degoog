@@ -273,6 +273,7 @@
       "domain-blocklist-desc": "One domain per line. Results from these domains are never indexed.",
       "word-blocklist": "Word blocklist",
       "word-blocklist-desc": "One word per line. If a word appears in a result's title, snippet, or URL, that result is never indexed.",
+      "oversized": "<too large to render> {lines} entries ({size}). Edit this list directly in data/indexer/indexer-config.json.",
       "storage-heading": "Storage and limits",
       "max-per-search": "Max results stored per search",
       "max-per-search-desc": "Only the top N aggregated results after each search are indexed. 0 means no limit.",

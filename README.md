@@ -8,7 +8,7 @@ Search aggregator that queries multiple engines and shows results in one place. 
 
 **Now in stable beta.** You can use it in production but there may be _some_ inconsistent behaviour.
 
-Please check the docs [here](https://degoog-org.github.io/docs/) before raising issues, your questions may already have been answered.
+Please check the [documentation](https://degoog-org.github.io/docs/) before raising issues, your questions may already have been answered.
 
 ---
 
@@ -47,6 +47,7 @@ Ready-to-use compose files live in [`docker-compose-examples/`](docker-compose-e
 | [`valkey.yml`](docker-compose-examples/valkey.yml) | degoog + Valkey | Multi-replica or public instance with shared cache keeps settings and invalidation in sync |
 | [`postgres.yml`](docker-compose-examples/postgres.yml) | degoog + Postgres | Busy public instance with a large indexer - Postgres scales concurrent writes and FTS better than SQLite |
 | [`full.yml`](docker-compose-examples/full.yml) | degoog + Valkey + Postgres | High-traffic public instance - both shared cache and scalable indexer |
+| [`mcp.yml`](docker-compose-examples/mcp.yml) | degoog + [degoog-mcp](mcp/README.md) | Exposing Degoog to LLMs / MCP clients (Claude, Cursor, llama.cpp) next to the web UI |
 
 </details>
 

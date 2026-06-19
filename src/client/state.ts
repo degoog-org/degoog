@@ -7,6 +7,7 @@ export const state: AppState = {
   lastPage: 10,
   currentResults: [],
   currentData: null,
+  currentRelatedSearches: [],
   imagePage: 1,
   imageLastPage: 10,
   videoPage: 1,

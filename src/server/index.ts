@@ -3,6 +3,7 @@ import { serveStatic, createBunWebSocket } from "hono/bun";
 import { trimTrailingSlash } from "hono/trailing-slash";
 import pkg from "../../package.json";
 import { getBasePath } from "./utils/base-url";
+import { getLocale } from "./utils/hono";
 import { initPlugins } from "./extensions/commands/registry";
 import { initUovadipasquas } from "./extensions/uovadipasqua/registry";
 import { initEngines } from "./extensions/engines/registry";
@@ -20,7 +21,8 @@ import { markReady } from "./routes/health";
 import { build404 } from "./routes/pages";
 import { initServerKey } from "./utils/server-key";
 import { initValkey } from "./utils/cache-valkey";
-import { getInstanceId } from "./utils/server-settings";
+import { getInstanceId, getInstanceSettings } from "./utils/server-settings";
+import { asBoolean } from "./utils/plugin-settings";
 import { runMigrations } from "./migrations";
 import { closeAllDbs } from "./indexer/db";
 import { startQueue, stopQueue } from "./indexer/queue";
@@ -55,11 +57,7 @@ app.use(
 app.route(BASE_PATH || "/", globalRouter);
 
 app.notFound(async (c) => {
-  const locale = c.req
-    .header("accept-language")
-    ?.split(",")[0]
-    ?.split("-")[0]
-    ?.trim();
+  const locale = getLocale(c);
   return c.html(await build404(locale), 404);
 });
 
@@ -134,8 +132,9 @@ process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
 Promise.all([initServerKey(), initExtensionRegistries()])
-  .then(() => {
-    startQueue();
+  .then(async () => {
+    const settings = await getInstanceSettings();
+    if (asBoolean(settings.degoogIndexerEnabled)) startQueue();
 
     const { upgradeWebSocket, websocket } = createBunWebSocket();
 

@@ -9,6 +9,7 @@ export interface AppState {
   lastPage: number;
   currentResults: ScoredResult[];
   currentData: SearchResponse | null;
+  currentRelatedSearches: string[];
   imagePage: number;
   imageLastPage: number;
   videoPage: number;

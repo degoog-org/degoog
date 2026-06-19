@@ -190,6 +190,7 @@ export async function initServerTab(
     });
     const controls = document.getElementById("settings-api-key-controls");
     const locked = document.getElementById("settings-api-key-locked");
+    const toggles = document.getElementById("settings-api-key-toggles");
     if (apiKeyRes.ok) {
       const apiKeyData = (await apiKeyRes.json()) as {
         key: string;
@@ -198,7 +199,8 @@ export async function initServerTab(
       };
       _apiKey = apiKeyData.key;
       _renderApiKey();
-      if (controls) controls.hidden = false;
+      if (controls) controls.style.display = "";
+      if (toggles) toggles.style.display = "";
     } else if (apiKeyRes.status === 403) {
       if (locked) locked.hidden = false;
     }

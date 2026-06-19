@@ -22,6 +22,7 @@ import {
   clearSlotPanels,
   renderResults,
   renderSidebar,
+  prependKnowledgePanels,
 } from "../renderer/render";
 import { renderMediaEngineBar } from "../renderer/render-media";
 import { getBase } from "../../utils/base-url";
@@ -87,7 +88,10 @@ export async function performTabSearch(
   if (glanceEl) glanceEl.innerHTML = "";
   clearSlotPanels();
   if (!isImageType) {
-    void fetchSlotPanels(query);
+    void fetchSlotPanels(query).then((panels) => {
+      const kp = panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel);
+      if (kp.length > 0) prependKnowledgePanels(kp);
+    });
     void fetchGlancePanels(query);
   }
   document.title = `${query} - degoog`;

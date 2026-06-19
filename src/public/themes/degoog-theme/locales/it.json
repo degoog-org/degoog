@@ -80,6 +80,18 @@
       "black": "Nero",
       "white": "Bianco"
     },
+    "no-results": "Nessun risultato trovato.",
+    "search-failed": "Ricerca fallita. Riprova.",
+    "no-engines": "Nessun motore di ricerca installato. {store} per sfogliarne e installarne alcuni.",
+    "no-engines-store": "Vai allo Store",
+    "sidebar": {
+      "engine-performance": "Prestazioni dei motori",
+      "people-also-search": "Le persone cercano anche",
+      "info": "Info",
+      "results": "{count} risultati",
+      "retry": "riprova",
+      "retrying": "nuovo tentativo..."
+    },
     "result": {
       "just-indexed": "appena indicizzato",
       "insecure": "Non sicuro",

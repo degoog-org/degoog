@@ -1,0 +1,46 @@
+# Degoog + degoog-mcp sidecar.
+# Good for: exposing Degoog to LLMs / MCP clients (Claude, Cursor, llama.cpp, ...)
+# alongside the normal web UI. The sidecar reaches the aggregator internally
+# over the shared network at http://degoog:4444.
+#
+# Setup:
+#   mkdir -p ./data && sudo chown -R 1000:1000 ./data
+#   docker compose -f docker-compose-examples/mcp.yml up -d
+#
+# MCP endpoint: http://localhost:4443/mcp  (legacy SSE at /sse)
+#
+# Tips for small-context models (e.g. llama.cpp):
+#   DEGOOG_MCP_MAX_RESULTS caps how many merged results the search tool returns.
+#   DEGOOG_MCP_ENGINES restricts every search to specific engine ids. Discover
+#   valid ids with: curl http://localhost:4444/api/extensions?type=engine
+
+services:
+  degoog:
+    image: ghcr.io/degoog-org/degoog:latest
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "4444:4444"
+    networks: [degoog-net]
+    restart: unless-stopped
+
+  degoog-mcp:
+    image: ghcr.io/degoog-org/mcp:latest
+    depends_on:
+      - degoog
+    ports:
+      - "4443:4443"
+    networks: [degoog-net]
+    restart: unless-stopped
+    environment:
+      DEGOOG_MCP_DEGOOG_URL: "http://degoog:4444"
+      # If Degoog has API-key protection enabled, set the 64-char hex key here.
+      DEGOOG_MCP_API_KEY: ""
+      # Optional: keep responses small for limited context windows.
+      DEGOOG_MCP_MAX_RESULTS: "10"
+      # Optional: restrict to specific engines, comma separated.
+      DEGOOG_MCP_ENGINES: ""
+
+networks:
+  degoog-net:
+    driver: bridge

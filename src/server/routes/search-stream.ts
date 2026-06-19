@@ -1,10 +1,9 @@
 import { Hono } from "hono";
 import {
-  fetchRelatedSearches,
   scoreResults,
   searchSingleEngine,
 } from "../search";
-import { selectActiveEngines } from "../search/engine-selection";
+import { selectActiveEngines, engineSettingsFingerprint } from "../search/engine-selection";
 import {
   EngineTiming,
   SearchResponse,
@@ -58,6 +57,7 @@ router.get("/api/search/stream", async (c) => {
     dateFrom,
     dateTo,
     imageFilter,
+    await engineSettingsFingerprint(type, engines),
   );
 
   const cached = await cache.get(key);
@@ -92,7 +92,7 @@ router.get("/api/search/stream", async (c) => {
             `event: done\ndata: ${JSON.stringify({
               totalTime: cached.totalTime,
               engineTimings: cached.engineTimings,
-              relatedSearches: cached.relatedSearches,
+              relatedSearches: [],
             })}\n\n`,
           ),
         );
@@ -223,12 +223,6 @@ router.get("/api/search/stream", async (c) => {
       void Promise.all(enginePromises).then(async () => {
         const totalTime = Math.round(performance.now() - start);
         const rawScoredResults = scoreResults(allRawResults);
-        let relatedSearches: string[] = [];
-        if (type === "web" && page === 1) {
-          relatedSearches = await fetchRelatedSearches(query).catch(
-            () => [] as string[],
-          );
-        }
 
         const response: SearchResponse = {
           results: rawScoredResults,
@@ -236,7 +230,7 @@ router.get("/api/search/stream", async (c) => {
           totalTime,
           type,
           engineTimings: allTimings,
-          relatedSearches,
+          relatedSearches: [],
         };
 
         const indexerSettings = await getInstanceSettings();
@@ -268,7 +262,7 @@ router.get("/api/search/stream", async (c) => {
         _send("done", {
           totalTime,
           engineTimings: allTimings,
-          relatedSearches,
+          relatedSearches: [],
         });
         if (!closed) {
           closed = true;

@@ -108,27 +108,6 @@ const _sortedFromMap = (urlMap: Map<string, ScoredResult>): ScoredResult[] => {
   return scored;
 };
 
-export const fetchRelatedSearches = async (
-  query: string,
-): Promise<string[]> => {
-  try {
-    const res = await outgoingFetch(
-      `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`,
-    );
-    const buf = await res.arrayBuffer();
-    const data = JSON.parse(new TextDecoder("iso-8859-1").decode(buf)) as [
-      string,
-      string[],
-    ];
-    return (data[1] || [])
-      .filter((s: string) => s.toLowerCase() !== query.toLowerCase())
-      .slice(0, 8);
-  } catch (err) {
-    logger.debug("search", "related searches fetch failed", err);
-    return [];
-  }
-};
-
 const _withTimeout = <T>(
   promise: Promise<T>,
   ms: number,
@@ -422,16 +401,6 @@ export const search = async (
   }
 
   const scored = scoreResults(allResults);
-
-  let relatedSearches: string[] = [];
-
-  if (type === "web" && p === 1) {
-    relatedSearches = await _withTimeout(
-      fetchRelatedSearches(query),
-      ENGINE_TIMEOUT_MS,
-    ).catch(() => []);
-  }
-
   const totalTime = Math.round(performance.now() - start);
 
   return {
@@ -440,6 +409,6 @@ export const search = async (
     totalTime,
     type,
     engineTimings,
-    relatedSearches,
+    relatedSearches: [],
   };
 };

@@ -252,6 +252,7 @@
       "domain-blocklist-desc": "Un domaine par ligne. Les résultats de ces domaines ne sont jamais indexés.",
       "word-blocklist": "Liste noire de mots",
       "word-blocklist-desc": "Un mot par ligne. Si un mot apparaît dans le titre, l'extrait ou l'URL d'un résultat, ce résultat n'est jamais indexé.",
+      "oversized": "<trop volumineux pour l'affichage> {lines} entrées ({size}). Modifiez cette liste directement dans data/indexer/indexer-config.json.",
       "storage-heading": "Stockage et limites",
       "max-per-search": "Max. résultats indexés par recherche",
       "max-per-search-desc": "Seuls les N premiers résultats agrégés sont indexés. 0 = pas de limite.",

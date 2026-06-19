@@ -18,6 +18,17 @@
   background: var(--border-color);
 }
 
+.wiki-thumb--logo {
+  display: block;
+  max-width: 80%;
+  max-height: 60px;
+  width: auto;
+  object-fit: contain;
+  object-position: left center;
+  margin-bottom: 0.75rem;
+  margin: 0.75rem auto 2rem auto;
+}
+
 .wiki-body {
   display: flex;
   flex-direction: column;

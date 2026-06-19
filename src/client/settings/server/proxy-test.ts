@@ -1,6 +1,6 @@
 import { getBase } from "../../utils/base-url";
 import { escapeHtml } from "../../utils/dom";
-import { authHeaders } from "../../utils/request";
+import { jsonHeaders } from "../../utils/request";
 import type { ProxyTestResult } from "../../types/settings-proxy";
 
 const t = window.scopedT("core");
@@ -76,9 +76,17 @@ export function initProxyTest(getToken: () => string | null): void {
     btn.textContent = labelTesting;
     resultEl.hidden = true;
 
+    const enabledEl = document.getElementById("settings-proxy-enabled") as HTMLInputElement | null;
+    const urlsEl = document.getElementById("settings-proxy-urls") as HTMLTextAreaElement | null;
+
     try {
       const res = await fetch(`${getBase()}/api/settings/proxy-test`, {
-        headers: authHeaders(getToken),
+        method: "POST",
+        headers: jsonHeaders(getToken),
+        body: JSON.stringify({
+          proxyEnabled: enabledEl?.checked ? "true" : "false",
+          proxyUrls: urlsEl?.value ?? "",
+        }),
       });
       if (!res.ok) {
         resultEl.className="proxy-test-result proxy-test-result--error";

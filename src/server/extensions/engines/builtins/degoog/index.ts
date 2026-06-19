@@ -15,6 +15,7 @@ const isIndexerOn = async (): Promise<boolean> => {
 };
 
 export const type = async (): Promise<string[]> => {
+  if (!(await isIndexerOn())) return [];
   const { getInstalledSearchTypes } = await import("../../registry");
   const seen = new Set(await getInstalledSearchTypes(DEGOOG_ENGINE_ID));
   for (const t of getKnownTypes()) seen.add(t);

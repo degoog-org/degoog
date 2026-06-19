@@ -22,6 +22,25 @@ describe("routes/extensions", () => {
     expect(Array.isArray(body.engines)).toBe(true);
   });
 
+  test("GET /api/extensions?type=engine returns only engines", async () => {
+    const res = await extensionsRouter.request(
+      "http://localhost/api/extensions?type=engine",
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty("engines");
+    expect(body).not.toHaveProperty("plugins");
+    expect(body).not.toHaveProperty("themes");
+    expect(Array.isArray(body.engines)).toBe(true);
+  });
+
+  test("GET /api/extensions?type=bogus returns 400", async () => {
+    const res = await extensionsRouter.request(
+      "http://localhost/api/extensions?type=bogus",
+    );
+    expect(res.status).toBe(400);
+  });
+
   test("GET /api/plugins/styles.css returns 200", async () => {
     const res = await extensionsRouter.request(
       "http://localhost/api/plugins/styles.css",

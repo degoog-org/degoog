@@ -1,0 +1,71 @@
+$viewports: (
+    sm: 480,
+    md: 780,
+    lg: 1024,
+);
+
+@mixin make-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: .75rem;
+    row-gap: .75rem;
+
+    &--no-gap {
+        column-gap: 0;
+        row-gap: 0;
+    }
+
+    &--vertical-align {
+        &-center {
+            align-items: center;
+        }
+    }
+}
+
+@mixin make-cols($prefix: false) {
+    $align: (
+        left: start,
+        center: center,
+        right: end
+    );
+
+$col: "col-";
+
+@if $prefix {
+    $col: #{$col}#{$prefix}-;
+}
+
+@for $c from 1 through 12 {
+    .#{$col}#{$c} {
+        grid-column: span #{$c};
+    }
+}
+
+.#{$col}hidden {
+    display: none;
+}
+
+.#{$col}show {
+    display: block;
+}
+
+@each $name, $dir in $align {
+    .#{$col}#{$name} {
+        justify-self: #{$dir};
+    }
+}
+}
+
+@mixin resp-grid {
+    @each $vp, $size in $viewports {
+        @media screen and (min-width: #{$size}px) {
+            @include make-cols($vp);
+        }
+    }
+}
+
+.degoog-grid {
+    @include make-grid;
+    @include make-cols;
+    @include resp-grid;
+}
