@@ -61,6 +61,84 @@
       "last-checked": "Dernière vérification"
     },
     "server": {
+      "presets": {
+        "heading": "Préréglages serveur",
+        "desc": "Appliquez un modèle ponctuel pour les styles de déploiement courants. Les préréglages remplacent les paramètres listés, mais ne définissent pas les variables d’environnement et ne remplacent pas vos listes personnalisées.",
+        "select-label": "Préréglage",
+        "select-placeholder": "Choisir un préréglage",
+        "warnings-heading": "Avant d’appliquer",
+        "changes-heading": "Paramètres que ce préréglage va modifier",
+        "apply": "Appliquer le préréglage",
+        "applying": "Application...",
+        "applied": "Préréglage appliqué",
+        "apply-failed": "Échec du préréglage",
+        "no-changes": "Ce préréglage correspond déjà aux paramètres gérés.",
+        "value-on": "Activé",
+        "value-off": "Désactivé",
+        "value-empty": "Vide",
+        "change-row": "{field} : {current} -> {next}",
+        "personal-local": {
+          "label": "Personnel / Local uniquement",
+          "desc": "Pour les déploiements LAN ou homelab mono-utilisateur où le confort prime et où le réseau est fiable."
+        },
+        "private-team": {
+          "label": "Équipe privée / Semi-souple",
+          "desc": "Pour une petite équipe de confiance derrière une authentification, un VPN ou un reverse proxy privé."
+        },
+        "public-web": {
+          "label": "Instance web publique",
+          "desc": "Pour une instance publique normale avec streaming, pièges honeypot et limites de débit raisonnables."
+        },
+        "hardened-public": {
+          "label": "Instance publique renforcée",
+          "desc": "Pour les instances exposées qui s’attendent aux abus, avec limites plus strictes et contrôles de clé API activés."
+        },
+        "indexer-discovery": {
+          "label": "Mode indexeur / Découverte",
+          "desc": "Pour les instances privilégiant les fonctions de découverte et l’enregistrement local des résultats tout en gardant des protections publiques de base."
+        },
+        "compat-low-resource": {
+          "label": "Compatibilité / Faibles ressources",
+          "desc": "Pour les anciens navigateurs, les proxies qui mettent les flux en tampon, les petits VPS ou un comportement de requêtes plus simple sans streaming."
+        },
+        "warnings": {
+          "local-only": "À utiliser uniquement sur des réseaux locaux de confiance. Ne l’exposez pas tel quel au web public.",
+          "private-team": "Placez ceci derrière une authentification, un VPN ou un reverse proxy et évitez d’exposer les routes admin/settings.",
+          "public-password": "Définissez DEGOOG_SETTINGS_PASSWORDS dans l’environnement. L’interface ne peut pas le faire pour vous.",
+          "public-https": "Utilisez HTTPS et un reverse proxy correctement configuré pour les déploiements exposés.",
+          "public-monitor": "Surveillez les abus et évitez d’exposer les routes admin/settings.",
+          "api-key": "L’application de la clé API n’aide que si les clients sont configurés pour envoyer des requêtes signées valides et si la clé est protégée.",
+          "hardened": "Envisagez un renforcement du proxy, WAF, conteneur et hôte pour le trafic hostile.",
+          "indexer-storage": "Le mode indexeur nécessite une planification du stockage/backend avant de s’y fier.",
+          "compat": "Le mode sans streaming peut sembler plus lent et moins vivant, mais il est plus facile à déboguer et fonctionne mieux avec certains proxies."
+        },
+        "fields": {
+          "streamingEnabled": "Résultats en streaming",
+          "streamingAutoRetry": "Nouvelle tentative automatique du streaming",
+          "streamingMaxRetries": "Nombre maximal de tentatives streaming",
+          "rateLimitEnabled": "Limitation du débit de recherche",
+          "rateLimitBurstWindow": "Fenêtre de rafale recherche",
+          "rateLimitBurstMax": "Maximum de rafale recherche",
+          "rateLimitLongWindow": "Fenêtre longue recherche",
+          "rateLimitLongMax": "Maximum long recherche",
+          "rateLimitSuggestEnabled": "Limitation du débit autocomplete",
+          "rateLimitSuggestBurstWindow": "Fenêtre de rafale autocomplete",
+          "rateLimitSuggestBurstMax": "Maximum de rafale autocomplete",
+          "rateLimitSuggestLongWindow": "Fenêtre longue autocomplete",
+          "rateLimitSuggestLongMax": "Maximum long autocomplete",
+          "acDebounceMs": "Délai autocomplete",
+          "imageProxyAllowLocal": "Accès local au proxy d’images",
+          "honeypotEnabled": "Pièges honeypot",
+          "honeypotCssCheck": "Vérification navigateur",
+          "honeypotBanDuration": "Durée de bannissement honeypot",
+          "apiKeySearchEnabled": "Application de clé API pour la recherche",
+          "apiKeySuggestEnabled": "Application de clé API pour les suggestions",
+          "degoogIndexerEnabled": "Indexeur Degoog",
+          "domainBlockUiEnabled": "Interface de blocage de domaines",
+          "domainReplaceUiEnabled": "Interface de remplacement de domaines",
+          "domainScoreUiEnabled": "Interface de score de domaines"
+        }
+      },
       "cache-heading": "Cache",
       "cache-desc": "Effacer les résultats de recherche stockés.",
       "cache-clear": "Vider le cache de recherche",
@@ -240,7 +318,8 @@
       "password-placeholder": "Mot de passe",
       "unlock": "Déverrouiller",
       "incorrect-password": "Mot de passe incorrect.",
-      "network-error": "Une erreur s'est produite. Réessayez."
+      "network-error": "Une erreur s'est produite. Réessayez.",
+      "generated-password-note": "DEGOOG_SETTINGS_PASSWORDS n’est pas défini. Degoog a donc généré un mot de passe temporaire pour cette exécution. Consultez les journaux du serveur pour le retrouver. Pour désactiver volontairement cette protection, définissez DEGOOG_DANGEROUSLY_NO_PASSWORD=true."
     },
     "public": {
       "engines-heading": "Moteurs"

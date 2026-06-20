@@ -1,4 +1,5 @@
 import { Hono, type Context } from "hono";
+import { randomBytes } from "node:crypto";
 import { getMiddleware } from "../extensions/middleware/registry";
 import { asString, getSettings } from "../utils/plugin-settings";
 import { getAdminPath, isPublicInstance } from "../utils/public-instance";
@@ -19,6 +20,46 @@ const router = new Hono();
 const COOKIE_NAME = "settings-token";
 const MIDDLEWARE_SETTINGS_ID = "middleware";
 const SETTINGS_GATE_KEY = "settingsGate";
+const GENERATED_PASSWORD = randomBytes(24).toString("base64url");
+
+const _envTruthy = (name: string): boolean => {
+  const value = (process.env[name] ?? "").trim().toLowerCase();
+  return value === "true" || value === "1" || value === "yes";
+};
+
+export const isDangerouslyNoPassword = (): boolean =>
+  _envTruthy("DEGOOG_DANGEROUSLY_NO_PASSWORD");
+
+const _explicitPasswords = (): string[] => {
+  const raw = process.env.DEGOOG_SETTINGS_PASSWORDS ?? "";
+  return raw
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+};
+
+export const hasGeneratedDefaultSettingsPassword = (): boolean =>
+  _explicitPasswords().length === 0 && !isDangerouslyNoPassword();
+
+export function logSettingsPasswordStatus(): void {
+  const explicit = _explicitPasswords();
+  if (explicit.length > 0) return;
+  if (isDangerouslyNoPassword()) {
+    logger.warn(
+      "server",
+      "DEGOOG_DANGEROUSLY_NO_PASSWORD is enabled: settings/admin authentication is disabled. Only use this on a trusted local network.",
+    );
+    return;
+  }
+  logger.warn(
+    "server",
+    `DEGOOG_SETTINGS_PASSWORDS is not set. Generated temporary settings password for this process: ${GENERATED_PASSWORD}`,
+  );
+  logger.warn(
+    "server",
+    "Set DEGOOG_SETTINGS_PASSWORDS to choose a stable password, or set DEGOOG_DANGEROUSLY_NO_PASSWORD=true to intentionally disable settings/admin authentication.",
+  );
+}
 
 const buildSessionCookie = (token: string, secure: boolean): string => {
   const attrs = [
@@ -98,11 +139,10 @@ export async function shouldServeSettingsGate(c: Context): Promise<boolean> {
 }
 
 function getPasswords(): string[] {
-  const raw = process.env.DEGOOG_SETTINGS_PASSWORDS ?? "";
-  return raw
-    .split(",")
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const explicit = _explicitPasswords();
+  if (explicit.length > 0) return explicit;
+  if (isDangerouslyNoPassword()) return [];
+  return [GENERATED_PASSWORD];
 }
 
 export function isPasswordRequired(): boolean {
@@ -110,7 +150,7 @@ export function isPasswordRequired(): boolean {
 }
 
 export async function gandalf(token: string | undefined): Promise<boolean> {
-  if (isPublicInstance() && !isPasswordRequired()) return false;
+  if (isPublicInstance() && !isPasswordRequired() && !isDangerouslyNoPassword()) return false;
   const required = await isAuthRequired();
   if (!required) return true;
   if (!token) {
@@ -152,14 +192,26 @@ async function isAuthRequired(): Promise<boolean> {
 
 router.get("/api/settings/auth", async (c) => {
   const required = await isAuthRequired();
-  if (!required) return c.json({ required: false, valid: true });
+  if (!required)
+    return c.json({
+      required: false,
+      valid: true,
+      dangerouslyNoPassword: isDangerouslyNoPassword(),
+      generatedDefaultPassword: false,
+    });
 
   const token = canBalrogPass(c);
   if (await gandalf(token)) return c.json({ required: true, valid: true });
 
   const m = await getSelectedMiddlewareForSettingsGate();
   if (!m) {
-    if (isPasswordRequired()) return c.json({ required: true, valid: false });
+    if (isPasswordRequired())
+      return c.json({
+        required: true,
+        valid: false,
+        generatedDefaultPassword: hasGeneratedDefaultSettingsPassword(),
+        dangerouslyNoPassword: false,
+      });
     logger.warn(
       "settings-auth",
       "settingsGate references a middleware that is not loaded; refusing to grant access",
@@ -199,7 +251,7 @@ router.get("/api/settings/auth/callback", async (c) => {
 });
 
 router.post("/api/settings/auth", async (c) => {
-  if (isPublicInstance() && !isPasswordRequired())
+  if (isPublicInstance() && !isPasswordRequired() && !isDangerouslyNoPassword())
     return c.json({ error: "You shall not pass!" }, 401);
   const ip = getClientIp(c) ?? "unknown";
   const rate = checkAuthRate(ip);

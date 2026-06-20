@@ -12,6 +12,8 @@ import { asBoolean } from "../utils/plugin-settings";
 import { getAdminPath, isPublicInstance } from "../utils/public-instance";
 import {
   canBalrogPass,
+  hasGeneratedDefaultSettingsPassword,
+  isDangerouslyNoPassword,
   isPasswordRequired,
   shouldServeSettingsGate,
   gandalf,
@@ -112,6 +114,22 @@ const _injectIntoHead = (html: string, fragment: string): string => {
   return `${fragment}\n${html}`;
 };
 
+const _escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+const _buildSettingsGatePage = async (locale?: string): Promise<string> => {
+  const html = await buildPage("settings-gate.html", locale);
+  const t = await getCoreTranslator();
+  const note = hasGeneratedDefaultSettingsPassword()
+    ? `<p class="settings-auth-help">${_escapeHtml(t("settings-page.gate.generated-password-note", undefined, locale))}</p>`
+    : "";
+  return html.replace("__SETTINGS_AUTH_DEFAULT_PASSWORD_NOTE__", note);
+};
+
 router.get("/search", async (c) => {
   const locale = getLocale(c);
   const override = await getThemeHtml("search");
@@ -140,7 +158,7 @@ router.get("/settings", async (c) => {
   if (ADMIN_PATH !== "settings")
     return c.redirect(`${BASE_URL || BASE_PATH}/${ADMIN_PATH}`, 302);
   if (await shouldServeSettingsGate(c)) {
-    return c.html(await buildPage("settings-gate.html", locale));
+    return c.html(await _buildSettingsGatePage(locale));
   }
   return c.html(await buildPage("settings.html", locale));
 });
@@ -160,7 +178,7 @@ router.get("/settings/:tab", async (c) => {
   }
   const locale = getLocale(c);
   if (await shouldServeSettingsGate(c)) {
-    return c.html(await buildPage("settings-gate.html", locale));
+    return c.html(await _buildSettingsGatePage(locale));
   }
   return c.html(await buildPage("settings.html", locale));
 });
@@ -173,17 +191,17 @@ for (const ap of _adminPaths) {
   );
 
   router.get(`/${ap}`, async (c) => {
-    if (isPublicInstance() && !isPasswordRequired())
+    if (isPublicInstance() && !isPasswordRequired() && !isDangerouslyNoPassword())
       return c.text("Not Found", 404);
     const locale = getLocale(c);
     if (await shouldServeSettingsGate(c)) {
-      return c.html(await buildPage("settings-gate.html", locale));
+      return c.html(await _buildSettingsGatePage(locale));
     }
     return c.html(await buildPage("settings.html", locale));
   });
 
   router.get(`/${ap}/:tab`, async (c) => {
-    if (isPublicInstance() && !isPasswordRequired())
+    if (isPublicInstance() && !isPasswordRequired() && !isDangerouslyNoPassword())
       return c.text("Not Found", 404);
     const tab = c.req.param("tab");
     if (!(SETTINGS_TABS as readonly string[]).includes(tab)) {
@@ -191,7 +209,7 @@ for (const ap of _adminPaths) {
     }
     const locale = getLocale(c);
     if (await shouldServeSettingsGate(c)) {
-      return c.html(await buildPage("settings-gate.html", locale));
+      return c.html(await _buildSettingsGatePage(locale));
     }
     return c.html(await buildPage("settings.html", locale));
   });

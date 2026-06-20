@@ -5,13 +5,17 @@ export const el = (id: string) => getInputElement(`settings-${id}`);
 export const val = (id: string) => el(id)?.value.trim() ?? "";
 export const boolStr = (id: string) => (el(id)?.checked ? "true" : "false");
 
+export function syncToggleWrap(checkboxId: string, wrapId: string): void {
+  const checkbox = el(checkboxId);
+  const wrap = el(wrapId);
+  if (checkbox && wrap) wrap.style.display = checkbox.checked ? "block" : "none";
+}
+
 export function bindToggle(checkboxId: string, wrapId: string): void {
   const checkbox = el(checkboxId);
   const wrap = el(wrapId);
   if (checkbox && wrap) {
-    const update = () => {
-      wrap.style.display = checkbox.checked ? "block" : "none";
-    };
+    const update = () => syncToggleWrap(checkboxId, wrapId);
     checkbox.addEventListener("change", update);
     update();
   }

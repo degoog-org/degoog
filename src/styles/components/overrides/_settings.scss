@@ -262,6 +262,68 @@
   margin: 0 0 $space-4;
 }
 
+.settings-server-presets {
+  .degoog-select-wrap {
+    max-width: 28rem;
+  }
+}
+
+.settings-server-preset-select {
+  min-height: $space-9;
+  cursor: pointer;
+}
+
+.settings-server-preset-preview {
+  display: grid;
+  gap: $space-4;
+  margin-top: $space-2;
+  background: var(--bg);
+  border-radius: $radius-md;
+  padding: $space-3;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .settings-desc {
+    margin-bottom: 0;
+  }
+}
+
+.settings-server-preset-block {
+  display: grid;
+  gap: $space-2;
+}
+
+.settings-server-preset-title {
+  color: var(--text-primary);
+  font-size: $font-size-small;
+  font-weight: 500;
+}
+
+.settings-server-preset-list {
+  display: grid;
+  gap: $space-1;
+  margin: 0;
+  padding-inline-start: $space-5;
+  color: var(--text-secondary);
+  font-size: $font-size-small;
+  line-height: 1.45;
+}
+
+.settings-server-preset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-3;
+}
+
+.settings-server-preset-status {
+  min-height: 1.25rem;
+  color: var(--text-secondary);
+  font-size: $font-size-small;
+}
+
 .engine-toggles {
   display: flex;
   flex-direction: column;
@@ -515,6 +577,14 @@
   text-align: center;
   margin: 0;
   min-height: $space-5;
+}
+
+.settings-auth-help {
+  color: var(--text-secondary);
+  font-size: $font-size-small;
+  line-height: 1.4;
+  margin: (-$space-1) 0 0;
+  text-align: center;
 }
 
 .settings-auth-submit {

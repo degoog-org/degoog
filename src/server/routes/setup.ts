@@ -5,16 +5,13 @@ import {
 } from "../utils/server-settings";
 import { logger } from "../utils/logger";
 import { isPublicInstance } from "../utils/public-instance";
-import { canBalrogPass, gandalf, isPasswordRequired } from "./settings-auth";
+import { canBalrogPass, gandalf } from "./settings-auth";
 
 const router = new Hono();
 
-const isInstanceGated = (): boolean =>
-  isPublicInstance() || isPasswordRequired();
-
 router.get("/api/server-settings", async (c) => {
   try {
-    if (isInstanceGated()) return c.json({ wizard: true });
+    if (isPublicInstance()) return c.json({ wizard: true });
     const s = await readServerSettings();
     return c.json({ wizard: s.wizard });
   } catch (err) {

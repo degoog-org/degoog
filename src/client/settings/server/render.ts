@@ -1,4 +1,5 @@
 import { escapeHtml } from "../../utils/dom";
+import { SERVER_SETTINGS_PRESETS } from "./presets";
 
 const t = window.scopedT("core");
 
@@ -10,6 +11,41 @@ const _h = (headingKey: string, icon: string): string =>
 
 const _desc = (key: string): string =>
   `<p class="settings-desc">${escapeHtml(t(key))}</p>`;
+
+const _renderPresetSection = (): string => `
+  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card settings-server-presets" id="settings-section-server-presets">
+    ${_h("settings-page.server.presets.heading", "fa-solid fa-sliders")}
+    ${_desc("settings-page.server.presets.desc")}
+    <div class="settings-fieldset">
+      <label for="settings-server-preset-select" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.presets.select-label"))}</label>
+      <div class="degoog-select-wrap">
+        <select id="settings-server-preset-select" class="settings-server-preset-select degoog-input">
+          <option value="">${escapeHtml(t("settings-page.server.presets.select-placeholder"))}</option>
+          ${SERVER_SETTINGS_PRESETS.map(
+            (preset) =>
+              `<option value="${escapeHtml(preset.id)}">${escapeHtml(t(preset.labelKey))}</option>`,
+          ).join("")}
+        </select>
+      </div>
+      <div class="settings-server-preset-preview" id="settings-server-preset-preview" hidden>
+        <p class="settings-desc" id="settings-server-preset-description"></p>
+        <div class="settings-server-preset-block" id="settings-server-preset-warnings" hidden>
+          <strong class="settings-server-preset-title">${escapeHtml(t("settings-page.server.presets.warnings-heading"))}</strong>
+          <ul class="settings-server-preset-list" id="settings-server-preset-warning-list"></ul>
+        </div>
+        <div class="settings-server-preset-block">
+          <strong class="settings-server-preset-title">${escapeHtml(t("settings-page.server.presets.changes-heading"))}</strong>
+          <ul class="settings-server-preset-list" id="settings-server-preset-change-list"></ul>
+        </div>
+        <div class="settings-server-preset-actions">
+          <button class="btn btn--primary degoog-btn degoog-btn--primary" id="settings-server-preset-apply" type="button">
+            ${escapeHtml(t("settings-page.server.presets.apply"))}
+          </button>
+          <span class="settings-server-preset-status" id="settings-server-preset-status" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+    </div>
+  </section>`;
 
 const _toggle = (
   id: string,
@@ -274,6 +310,7 @@ const _renderCustomCssSection = (): string => `
 
 export const renderServerContent = (): string =>
   [
+    _renderPresetSection(),
     _renderCacheSection(),
     _renderApiKeySection(),
     _renderIndexerSection(),

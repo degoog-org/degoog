@@ -62,6 +62,84 @@
       "last-checked": "Last checked"
     },
     "server": {
+      "presets": {
+        "heading": "Server presets",
+        "desc": "Apply a one-shot template for common deployment styles. Presets override the listed settings, but they do not set environment variables or replace your custom lists.",
+        "select-label": "Preset",
+        "select-placeholder": "Choose a preset",
+        "warnings-heading": "Before applying",
+        "changes-heading": "Settings this preset will change",
+        "apply": "Apply preset",
+        "applying": "Applying...",
+        "applied": "Preset applied",
+        "apply-failed": "Preset failed",
+        "no-changes": "This preset already matches the managed settings.",
+        "value-on": "On",
+        "value-off": "Off",
+        "value-empty": "Empty",
+        "change-row": "{field}: {current} -> {next}",
+        "personal-local": {
+          "label": "Personal / Local Only",
+          "desc": "For single-user LAN or homelab deployments where convenience matters and the network is trusted."
+        },
+        "private-team": {
+          "label": "Private Team / Semi-Lax",
+          "desc": "For a small trusted team behind auth, VPN, or a private reverse proxy."
+        },
+        "public-web": {
+          "label": "Public Web Instance",
+          "desc": "For a normal public-facing instance with streaming, honeypot checks, and sensible public rate limits."
+        },
+        "hardened-public": {
+          "label": "Hardened Public Instance",
+          "desc": "For exposed instances expecting abuse, with stricter limits and API key enforcement toggles enabled."
+        },
+        "indexer-discovery": {
+          "label": "Indexer / Discovery Mode",
+          "desc": "For instances prioritizing discovery features and local result recording while keeping basic public safeguards."
+        },
+        "compat-low-resource": {
+          "label": "Compatibility / Low Resource Mode",
+          "desc": "For older browsers, buffering proxies, small VPSes, or simpler request behavior with streaming disabled."
+        },
+        "warnings": {
+          "local-only": "Use this only on trusted local networks. Do not expose it to the public web as-is.",
+          "private-team": "Put this behind auth, VPN, or a reverse proxy and avoid casually exposing admin/settings routes.",
+          "public-password": "Set DEGOOG_SETTINGS_PASSWORDS in the environment. The UI cannot set it for you.",
+          "public-https": "Use HTTPS and a properly configured reverse proxy for exposed deployments.",
+          "public-monitor": "Monitor abuse and avoid exposing admin/settings casually.",
+          "api-key": "API key enforcement only helps when clients are configured to send valid signed requests and the key is protected.",
+          "hardened": "Consider proxy, WAF, container, and host hardening for hostile traffic.",
+          "indexer-storage": "Indexer mode needs storage/backend planning before you rely on it.",
+          "compat": "Non-streaming can feel slower and less lively, but it is easier to debug and works better with some proxies."
+        },
+        "fields": {
+          "streamingEnabled": "Streaming results",
+          "streamingAutoRetry": "Streaming auto-retry",
+          "streamingMaxRetries": "Streaming max retries",
+          "rateLimitEnabled": "Search rate limiting",
+          "rateLimitBurstWindow": "Search burst window",
+          "rateLimitBurstMax": "Search burst max",
+          "rateLimitLongWindow": "Search long window",
+          "rateLimitLongMax": "Search long max",
+          "rateLimitSuggestEnabled": "Autocomplete rate limiting",
+          "rateLimitSuggestBurstWindow": "Autocomplete burst window",
+          "rateLimitSuggestBurstMax": "Autocomplete burst max",
+          "rateLimitSuggestLongWindow": "Autocomplete long window",
+          "rateLimitSuggestLongMax": "Autocomplete long max",
+          "acDebounceMs": "Autocomplete delay",
+          "imageProxyAllowLocal": "Local image proxy access",
+          "honeypotEnabled": "Honeypot traps",
+          "honeypotCssCheck": "Browser verification",
+          "honeypotBanDuration": "Honeypot ban duration",
+          "apiKeySearchEnabled": "Search API key enforcement",
+          "apiKeySuggestEnabled": "Suggestion API key enforcement",
+          "degoogIndexerEnabled": "Degoog Indexer",
+          "domainBlockUiEnabled": "Domain block UI",
+          "domainReplaceUiEnabled": "Domain replace UI",
+          "domainScoreUiEnabled": "Domain score UI"
+        }
+      },
       "cache-heading": "Cache",
       "cache-desc": "Flush stored cache entries. Search and autocomplete are kept separately; extensions register their own caches (e.g. wiki, ai-summary).",
       "cache-clear": "Clear search cache",
@@ -261,7 +339,8 @@
       "unlock": "Unlock",
       "incorrect-password": "Incorrect password.",
       "network-error": "Something went wrong. Please try again.",
-      "misconfigured": "Settings authentication is misconfigured: the configured gate references a middleware that is not loaded. Contact the administrator to fix the gate setting or set DEGOOG_SETTINGS_PASSWORDS."
+      "misconfigured": "Settings authentication is misconfigured: the configured gate references a middleware that is not loaded. Contact the administrator to fix the gate setting or set DEGOOG_SETTINGS_PASSWORDS.",
+      "generated-password-note": "DEGOOG_SETTINGS_PASSWORDS is not set, so Degoog generated a temporary password for this run. Check the server logs for it. To intentionally disable this gate, set DEGOOG_DANGEROUSLY_NO_PASSWORD=true."
     },
     "public": {
       "engines-heading": "Engines"

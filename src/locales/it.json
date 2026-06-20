@@ -60,6 +60,84 @@
       "last-checked": "Ultimo controllo"
     },
     "server": {
+      "presets": {
+        "heading": "Preset server",
+        "desc": "Applica un modello una tantum per gli stili di distribuzione più comuni. I preset sovrascrivono le impostazioni elencate, ma non impostano variabili d’ambiente e non sostituiscono le tue liste personalizzate.",
+        "select-label": "Preset",
+        "select-placeholder": "Scegli un preset",
+        "warnings-heading": "Prima di applicare",
+        "changes-heading": "Impostazioni che questo preset modificherà",
+        "apply": "Applica preset",
+        "applying": "Applicazione...",
+        "applied": "Preset applicato",
+        "apply-failed": "Preset non riuscito",
+        "no-changes": "Questo preset corrisponde già alle impostazioni gestite.",
+        "value-on": "Attivo",
+        "value-off": "Disattivo",
+        "value-empty": "Vuoto",
+        "change-row": "{field}: {current} -> {next}",
+        "personal-local": {
+          "label": "Personale / Solo locale",
+          "desc": "Per distribuzioni LAN o homelab con un solo utente, dove conta la comodità e la rete è fidata."
+        },
+        "private-team": {
+          "label": "Team privato / Semi-permissivo",
+          "desc": "Per un piccolo team fidato dietro autenticazione, VPN o reverse proxy privato."
+        },
+        "public-web": {
+          "label": "Istanza web pubblica",
+          "desc": "Per una normale istanza pubblica con streaming, controlli honeypot e limiti ragionevoli."
+        },
+        "hardened-public": {
+          "label": "Istanza pubblica rinforzata",
+          "desc": "Per istanze esposte che si aspettano abusi, con limiti più severi e controlli chiave API abilitati."
+        },
+        "indexer-discovery": {
+          "label": "Modalità indicizzatore / Scoperta",
+          "desc": "Per istanze che privilegiano funzioni di scoperta e registrazione locale dei risultati mantenendo protezioni pubbliche di base."
+        },
+        "compat-low-resource": {
+          "label": "Compatibilità / Poche risorse",
+          "desc": "Per browser vecchi, proxy che bufferizzano gli stream, piccoli VPS o comportamento delle richieste più semplice con streaming disattivato."
+        },
+        "warnings": {
+          "local-only": "Usalo solo su reti locali fidate. Non esporlo al web pubblico così com’è.",
+          "private-team": "Mettilo dietro autenticazione, VPN o reverse proxy ed evita di esporre liberamente le route admin/settings.",
+          "public-password": "Imposta DEGOOG_SETTINGS_PASSWORDS nell’ambiente. L’interfaccia non può farlo per te.",
+          "public-https": "Usa HTTPS e un reverse proxy configurato correttamente per le distribuzioni esposte.",
+          "public-monitor": "Monitora gli abusi ed evita di esporre liberamente admin/settings.",
+          "api-key": "L’obbligo di chiave API aiuta solo quando i client sono configurati per inviare richieste firmate valide e la chiave è protetta.",
+          "hardened": "Considera hardening di proxy, WAF, container e host per traffico ostile.",
+          "indexer-storage": "La modalità indicizzatore richiede pianificazione di storage/backend prima di farci affidamento.",
+          "compat": "La modalità non-streaming può sembrare più lenta e meno viva, ma è più facile da debuggare e funziona meglio con alcuni proxy."
+        },
+        "fields": {
+          "streamingEnabled": "Risultati in streaming",
+          "streamingAutoRetry": "Riprova automatica streaming",
+          "streamingMaxRetries": "Numero massimo di tentativi streaming",
+          "rateLimitEnabled": "Limitazione richieste di ricerca",
+          "rateLimitBurstWindow": "Finestra burst ricerca",
+          "rateLimitBurstMax": "Massimo burst ricerca",
+          "rateLimitLongWindow": "Finestra lunga ricerca",
+          "rateLimitLongMax": "Massimo lungo ricerca",
+          "rateLimitSuggestEnabled": "Limitazione autocomplete",
+          "rateLimitSuggestBurstWindow": "Finestra burst autocomplete",
+          "rateLimitSuggestBurstMax": "Massimo burst autocomplete",
+          "rateLimitSuggestLongWindow": "Finestra lunga autocomplete",
+          "rateLimitSuggestLongMax": "Massimo lungo autocomplete",
+          "acDebounceMs": "Ritardo autocomplete",
+          "imageProxyAllowLocal": "Accesso locale proxy immagini",
+          "honeypotEnabled": "Trappole honeypot",
+          "honeypotCssCheck": "Verifica browser",
+          "honeypotBanDuration": "Durata ban honeypot",
+          "apiKeySearchEnabled": "Obbligo chiave API per ricerca",
+          "apiKeySuggestEnabled": "Obbligo chiave API per suggerimenti",
+          "degoogIndexerEnabled": "Indicizzatore Degoog",
+          "domainBlockUiEnabled": "UI blocco domini",
+          "domainReplaceUiEnabled": "UI sostituzione domini",
+          "domainScoreUiEnabled": "UI punteggio domini"
+        }
+      },
       "cache-heading": "Cache",
       "cache-desc": "Cancella i risultati di ricerca memorizzati.",
       "cache-clear": "Svuota cache di ricerca",
@@ -234,7 +312,8 @@
       "password-placeholder": "Password",
       "unlock": "Sblocca",
       "incorrect-password": "Password errata.",
-      "network-error": "Si è verificato un errore. Riprova."
+      "network-error": "Si è verificato un errore. Riprova.",
+      "generated-password-note": "DEGOOG_SETTINGS_PASSWORDS non è impostato, quindi Degoog ha generato una password temporanea per questa esecuzione. Cercala nei log del server. Per disattivare intenzionalmente questo blocco, imposta DEGOOG_DANGEROUSLY_NO_PASSWORD=true."
     },
     "public": {
       "engines-heading": "Motori"
