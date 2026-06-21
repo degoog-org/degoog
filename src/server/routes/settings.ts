@@ -353,11 +353,20 @@ router.post("/api/settings/proxy-test", async (c) => {
     });
   }
 
-  const overrideFetch = ((_url: RequestInfo | URL) =>
-    outgoingFetch(String(_url), {}, "fetch", {
-      proxyOverrideEnabled: true,
-      proxyOverrideUrls: proxyUrls,
-    })) as typeof fetch;
+  const overrideFetch = ((_url: RequestInfo | URL, init?: RequestInit) =>
+    outgoingFetch(
+      String(_url),
+      {
+        method: init?.method,
+        headers: init?.headers as Record<string, string> | undefined,
+        signal: init?.signal ?? undefined,
+      },
+      "fetch",
+      {
+        proxyOverrideEnabled: true,
+        proxyOverrideUrls: proxyUrls,
+      },
+    )) as typeof fetch;
   const proxyIp = await fetchIp(overrideFetch);
 
   return c.json({
@@ -510,7 +519,11 @@ router.delete("/api/settings/shortcuts/source/:id", async (c) => {
   const settings = await readShortcutsSettings();
   delete settings.bindings[id];
   await writeShortcutsSettings(settings);
-  await unlink(file);
+  try {
+    await unlink(file);
+  } catch (err) {
+    logger.warn("settings", `failed to unlink shortcut source id=${id}`, err);
+  }
   await reloadShortcutsRegistry(true);
   return c.json({ ok: true });
 });

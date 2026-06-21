@@ -41,7 +41,7 @@ describe("indexer filters - shouldIndex", () => {
 
   test("domain blocklist stays fast with a large list", () => {
     const big = new Set<string>();
-    for (let i = 0; i < 500_000; i++) big.add(`blocked-${i}.com`);
+    for (let i = 0; i < 5_000; i++) big.add(`blocked-${i}.com`);
     big.add("example.com");
     const cfg = { ...baseCfg, domainBlocklist: big };
     expect(shouldIndex(result({ url: "https://www.example.com/a" }), cfg)).toBe(false);

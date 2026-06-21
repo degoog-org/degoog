@@ -1,10 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, afterAll } from "bun:test";
 import { writeFile, readFile, unlink } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 
 const settingsFile = join(tmpdir(), `degoog-ls-settings-${Date.now()}.json`);
 const listsFile = join(tmpdir(), `degoog-ls-lists-${Date.now()}.json`);
+const _originalSettingsFile = process.env.DEGOOG_SERVER_SETTINGS_FILE;
 process.env.DEGOOG_SERVER_SETTINGS_FILE = settingsFile;
 
 import { createListStore } from "../../src/server/utils/list-store";
@@ -40,6 +41,13 @@ const wipe = async (): Promise<void> => {
 
 beforeEach(wipe);
 afterEach(wipe);
+afterAll(() => {
+  if (_originalSettingsFile === undefined) {
+    delete process.env.DEGOOG_SERVER_SETTINGS_FILE;
+  } else {
+    process.env.DEGOOG_SERVER_SETTINGS_FILE = _originalSettingsFile;
+  }
+});
 
 describe("createListStore", () => {
   test("reads from legacy settings when no file exists", async () => {

@@ -43,4 +43,55 @@ describe("mergeSuggestions", () => {
     expect(richCount).toBe(2);
     expect(merged[0].rich).toBeDefined();
   });
+
+  test("decodes html entities before filtering and deduping", () => {
+    const merged = mergeSuggestions(
+      [
+        {
+          results: [
+            "&#23398;&#20013;&#25991;",
+            "&#23398;&#20013;&#25991;&#30340;app",
+          ],
+          name: "Google",
+        },
+        { results: ["学中文的app", "Tom &amp; Jerry"], name: "DuckDuckGo" },
+      ],
+      "学中文",
+    );
+
+    expect(merged.map((m) => m.text)).toEqual([
+      "学中文的app",
+      "Tom & Jerry",
+    ]);
+    expect(merged[0].source).toContain("Google");
+    expect(merged[0].source).toContain("DuckDuckGo");
+  });
+
+  test("decodes rich suggestion text and string metadata", () => {
+    const merged = mergeSuggestions(
+      [
+        {
+          results: [
+            {
+              text: "&#x5B66;&#x4E2D;&#x6587; app",
+              rich: {
+                description: "Learn &quot;Chinese&quot;",
+                type: "App &amp; Course",
+              },
+            },
+          ],
+          name: "Google",
+        },
+      ],
+      "q",
+    );
+
+    expect(merged[0]).toMatchObject({
+      text: "学中文 app",
+      rich: {
+        description: 'Learn "Chinese"',
+        type: "App & Course",
+      },
+    });
+  });
 });

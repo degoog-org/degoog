@@ -3,7 +3,7 @@ import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-const dir = join(tmpdir(), "degoog-shortcuts-registry-tests");
+const dir = join(tmpdir(), `degoog-shortcuts-registry-tests-${Date.now()}`);
 rmSync(dir, { recursive: true, force: true });
 mkdirSync(dir, { recursive: true });
 process.env.DEGOOG_SHORTCUTS_DIR = dir;

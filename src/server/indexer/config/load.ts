@@ -20,7 +20,7 @@ const parseLines = (raw: string | undefined): string[] =>
 const parseDomains = (raw: string | undefined): Set<string> => {
   const set = new Set<string>();
   for (const line of parseLines(raw)) {
-    set.add(line.replace(/^https?:\/\//, "").replace(/\/.*$/, ""));
+    set.add(line.replace(/^https?:\/\//, "").replace(/[/:?#].*$/, ""));
   }
   return set;
 };

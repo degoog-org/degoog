@@ -225,7 +225,7 @@ const catalogPrimaryType = (types: string[]): string =>
 
 const SHORTCUT_KIND_RE = /\bkind\s*:\s*["'](single|numeric)["']/;
 const SHORTCUT_BINDING_RE = /defaultBinding\s*:\s*\{([^}]*)\}/;
-const SHORTCUT_KEY_RE = /\bkey\s*:\s*["']([^"']+)["']/;
+const SHORTCUT_KEY_RE = /["']?\bkey\b["']?\s*:\s*["']([^"']+)["']/;
 const shortcutMetaCache = new Map<string, ShortcutCatalogMeta | null>();
 
 type ShortcutCatalogMeta = {
@@ -243,7 +243,7 @@ export const parseShortcutMetaFromSource = (
   const keyMatch = SHORTCUT_KEY_RE.exec(block);
   if (keyMatch) binding.key = keyMatch[1];
   for (const mod of ["ctrl", "meta", "alt", "shift"] as const) {
-    if (new RegExp(`\\b${mod}\\s*:\\s*true`).test(block)) binding[mod] = true;
+    if (new RegExp(`["']?\\b${mod}\\b["']?\\s*:\\s*true`).test(block)) binding[mod] = true;
   }
   const kind: ShortcutKind =
     SHORTCUT_KIND_RE.exec(src)?.[1] === "numeric" ? "numeric" : "single";

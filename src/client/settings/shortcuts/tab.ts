@@ -165,10 +165,14 @@ const _bind = (container: HTMLElement): void => {
   );
   container.querySelectorAll<HTMLInputElement>(".shortcut-toggle-input").forEach(
     (input) => {
+      let reqToken = 0;
+      let confirmed = input.checked;
       input.addEventListener("change", async () => {
         const id = input.dataset.action;
         if (!id) return;
-        const disabled = !input.checked;
+        const intended = input.checked;
+        const disabled = !intended;
+        const token = ++reqToken;
         try {
           const res = await fetch(
             `${getBase()}/api/extensions/${encodeURIComponent(id)}/settings`,
@@ -179,12 +183,15 @@ const _bind = (container: HTMLElement): void => {
             },
           );
           if (!res.ok) throw new Error("save failed");
+          if (token !== reqToken) return;
+          confirmed = intended;
           const action = _customActions.find((a) => a.id === id);
           if (action) action.disabled = disabled;
           flashSuccess(t("settings-page.server.saved"));
         } catch (err) {
           console.warn("[settings] shortcut toggle failed", err);
-          input.checked = !input.checked;
+          if (token !== reqToken) return;
+          input.checked = confirmed;
           flashError(t("settings-page.server.save-failed-network"));
         }
       });

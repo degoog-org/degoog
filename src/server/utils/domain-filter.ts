@@ -1,17 +1,22 @@
 import type { ScoredResult } from "../types";
 import { asBoolean } from "./plugin-settings";
 import { getInstanceSettings } from "./server-settings";
-import { readDomainLists, type DomainLists } from "./domain-lists";
+import { readDomainLists } from "./domain-lists";
+import { INVALIDATE_SCOPE, onInvalidate } from "./cache-valkey";
 import { logger } from "./logger";
 
 interface ParsedLists {
-  source: DomainLists;
   block: string[];
   replace: { source: string; target: string }[];
   score: { pattern: string; score: number }[];
 }
 
 let _parsed: ParsedLists | null = null;
+
+onInvalidate((payload) => {
+  if (payload.scope !== INVALIDATE_SCOPE.SERVER_SETTINGS) return;
+  _parsed = null;
+});
 
 const _matchesDomain = (hostname: string, pattern: string): boolean => {
   if (pattern.startsWith("/") && pattern.endsWith("/")) {
@@ -52,10 +57,9 @@ const _parseScoreList = (raw: string): { pattern: string; score: number }[] =>
     .filter((entry) => entry.pattern.length > 0 && Number.isFinite(entry.score));
 
 const getParsed = async (): Promise<ParsedLists> => {
+  if (_parsed) return _parsed;
   const lists = await readDomainLists();
-  if (_parsed && _parsed.source === lists) return _parsed;
   _parsed = {
-    source: lists,
     block: _parseBlockList(lists.domainBlockList),
     replace: _parseReplaceList(lists.domainReplaceList),
     score: _parseScoreList(lists.domainScoreList),

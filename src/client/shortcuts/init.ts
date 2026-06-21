@@ -1,5 +1,5 @@
 import { SHORTCUT_ACTIONS, type ClientShortcut, type ShortcutsConfig } from "../../shared/shortcuts";
-import { toShortcut } from "./binding";
+import { hasBinding, toShortcut } from "./binding";
 import { applyShortcut } from "./registry";
 import { registerShortcut } from "../utils/keyboard-shortcuts";
 
@@ -14,13 +14,15 @@ const _runCustomShortcut = (shortcut: ClientShortcut, event: KeyboardEvent): voi
     .then((mod: { default?: { run?: (ctx: object) => void }; run?: (ctx: object) => void }) => {
       const run = mod.default?.run ?? mod.run;
       if (typeof run !== "function") return;
-      run({
-        document,
-        window,
-        event,
-        location: window.location,
-        navigator: window.navigator,
-      });
+      return Promise.resolve(
+        run({
+          document,
+          window,
+          event,
+          location: window.location,
+          navigator: window.navigator,
+        }),
+      );
     })
     .catch((err) => {
       console.warn("[shortcuts] custom shortcut failed", shortcut.id, err);
@@ -36,7 +38,9 @@ export const initShortcuts = (): void => {
   }
   for (const shortcut of config.custom ?? []) {
     const binding = config.bindings[shortcut.id] ?? shortcut.defaultBinding;
-    if (shortcut.kind === "numeric") {
+    const kind = shortcut.kind ?? "single";
+    if (!hasBinding(binding, kind)) continue;
+    if (kind === "numeric") {
       for (let n = 1; n <= 9; n++) {
         registerShortcut(
           toShortcut(

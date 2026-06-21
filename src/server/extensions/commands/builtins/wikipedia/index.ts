@@ -2,13 +2,33 @@ import {
   SlotPanelPosition,
   TranslateFunction,
   type PluginContext,
+  type SettingField,
   type SlotPlugin,
   type SlotPluginContext,
 } from "../../../../types";
 import type { AsyncTtlCache } from "../../../../utils/cache";
+import { getSettings } from "../../../../utils/plugin-settings";
 import { logger } from "../../../../utils/logger";
 const WIKI_NAMESPACE = "ext:wikipedia:page";
 const WIKI_TTL_MS = 60 * 60 * 1000;
+
+const WIKI_SETTINGS_ID = "wikipedia-slot";
+const DEFAULT_WIKI_DOMAIN = "en.wikipedia.org";
+const WIKI_DOMAIN_PATTERN = /^[a-z0-9-]+\.wikipedia\.org$/;
+
+export const toWikiDomain = (raw: unknown): string => {
+  const cleaned = String(raw ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "");
+  return WIKI_DOMAIN_PATTERN.test(cleaned) ? cleaned : DEFAULT_WIKI_DOMAIN;
+};
+
+const _wikiDomain = async (): Promise<string> => {
+  const stored = await getSettings(WIKI_SETTINGS_ID);
+  return toWikiDomain(stored["domain"]);
+};
 
 const TIMEOUT_MS = 5_000;
 const USER_AGENT = "degoog/1.0 (+https://github.com/degoog-org/degoog)";
@@ -79,7 +99,10 @@ async function _fetchWikidataThumb(
   }
 }
 
-async function _fetchWikipedia(query: string): Promise<WikiPage | null> {
+async function _fetchWikipedia(
+  query: string,
+  host: string,
+): Promise<WikiPage | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
@@ -97,7 +120,7 @@ async function _fetchWikipedia(query: string): Promise<WikiPage | null> {
       format: "json",
     });
     const res = await fetch(
-      `https://en.wikipedia.org/w/api.php?${params.toString()}`,
+      `https://${host}/w/api.php?${params.toString()}`,
       {
         signal: controller.signal,
         headers: {
@@ -164,13 +187,26 @@ const wikipediaSlot: SlotPlugin = {
     _wikiCache = ctx.useCache<WikiPage>(WIKI_NAMESPACE, WIKI_TTL_MS);
   },
 
+  settingsSchema: [
+    {
+      key: "domain",
+      label: "Wikipedia domain",
+      type: "text",
+      default: DEFAULT_WIKI_DOMAIN,
+      placeholder: DEFAULT_WIKI_DOMAIN,
+      description:
+        "Wikipedia domain the knowledge panel reads from, e.g. en.wikipedia.org or fr.wikipedia.org. Enter the full domain, not just a language code. Must be a *.wikipedia.org host; anything else falls back to en.wikipedia.org.",
+    },
+  ] as SettingField[],
+
   async trigger(query: string): Promise<boolean> {
     const q = query.trim();
     if (q.length < 2 || q.length > 100) return false;
-    const key = q.toLowerCase();
+    const host = await _wikiDomain();
+    const key = `${host}:${q.toLowerCase()}`;
     const page = await _wikiCache.get(key);
     if (page === null) {
-      const fetched = await _fetchWikipedia(q);
+      const fetched = await _fetchWikipedia(q, host);
       if (fetched) {
         await _wikiCache.set(key, fetched);
         return true;
@@ -184,10 +220,11 @@ const wikipediaSlot: SlotPlugin = {
     const sign = ctx?.signProxyUrl ?? _signProxyUrl;
     const proxy = (url: string) => (sign ? sign(url) : "");
     const q = query.trim();
-    const key = q.toLowerCase();
+    const host = await _wikiDomain();
+    const key = `${host}:${q.toLowerCase()}`;
     let page = await _wikiCache.get(key);
     if (page === null) {
-      const fetched = await _fetchWikipedia(q);
+      const fetched = await _fetchWikipedia(q, host);
       if (fetched) {
         await _wikiCache.set(key, fetched);
         page = fetched;
@@ -202,7 +239,7 @@ const wikipediaSlot: SlotPlugin = {
       thumbnail: page.thumbnail
         ? `<img class="${page.thumbnail.isLogo ? "wiki-thumb--logo" : "wiki-thumb"}" src="${escapeHtml(proxy(page.thumbnail.source))}" alt="${escapeHtml(page.title)}" loading="lazy">`
         : "",
-      url: page.fullurl ?? `https://en.wikipedia.org/?curid=${page.pageid}`,
+      url: page.fullurl ?? `https://${host}/?curid=${page.pageid}`,
     };
 
     const html = _template.replace(
