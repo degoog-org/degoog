@@ -237,7 +237,7 @@ export async function initStoreTab(
         .forEach((btn) => {
           btn.addEventListener(
             "click",
-            () => void handleInstall(btn, getToken, loadItems, render),
+            () => void handleInstall(container, btn, getToken, loadItems, render),
           );
         });
       grid
@@ -253,7 +253,7 @@ export async function initStoreTab(
         .forEach((btn) => {
           btn.addEventListener(
             "click",
-            () => void handleUpdate(btn, getToken, loadItems, render),
+            () => void handleUpdate(container, btn, getToken, loadItems, render),
           );
         });
       grid
@@ -317,7 +317,7 @@ export async function initStoreTab(
           .forEach((btn) => {
             btn.addEventListener(
               "click",
-              () => void handleUpdate(btn, getToken, loadItems, render),
+              () => void handleUpdate(container, btn, getToken, loadItems, render),
             );
           });
       }
@@ -376,6 +376,7 @@ export async function initStoreTab(
     );
     if (refreshBtn?.dataset.url)
       void handleRefresh(
+        container,
         refreshBtn.dataset.url,
         getToken,
         refreshAndRender,
@@ -412,7 +413,6 @@ export async function initStoreTab(
       }).catch(() => { });
       await loadRepos();
       await loadItems();
-      await loadReposStatus();
       render();
     })();
   } catch {
