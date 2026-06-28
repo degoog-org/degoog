@@ -93,6 +93,10 @@
       cursor: default;
       pointer-events: none;
     }
+
+    &--loading {
+      cursor: progress;
+    }
   }
 
   &-active {
@@ -105,6 +109,15 @@
     display: flex;
     align-items: center;
     gap: $space-2;
+  }
+}
+
+.themes-applying {
+  cursor: progress;
+
+  .ext-card-apply {
+    cursor: progress;
+    pointer-events: none;
   }
 }
 

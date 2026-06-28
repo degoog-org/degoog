@@ -105,7 +105,7 @@ function getTextDirection(locale: string): "rtl" | "ltr" {
 function themeCssPlaceholder(): string {
   const theme = getActiveTheme();
   if (!theme?.manifest.css) return "";
-  return `<link rel="stylesheet" href="/theme/style.css?v=${pkg.version}">`;
+  return `<link id="degoog-theme-css" rel="stylesheet" href="/theme/style.css?v=${pkg.version}">`;
 }
 
 const customCssPlaceholder = async (): Promise<string> => {

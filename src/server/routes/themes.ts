@@ -3,6 +3,7 @@ import {
   getThemes,
   getActiveTheme,
   getActiveThemeId,
+  getActiveThemeDataAttrsMap,
   setActiveTheme,
 } from "../extensions/themes/registry";
 import { canBalrogPass, gandalf } from "./settings-auth";
@@ -37,7 +38,12 @@ router.post("/api/theme/active", async (c) => {
   }
   const ok = await setActiveTheme(body.id ?? null);
   if (!ok) return c.json({ error: "Theme not found" }, 400);
-  return c.json({ ok: true, activeId: body.id });
+  return c.json({
+    ok: true,
+    activeId: body.id,
+    hasCss: !!getActiveTheme()?.compiledCss,
+    dataAttrs: await getActiveThemeDataAttrsMap(),
+  });
 });
 
 router.get("/theme/style.css", (c) => {

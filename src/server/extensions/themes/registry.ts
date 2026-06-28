@@ -205,16 +205,18 @@ export async function getThemeExtensionMeta(): Promise<ExtensionMeta[]> {
   return results;
 }
 
-export async function getActiveThemeDataAttrs(): Promise<string> {
+export async function getActiveThemeDataAttrsMap(): Promise<
+  Record<string, string>
+> {
   const theme = getActiveTheme();
   if (
     !theme?.manifest.dataAttrsFromSettings ||
     Object.keys(theme.manifest.dataAttrsFromSettings).length === 0
   ) {
-    return "";
+    return {};
   }
   const stored = await getSettings(getThemeSettingsId(theme.id));
-  const parts: string[] = [];
+  const attrs: Record<string, string> = {};
   for (const [settingKey, attrSuffix] of Object.entries(
     theme.manifest.dataAttrsFromSettings,
   )) {
@@ -230,9 +232,16 @@ export async function getActiveThemeDataAttrs(): Promise<string> {
     const attrName = attrSuffix.startsWith("data-")
       ? attrSuffix
       : `data-${attrSuffix}`;
-    const escaped = String(value).replace(/"/g, "&quot;").trim();
-    parts.push(`${attrName}="${escaped}"`);
+    attrs[attrName] = String(value).trim();
   }
+  return attrs;
+}
+
+export async function getActiveThemeDataAttrs(): Promise<string> {
+  const attrs = await getActiveThemeDataAttrsMap();
+  const parts = Object.entries(attrs).map(
+    ([name, value]) => `${name}="${value.replace(/"/g, "&quot;")}"`,
+  );
   return parts.length > 0 ? " " + parts.join(" ") : "";
 }
 

@@ -1,8 +1,16 @@
 import { escapeHtml } from "../../utils/dom";
 import { extCardBadge, extCardConfigureBtn, extCardVersionWarning } from "../shared/ext-card";
 import { getBase } from "../../utils/base-url";
+import { applyThemeExtension } from "../../utils/theme";
 import { openModal } from "../../modules/modals/settings-modal/modal";
 import type { ExtensionMeta } from "../../types";
+
+interface ApplyThemeResponse {
+  ok: boolean;
+  activeId: string | null;
+  hasCss?: boolean;
+  dataAttrs?: Record<string, string>;
+}
 
 const t = window.scopedT("core");
 const themeT = window.scopedT("themes/degoog");
@@ -60,8 +68,10 @@ export async function initThemesTab(
 ): Promise<void> {
   const container = document.getElementById("themes-content");
   if (!container) return;
+  container.classList.remove("themes-applying");
 
   const activeId = themesData.activeId;
+  container.dataset.activeThemeId = activeId ?? "built-in";
   let html = `<div class="ext-group"><h3 class="ext-group-label">${escapeHtml(t("settings-page.extensions.group-themes"))}</h3><div class="ext-cards">`;
   html += _renderBuiltInCard(activeId);
   for (const ext of themeExts) {
@@ -80,24 +90,51 @@ export async function initThemesTab(
       });
     });
 
+  let applying = false;
+
   container
     .querySelectorAll<HTMLButtonElement>(".ext-card-apply")
     .forEach((btn) => {
       btn.addEventListener("click", async () => {
-        const rawId = btn.dataset.themeId;
-        const id = rawId === "built-in" ? null : (rawId ?? null);
-        btn.disabled = true;
+        if (applying) return;
+        applying = true;
+        btn.classList.add("ext-card-apply--loading");
+        _setThemesLocked(container, true);
         try {
           const res = await fetch(`${getBase()}/api/theme/active`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id }),
+            body: JSON.stringify({
+              id: btn.dataset.themeId === "built-in" ? null : (btn.dataset.themeId ?? null),
+            }),
           });
           if (!res.ok) throw new Error("Failed");
-          window.location.reload();
+          const data = (await res.json()) as ApplyThemeResponse;
+          await applyThemeExtension({
+            hasCss: !!data.hasCss,
+            dataAttrs: data.dataAttrs ?? {},
+          });
+          // Re-render with the new active theme; this rebuilds the cards
+          // (active badge + disabled state) and re-binds fresh listeners.
+          await initThemesTab({ activeId: data.activeId ?? null }, themeExts);
         } catch {
-          btn.disabled = false;
+          btn.classList.remove("ext-card-apply--loading");
+          _setThemesLocked(container, false);
+          applying = false;
         }
       });
     });
 }
+
+const _setThemesLocked = (container: HTMLElement, locked: boolean): void => {
+  container.classList.toggle("themes-applying", locked);
+  container
+    .querySelectorAll<HTMLButtonElement>(".ext-card-apply")
+    .forEach((b) => {
+      if (locked) {
+        b.disabled = true;
+      } else {
+        b.disabled = b.dataset.themeId === container.dataset.activeThemeId;
+      }
+    });
+};
