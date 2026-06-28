@@ -1,11 +1,18 @@
 import postgres from "postgres";
-import type { IndexerAdapter, UrlRow, HitRow, TypeCounts, ExportRow } from "../../types/adapter";
+import type {
+  IndexerAdapter,
+  UrlRow,
+  HitRow,
+  TypeCounts,
+  ExportRow,
+} from "../../types/adapter";
 import type { IndexRow } from "../../recorders";
 import type { IndexerConfig } from "../../types/config";
 import { safeSlug } from "../../shared/safe-type";
 import { logger } from "../../../utils/logger";
 import { initPgSchema } from "./schema";
 import { runPgPrune } from "./prune";
+import { createHash } from "crypto";
 
 const IMPORT_BATCH_SIZE = 500;
 
@@ -30,7 +37,10 @@ export class PgAdapter implements IndexerAdapter {
           AND table_schema NOT IN ('public', 'information_schema', 'pg_catalog')
       `;
       for (const row of rows) this._types.add(row.table_schema);
-      logger.info("indexer", `postgres adapter booted, found types: [${Array.from(this._types).join(", ")}]`);
+      logger.info(
+        "indexer",
+        `postgres adapter booted, found types: [${Array.from(this._types).join(", ")}]`,
+      );
     } catch (err) {
       logger.error("indexer", "postgres adapter boot failed", err);
       throw err;
@@ -40,7 +50,42 @@ export class PgAdapter implements IndexerAdapter {
   async open(type: string): Promise<void> {
     const schema = safeSlug(type);
     if (this._types.has(schema)) return;
+
     await this._sql.begin(async (tx) => initPgSchema(tx, schema));
+
+    // PostgreSQL identifiers are limited to 63 bytes.
+    const hash = createHash("sha1").update(schema).digest("hex").slice(0, 8);
+    const prefix = "idx_";
+    const suffix = "_hits_url_id";
+    const maxSchemaLen = 63 - prefix.length - suffix.length - hash.length - 1;
+
+    const indexName = `${prefix}${schema.slice(0, maxSchemaLen)}_${hash}${suffix}`;
+
+    const [index] = await this._sql<{ indisvalid: boolean }[]>`
+      SELECT i.indisvalid
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      JOIN pg_index i ON i.indexrelid = c.oid
+      WHERE c.relkind = 'i'
+        AND c.relname = ${indexName}
+        AND n.nspname = ${schema}
+    `;
+
+    if (index && !index.indisvalid) {
+      await this._sql`
+        DROP INDEX CONCURRENTLY IF EXISTS
+        ${this._sql(schema)}.${this._sql(indexName)}
+      `;
+    }
+
+    if (!index || !index.indisvalid) {
+      await this._sql`
+        CREATE INDEX CONCURRENTLY IF NOT EXISTS
+        ${this._sql(indexName)}
+        ON ${this._sql(schema)}.query_hits (url_id)
+      `;
+    }
+
     this._types.add(schema);
   }
 
@@ -56,7 +101,7 @@ export class PgAdapter implements IndexerAdapter {
     }
   }
 
-  async checkpoint(_type: string): Promise<void> { }
+  async checkpoint(_type: string): Promise<void> {}
 
   async writeBatch(type: string, rows: IndexRow[], now: number): Promise<void> {
     const schema = safeSlug(type);
@@ -98,7 +143,10 @@ export class PgAdapter implements IndexerAdapter {
     });
   }
 
-  async importRows(type: string, rows: ExportRow[]): Promise<{ urls: number; hits: number }> {
+  async importRows(
+    type: string,
+    rows: ExportRow[],
+  ): Promise<{ urls: number; hits: number }> {
     const schema = safeSlug(type);
     await this.open(type);
     let urlsInserted = 0;
@@ -123,9 +171,12 @@ export class PgAdapter implements IndexerAdapter {
           `;
           if (urlRows.length > 0) urlsInserted++;
 
-          const [existingUrl] = urlRows.length > 0
-            ? urlRows
-            : await tx<{ id: number }[]>`SELECT id FROM ${tx(schema)}.urls WHERE url_norm = ${row.url_norm}`;
+          const [existingUrl] =
+            urlRows.length > 0
+              ? urlRows
+              : await tx<
+                  { id: number }[]
+                >`SELECT id FROM ${tx(schema)}.urls WHERE url_norm = ${row.url_norm}`;
 
           if (!existingUrl) continue;
 
@@ -145,7 +196,12 @@ export class PgAdapter implements IndexerAdapter {
     return { urls: urlsInserted, hits: hitsInserted };
   }
 
-  async queryExact(type: string, queryNorm: string, limit: number, offset = 0): Promise<UrlRow[]> {
+  async queryExact(
+    type: string,
+    queryNorm: string,
+    limit: number,
+    offset = 0,
+  ): Promise<UrlRow[]> {
     const schema = safeSlug(type);
     try {
       return await this._sql<UrlRow[]>`
@@ -163,7 +219,12 @@ export class PgAdapter implements IndexerAdapter {
     }
   }
 
-  async queryFuzzy(type: string, queryNorm: string, limit: number, offset = 0): Promise<UrlRow[]> {
+  async queryFuzzy(
+    type: string,
+    queryNorm: string,
+    limit: number,
+    offset = 0,
+  ): Promise<UrlRow[]> {
     const schema = safeSlug(type);
     const pgExpr = queryNorm
       .split(/\s+/)
@@ -328,12 +389,28 @@ export class PgAdapter implements IndexerAdapter {
 
   async deleteHitsForType(type: string, ids: number[]): Promise<void> {
     if (ids.length === 0) return;
+
     const schema = safeSlug(type);
+
     await this._sql.begin(async (tx) => {
-      await tx`DELETE FROM ${tx(schema)}.query_hits WHERE id = ANY(${ids})`;
+      const deleted = await tx<{ url_id: number }[]>`
+        DELETE FROM ${tx(schema)}.query_hits
+        WHERE id = ANY(${ids})
+        RETURNING url_id
+      `;
+
+      const urlIds = [...new Set(deleted.map((r) => r.url_id))];
+
+      if (urlIds.length === 0) return;
+
       await tx`
-        DELETE FROM ${tx(schema)}.urls
-        WHERE id NOT IN (SELECT url_id FROM ${tx(schema)}.query_hits)
+        DELETE FROM ${tx(schema)}.urls u
+        WHERE u.id = ANY(${urlIds})
+          AND NOT EXISTS (
+            SELECT 1
+            FROM ${tx(schema)}.query_hits h
+            WHERE h.url_id = u.id
+          )
       `;
     });
   }
