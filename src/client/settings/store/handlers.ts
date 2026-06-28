@@ -253,7 +253,8 @@ export async function handleUpdateAll(
   );
   if (btn) btn.disabled = true;
   try {
-    await streamUpdateAll(container, getToken);
+    const result = await streamUpdateAll(container, getToken);
+    if (!result) return;
     await loadItems();
     render();
     window.dispatchEvent(new CustomEvent("extensions-saved"));
@@ -274,7 +275,8 @@ export async function handleRefreshAll(
   );
   if (btn) btn.disabled = true;
   try {
-    await streamRefreshAll(container, getToken);
+    const result = await streamRefreshAll(container, getToken);
+    if (!result) return;
     await refreshAndRender();
     void loadReposStatus().then(() => render());
   } finally {

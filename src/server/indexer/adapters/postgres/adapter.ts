@@ -41,18 +41,24 @@ export class PgAdapter implements IndexerAdapter {
         "indexer",
         `postgres adapter booted, found types: [${Array.from(this._types).join(", ")}]`,
       );
+      for (const schema of this._types) {
+        try {
+          await this._ensureHitsIndex(schema);
+        } catch (err) {
+          logger.warn(
+            "indexer",
+            `hits index maintenance failed for schema=${schema}`,
+            err,
+          );
+        }
+      }
     } catch (err) {
       logger.error("indexer", "postgres adapter boot failed", err);
       throw err;
     }
   }
 
-  async open(type: string): Promise<void> {
-    const schema = safeSlug(type);
-    if (this._types.has(schema)) return;
-
-    await this._sql.begin(async (tx) => initPgSchema(tx, schema));
-
+  private async _ensureHitsIndex(schema: string): Promise<void> {
     // PostgreSQL identifiers are limited to 63 bytes.
     const hash = createHash("sha1").update(schema).digest("hex").slice(0, 8);
     const prefix = "idx_";
@@ -85,6 +91,14 @@ export class PgAdapter implements IndexerAdapter {
         ON ${this._sql(schema)}.query_hits (url_id)
       `;
     }
+  }
+
+  async open(type: string): Promise<void> {
+    const schema = safeSlug(type);
+    if (this._types.has(schema)) return;
+
+    await this._sql.begin(async (tx) => initPgSchema(tx, schema));
+    await this._ensureHitsIndex(schema);
 
     this._types.add(schema);
   }

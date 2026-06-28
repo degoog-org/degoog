@@ -1,6 +1,7 @@
-import { readFile, rm } from "fs/promises";
-import { join } from "path";
+import { readFile, rm, realpath } from "fs/promises";
+import { join, relative, isAbsolute } from "path";
 import type { RepoInfo, RepoPackageJson } from "../../types";
+import type { StoreStreamPhase } from "../../../shared/store-stream";
 import { logger } from "../../utils/logger";
 import { runStoreExclusive } from "./store-lock";
 import {
@@ -27,7 +28,26 @@ const _isLockError = (stderr: string): boolean =>
 
 const STALE_LOCK_FILES = ["shallow.lock", "index.lock"];
 
+const _isInsideStore = async (repoPath: string): Promise<boolean> => {
+  try {
+    const root = await realpath(getStoreDir());
+    const target = await realpath(repoPath);
+    const rel = relative(root, target);
+    return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
+  } catch (err) {
+    logger.warn("store:repo", `could not resolve repo path ${repoPath}`, err);
+    return false;
+  }
+};
+
 const _cleanGitLocks = async (repoPath: string): Promise<void> => {
+  if (!(await _isInsideStore(repoPath))) {
+    logger.warn(
+      "store:repo",
+      `refusing to clean locks outside store dir: ${repoPath}`,
+    );
+    return;
+  }
   const gitDir = join(repoPath, ".git");
   await Promise.all(
     STALE_LOCK_FILES.map((name) =>
@@ -408,7 +428,7 @@ export interface RefreshProgress {
   name: string;
   i: number;
   total: number;
-  phase: "start" | "ok" | "failed";
+  phase: StoreStreamPhase;
   error?: string;
 }
 

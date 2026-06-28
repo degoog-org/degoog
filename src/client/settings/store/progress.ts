@@ -1,18 +1,11 @@
 import { getBase } from "../../utils/base-url";
+import {
+  isStoreEvent,
+  type StoreStreamEvent,
+  type StoreStreamPhase,
+} from "../../../shared/store-stream";
 
-type Phase = "start" | "ok" | "failed";
-
-interface StoreStreamEvent {
-  repoUrl?: string;
-  itemPath?: string;
-  type?: string;
-  url?: string;
-  name?: string;
-  i: number;
-  total: number;
-  phase: Phase;
-  error?: string;
-}
+type Phase = StoreStreamPhase;
 
 export interface ItemKey {
   repoUrl: string;
@@ -111,15 +104,22 @@ function streamStoreOp(
     let failed = 0;
 
     source.addEventListener(event, (e) => {
-      const data = JSON.parse((e as MessageEvent).data) as StoreStreamEvent;
+      const data: unknown = JSON.parse((e as MessageEvent).data);
+      if (!isStoreEvent(data)) return;
       if (data.phase === "failed") failed++;
       onEvent(data);
     });
 
     source.addEventListener("done", (e) => {
       source.close();
-      const data = JSON.parse((e as MessageEvent).data) as { failed?: number };
-      resolve({ failed: data.failed ?? failed });
+      const data: unknown = JSON.parse((e as MessageEvent).data);
+      const reported =
+        typeof data === "object" &&
+        data !== null &&
+        typeof (data as { failed?: unknown }).failed === "number"
+          ? (data as { failed: number }).failed
+          : failed;
+      resolve({ failed: reported });
     });
 
     source.addEventListener("failed", () => {

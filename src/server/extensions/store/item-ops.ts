@@ -18,6 +18,7 @@ import {
 } from "./persistence";
 import { _addRepo } from "./repo-ops";
 import { STORE_TYPE_SPECS } from "./store-types";
+import type { StoreStreamPhase } from "../../../shared/store-stream";
 import { bumpPluginRegistryReload } from "../registry-factory";
 import { runStoreExclusive } from "./store-lock";
 import { makeExtID } from "../../utils/extension-id";
@@ -670,7 +671,7 @@ export interface UpdateItemProgress {
   type: ExtensionStoreType;
   i: number;
   total: number;
-  phase: "start" | "ok" | "failed";
+  phase: StoreStreamPhase;
   error?: string;
 }
 
