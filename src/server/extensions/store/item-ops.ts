@@ -16,15 +16,13 @@ import {
   writeReposData,
   getRepoByUrl,
 } from "./persistence";
-import { addRepo } from "./repo-ops";
+import { _addRepo } from "./repo-ops";
 import { STORE_TYPE_SPECS } from "./store-types";
 import { bumpPluginRegistryReload } from "../registry-factory";
-import { createMutex } from "../../utils/mutex";
+import { runStoreExclusive } from "./store-lock";
 import { makeExtID } from "../../utils/extension-id";
 import { logger } from "../../utils/logger";
 import type { ShortcutBinding, ShortcutKind } from "../../../shared/shortcuts";
-
-const _storeMutex = createMutex();
 
 function slugifyIdPart(input: string): string {
   return (
@@ -190,7 +188,7 @@ async function installDependencies(dependencies: string[]): Promise<void> {
     let repo = getRepoByUrl(data, parsed.repoUrl);
     if (!repo) {
       try {
-        repo = await addRepo(parsed.repoUrl);
+        repo = await _addRepo(parsed.repoUrl);
       } catch (err) {
         logger.warn("store:item", `failed to add repo ${parsed.repoUrl}`, err);
         continue;
@@ -496,7 +494,7 @@ export function installItem(
   itemPath: string,
   type: ExtensionStoreType,
 ): Promise<void> {
-  return _storeMutex(() => _installItem(repoUrl, itemPath, type));
+  return runStoreExclusive(() => _installItem(repoUrl, itemPath, type));
 }
 
 async function _installItem(
@@ -581,7 +579,7 @@ export function uninstallItem(
   itemPath: string,
   type: ExtensionStoreType,
 ): Promise<void> {
-  return _storeMutex(() => _uninstallItem(repoUrl, itemPath, type));
+  return runStoreExclusive(() => _uninstallItem(repoUrl, itemPath, type));
 }
 
 async function _uninstallItem(
@@ -612,7 +610,7 @@ export function updateItem(
   itemPath: string,
   type: ExtensionStoreType,
 ): Promise<void> {
-  return _storeMutex(() => _updateItem(repoUrl, itemPath, type));
+  return runStoreExclusive(() => _updateItem(repoUrl, itemPath, type));
 }
 
 async function _updateItem(
@@ -665,12 +663,50 @@ async function _updateItem(
   await reloadAfterAction(type);
 }
 
-export async function updateAllItems(): Promise<{ updated: number }> {
-  const items = await listRepoItems();
-  const updatable = items.filter((i) => i.updateAvailable);
-  for (const item of updatable)
-    await updateItem(item.repoUrl, item.path, item.type);
-  return { updated: updatable.length };
+export interface UpdateItemProgress {
+  repoUrl: string;
+  itemPath: string;
+  name: string;
+  type: ExtensionStoreType;
+  i: number;
+  total: number;
+  phase: "start" | "ok" | "failed";
+  error?: string;
+}
+
+export async function updateAllItems(
+  onProgress?: (p: UpdateItemProgress) => void,
+): Promise<{ updated: number; failed: number }> {
+  return runStoreExclusive(async () => {
+    const items = await listRepoItems();
+    const updatable = items.filter((i) => i.updateAvailable);
+    const total = updatable.length;
+    let updated = 0;
+    let failed = 0;
+    for (let idx = 0; idx < total; idx++) {
+      const item = updatable[idx];
+      const base = {
+        repoUrl: item.repoUrl,
+        itemPath: item.path,
+        name: item.name,
+        type: item.type,
+        i: idx + 1,
+        total,
+      };
+      onProgress?.({ ...base, phase: "start" });
+      try {
+        await _updateItem(item.repoUrl, item.path, item.type);
+        updated++;
+        onProgress?.({ ...base, phase: "ok" });
+      } catch (err) {
+        failed++;
+        const message = err instanceof Error ? err.message : "Update failed";
+        logger.warn("store:item", `update-all failed for ${item.name}`, err);
+        onProgress?.({ ...base, phase: "failed", error: message });
+      }
+    }
+    return { updated, failed };
+  });
 }
 
 export async function getInstalledItems(): Promise<InstalledItem[]> {
@@ -682,7 +718,7 @@ export function deleteUntracked(
   type: ExtensionStoreType,
   folderName: string,
 ): Promise<void> {
-  return _storeMutex(() => _deleteUntracked(type, folderName));
+  return runStoreExclusive(() => _deleteUntracked(type, folderName));
 }
 
 async function _deleteUntracked(

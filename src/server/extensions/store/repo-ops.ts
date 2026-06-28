@@ -2,6 +2,7 @@ import { readFile, rm } from "fs/promises";
 import { join } from "path";
 import type { RepoInfo, RepoPackageJson } from "../../types";
 import { logger } from "../../utils/logger";
+import { runStoreExclusive } from "./store-lock";
 import {
   normalizeRepoUrl,
   getStoreDir,
@@ -18,6 +19,28 @@ const OLD_OFFICIAL_REPO_URL =
   "https://github.com/fccview/fccview-degoog-extensions.git";
 const DEGOOG_BETA_STORE = process.env.DEGOOG_BETA_STORE === "1";
 const BETA_BRANCH = "develop";
+
+const _isLockError = (stderr: string): boolean =>
+  /shallow\.lock|shallow file has changed|index\.lock|another git process/i.test(
+    stderr,
+  );
+
+const STALE_LOCK_FILES = ["shallow.lock", "index.lock"];
+
+const _cleanGitLocks = async (repoPath: string): Promise<void> => {
+  const gitDir = join(repoPath, ".git");
+  await Promise.all(
+    STALE_LOCK_FILES.map((name) =>
+      rm(join(gitDir, name), { force: true }).catch((err) =>
+        logger.debug(
+          "store:repo",
+          `could not remove stale ${name} in ${repoPath}`,
+          err,
+        ),
+      ),
+    ),
+  );
+};
 
 const probeBranch = async (url: string, branch: string): Promise<boolean> => {
   const proc = Bun.spawn(["git", "ls-remote", "--heads", url, branch], {
@@ -64,10 +87,10 @@ const headBranch = async (repoPath: string): Promise<string> => {
   return (await new Response(proc.stdout).text()).trim();
 };
 
-const fetchRef = async (
+const _runFetchRef = async (
   repoPath: string,
   branch: string,
-): Promise<{ ok: boolean; notFound: boolean; error: string }> => {
+): Promise<{ exit: number; stderr: string; timedOut: boolean }> => {
   const proc = Bun.spawn(
     [
       "git",
@@ -81,9 +104,34 @@ const fetchRef = async (
     ],
     { stdout: "ignore", stderr: "pipe" },
   );
-  const exit = await proc.exited;
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    proc.kill();
+  }, FETCH_TIMEOUT_MS);
+  try {
+    const exit = await proc.exited;
+    const stderr = exit === 0 ? "" : await new Response(proc.stderr).text();
+    return { exit, stderr, timedOut };
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+const fetchRef = async (
+  repoPath: string,
+  branch: string,
+): Promise<{ ok: boolean; notFound: boolean; error: string }> => {
+  let { exit, stderr, timedOut } = await _runFetchRef(repoPath, branch);
+  if (exit !== 0 && !timedOut && _isLockError(stderr)) {
+    logger.warn(
+      "store:repo",
+      `git lock detected during fetch, clearing stale locks and retrying`,
+    );
+    await _cleanGitLocks(repoPath);
+    ({ exit, stderr, timedOut } = await _runFetchRef(repoPath, branch));
+  }
   if (exit === 0) return { ok: true, notFound: false, error: "" };
-  const stderr = await new Response(proc.stderr).text();
   const notFound =
     /couldn't find remote ref|remote ref does not exist|invalid refspec/i.test(
       stderr,
@@ -91,7 +139,7 @@ const fetchRef = async (
   return {
     ok: false,
     notFound,
-    error: _sanitizeGitError(stderr),
+    error: timedOut ? "Fetch timed out" : _sanitizeGitError(stderr),
   };
 };
 
@@ -153,6 +201,13 @@ const syncBranch = async (repoPath: string): Promise<void> => {
   }
 };
 
+const resolveTrackedBranch = async (repoPath: string): Promise<string> => {
+  const useBeta =
+    DEGOOG_BETA_STORE &&
+    (await branchExists(repoPath, `origin/${BETA_BRANCH}`));
+  return useBeta ? BETA_BRANCH : await headBranch(repoPath);
+};
+
 function _sanitizeGitError(raw: string): string {
   if (!raw) return raw;
   const storeDir = getStoreDir();
@@ -200,7 +255,11 @@ export function isValidGitUrl(url: string): boolean {
   }
 }
 
-export async function addRepo(url: string): Promise<RepoInfo> {
+export function addRepo(url: string): Promise<RepoInfo> {
+  return runStoreExclusive(() => _addRepo(url));
+}
+
+export async function _addRepo(url: string): Promise<RepoInfo> {
   if (!isValidGitUrl(url)) {
     throw new Error(
       "Invalid git URL. Use http(s) or ssh URL ending in .git or without.",
@@ -272,7 +331,11 @@ export async function addRepo(url: string): Promise<RepoInfo> {
   return repoInfo;
 }
 
-export async function removeRepo(url: string): Promise<void> {
+export function removeRepo(url: string): Promise<void> {
+  return runStoreExclusive(() => _removeRepo(url));
+}
+
+async function _removeRepo(url: string): Promise<void> {
   const data = await readReposData();
   const repo = getRepoByUrl(data, url);
   if (!repo) throw new Error("Repository not found.");
@@ -296,60 +359,81 @@ export async function removeRepo(url: string): Promise<void> {
   await writeReposData(data);
 }
 
-export async function refreshRepo(url?: string): Promise<void> {
-  const data = await readReposData();
-  const repos = url ? [getRepoByUrl(data, url)] : data.repos;
-  const toRefresh = repos.filter((r): r is RepoInfo => r != null);
-  for (const repo of toRefresh) {
-    const repoPath = join(getStoreDir(), repo.localPath);
-    try {
-      await syncBranch(repoPath);
-      const useBeta =
-        DEGOOG_BETA_STORE &&
-        (await branchExists(repoPath, `origin/${BETA_BRANCH}`));
-      const branch = useBeta ? BETA_BRANCH : await headBranch(repoPath);
-      const fetched = await fetchRef(repoPath, branch);
-      if (!fetched.ok) {
-        repo.error = fetched.error || `Git fetch failed for ${branch}`;
-        continue;
-      }
-      const reset = await hardReset(repoPath, `origin/${branch}`);
-      if (!reset.ok) {
-        repo.error = reset.error || `Git reset failed for ${branch}`;
-        continue;
-      }
-      repo.error = null;
-      repo.lastFetched = new Date().toISOString();
-      const pkgPath = join(repoPath, "package.json");
-      const raw = await readFile(pkgPath, "utf-8");
-      const pkg = JSON.parse(raw) as RepoPackageJson;
-      repo.name = pkg.name ?? repo.name;
-      repo.description = pkg.description ?? repo.description;
-      repo.repoImage = pkg["repo-image"] ?? null;
-    } catch (e) {
-      repo.error = e instanceof Error ? e.message : String(e);
+async function _refreshRepo(repo: RepoInfo): Promise<void> {
+  const repoPath = join(getStoreDir(), repo.localPath);
+  try {
+    await syncBranch(repoPath);
+    const branch = await resolveTrackedBranch(repoPath);
+    const fetched = await fetchRef(repoPath, branch);
+    if (!fetched.ok) {
+      repo.error = fetched.error || `Git fetch failed for ${branch}`;
+      return;
     }
+    const reset = await hardReset(repoPath, `origin/${branch}`);
+    if (!reset.ok) {
+      repo.error = reset.error || `Git reset failed for ${branch}`;
+      return;
+    }
+    repo.error = null;
+    repo.lastFetched = new Date().toISOString();
+    const pkgPath = join(repoPath, "package.json");
+    const raw = await readFile(pkgPath, "utf-8");
+    const pkg = JSON.parse(raw) as RepoPackageJson;
+    repo.name = pkg.name ?? repo.name;
+    repo.description = pkg.description ?? repo.description;
+    repo.repoImage = pkg["repo-image"] ?? null;
+  } catch (e) {
+    repo.error = e instanceof Error ? e.message : String(e);
   }
-  await writeReposData(data);
 }
 
-export async function refreshAllRepos(): Promise<
-  { url: string; error: string | null }[]
-> {
-  const data = await readReposData();
-  const results: { url: string; error: string | null }[] = [];
-  for (const repo of data.repos) {
-    try {
-      await refreshRepo(repo.url);
-      const updated = await readReposData();
-      const r = getRepoByUrl(updated, repo.url);
-      results.push({ url: repo.url, error: r?.error ?? null });
-    } catch (err) {
-      logger.warn("store:repo", `refresh failed for ${repo.url}`, err);
-      results.push({ url: repo.url, error: "Refresh failed" });
+export function refreshRepo(url?: string): Promise<void> {
+  return runStoreExclusive(async () => {
+    const data = await readReposData();
+    let toRefresh: RepoInfo[];
+    if (url) {
+      const repo = getRepoByUrl(data, url);
+      if (!repo) throw new Error("Repository not found.");
+      toRefresh = [repo];
+    } else {
+      toRefresh = data.repos;
     }
-  }
-  return results;
+    for (const repo of toRefresh) await _refreshRepo(repo);
+    await writeReposData(data);
+  });
+}
+
+export interface RefreshProgress {
+  url: string;
+  name: string;
+  i: number;
+  total: number;
+  phase: "start" | "ok" | "failed";
+  error?: string;
+}
+
+export function refreshAllRepos(
+  onProgress?: (p: RefreshProgress) => void,
+): Promise<{ url: string; error: string | null }[]> {
+  return runStoreExclusive(async () => {
+    const data = await readReposData();
+    const results: { url: string; error: string | null }[] = [];
+    const total = data.repos.length;
+    for (let idx = 0; idx < total; idx++) {
+      const repo = data.repos[idx];
+      const base = { url: repo.url, name: repo.name, i: idx + 1, total };
+      onProgress?.({ ...base, phase: "start" });
+      await _refreshRepo(repo);
+      results.push({ url: repo.url, error: repo.error });
+      onProgress?.({
+        ...base,
+        phase: repo.error ? "failed" : "ok",
+        ...(repo.error ? { error: repo.error } : {}),
+      });
+    }
+    await writeReposData(data);
+    return results;
+  });
 }
 
 export interface RepoStatus {
@@ -357,22 +441,10 @@ export interface RepoStatus {
   behind: number;
 }
 
-async function getBehindCount(repoPath: string): Promise<number> {
-  let remoteRef = "origin/HEAD";
-  const refs = DEGOOG_BETA_STORE
-    ? [`origin/${BETA_BRANCH}`, "origin/HEAD", "origin/main", "origin/master"]
-    : ["origin/HEAD", "origin/main", "origin/master"];
-  for (const ref of refs) {
-    const proc = Bun.spawn(["git", "-C", repoPath, "rev-parse", ref], {
-      stdout: "ignore",
-      stderr: "ignore",
-    });
-    const exit = await proc.exited;
-    if (exit === 0) {
-      remoteRef = ref;
-      break;
-    }
-  }
+async function getBehindCount(
+  repoPath: string,
+  remoteRef: string,
+): Promise<number> {
   const countProc = Bun.spawn(
     ["git", "-C", repoPath, "rev-list", "--count", `HEAD..${remoteRef}`],
     { stdout: "pipe", stderr: "ignore" },
@@ -384,40 +456,29 @@ async function getBehindCount(repoPath: string): Promise<number> {
   return Number.isNaN(n) ? 0 : Math.max(0, n);
 }
 
-export async function getReposStatus(): Promise<RepoStatus[]> {
-  const data = await readReposData();
-  const storeDir = getStoreDir();
-  const results: RepoStatus[] = [];
-  for (const repo of data.repos) {
-    const repoPath = join(storeDir, repo.localPath);
-    try {
-      const fetchProc = Bun.spawn(["git", "-C", repoPath, "fetch", "origin"], {
-        stdout: "ignore",
-        stderr: "pipe",
-      });
-      await Promise.race([
-        fetchProc.exited,
-        new Promise<number>((_, rej) =>
-          setTimeout(() => {
-            fetchProc.kill();
-            rej(new Error("Fetch timed out"));
-          }, FETCH_TIMEOUT_MS),
-        ),
-      ]);
-    } catch (err) {
-      logger.warn("store:repo", `fetch failed for ${repo.url}`, err);
-      results.push({ url: repo.url, behind: 0 });
-      continue;
+export function getReposStatus(): Promise<RepoStatus[]> {
+  return runStoreExclusive(async () => {
+    const data = await readReposData();
+    const storeDir = getStoreDir();
+    const results: RepoStatus[] = [];
+    for (const repo of data.repos) {
+      const repoPath = join(storeDir, repo.localPath);
+      try {
+        const branch = await resolveTrackedBranch(repoPath);
+        const fetched = await fetchRef(repoPath, branch);
+        if (!fetched.ok) {
+          results.push({ url: repo.url, behind: 0 });
+          continue;
+        }
+        const behind = await getBehindCount(repoPath, `origin/${branch}`);
+        results.push({ url: repo.url, behind });
+      } catch (err) {
+        logger.warn("store:repo", `status check failed for ${repo.url}`, err);
+        results.push({ url: repo.url, behind: 0 });
+      }
     }
-    try {
-      const behind = await getBehindCount(repoPath);
-      results.push({ url: repo.url, behind });
-    } catch (err) {
-      logger.warn("store:repo", `behind count failed for ${repo.url}`, err);
-      results.push({ url: repo.url, behind: 0 });
-    }
-  }
-  return results;
+    return results;
+  });
 }
 
 async function _migrateOfficialRepo(): Promise<void> {

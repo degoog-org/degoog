@@ -2,6 +2,12 @@ import type { RepoInfo } from "../../types/store-tab";
 import { jsonHeaders } from "../../utils/request";
 import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
 import { getBase } from "../../utils/base-url";
+import {
+  setItemPhase,
+  setRepoPhase,
+  streamRefreshAll,
+  streamUpdateAll,
+} from "./progress";
 
 export function showError(el: HTMLElement | null, msg: string): void {
   if (!el) return;
@@ -42,20 +48,30 @@ export async function handleAddRepo(
 }
 
 export async function handleRefresh(
+  container: HTMLElement,
   url: string,
   getToken: () => string | null,
   refreshAndRender: () => Promise<void>,
   loadReposStatus: () => Promise<void>,
   render: () => void,
 ): Promise<void> {
-  const res = await fetch(`${getBase()}/api/store/repos/refresh`, {
-    method: "POST",
-    headers: jsonHeaders(getToken),
-    body: JSON.stringify({ url }),
-  });
-  if (!res.ok) return;
-  await refreshAndRender();
-  void loadReposStatus().then(() => render());
+  setRepoPhase(container, url, "Refreshing", "start");
+  try {
+    const res = await fetch(`${getBase()}/api/store/repos/refresh`, {
+      method: "POST",
+      headers: jsonHeaders(getToken),
+      body: JSON.stringify({ url }),
+    });
+    if (!res.ok) {
+      setRepoPhase(container, url, "Refreshing", "failed");
+      return;
+    }
+    setRepoPhase(container, url, "Refreshing", "ok");
+    await refreshAndRender();
+    void loadReposStatus().then(() => render());
+  } catch {
+    setRepoPhase(container, url, "Refreshing", "failed", "Network error");
+  }
 }
 
 export async function handleRemove(
@@ -80,12 +96,14 @@ export async function handleRemove(
 }
 
 export async function handleInstall(
+  container: HTMLElement,
   btn: HTMLButtonElement,
   getToken: () => string | null,
   loadItems: () => Promise<void>,
   render: () => void,
 ): Promise<void> {
   const { repoUrl, itemPath, type } = btn.dataset;
+  if (!repoUrl || !itemPath || !type) return;
   if (
     type === "plugin" &&
     !(await confirmModal({
@@ -95,7 +113,9 @@ export async function handleInstall(
     }))
   )
     return;
+  const key = { repoUrl, itemPath, type };
   btn.disabled = true;
+  setItemPhase(container, key, "Installing", "start");
   try {
     const res = await fetch(`${getBase()}/api/store/install`, {
       method: "POST",
@@ -103,14 +123,16 @@ export async function handleInstall(
       body: JSON.stringify({ repoUrl, itemPath, type }),
     });
     const data = (await res.json()) as { error?: string };
-    if (!res.ok) alert(data.error || "Install failed");
-    else {
-      await loadItems();
-      render();
-      window.dispatchEvent(new CustomEvent("extensions-saved"));
+    if (!res.ok) {
+      setItemPhase(container, key, "Installing", "failed", data.error);
+      return;
     }
+    setItemPhase(container, key, "Installing", "ok");
+    await loadItems();
+    render();
+    window.dispatchEvent(new CustomEvent("extensions-saved"));
   } catch {
-    alert("Network error");
+    setItemPhase(container, key, "Installing", "failed", "Network error");
   } finally {
     btn.disabled = false;
   }
@@ -187,13 +209,17 @@ export async function handleDeleteUntracked(
 }
 
 export async function handleUpdate(
+  container: HTMLElement,
   btn: HTMLButtonElement,
   getToken: () => string | null,
   loadItems: () => Promise<void>,
   render: () => void,
 ): Promise<void> {
   const { repoUrl, itemPath, type } = btn.dataset;
+  if (!repoUrl || !itemPath || !type) return;
+  const key = { repoUrl, itemPath, type };
   btn.disabled = true;
+  setItemPhase(container, key, "Updating", "start");
   try {
     const res = await fetch(`${getBase()}/api/store/update`, {
       method: "POST",
@@ -201,14 +227,16 @@ export async function handleUpdate(
       body: JSON.stringify({ repoUrl, itemPath, type }),
     });
     const data = (await res.json()) as { error?: string };
-    if (!res.ok) alert(data.error || "Update failed");
-    else {
-      await loadItems();
-      render();
-      window.dispatchEvent(new CustomEvent("extensions-saved"));
+    if (!res.ok) {
+      setItemPhase(container, key, "Updating", "failed", data.error);
+      return;
     }
+    setItemPhase(container, key, "Updating", "ok");
+    await loadItems();
+    render();
+    window.dispatchEvent(new CustomEvent("extensions-saved"));
   } catch {
-    alert("Network error");
+    setItemPhase(container, key, "Updating", "failed", "Network error");
   } finally {
     btn.disabled = false;
   }
@@ -225,19 +253,10 @@ export async function handleUpdateAll(
   );
   if (btn) btn.disabled = true;
   try {
-    const res = await fetch(`${getBase()}/api/store/update-all`, {
-      method: "POST",
-      headers: jsonHeaders(getToken),
-    });
-    const data = (await res.json()) as { error?: string; updated?: number };
-    if (!res.ok) alert(data.error || "Update failed");
-    else {
-      await loadItems();
-      render();
-      window.dispatchEvent(new CustomEvent("extensions-saved"));
-    }
-  } catch {
-    alert("Network error");
+    await streamUpdateAll(container, getToken);
+    await loadItems();
+    render();
+    window.dispatchEvent(new CustomEvent("extensions-saved"));
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -255,11 +274,7 @@ export async function handleRefreshAll(
   );
   if (btn) btn.disabled = true;
   try {
-    await fetch(`${getBase()}/api/store/repos/refresh`, {
-      method: "POST",
-      headers: jsonHeaders(getToken),
-      body: JSON.stringify({}),
-    });
+    await streamRefreshAll(container, getToken);
     await refreshAndRender();
     void loadReposStatus().then(() => render());
   } finally {
