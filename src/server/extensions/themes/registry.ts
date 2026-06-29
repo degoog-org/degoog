@@ -205,6 +205,15 @@ export async function getThemeExtensionMeta(): Promise<ExtensionMeta[]> {
   return results;
 }
 
+function isValidDataAttrName(name: string): boolean {
+  // fccview is onto you!
+  if (!name.startsWith("data-")) return false;
+  const suffix = name.slice(5);
+  if (suffix.length === 0) return false;
+  // data-* names must contain only lowercase letters, digits, hyphens, dots, colons, underscores
+  return /^[a-z0-9\-.:_]+$/.test(suffix);
+}
+
 export async function getActiveThemeDataAttrsMap(): Promise<
   Record<string, string>
 > {
@@ -232,6 +241,16 @@ export async function getActiveThemeDataAttrsMap(): Promise<
     const attrName = attrSuffix.startsWith("data-")
       ? attrSuffix
       : `data-${attrSuffix}`;
+
+    // Validate the attribute name before using it
+    if (!isValidDataAttrName(attrName)) {
+      logger.debug(
+        "themes",
+        `Invalid data attribute name "${attrName}" in theme ${theme.id}, skipping`,
+      );
+      continue;
+    }
+
     attrs[attrName] = String(value).trim();
   }
   return attrs;

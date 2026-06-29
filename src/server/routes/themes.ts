@@ -8,6 +8,7 @@ import {
 } from "../extensions/themes/registry";
 import { canBalrogPass, gandalf } from "./settings-auth";
 import { logger } from "../utils/logger";
+import type { ApplyThemeResponse } from "../../shared/theme";
 
 const router = new Hono();
 
@@ -38,12 +39,13 @@ router.post("/api/theme/active", async (c) => {
   }
   const ok = await setActiveTheme(body.id ?? null);
   if (!ok) return c.json({ error: "Theme not found" }, 400);
-  return c.json({
+  const response: ApplyThemeResponse = {
     ok: true,
     activeId: body.id,
     hasCss: !!getActiveTheme()?.compiledCss,
     dataAttrs: await getActiveThemeDataAttrsMap(),
-  });
+  };
+  return c.json(response);
 });
 
 router.get("/theme/style.css", (c) => {

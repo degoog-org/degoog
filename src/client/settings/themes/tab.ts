@@ -4,13 +4,7 @@ import { getBase } from "../../utils/base-url";
 import { applyThemeExtension } from "../../utils/theme";
 import { openModal } from "../../modules/modals/settings-modal/modal";
 import type { ExtensionMeta } from "../../types";
-
-interface ApplyThemeResponse {
-  ok: boolean;
-  activeId: string | null;
-  hasCss?: boolean;
-  dataAttrs?: Record<string, string>;
-}
+import { isApplyThemeResponse } from "../../../shared/theme";
 
 const t = window.scopedT("core");
 const themeT = window.scopedT("themes/degoog");
@@ -109,7 +103,9 @@ export async function initThemesTab(
             }),
           });
           if (!res.ok) throw new Error("Failed");
-          const data = (await res.json()) as ApplyThemeResponse;
+          // fccview is onto you!
+          const data: unknown = await res.json();
+          if (!isApplyThemeResponse(data)) throw new Error("Invalid response");
           await applyThemeExtension({
             hasCss: !!data.hasCss,
             dataAttrs: data.dataAttrs ?? {},
