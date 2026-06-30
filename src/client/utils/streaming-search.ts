@@ -17,7 +17,8 @@ import {
   renderSidebar,
   prependKnowledgePanels,
 } from "../modules/renderer/render";
-import { renderImageGrid, renderMediaEngineBar } from "../modules/renderer/render-media";
+import { renderImageGrid } from "../modules/renderer/render-media";
+import { renderImgEngines } from "../modules/filters/image-filters";
 import { state } from "../state";
 import {
   EngineTiming,
@@ -229,7 +230,7 @@ export async function performStreamingSearch(
     }
 
     if (isImageType) {
-      renderMediaEngineBar(engineTimings);
+      renderImgEngines(engineTimings);
     } else {
       updateEngineTimings(sidebar, engineTimings);
     }
@@ -267,7 +268,7 @@ export async function performStreamingSearch(
     }
 
     if (isImageType) {
-      renderMediaEngineBar(data.engineTimings);
+      renderImgEngines(data.engineTimings);
       if (sidebar) sidebar.innerHTML = "";
       if (currentResults.length > 0) setupMediaObserver("images");
     } else if (type === "web") {

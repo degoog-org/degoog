@@ -6,7 +6,7 @@ import {
   OPEN_IN_NEW_TAB_KEY,
   POST_METHOD_ENABLED,
 } from "../constants";
-import { state } from "../state";
+import { state, defaultImageFilter } from "../state";
 import { initAutocomplete } from "../utils/autocomplete";
 import { idbGet } from "../utils/db";
 import { recordSettingsReturn, showHome } from "../utils/navigation";
@@ -271,7 +271,9 @@ export async function init(): Promise<void> {
     const hs = e.state as DegoogHistoryState | null;
     if (hs?.degoog) {
       state.isInitialLoad = true;
-      state.imageFilter = hs.imageFilter ? { ...hs.imageFilter } : {};
+      state.imageFilter = hs.imageFilter
+        ? { ...hs.imageFilter }
+        : defaultImageFilter();
       if (hs.type?.startsWith("tab:")) {
         void performTabSearch(hs.query, hs.type.slice(4), hs.page);
       } else {
@@ -285,7 +287,7 @@ export async function init(): Promise<void> {
       const popType = popParams.get("type") || "web";
       const popPage = parseInt(popParams.get("page") ?? "1", 10) || 1;
       if (isImageSearchType(popType)) state.imageFilter = readImgFilter(popParams);
-      else state.imageFilter = {};
+      else state.imageFilter = defaultImageFilter();
       state.isInitialLoad = true;
       if (popType.startsWith("tab:")) {
         void performTabSearch(popQ, popType.slice(4), popPage);

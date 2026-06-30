@@ -1,9 +1,8 @@
 import { state } from "../../state";
-import { escapeHtml, cleanHostname } from "../../utils/dom";
+import { cleanHostname } from "../../utils/dom";
 import { openMediaPreview, registerAppendMediaCards } from "../media/media";
-import { setupRetryLinks } from "./render-sidebar";
 import { renderTemplate } from "../../utils/template";
-import type { ScoredResult, EngineTiming } from "../../types";
+import type { ScoredResult } from "../../types";
 
 const _getImageColumnCount = (): number => {
   const w = window.innerWidth;
@@ -149,22 +148,4 @@ export function renderVideoGrid(
     grid.innerHTML = "";
   }
   appendMediaCards(grid, results, "video");
-}
-
-export function renderMediaEngineBar(timings: EngineTiming[]): void {
-  const el = document.getElementById("results-meta");
-  if (!el) return;
-  el.querySelector(".media-engine-bar")?.remove();
-  if (!timings.length) return;
-  const tags = timings
-    .map((et) => {
-      const hit = et.resultCount > 0;
-      return `<span class="degoog-badge result-engine-tag${hit ? "" : " media-engine-tag--miss"}">${escapeHtml(et.name)} · ${et.resultCount} <a class="engine-retry-link" data-engine="${escapeHtml(et.name)}">retry</a></span>`;
-    })
-    .join("");
-  const bar = document.createElement("div");
-  bar.className = "media-engine-bar";
-  bar.innerHTML = tags;
-  el.appendChild(bar);
-  setupRetryLinks(bar);
 }

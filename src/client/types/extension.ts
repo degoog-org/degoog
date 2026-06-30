@@ -79,6 +79,7 @@ export interface EngineRegistry {
     primaryType: string;
     searchTypes: string[];
     disabledByDefault?: boolean;
+    filters?: Record<string, string[]>;
   }>;
   defaults?: Record<string, boolean>;
 }

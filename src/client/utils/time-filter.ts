@@ -12,6 +12,8 @@ const TIME_LABELS: Record<string, string> = {
   custom: "Custom",
 };
 
+const TOOLS_OPEN_KEY = "degoog-tools-open";
+
 let _langDisplayNames: Intl.DisplayNames | null = null;
 
 function getLangName(code: string): string {
@@ -29,13 +31,30 @@ function isActive(): boolean {
   return state.currentTimeFilter !== "any" || !!state.currentLanguage;
 }
 
+function readOpenPref(): boolean {
+  try {
+    return localStorage.getItem(TOOLS_OPEN_KEY) === "true";
+  } catch (err) {
+    console.debug("[tools] open pref read failed", err);
+    return false;
+  }
+}
+
+function writeOpenPref(open: boolean): void {
+  try {
+    localStorage.setItem(TOOLS_OPEN_KEY, open ? "true" : "false");
+  } catch (err) {
+    console.debug("[tools] open pref write failed", err);
+  }
+}
+
 export function initOptionsDropdown(): void {
   const toggle = document.getElementById("tools-toggle");
-  const dropdown = document.getElementById("tools-dropdown");
+  const panel = document.getElementById("tools-panel");
   const toolsBar = document.getElementById("tools-bar");
   const submenuTime = document.getElementById("tools-submenu-time");
   const submenuLang = document.getElementById("tools-submenu-lang");
-  if (!toggle || !dropdown || !toolsBar || !submenuTime || !submenuLang) return;
+  if (!toggle || !panel || !toolsBar || !submenuTime || !submenuLang) return;
 
   const customDateWrap = document.getElementById("tools-custom-date");
   const dateFromInput = document.getElementById(
@@ -52,11 +71,12 @@ export function initOptionsDropdown(): void {
   const timeValEl = document.getElementById("tools-time-val");
   const langValEl = document.getElementById("tools-lang-val");
 
-  document.body.appendChild(dropdown);
-  document.body.appendChild(submenuTime);
-  document.body.appendChild(submenuLang);
+  const tabsRow = document.getElementById("results-tabs");
+  if (tabsRow && panel.parentElement !== tabsRow.parentElement) {
+    tabsRow.after(panel);
+  }
 
-  let _activeSubmenu: HTMLElement | null = null;
+  let _activeField: HTMLElement | null = null;
 
   function updateToggle(): void {
     toggle!.classList.toggle("active", isActive());
@@ -67,7 +87,7 @@ export function initOptionsDropdown(): void {
       timeValEl.textContent =
         TIME_LABELS[state.currentTimeFilter] ?? "Any time";
       timeValEl.classList.toggle(
-        "tools-menu-value--set",
+        "tools-field-value--set",
         state.currentTimeFilter !== "any",
       );
     }
@@ -76,67 +96,34 @@ export function initOptionsDropdown(): void {
         ? getLangName(state.currentLanguage)
         : "Any";
       langValEl.classList.toggle(
-        "tools-menu-value--set",
+        "tools-field-value--set",
         !!state.currentLanguage,
       );
     }
   }
 
-  function positionDropdown(): void {
-    const rect = toggle!.getBoundingClientRect();
-    dropdown!.style.position = "fixed";
-    dropdown!.style.top = `${rect.bottom + 4}px`;
-    dropdown!.style.right = `${window.innerWidth - rect.right}px`;
-  }
-
-  function positionSubmenu(submenu: HTMLElement, itemEl: HTMLElement): void {
-    const viewW = window.innerWidth;
-    const anchorRect = itemEl.getBoundingClientRect();
-    submenu.style.position = "fixed";
-
-    if (viewW >= 768) {
-      const dropdownRect = dropdown!.getBoundingClientRect();
-      let left = dropdownRect.right + 4;
-      if (left + 220 > viewW - 8) left = dropdownRect.left - 224;
-      submenu.style.top = `${anchorRect.top}px`;
-      submenu.style.left = `${left}px`;
-      submenu.style.width = "";
-    } else {
-      const dropdownRect = dropdown!.getBoundingClientRect();
-      submenu.style.top = `${anchorRect.bottom}px`;
-      submenu.style.left = `${dropdownRect.left}px`;
-      submenu.style.width = `${dropdownRect.width}px`;
+  function closeField(): void {
+    if (_activeField) {
+      _activeField.style.display = "none";
+      _activeField = null;
     }
   }
 
-  function closeSubmenu(): void {
-    if (_activeSubmenu) {
-      _activeSubmenu.style.display = "none";
-      _activeSubmenu = null;
-    }
-  }
-
-  function closeAll(): void {
-    dropdown!.style.display = "none";
-    closeSubmenu();
-    updateToggle();
-  }
-
-  function openDropdown(): void {
-    positionDropdown();
-    dropdown!.style.display = "block";
-    toggle!.classList.add("active");
-  }
-
-  function openSubmenu(submenu: HTMLElement, itemEl: HTMLElement): void {
-    if (_activeSubmenu === submenu) {
-      closeSubmenu();
+  function openField(menu: HTMLElement): void {
+    if (_activeField === menu) {
+      closeField();
       return;
     }
-    closeSubmenu();
-    positionSubmenu(submenu, itemEl);
-    submenu.style.display = "block";
-    _activeSubmenu = submenu;
+    closeField();
+    menu.style.display = "block";
+    _activeField = menu;
+  }
+
+  function setPanelOpen(open: boolean): void {
+    panel!.style.display = open ? "flex" : "none";
+    toggle!.classList.toggle("is-open", open);
+    if (!open) closeField();
+    writeOpenPref(open);
   }
 
   function syncTimeOptions(): void {
@@ -203,7 +190,8 @@ export function initOptionsDropdown(): void {
         if (lang === state.currentLanguage) return;
         state.currentLanguage = lang;
         syncLangOptions(langFilter?.value ?? "");
-        closeAll();
+        closeField();
+        updateToggle();
         if (state.currentQuery)
           void performSearch(state.currentQuery, state.currentType);
       });
@@ -214,49 +202,32 @@ export function initOptionsDropdown(): void {
     }
   }
 
+  setPanelOpen(readOpenPref());
   updateToggle();
   updateValueLabels();
   syncTimeOptions();
   void loadLanguages();
 
   toggle.addEventListener("click", () => {
-    const open = dropdown.style.display !== "none";
-    if (open) closeAll();
-    else openDropdown();
+    setPanelOpen(panel.style.display === "none");
   });
 
   document.addEventListener("click", (e) => {
     const target = e.target as Node;
-    if (
-      !toggle.contains(target) &&
-      !dropdown.contains(target) &&
-      !submenuTime.contains(target) &&
-      !submenuLang.contains(target)
-    ) {
-      closeAll();
+    if (!panel.contains(target) && !toggle.contains(target)) {
+      closeField();
     }
   });
 
-  window.addEventListener(
-    "scroll",
-    (e) => {
-      if (dropdown.style.display !== "block") return;
-      const target = e.target as Node;
-      if (submenuTime.contains(target) || submenuLang.contains(target)) return;
-      closeAll();
-    },
-    { capture: true },
-  );
-
-  dropdown.addEventListener("click", (e) => {
-    const item = (e.target as HTMLElement).closest<HTMLElement>(
-      ".tools-menu-item",
+  panel.addEventListener("click", (e) => {
+    const fieldToggle = (e.target as HTMLElement).closest<HTMLElement>(
+      ".tools-field-toggle",
     );
-    if (!item) return;
-    const menu = item.dataset.menu;
-    if (menu === "time") openSubmenu(submenuTime, item);
+    if (!fieldToggle) return;
+    const menu = fieldToggle.dataset.menu;
+    if (menu === "time") openField(submenuTime);
     else if (menu === "lang") {
-      openSubmenu(submenuLang, item);
+      openField(submenuLang);
       if (langFilter) setTimeout(() => langFilter.focus(), 50);
     }
   });
@@ -270,8 +241,9 @@ export function initOptionsDropdown(): void {
     if (!value || value === state.currentTimeFilter) return;
     state.currentTimeFilter = value;
     syncTimeOptions();
+    updateToggle();
     if (value !== "custom") {
-      closeAll();
+      closeField();
       if (state.currentQuery)
         void performSearch(state.currentQuery, state.currentType);
     }
@@ -280,7 +252,7 @@ export function initOptionsDropdown(): void {
   dateApplyBtn?.addEventListener("click", () => {
     state.customDateFrom = dateFromInput?.value ?? "";
     state.customDateTo = dateToInput?.value ?? "";
-    closeAll();
+    closeField();
     if (state.currentQuery)
       void performSearch(state.currentQuery, state.currentType);
   });

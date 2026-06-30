@@ -24,7 +24,7 @@ import {
   renderSidebar,
   prependKnowledgePanels,
 } from "../renderer/render";
-import { renderMediaEngineBar } from "../renderer/render-media";
+import { renderImgEngines } from "../filters/image-filters";
 import { getBase } from "../../utils/base-url";
 
 export async function performTabSearch(
@@ -155,7 +155,7 @@ export async function performTabSearch(
     state.currentData = currentData;
 
     if (isImageType) {
-      renderMediaEngineBar(timings);
+      renderImgEngines(timings);
       renderResults(data.results || []);
       setupMediaObserver("images");
       return;

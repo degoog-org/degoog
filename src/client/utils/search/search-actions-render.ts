@@ -12,7 +12,7 @@ import {
   renderSidebarSuggestions,
   prependKnowledgePanels,
 } from "../../modules/renderer/render";
-import { renderMediaEngineBar } from "../../modules/renderer/render-media";
+import { renderImgEngines } from "../../modules/filters/image-filters";
 import { state } from "../../state";
 import { SlotPanelPosition, type SearchResponse } from "../../types";
 import { abortAcReq, hideAcDropdown } from "../autocomplete";
@@ -158,7 +158,7 @@ export const renderSearchResponse = (
 
   if (isImageType) {
     if (glanceEl) glanceEl.innerHTML = "";
-    renderMediaEngineBar(data.engineTimings ?? []);
+    renderImgEngines(data.engineTimings ?? []);
     if (sidebar) sidebar.innerHTML = "";
   } else if (type === "web") {
     if (opts.fetchGlance) void fetchGlancePanels(query, data.results);

@@ -122,8 +122,7 @@
   @extend .degoog-accordion-toggle;
 }
 
-.results-tab:not([class~="degoog-tab"]),
-.tools-toggle:not([class~="degoog-tab"]) {
+.results-tab:not([class~="degoog-tab"]) {
   @extend .degoog-tab;
 }
 

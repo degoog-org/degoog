@@ -1,6 +1,7 @@
 import {
   type EngineConfig,
   type ExtensionMeta,
+  type ImageFilter,
   type SearchEngine,
   type SettingField,
   type Translate,
@@ -40,6 +41,8 @@ export const clearTypeCache = (): void => {
 
 export type EngineSearchType = string;
 
+export type EngineFilters = Record<string, string[]>;
+
 export const ENGINE_IDS = [] as readonly string[];
 export type EngineId = string;
 
@@ -49,6 +52,7 @@ export interface EngineCatalogEntry {
   disabledByDefault?: boolean;
   searchTypes: EngineSearchType[];
   primaryType: EngineSearchType;
+  filters?: EngineFilters;
 }
 
 interface PluginEntry {
@@ -59,6 +63,7 @@ interface PluginEntry {
   instance: SearchEngine;
   disabledByDefault?: boolean;
   source?: RegistrySource;
+  filters?: EngineFilters;
 }
 
 const resolveTypes = (
@@ -107,6 +112,17 @@ const _coerceTypeList = (raw: unknown): string[] => {
   }
   if (typeof raw === "string" && raw.trim()) return [raw];
   return [];
+};
+
+const _coerceFilters = (raw: unknown): EngineFilters | undefined => {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw))
+    return undefined;
+  const out: EngineFilters = {};
+  for (const [group, values] of Object.entries(raw as Record<string, unknown>)) {
+    const list = _coerceTypeList(values);
+    if (list.length > 0) out[group] = list;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 };
 
 const _resolving = new Set<string>();
@@ -175,6 +191,7 @@ const engineRegistry = createRegistry<PluginEntry>({
       searchTypes: declared.length > 0 ? declared : isFn ? [] : ["web"],
       description:
         typeof mod.description === "string" ? mod.description : undefined,
+      filters: _coerceFilters(mod.filters),
       instance,
     };
   },
@@ -206,6 +223,7 @@ export const listEngines = async (): Promise<EngineCatalogEntry[]> =>
         disabledByDefault: e.disabledByDefault,
         searchTypes,
         primaryType: primaryType(searchTypes),
+        filters: e.filters,
       };
     }),
   );
@@ -213,9 +231,22 @@ export const listEngines = async (): Promise<EngineCatalogEntry[]> =>
 export const getEngineMap = (): Record<string, SearchEngine> =>
   Object.fromEntries(engineRegistry.items().map((e) => [e.id, e.instance]));
 
+export const honorsImageFilters = (
+  filters: EngineFilters | undefined,
+  imageFilter?: ImageFilter,
+): boolean => {
+  const active = Object.entries(
+    (imageFilter ?? {}) as Record<string, string | undefined>,
+  ).filter(([, value]) => value && value !== "any") as [string, string][];
+  if (active.length === 0) return true;
+  if (!filters) return false;
+  return active.every(([group, value]) => (filters[group] ?? []).includes(value));
+};
+
 export const getEnginesForCustomType = async (
   engineType: string,
   config?: EngineConfig,
+  imageFilter?: ImageFilter,
 ): Promise<{ id: string; instance: SearchEngine }[]> => {
   const results: { id: string; instance: SearchEngine }[] = [];
   const settings = await getInstanceSettings();
@@ -224,6 +255,7 @@ export const getEnginesForCustomType = async (
     const enabled = !config || isEngineEnabled(e.id, config, indexerOn);
     if (!enabled) continue;
     if (await isDisabled(e.id)) continue;
+    if (!honorsImageFilters(e.filters, imageFilter)) continue;
     const types = await resolveEngineTypes(e);
     if (types.includes(engineType))
       results.push({ id: e.id, instance: e.instance });

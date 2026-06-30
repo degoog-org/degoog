@@ -328,7 +328,7 @@ export const search = async (
   const start = performance.now();
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
 
-  const rawActiveEngines = await selectActiveEngines(type, config);
+  const rawActiveEngines = await selectActiveEngines(type, config, imageFilter);
 
   if (rawActiveEngines.length === 0) {
     return {

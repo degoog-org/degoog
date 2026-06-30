@@ -47,11 +47,16 @@
       "filter-languages": "סנן שפות..."
     },
     "image-filters": {
+      "title": "מסננים",
+      "any": "הכול",
+      "toggle": "מסננים",
+      "close": "סגירת מסננים",
       "size": "גודל",
       "color": "צבע",
       "type": "סוג",
       "layout": "פריסה",
-      "nsfw": "NSFW",
+      "nsfw": "מצב בטוח",
+      "transparent": "שקוף",
       "small": "קטנה",
       "medium": "בינונית",
       "large": "גדולה",

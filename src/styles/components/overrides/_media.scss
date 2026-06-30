@@ -35,26 +35,6 @@
   -webkit-user-drag: none;
 }
 
-.media-engine-bar {
-  display: flex;
-  flex-wrap: nowrap;
-  flex-basis: 100%;
-  gap: $space-2;
-  padding: $space-1 0 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  &-tag {
-    &--miss {
-      opacity: 0.5;
-    }
-  }
-}
-
 .image-grid {
   display: flex;
   gap: $space-1;

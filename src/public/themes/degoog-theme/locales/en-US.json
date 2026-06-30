@@ -47,11 +47,16 @@
       "filter-languages": "Filter languages..."
     },
     "image-filters": {
+      "title": "Filters",
+      "any": "Any",
+      "toggle": "Filters",
+      "close": "Close filters",
       "size": "Size",
       "color": "Color",
       "type": "Type",
       "layout": "Layout",
-      "nsfw": "NSFW",
+      "nsfw": "Safe mode",
+      "transparent": "Transparent",
       "small": "Small",
       "medium": "Medium",
       "large": "Large",

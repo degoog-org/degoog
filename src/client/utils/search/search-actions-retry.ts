@@ -2,7 +2,7 @@ import type { ScoredResult, SearchResponse } from "../../types";
 import { getBase } from "../base-url";
 import { state } from "../../state";
 import { getEngines, isImageSearchType } from "../engines";
-import { renderMediaEngineBar } from "../../modules/renderer/render-media";
+import { renderImgEngines } from "../../modules/filters/image-filters";
 import { renderSidebar, renderResults } from "../../modules/renderer/render";
 import { performSearch } from "./search-actions-perform";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
@@ -71,7 +71,7 @@ export async function retryEngine(engineName: string): Promise<void> {
 
     const isMediaType = isImageSearchType(state.currentType);
     if (isMediaType && state.currentData) {
-      renderMediaEngineBar(state.currentData.engineTimings ?? []);
+      renderImgEngines(state.currentData.engineTimings ?? []);
     } else if (state.currentData) {
       renderSidebar(state.currentData, (q) => void performSearch(q));
     }
