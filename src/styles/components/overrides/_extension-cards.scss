@@ -108,8 +108,18 @@
   }
 }
 
+@keyframes degoog-pos-glow {
+  0%   { color: var(--text-secondary); }
+  30%  { color: var(--primary); }
+  100% { color: var(--text-secondary); }
+}
+
 .degoog-card-order {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   flex-shrink: 0;
+  gap: 0;
 
   &-btn {
     display: block;
@@ -121,10 +131,30 @@
     }
   }
 
-  @media (max-width: 768px) {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+  &-pos {
+    width: 2rem;
+    text-align: center;
+    padding: 0;
+    font-size: $font-size-small;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border: none;
+    background: transparent;
+    appearance: textfield;
+    line-height: 1.4;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      display: none;
+    }
+
+    &:focus {
+      outline: none;
+    }
+
+    &--glow {
+      animation: degoog-pos-glow 0.8s ease-out forwards;
+    }
   }
 }
 
