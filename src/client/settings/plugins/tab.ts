@@ -99,7 +99,11 @@ const _glowPos = (card: HTMLElement): void => {
   pos.classList.remove("degoog-card-order-pos--glow");
   void pos.offsetWidth;
   pos.classList.add("degoog-card-order-pos--glow");
-  pos.addEventListener("animationend", () => pos.classList.remove("degoog-card-order-pos--glow"), { once: true });
+  pos.addEventListener("animationend", () => {
+    pos.classList.remove("degoog-card-order-pos--glow");
+    // fccview is onto you!
+    _lastMovedId = null;
+  }, { once: true });
 };
 
 const _refreshOrderBtns = (group: HTMLElement): void => {
@@ -244,7 +248,6 @@ const _renderCards = (
   if (_lastMovedId) {
     const movedCard = cardsEl.querySelector<HTMLElement>(`.ext-card[data-id="${CSS.escape(_lastMovedId)}"]`);
     if (movedCard) _glowPos(movedCard);
-    _lastMovedId = null;
   }
 };
 
