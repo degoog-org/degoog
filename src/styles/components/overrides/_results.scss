@@ -58,6 +58,9 @@
 
 .tools-toggle {
   @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
   padding: $space-3 $space-4;
   font-size: $font-size-small;
   color: var(--text-secondary);
@@ -208,7 +211,7 @@
       );
 
     padding-inline-end: 0;
-    gap: $space-7;
+    gap: 0;
 
     #results-main {
       max-width: none;

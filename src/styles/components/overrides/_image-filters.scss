@@ -3,12 +3,12 @@
   position: fixed;
   top: 0;
   bottom: 0;
-  left: 0;
+  right: 0;
   z-index: 210;
   width: min(20rem, 85vw);
   background: var(--bg);
   overflow: hidden;
-  transform: translateX(-100%);
+  transform: translateX(100%);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.open {
@@ -21,17 +21,21 @@
     top: $space-4;
     bottom: auto;
     z-index: auto;
-    width: 17rem;
+    width: 0;
     flex-shrink: 0;
     align-self: flex-start;
     max-height: calc(100vh - #{$space-6});
-    overflow-y: auto;
+    overflow: hidden;
     scrollbar-width: thin;
     background: none;
     transform: none;
     box-shadow: none;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
     &.open {
+      width: 17rem;
+      margin-inline: $space-7;
+      overflow-y: auto;
       box-shadow: none;
     }
   }
@@ -162,13 +166,4 @@
 
 .degoog-img-filter-text {
   @include truncate;
-}
-
-.degoog-img-filter-toggle {
-  margin-left: auto;
-  padding: $space-3 0;
-
-  @media (min-width: 768px) {
-    display: none;
-  }
 }

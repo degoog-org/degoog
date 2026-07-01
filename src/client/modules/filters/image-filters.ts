@@ -8,7 +8,9 @@ const FILTER_BAR_ID = "image-filters-bar";
 const ENGINE_PANEL_ID = "image-engine-panel";
 const GROUPS_ID = "image-filter-groups";
 const OVERLAY_CLASS = "degoog-img-sidebar-overlay";
-const TOGGLE_CLASS = "degoog-img-filter-toggle";
+const LAYOUT_ID = "results-layout";
+const TOOLS_TOGGLE_ID = "tools-toggle";
+const TOOLS_CLOSE_EVENT = "degoog-tools-close";
 const T_NS = "themes/degoog";
 const T_PFX = "search-templates.image-filters";
 
@@ -114,16 +116,28 @@ const shellHtml = (): string =>
 
 const setOpen = (open: boolean): void => {
   document.getElementById(FILTER_BAR_ID)?.classList.toggle("open", open);
+  document.getElementById(LAYOUT_ID)?.classList.toggle("filters-open", open);
   document
     .querySelector(`.${OVERLAY_CLASS}`)
     ?.classList.toggle("open", open);
+};
+
+const toolsOpen = (): boolean =>
+  document.getElementById(TOOLS_TOGGLE_ID)?.getAttribute("aria-expanded") ===
+  "true";
+
+export const toggleImgSidebar = (open: boolean): void => setOpen(open);
+
+const requestToolsClose = (): void => {
+  window.dispatchEvent(new CustomEvent(TOOLS_CLOSE_EVENT));
+  setOpen(false);
 };
 
 const ensureOverlay = (): void => {
   if (document.querySelector(`.${OVERLAY_CLASS}`)) return;
   const overlay = document.createElement("div");
   overlay.className = OVERLAY_CLASS;
-  overlay.addEventListener("click", () => setOpen(false));
+  overlay.addEventListener("click", requestToolsClose);
   document.body.appendChild(overlay);
 };
 
@@ -157,7 +171,7 @@ const wireAccordions = (bar: HTMLElement): void => {
   const close = bar.querySelector<HTMLElement>(".degoog-img-sidebar-close");
   if (close && close.dataset.imgCloseWired !== "true") {
     close.dataset.imgCloseWired = "true";
-    close.addEventListener("click", () => setOpen(false));
+    close.addEventListener("click", requestToolsClose);
   }
 };
 
@@ -227,19 +241,6 @@ export const renderImgEngines = (timings: EngineTiming[]): void => {
     setupRetryLinks(bar);
     wireAccordions(bar);
   }
-  ensureToggleButton();
-};
-
-const ensureToggleButton = (): void => {
-  const meta = document.getElementById("results-meta");
-  if (!meta || meta.querySelector(`.${TOGGLE_CLASS}`)) return;
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = `${TOGGLE_CLASS} degoog-btn degoog-btn--secondary`;
-  btn.setAttribute("aria-label", tf("toggle"));
-  btn.innerHTML = '<i class="fa-solid fa-sliders fa-xl"></i>';
-  btn.addEventListener("click", () => setOpen(true));
-  meta.appendChild(btn);
 };
 
 export const initImgFilters = (onSearch: SearchFn): void => {
@@ -264,5 +265,5 @@ export const syncImgFilters = (type: string): void => {
   if (!bar) return;
   const isImage = isImageSearchType(type);
   bar.style.display = isImage ? "block" : "none";
-  if (!isImage) setOpen(false);
+  setOpen(isImage && toolsOpen());
 };

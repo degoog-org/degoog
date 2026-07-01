@@ -1,6 +1,7 @@
 import { state } from "../state";
 import { performSearch } from "./search-actions";
 import { getBase } from "./base-url";
+import { isImageSearchType } from "./engines";
 
 const TIME_LABELS: Record<string, string> = {
   any: "Any time",
@@ -13,6 +14,7 @@ const TIME_LABELS: Record<string, string> = {
 };
 
 const TOOLS_OPEN_KEY = "degoog-tools-open";
+const TOOLS_CLOSE_EVENT = "degoog-tools-close";
 
 let _langDisplayNames: Intl.DisplayNames | null = null;
 
@@ -220,7 +222,22 @@ export function initOptionsDropdown(): void {
   void loadLanguages();
 
   toggle.addEventListener("click", () => {
-    setPanelOpen(panel.style.display === "none");
+    const open = panel.style.display === "none";
+    setPanelOpen(open);
+    if (isImageSearchType(state.currentType)) {
+      void import("../modules/filters/image-filters").then(
+        ({ toggleImgSidebar }) => toggleImgSidebar(open),
+      );
+    }
+  });
+
+  window.addEventListener(TOOLS_CLOSE_EVENT, () => {
+    setPanelOpen(false);
+    if (isImageSearchType(state.currentType)) {
+      void import("../modules/filters/image-filters").then(
+        ({ toggleImgSidebar }) => toggleImgSidebar(false),
+      );
+    }
   });
 
   document.addEventListener("click", (e) => {

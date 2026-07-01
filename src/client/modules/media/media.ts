@@ -18,6 +18,13 @@ let appendMediaCardsRef:
 let currentMediaIdx = -1;
 let currentCardSelector = "";
 
+const syncFilters = (open: boolean): void => {
+  void import("../filters/image-filters").then((m) => {
+    if (open) m.syncImgFilters(state.currentType);
+    else m.toggleImgSidebar(false);
+  });
+};
+
 export function registerAppendMediaCards(
   fn: (
     grid: HTMLElement,
@@ -195,6 +202,7 @@ export function openMediaPreview(
   }
 
   panel?.classList.add("open");
+  syncFilters(false);
 
   document
     .querySelectorAll<HTMLElement>(cardSelector)
@@ -294,6 +302,7 @@ export function navigateMediaPreview(direction: -1 | 1): void {
 
 export function closeMediaPreview(): void {
   document.getElementById("media-preview-panel")?.classList.remove("open");
+  syncFilters(true);
   document.querySelector(".media-preview-embed")?.remove();
   const img = document.getElementById(
     "media-preview-img",

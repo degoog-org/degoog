@@ -161,6 +161,7 @@
     &.open {
       border-left: 1px solid var(--border);
       box-shadow: none;
+      margin-inline-start: $space-7;
       min-width: 26.25rem;
       transform: none;
       width: 26.25rem;
