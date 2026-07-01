@@ -101,7 +101,6 @@ const _glowPos = (card: HTMLElement): void => {
   pos.classList.add("degoog-card-order-pos--glow");
   pos.addEventListener("animationend", () => {
     pos.classList.remove("degoog-card-order-pos--glow");
-    // fccview is onto you!
     _lastMovedId = null;
   }, { once: true });
 };
