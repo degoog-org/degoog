@@ -90,6 +90,12 @@
 
 .degoog-panel:has(.engine-stat-row) {
   overflow: visible;
+
+  .sidebar-accordion-body {
+    @extend .degoog-scrollbar;
+    max-height: 20rem;
+    overflow-y: auto;
+  }
 }
 
 .engine-stat-reason {

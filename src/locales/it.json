@@ -44,7 +44,9 @@
       "inline-gif-playback-aria": "Disabilita l'animazione GIF nei risultati immagini",
       "post-method": "Usa il metodo POST per le richieste di ricerca (Non funziona con lo streaming dei risultati)",
       "post-method-aria": "Usa il metodo POST per le richieste di ricerca (Non funziona con lo streaming dei risultati)",
-      "post-method-tooltip": "Il metodo POST non è compatibile con lo streaming dei risultati"
+      "post-method-tooltip": "Il metodo POST non è compatibile con lo streaming dei risultati",
+      "sticky-sidebar": "Mantieni la barra laterale dei risultati fissa durante lo scorrimento",
+      "sticky-sidebar-aria": "Mantieni la barra laterale dei risultati fissa durante lo scorrimento"
     },
     "sync": {
       "heading": "Impostazioni predefinite dell'istanza",

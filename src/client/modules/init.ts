@@ -5,6 +5,7 @@ import {
   INLINE_GIF_PLAYBACK,
   OPEN_IN_NEW_TAB_KEY,
   POST_METHOD_ENABLED,
+  STICKY_SIDEBAR,
 } from "../constants";
 import { state, defaultImageFilter } from "../state";
 import { initAutocomplete } from "../utils/autocomplete";
@@ -173,6 +174,12 @@ export async function init(): Promise<void> {
   });
   void idbGet<boolean>(INLINE_GIF_PLAYBACK).then((v) => {
     if (v !== null) state.inlineGifPlayback = v;
+  });
+  void idbGet<boolean>(STICKY_SIDEBAR).then((v) => {
+    if (v !== null) state.stickySidebar = v;
+    document
+      .getElementById("sidebar-col")
+      ?.classList.toggle("is-sticky", state.stickySidebar);
   });
 
   document.body.addEventListener("click", (e) => {

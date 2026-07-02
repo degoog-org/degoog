@@ -239,6 +239,14 @@
     width: 21.25rem;
     padding-bottom: 0;
     order: 0;
+
+    &.is-sticky {
+      position: sticky;
+      top: $space-4;
+      align-self: flex-start;
+      max-height: calc(100vh - #{$space-6});
+      overflow-y: auto;
+    }
   }
 }
 

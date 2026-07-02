@@ -5,6 +5,7 @@ import {
   INLINE_GIF_PLAYBACK,
   OPEN_IN_NEW_TAB_KEY,
   POST_METHOD_ENABLED,
+  STICKY_SIDEBAR,
   THEME_KEY,
 } from "../../constants";
 import { idbGet, idbSet } from "../../utils/db";
@@ -46,6 +47,11 @@ const SEARCH_OPTION_TOGGLES: ToggleOpts[] = [
     labelKey: "settings-page.search-options.post-method",
     ariaKey: "settings-page.search-options.post-method-aria",
     titleKey: "settings-page.search-options.post-method-tooltip",
+  },
+  {
+    id: "settings-sticky-sidebar",
+    labelKey: "settings-page.search-options.sticky-sidebar",
+    ariaKey: "settings-page.search-options.sticky-sidebar-aria",
   },
 ];
 
@@ -202,6 +208,7 @@ const PREF_TOGGLES: { id: string; key: string; defaultVal?: boolean; invert?: bo
   { id: "display-related-queries", key: DISPLAY_SEARCH_SUGGESTIONS, defaultVal: true },
   { id: "settings-inline-gif-playback", key: INLINE_GIF_PLAYBACK, defaultVal: false, invert: true },
   { id: "settings-post-method-enabled", key: POST_METHOD_ENABLED, defaultVal: false },
+  { id: "settings-sticky-sidebar", key: STICKY_SIDEBAR, defaultVal: false },
 ];
 
 export async function initAppearanceSettings(): Promise<void> {

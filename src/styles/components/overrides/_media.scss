@@ -128,13 +128,7 @@
   min-width: 0;
   overflow: hidden;
   overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
   position: fixed;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
   right: 0;
   top: auto;
   transform: translateY(100%);

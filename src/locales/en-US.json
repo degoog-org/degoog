@@ -46,7 +46,9 @@
       "inline-gif-playback-aria": "Disable GIF animation in image results",
       "post-method": "Use POST method for search requests (Won't work with streaming results)",
       "post-method-aria": "Use POST method for search requests (Won't work with streaming results)",
-      "post-method-tooltip": "POST method is not compatible with streaming results"
+      "post-method-tooltip": "POST method is not compatible with streaming results",
+      "sticky-sidebar": "Keep the results sidebar sticky while scrolling",
+      "sticky-sidebar-aria": "Keep the results sidebar sticky while scrolling"
     },
     "sync": {
       "heading": "Instance defaults",

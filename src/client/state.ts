@@ -26,6 +26,7 @@ export const state: AppState = {
   displaySearchSuggestions: true,
   postMethodEnabled: false,
   inlineGifPlayback: true,
+  stickySidebar: false,
   isInitialLoad: false,
   imageFilter: defaultImageFilter(),
 };

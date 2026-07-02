@@ -158,8 +158,19 @@ body.has-results #app {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: $primary;
+    background: var(--border);
     border-radius: $radius-sm;
+  }
+}
+
+.degoog-no-scrollbar,
+#sidebar-col,
+#media-preview-panel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 
