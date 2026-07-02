@@ -63,6 +63,7 @@ const _renderPluginCard = (
   const orderBtns = orderable
     ? `<div class="degoog-card-order">
         <button class="degoog-icon-btn degoog-card-order-btn" data-id="${escapeHtml(plugin.id)}" data-dir="up" title="Move up" type="button"><i class="fa-solid fa-chevron-up"></i></button>
+        <input type="number" class="degoog-card-order-pos" min="1" title="Position">
         <button class="degoog-icon-btn degoog-card-order-btn" data-id="${escapeHtml(plugin.id)}" data-dir="down" title="Move down" type="button"><i class="fa-solid fa-chevron-down"></i></button>
       </div>`
     : "";
@@ -89,13 +90,33 @@ const _renderPluginCard = (
     </div>`;
 };
 
+let _lastMovedId: string | null = null;
+
+const _glowPos = (card: HTMLElement): void => {
+  _lastMovedId = card.dataset.id ?? null;
+  const pos = card.querySelector<HTMLInputElement>(".degoog-card-order-pos");
+  if (!pos) return;
+  pos.classList.remove("degoog-card-order-pos--glow");
+  void pos.offsetWidth;
+  pos.classList.add("degoog-card-order-pos--glow");
+  pos.addEventListener("animationend", () => {
+    pos.classList.remove("degoog-card-order-pos--glow");
+    _lastMovedId = null;
+  }, { once: true });
+};
+
 const _refreshOrderBtns = (group: HTMLElement): void => {
   const cards = group.querySelectorAll<HTMLElement>(".ext-card");
   cards.forEach((card, i) => {
     const up = card.querySelector<HTMLButtonElement>('[data-dir="up"]');
     const down = card.querySelector<HTMLButtonElement>('[data-dir="down"]');
+    const pos = card.querySelector<HTMLInputElement>(".degoog-card-order-pos");
     if (up) up.disabled = i === 0;
     if (down) down.disabled = i === cards.length - 1;
+    if (pos) {
+      pos.value = String(i + 1);
+      pos.max = String(cards.length);
+    }
   });
 };
 
@@ -186,6 +207,30 @@ const _bindCards = (
           if (next) cardsEl.insertBefore(next, card);
         }
         _refreshOrderBtns(cardsEl);
+        _glowPos(card);
+        void _savePriorities(cardsEl);
+      });
+    });
+
+  container
+    .querySelectorAll<HTMLInputElement>(".degoog-card-order-pos")
+    .forEach((input) => {
+      input.addEventListener("change", () => {
+        const card = input.closest<HTMLElement>(".ext-card");
+        const cardsEl = input.closest<HTMLElement>(".ext-cards--orderable");
+        if (!card || !cardsEl) return;
+        const cards = Array.from(cardsEl.querySelectorAll<HTMLElement>(".ext-card"));
+        const target = Math.max(1, Math.min(cards.length, parseInt(input.value, 10) || 1)) - 1;
+        const current = cards.indexOf(card);
+        if (target === current) return;
+        if (target >= cards.length - 1) {
+          cardsEl.appendChild(card);
+        } else {
+          const ref = cards[target > current ? target + 1 : target];
+          cardsEl.insertBefore(card, ref);
+        }
+        _refreshOrderBtns(cardsEl);
+        _glowPos(card);
         void _savePriorities(cardsEl);
       });
     });
@@ -199,6 +244,10 @@ const _renderCards = (
   for (const plugin of plugins) html += _renderPluginCard(plugin, true);
   cardsEl.innerHTML = html;
   _refreshOrderBtns(cardsEl);
+  if (_lastMovedId) {
+    const movedCard = cardsEl.querySelector<HTMLElement>(`.ext-card[data-id="${CSS.escape(_lastMovedId)}"]`);
+    if (movedCard) _glowPos(movedCard);
+  }
 };
 
 let _pluginSearchQuery = "";
