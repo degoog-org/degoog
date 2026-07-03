@@ -162,33 +162,29 @@ select.degoog-input {
 .degoog-checkbox {
   width: $space-6;
   height: $space-6;
-  border-radius: $radius-sm;
+  border-radius: $radius-md;
   border: 1px solid var(--border);
   background: var(--bg);
   flex-shrink: 0;
   position: relative;
   transition: background $transition-fast, border-color $transition-fast;
+  @include flex-center;
 
-  &::after {
-    content: "";
-    position: absolute;
-    top: 44%;
-    left: 50%;
-    width: $space-3;
-    height: $space-4;
-    border: solid var(--white);
-    border-width: 0 3px 3px 0;
+  .fa-check {
+    font-size: $font-size-xs;
+    color: var(--white);
     opacity: 0;
-    transform: translate(-50%, -60%) rotate(45deg) scale(0.6);
-    transition: opacity $transition-fast;
+    transform: scale(0.6);
+    transition: opacity $transition-fast, transform $transition-fast;
   }
 
   input:checked + & {
     background: $primary;
     border-color: $primary;
 
-    &::after {
+    .fa-check {
       opacity: 1;
+      transform: scale(1);
     }
   }
 }

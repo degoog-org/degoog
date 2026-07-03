@@ -92,7 +92,7 @@ async function _initStreamingTypeChecks(
   container.innerHTML = types.map((type) =>
     `<label class="degoog-checkbox-wrap">
       <input type="checkbox" class="settings-toggle" value="${escapeHtml(type)}"${disabled.has(type) ? "" : " checked"} />
-      <span class="degoog-checkbox"></span>
+      <span class="degoog-checkbox"><i class="fa-solid fa-check"></i></span>
       <span class="settings-toggle-label">${escapeHtml(type)}</span>
     </label>`,
   ).join("");

@@ -62,8 +62,12 @@
   }
 
   &.selected {
-    outline: 3px solid $primary;
-    outline-offset: -3px;
+    outline: 3px solid var(--brand-blue);
+    outline-offset: -1px;
+
+    .image-thumb {
+      filter: brightness(0.5);
+    }
   }
 }
 
@@ -76,6 +80,7 @@
 .image-thumb {
   width: 100%;
   display: block;
+  transition: filter $transition-fast;
 }
 
 .image-info {
