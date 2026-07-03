@@ -118,6 +118,121 @@
     overflow-y: visible;
     padding: 0;
   }
+
+  #tools-panel {
+    flex-wrap: nowrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+
+    .tools-field {
+      background: var(--bg-light);
+      border: 1px solid transparent;
+      border-radius: $radius-lg;
+      box-shadow: $box-shadow;
+      overflow: hidden;
+      margin-bottom: $space-4;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .tools-field-toggle {
+      width: 100%;
+      justify-content: space-between;
+      padding: $space-3 $space-4;
+      font-size: $font-size-base;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: none;
+      border-radius: 0;
+      gap: $space-2;
+    }
+
+    .tools-field-label {
+      color: var(--text-primary);
+    }
+
+    .tools-field-value {
+      display: none;
+      font-size: $font-size-xs;
+      font-weight: 400;
+      color: $primary;
+      max-width: none;
+
+      &--set {
+        display: inline;
+      }
+    }
+
+    .tools-field-chevron {
+      transition: transform $transition-fast;
+      flex-shrink: 0;
+    }
+
+    .tools-field-toggle[aria-expanded="true"] .tools-field-chevron {
+      transform: rotate(180deg);
+    }
+
+    .tools-field-menu {
+      position: static;
+      z-index: auto;
+      max-height: 14rem;
+      overflow-y: auto;
+      padding: $space-1 $space-2 $space-2;
+
+      &::-webkit-scrollbar {
+        width: $space-1;
+        height: $space-1;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: $radius-sm;
+      }
+    }
+
+    .tools-option {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: $space-2 $space-3;
+      border-radius: $radius-sm;
+      text-align: left;
+      color: var(--text-secondary);
+      cursor: pointer;
+      background: none;
+      transition: background $transition-fast, color $transition-fast;
+
+      &:hover:not(.active) {
+        background: var(--bg-hover);
+      }
+
+      &.active {
+        background: $primary;
+        color: #fff;
+        font-weight: 500;
+      }
+    }
+
+    .tools-lang-filter {
+      margin: 0 0 $space-2;
+    }
+
+    .tools-lang-list {
+      max-height: 10rem;
+    }
+
+    .tools-custom-date {
+      padding: $space-2 $space-3;
+    }
+  }
 }
 
 .degoog-img-filter-head {

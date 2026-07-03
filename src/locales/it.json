@@ -307,6 +307,7 @@
       "tabs-heading": "Schede di ricerca",
       "tabs-desc": "Imposta i motori abilitati per impostazione predefinita e personalizza l'ordine delle schede dei risultati.",
       "order-tabs": "Ordina schede",
+      "drag-to-reorder": "Trascina per riordinare",
       "exposure-exposed": "Il browser può contattare servizi esterni direttamente",
       "exposure-safe": "Le richieste del browser passano per il server",
       "exposure-unknown": "Comportamento di rete non dichiarato",

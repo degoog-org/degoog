@@ -6,6 +6,8 @@ import { engineStatsHtml, setupRetryLinks } from "../renderer/render-sidebar";
 
 const FILTER_BAR_ID = "image-filters-bar";
 const ENGINE_PANEL_ID = "image-engine-panel";
+const TOOLS_PANEL_ID = "tools-panel";
+const RESULTS_TABS_ID = "results-tabs";
 const GROUPS_ID = "image-filter-groups";
 const OVERLAY_CLASS = "degoog-img-sidebar-overlay";
 const LAYOUT_ID = "results-layout";
@@ -260,10 +262,32 @@ export const initImgFilters = (onSearch: SearchFn): void => {
   void buildGroups();
 };
 
+const relocateToolsPanel = (): void => {
+  const panel = document.getElementById(TOOLS_PANEL_ID);
+  const groupsEl = document.getElementById(GROUPS_ID);
+  if (!panel || !groupsEl || panel.parentElement === groupsEl.parentElement) {
+    return;
+  }
+  groupsEl.before(panel);
+};
+
+const restoreToolsPanel = (): void => {
+  const panel = document.getElementById(TOOLS_PANEL_ID);
+  const tabsRow = document.getElementById(RESULTS_TABS_ID);
+  if (!panel || !tabsRow || panel.previousElementSibling === tabsRow) return;
+  tabsRow.after(panel);
+};
+
 export const syncImgFilters = (type: string): void => {
   const bar = document.getElementById(FILTER_BAR_ID);
   if (!bar) return;
   const isImage = isImageSearchType(type);
   bar.style.display = isImage ? "block" : "none";
+  if (isImage) {
+    ensureShell();
+    relocateToolsPanel();
+  } else {
+    restoreToolsPanel();
+  }
   setOpen(isImage && toolsOpen());
 };

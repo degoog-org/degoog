@@ -313,6 +313,7 @@
       "tabs-heading": "Onglets de recherche",
       "tabs-desc": "Définissez les moteurs activés par défaut et personnalisez l'ordre des onglets de résultats.",
       "order-tabs": "Ordonner les onglets",
+      "drag-to-reorder": "Glisser pour réordonner",
       "exposure-exposed": "Le navigateur peut contacter des services externes directement",
       "exposure-safe": "Les requêtes du navigateur passent par le serveur",
       "exposure-unknown": "Comportement réseau non déclaré",

@@ -108,53 +108,41 @@
   }
 }
 
-@keyframes degoog-pos-glow {
-  0%   { color: var(--text-secondary); }
-  30%  { color: var(--primary); }
-  100% { color: var(--text-secondary); }
-}
-
-.degoog-card-order {
+.degoog-drag-handle {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  gap: 0;
+  padding: $space-2 $space-1;
+  color: var(--text-secondary);
+  cursor: grab;
+  opacity: 0.5;
+  touch-action: none;
+  user-select: none;
+  transition: opacity $transition-fast;
 
-  &-btn {
-    display: block;
-
-    &:disabled {
-      cursor: default;
-      opacity: 0.2;
-      pointer-events: none;
-    }
+  &:hover {
+    opacity: 1;
   }
 
-  &-pos {
-    width: 2rem;
-    text-align: center;
-    padding: 0;
-    font-size: $font-size-small;
-    font-weight: 500;
-    color: var(--text-secondary);
-    border: none;
-    background: transparent;
-    appearance: textfield;
-    line-height: 1.4;
+  &:active {
+    cursor: grabbing;
+  }
+}
 
-    &::-webkit-inner-spin-button,
-    &::-webkit-outer-spin-button {
-      display: none;
-    }
+.degoog-drag-active,
+.degoog-drag-active * {
+  user-select: none;
+}
 
-    &:focus {
-      outline: none;
-    }
+.degoog-dragging {
+  position: relative;
+  z-index: 5;
+  cursor: grabbing;
+  will-change: transform;
 
-    &--glow {
-      animation: degoog-pos-glow 0.8s ease-out forwards;
-    }
+  &.ext-card {
+    background: var(--bg-hover);
   }
 }
 

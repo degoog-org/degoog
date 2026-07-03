@@ -329,6 +329,7 @@
       "tabs-heading": "Search tabs",
       "tabs-desc": "Set the default enabled engines and customise the order of result tabs.",
       "order-tabs": "Order tabs",
+      "drag-to-reorder": "Drag to reorder",
       "exposure-exposed": "Browser may contact external services directly",
       "exposure-safe": "Browser requests go through the server",
       "exposure-unknown": "Network behaviour not declared",
