@@ -49,8 +49,8 @@
       "post-method-tooltip": "POST method is not compatible with streaming results",
       "sticky-sidebar": "Keep the results sidebar sticky while scrolling",
       "sticky-sidebar-aria": "Keep the results sidebar sticky while scrolling",
-      "centered-mode": "Center search results (desktop and tablet only)",
-      "centered-mode-aria": "Center search results (desktop and tablet only)"
+      "centered-mode": "Center search results",
+      "centered-mode-aria": "Center search results"
     },
     "sync": {
       "heading": "Instance defaults",

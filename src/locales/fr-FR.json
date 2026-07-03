@@ -48,8 +48,8 @@
       "post-method-tooltip": "La méthode POST n'est pas compatible avec les résultats en flux",
       "sticky-sidebar": "Garder la barre latérale des résultats fixe lors du défilement",
       "sticky-sidebar-aria": "Garder la barre latérale des résultats fixe lors du défilement",
-      "centered-mode": "Centrer les résultats de recherche (ordinateur et tablette uniquement)",
-      "centered-mode-aria": "Centrer les résultats de recherche (ordinateur et tablette uniquement)"
+      "centered-mode": "Centrer les résultats de recherche",
+      "centered-mode-aria": "Centrer les résultats de recherche"
     },
     "sync": {
       "heading": "Paramètres par défaut de l'instance",
