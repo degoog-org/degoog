@@ -64,6 +64,8 @@ app.notFound(async (c) => {
 });
 
 const port = Number(process.env.DEGOOG_PORT) || 4444;
+const unixSocket = process.env.DEGOOG_UNIX_SOCKET?.trim();
+const listenUrl = unixSocket ? `unix:${unixSocket}` : `http://localhost:${port}`;
 
 const _noColor = !!process.env.NO_COLOR;
 const _ansi = (code: string): string => (_noColor ? "" : code);
@@ -77,7 +79,7 @@ const ANSI_GRAY = _ansi("\x1b[90m");
 console.log(
   `
    ${ANSI_BLUE}    ░██ ${ANSI_RESET} degoog ${ANSI_GRAY}${pkg.version}
-  ${ANSI_BLUE}     ░██ ${ANSI_RESET} Running on ${ANSI_GRAY}http://localhost:${port} ${ANSI_RESET}${"           ".repeat(5)}\n` +
+  ${ANSI_BLUE}     ░██ ${ANSI_RESET} Running on ${ANSI_GRAY}${listenUrl} ${ANSI_RESET}${"           ".repeat(5)}\n` +
   `${ANSI_BLUE}       ░██ ${ANSI_RESET}${"           ".repeat(5)}\n` +
   `${ANSI_BLUE} ░████████ ${ANSI_RED} ░███████  ${ANSI_YELLOW} ░████████ ${ANSI_BLUE} ░███████  ${ANSI_GREEN} ░███████  ${ANSI_RED} ░████████ ${ANSI_RESET}\n` +
   `${ANSI_BLUE}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_YELLOW}░██    ░██ ${ANSI_BLUE}░██    ░██ ${ANSI_GREEN}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_RESET}\n` +
@@ -168,7 +170,11 @@ Promise.all([initServerKey(), initExtensionRegistries()])
       }));
     }
 
-    Bun.serve({ port, fetch: app.fetch, websocket, idleTimeout: 120 });
+    if (unixSocket) {
+      Bun.serve({ unix: unixSocket, fetch: app.fetch, websocket });
+    } else {
+      Bun.serve({ port, fetch: app.fetch, websocket, idleTimeout: 120 });
+    }
     markReady();
 
     logSettingsPasswordStatus();
