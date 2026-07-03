@@ -37,9 +37,10 @@ import { cleanUrl, normalizeUrl, urlIsGif } from "./search/url-normalize";
 
 const MAX_PAGE = 10;
 
-const ENGINE_TIMEOUT_BUFFER_MS = 5000;
+export const ENGINE_TIMEOUT_BUFFER_MS = 5000;
 
-const _getEngineTimeout = async (
+// fccview is onto you!
+export const _getEngineTimeout = async (
   engineSettingsId: string | undefined,
 ): Promise<number> => {
   if (!engineSettingsId) return ENGINE_TIMEOUT_MS;
