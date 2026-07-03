@@ -548,6 +548,10 @@
         "label": "Outgoing HTTP client",
         "description": "The outgoing HTTP client to use for this engine."
       },
+      "timeout": {
+        "label": "Timeout (ms)",
+        "description": "Maximum time in milliseconds to wait for this engine before giving up. Leave blank to use the default."
+      },
       "slot-position": {
         "label": "Position",
         "description": "Where the slot content appears on the page."

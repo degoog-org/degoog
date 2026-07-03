@@ -477,6 +477,10 @@
         "label": "Client HTTP in uscita",
         "description": "Il client HTTP in uscita da usare per questo motore."
       },
+      "timeout": {
+        "label": "Timeout (ms)",
+        "description": "Tempo massimo in millisecondi di attesa per questo motore prima di rinunciare. Lascia vuoto per usare il valore predefinito."
+      },
       "slot-position": {
         "label": "Posizione",
         "description": "Dove appare il contenuto dello slot nella pagina."

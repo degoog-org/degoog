@@ -483,6 +483,10 @@
         "label": "Client HTTP sortant",
         "description": "Le client HTTP sortant à utiliser pour ce moteur."
       },
+      "timeout": {
+        "label": "Délai d'expiration (ms)",
+        "description": "Temps maximal en millisecondes d'attente de ce moteur avant abandon. Laisser vide pour utiliser la valeur par défaut."
+      },
       "slot-position": {
         "label": "Position",
         "description": "Où le contenu du slot apparaît sur la page."

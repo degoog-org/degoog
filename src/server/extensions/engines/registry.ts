@@ -385,6 +385,19 @@ const OUTGOING_TRANSPORT_FIELD: SettingField = {
   advanced: true,
 };
 
+export const ENGINE_TIMEOUT_MS = 10_000;
+
+const TIMEOUT_FIELD: SettingField = {
+  key: "timeoutMs",
+  label: "Timeout (ms)",
+  type: "number",
+  default: "",
+  placeholder: String(ENGINE_TIMEOUT_MS),
+  description:
+    "Maximum time in milliseconds to wait for this engine before giving up. Leave blank to use the default.",
+  advanced: true,
+};
+
 const CUSTOM_USER_AGENTS_FIELD: SettingField = {
   key: "customUserAgents",
   label: "Custom user agents",
@@ -465,6 +478,17 @@ export const getEngineExtensionMeta = async (
           OUTGOING_TRANSPORT_FIELD.description,
       }
     : OUTGOING_TRANSPORT_FIELD;
+
+  const timeoutField = coreT
+    ? {
+        ...TIMEOUT_FIELD,
+        label:
+          coreT("settings-page.schema.timeout.label") || TIMEOUT_FIELD.label,
+        description:
+          coreT("settings-page.schema.timeout.description") ||
+          TIMEOUT_FIELD.description,
+      }
+    : TIMEOUT_FIELD;
 
   const settings = await getInstanceSettings();
   const indexerOn = asBoolean(settings.degoogIndexerEnabled);
@@ -547,6 +571,7 @@ export const getEngineExtensionMeta = async (
     const schema: SettingField[] = [
       scoreField,
       transportField,
+      timeoutField,
       CUSTOM_USER_AGENTS_FIELD,
       PROXY_OVERRIDE_ENABLED_FIELD,
       PROXY_OVERRIDE_URLS_FIELD,
