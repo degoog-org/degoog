@@ -438,10 +438,11 @@ const _bindRestartButton = (getToken: () => string | null): void => {
     btn.disabled = true;
     btn.textContent = t("settings-page.server.restarting");
     try {
-      await fetch(`${getBase()}/api/settings/restart`, {
+      const res = await fetch(`${getBase()}/api/settings/restart`, {
         method: "POST",
         headers: authHeaders(getToken),
       });
+      if (!res.ok) throw new Error(`Restart failed: ${res.status}`);
     } catch (err) {
       console.debug("[settings] restart trigger failed", err);
       btn.textContent = label;
