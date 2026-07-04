@@ -7,6 +7,7 @@ export {
   POST_METHOD_ENABLED,
   INLINE_GIF_PLAYBACK,
   STICKY_SIDEBAR,
+  CENTERED_MODE,
   TAB_ORDER_SAVED,
 } from "../shared/sync";
 

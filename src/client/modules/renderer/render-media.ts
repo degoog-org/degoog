@@ -4,8 +4,8 @@ import { toggleMediaPreview, registerAppendMediaCards } from "../media/media";
 import { renderTemplate } from "../../utils/template";
 import type { ScoredResult } from "../../types";
 
-const _getImageColumnCount = (): number => {
-  const w = window.innerWidth;
+const _getImageColumnCount = (grid: HTMLElement): number => {
+  const w = grid.clientWidth || window.innerWidth;
   if (w <= 800) return 3;
   if (w <= 1100) return 4;
   if (w <= 1400) return 5;
@@ -20,7 +20,7 @@ const _shortestColumn = (columns: HTMLElement[]): HTMLElement =>
   });
 
 function _ensureImageColumns(grid: HTMLElement): void {
-  const count = _getImageColumnCount();
+  const count = _getImageColumnCount(grid);
   const existing = grid.querySelectorAll(".image-column").length;
   if (existing === count) return;
 

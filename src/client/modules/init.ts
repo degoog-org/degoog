@@ -6,6 +6,7 @@ import {
   OPEN_IN_NEW_TAB_KEY,
   POST_METHOD_ENABLED,
   STICKY_SIDEBAR,
+  CENTERED_MODE,
 } from "../constants";
 import { state, defaultImageFilter } from "../state";
 import { initAutocomplete } from "../utils/autocomplete";
@@ -177,6 +178,11 @@ export async function init(): Promise<void> {
     document
       .getElementById("sidebar-col")
       ?.classList.toggle("is-sticky", state.stickySidebar);
+  });
+  void idbGet<boolean>(CENTERED_MODE).then((v) => {
+    document
+      .getElementById("results-page")
+      ?.classList.toggle("centered-mode", v ?? false);
   });
 
   document.body.addEventListener("click", (e) => {

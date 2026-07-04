@@ -223,6 +223,25 @@
   }
 }
 
+#results-page.centered-mode {
+  @media (min-width: 768px) {
+    #results-header,
+    #results-tabs,
+    #results-meta,
+    #results-layout,
+    #tools-panel {
+      width: 100%;
+      max-width: $results-centered-max;
+      margin-inline: auto;
+      padding-inline: $space-5;
+    }
+
+    #results-layout.media-mode {
+      max-width: $results-centered-media-max;
+    }
+  }
+}
+
 #results-main {
   flex: 1;
   max-width: $results-max-width;

@@ -16,7 +16,7 @@ import {
   performStreamingSearch,
 } from "../../utils/streaming-search";
 import { renderTemplate } from "../../utils/template";
-import { closeMediaPreview, destroyMediaObserver, setupMediaObserver } from "../media/media";
+import { closeMediaPreview, destroyMediaObserver, setupMediaObserver, syncMediaPreviewPanel } from "../media/media";
 import {
   buildResultContext,
   clearSlotPanels,
@@ -101,6 +101,7 @@ export async function performTabSearch(
     if (isImageType) layout.classList.add("media-mode");
     else layout.classList.remove("media-mode");
   }
+  syncMediaPreviewPanel(isImageType);
 
   const urlParams = new URLSearchParams({ q: query, type: `tab:${tabId}` });
   if (page > 1) urlParams.set("page", String(page));

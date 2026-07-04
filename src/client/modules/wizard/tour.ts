@@ -52,6 +52,7 @@ const isNextBlocked = (step: WizardStep): boolean => {
 export const runTour = async (
   steps: readonly WizardStep[],
   onFinish: () => void,
+  onSkip?: () => void,
 ): Promise<void> => {
   if (active) return;
   active = true;
@@ -151,7 +152,10 @@ export const runTour = async (
     requestAnimationFrame(() => nextBtn?.focus());
   };
 
-  skipBtn?.addEventListener("click", teardown);
+  skipBtn?.addEventListener("click", () => {
+    onSkip?.();
+    teardown();
+  });
   backBtn?.addEventListener("click", () => {
     if (index > 0) {
       index--;

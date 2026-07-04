@@ -4,7 +4,7 @@ import {
   skeletonResults,
   skeletonSidebar,
 } from "../../animations/skeleton";
-import { closeMediaPreview } from "../../modules/media/media";
+import { closeMediaPreview, syncMediaPreviewPanel } from "../../modules/media/media";
 import {
   clearSlotPanels,
   renderResults,
@@ -76,6 +76,7 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
   } else {
     layout?.classList.remove("media-mode");
   }
+  syncMediaPreviewPanel(isImageType);
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   clearSlotPanels();

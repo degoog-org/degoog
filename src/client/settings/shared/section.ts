@@ -25,7 +25,7 @@ export const renderCheckbox = (opts: ToggleOpts): string => {
   const checkedAttr = opts.checked ? " checked" : "";
   return `<label class="degoog-checkbox-wrap"${titleAttr}>
       <input type="checkbox" id="${opts.id}" class="settings-toggle"${ariaAttr}${checkedAttr} />
-      <span class="degoog-checkbox"></span>
+      <span class="degoog-checkbox"><i class="fa-solid fa-check"></i></span>
       <span class="settings-toggle-label">${escapeHtml(t(opts.labelKey))}</span>
     </label>`;
 };

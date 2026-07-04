@@ -7,6 +7,7 @@ import { buildSearchBody, buildSearchUrl, faviconHostname } from "../../utils/ur
 import { attachFaviconFallback } from "../../utils/favicon";
 import { openLightbox } from "./lightbox";
 import { searchAuthHeaders, appendSearchAuthParams } from "../../utils/request";
+import { renderTemplate } from "../../utils/template";
 
 const MORE_IMAGES_COUNT = 15;
 
@@ -429,6 +430,34 @@ export function navigateMediaPreview(direction: -1 | 1): void {
   openMediaPreview(item, newIdx, currentCardSelector);
   target.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
+
+let _mediaPanel: HTMLElement | null = null;
+
+const _mediaPanelEl = (): HTMLElement | null => {
+  if (!_mediaPanel) _mediaPanel = document.getElementById("media-preview-panel");
+  return _mediaPanel;
+};
+
+export const syncMediaPreviewPanel = (isMediaType: boolean): void => {
+  const panel = _mediaPanelEl();
+  if (!panel) return;
+
+  if (isMediaType) {
+    if (!panel.isConnected) {
+      const sidebarCol = document.getElementById("sidebar-col");
+      sidebarCol?.after(panel);
+    }
+    if (!panel.hasChildNodes()) {
+      panel.innerHTML = renderTemplate("degoog-search-media-preview", {}) ?? "";
+    }
+    return;
+  }
+
+  if (panel.isConnected) {
+    closeMediaPreview();
+    panel.remove();
+  }
+};
 
 export function closeMediaPreview(): void {
   document.getElementById("media-preview-panel")?.classList.remove("open");

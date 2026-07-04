@@ -6,6 +6,7 @@ import {
   OPEN_IN_NEW_TAB_KEY,
   POST_METHOD_ENABLED,
   STICKY_SIDEBAR,
+  CENTERED_MODE,
   THEME_KEY,
 } from "../../constants";
 import { idbGet, idbSet } from "../../utils/db";
@@ -52,6 +53,11 @@ const SEARCH_OPTION_TOGGLES: ToggleOpts[] = [
     id: "settings-sticky-sidebar",
     labelKey: "settings-page.search-options.sticky-sidebar",
     ariaKey: "settings-page.search-options.sticky-sidebar-aria",
+  },
+  {
+    id: "settings-centered-mode",
+    labelKey: "settings-page.search-options.centered-mode",
+    ariaKey: "settings-page.search-options.centered-mode-aria",
   },
 ];
 
@@ -211,6 +217,7 @@ const PREF_TOGGLES: { id: string; key: string; defaultVal?: boolean; invert?: bo
   { id: "settings-inline-gif-playback", key: INLINE_GIF_PLAYBACK, defaultVal: false, invert: true },
   { id: "settings-post-method-enabled", key: POST_METHOD_ENABLED, defaultVal: false },
   { id: "settings-sticky-sidebar", key: STICKY_SIDEBAR, defaultVal: false },
+  { id: "settings-centered-mode", key: CENTERED_MODE, defaultVal: false },
 ];
 
 export async function initAppearanceSettings(): Promise<void> {

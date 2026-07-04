@@ -278,16 +278,33 @@ const restoreToolsPanel = (): void => {
   tabsRow.after(panel);
 };
 
+let _filterBar: HTMLElement | null = null;
+
+const _filterBarEl = (): HTMLElement | null => {
+  if (!_filterBar) _filterBar = document.getElementById(FILTER_BAR_ID);
+  return _filterBar;
+};
+
 export const syncImgFilters = (type: string): void => {
-  const bar = document.getElementById(FILTER_BAR_ID);
+  const bar = _filterBarEl();
   if (!bar) return;
   const isImage = isImageSearchType(type);
-  bar.style.display = isImage ? "block" : "none";
+
   if (isImage) {
+    if (!bar.isConnected) {
+      const layout = document.getElementById(LAYOUT_ID);
+      layout?.appendChild(bar);
+    }
+    bar.style.display = "block";
     ensureShell();
     relocateToolsPanel();
-  } else {
-    restoreToolsPanel();
+    setOpen(toolsOpen());
+    return;
   }
-  setOpen(isImage && toolsOpen());
+
+  if (bar.isConnected) {
+    setOpen(false);
+    restoreToolsPanel();
+    bar.remove();
+  }
 };

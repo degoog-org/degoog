@@ -9,6 +9,7 @@ import {
   closeMediaPreview,
   destroyMediaObserver,
   setupMediaObserver,
+  syncMediaPreviewPanel,
 } from "../modules/media/media";
 import {
   attachVideoPlayers,
@@ -121,6 +122,7 @@ export async function performStreamingSearch(
   } else {
     layout?.classList.remove("media-mode");
   }
+  syncMediaPreviewPanel(isImageType);
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   const resultsList = document.getElementById("results-list");

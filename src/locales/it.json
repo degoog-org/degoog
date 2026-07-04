@@ -46,7 +46,9 @@
       "post-method-aria": "Usa il metodo POST per le richieste di ricerca (Non funziona con lo streaming dei risultati)",
       "post-method-tooltip": "Il metodo POST non è compatibile con lo streaming dei risultati",
       "sticky-sidebar": "Mantieni la barra laterale dei risultati fissa durante lo scorrimento",
-      "sticky-sidebar-aria": "Mantieni la barra laterale dei risultati fissa durante lo scorrimento"
+      "sticky-sidebar-aria": "Mantieni la barra laterale dei risultati fissa durante lo scorrimento",
+      "centered-mode": "Centra i risultati di ricerca",
+      "centered-mode-aria": "Centra i risultati di ricerca"
     },
     "sync": {
       "heading": "Impostazioni predefinite dell'istanza",

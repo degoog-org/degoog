@@ -48,7 +48,9 @@
       "post-method-aria": "Use POST method for search requests (Won't work with streaming results)",
       "post-method-tooltip": "POST method is not compatible with streaming results",
       "sticky-sidebar": "Keep the results sidebar sticky while scrolling",
-      "sticky-sidebar-aria": "Keep the results sidebar sticky while scrolling"
+      "sticky-sidebar-aria": "Keep the results sidebar sticky while scrolling",
+      "centered-mode": "Center search results",
+      "centered-mode-aria": "Center search results"
     },
     "sync": {
       "heading": "Instance defaults",

@@ -34,6 +34,8 @@ $search-bar-height: 2.75rem;
 $search-bar-radius: $radius-pill;
 
 $results-max-width: 40.75rem;
+$results-centered-max: 64.5rem;
+$results-centered-media-max: 80rem;
 $results-inline-gutter: clamp(
   #{$space-4},
   calc(#{$space-4} + max(0px, (100vw - 48rem) * 0.31)),

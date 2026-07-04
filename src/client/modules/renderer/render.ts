@@ -9,7 +9,7 @@ import { attachFaviconFallback } from "../../utils/favicon";
 import { faviconHostname, faviconUrl } from "../../utils/url";
 import { isImageSearchType } from "../../utils/engines";
 import { getBase } from "../../utils/base-url";
-import { destroyMediaObserver, setupMediaObserver } from "../media/media";
+import { destroyMediaObserver, setupMediaObserver, syncMediaPreviewPanel } from "../media/media";
 import { renderImageGrid } from "./render-media";
 
 import { clearSlotPanels as _clearSlots } from "./render-slots";
@@ -82,6 +82,7 @@ export function renderResults(results: ScoredResult[]): void {
   } else {
     layout.classList.remove("media-mode");
   }
+  syncMediaPreviewPanel(isImageType);
 
   if (results.length === 0) {
     const noEngines = state.currentData?.engineTimings.length === 0;

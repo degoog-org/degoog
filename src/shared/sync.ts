@@ -6,6 +6,7 @@ export const DISPLAY_SEARCH_SUGGESTIONS = "display_search_suggestions";
 export const POST_METHOD_ENABLED = "post_method_enabled";
 export const INLINE_GIF_PLAYBACK = "inline_gif_playback";
 export const STICKY_SIDEBAR = "sticky_sidebar";
+export const CENTERED_MODE = "centered_mode";
 export const TAB_ORDER_SAVED = "tab-order-saved";
 
 export const GENERAL_SYNC_KEYS = [
@@ -16,6 +17,7 @@ export const GENERAL_SYNC_KEYS = [
   POST_METHOD_ENABLED,
   INLINE_GIF_PLAYBACK,
   STICKY_SIDEBAR,
+  CENTERED_MODE,
 ] as const;
 
 export const ENGINE_SYNC_KEYS = [ENGINES_KEY] as const;
