@@ -25,6 +25,7 @@ import { createRegistry } from "../registry-factory";
 import { makeExtID, folderFromExtID } from "../../utils/extension-id";
 import { buildExtensionMeta } from "../extension-meta";
 import { logger } from "../../utils/logger";
+import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
 
 const builtinsDir = join(
   process.cwd(),
@@ -370,6 +371,9 @@ export async function getPluginExtensionMeta(
         trigger: entry.trigger,
         source: commandSourceMap.get(entry.id) ?? "plugin",
         isClientExposed: entry.instance.isClientExposed,
+        needsAppRestart: isExtensionRestartFlagVisible(
+          entry.instance.needsAppRestart,
+        ),
       },
     });
     const inst = entry.instance as unknown as Record<string, unknown>;

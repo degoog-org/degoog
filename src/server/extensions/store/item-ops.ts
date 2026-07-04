@@ -24,6 +24,7 @@ import { runStoreExclusive } from "./store-lock";
 import { makeExtID } from "../../utils/extension-id";
 import { logger } from "../../utils/logger";
 import type { ShortcutBinding, ShortcutKind } from "../../../shared/shortcuts";
+import { markRestartPending } from "../../utils/restart-state";
 
 function slugifyIdPart(input: string): string {
   return (
@@ -222,6 +223,25 @@ const parseEngineTypesFromSource = (src: string): string[] | null => {
 const catalogPrimaryType = (types: string[]): string =>
   types.length > 0 ? types[0] : "web";
 
+const NEEDS_APP_RESTART_RE = /\bneedsAppRestart\s*[:=]\s*true\b/;
+const needsAppRestartCache = new Map<string, boolean>();
+
+export const readNeedsAppRestart = async (dir: string): Promise<boolean> => {
+  if (needsAppRestartCache.has(dir)) return needsAppRestartCache.get(dir)!;
+  let result = false;
+  for (const file of ["index.js", "index.ts", "index.mjs", "index.cjs"]) {
+    try {
+      const src = await readFile(join(dir, file), "utf-8");
+      result = NEEDS_APP_RESTART_RE.test(src);
+      if (result) break;
+    } catch {
+      continue;
+    }
+  }
+  needsAppRestartCache.set(dir, result);
+  return result;
+};
+
 const SHORTCUT_KIND_RE = /\bkind\s*:\s*["'](single|numeric)["']/;
 const SHORTCUT_BINDING_RE = /defaultBinding\s*:\s*\{([^}]*)\}/;
 const SHORTCUT_KEY_RE = /["']?\bkey\b["']?\s*:\s*["']([^"']+)["']/;
@@ -390,6 +410,7 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
             item.shortcutKind = meta.kind;
           }
         }
+        if (await readNeedsAppRestart(fullPath)) item.needsAppRestart = true;
         if (type === ExtensionStoreType.Plugin && ent.type)
           item.pluginType = ent.type;
         if (type === ExtensionStoreType.Engine) {
@@ -569,6 +590,9 @@ async function _installItem(
         : {}),
     });
     await writeReposData(freshData);
+    needsAppRestartCache.delete(destDir);
+    if (await readNeedsAppRestart(destDir))
+      markRestartPending(`${type} "${manifest.name ?? folderName}" was installed`);
     await reloadAfterAction(type);
   } finally {
     _installingSet.delete(key);
@@ -661,6 +685,9 @@ async function _updateItem(
   if (manifest?.minDegoogVersion)
     inst.minDegoogVersion = manifest.minDegoogVersion;
   await writeReposData(data);
+  needsAppRestartCache.delete(destDir);
+  if (await readNeedsAppRestart(destDir))
+    markRestartPending(`${type} "${manifest?.name ?? inst.installedAs}" was updated`);
   await reloadAfterAction(type);
 }
 

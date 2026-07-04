@@ -22,13 +22,13 @@ const MIDDLEWARE_SETTINGS_ID = "middleware";
 const SETTINGS_GATE_KEY = "settingsGate";
 const GENERATED_PASSWORD = randomBytes(24).toString("base64url");
 
-const _envTruthy = (name: string): boolean => {
+export const envTruthy = (name: string): boolean => {
   const value = (process.env[name] ?? "").trim().toLowerCase();
   return value === "true" || value === "1" || value === "yes";
 };
 
 export const isDangerouslyNoPassword = (): boolean =>
-  _envTruthy("DEGOOG_DANGEROUSLY_NO_PASSWORD");
+  envTruthy("DEGOOG_DANGEROUSLY_NO_PASSWORD");
 
 const _explicitPasswords = (): string[] => {
   const raw = process.env.DEGOOG_SETTINGS_PASSWORDS ?? "";

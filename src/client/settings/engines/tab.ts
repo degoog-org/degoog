@@ -12,6 +12,7 @@ import { renderMdInline } from "../../utils/md";
 import { getTabOrder, applyTabOrder } from "../../utils/tab-order";
 import { getStoredToken } from "../../utils/settings-token";
 import { openTabOrderModal } from "../shared/tab-order-modal";
+import { extCardRestartWarning } from "../shared/ext-card";
 
 const t = window.scopedT("core");
 const themeT = window.scopedT("themes/degoog");
@@ -99,6 +100,7 @@ const _renderEngineCard = (
   const versionWarning = engine.requiresNewerVersion
     ? `<span class="ext-version-warning">${escapeHtml(t("settings-page.extensions.requires-newer-version"))}</span>`
     : "";
+  const restartWarning = extCardRestartWarning(engine);
   const extraTypes = _extraTypeLabels(engine);
   const extraTypesHtml = extraTypes.length
     ? `<div class="ext-card-extra-types"><span class="ext-card-extra-types-label">${escapeHtml(t("settings-page.extensions.extra-types"))}</span>${extraTypes.map((label) => `<span class="degoog-badge degoog-badge--engine-type">${escapeHtml(label)}</span>`).join("")}</div>`
@@ -123,7 +125,10 @@ const _renderEngineCard = (
     <div class="ext-card degoog-panel degoog-panel--ext-card" data-id="${escapeHtml(engine.id)}">
       <div class="ext-card-main">
         <div class="ext-card-info">
-          <label for="engine-toggle-${escapeHtml(engine.id)}" class="ext-card-name engine-toggle-label">${escapeHtml(engine.displayName)}</label>
+          <div class="ext-card-name-row">
+            ${restartWarning}
+            <label for="engine-toggle-${escapeHtml(engine.id)}" class="ext-card-name engine-toggle-label">${escapeHtml(engine.displayName)}</label>
+          </div>
           ${desc}
           ${extraTypesHtml}
           ${versionWarning}

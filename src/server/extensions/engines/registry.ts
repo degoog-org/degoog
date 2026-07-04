@@ -30,6 +30,7 @@ import { logger } from "../../utils/logger";
 import { getInstanceSettings } from "../../utils/server-settings";
 import { DEGOOG_ENGINE_ID } from "./builtins/degoog";
 import type { EngineFilters } from "../../../shared/engine-filters";
+import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
 
 const builtinsDir = join(import.meta.dir, "builtins");
 
@@ -595,6 +596,7 @@ export const getEngineExtensionMeta = async (
       extensionDocsAvailable: exists,
       defaultEnabled: defaults[entry.id],
       source: entry.source,
+      needsAppRestart: isExtensionRestartFlagVisible(instance?.needsAppRestart),
     });
   }
 

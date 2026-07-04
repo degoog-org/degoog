@@ -46,6 +46,7 @@ export interface ExtensionMeta {
   defaultFeedUrls?: string[];
   isClientExposed?: boolean;
   requiresNewerVersion?: boolean;
+  needsAppRestart?: boolean;
 }
 
 export interface AllExtensions {

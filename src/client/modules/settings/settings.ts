@@ -232,7 +232,7 @@ async function _initSettings(): Promise<void> {
   initInstallPrompt();
   _initTabs();
   _initSettingsMainOffset();
-  void initGeneralTab();
+  void initGeneralTab(getStoredToken);
   void initServerTab(getStoredToken);
   void initShortcutsTab(getStoredToken);
 

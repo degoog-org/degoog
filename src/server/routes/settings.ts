@@ -53,6 +53,8 @@ import {
 } from "../../shared/indexer";
 import { SEARCH_LIST_FIELDS } from "../../shared/settings-lists";
 import { logger } from "../utils/logger";
+import { getRestartState } from "../utils/restart-state";
+import { requestRestart } from "../utils/server-lifecycle";
 
 const router = new Hono();
 
@@ -569,6 +571,19 @@ router.post("/api/settings/default-engines", async (c) => {
   const body = await readObjectBody<Record<string, boolean>>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   await writeFile(defaultEnginesFile(), JSON.stringify(body, null, 2), "utf-8");
+  return c.json({ ok: true });
+});
+
+router.get("/api/settings/restart-state", async (c) => {
+  const denied = await guardSettingsRoute(c, "GET /api/settings/restart-state");
+  if (denied) return denied;
+  return c.json(getRestartState());
+});
+
+router.post("/api/settings/restart", async (c) => {
+  const denied = await guardSettingsRoute(c, "POST /api/settings/restart");
+  if (denied) return denied;
+  requestRestart("admin-triggered restart from general settings");
   return c.json({ ok: true });
 });
 

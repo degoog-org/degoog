@@ -5,6 +5,7 @@ import { getBase } from "../../utils/base-url";
 import { renderMdInline } from "../../utils/md";
 import { flashError, flashSuccess } from "../shared/flash-msg";
 import { initDragOrder } from "../../utils/drag-order";
+import { extCardRestartWarning } from "../shared/ext-card";
 
 const t = window.scopedT("core");
 
@@ -34,6 +35,7 @@ const _renderPluginCard = (
       ? `<span class="degoog-badge">Built-in</span>`
       : "";
   const exposureIcon = _exposureIcon(plugin);
+  const restartWarning = extCardRestartWarning(plugin);
   const desc = plugin.description
     ? `<span class="ext-card-desc">${renderMdInline(plugin.description)}</span>`
     : "";
@@ -71,6 +73,7 @@ const _renderPluginCard = (
         <div class="ext-card-info">
           <div class="ext-card-name-row">
             ${exposureIcon}
+            ${restartWarning}
             <label for="plugin-toggle-${escapeHtml(plugin.id)}" class="ext-card-name plugin-toggle-label">${escapeHtml(plugin.displayName)}</label>
             ${builtinBadge}
           </div>

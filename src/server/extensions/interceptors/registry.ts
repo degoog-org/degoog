@@ -14,6 +14,7 @@ import {
 import { createRegistry } from "../registry-factory";
 import { buildExtensionMeta } from "../extension-meta";
 import { isPluginManifest } from "../plugin-manifest";
+import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
 
 const SETTINGS_PREFIX = "interceptor-";
 
@@ -88,6 +89,9 @@ export const getInterceptorMeta = async (): Promise<ExtensionMeta[]> => {
         extra: {
           source: "plugin",
           isClientExposed: interceptor.isClientExposed,
+          needsAppRestart: isExtensionRestartFlagVisible(
+            interceptor.needsAppRestart,
+          ),
         },
       }),
     );

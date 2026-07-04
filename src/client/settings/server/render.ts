@@ -12,6 +12,15 @@ const _h = (headingKey: string, icon: string): string =>
 const _desc = (key: string): string =>
   `<p class="settings-desc">${escapeHtml(t(key))}</p>`;
 
+const _renderRestartSection = (): string => `
+  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-restart">
+    ${_h("settings-page.server.restart-heading", "fa-solid fa-power-off")}
+    ${_desc("settings-page.server.restart-desc")}
+    <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="settings-server-restart" type="button">
+      ${escapeHtml(t("settings-page.server.restart-button"))}
+    </button>
+  </section>`;
+
 const _renderPresetSection = (): string => `
   <section class="settings-section ext-card degoog-panel degoog-panel--ext-card settings-server-presets" id="settings-section-server-presets">
     ${_h("settings-page.server.presets.heading", "fa-solid fa-sliders")}
@@ -311,6 +320,7 @@ const _renderCustomCssSection = (): string => `
 
 export const renderServerContent = (): string =>
   [
+    _renderRestartSection(),
     _renderPresetSection(),
     _renderCacheSection(),
     _renderApiKeySection(),

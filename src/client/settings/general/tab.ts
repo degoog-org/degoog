@@ -19,6 +19,8 @@ import { escapeHtml } from "../../utils/dom";
 import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
 import type { ToggleOpts } from "../../types/settings-section";
 import { renderCheckbox, renderSection } from "../shared/section";
+import { getBase } from "../../utils/base-url";
+import { authHeaders } from "../../utils/request";
 
 const t = window.scopedT("core");
 
@@ -60,6 +62,18 @@ const SEARCH_OPTION_TOGGLES: ToggleOpts[] = [
     ariaKey: "settings-page.search-options.centered-mode-aria",
   },
 ];
+
+const renderRestartBannerSection = (): string => `
+  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card settings-restart-banner" id="settings-restart-banner" style="display: none">
+    <div class="setting-section-heading-wrapper">
+      <h2 class="settings-section-heading">${escapeHtml(t("settings-page.restart.heading"))}</h2>
+      <div class="floating-section-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    </div>
+    <p class="settings-desc" id="settings-restart-reason">${escapeHtml(t("settings-page.restart.desc"))}</p>
+    <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="settings-restart-now" type="button">
+      ${escapeHtml(t("settings-page.restart.button"))}
+    </button>
+  </section>`;
 
 const renderAppearanceSection = (): string => {
   const opts = ["system", "light", "dark"] as const;
@@ -189,6 +203,7 @@ const renderPublicSearchOptions = (): string =>
 
 export const renderGeneralContent = (): string =>
   [
+    renderRestartBannerSection(),
     renderAppearanceSection(),
     renderSearchOptionsSection(),
     renderSyncSection(),
@@ -273,7 +288,7 @@ export async function initPublicGeneral(): Promise<void> {
   await initAppearanceSettings();
 }
 
-async function initSyncSetting(): Promise<void> {
+async function initSyncSetting(getToken: () => string | null): Promise<void> {
   const btn = document.getElementById("settings-sync-save-defaults") as HTMLButtonElement | null;
   if (btn) {
     const label = btn.textContent;
@@ -290,7 +305,7 @@ async function initSyncSetting(): Promise<void> {
     });
   }
 
-  bindResetDefaults(SYNC_KEYS, initGeneralTab);
+  bindResetDefaults(SYNC_KEYS, () => initGeneralTab(getToken));
 }
 
 async function initVersionChecker(): Promise<void> {
@@ -333,13 +348,68 @@ async function initVersionChecker(): Promise<void> {
   });
 }
 
-export async function initGeneralTab(): Promise<void> {
+interface RestartState {
+  pending: boolean;
+  reasons: string[];
+}
+
+async function initRestartBanner(
+  getToken: () => string | null,
+): Promise<void> {
+  const banner = document.getElementById("settings-restart-banner");
+  const reasonEl = document.getElementById("settings-restart-reason");
+  const btn = document.getElementById(
+    "settings-restart-now",
+  ) as HTMLButtonElement | null;
+  if (!banner || !btn) return;
+
+  let state: RestartState;
+  try {
+    const res = await fetch(`${getBase()}/api/settings/restart-state`, {
+      headers: authHeaders(getToken),
+    });
+    if (!res.ok) return;
+    state = (await res.json()) as RestartState;
+  } catch (err) {
+    console.debug("[settings] restart state fetch failed", err);
+    return;
+  }
+
+  if (!state.pending) return;
+  if (reasonEl && state.reasons.length)
+    reasonEl.textContent = state.reasons.join(", ");
+  banner.removeAttribute("style");
+
+  btn.addEventListener("click", async () => {
+    const confirmed = await confirmModal({
+      title: t("settings-page.restart.button"),
+      message: t("settings-page.restart.confirm"),
+    });
+    if (!confirmed) return;
+    btn.disabled = true;
+    try {
+      await fetch(`${getBase()}/api/settings/restart`, {
+        method: "POST",
+        headers: authHeaders(getToken),
+      });
+      btn.textContent = t("settings-page.restart.restarting");
+    } catch (err) {
+      console.debug("[settings] restart trigger failed", err);
+      btn.disabled = false;
+    }
+  });
+}
+
+export async function initGeneralTab(
+  getToken: () => string | null,
+): Promise<void> {
   const container = document.getElementById("general-content");
   if (container) container.innerHTML = renderGeneralContent();
 
   await initAppearanceSettings();
-  await initSyncSetting();
+  await initSyncSetting(getToken);
   await initVersionChecker();
+  await initRestartBanner(getToken);
 
   document
     .getElementById("settings-wizard-restart")

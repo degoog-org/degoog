@@ -3,6 +3,7 @@ import { getBase } from "../../utils/base-url";
 import { escapeHtml } from "../../utils/dom";
 import { getAllSearchTypes } from "../../utils/engines";
 import { authHeaders } from "../../utils/request";
+import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
 import { saveBatch, saveField } from "../../utils/settings-api";
 import type {
   ButtonStateHandler,
@@ -421,12 +422,41 @@ const _initApiKeyControls = (
   );
 };
 
+const _bindRestartButton = (getToken: () => string | null): void => {
+  const btn = document.getElementById(
+    "settings-server-restart",
+  ) as HTMLButtonElement | null;
+  if (!btn) return;
+
+  const label = btn.textContent;
+  btn.addEventListener("click", async () => {
+    const confirmed = await confirmModal({
+      title: t("settings-page.server.restart-button"),
+      message: t("settings-page.server.restart-confirm"),
+    });
+    if (!confirmed) return;
+    btn.disabled = true;
+    btn.textContent = t("settings-page.server.restarting");
+    try {
+      await fetch(`${getBase()}/api/settings/restart`, {
+        method: "POST",
+        headers: authHeaders(getToken),
+      });
+    } catch (err) {
+      console.debug("[settings] restart trigger failed", err);
+      btn.textContent = label;
+      btn.disabled = false;
+    }
+  });
+};
+
 export async function initServerTab(
   getToken: () => string | null,
 ): Promise<void> {
   const container = document.getElementById("server-content");
   if (container) container.innerHTML = renderServerContent();
 
+  _bindRestartButton(getToken);
   _bindToggles();
 
   document
