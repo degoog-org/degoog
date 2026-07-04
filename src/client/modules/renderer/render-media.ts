@@ -145,12 +145,14 @@ function _expandFromPanel(grid: HTMLElement): void {
 const PANEL_LAYOUT_BREAKPOINT = 768;
 
 registerImageGridPanelSync((isOpen) => {
-  if (window.innerWidth < PANEL_LAYOUT_BREAKPOINT) return;
-
   const grid = document.querySelector<HTMLElement>(".image-grid");
   if (!grid) return;
-  if (isOpen) _collapseForPanel(grid);
-  else _expandFromPanel(grid);
+  if (isOpen) {
+    if (window.innerWidth < PANEL_LAYOUT_BREAKPOINT) return;
+    _collapseForPanel(grid);
+  } else {
+    _expandFromPanel(grid);
+  }
 });
 
 const _imageCardUrl = (r: ScoredResult): string => {
