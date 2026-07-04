@@ -36,22 +36,25 @@
     />
     <link
       rel="stylesheet"
+      href="/public/icons/fontawesome/css/all.min.css?v=__APP_VERSION__"
+    />
+    <link
+      rel="stylesheet"
       href="/public/themes/degoog-theme/style.css?v=__APP_VERSION__"
     />
     __THEME_CSS__ __CUSTOM_CSS__
   </head>
   <body class="settings-page-body">
     <div class="settings-page">
-      <header class="settings-page-header">
-        <a href="/" class="settings-page-back">
-          <i class="fa-solid fa-arrow-left fa-xl"></i>
-          {{t:settings-page.back}}
-        </a>
-        <h1 class="settings-page-title">{{t:settings-page.page-title}}</h1>
-      </header>
-
       <div class="settings-layout">
         <div class="settings-sidebar">
+          <header class="settings-page-header">
+            <a href="/" class="settings-page-back">
+              <i class="fa-solid fa-arrow-left fa-xl"></i>
+              {{t:settings-page.back}}
+            </a>
+            <h1 class="settings-page-title">{{t:settings-page.page-title}}</h1>
+          </header>
           <div
             class="settings-nav-search degoog-search-bar degoog-search-bar--square-advanced"
           >
@@ -72,21 +75,7 @@
               class="settings-tab-select degoog-select"
               aria-label="{{t:settings-page.nav.aria-section}}"
             >
-              <option value="general">{{t:settings-page.nav.general}}</option>
-              <option value="server">{{t:settings-page.nav.server}}</option>
-              <option value="engines">{{t:settings-page.nav.engines}}</option>
-              <option value="plugins">{{t:settings-page.nav.plugins}}</option>
-              <option value="transports">
-                {{t:settings-page.nav.transports}}
-              </option>
-              <option value="autocomplete">
-                {{t:settings-page.nav.autocomplete}}
-              </option>
-              <option value="themes">{{t:settings-page.nav.themes}}</option>
-              <option value="store">{{t:settings-page.nav.store}}</option>
-              <option value="shortcuts">
-                {{t:settings-page.nav.shortcuts}}
-              </option>
+              __SETTINGS_TAB_SELECT__
             </select>
           </div>
 
@@ -95,68 +84,7 @@
             id="settings-tabs-nav"
             aria-label="{{t:settings-page.nav.aria-sections}}"
           >
-            <button
-              class="settings-nav-item active"
-              data-tab="general"
-              type="button"
-            >
-              <i class="fa-solid fa-gear fa-lg"></i>
-              {{t:settings-page.nav.general}}
-            </button>
-            <button class="settings-nav-item" data-tab="server" type="button">
-              <i class="fa-solid fa-server fa-lg"></i>
-              {{t:settings-page.nav.server}}
-            </button>
-            <button
-              class="settings-nav-item"
-              data-tab="indexer"
-              type="button"
-              data-indexer-nav
-              style="display: none"
-            >
-              <i class="fa-solid fa-database fa-lg"></i>
-              {{t:settings-page.nav.indexer}}
-            </button>
-            <button class="settings-nav-item" data-tab="engines" type="button">
-              <i class="fa-solid fa-bolt fa-lg"></i>
-              {{t:settings-page.nav.engines}}
-            </button>
-            <button class="settings-nav-item" data-tab="plugins" type="button">
-              <i class="fa-solid fa-puzzle-piece fa-lg"></i>
-              {{t:settings-page.nav.plugins}}
-            </button>
-            <button
-              class="settings-nav-item"
-              data-tab="transports"
-              type="button"
-            >
-              <i class="fa-solid fa-network-wired fa-lg"></i>
-              {{t:settings-page.nav.transports}}
-            </button>
-            <button
-              class="settings-nav-item"
-              data-tab="autocomplete"
-              type="button"
-            >
-              <i class="fa-solid fa-keyboard fa-lg"></i>
-              {{t:settings-page.nav.autocomplete}}
-            </button>
-            <button
-              class="settings-nav-item"
-              data-tab="shortcuts"
-              type="button"
-            >
-              <i class="fa-solid fa-arrow-down-a-z fa-lg"></i>
-              {{t:settings-page.nav.shortcuts}}
-            </button>
-            <button class="settings-nav-item" data-tab="themes" type="button">
-              <i class="fa-solid fa-palette fa-lg"></i>
-              {{t:settings-page.nav.themes}}
-            </button>
-            <button class="settings-nav-item" data-tab="store" type="button">
-              <i class="fa-solid fa-store fa-lg"></i>
-              {{t:settings-page.nav.store}}
-            </button>
+            __SETTINGS_NAV__
           </nav>
         </div>
 

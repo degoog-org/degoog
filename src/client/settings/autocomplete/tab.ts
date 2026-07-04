@@ -1,5 +1,10 @@
 import { escapeHtml } from "../../utils/dom";
-import { extCardBadge, extCardConfigureBtn, extCardVersionWarning } from "../shared/ext-card";
+import {
+  extCardBadge,
+  extCardConfigureBtn,
+  extCardRestartWarning,
+  extCardVersionWarning,
+} from "../shared/ext-card";
 import { openModal } from "../../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, AllExtensions } from "../../types";
 import { getBase } from "../../utils/base-url";
@@ -10,13 +15,17 @@ const t = window.scopedT("core");
 const _renderAutocompleteCard = (provider: ExtensionMeta): string => {
   const isEnabled = provider.settings["disabled"] !== "true";
   const versionWarning = extCardVersionWarning(provider);
+  const restartWarning = extCardRestartWarning(provider);
   const badge = extCardBadge(provider);
   const configureBtn = extCardConfigureBtn(provider);
   return `
     <div class="ext-card degoog-panel degoog-panel--ext-card" data-id="${escapeHtml(provider.id)}">
       <div class="ext-card-main">
         <div class="ext-card-info">
-          <label for="autocomplete-toggle-${escapeHtml(provider.id)}" class="ext-card-name autocomplete-toggle-label">${escapeHtml(provider.displayName)}</label>
+          <div class="ext-card-name-row">
+            ${restartWarning}
+            <label for="autocomplete-toggle-${escapeHtml(provider.id)}" class="ext-card-name autocomplete-toggle-label">${escapeHtml(provider.displayName)}</label>
+          </div>
           ${versionWarning}
         </div>
         <div class="ext-card-actions">

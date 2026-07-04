@@ -1,5 +1,5 @@
 import { state } from "../../state";
-import type { SearchResponse, SlotPanel } from "../../types";
+import type { EngineTiming, SearchResponse, SlotPanel } from "../../types";
 import { escapeHtml } from "../../utils/dom";
 import { retryEngine } from "../../utils/search-actions";
 import { engineCountHtml } from "../../utils/search/engine-failure";
@@ -36,6 +36,41 @@ export const sidebarAccordion = (title: string, content: string): string =>
     </button>
     <div class="sidebar-accordion-body degoog-accordion-body">${content}</div>
   </div>`;
+
+export const engineStatsHtml = (timings: EngineTiming[]): string => {
+  if (!state.displayEnginePerformance || timings.length === 0) return "";
+
+  let statsContent = "";
+  timings.forEach((et) => {
+    const isIndexed = et.resultCount === 0 && et.indexed === true;
+    const statusClass = et.resultCount === 0 && !isIndexed ? " engine-failed" : "";
+    const resultsLabel = t("search-templates.sidebar.results", {
+      count: String(et.resultCount),
+    });
+    const countHtml = isIndexed
+      ? resultsLabel
+      : engineCountHtml(et, resultsLabel);
+    const metaText = isIndexed
+      ? `${t("search-templates.result.just-indexed")} · ${et.time}ms`
+      : `${countHtml} · ${et.time}ms`;
+    const action = isIndexed
+      ? ""
+      : `<a class="engine-retry-link degoog-link" data-engine="${escapeHtml(et.name)}">${t("search-templates.sidebar.retry")}</a>`;
+    statsContent += `
+      <div class="engine-stat-row${statusClass}">
+        <div class="engine-stat-info">
+          <div class="engine-stat-label degoog-text">${escapeHtml(et.name)}</div>
+          <div class="engine-stat-meta degoog-text degoog-text--sm degoog-text--secondary">${metaText}</div>
+        </div>
+        ${action}
+      </div>`;
+  });
+
+  return sidebarAccordion(
+    t("search-templates.sidebar.engine-performance"),
+    statsContent,
+  );
+};
 
 const _relatedSearchesHtml = (terms: string[]): string =>
   sidebarAccordion(
@@ -130,41 +165,7 @@ export function renderSidebar(
     }
   }
 
-  if (
-    state.displayEnginePerformance &&
-    data.engineTimings &&
-    data.engineTimings.length > 0
-  ) {
-    let statsContent = "";
-    const maxTime = Math.max(...data.engineTimings.map((e) => e.time));
-    data.engineTimings.forEach((et) => {
-      const barWidth = Math.min(100, (et.time / maxTime) * 100);
-      const isIndexed = et.resultCount === 0 && et.indexed === true;
-      const statusClass = et.resultCount === 0 && !isIndexed ? " engine-failed" : "";
-      const resultsLabel = t("search-templates.sidebar.results", {
-        count: String(et.resultCount),
-      });
-      const countHtml = isIndexed
-        ? resultsLabel
-        : engineCountHtml(et, resultsLabel);
-      const metaText = isIndexed
-        ? `${t("search-templates.result.just-indexed")} · ${et.time}ms`
-        : `${countHtml} · ${et.time}ms`;
-      const action = isIndexed
-        ? ""
-        : `<a class="engine-retry-link degoog-link" data-engine="${escapeHtml(et.name)}">${t("search-templates.sidebar.retry")}</a>`;
-      statsContent += `
-        <div class="engine-stat-row${statusClass}">
-          <div class="engine-stat-info">
-            <div class="engine-stat-label degoog-text">${escapeHtml(et.name)}</div>
-            <div class="engine-stat-meta degoog-text degoog-text--sm degoog-text--secondary">${metaText}</div>
-          </div>
-          ${action}
-        </div>`;
-      void barWidth;
-    });
-    html += sidebarAccordion(t("search-templates.sidebar.engine-performance"), statsContent);
-  }
+  html += engineStatsHtml(data.engineTimings ?? []);
 
   const relatedSearches = data.relatedSearches?.length
     ? data.relatedSearches

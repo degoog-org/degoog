@@ -138,6 +138,14 @@
   min-width: 12.5rem;
 }
 
+.store-btn-add-confirm {
+  height: $search-bar-height;
+  width: $search-bar-height;
+  font-size: $font-size-md;
+  padding: 0;
+  flex-shrink: 0;
+}
+
 .store-inline-error {
   color: $danger;
   font-size: $font-size-small;
@@ -199,7 +207,7 @@
   align-items: center;
   justify-content: space-between;
   gap: $space-3;
-  padding: $space-2 $space-3;
+  padding: $space-3;
   background: var(--bg-hover);
   border-radius: $radius-md;
 }
@@ -460,6 +468,24 @@
   }
 }
 
+.store-btn-update-icon {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  border-radius: $radius-md;
+  color: $primary;
+  cursor: pointer;
+  flex: none;
+  font-size: $font-size-md;
+  padding: $space-2 $space-3;
+  transition: opacity $transition-fast;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
 .store-card-thumb-wrap--clickable {
   cursor: pointer;
 
@@ -597,4 +623,96 @@
   font-weight: 500;
   padding: $space-2 $space-4;
   letter-spacing: 0.02em;
+}
+
+.store-progress-host {
+  position: relative;
+}
+
+.store-progress {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  padding: $space-3;
+  border-radius: inherit;
+  background: var(--bg-light);
+  pointer-events: none;
+}
+
+.store-progress-label {
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.store-progress-bar {
+  width: 80%;
+  max-width: 12rem;
+  height: $space-2;
+  border-radius: $radius-pill;
+  background: var(--bg-hover);
+  overflow: hidden;
+}
+
+.store-progress-bar-fill {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: $radius-pill;
+  background: $primary;
+}
+
+.is-working .store-progress-bar-fill {
+  animation: store-progress-slide 1s ease-in-out infinite;
+}
+
+.is-ok {
+  .store-progress-label {
+    color: $primary;
+  }
+
+  .store-progress-bar-fill {
+    width: 100%;
+    background: $primary;
+  }
+}
+
+.is-failed {
+  .store-progress-label {
+    color: $danger;
+  }
+
+  .store-progress-bar-fill {
+    width: 100%;
+    background: $danger;
+  }
+}
+
+.store-repo-item {
+  .store-progress {
+    padding: $space-1;
+    gap: 0;
+  }
+
+  .store-progress-label {
+    display: none;
+  }
+
+  .store-progress-bar {
+    width: 90%;
+  }
+}
+
+@keyframes store-progress-slide {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(275%);
+  }
 }

@@ -10,6 +10,7 @@ import { registerExtensionFolder } from "../../utils/extension-docs";
 import { buildExtensionMeta } from "../extension-meta";
 import { mountTransportWs } from "./ws-registry";
 import { getTransportWsSession } from "./ws-session";
+import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
 
 const _builtins: Transport[] = [
   new FetchTransport(),
@@ -113,6 +114,7 @@ export async function getTransportExtensionMeta(): Promise<ExtensionMeta[]> {
         type: ExtensionStoreType.Transport,
         schema,
         rawSettings: await getSettings(id),
+        extra: { needsAppRestart: isExtensionRestartFlagVisible(t.needsAppRestart) },
       }),
     );
   }

@@ -5,14 +5,17 @@ import {
   INLINE_GIF_PLAYBACK,
   OPEN_IN_NEW_TAB_KEY,
   POST_METHOD_ENABLED,
+  STICKY_SIDEBAR,
+  CENTERED_MODE,
 } from "../constants";
-import { state } from "../state";
+import { state, defaultImageFilter } from "../state";
 import { initAutocomplete } from "../utils/autocomplete";
 import { idbGet } from "../utils/db";
 import { recordSettingsReturn, showHome } from "../utils/navigation";
 import { performSearch } from "../utils/search-actions";
 import { applyUovaStorage } from "../utils/uovadipasqua";
 import { initTheme } from "../utils/theme";
+import { applyDefaults } from "../utils/sync";
 import { initOptionsDropdown } from "../utils/time-filter";
 import { initImgFilters } from "./filters/image-filters";
 import { initMediaPreview } from "./media/media-preview";
@@ -41,7 +44,9 @@ type DegoogHistoryState = {
   imageFilter?: ImageFilter;
 };
 
-export function init(): void {
+export async function init(): Promise<void> {
+  await applyDefaults();
+
   renderPageTemplates();
   void applyUovaStorage();
   void initHomeWizard();
@@ -165,11 +170,19 @@ export function init(): void {
   void idbGet<boolean>(DISPLAY_SEARCH_SUGGESTIONS).then((v) => {
     if (v !== null) state.displaySearchSuggestions = v;
   });
-  void idbGet<boolean>(POST_METHOD_ENABLED).then((v) => {
-    if (v !== null) state.postMethodEnabled = v;
-  });
   void idbGet<boolean>(INLINE_GIF_PLAYBACK).then((v) => {
     if (v !== null) state.inlineGifPlayback = v;
+  });
+  void idbGet<boolean>(STICKY_SIDEBAR).then((v) => {
+    if (v !== null) state.stickySidebar = v;
+    document
+      .getElementById("sidebar-col")
+      ?.classList.toggle("is-sticky", state.stickySidebar);
+  });
+  void idbGet<boolean>(CENTERED_MODE).then((v) => {
+    document
+      .getElementById("results-page")
+      ?.classList.toggle("centered-mode", v ?? false);
   });
 
   document.body.addEventListener("click", (e) => {
@@ -188,6 +201,9 @@ export function init(): void {
       if (ok) done();
     });
   });
+
+  const postMethodEnabled = await idbGet<boolean>(POST_METHOD_ENABLED);
+  if (postMethodEnabled !== null) state.postMethodEnabled = postMethodEnabled;
 
   const params = new URLSearchParams(window.location.search);
   const q = params.get("q");
@@ -268,7 +284,9 @@ export function init(): void {
     const hs = e.state as DegoogHistoryState | null;
     if (hs?.degoog) {
       state.isInitialLoad = true;
-      state.imageFilter = hs.imageFilter ? { ...hs.imageFilter } : {};
+      state.imageFilter = hs.imageFilter
+        ? { ...hs.imageFilter }
+        : defaultImageFilter();
       if (hs.type?.startsWith("tab:")) {
         void performTabSearch(hs.query, hs.type.slice(4), hs.page);
       } else {
@@ -282,7 +300,7 @@ export function init(): void {
       const popType = popParams.get("type") || "web";
       const popPage = parseInt(popParams.get("page") ?? "1", 10) || 1;
       if (isImageSearchType(popType)) state.imageFilter = readImgFilter(popParams);
-      else state.imageFilter = {};
+      else state.imageFilter = defaultImageFilter();
       state.isInitialLoad = true;
       if (popType.startsWith("tab:")) {
         void performTabSearch(popQ, popType.slice(4), popPage);

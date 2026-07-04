@@ -3,9 +3,13 @@ import { initLightbox } from "./lightbox";
 
 export function initMediaPreview(): void {
   initLightbox();
-  document.getElementById("media-preview-close")?.addEventListener("click", closeMediaPreview);
-  document.getElementById("media-preview-prev")?.addEventListener("click", () => navigateMediaPreview(-1));
-  document.getElementById("media-preview-next")?.addEventListener("click", () => navigateMediaPreview(1));
+
+  document.getElementById("media-preview-panel")?.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("#media-preview-close")) closeMediaPreview();
+    else if (target.closest("#media-preview-prev")) navigateMediaPreview(-1);
+    else if (target.closest("#media-preview-next")) navigateMediaPreview(1);
+  });
 
   document.addEventListener("keydown", (e) => {
     const panel = document.getElementById("media-preview-panel");

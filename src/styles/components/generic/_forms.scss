@@ -147,3 +147,44 @@ select.degoog-input {
     }
   }
 }
+
+.degoog-checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  cursor: pointer;
+
+  input {
+    display: none;
+  }
+}
+
+.degoog-checkbox {
+  width: $space-6;
+  height: $space-6;
+  border-radius: $radius-md;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  flex-shrink: 0;
+  position: relative;
+  transition: background $transition-fast, border-color $transition-fast;
+  @include flex-center;
+
+  .fa-check {
+    font-size: $font-size-xs;
+    color: var(--white);
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity $transition-fast, transform $transition-fast;
+  }
+
+  input:checked + & {
+    background: $primary;
+    border-color: $primary;
+
+    .fa-check {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}

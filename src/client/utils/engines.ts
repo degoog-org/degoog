@@ -46,6 +46,17 @@ const _typesForEngine = (engine: {
   return ["web"];
 };
 
+export const getAllSearchTypes = async (): Promise<Set<string>> => {
+  const types = new Set<string>();
+  const reg = await getRegistry();
+  for (const engine of reg.engines) {
+    for (const t of _typesForEngine(engine)) {
+      types.add(t);
+    }
+  }
+  return types;
+};
+
 export const getEnabledSearchTypes = async (): Promise<Set<string>> => {
   const engines = await getEngines();
   const reg = await getRegistry();

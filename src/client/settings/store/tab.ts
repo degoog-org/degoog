@@ -83,6 +83,22 @@ export async function initStoreTab(
     render();
   }
 
+  function reconcileGrid(grid: HTMLElement, filtered: StoreItem[]): void {
+    const key = (el: Element) =>
+      `${(el as HTMLElement).dataset.repoUrl}::${(el as HTMLElement).dataset.itemPath}::${(el as HTMLElement).dataset.type}`;
+    const oldByKey = new Map(
+      Array.from(grid.children).map((el) => [key(el), el as HTMLElement]),
+    );
+    const nodes = filtered.map((item) => {
+      const tmp = document.createElement("div");
+      tmp.innerHTML = renderItemCard(item);
+      const newCard = tmp.firstElementChild as HTMLElement;
+      const existing = oldByKey.get(key(newCard));
+      return existing && existing.outerHTML === newCard.outerHTML ? existing : newCard;
+    });
+    grid.replaceChildren(...nodes);
+  }
+
   function render(): void {
     const repoSection = container.querySelector<HTMLElement>(
       ".store-repos-section",
@@ -93,7 +109,6 @@ export async function initStoreTab(
     if (listEl) {
       listEl.innerHTML = renderRepoList(
         repos,
-        getToken,
         repoStatusByUrl,
         selectedRepoUrl,
       );
@@ -136,15 +151,17 @@ export async function initStoreTab(
       ".store-catalog-grid",
     );
 
+    const scopedItems = selectedRepoUrl ? items.filter((i) => normalizeRepoUrl(i.repoUrl) === normalizeRepoUrl(selectedRepoUrl ?? "")) : items;
+
     if (typeSelect) {
       const typeCounts = {
-        all: items.length,
-        plugin: items.filter((i) => i.type === "plugin").length,
-        theme: items.filter((i) => i.type === "theme").length,
-        engine: items.filter((i) => i.type === "engine").length,
-        transport: items.filter((i) => i.type === "transport").length,
-        autocomplete: items.filter((i) => i.type === "autocomplete").length,
-        shortcut: items.filter((i) => i.type === "shortcut").length,
+        all: scopedItems.length,
+        plugin: scopedItems.filter((i) => i.type === "plugin").length,
+        theme: scopedItems.filter((i) => i.type === "theme").length,
+        engine: scopedItems.filter((i) => i.type === "engine").length,
+        transport: scopedItems.filter((i) => i.type === "transport").length,
+        autocomplete: scopedItems.filter((i) => i.type === "autocomplete").length,
+        shortcut: scopedItems.filter((i) => i.type === "shortcut").length,
       };
       typeSelect.innerHTML = [
         { id: "all", label: "Extensions", count: typeCounts.all },
@@ -167,14 +184,14 @@ export async function initStoreTab(
       };
     }
 
-    const subtypes = collectSubtypes(items, typeFilter);
+    const subtypes = collectSubtypes(scopedItems, typeFilter);
     if (subtypeSelect) {
       if (subtypes.length === 0) {
         subtypeSelect.style.display = "none";
         subtypeSelect.innerHTML = "";
       } else {
         subtypeSelect.style.display = "";
-        const filteredForType = items.filter((i) => i.type === typeFilter);
+        const filteredForType = (scopedItems).filter((i) => i.type === typeFilter);
         subtypeSelect.innerHTML = [
           { id: "all", label: "All", count: filteredForType.length },
           ...subtypes.map((id) => ({
@@ -186,7 +203,7 @@ export async function initStoreTab(
             count: filteredForType.filter(
               (i) =>
                 (typeFilter === "plugin" && i.pluginType === id) ||
-                (typeFilter === "engine" && i.engineType === id),
+                (typeFilter === "engine" && (i.engineTypes ?? (i.engineType ? [i.engineType] : [])).includes(id)),
             ).length,
           })),
         ]
@@ -203,11 +220,11 @@ export async function initStoreTab(
     }
 
     if (statusSelect) {
-      const installed = items.filter((i) => i.installed).length;
+      const installed = scopedItems.filter((i) => i.installed).length;
       statusSelect.innerHTML = [
-        { id: "all", label: "All", count: items.length },
+        { id: "all", label: "All", count: scopedItems.length },
         { id: "installed", label: "Installed", count: installed },
-        { id: "not-installed", label: "Not Installed", count: items.length - installed },
+        { id: "not-installed", label: "Not Installed", count: scopedItems.length - installed },
       ]
         .map(
           (s) =>
@@ -221,51 +238,8 @@ export async function initStoreTab(
     }
 
     if (grid) {
-      const filtered = filterItems(
-        items,
-        typeFilter,
-        subtypeFilter,
-        searchQuery,
-        selectedRepoUrl,
-        installedFilter,
-      );
-      grid.innerHTML = filtered
-        .map((item) => renderItemCard(item, getToken))
-        .join("");
-      grid
-        .querySelectorAll<HTMLButtonElement>(".store-btn-install")
-        .forEach((btn) => {
-          btn.addEventListener(
-            "click",
-            () => void handleInstall(btn, getToken, loadItems, render),
-          );
-        });
-      grid
-        .querySelectorAll<HTMLButtonElement>(".store-btn-uninstall")
-        .forEach((btn) => {
-          btn.addEventListener(
-            "click",
-            () => void handleUninstall(btn, getToken, loadItems, render),
-          );
-        });
-      grid
-        .querySelectorAll<HTMLButtonElement>(".store-btn-update")
-        .forEach((btn) => {
-          btn.addEventListener(
-            "click",
-            () => void handleUpdate(btn, getToken, loadItems, render),
-          );
-        });
-      grid
-        .querySelectorAll<HTMLButtonElement>(".store-btn-delete")
-        .forEach((btn) => {
-          btn.addEventListener("click", () => {
-            if (btn.dataset.untracked === "true")
-              void handleDeleteUntracked(btn, getToken, loadItems, render);
-            else
-              void handleUninstall(btn, getToken, loadItems, render);
-          });
-        });
+      const filtered = filterItems(items, typeFilter, subtypeFilter, searchQuery, selectedRepoUrl, installedFilter);
+      reconcileGrid(grid, filtered);
     }
 
     const updatesPanel = container.querySelector<HTMLElement>(
@@ -287,7 +261,7 @@ export async function initStoreTab(
                   <span class="store-updates-row-name">${escapeHtml(i.name)}</span>
                   <span class="store-updates-row-meta">${escapeHtml(i.repoName)} · <span class="store-card-version-old">v${escapeHtml(i.installedVersion || "?")}</span> → v${escapeHtml(i.version)}</span>
                 </div>
-                <button class="btn btn--primary degoog-btn degoog-btn--primary store-btn-update" type="button" data-repo-url="${escapeHtml(i.repoUrl)}" data-item-path="${escapeHtml(i.path)}" data-type="${escapeHtml(i.type)}">Update</button>
+                <button class="btn btn--primary degoog-btn degoog-btn--primary store-btn-update" type="button" data-repo-url="${escapeHtml(i.repoUrl)}" data-item-path="${escapeHtml(i.path)}" data-type="${escapeHtml(i.type)}" aria-label="Update"><i class="fa-solid fa-download"></i></button>
               </div>`,
           )
           .join("");
@@ -310,14 +284,14 @@ export async function initStoreTab(
           .querySelector<HTMLButtonElement>(".store-btn-update-all")
           ?.addEventListener(
             "click",
-            () => void handleUpdateAll(container, getToken, loadItems, render),
+            () => void handleUpdateAll(container, loadItems, render),
           );
         updatesPanel
           .querySelectorAll<HTMLButtonElement>(".store-btn-update")
           .forEach((btn) => {
             btn.addEventListener(
               "click",
-              () => void handleUpdate(btn, getToken, loadItems, render),
+              () => void handleUpdate(container, btn, getToken, loadItems, render),
             );
           });
       }
@@ -326,7 +300,24 @@ export async function initStoreTab(
 
   container.innerHTML = getStoreTabHtml();
 
-  initLightbox(container, getToken);
+  container.querySelector<HTMLElement>(".store-catalog-grid")?.addEventListener("click", (e) => {
+    const t = e.target as HTMLElement;
+    const installBtn = t.closest<HTMLButtonElement>(".store-btn-install");
+    const uninstallBtn = t.closest<HTMLButtonElement>(".store-btn-uninstall");
+    const updateBtn = t.closest<HTMLButtonElement>(".store-btn-update");
+    const deleteBtn = t.closest<HTMLButtonElement>(".store-btn-delete");
+    if (installBtn) void handleInstall(container, installBtn, getToken, loadItems, render);
+    if (uninstallBtn) void handleUninstall(uninstallBtn, getToken, loadItems, render);
+    if (updateBtn) void handleUpdate(container, updateBtn, getToken, loadItems, render);
+    if (deleteBtn) {
+      if (deleteBtn.dataset.untracked === "true")
+        void handleDeleteUntracked(deleteBtn, getToken, loadItems, render);
+      else
+        void handleUninstall(deleteBtn, getToken, loadItems, render);
+    }
+  });
+
+  initLightbox(container);
 
   const addWrap = container.querySelector<HTMLElement>(".store-add-repo-wrap");
   const addBtn = container.querySelector<HTMLButtonElement>(".store-btn-add");
@@ -360,7 +351,6 @@ export async function initStoreTab(
     ?.addEventListener("click", async () => {
       await handleRefreshAll(
         container,
-        getToken,
         refreshAndRender,
         loadReposStatus,
         render,
@@ -376,6 +366,7 @@ export async function initStoreTab(
     );
     if (refreshBtn?.dataset.url)
       void handleRefresh(
+        container,
         refreshBtn.dataset.url,
         getToken,
         refreshAndRender,

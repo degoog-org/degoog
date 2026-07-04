@@ -5,17 +5,22 @@ import {
   INLINE_GIF_PLAYBACK,
   OPEN_IN_NEW_TAB_KEY,
   POST_METHOD_ENABLED,
+  STICKY_SIDEBAR,
+  CENTERED_MODE,
   THEME_KEY,
 } from "../../constants";
-import { getBase } from "../../utils/base-url";
 import { idbGet, idbSet } from "../../utils/db";
+import { resetDefaults, saveDefaults } from "../../utils/sync";
+import { SYNC_KEYS } from "../../../shared/sync";
 import { requestInstallPrompt } from "../../utils/install-prompt";
 import { applyTheme } from "../../utils/theme";
 import { restartWizard } from "../../modules/wizard/wizard";
 import { escapeHtml } from "../../utils/dom";
-import { getStoredToken } from "../../utils/settings-token";
+import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
 import type { ToggleOpts } from "../../types/settings-section";
-import { renderSection, renderToggle } from "../shared/section";
+import { renderCheckbox, renderSection } from "../shared/section";
+import { getBase } from "../../utils/base-url";
+import { authHeaders } from "../../utils/request";
 
 const t = window.scopedT("core");
 
@@ -46,7 +51,29 @@ const SEARCH_OPTION_TOGGLES: ToggleOpts[] = [
     ariaKey: "settings-page.search-options.post-method-aria",
     titleKey: "settings-page.search-options.post-method-tooltip",
   },
+  {
+    id: "settings-sticky-sidebar",
+    labelKey: "settings-page.search-options.sticky-sidebar",
+    ariaKey: "settings-page.search-options.sticky-sidebar-aria",
+  },
+  {
+    id: "settings-centered-mode",
+    labelKey: "settings-page.search-options.centered-mode",
+    ariaKey: "settings-page.search-options.centered-mode-aria",
+  },
 ];
+
+const renderRestartBannerSection = (): string => `
+  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card settings-restart-banner" id="settings-restart-banner" style="display: none">
+    <div class="setting-section-heading-wrapper">
+      <h2 class="settings-section-heading">${escapeHtml(t("settings-page.restart.heading"))}</h2>
+      <div class="floating-section-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    </div>
+    <p class="settings-desc" id="settings-restart-reason">${escapeHtml(t("settings-page.restart.desc"))}</p>
+    <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="settings-restart-now" type="button">
+      ${escapeHtml(t("settings-page.restart.button"))}
+    </button>
+  </section>`;
 
 const renderAppearanceSection = (): string => {
   const opts = ["system", "light", "dark"] as const;
@@ -56,10 +83,7 @@ const renderAppearanceSection = (): string => {
   const content = `
     <div class="theme-select-wrap degoog-select-wrap degoog-select-wrap--flex">
       <select id="theme-select" class="theme-select">${optHtml}</select>
-    </div>
-    <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="save-default-theme" type="button">
-      ${escapeHtml(t("settings-page.appearance.save-defaults"))}
-    </button>`;
+    </div>`;
   return renderSection({
     icon: "fa-solid fa-palette",
     headingKey: "settings-page.appearance.heading",
@@ -73,7 +97,36 @@ const renderSearchOptionsSection = (): string =>
   renderSection({
     icon: "fa-solid fa-magnifying-glass",
     headingKey: "settings-page.search-options.heading",
-    content: SEARCH_OPTION_TOGGLES.map(renderToggle).join(""),
+    fieldsetClass: "settings-toggle-grid",
+    content: SEARCH_OPTION_TOGGLES.map(renderCheckbox).join(""),
+  });
+
+const renderSyncSection = (): string =>
+  renderSection({
+    icon: "fa-solid fa-rotate",
+    headingKey: "settings-page.sync.heading",
+    descKey: "settings-page.sync.desc",
+    noFieldset: true,
+    content: `<div class="settings-page-actions">
+      <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="settings-sync-save-defaults" type="button">
+        ${escapeHtml(t("settings-page.sync.save-button"))}
+      </button>
+      ${renderResetBtn()}
+    </div>`,
+  });
+
+const renderResetBtn = (): string =>
+  `<button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="settings-sync-reset-defaults" type="button">
+    ${escapeHtml(t("settings-page.sync.reset-button"))}
+  </button>`;
+
+const renderResetSection = (): string =>
+  renderSection({
+    icon: "fa-solid fa-rotate",
+    headingKey: "settings-page.sync.reset-heading",
+    descKey: "settings-page.sync.reset-desc",
+    noFieldset: true,
+    content: renderResetBtn(),
   });
 
 const renderWizardSection = (): string =>
@@ -144,20 +197,23 @@ const renderPublicAppearance = (): string => {
 const renderPublicSearchOptions = (): string =>
   renderSection({
     headingKey: "settings-page.search-options.heading",
-    content: SEARCH_OPTION_TOGGLES.map(renderToggle).join(""),
+    fieldsetClass: "settings-toggle-grid",
+    content: SEARCH_OPTION_TOGGLES.map(renderCheckbox).join(""),
   });
 
 export const renderGeneralContent = (): string =>
   [
+    renderRestartBannerSection(),
     renderAppearanceSection(),
     renderSearchOptionsSection(),
+    renderSyncSection(),
     renderWizardSection(),
     renderInstallSection(),
     renderUpdateSection(),
   ].join("");
 
 export const renderPublicSettingsTop = (): string =>
-  renderPublicAppearance() + renderPublicSearchOptions();
+  renderResetSection() + renderPublicAppearance() + renderPublicSearchOptions();
 
 async function getNewestRelease(): Promise<string> {
   const tags = await fetch("https://api.github.com/repos/degoog-org/degoog/tags");
@@ -169,11 +225,18 @@ async function getNewestRelease(): Promise<string> {
   return "Unknown";
 }
 
+const PREF_TOGGLES: { id: string; key: string; defaultVal?: boolean; invert?: boolean }[] = [
+  { id: "settings-open-new-tab", key: OPEN_IN_NEW_TAB_KEY, defaultVal: false },
+  { id: "display-engine-performance", key: DISPLAY_ENGINE_PERFORMANCE, defaultVal: true },
+  { id: "display-related-queries", key: DISPLAY_SEARCH_SUGGESTIONS, defaultVal: true },
+  { id: "settings-inline-gif-playback", key: INLINE_GIF_PLAYBACK, defaultVal: false, invert: true },
+  { id: "settings-post-method-enabled", key: POST_METHOD_ENABLED, defaultVal: false },
+  { id: "settings-sticky-sidebar", key: STICKY_SIDEBAR, defaultVal: false },
+  { id: "settings-centered-mode", key: CENTERED_MODE, defaultVal: false },
+];
+
 export async function initAppearanceSettings(): Promise<void> {
   const themeSelect = document.getElementById("theme-select") as HTMLSelectElement | null;
-  const saveDefaultBtn = document.getElementById("save-default-theme") as HTMLButtonElement | null;
-
-  if (saveDefaultBtn) saveDefaultBtn.style.display = "none";
 
   if (themeSelect) {
     const saved = await idbGet<string>(THEME_KEY);
@@ -187,41 +250,8 @@ export async function initAppearanceSettings(): Promise<void> {
         console.debug("[settings] theme localStorage sync failed", err);
       }
       applyTheme(value);
-      if (saveDefaultBtn) saveDefaultBtn.style.display = "";
     });
   }
-
-  saveDefaultBtn?.addEventListener("click", async () => {
-    const value =
-      (document.getElementById("theme-select") as HTMLSelectElement | null)?.value ?? "system";
-    try {
-      const token = getStoredToken();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers["x-settings-token"] = token;
-      const res = await fetch(`${getBase()}/api/settings/general`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ defaultTheme: value }),
-      });
-      if (!res.ok) throw new Error("save failed");
-      const prev = saveDefaultBtn.textContent;
-      saveDefaultBtn.textContent = t("settings-page.server.saved");
-      setTimeout(() => {
-        saveDefaultBtn.textContent = prev;
-        saveDefaultBtn.style.display = "none";
-      }, 1200);
-    } catch {
-      saveDefaultBtn.textContent = t("settings-page.server.save-failed-network");
-    }
-  });
-
-  const PREF_TOGGLES: { id: string; key: string; defaultVal?: boolean; invert?: boolean }[] = [
-    { id: "settings-open-new-tab", key: OPEN_IN_NEW_TAB_KEY, defaultVal: false },
-    { id: "display-engine-performance", key: DISPLAY_ENGINE_PERFORMANCE, defaultVal: true },
-    { id: "display-related-queries", key: DISPLAY_SEARCH_SUGGESTIONS, defaultVal: true },
-    { id: "settings-inline-gif-playback", key: INLINE_GIF_PLAYBACK, defaultVal: false, invert: true },
-    { id: "settings-post-method-enabled", key: POST_METHOD_ENABLED, defaultVal: false },
-  ];
 
   for (const pref of PREF_TOGGLES) {
     const el = document.getElementById(pref.id) as HTMLInputElement | null;
@@ -233,6 +263,49 @@ export async function initAppearanceSettings(): Promise<void> {
       await idbSet(pref.key, pref.invert ? !el.checked : el.checked);
     });
   }
+}
+
+export const bindResetDefaults = (
+  keys: readonly string[],
+  rerender: () => Promise<void>,
+): void => {
+  const resetBtn = document.getElementById("settings-sync-reset-defaults") as HTMLButtonElement | null;
+  resetBtn?.addEventListener("click", async () => {
+    const confirmed = await confirmModal({
+      title: t("settings-page.sync.reset-button"),
+      message: t("settings-page.sync.reset-confirm"),
+    });
+    if (!confirmed) return;
+    await resetDefaults(keys);
+    applyTheme((await idbGet<string>(THEME_KEY)) || "system");
+    await rerender();
+  });
+};
+
+export async function initPublicGeneral(): Promise<void> {
+  const host = document.getElementById("public-settings-content");
+  if (host) host.innerHTML = renderPublicSettingsTop();
+  await initAppearanceSettings();
+}
+
+async function initSyncSetting(getToken: () => string | null): Promise<void> {
+  const btn = document.getElementById("settings-sync-save-defaults") as HTMLButtonElement | null;
+  if (btn) {
+    const label = btn.textContent;
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      const ok = await saveDefaults();
+      btn.textContent = ok
+        ? t("settings-page.sync.saved")
+        : t("settings-page.server.save-failed-network");
+      setTimeout(() => {
+        btn.textContent = label;
+        btn.disabled = false;
+      }, 1200);
+    });
+  }
+
+  bindResetDefaults(SYNC_KEYS, () => initGeneralTab(getToken));
 }
 
 async function initVersionChecker(): Promise<void> {
@@ -275,12 +348,72 @@ async function initVersionChecker(): Promise<void> {
   });
 }
 
-export async function initGeneralTab(): Promise<void> {
+interface RestartState {
+  pending: boolean;
+  reasons: string[];
+}
+
+async function initRestartBanner(
+  getToken: () => string | null,
+): Promise<void> {
+  const banner = document.getElementById("settings-restart-banner");
+  const reasonEl = document.getElementById("settings-restart-reason");
+  const btn = document.getElementById(
+    "settings-restart-now",
+  ) as HTMLButtonElement | null;
+  if (!banner || !btn) return;
+
+  let state: RestartState;
+  try {
+    const res = await fetch(`${getBase()}/api/settings/restart-state`, {
+      headers: authHeaders(getToken),
+    });
+    if (!res.ok) return;
+    state = (await res.json()) as RestartState;
+  } catch (err) {
+    console.debug("[settings] restart state fetch failed", err);
+    return;
+  }
+
+  if (!state.pending) return;
+  if (reasonEl && state.reasons.length)
+    reasonEl.textContent = state.reasons.join(", ");
+  banner.removeAttribute("style");
+
+  btn.addEventListener("click", async () => {
+    const confirmed = await confirmModal({
+      title: t("settings-page.restart.button"),
+      message: t("settings-page.restart.confirm"),
+    });
+    if (!confirmed) return;
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${getBase()}/api/settings/restart`, {
+        method: "POST",
+        headers: authHeaders(getToken),
+      });
+      if (!res.ok) {
+        btn.disabled = false;
+        return;
+      }
+      btn.textContent = t("settings-page.restart.restarting");
+    } catch (err) {
+      console.debug("[settings] restart trigger failed", err);
+      btn.disabled = false;
+    }
+  });
+}
+
+export async function initGeneralTab(
+  getToken: () => string | null,
+): Promise<void> {
   const container = document.getElementById("general-content");
   if (container) container.innerHTML = renderGeneralContent();
 
   await initAppearanceSettings();
+  await initSyncSetting(getToken);
   await initVersionChecker();
+  await initRestartBanner(getToken);
 
   document
     .getElementById("settings-wizard-restart")

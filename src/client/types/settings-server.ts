@@ -21,6 +21,7 @@ export type ServerSettingsData = {
   streamingEnabled?: BoolSetting;
   streamingAutoRetry?: BoolSetting;
   streamingMaxRetries?: string;
+  streamingDisabledTypes?: string;
   domainBlockEnabled?: BoolSetting;
   domainBlockList?: string;
   domainBlockUiEnabled?: BoolSetting;

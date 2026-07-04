@@ -7,10 +7,12 @@
 #   mkdir -p ./data && sudo chown -R 1000:1000 ./data
 #   docker compose -f docker-compose-examples/mcp.yml up -d
 #
-# MCP endpoint: http://localhost:4443/mcp  (legacy SSE at /sse)
+# MCP endpoint: http://localhost:4443/mcp
 #
 # Tips for small-context models (e.g. llama.cpp):
 #   DEGOOG_MCP_MAX_RESULTS caps how many merged results the search tool returns.
+#   DEGOOG_MCP_SEARCH_TEXT=results puts titles, URLs, and snippets in the
+#   visible tool text for clients that do not expose structuredContent.
 #   DEGOOG_MCP_ENGINES restricts every search to specific engine ids. Discover
 #   valid ids with: curl http://localhost:4444/api/extensions?type=engine
 
@@ -43,9 +45,13 @@ services:
     environment:
       DEGOOG_MCP_DEGOOG_URL: "http://degoog:4444"
       # If Degoog has API-key protection enabled, set the 64-char hex key here.
-      DEGOOG_MCP_API_KEY: ""
+      DEGOOG_MCP_DEGOOG_API_KEY: ""
       # Optional: keep responses small for limited context windows.
       DEGOOG_MCP_MAX_RESULTS: "10"
+      # Use "full" for breakdown + result rows + scrape guidance.
+      # Use "results" for small/local models that need less header text.
+      # Use "breakdown" or "none" only if your client reliably passes structuredContent.
+      DEGOOG_MCP_SEARCH_TEXT: "none"
       # Optional: restrict to specific engines, comma separated.
       DEGOOG_MCP_ENGINES: ""
 

@@ -37,3 +37,8 @@ export const saveShortcuts = (
   getToken: () => string | null,
 ): Promise<boolean> =>
   _post("/api/settings/shortcuts", { shortcuts }, getToken);
+
+export const saveSyncedDefaults = (
+  settings: Record<string, unknown>,
+  getToken: () => string | null,
+): Promise<boolean> => _post("/api/settings/sync", { settings }, getToken);

@@ -1,5 +1,8 @@
 import { idbGet, idbSet } from "../../utils/db";
 import { SETTINGS_KEY, TAB_ORDER_SAVED } from "../../constants";
+import { resetDefaults } from "../../utils/sync";
+import { ENGINE_SYNC_KEYS } from "../../../shared/sync";
+import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
 import { escapeHtml, getConfigStatus } from "../../utils/dom";
 import { openModal } from "../../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, EngineRecord, AllExtensions } from "../../types";
@@ -9,9 +12,12 @@ import { renderMdInline } from "../../utils/md";
 import { getTabOrder, applyTabOrder } from "../../utils/tab-order";
 import { getStoredToken } from "../../utils/settings-token";
 import { openTabOrderModal } from "../shared/tab-order-modal";
+import { extCardRestartWarning } from "../shared/ext-card";
 
 const t = window.scopedT("core");
 const themeT = window.scopedT("themes/degoog");
+
+let _orderSavedHandler: (() => void) | null = null;
 
 const _typeLabel = (type: string): string => {
   const translated = themeT(`search-templates.tabs.${type}`);
@@ -94,6 +100,7 @@ const _renderEngineCard = (
   const versionWarning = engine.requiresNewerVersion
     ? `<span class="ext-version-warning">${escapeHtml(t("settings-page.extensions.requires-newer-version"))}</span>`
     : "";
+  const restartWarning = extCardRestartWarning(engine);
   const extraTypes = _extraTypeLabels(engine);
   const extraTypesHtml = extraTypes.length
     ? `<div class="ext-card-extra-types"><span class="ext-card-extra-types-label">${escapeHtml(t("settings-page.extensions.extra-types"))}</span>${extraTypes.map((label) => `<span class="degoog-badge degoog-badge--engine-type">${escapeHtml(label)}</span>`).join("")}</div>`
@@ -118,7 +125,10 @@ const _renderEngineCard = (
     <div class="ext-card degoog-panel degoog-panel--ext-card" data-id="${escapeHtml(engine.id)}">
       <div class="ext-card-main">
         <div class="ext-card-info">
-          <label for="engine-toggle-${escapeHtml(engine.id)}" class="ext-card-name engine-toggle-label">${escapeHtml(engine.displayName)}</label>
+          <div class="ext-card-name-row">
+            ${restartWarning}
+            <label for="engine-toggle-${escapeHtml(engine.id)}" class="ext-card-name engine-toggle-label">${escapeHtml(engine.displayName)}</label>
+          </div>
           ${desc}
           ${extraTypesHtml}
           ${versionWarning}
@@ -157,6 +167,8 @@ export async function initEnginesTab(
   const savedOrder = await getTabOrder();
   const groups = _sortGroups(rawGroups, savedOrder);
 
+  const resetBtn = `<button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="reset-default-engines" type="button">${escapeHtml(t("settings-page.extensions.reset-defaults"))}</button>`;
+
   let html = "";
 
   if (allowConfigure) {
@@ -169,6 +181,7 @@ export async function initEnginesTab(
       <div class="settings-page-actions">
         <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="order-engine-tabs" type="button">${escapeHtml(t("settings-page.extensions.order-tabs"))}</button>
         <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="save-default-engines" type="button">${escapeHtml(t("settings-page.extensions.save-defaults"))}</button>
+        ${resetBtn}
       </div>
     </section>`;
   }
@@ -243,6 +256,18 @@ export async function initEnginesTab(
             btn.textContent = t("settings-page.server.save-failed-network");
         }
       });
+
+    document
+      .getElementById("reset-default-engines")
+      ?.addEventListener("click", async () => {
+        const confirmed = await confirmModal({
+          title: t("settings-page.extensions.reset-defaults"),
+          message: t("settings-page.extensions.reset-confirm"),
+        });
+        if (!confirmed) return;
+        await resetDefaults(ENGINE_SYNC_KEYS);
+        await initEnginesTab(allExtensions, options);
+      });
   }
 
   document
@@ -253,9 +278,14 @@ export async function initEnginesTab(
       void openTabOrderModal(allTypes, token);
     });
 
+  if (_orderSavedHandler) {
+    window.removeEventListener(TAB_ORDER_SAVED, _orderSavedHandler);
+  }
   const onOrderSaved = (): void => {
     window.removeEventListener(TAB_ORDER_SAVED, onOrderSaved);
+    _orderSavedHandler = null;
     void initEnginesTab(allExtensions, options);
   };
+  _orderSavedHandler = onOrderSaved;
   window.addEventListener(TAB_ORDER_SAVED, onOrderSaved);
 }

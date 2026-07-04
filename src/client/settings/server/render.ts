@@ -12,6 +12,15 @@ const _h = (headingKey: string, icon: string): string =>
 const _desc = (key: string): string =>
   `<p class="settings-desc">${escapeHtml(t(key))}</p>`;
 
+const _renderRestartSection = (): string => `
+  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-restart">
+    ${_h("settings-page.server.restart-heading", "fa-solid fa-power-off")}
+    ${_desc("settings-page.server.restart-desc")}
+    <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="settings-server-restart" type="button">
+      ${escapeHtml(t("settings-page.server.restart-button"))}
+    </button>
+  </section>`;
+
 const _renderPresetSection = (): string => `
   <section class="settings-section ext-card degoog-panel degoog-panel--ext-card settings-server-presets" id="settings-section-server-presets">
     ${_h("settings-page.server.presets.heading", "fa-solid fa-sliders")}
@@ -123,6 +132,7 @@ const _renderStreamingSection = (): string => `
       ${_toggle("settings-streaming-enabled", "settings-page.server.streaming-enable", { aria: "settings-page.server.streaming-enable-aria", title: "settings-page.server.streaming-enable-tooltip" })}
       <div class="settings-streaming-options" id="settings-streaming-options" style="display: none">
         <fieldset class="settings-fieldset settings-fieldset--compact">
+          <div id="settings-streaming-type-checks" class="settings-streaming-type-checks"></div>
           ${_toggle("settings-streaming-auto-retry", "settings-page.server.streaming-auto-retry", { aria: "settings-page.server.streaming-auto-retry-aria" })}
           <div class="settings-streaming-retry-wrap settings-fieldset settings-fieldset-inverse settings-fieldset--compact" id="settings-streaming-retry-wrap" style="display: none">
             <label for="settings-streaming-max-retries" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.streaming-max-retries-label"))}</label>
@@ -310,6 +320,7 @@ const _renderCustomCssSection = (): string => `
 
 export const renderServerContent = (): string =>
   [
+    _renderRestartSection(),
     _renderPresetSection(),
     _renderCacheSection(),
     _renderApiKeySection(),

@@ -19,6 +19,17 @@ export const renderToggle = (opts: ToggleOpts): string => {
     </label>`;
 };
 
+export const renderCheckbox = (opts: ToggleOpts): string => {
+  const ariaAttr = opts.ariaKey ? ` aria-label="${escapeHtml(t(opts.ariaKey))}"` : "";
+  const titleAttr = opts.titleKey ? ` title="${escapeHtml(t(opts.titleKey))}"` : "";
+  const checkedAttr = opts.checked ? " checked" : "";
+  return `<label class="degoog-checkbox-wrap"${titleAttr}>
+      <input type="checkbox" id="${opts.id}" class="settings-toggle"${ariaAttr}${checkedAttr} />
+      <span class="degoog-checkbox"><i class="fa-solid fa-check"></i></span>
+      <span class="settings-toggle-label">${escapeHtml(t(opts.labelKey))}</span>
+    </label>`;
+};
+
 export const renderDesc = (key: string): string =>
   `<p class="settings-desc">${escapeHtml(t(key))}</p>`;
 

@@ -44,7 +44,21 @@
       "inline-gif-playback-aria": "Disabilita l'animazione GIF nei risultati immagini",
       "post-method": "Usa il metodo POST per le richieste di ricerca (Non funziona con lo streaming dei risultati)",
       "post-method-aria": "Usa il metodo POST per le richieste di ricerca (Non funziona con lo streaming dei risultati)",
-      "post-method-tooltip": "Il metodo POST non è compatibile con lo streaming dei risultati"
+      "post-method-tooltip": "Il metodo POST non è compatibile con lo streaming dei risultati",
+      "sticky-sidebar": "Mantieni la barra laterale dei risultati fissa durante lo scorrimento",
+      "sticky-sidebar-aria": "Mantieni la barra laterale dei risultati fissa durante lo scorrimento",
+      "centered-mode": "Centra i risultati di ricerca",
+      "centered-mode-aria": "Centra i risultati di ricerca"
+    },
+    "sync": {
+      "heading": "Impostazioni predefinite dell'istanza",
+      "desc": "Pubblica le impostazioni attuali di questo browser come predefinite per i nuovi visitatori. Le scelte di ogni visitatore hanno sempre la priorità su queste impostazioni predefinite.",
+      "save-button": "Salva le impostazioni attuali come predefinite",
+      "saved": "Impostazioni predefinite salvate",
+      "reset-button": "Ripristina le impostazioni predefinite dell'istanza",
+      "reset-confirm": "Questo sostituisce le impostazioni salvate su questo browser con quelle predefinite dell'istanza. Continuare?",
+      "reset-heading": "Ripristina impostazioni",
+      "reset-desc": "Ripristina le impostazioni predefinite di questa istanza su questo browser. Le tue modifiche locali verranno sostituite."
     },
     "install": {
       "heading": "Installa app",
@@ -290,9 +304,12 @@
       "group-themes": "Temi",
       "apply-failed": "Operazione non riuscita",
       "save-defaults": "Salva come predefinito dell'istanza",
+      "reset-defaults": "Ripristina le impostazioni predefinite dell'istanza",
+      "reset-confirm": "Questo sostituisce le tue scelte dei motori su questo browser con quelle predefinite dell'istanza. Continuare?",
       "tabs-heading": "Schede di ricerca",
       "tabs-desc": "Imposta i motori abilitati per impostazione predefinita e personalizza l'ordine delle schede dei risultati.",
       "order-tabs": "Ordina schede",
+      "drag-to-reorder": "Trascina per riordinare",
       "exposure-exposed": "Il browser può contattare servizi esterni direttamente",
       "exposure-safe": "Le richieste del browser passano per il server",
       "exposure-unknown": "Comportamento di rete non dichiarato",
@@ -461,6 +478,10 @@
       "outgoing-transport": {
         "label": "Client HTTP in uscita",
         "description": "Il client HTTP in uscita da usare per questo motore."
+      },
+      "timeout": {
+        "label": "Timeout (ms)",
+        "description": "Tempo massimo in millisecondi di attesa per questo motore prima di rinunciare. Lascia vuoto per usare il valore predefinito."
       },
       "slot-position": {
         "label": "Posizione",

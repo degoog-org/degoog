@@ -30,16 +30,11 @@ export function formatRelativeTime(iso: string): string {
   }
 }
 
-export function repoImageSrc(
-  repo: RepoInfo,
-  getToken: () => string | null,
-): string {
+export function repoImageSrc(repo: RepoInfo): string {
   const img = repo.repoImage;
   if (!img) return "";
   if (/^https?:\/\//i.test(img)) return img;
-  const token = getToken();
-  const q = token ? `&token=${encodeURIComponent(token)}` : "";
-  return `${getBase()}/api/store/repos/${encodeURIComponent(repo.localPath)}/asset?path=${encodeURIComponent(img)}${q}`;
+  return `${getBase()}/api/store/repos/${encodeURIComponent(repo.localPath)}/asset?path=${encodeURIComponent(img)}`;
 }
 
 export function pluginTypeLabel(type: string): string {
@@ -56,7 +51,6 @@ export function engineTypeLabel(type: string): string {
 
 export function renderRepoDetail(
   repo: RepoInfo,
-  getToken: () => string | null,
   statusByUrl: Record<string, number>,
 ): string {
   const err = repo.error
@@ -73,7 +67,7 @@ export function renderRepoDetail(
     behind > 0
       ? `<span class="store-repo-updates-note" title="Refresh to get latest">${escapeHtml(String(behind))} update${behind !== 1 ? "s" : ""} available</span>`
       : "";
-  const imgSrc = repoImageSrc(repo, getToken);
+  const imgSrc = repoImageSrc(repo);
   const imgHtml = imgSrc
     ? `<img src="${escapeHtml(imgSrc)}" alt="" class="store-repo-img" loading="lazy">`
     : '<div class="store-repo-img store-repo-img-placeholder"></div>';
@@ -98,7 +92,6 @@ export function renderRepoDetail(
 
 export function renderRepoList(
   repos: RepoInfo[],
-  getToken: () => string | null,
   statusByUrl: Record<string, number>,
   selectedUrl: string | null,
 ): string {
@@ -111,7 +104,7 @@ export function renderRepoList(
   let html = "";
   html += '<div class="store-repo-list">';
   for (const repo of repos) {
-    const imgSrc = repoImageSrc(repo, getToken);
+    const imgSrc = repoImageSrc(repo);
     const active = repo.url === selectedUrl ? " store-repo-item--active" : "";
     const normUrl = normalizeRepoUrl(repo.url);
     const behind = statusByUrl[normUrl] ?? statusByUrl[repo.url] ?? 0;
@@ -126,7 +119,7 @@ export function renderRepoList(
   }
   html += "</div>";
   if (selected) {
-    html += renderRepoDetail(selected, getToken, statusByUrl);
+    html += renderRepoDetail(selected, statusByUrl);
   }
   return html;
 }
@@ -144,20 +137,10 @@ export function renderShortcutKeycaps(item: StoreItem): string {
   return `<div class="store-card-thumb store-card-keycaps">${keys}</div>`;
 }
 
-export function renderItemCard(
-  item: StoreItem,
-  getToken: () => string | null,
-): string {
+export function renderItemCard(item: StoreItem): string {
   const itemSlug = item.path.split("/").pop() ?? "";
-  const token = getToken();
   const firstUrl = item.screenshots.length
-    ? screenshotUrl(
-        item.repoSlug,
-        item.type,
-        itemSlug,
-        item.screenshots[0],
-        token,
-      )
+    ? screenshotUrl(item.repoSlug, item.type, itemSlug, item.screenshots[0])
     : "";
   const keycaps = item.type === "shortcut" ? renderShortcutKeycaps(item) : "";
   const thumb = item.screenshots.length

@@ -63,3 +63,10 @@ export const idbSet = async (key: string, value: unknown): Promise<void> => {
     (store) => store.put(value, key) as unknown as IDBRequest<undefined>,
   );
 };
+
+export const idbDel = async (key: string): Promise<void> => {
+  await _runTx<undefined>(
+    "readwrite",
+    (store) => store.delete(key) as unknown as IDBRequest<undefined>,
+  );
+};

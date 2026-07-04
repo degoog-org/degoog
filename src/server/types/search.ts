@@ -20,6 +20,7 @@ export enum ImgColor {
   PURPLE = "purple",
   RED = "red",
   TEAL = "teal",
+  TRANSPARENT = "transparent",
   WHITE = "white",
   YELLOW = "yellow",
 }
@@ -38,6 +39,7 @@ export enum ImgType {
   CLIPART = "clipart",
   LINEART = "lineart",
   PHOTO = "photo",
+  TRANSPARENT = "transparent",
 }
 
 export enum ImgLayout {
@@ -75,6 +77,8 @@ export interface SearchBody {
   imgSize?: string;
   imgType?: string;
   imgLayout?: string;
+  safeMode?: string;
+  /** @deprecated use safeMode; still read for old bookmarks/clients. */
   imgNsfw?: string;
 }
 

@@ -45,7 +45,21 @@
       "inline-gif-playback-aria": "Désactiver l'animation GIF dans les résultats d'images",
       "post-method": "Utiliser la méthode POST pour les requêtes de recherche (Ne fonctionne pas avec les résultats en flux)",
       "post-method-aria": "Utiliser la méthode POST pour les requêtes de recherche (Ne fonctionne pas avec les résultats en flux)",
-      "post-method-tooltip": "La méthode POST n'est pas compatible avec les résultats en flux"
+      "post-method-tooltip": "La méthode POST n'est pas compatible avec les résultats en flux",
+      "sticky-sidebar": "Garder la barre latérale des résultats fixe lors du défilement",
+      "sticky-sidebar-aria": "Garder la barre latérale des résultats fixe lors du défilement",
+      "centered-mode": "Centrer les résultats de recherche",
+      "centered-mode-aria": "Centrer les résultats de recherche"
+    },
+    "sync": {
+      "heading": "Paramètres par défaut de l'instance",
+      "desc": "Publiez les paramètres actuels de ce navigateur comme valeurs par défaut pour les nouveaux visiteurs. Les choix de chaque visiteur ont toujours priorité sur ces valeurs par défaut.",
+      "save-button": "Enregistrer les paramètres actuels comme valeurs par défaut",
+      "saved": "Valeurs par défaut enregistrées",
+      "reset-button": "Réinitialiser aux valeurs par défaut de l'instance",
+      "reset-confirm": "Cela remplace les paramètres enregistrés sur ce navigateur par les valeurs par défaut de l'instance. Continuer ?",
+      "reset-heading": "Réinitialiser les paramètres",
+      "reset-desc": "Restaure les paramètres par défaut de cette instance sur ce navigateur. Vos modifications locales seront remplacées."
     },
     "install": {
       "heading": "Installer l'application",
@@ -296,9 +310,12 @@
       "group-themes": "Thèmes",
       "apply-failed": "Échec",
       "save-defaults": "Enregistrer comme valeur par défaut de l'instance",
+      "reset-defaults": "Réinitialiser aux valeurs par défaut de l'instance",
+      "reset-confirm": "Cela remplace vos choix de moteurs sur ce navigateur par les valeurs par défaut de l'instance. Continuer ?",
       "tabs-heading": "Onglets de recherche",
       "tabs-desc": "Définissez les moteurs activés par défaut et personnalisez l'ordre des onglets de résultats.",
       "order-tabs": "Ordonner les onglets",
+      "drag-to-reorder": "Glisser pour réordonner",
       "exposure-exposed": "Le navigateur peut contacter des services externes directement",
       "exposure-safe": "Les requêtes du navigateur passent par le serveur",
       "exposure-unknown": "Comportement réseau non déclaré",
@@ -467,6 +484,10 @@
       "outgoing-transport": {
         "label": "Client HTTP sortant",
         "description": "Le client HTTP sortant à utiliser pour ce moteur."
+      },
+      "timeout": {
+        "label": "Délai d'expiration (ms)",
+        "description": "Temps maximal en millisecondes d'attente de ce moteur avant abandon. Laisser vide pour utiliser la valeur par défaut."
       },
       "slot-position": {
         "label": "Position",
