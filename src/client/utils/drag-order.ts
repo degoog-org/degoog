@@ -134,6 +134,36 @@ export const initDragOrder = (
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
   });
+
+  const moveByKey = (item: HTMLElement, direction: -1 | 1): void => {
+    const siblings = items();
+    const idx = siblings.indexOf(item);
+    const swapIdx = idx + direction;
+    if (swapIdx < 0 || swapIdx >= siblings.length) return;
+
+    dragged = item;
+    const ref =
+      direction === -1
+        ? siblings[swapIdx]
+        : (siblings[swapIdx].nextElementSibling as HTMLElement | null);
+    reorder(ref);
+    dragged = null;
+
+    settle(item);
+    config.onReorder(list, item);
+  };
+
+  list.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    const target = e.target as HTMLElement;
+    const handle = target.closest(config.handleSelector);
+    if (!handle || !list.contains(handle)) return;
+    const item = handle.closest<HTMLElement>(config.itemSelector);
+    if (!item) return;
+
+    e.preventDefault();
+    moveByKey(item, e.key === "ArrowUp" ? -1 : 1);
+  });
 };
 
 declare global {

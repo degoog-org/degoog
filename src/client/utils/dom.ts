@@ -36,10 +36,10 @@ const ALLOWED_URL_SCHEMES = new Set([
 
 export const linkHref = (url: string | null | undefined): string => {
   if (!url) return "";
-  const stripped = url.replace(/^[\x00-\x20]+/, "");
-  const scheme = stripped.match(/^([a-z][a-z0-9+.-]*):/i);
-  if (!scheme) return url;
-  return ALLOWED_URL_SCHEMES.has(scheme[1].toLowerCase()) ? url : "";
+  const normalized = url.replace(/[\t\n\r]/g, "").replace(/^[\x00-\x20]+/, "");
+  const scheme = normalized.match(/^([a-z][a-z0-9+.-]*):/i);
+  if (!scheme) return normalized;
+  return ALLOWED_URL_SCHEMES.has(scheme[1].toLowerCase()) ? normalized : "";
 };
 
 type SchemaField = { key: string; required?: boolean };

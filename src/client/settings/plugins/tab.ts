@@ -62,7 +62,7 @@ const _renderPluginCard = (
     : "";
 
   const orderBtns = orderable
-    ? `<span class="degoog-drag-handle" data-drag-handle title="${escapeHtml(t("settings-page.extensions.drag-to-reorder"))}" aria-label="${escapeHtml(t("settings-page.extensions.drag-to-reorder"))}"><i class="fa-solid fa-grip-vertical"></i></span>`
+    ? `<span class="degoog-drag-handle" data-drag-handle tabindex="0" role="button" title="${escapeHtml(t("settings-page.extensions.drag-to-reorder"))}" aria-label="${escapeHtml(t("settings-page.extensions.drag-to-reorder"))}"><i class="fa-solid fa-grip-vertical"></i></span>`
     : "";
 
   return `

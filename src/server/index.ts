@@ -1,6 +1,8 @@
 import { Hono } from "hono";
-import { serveStatic, createBunWebSocket } from "hono/bun";
+import { serveStatic, upgradeWebSocket, websocket } from "hono/bun";
 import { trimTrailingSlash } from "hono/trailing-slash";
+import { lstatSync, unlinkSync } from "fs";
+import net from "net";
 import pkg from "../../package.json";
 import { getBasePath } from "./utils/base-url";
 import { getLocale } from "./utils/hono";
@@ -67,6 +69,34 @@ const port = Number(process.env.DEGOOG_PORT) || 4444;
 const unixSocket = process.env.DEGOOG_UNIX_SOCKET?.trim();
 const listenUrl = unixSocket ? `unix:${unixSocket}` : `http://localhost:${port}`;
 
+const isStaleUnixSocket = async (path: string): Promise<boolean> => {
+  try {
+    if (!lstatSync(path).isSocket()) return false;
+  } catch {
+    return false;
+  }
+
+  return await new Promise((resolve) => {
+    const socket = net.createConnection(path);
+    socket.once("connect", () => {
+      socket.destroy();
+      resolve(false);
+    });
+    socket.once("error", (err: NodeJS.ErrnoException) => resolve(err.code === "ECONNREFUSED"));
+  });
+};
+
+const bindUnixSocket = async (path: string, serve: () => void): Promise<void> => {
+  try {
+    serve();
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "EADDRINUSE" || !(await isStaleUnixSocket(path))) throw err;
+    logger.warn(`[startup] removing stale unix socket at ${path}`);
+    unlinkSync(path);
+    serve();
+  }
+};
+
 const _noColor = !!process.env.NO_COLOR;
 const _ansi = (code: string): string => (_noColor ? "" : code);
 const ANSI_BLUE = _ansi("\x1b[38;2;66;133;244m");
@@ -116,9 +146,9 @@ const initExtensionRegistries = async (): Promise<void> => {
    * Promise.all it's because the plugin api routes MUST be initialised after the plugins are loaded
    * and promise.all is not gonna give a reliable order of execution 100% of the time.
    * 
-   * This ensures your lovely extremely dangerous api routes from thied party plugins you are installing
+   * This ensures your lovely extremely dangerous api routes from third party plugins you are installing
    * from dubious sources that you are MOST DEFINITELY NOT code checking are running nicely in the background 
-   * and installing all sort of viruses and exploits reliably <3 happy far westing!
+   * and installing all sort of viruses and exploits reliably <3 happy farwesting!
    */
   await initPlugins();
   await initPluginRoutes();
@@ -140,8 +170,6 @@ Promise.all([initServerKey(), initExtensionRegistries()])
   .then(async () => {
     const settings = await getInstanceSettings();
     if (asBoolean(settings.degoogIndexerEnabled)) startQueue();
-
-    const { upgradeWebSocket, websocket } = createBunWebSocket();
 
     for (const [name] of getTransportWsHandlers()) {
       app.get(`/ws/${name}/:password?`, upgradeWebSocket((c) => {
@@ -171,7 +199,9 @@ Promise.all([initServerKey(), initExtensionRegistries()])
     }
 
     if (unixSocket) {
-      Bun.serve({ unix: unixSocket, fetch: app.fetch, websocket });
+      await bindUnixSocket(unixSocket, () =>
+        Bun.serve({ unix: unixSocket, fetch: app.fetch, websocket }),
+      );
     } else {
       Bun.serve({ port, fetch: app.fetch, websocket, idleTimeout: 120 });
     }

@@ -11,7 +11,7 @@ const _renderItem = (entry: TypeEntry): string =>
   `<li class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact" data-key="${escapeHtml(entry.key)}">
     <div class="ext-card-main">
       <span class="ext-card-name">${escapeHtml(entry.label)}</span>
-      <span class="degoog-drag-handle" data-drag-handle title="${escapeHtml(t("settings-page.extensions.drag-to-reorder"))}" aria-label="${escapeHtml(t("settings-page.extensions.drag-to-reorder"))}"><i class="fa-solid fa-grip-vertical"></i></span>
+      <span class="degoog-drag-handle" data-drag-handle tabindex="0" role="button" title="${escapeHtml(t("settings-page.extensions.drag-to-reorder"))}" aria-label="${escapeHtml(t("settings-page.extensions.drag-to-reorder"))}"><i class="fa-solid fa-grip-vertical"></i></span>
     </div>
   </li>`;
 
@@ -28,10 +28,10 @@ export const openTabOrderModal = async (
   token: string | null,
 ): Promise<void> => {
   const saved = await getTabOrder();
-  const orderedKeys = applyTabOrder(types.map((t) => t.key), saved);
+  const orderedKeys = applyTabOrder(types.map((entry) => entry.key), saved);
   const ordered = orderedKeys
-    .map((k) => types.find((t) => t.key === k))
-    .filter((t): t is TypeEntry => t !== undefined);
+    .map((key) => types.find((entry) => entry.key === key))
+    .filter((entry): entry is TypeEntry => entry !== undefined);
 
   const bodyHtml = `<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:var(--space-2,0.5rem)">${ordered.map(_renderItem).join("")}</ul>`;
 
