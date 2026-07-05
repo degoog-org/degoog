@@ -35,6 +35,8 @@ import { getInstanceSettings } from "../../utils/server-settings";
 import { readShortcutsSettings } from "../../utils/shortcuts-settings";
 import { getClientShortcuts } from "../../extensions/shortcuts/registry";
 import { isPasswordRequired } from "../settings-auth";
+import { readSyncedDefaults } from "../../utils/synced-settings";
+import { buildSettingsNav, buildSettingsTabSelect } from "./settings-nav";
 
 export const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
 const CORE_LOCALES_ROOT = "src";
@@ -221,6 +223,13 @@ export async function applyPagePlaceholders(
   const shortcutsScript = `<script>window.__DEGOOG_SHORTCUTS__=${safeShortcuts}</script>`;
   result = result.replace("</head>", `${shortcutsScript}\n  </head>`);
 
+  const syncedDefaults = await readSyncedDefaults();
+  if (Object.keys(syncedDefaults).length > 0) {
+    const safeSync = JSON.stringify(syncedDefaults).replace(/<\//g, "<\\/");
+    const syncScript = `<script>window.__DEGOOG_SYNCED_DEFAULTS__=${safeSync}</script>`;
+    result = result.replace("</head>", `${syncScript}\n  </head>`);
+  }
+
   result = result.replace(
     "</head>",
     `<link rel="stylesheet" href="/public/icons/fontawesome/css/all.min.css?v=${pkg.version}">\n  </head>`,
@@ -310,6 +319,12 @@ export async function buildPage(
       ? _apiKeySection
       : _apiKeySectionLocked;
     html = html.replace("__API_KEY_SECTION__", content);
+  }
+  if (html.includes("__SETTINGS_NAV__")) {
+    html = html.replace("__SETTINGS_NAV__", buildSettingsNav());
+  }
+  if (html.includes("__SETTINGS_TAB_SELECT__")) {
+    html = html.replace("__SETTINGS_TAB_SELECT__", buildSettingsTabSelect());
   }
   const t = await getTranslator(locale);
   return applyPagePlaceholders(html, t, locale);

@@ -67,22 +67,27 @@ a {
 
   &--proxy-exposed,
   &--proxy-safe,
-  &--proxy-unknown {
+  &--proxy-unknown,
+  &--restart-required {
     background: transparent;
     cursor: help;
     line-height: 1;
     padding: 0;
   }
 
-  &--proxy-exposed { 
-    color: $warning; 
+  &--proxy-exposed {
+    color: $warning;
   }
 
-  &--proxy-safe { 
-    color: $success; 
+  &--proxy-safe {
+    color: $success;
   }
 
-  &--proxy-unknown { 
+  &--proxy-unknown {
     color: var(--text-secondary);
+  }
+
+  &--restart-required {
+    color: $danger;
   }
 }

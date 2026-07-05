@@ -4,7 +4,7 @@ import {
   destroyMediaObserver,
 } from "../../modules/media/media";
 import { clearSlotPanels, renderResults } from "../../modules/renderer/render";
-import { renderMediaEngineBar } from "../../modules/renderer/render-media";
+import { renderImgEngines } from "../../modules/filters/image-filters";
 import { state } from "../../state";
 import {
   type Command,
@@ -108,11 +108,13 @@ export async function performSearch(
     ? getNaturalLanguageBangQuery(query, commands)
     : null;
 
+  const streamingConfig = await fetchStreamingConfig();
   if (
     !naturalBangQuery &&
     !state.postMethodEnabled &&
     (!page || page === 1) &&
-    (await fetchStreamingConfig())
+    streamingConfig.enabled &&
+    !streamingConfig.disabledTypes.includes(resolvedType)
   ) {
     abortStreamingSearch();
     return performStreamingSearch(
@@ -342,10 +344,10 @@ async function _performBangCommand(
         if (glanceElMedia) glanceElMedia.innerHTML = "";
         const sidebarMedia = document.getElementById("results-sidebar");
         if (sidebarMedia) sidebarMedia.innerHTML = "";
-        renderMediaEngineBar(data.engineTimings ?? []);
       }
       if (resultsMeta)
         resultsMeta.textContent = `About ${data.results?.length ?? 0} results (${((data.totalTime ?? 0) / 1000).toFixed(2)} seconds)`;
+      if (isMedia) renderImgEngines(data.engineTimings ?? []);
       state.currentPage = page;
       renderResults(data.results ?? []);
       return;

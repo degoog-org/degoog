@@ -23,8 +23,50 @@ import {
 } from "../extensions/store";
 import { ExtensionStoreType } from "../types";
 import { getBaseUrl } from "../utils/base-url";
+import { logger } from "../utils/logger";
 
 const router = new Hono();
+
+type SseSend = (event: string, data: unknown) => void;
+
+function streamStoreProgress(
+  signal: AbortSignal,
+  run: (send: SseSend) => Promise<void>,
+): Response {
+  const encoder = new TextEncoder();
+  const body = new ReadableStream({
+    async start(controller) {
+      let closed = false;
+      const send: SseSend = (event, data) => {
+        if (closed || signal.aborted) return;
+        try {
+          controller.enqueue(
+            encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
+          );
+        } catch (err) {
+          logger.debug("store:stream", "client disconnected", err);
+          closed = true;
+        }
+      };
+      try {
+        await run(send);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "Operation failed";
+        logger.warn("store:stream", `store progress stream failed: ${message}`);
+        send("failed", { error: message });
+      } finally {
+        if (!closed) controller.close();
+      }
+    },
+  });
+  return new Response(body, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+}
 
 const VALID_TYPES: ExtensionStoreType[] = Object.values(ExtensionStoreType);
 
@@ -241,6 +283,25 @@ router.post("/api/store/update-all", async (c) => {
     const message = e instanceof Error ? e.message : "Update failed";
     return c.json({ error: message }, 400);
   }
+});
+
+router.get("/api/store/update-all/stream", async (c) => {
+  if (!(await gandalf(canBalrogPass(c))))
+    return c.json({ error: "You shall not pass!" }, 401);
+  return streamStoreProgress(c.req.raw.signal, async (send) => {
+    const result = await updateAllItems((p) => send("item", p));
+    send("done", result);
+  });
+});
+
+router.get("/api/store/repos/refresh/stream", async (c) => {
+  if (!(await gandalf(canBalrogPass(c))))
+    return c.json({ error: "You shall not pass!" }, 401);
+  return streamStoreProgress(c.req.raw.signal, async (send) => {
+    const results = await refreshAllRepos((p) => send("repo", p));
+    const failed = results.filter((r) => r.error).length;
+    send("done", { refreshed: results.length - failed, failed });
+  });
 });
 
 router.delete("/api/store/untracked", async (c) => {

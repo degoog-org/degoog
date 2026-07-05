@@ -1,5 +1,10 @@
 import { escapeHtml } from "../../utils/dom";
-import { extCardBadge, extCardConfigureBtn, extCardVersionWarning } from "../shared/ext-card";
+import {
+  extCardBadge,
+  extCardConfigureBtn,
+  extCardRestartWarning,
+  extCardVersionWarning,
+} from "../shared/ext-card";
 import { openModal } from "../../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, AllExtensions } from "../../types";
 import { getBase } from "../../utils/base-url";
@@ -14,6 +19,7 @@ const _renderTransportCard = (transport: ExtensionMeta): string => {
     ? `<span class="ext-card-desc">${renderMdInline(transport.description)}</span>`
     : "";
   const versionWarning = extCardVersionWarning(transport);
+  const restartWarning = extCardRestartWarning(transport);
   const badge = extCardBadge(transport);
   const configureBtn = extCardConfigureBtn(transport);
   const toggle = transport.configurable
@@ -27,7 +33,10 @@ const _renderTransportCard = (transport: ExtensionMeta): string => {
     <div class="ext-card degoog-panel degoog-panel--ext-card" data-id="${escapeHtml(transport.id)}">
       <div class="ext-card-main">
         <div class="ext-card-info">
-          <label for="transport-toggle-${escapeHtml(transport.id)}" class="ext-card-name transport-toggle-label">${escapeHtml(transport.displayName)}</label>
+          <div class="ext-card-name-row">
+            ${restartWarning}
+            <label for="transport-toggle-${escapeHtml(transport.id)}" class="ext-card-name transport-toggle-label">${escapeHtml(transport.displayName)}</label>
+          </div>
           ${desc}
           ${versionWarning}
         </div>

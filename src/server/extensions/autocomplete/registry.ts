@@ -22,6 +22,7 @@ import { signSuggestionThumbnails } from "../../utils/proxy-sign";
 import { buildProviderContext } from "./context";
 import { mergeSuggestions } from "./merge";
 import { AUTOCOMPLETE_TIMEOUT_MS, withTimeout } from "../../utils/with-timeout";
+import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
 
 interface PluginEntry {
   id: string;
@@ -232,6 +233,7 @@ export async function getAutocompleteExtensionMeta(): Promise<ExtensionMeta[]> {
       settingsSchema: schema,
       settings: maskedSettings,
       defaultEnabled: true,
+      needsAppRestart: isExtensionRestartFlagVisible(p.instance.needsAppRestart),
     });
   }
 

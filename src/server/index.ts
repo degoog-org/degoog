@@ -1,6 +1,8 @@
 import { Hono } from "hono";
-import { serveStatic, createBunWebSocket } from "hono/bun";
+import { serveStatic, upgradeWebSocket, websocket } from "hono/bun";
 import { trimTrailingSlash } from "hono/trailing-slash";
+import { lstatSync, unlinkSync } from "fs";
+import net from "net";
 import pkg from "../../package.json";
 import { getBasePath } from "./utils/base-url";
 import { getLocale } from "./utils/hono";
@@ -29,6 +31,7 @@ import { runMigrations } from "./migrations";
 import { closeAllDbs } from "./indexer/db";
 import { startQueue, stopQueue } from "./indexer/queue";
 import { logger } from "./utils/logger";
+import { registerServerHandle } from "./utils/server-lifecycle";
 import { getTransportWsHandlers } from "./extensions/transports/ws-registry";
 
 const BASE_PATH = getBasePath();
@@ -64,6 +67,51 @@ app.notFound(async (c) => {
 });
 
 const port = Number(process.env.DEGOOG_PORT) || 4444;
+const unixSocket = process.env.DEGOOG_UNIX_SOCKET?.trim();
+const listenUrl = unixSocket ? `unix:${unixSocket}` : `http://localhost:${port}`;
+
+const isStaleUnixSocket = async (path: string): Promise<boolean> => {
+  try {
+    if (!lstatSync(path).isSocket()) return false;
+  } catch {
+    return false;
+  }
+
+  return await new Promise((resolve) => {
+    const socket = net.createConnection(path);
+    socket.once("connect", () => {
+      socket.destroy();
+      resolve(false);
+    });
+    socket.once("error", (err: NodeJS.ErrnoException) => resolve(err.code === "ECONNREFUSED"));
+  });
+};
+
+const bindUnixSocket = async (path: string, serve: () => void): Promise<void> => {
+  try {
+    serve();
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "EADDRINUSE" || !(await isStaleUnixSocket(path))) throw err;
+    logger.warn(`[startup] removing stale unix socket at ${path}`);
+    unlinkSync(path);
+    serve();
+  }
+};
+
+const PORT_BIND_RETRY_ATTEMPTS = 10;
+const PORT_BIND_RETRY_DELAY_MS = 300;
+
+const bindPort = async (serve: () => void): Promise<void> => {
+  for (let attempt = 1; attempt <= PORT_BIND_RETRY_ATTEMPTS; attempt++) {
+    try {
+      serve();
+      return;
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "EADDRINUSE" || attempt === PORT_BIND_RETRY_ATTEMPTS) throw err;
+      await new Promise((resolve) => setTimeout(resolve, PORT_BIND_RETRY_DELAY_MS));
+    }
+  }
+};
 
 const _noColor = !!process.env.NO_COLOR;
 const _ansi = (code: string): string => (_noColor ? "" : code);
@@ -77,7 +125,7 @@ const ANSI_GRAY = _ansi("\x1b[90m");
 console.log(
   `
    ${ANSI_BLUE}    ░██ ${ANSI_RESET} degoog ${ANSI_GRAY}${pkg.version}
-  ${ANSI_BLUE}     ░██ ${ANSI_RESET} Running on ${ANSI_GRAY}http://localhost:${port} ${ANSI_RESET}${"           ".repeat(5)}\n` +
+  ${ANSI_BLUE}     ░██ ${ANSI_RESET} Running on ${ANSI_GRAY}${listenUrl} ${ANSI_RESET}${"           ".repeat(5)}\n` +
   `${ANSI_BLUE}       ░██ ${ANSI_RESET}${"           ".repeat(5)}\n` +
   `${ANSI_BLUE} ░████████ ${ANSI_RED} ░███████  ${ANSI_YELLOW} ░████████ ${ANSI_BLUE} ░███████  ${ANSI_GREEN} ░███████  ${ANSI_RED} ░████████ ${ANSI_RESET}\n` +
   `${ANSI_BLUE}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_YELLOW}░██    ░██ ${ANSI_BLUE}░██    ░██ ${ANSI_GREEN}░██    ░██ ${ANSI_RED}░██    ░██ ${ANSI_RESET}\n` +
@@ -114,9 +162,9 @@ const initExtensionRegistries = async (): Promise<void> => {
    * Promise.all it's because the plugin api routes MUST be initialised after the plugins are loaded
    * and promise.all is not gonna give a reliable order of execution 100% of the time.
    * 
-   * This ensures your lovely extremely dangerous api routes from thied party plugins you are installing
+   * This ensures your lovely extremely dangerous api routes from third party plugins you are installing
    * from dubious sources that you are MOST DEFINITELY NOT code checking are running nicely in the background 
-   * and installing all sort of viruses and exploits reliably <3 happy far westing!
+   * and installing all sort of viruses and exploits reliably <3 happy farwesting!
    */
   await initPlugins();
   await initPluginRoutes();
@@ -138,8 +186,6 @@ Promise.all([initServerKey(), initExtensionRegistries()])
   .then(async () => {
     const settings = await getInstanceSettings();
     if (asBoolean(settings.degoogIndexerEnabled)) startQueue();
-
-    const { upgradeWebSocket, websocket } = createBunWebSocket();
 
     for (const [name] of getTransportWsHandlers()) {
       app.get(`/ws/${name}/:password?`, upgradeWebSocket((c) => {
@@ -168,7 +214,15 @@ Promise.all([initServerKey(), initExtensionRegistries()])
       }));
     }
 
-    Bun.serve({ port, fetch: app.fetch, websocket, idleTimeout: 120 });
+    if (unixSocket) {
+      await bindUnixSocket(unixSocket, () =>
+        registerServerHandle(Bun.serve({ unix: unixSocket, fetch: app.fetch, websocket })),
+      );
+    } else {
+      await bindPort(() =>
+        registerServerHandle(Bun.serve({ port, fetch: app.fetch, websocket, idleTimeout: 120 })),
+      );
+    }
     markReady();
 
     logSettingsPasswordStatus();

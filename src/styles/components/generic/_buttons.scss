@@ -105,10 +105,10 @@
   }
 
   &--media-preview-close {
-    position: absolute;
-    top: $space-3;
-    right: $space-3;
-    font-size: $space-6;
-    z-index: 1;
+    @include flex-center;
+    width: $space-6;
+    height: $space-6;
+    font-size: $font-size-lg;
+    line-height: 1;
   }
 }

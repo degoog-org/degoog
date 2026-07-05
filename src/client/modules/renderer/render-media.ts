@@ -1,12 +1,15 @@
 import { state } from "../../state";
-import { escapeHtml, cleanHostname } from "../../utils/dom";
-import { openMediaPreview, registerAppendMediaCards } from "../media/media";
-import { setupRetryLinks } from "./render-sidebar";
+import { cleanHostname, linkHref } from "../../utils/dom";
+import {
+  toggleMediaPreview,
+  registerAppendMediaCards,
+  registerImageGridPanelSync,
+} from "../media/media";
 import { renderTemplate } from "../../utils/template";
-import type { ScoredResult, EngineTiming } from "../../types";
+import type { ScoredResult } from "../../types";
 
-const _getImageColumnCount = (): number => {
-  const w = window.innerWidth;
+const _getImageColumnCount = (grid: HTMLElement): number => {
+  const w = grid.clientWidth || window.innerWidth;
   if (w <= 800) return 3;
   if (w <= 1100) return 4;
   if (w <= 1400) return 5;
@@ -20,10 +23,13 @@ const _shortestColumn = (columns: HTMLElement[]): HTMLElement =>
     return a.children.length <= b.children.length ? a : b;
   });
 
+const _imageColumns = (grid: HTMLElement): HTMLElement[] =>
+  Array.from(grid.querySelectorAll<HTMLElement>(".image-column"));
+
 function _ensureImageColumns(grid: HTMLElement): void {
-  const count = _getImageColumnCount();
-  const existing = grid.querySelectorAll(".image-column").length;
-  if (existing === count) return;
+  const count = _getImageColumnCount(grid);
+  const columns = _imageColumns(grid);
+  if (columns.length === count) return;
 
   const cards = Array.from(grid.querySelectorAll<HTMLElement>(".image-card"));
   grid.innerHTML = "";
@@ -33,25 +39,121 @@ function _ensureImageColumns(grid: HTMLElement): void {
     grid.appendChild(col);
   }
 
-  const columns = Array.from(
-    grid.querySelectorAll<HTMLElement>(".image-column"),
-  );
+  const freshColumns = _imageColumns(grid);
   cards.forEach((card) => {
-    _shortestColumn(columns).appendChild(card);
+    _shortestColumn(freshColumns).appendChild(card);
   });
+  _collapsedOverflow = null;
 }
 
 let _resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
-function _handleResize(): void {
-  if (_resizeTimer) clearTimeout(_resizeTimer);
-  _resizeTimer = setTimeout(() => {
-    const grid = document.querySelector<HTMLElement>(".image-grid");
-    if (grid) _ensureImageColumns(grid);
-  }, 200);
+function _clearScheduledSync(): void {
+  if (_resizeTimer) {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = null;
+  }
 }
 
-let _resizeListenerAdded = false;
+function _scheduleColumnSync(grid: HTMLElement): void {
+  if (_collapsedOverflow) return;
+  _clearScheduledSync();
+  _resizeTimer = setTimeout(() => _ensureImageColumns(grid), 200);
+}
+
+let _gridResizeObserver: ResizeObserver | null = null;
+
+function _observeGridResize(grid: HTMLElement): void {
+  _gridResizeObserver?.disconnect();
+  _gridResizeObserver = new ResizeObserver(() => _scheduleColumnSync(grid));
+  _gridResizeObserver.observe(grid);
+}
+
+const PANEL_COLUMN_DROP = 2;
+
+interface _OverflowCard {
+  card: HTMLElement;
+  removedCol: number;
+  row: number;
+}
+
+let _collapsedOverflow: _OverflowCard[] | null = null;
+let _collapsedDropCount = 0;
+
+function _scrollSelectedIntoView(grid: HTMLElement): void {
+  grid
+    .querySelector<HTMLElement>(".image-card.selected")
+    ?.scrollIntoView({ block: "nearest" });
+}
+
+function _collapseForPanel(grid: HTMLElement): void {
+  if (_collapsedOverflow) return;
+
+  const columns = _imageColumns(grid);
+  const dropCount = Math.min(PANEL_COLUMN_DROP, columns.length - 1);
+  if (dropCount <= 0) return;
+
+  const keepCount = columns.length - dropCount;
+  const keep = columns.slice(0, keepCount);
+  const removed = columns.slice(keepCount);
+  const overflow: _OverflowCard[] = [];
+
+  removed.forEach((col, removedCol) => {
+    const target = keep[removedCol % keepCount];
+    const targetRows = Array.from(
+      target.children as HTMLCollectionOf<HTMLElement>,
+    );
+
+    Array.from(col.children as HTMLCollectionOf<HTMLElement>).forEach(
+      (card, row) => {
+        overflow.push({ card, removedCol, row });
+        const anchor = targetRows[row];
+        if (anchor) anchor.after(card);
+        else target.appendChild(card);
+      },
+    );
+    col.remove();
+  });
+
+  _collapsedOverflow = overflow;
+  _collapsedDropCount = dropCount;
+  _scrollSelectedIntoView(grid);
+}
+
+function _expandFromPanel(grid: HTMLElement): void {
+  if (!_collapsedOverflow) return;
+
+  const restored: HTMLElement[] = [];
+  for (let i = 0; i < _collapsedDropCount; i++) {
+    const col = document.createElement("div");
+    col.className = "image-column";
+    grid.appendChild(col);
+    restored.push(col);
+  }
+
+  const overflow = _collapsedOverflow;
+  _collapsedOverflow = null;
+  _collapsedDropCount = 0;
+
+  overflow.forEach(({ card, removedCol }) => {
+    restored[removedCol].appendChild(card);
+  });
+
+  _scrollSelectedIntoView(grid);
+}
+
+const PANEL_LAYOUT_BREAKPOINT = 768;
+
+registerImageGridPanelSync((isOpen) => {
+  const grid = document.querySelector<HTMLElement>(".image-grid");
+  if (!grid) return;
+  if (isOpen) {
+    if (window.innerWidth < PANEL_LAYOUT_BREAKPOINT) return;
+    _collapseForPanel(grid);
+  } else {
+    _expandFromPanel(grid);
+  }
+});
 
 const _imageCardUrl = (r: ScoredResult): string => {
   const thumbnail = r.thumbnail || "";
@@ -61,7 +163,7 @@ const _imageCardUrl = (r: ScoredResult): string => {
 
 const _buildMediaContext = (r: ScoredResult): Record<string, unknown> => ({
   title: r.title,
-  url: r.url,
+  url: linkHref(r.url),
   thumbnail_url: _imageCardUrl(r),
   fallback_url: r.thumbnail || "",
   hostname: cleanHostname(r.url),
@@ -93,15 +195,12 @@ export function appendMediaCards(
       card.dataset.idx = String(idx);
       card.innerHTML = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
       card.addEventListener("click", () => {
-        openMediaPreview(state.currentResults[idx], idx, selector);
+        toggleMediaPreview(state.currentResults[idx], idx, selector);
       });
       _shortestColumn(columns).appendChild(card);
     });
 
-    if (!_resizeListenerAdded) {
-      window.addEventListener("resize", _handleResize);
-      _resizeListenerAdded = true;
-    }
+    _observeGridResize(grid);
   } else {
     const fragment = document.createDocumentFragment();
     results.forEach((r, i) => {
@@ -111,7 +210,7 @@ export function appendMediaCards(
       card.dataset.idx = String(idx);
       card.innerHTML = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
       card.addEventListener("click", () => {
-        openMediaPreview(state.currentResults[idx], idx, selector);
+        toggleMediaPreview(state.currentResults[idx], idx, selector);
       });
       fragment.appendChild(card);
     });
@@ -149,22 +248,4 @@ export function renderVideoGrid(
     grid.innerHTML = "";
   }
   appendMediaCards(grid, results, "video");
-}
-
-export function renderMediaEngineBar(timings: EngineTiming[]): void {
-  const el = document.getElementById("results-meta");
-  if (!el) return;
-  el.querySelector(".media-engine-bar")?.remove();
-  if (!timings.length) return;
-  const tags = timings
-    .map((et) => {
-      const hit = et.resultCount > 0;
-      return `<span class="degoog-badge result-engine-tag${hit ? "" : " media-engine-tag--miss"}">${escapeHtml(et.name)} · ${et.resultCount} <a class="engine-retry-link" data-engine="${escapeHtml(et.name)}">retry</a></span>`;
-    })
-    .join("");
-  const bar = document.createElement("div");
-  bar.className = "media-engine-bar";
-  bar.innerHTML = tags;
-  el.appendChild(bar);
-  setupRetryLinks(bar);
 }

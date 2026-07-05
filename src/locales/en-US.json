@@ -46,7 +46,21 @@
       "inline-gif-playback-aria": "Disable GIF animation in image results",
       "post-method": "Use POST method for search requests (Won't work with streaming results)",
       "post-method-aria": "Use POST method for search requests (Won't work with streaming results)",
-      "post-method-tooltip": "POST method is not compatible with streaming results"
+      "post-method-tooltip": "POST method is not compatible with streaming results",
+      "sticky-sidebar": "Keep the results sidebar sticky while scrolling",
+      "sticky-sidebar-aria": "Keep the results sidebar sticky while scrolling",
+      "centered-mode": "Center search results",
+      "centered-mode-aria": "Center search results"
+    },
+    "sync": {
+      "heading": "Instance defaults",
+      "desc": "Publish this browser's current settings as the defaults for new visitors. Each visitor's own choices always take priority over these defaults.",
+      "save-button": "Save current settings as defaults",
+      "saved": "Defaults saved",
+      "reset-button": "Reset to instance defaults",
+      "reset-confirm": "This replaces your saved settings on this browser with the instance defaults. Continue?",
+      "reset-heading": "Reset settings",
+      "reset-desc": "Restore this instance's default settings on this browser. Your local changes will be replaced."
     },
     "install": {
       "heading": "Install app",
@@ -140,6 +154,11 @@
           "domainScoreUiEnabled": "Domain score UI"
         }
       },
+      "restart-heading": "Restart server",
+      "restart-desc": "Manually restart the Degoog server process.",
+      "restart-button": "Restart server",
+      "restart-confirm": "This restarts the Degoog server. Active searches may be interrupted briefly. Continue?",
+      "restarting": "Restarting...",
       "cache-heading": "Cache",
       "cache-desc": "Flush stored cache entries. Search and autocomplete are kept separately; extensions register their own caches (e.g. wiki, ai-summary).",
       "cache-clear": "Clear search cache",
@@ -312,9 +331,12 @@
       "group-themes": "Themes",
       "apply-failed": "Failed",
       "save-defaults": "Save as instance defaults",
+      "reset-defaults": "Reset to instance defaults",
+      "reset-confirm": "This replaces your engine choices on this browser with the instance defaults. Continue?",
       "tabs-heading": "Search tabs",
       "tabs-desc": "Set the default enabled engines and customise the order of result tabs.",
       "order-tabs": "Order tabs",
+      "drag-to-reorder": "Drag to reorder",
       "exposure-exposed": "Browser may contact external services directly",
       "exposure-safe": "Browser requests go through the server",
       "exposure-unknown": "Network behaviour not declared",
@@ -325,7 +347,8 @@
       "no-engines": "No search engines installed. Head to the {store} tab to browse and install some.",
       "no-engines-store": "Store",
       "no-autocomplete": "No autocomplete providers installed. Head to the {store} tab to browse and install some.",
-      "no-autocomplete-store": "Store"
+      "no-autocomplete-store": "Store",
+      "restart-required": "Server restart required for this extension to work properly."
     },
     "errors": {
       "load-extensions": "Failed to load extensions.",
@@ -533,6 +556,10 @@
         "label": "Outgoing HTTP client",
         "description": "The outgoing HTTP client to use for this engine."
       },
+      "timeout": {
+        "label": "Timeout (ms)",
+        "description": "Maximum time in milliseconds to wait for this engine before giving up. Leave blank to use the default."
+      },
       "slot-position": {
         "label": "Position",
         "description": "Where the slot content appears on the page."
@@ -588,6 +615,13 @@
           "desc": "Open the currently focused result."
         }
       }
+    },
+    "restart": {
+      "heading": "Restart required",
+      "desc": "Some installed extensions need a server restart to work properly.",
+      "button": "Restart server",
+      "confirm": "This restarts the Degoog server. Active searches may be interrupted briefly. Continue?",
+      "restarting": "Restarting..."
     }
   }
 }

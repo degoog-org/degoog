@@ -10,7 +10,7 @@ export const imgFilterRecord = (f: ImageFilter): Record<string, string> => {
   if (f.size && f.size !== "any") r.imgSize = f.size;
   if (f.type && f.type !== "any") r.imgType = f.type;
   if (f.layout && f.layout !== "any") r.imgLayout = f.layout;
-  if (f.nsfw && f.nsfw !== "any") r.imgNsfw = f.nsfw;
+  if (f.nsfw && f.nsfw !== "any") r.safeMode = f.nsfw;
   return r;
 };
 
@@ -20,7 +20,7 @@ export const readImgFilter = (p: URLSearchParams): ImageFilter => {
   const size = p.get("imgSize");
   const type = p.get("imgType");
   const layout = p.get("imgLayout");
-  const nsfw = p.get("imgNsfw");
+  const nsfw = p.get("safeMode") ?? p.get("imgNsfw");
   if (color && color !== "any") f.color = color;
   if (size && size !== "any") f.size = size;
   if (type && type !== "any") f.type = type;

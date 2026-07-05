@@ -1,4 +1,4 @@
-import { escapeHtml } from "./dom";
+import { escapeAttribute } from "./dom";
 
 const PLACEHOLDER_RE = /\{\{\s*([^#/^}][^}]*?)\s*\}\}/g;
 const BLOCK_RE = /\{\{([#^])(\w+)\s+([\w.]+)\}\}([\s\S]*?)\{\{\/\2\s+\3\}\}/g;
@@ -45,7 +45,7 @@ const _fillPlaceholders = (
   tpl.replace(PLACEHOLDER_RE, (_, key: string) => {
     const val = _resolve(key.trim(), ctx);
     if (val == null) return "";
-    return escapeHtml(String(val));
+    return escapeAttribute(String(val));
   });
 
 const _findTemplate = (templateId: string): HTMLTemplateElement | null => {

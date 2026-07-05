@@ -23,3 +23,8 @@ export const extCardVersionWarning = (ext: ExtensionMeta): string =>
   ext.requiresNewerVersion
     ? `<span class="ext-version-warning">${escapeHtml(t("settings-page.extensions.requires-newer-version"))}</span>`
     : "";
+
+export const extCardRestartWarning = (ext: ExtensionMeta): string =>
+  ext.needsAppRestart
+    ? `<span class="degoog-badge degoog-badge--restart-required" data-tooltip="${escapeHtml(t("settings-page.extensions.restart-required"))}"><i class="fa-solid fa-triangle-exclamation"></i></span>`
+    : "";

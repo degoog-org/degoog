@@ -12,7 +12,9 @@ export function getStoreTabHtml(): string {
       </div>
       <div class="store-add-repo-wrap" style="display:none">
         <input type="text" class="store-search-input degoog-search-bar degoog-search-bar--square-advanced store-input-url" placeholder="https://github.com/user/repo.git">
-        <button class="btn btn--primary degoog-btn degoog-btn--primary store-btn-add-confirm" type="button">Add</button>
+        <button class="btn btn--primary degoog-btn degoog-btn--primary store-btn-add-confirm" type="button" aria-label="Add repository">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        </button>
         <span class="store-inline-error"></span>
       </div>
       <p class="settings-desc">Add a git repository URL to browse and install plugins, themes, engines, and transports. Set <code>repo-image</code> in the repo’s package.json to show an image next to the URL.</p>

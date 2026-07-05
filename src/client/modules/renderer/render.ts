@@ -1,7 +1,7 @@
 import { MAX_PAGE } from "../../constants";
 import { state } from "../../state";
 import type { ScoredResult } from "../../types";
-import { cleanUrl } from "../../utils/dom";
+import { cleanUrl, linkHref } from "../../utils/dom";
 import { buildPaginationHtml } from "../../utils/pagination";
 import { goToPage } from "../../utils/search-actions";
 import { renderTemplate } from "../../utils/template";
@@ -9,7 +9,7 @@ import { attachFaviconFallback } from "../../utils/favicon";
 import { faviconHostname, faviconUrl } from "../../utils/url";
 import { isImageSearchType } from "../../utils/engines";
 import { getBase } from "../../utils/base-url";
-import { destroyMediaObserver, setupMediaObserver } from "../media/media";
+import { destroyMediaObserver, setupMediaObserver, syncMediaPreviewPanel } from "../media/media";
 import { renderImageGrid } from "./render-media";
 
 import { clearSlotPanels as _clearSlots } from "./render-slots";
@@ -45,7 +45,7 @@ export const buildResultContext = (
   return {
     index,
     title: r.title,
-    url: r.url,
+    url: linkHref(r.url),
     cite_url: cleanUrl(r.url),
     snippet: r.snippet,
     favicon_url: faviconUrl(r.url),
@@ -82,6 +82,7 @@ export function renderResults(results: ScoredResult[]): void {
   } else {
     layout.classList.remove("media-mode");
   }
+  syncMediaPreviewPanel(isImageType);
 
   if (results.length === 0) {
     const noEngines = state.currentData?.engineTimings.length === 0;

@@ -1,11 +1,13 @@
 import { initTheme } from "../../utils/theme";
+import { applyDefaults } from "../../utils/sync";
 import { getBase } from "../../utils/base-url";
 import { initInstallPrompt } from "../../utils/install-prompt";
 import {
   initGeneralTab,
-  initAppearanceSettings,
-  renderPublicSettingsTop,
+  initPublicGeneral,
+  bindResetDefaults,
 } from "../../settings/general/tab";
+import { SYNC_KEYS } from "../../../shared/sync";
 import { initEnginesTab } from "../../settings/engines/tab";
 import { initPluginsTab } from "../../settings/plugins/tab";
 import { initTransportsTab } from "../../settings/transports/tab";
@@ -193,11 +195,44 @@ function _initTabs(): void {
   }
 }
 
+function _initSettingsMainOffset(): void {
+  const main = document.querySelector<HTMLElement>(".settings-page-main");
+  const search = document.querySelector<HTMLElement>(".settings-nav-search");
+  if (!main || !search) return;
+
+  const desktop = window.matchMedia("(min-width: 768px)");
+  let frame = 0;
+
+  const sync = (): void => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      main.style.paddingTop = "";
+      if (!desktop.matches) return;
+      const offset = search.getBoundingClientRect().top - main.getBoundingClientRect().top;
+      main.style.paddingTop = `${Math.max(0, offset)}px`;
+    });
+  };
+
+  sync();
+  window.addEventListener("resize", sync);
+  desktop.addEventListener("change", sync);
+  window.addEventListener("load", sync, { once: true });
+  void document.fonts?.ready.then(sync);
+
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(sync);
+    observer.observe(search);
+    const header = document.querySelector<HTMLElement>(".settings-page-header");
+    if (header) observer.observe(header);
+  }
+}
+
 async function _initSettings(): Promise<void> {
   void initTheme();
   initInstallPrompt();
   _initTabs();
-  void initGeneralTab();
+  _initSettingsMainOffset();
+  void initGeneralTab(getStoredToken);
   void initServerTab(getStoredToken);
   void initShortcutsTab(getStoredToken);
 
@@ -264,16 +299,25 @@ window.addEventListener("extensions-saved", async () => {
   }
 });
 
+async function _renderPublicTabs(allExtensions: AllExtensions): Promise<void> {
+  await initPublicGeneral();
+  await initEnginesTab(allExtensions, { publicInstance: true });
+  bindResetDefaults(SYNC_KEYS, () => _renderPublicTabs(allExtensions));
+}
+
 async function _initPublicSettings(): Promise<void> {
+  await applyDefaults();
   void initTheme();
-  const publicContent = document.getElementById("public-settings-content");
-  if (publicContent) publicContent.innerHTML = renderPublicSettingsTop();
-  void initAppearanceSettings();
   try {
     const res = await fetch(`${getBase()}/api/extensions`);
     const allExtensions = (await res.json()) as AllExtensions;
-    await initEnginesTab(allExtensions, { publicInstance: true });
+    await _renderPublicTabs(allExtensions);
   } catch {
+    const renderGeneralOnly = async (): Promise<void> => {
+      await initPublicGeneral();
+      bindResetDefaults(SYNC_KEYS, renderGeneralOnly);
+    };
+    await renderGeneralOnly();
     const enginesEl = document.getElementById("engines-content");
     if (enginesEl)
       enginesEl.innerHTML = `<p>${t("settings-page.errors.load-engines")}</p>`;

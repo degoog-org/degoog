@@ -7,7 +7,6 @@ const PAGE_SLOTS: [string, string][] = [
   ["degoog-home-footer", "home-footer"],
   ["degoog-search-header", "results-header"],
   ["degoog-search-tabs", "results-tabs"],
-  ["degoog-search-media-preview", "media-preview-panel"],
   ["degoog-search-lightbox", "img-lightbox"],
 ];
 

@@ -8,9 +8,15 @@ const MANUAL_RESTART_KEY = "degoog-wizard-manual-restart";
 const SETTINGS_PENDING_KEY = "degoog-wizard-settings-pending";
 
 const runHomeTour = (): Promise<void> =>
-  runTour(HOME_STEPS, () => {
-    localStorage.setItem(HOME_DONE_KEY, "true");
-  });
+  runTour(
+    HOME_STEPS,
+    () => {
+      localStorage.setItem(HOME_DONE_KEY, "true");
+    },
+    () => {
+      sessionStorage.removeItem(SETTINGS_PENDING_KEY);
+    },
+  );
 
 export const initHomeWizard = async (): Promise<void> => {
   if (isTourActive()) return;
@@ -47,7 +53,7 @@ export const initSettingsWizard = async (): Promise<void> => {
   }
   sessionStorage.removeItem(SETTINGS_PENDING_KEY);
   void runTour(SETTINGS_STEPS, () => {
-    localStorage.removeItem(HOME_DONE_KEY);
+    localStorage.setItem(HOME_DONE_KEY, "true");
     void markServerDone();
   });
 };

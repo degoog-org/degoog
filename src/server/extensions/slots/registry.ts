@@ -21,6 +21,7 @@ import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import { createRegistry } from "../registry-factory";
 import { getInterceptors } from "../interceptors/registry";
 import { isPluginManifest } from "../plugin-manifest";
+import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
 
 const builtinsDir = join(
   process.cwd(),
@@ -199,6 +200,7 @@ export const getSlotExtensionMeta = async (
       settings,
       source: getSlotSource(slot.id),
       isClientExposed: slot.isClientExposed,
+      needsAppRestart: isExtensionRestartFlagVisible(slot.needsAppRestart),
     });
   }
 

@@ -39,6 +39,7 @@ export interface StoreItem {
   requiresNewerVersion?: boolean;
   orphaned?: boolean;
   untracked?: boolean;
+  needsAppRestart?: boolean;
 }
 
 export interface InstalledItem {

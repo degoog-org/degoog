@@ -6,6 +6,9 @@ import {
 import type { EngineConfig, ImageFilter, ImgColor, ImgLayout, ImgNsfw, ImgSize, ImgType, SearchParams, SearchType, TimeFilter } from "../../types";
 import { parseEngineConfig } from "../../utils/search";
 
+export const SAFE_MODE_PARAM = "safeMode";
+export const LEGACY_SAFE_MODE_PARAM = "imgNsfw";
+
 export function parsePage(raw: unknown): number {
   return Math.max(1, Math.min(10, Math.floor(Number(raw)) || 1));
 }
@@ -34,7 +37,7 @@ export const parseSearchRequest = (c: Context): Omit<SearchParams, "query"> & { 
     c.req.query("imgSize"),
     c.req.query("imgType"),
     c.req.query("imgLayout"),
-    c.req.query("imgNsfw"),
+    c.req.query(SAFE_MODE_PARAM) ?? c.req.query(LEGACY_SAFE_MODE_PARAM),
   ),
 });
 

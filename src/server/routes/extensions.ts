@@ -252,7 +252,8 @@ router.post("/api/extensions/:id/settings", async (c) => {
     ext.settingsSchema.some((f) => f.key === "useAsSettingsGate")
   ) {
     const slug = folderFromExtID(id, "command");
-    const gateValue = `plugin:${slug}`;
+    const middlewareId = makeExtID(slug, "middleware");
+    const gateValue = `plugin:${middlewareId}`;
     const mid = await getSettings("middleware");
     const useGate = mid.settingsGate;
     const useGateStr = typeof useGate === "string" ? useGate.trim() : "";

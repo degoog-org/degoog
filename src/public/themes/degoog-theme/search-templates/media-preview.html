@@ -1,42 +1,39 @@
-<button class="media-preview-close degoog-icon-btn degoog-icon-btn--media-preview-close" id="media-preview-close">
-  &times;
-</button>
-<div class="media-preview-img-wrap">
-  <button
-    class="media-preview-nav media-preview-prev"
-    id="media-preview-prev"
-  >
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
+<div class="media-preview-header">
+  <div class="media-preview-source">
+    <span class="media-preview-favicon-wrap" id="media-preview-favicon-wrap"></span>
+    <span class="media-preview-domain" id="media-preview-domain"></span>
+  </div>
+  <div class="media-preview-header-actions">
+    <button
+      class="media-preview-nav media-preview-prev"
+      id="media-preview-prev"
+      aria-label="Previous"
     >
-      <polyline points="15 18 9 12 15 6" />
-    </svg>
-  </button>
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <button
+      class="media-preview-nav media-preview-next"
+      id="media-preview-next"
+      aria-label="Next"
+    >
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+    <button
+      class="media-preview-close degoog-icon-btn degoog-icon-btn--media-preview-close"
+      id="media-preview-close"
+      aria-label="Close"
+    >
+      <i class="fa-solid fa-times"></i>
+    </button>
+  </div>
+</div>
+<div class="media-preview-img-wrap">
   <img
     class="media-preview-img"
     id="media-preview-img"
     src=""
     alt=""
   />
-  <button
-    class="media-preview-nav media-preview-next"
-    id="media-preview-next"
-  >
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-    >
-      <polyline points="9 6 15 12 9 18" />
-    </svg>
-  </button>
 </div>
 <div class="media-preview-info" id="media-preview-info"></div>
+<div class="media-preview-more" id="media-preview-more"></div>

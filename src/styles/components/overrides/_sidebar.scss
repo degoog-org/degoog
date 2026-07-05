@@ -90,6 +90,10 @@
 
 .degoog-panel:has(.engine-stat-row) {
   overflow: visible;
+
+  .sidebar-accordion-body {
+    @extend .degoog-scrollbar;
+  }
 }
 
 .engine-stat-reason {

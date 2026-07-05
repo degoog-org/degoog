@@ -26,6 +26,7 @@ export const SETTINGS_SCHEMA = {
   streamingEnabled:             { kind: "boolean", default: true },
   streamingAutoRetry:           { kind: "boolean", default: true },
   streamingMaxRetries:          { kind: "number",  default: "2" },
+  streamingDisabledTypes:       { kind: "lines",   default: "" },
   postMethodEnabled:            { kind: "boolean", default: false },
   defaultTheme:                 { kind: "string",  default: "system" },
   domainBlockEnabled:           { kind: "boolean", default: false },

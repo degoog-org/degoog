@@ -16,15 +16,15 @@ import {
   writeReposData,
   getRepoByUrl,
 } from "./persistence";
-import { addRepo } from "./repo-ops";
+import { _addRepo } from "./repo-ops";
 import { STORE_TYPE_SPECS } from "./store-types";
+import type { StoreStreamPhase } from "../../../shared/store-stream";
 import { bumpPluginRegistryReload } from "../registry-factory";
-import { createMutex } from "../../utils/mutex";
+import { runStoreExclusive } from "./store-lock";
 import { makeExtID } from "../../utils/extension-id";
 import { logger } from "../../utils/logger";
 import type { ShortcutBinding, ShortcutKind } from "../../../shared/shortcuts";
-
-const _storeMutex = createMutex();
+import { markRestartPending } from "../../utils/restart-state";
 
 function slugifyIdPart(input: string): string {
   return (
@@ -190,7 +190,7 @@ async function installDependencies(dependencies: string[]): Promise<void> {
     let repo = getRepoByUrl(data, parsed.repoUrl);
     if (!repo) {
       try {
-        repo = await addRepo(parsed.repoUrl);
+        repo = await _addRepo(parsed.repoUrl);
       } catch (err) {
         logger.warn("store:item", `failed to add repo ${parsed.repoUrl}`, err);
         continue;
@@ -222,6 +222,28 @@ const parseEngineTypesFromSource = (src: string): string[] | null => {
 
 const catalogPrimaryType = (types: string[]): string =>
   types.length > 0 ? types[0] : "web";
+
+const NEEDS_APP_RESTART_RE = /\bneedsAppRestart\s*[:=]\s*true\b/;
+const needsAppRestartCache = new Map<string, boolean>();
+
+const stripComments = (src: string): string =>
+  src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+
+export const readNeedsAppRestart = async (dir: string): Promise<boolean> => {
+  if (needsAppRestartCache.has(dir)) return needsAppRestartCache.get(dir)!;
+  let result = false;
+  for (const file of ["index.js", "index.ts", "index.mjs", "index.cjs"]) {
+    try {
+      const src = await readFile(join(dir, file), "utf-8");
+      result = NEEDS_APP_RESTART_RE.test(stripComments(src));
+      if (result) break;
+    } catch {
+      continue;
+    }
+  }
+  needsAppRestartCache.set(dir, result);
+  return result;
+};
 
 const SHORTCUT_KIND_RE = /\bkind\s*:\s*["'](single|numeric)["']/;
 const SHORTCUT_BINDING_RE = /defaultBinding\s*:\s*\{([^}]*)\}/;
@@ -290,6 +312,15 @@ const readEngineTypes = async (dir: string): Promise<string[] | null> => {
   engineTypesCache.set(dir, result);
   return result;
 };
+
+export function clearItemCachesForRepo(repoPath: string): void {
+  const prefix = repoPath.endsWith("/") ? repoPath : `${repoPath}/`;
+  for (const cache of [needsAppRestartCache, engineTypesCache, shortcutMetaCache]) {
+    for (const key of cache.keys()) {
+      if (key === repoPath || key.startsWith(prefix)) cache.delete(key);
+    }
+  }
+}
 
 export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
   const data = await readReposData();
@@ -391,6 +422,7 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
             item.shortcutKind = meta.kind;
           }
         }
+        if (await readNeedsAppRestart(fullPath)) item.needsAppRestart = true;
         if (type === ExtensionStoreType.Plugin && ent.type)
           item.pluginType = ent.type;
         if (type === ExtensionStoreType.Engine) {
@@ -496,7 +528,7 @@ export function installItem(
   itemPath: string,
   type: ExtensionStoreType,
 ): Promise<void> {
-  return _storeMutex(() => _installItem(repoUrl, itemPath, type));
+  return runStoreExclusive(() => _installItem(repoUrl, itemPath, type));
 }
 
 async function _installItem(
@@ -570,6 +602,9 @@ async function _installItem(
         : {}),
     });
     await writeReposData(freshData);
+    needsAppRestartCache.delete(destDir);
+    if (await readNeedsAppRestart(destDir))
+      markRestartPending(`${type} "${manifest.name ?? folderName}" was installed`);
     await reloadAfterAction(type);
   } finally {
     _installingSet.delete(key);
@@ -581,7 +616,7 @@ export function uninstallItem(
   itemPath: string,
   type: ExtensionStoreType,
 ): Promise<void> {
-  return _storeMutex(() => _uninstallItem(repoUrl, itemPath, type));
+  return runStoreExclusive(() => _uninstallItem(repoUrl, itemPath, type));
 }
 
 async function _uninstallItem(
@@ -612,7 +647,7 @@ export function updateItem(
   itemPath: string,
   type: ExtensionStoreType,
 ): Promise<void> {
-  return _storeMutex(() => _updateItem(repoUrl, itemPath, type));
+  return runStoreExclusive(() => _updateItem(repoUrl, itemPath, type));
 }
 
 async function _updateItem(
@@ -662,15 +697,56 @@ async function _updateItem(
   if (manifest?.minDegoogVersion)
     inst.minDegoogVersion = manifest.minDegoogVersion;
   await writeReposData(data);
+  needsAppRestartCache.delete(destDir);
+  if (await readNeedsAppRestart(destDir))
+    markRestartPending(`${type} "${manifest?.name ?? inst.installedAs}" was updated`);
   await reloadAfterAction(type);
 }
 
-export async function updateAllItems(): Promise<{ updated: number }> {
-  const items = await listRepoItems();
-  const updatable = items.filter((i) => i.updateAvailable);
-  for (const item of updatable)
-    await updateItem(item.repoUrl, item.path, item.type);
-  return { updated: updatable.length };
+export interface UpdateItemProgress {
+  repoUrl: string;
+  itemPath: string;
+  name: string;
+  type: ExtensionStoreType;
+  i: number;
+  total: number;
+  phase: StoreStreamPhase;
+  error?: string;
+}
+
+export async function updateAllItems(
+  onProgress?: (p: UpdateItemProgress) => void,
+): Promise<{ updated: number; failed: number }> {
+  return runStoreExclusive(async () => {
+    const items = await listRepoItems();
+    const updatable = items.filter((i) => i.updateAvailable);
+    const total = updatable.length;
+    let updated = 0;
+    let failed = 0;
+    for (let idx = 0; idx < total; idx++) {
+      const item = updatable[idx];
+      const base = {
+        repoUrl: item.repoUrl,
+        itemPath: item.path,
+        name: item.name,
+        type: item.type,
+        i: idx + 1,
+        total,
+      };
+      onProgress?.({ ...base, phase: "start" });
+      try {
+        await _updateItem(item.repoUrl, item.path, item.type);
+        updated++;
+        onProgress?.({ ...base, phase: "ok" });
+      } catch (err) {
+        failed++;
+        const message = err instanceof Error ? err.message : "Update failed";
+        logger.warn("store:item", `update-all failed for ${item.name}`, err);
+        onProgress?.({ ...base, phase: "failed", error: message });
+      }
+    }
+    return { updated, failed };
+  });
 }
 
 export async function getInstalledItems(): Promise<InstalledItem[]> {
@@ -682,7 +758,7 @@ export function deleteUntracked(
   type: ExtensionStoreType,
   folderName: string,
 ): Promise<void> {
-  return _storeMutex(() => _deleteUntracked(type, folderName));
+  return runStoreExclusive(() => _deleteUntracked(type, folderName));
 }
 
 async function _deleteUntracked(

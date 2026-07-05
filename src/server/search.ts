@@ -1,4 +1,5 @@
 import {
+  ENGINE_TIMEOUT_MS,
   getEngineDefaultTransport,
   getEngineIdByInstance,
   getEngineMap,
@@ -35,24 +36,32 @@ import { buildSignedProxyUrl } from "./utils/proxy-sign";
 import { cleanUrl, normalizeUrl, urlIsGif } from "./search/url-normalize";
 
 const MAX_PAGE = 10;
-const ENGINE_TIMEOUT_MS = 10_000;
 
-const ENGINE_TIMEOUT_BUFFER_MS = 5000;
+export const ENGINE_TIMEOUT_BUFFER_MS = 5000;
+export const ENGINE_TIMEOUT_MIN_MS = 10;
+export const ENGINE_TIMEOUT_MAX_MS = 10 * 60 * 1000;
 
-const _getEngineTimeout = async (
+const clampTimeout = (ms: number): number =>
+  Math.min(Math.max(ms, ENGINE_TIMEOUT_MIN_MS), ENGINE_TIMEOUT_MAX_MS);
+
+export const getEngineTimeout = async (
   engineSettingsId: string | undefined,
 ): Promise<number> => {
-  if (!engineSettingsId) return ENGINE_TIMEOUT_MS;
-  let raw =
-    asString((await getSettings(engineSettingsId)).outgoingTransport) ||
-    undefined;
+  if (!engineSettingsId) return clampTimeout(ENGINE_TIMEOUT_MS);
+  const stored = await getSettings(engineSettingsId);
+  const configured = parseInt(asString(stored.timeoutMs), 10);
+  const base =
+    Number.isFinite(configured) && configured > 0
+      ? configured
+      : ENGINE_TIMEOUT_MS;
+  let raw = asString(stored.outgoingTransport) || undefined;
   if (!raw) raw = getEngineDefaultTransport(engineSettingsId) ?? undefined;
   const transportName = parseOutgoingTransport(raw);
   const transport = resolveTransport(transportName);
-  if (transport.timeoutMs && transport.timeoutMs > ENGINE_TIMEOUT_MS) {
-    return transport.timeoutMs + ENGINE_TIMEOUT_BUFFER_MS;
+  if (transport.timeoutMs && transport.timeoutMs > base) {
+    return clampTimeout(transport.timeoutMs + ENGINE_TIMEOUT_BUFFER_MS);
   }
-  return ENGINE_TIMEOUT_MS;
+  return clampTimeout(base);
 };
 
 const _mergeIntoMap = (
@@ -292,7 +301,7 @@ export const searchSingleEngine = async (
     searchType,
   );
   try {
-    const timeout = await _getEngineTimeout(engineSettingsId);
+    const timeout = await getEngineTimeout(engineSettingsId);
     const results = await _withTimeout(
       engine.executeSearch(query, p, timeFilter, engineContext),
       timeout,
@@ -328,7 +337,7 @@ export const search = async (
   const start = performance.now();
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
 
-  const rawActiveEngines = await selectActiveEngines(type, config);
+  const rawActiveEngines = await selectActiveEngines(type, config, imageFilter);
 
   if (rawActiveEngines.length === 0) {
     return {
@@ -354,13 +363,19 @@ export const search = async (
         ac.signal,
         type,
       );
-      const timeout = await _getEngineTimeout(id);
-      const results = await _withTimeout(
-        instance.executeSearch(query, p, timeFilter, ctx),
-        timeout,
-        () => ac.abort(),
-      );
-      return { results, elapsed: Math.round(performance.now() - t0) };
+      const timeout = await getEngineTimeout(id);
+      try {
+        const results = await _withTimeout(
+          instance.executeSearch(query, p, timeFilter, ctx),
+          timeout,
+          () => ac.abort(),
+        );
+        return { results, elapsed: Math.round(performance.now() - t0) };
+      } catch (err) {
+        const elapsed = Math.round(performance.now() - t0);
+        const wrapped = err instanceof Error ? err : new Error(String(err));
+        throw Object.assign(wrapped, { elapsed });
+      }
     }),
   );
 
@@ -383,15 +398,18 @@ export const search = async (
       });
     } else {
       const classified = _classifyReject(result.reason);
+      const reasonElapsed = (result.reason as { elapsed?: unknown } | null)
+        ?.elapsed;
+      const elapsed =
+        typeof reasonElapsed === "number" ? reasonElapsed : ENGINE_TIMEOUT_MS;
       logger.warn(
         "search",
-        `engine="${engineName}" status=${classified.status}${
-          classified.httpStatus ? ` http=${classified.httpStatus}` : ""
+        `engine="${engineName}" status=${classified.status}${classified.httpStatus ? ` http=${classified.httpStatus}` : ""
         } reason="${classified.reason}"`,
       );
       engineTimings.push({
         name: engineName,
-        time: ENGINE_TIMEOUT_MS,
+        time: elapsed,
         resultCount: 0,
         status: classified.status,
         errorReason: classified.reason,

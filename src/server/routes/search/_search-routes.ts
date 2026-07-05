@@ -12,7 +12,7 @@ import {
   parseEngineConfig,
 } from "../../utils/search";
 import { guardApiKey } from "../../utils/api-key-guard";
-import { parseEnginesFromBody, parseImageFilter, parsePage, parseSearchRequest } from "./_parsers";
+import { LEGACY_SAFE_MODE_PARAM, parseEnginesFromBody, parseImageFilter, parsePage, parseSearchRequest, SAFE_MODE_PARAM } from "./_parsers";
 import { handleRetry, handleSearch } from "./_search-handlers";
 import { logger } from "../../utils/logger";
 
@@ -74,7 +74,7 @@ export function registerSearchRoutes(router: Hono): void {
           form.get("imgSize") as string | null,
           form.get("imgType") as string | null,
           form.get("imgLayout") as string | null,
-          form.get("imgNsfw") as string | null,
+          (form.get(SAFE_MODE_PARAM) ?? form.get(LEGACY_SAFE_MODE_PARAM)) as string | null,
         ),
       });
 
@@ -101,7 +101,7 @@ export function registerSearchRoutes(router: Hono): void {
       lang: body.lang || "",
       dateFrom: body.dateFrom || "",
       dateTo: body.dateTo || "",
-      imageFilter: parseImageFilter(body.imgColor, body.imgSize, body.imgType, body.imgLayout, body.imgNsfw),
+      imageFilter: parseImageFilter(body.imgColor, body.imgSize, body.imgType, body.imgLayout, body.safeMode ?? body.imgNsfw),
     });
 
     return c.json(openWebUIFix(result));
@@ -133,7 +133,7 @@ export function registerSearchRoutes(router: Hono): void {
         c.req.query("imgSize"),
         c.req.query("imgType"),
         c.req.query("imgLayout"),
-        c.req.query("imgNsfw"),
+        c.req.query(SAFE_MODE_PARAM) ?? c.req.query(LEGACY_SAFE_MODE_PARAM),
       ),
     });
 
@@ -168,7 +168,7 @@ export function registerSearchRoutes(router: Hono): void {
       lang: body.lang || "",
       dateFrom: body.dateFrom || "",
       dateTo: body.dateTo || "",
-      imageFilter: parseImageFilter(body.imgColor, body.imgSize, body.imgType, body.imgLayout, body.imgNsfw),
+      imageFilter: parseImageFilter(body.imgColor, body.imgSize, body.imgType, body.imgLayout, body.safeMode ?? body.imgNsfw),
     });
 
     return c.json(openWebUIFix(result));

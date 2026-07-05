@@ -29,6 +29,7 @@ import {
   updateInstanceSettings,
   type ServerSettingValue,
 } from "../utils/server-settings";
+import { writeSyncedDefaults } from "../utils/synced-settings";
 import {
   SETTINGS_SCHEMA,
   coerceSetting,
@@ -52,6 +53,8 @@ import {
 } from "../../shared/indexer";
 import { SEARCH_LIST_FIELDS } from "../../shared/settings-lists";
 import { logger } from "../utils/logger";
+import { getRestartState } from "../utils/restart-state";
+import { requestRestart } from "../utils/server-lifecycle";
 
 const router = new Hono();
 
@@ -186,6 +189,7 @@ router.get("/api/settings/streaming", async (c) => {
     enabled: asBoolean(settings.streamingEnabled),
     autoRetry: asBoolean(settings.streamingAutoRetry),
     maxRetries: parseInt(asString(settings.streamingMaxRetries) || "2", 10),
+    disabledTypes: asString(settings.streamingDisabledTypes ?? "").split("\n").map(s => s.trim()).filter(Boolean),
   });
 });
 
@@ -471,6 +475,21 @@ router.post("/api/settings/shortcuts", async (c) => {
   return c.json({ ok: true });
 });
 
+router.post("/api/settings/sync", async (c) => {
+  const denied = await guardSettingsRoute(c, "POST /api/settings/sync");
+  if (denied) return denied;
+  const body = await readObjectBody<{ settings?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
+  if (!body.settings || typeof body.settings !== "object" || Array.isArray(body.settings)) {
+    return c.json({ error: "Missing settings" }, 400);
+  }
+  if (JSON.stringify(body.settings).length > 64_000) {
+    return c.json({ error: "Settings too large" }, 413);
+  }
+  const settings = await writeSyncedDefaults(body.settings as Record<string, unknown>);
+  return c.json({ ok: true, settings });
+});
+
 const SHORTCUT_SCAFFOLD = `export default {
   name: "My shortcut",
   description: "Describe what this shortcut does.",
@@ -552,6 +571,19 @@ router.post("/api/settings/default-engines", async (c) => {
   const body = await readObjectBody<Record<string, boolean>>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   await writeFile(defaultEnginesFile(), JSON.stringify(body, null, 2), "utf-8");
+  return c.json({ ok: true });
+});
+
+router.get("/api/settings/restart-state", async (c) => {
+  const denied = await guardSettingsRoute(c, "GET /api/settings/restart-state");
+  if (denied) return denied;
+  return c.json(getRestartState());
+});
+
+router.post("/api/settings/restart", async (c) => {
+  const denied = await guardSettingsRoute(c, "POST /api/settings/restart");
+  if (denied) return denied;
+  requestRestart("admin-triggered restart from general settings");
   return c.json({ ok: true });
 });
 

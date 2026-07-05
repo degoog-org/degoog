@@ -22,6 +22,40 @@ describe("routes/settings-auth", () => {
     expect(token).toBeUndefined();
   });
 
+  test("canBalrogPass ignores a token supplied via query param", () => {
+    const req = new Request("http://localhost/?token=leaked-admin-token", {
+      headers: {},
+    });
+    const c = {
+      req: Object.assign(req, {
+        header: (name: string) => req.headers.get(name) ?? undefined,
+        query: (name: string) =>
+          new URL(req.url).searchParams.get(name) ?? undefined,
+      }),
+    };
+    const token = canBalrogPass(
+      c as unknown as Parameters<typeof canBalrogPass>[0],
+    );
+    expect(token).toBeUndefined();
+  });
+
+  test("canBalrogPass reads the token from the x-settings-token header", () => {
+    const req = new Request("http://localhost/", {
+      headers: { "x-settings-token": "header-token" },
+    });
+    const c = {
+      req: Object.assign(req, {
+        header: (name: string) => req.headers.get(name) ?? undefined,
+        query: (name: string) =>
+          new URL(req.url).searchParams.get(name) ?? undefined,
+      }),
+    };
+    const token = canBalrogPass(
+      c as unknown as Parameters<typeof canBalrogPass>[0],
+    );
+    expect(token).toBe("header-token");
+  });
+
   test("requires a generated default password when no password env is set", () => {
     const oldPasswords = process.env.DEGOOG_SETTINGS_PASSWORDS;
     const oldDanger = process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD;

@@ -147,6 +147,33 @@ body.has-results #app {
   border-radius: $radius-sm;
 }
 
+.degoog-scrollbar {
+  &::-webkit-scrollbar {
+    width: $space-1;
+    height: $space-1;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: $radius-sm;
+  }
+}
+
+.degoog-no-scrollbar,
+#sidebar-col,
+#media-preview-panel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 #home-footer {
   flex-shrink: 0;
   text-align: center;

@@ -2,7 +2,7 @@ import {
   getActiveWebEngines,
   getEnginesForCustomType,
 } from "../extensions/engines/registry";
-import type { EngineConfig, SearchEngine } from "../types";
+import type { EngineConfig, ImageFilter, SearchEngine } from "../types";
 import { asString, getSettings, maskSecrets } from "../utils/plugin-settings";
 
 export interface ActiveEngine {
@@ -14,10 +14,11 @@ export interface ActiveEngine {
 export const selectActiveEngines = async (
   type: string,
   config: EngineConfig,
+  imageFilter?: ImageFilter,
 ): Promise<ActiveEngine[]> => {
   if (type === "web") return getActiveWebEngines(config);
   return Promise.all(
-    (await getEnginesForCustomType(type, config)).map(async (e) => ({
+    (await getEnginesForCustomType(type, config, imageFilter)).map(async (e) => ({
       id: e.id,
       instance: e.instance,
       score: await readEngineScore(e.id),

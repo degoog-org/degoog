@@ -108,23 +108,41 @@
   }
 }
 
-.degoog-card-order {
+.degoog-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  padding: $space-2 $space-1;
+  color: var(--text-secondary);
+  cursor: grab;
+  opacity: 0.5;
+  touch-action: none;
+  user-select: none;
+  transition: opacity $transition-fast;
 
-  &-btn {
-    display: block;
-
-    &:disabled {
-      cursor: default;
-      opacity: 0.2;
-      pointer-events: none;
-    }
+  &:hover {
+    opacity: 1;
   }
 
-  @media (max-width: 768px) {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.degoog-drag-active,
+.degoog-drag-active * {
+  user-select: none;
+}
+
+.degoog-dragging {
+  position: relative;
+  z-index: 5;
+  cursor: grabbing;
+  will-change: transform;
+
+  &.ext-card {
+    background: var(--bg-hover);
   }
 }
 

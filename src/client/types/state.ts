@@ -25,6 +25,7 @@ export interface AppState {
   displaySearchSuggestions: boolean;
   postMethodEnabled: boolean;
   inlineGifPlayback: boolean;
+  stickySidebar: boolean;
   isInitialLoad: boolean;
   imageFilter: ImageFilter;
 }

@@ -4,7 +4,7 @@ import {
   skeletonResults,
   skeletonSidebar,
 } from "../../animations/skeleton";
-import { closeMediaPreview } from "../../modules/media/media";
+import { closeMediaPreview, syncMediaPreviewPanel } from "../../modules/media/media";
 import {
   clearSlotPanels,
   renderResults,
@@ -12,7 +12,7 @@ import {
   renderSidebarSuggestions,
   prependKnowledgePanels,
 } from "../../modules/renderer/render";
-import { renderMediaEngineBar } from "../../modules/renderer/render-media";
+import { renderImgEngines } from "../../modules/filters/image-filters";
 import { state } from "../../state";
 import { SlotPanelPosition, type SearchResponse } from "../../types";
 import { abortAcReq, hideAcDropdown } from "../autocomplete";
@@ -76,6 +76,7 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
   } else {
     layout?.classList.remove("media-mode");
   }
+  syncMediaPreviewPanel(isImageType);
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   clearSlotPanels();
@@ -158,7 +159,7 @@ export const renderSearchResponse = (
 
   if (isImageType) {
     if (glanceEl) glanceEl.innerHTML = "";
-    renderMediaEngineBar(data.engineTimings ?? []);
+    renderImgEngines(data.engineTimings ?? []);
     if (sidebar) sidebar.innerHTML = "";
   } else if (type === "web") {
     if (opts.fetchGlance) void fetchGlancePanels(query, data.results);

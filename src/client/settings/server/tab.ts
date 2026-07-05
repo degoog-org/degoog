@@ -1,7 +1,10 @@
 import { copyTextToClipboard } from "../../utils/clipboard";
 import { getBase } from "../../utils/base-url";
+import { escapeHtml } from "../../utils/dom";
+import { getAllSearchTypes } from "../../utils/engines";
 import { authHeaders } from "../../utils/request";
-import { saveBatch } from "../../utils/settings-api";
+import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
+import { saveBatch, saveField } from "../../utils/settings-api";
 import type {
   ButtonStateHandler,
   ServerSettingsData,
@@ -42,6 +45,63 @@ const TOGGLE_WRAP_PAIRS = [
   ["domain-replace-enabled", "domain-replace-wrap"],
   ["domain-score-enabled", "domain-score-wrap"],
 ] as const;
+
+async function _initStreamingTypeChecks(
+  disabledTypes: string,
+  getToken: () => string | null,
+): Promise<void> {
+  const container = document.getElementById("settings-streaming-type-checks");
+  if (!container) return;
+  const disabled = new Set(disabledTypes.split("\n").map((s) => s.trim()).filter(Boolean));
+  let types: string[];
+  try {
+    types = [...(await getAllSearchTypes())];
+  } catch (err) {
+    console.warn("[settings] could not load search types for streaming controls", err);
+    return;
+  }
+
+  if (types.length <= 1) {
+    container.remove();
+    return;
+  }
+
+  let _saving = false;
+  let _saveAgain = false;
+
+  const _save = async (): Promise<void> => {
+    if (_saving) {
+      _saveAgain = true;
+      return;
+    }
+    _saving = true;
+    do {
+      _saveAgain = false;
+      const checks = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+      const nowDisabled = [...checks].filter((c) => !c.checked).map((c) => c.value).join("\n");
+      const ok = await saveField("streamingDisabledTypes", nowDisabled, getToken);
+      if (ok) {
+        window.dispatchEvent(new Event("extensions-saved"));
+        flashSuccess(t("settings-page.server.saved"));
+      } else {
+        flashError(t("settings-page.server.save-failed-network"));
+      }
+    } while (_saveAgain);
+    _saving = false;
+  };
+
+  container.innerHTML = types.map((type) =>
+    `<label class="degoog-checkbox-wrap">
+      <input type="checkbox" class="settings-toggle" value="${escapeHtml(type)}"${disabled.has(type) ? "" : " checked"} />
+      <span class="degoog-checkbox"><i class="fa-solid fa-check"></i></span>
+      <span class="settings-toggle-label">${escapeHtml(type)}</span>
+    </label>`,
+  ).join("");
+
+  container.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+    cb.addEventListener("change", () => void _save());
+  });
+}
 
 function _renderApiKey(): void {
   const element = document.getElementById("settings-api-key-value");
@@ -96,6 +156,7 @@ async function _loadServerSettings(
     setToggle("streaming-enabled", data.streamingEnabled);
     setToggle("streaming-auto-retry", data.streamingAutoRetry);
     setVal("streaming-max-retries", data.streamingMaxRetries);
+    void _initStreamingTypeChecks(data.streamingDisabledTypes ?? "", getToken);
 
     setToggle("domain-block-enabled", data.domainBlockEnabled);
     setListVal("domain-block-list", "domainBlockList", data.domainBlockList);
@@ -361,12 +422,42 @@ const _initApiKeyControls = (
   );
 };
 
+const _bindRestartButton = (getToken: () => string | null): void => {
+  const btn = document.getElementById(
+    "settings-server-restart",
+  ) as HTMLButtonElement | null;
+  if (!btn) return;
+
+  const label = btn.textContent;
+  btn.addEventListener("click", async () => {
+    const confirmed = await confirmModal({
+      title: t("settings-page.server.restart-button"),
+      message: t("settings-page.server.restart-confirm"),
+    });
+    if (!confirmed) return;
+    btn.disabled = true;
+    btn.textContent = t("settings-page.server.restarting");
+    try {
+      const res = await fetch(`${getBase()}/api/settings/restart`, {
+        method: "POST",
+        headers: authHeaders(getToken),
+      });
+      if (!res.ok) throw new Error(`Restart failed: ${res.status}`);
+    } catch (err) {
+      console.debug("[settings] restart trigger failed", err);
+      btn.textContent = label;
+      btn.disabled = false;
+    }
+  });
+};
+
 export async function initServerTab(
   getToken: () => string | null,
 ): Promise<void> {
   const container = document.getElementById("server-content");
   if (container) container.innerHTML = renderServerContent();
 
+  _bindRestartButton(getToken);
   _bindToggles();
 
   document

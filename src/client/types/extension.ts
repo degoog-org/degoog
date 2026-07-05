@@ -1,3 +1,5 @@
+import type { EngineFilters } from "../../shared/engine-filters";
+
 export type SettingFieldType =
   | "text"
   | "number"
@@ -44,6 +46,7 @@ export interface ExtensionMeta {
   defaultFeedUrls?: string[];
   isClientExposed?: boolean;
   requiresNewerVersion?: boolean;
+  needsAppRestart?: boolean;
 }
 
 export interface AllExtensions {
@@ -79,6 +82,7 @@ export interface EngineRegistry {
     primaryType: string;
     searchTypes: string[];
     disabledByDefault?: boolean;
+    filters?: EngineFilters;
   }>;
   defaults?: Record<string, boolean>;
 }
