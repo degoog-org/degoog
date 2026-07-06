@@ -93,7 +93,8 @@ export function updateEngineTimings(
   if (!panel) {
     sidebar.querySelector(".skeleton-sidebar")?.remove();
     panel = document.createElement("div");
-    panel.className="sidebar-panel sidebar-accordion streaming-engine-panel open degoog-panel degoog-panel--accordion degoog-panel--stack-item";
+    const openClass = window.innerWidth >= 768 ? " open" : "";
+    panel.className = `sidebar-panel sidebar-accordion streaming-engine-panel${openClass} degoog-panel degoog-panel--accordion degoog-panel--stack-item`;
     panel.innerHTML = `
       <button class="sidebar-accordion-toggle degoog-accordion-toggle degoog-accordion-toggle--sidebar" type="button">
         <span>${t("search-templates.sidebar.engine-performance")}</span>
