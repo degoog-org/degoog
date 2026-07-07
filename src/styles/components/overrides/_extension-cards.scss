@@ -199,7 +199,7 @@
   &-footer {
     @include flex-between;
     border-top: 1px solid var(--border-light);
-    background: #3c4043;
+    background: var(--bg-hover);
     padding: $space-4 $space-6;
   }
 
