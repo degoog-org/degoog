@@ -199,6 +199,7 @@
   &-footer {
     @include flex-between;
     border-top: 1px solid var(--border-light);
+    background: rgba(var(--primary-rgb), 0.06);
     padding: $space-4 $space-6;
   }
 
