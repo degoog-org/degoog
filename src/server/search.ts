@@ -241,11 +241,13 @@ export const createSearchEngineContext = (
         return outgoingFetch(url, baseInit, transport, {
           proxyOverrideEnabled,
           proxyOverrideUrls,
+          engineId: engineSettingsId,
         });
       const headers = { ...(baseInit.headers ?? {}), "User-Agent": customUa };
       return outgoingFetch(url, { ...baseInit, headers }, transport, {
         proxyOverrideEnabled,
         proxyOverrideUrls,
+        engineId: engineSettingsId,
       });
     },
     lang: resolvedLang,

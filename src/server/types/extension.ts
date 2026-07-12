@@ -301,6 +301,7 @@ export type ProxyAwareFetch = (
 
 export interface TransportContext {
   proxyUrl?: string;
+  engineId?: string;
   fetch: ProxyAwareFetch;
   useCache: UseCache;
 }
