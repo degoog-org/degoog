@@ -154,7 +154,7 @@ Some amazing people around the web decided to make their degoog instances availa
 
 Aside from the official store repo community members have been working hard on their own plugins and been sharing them with everyone who wants to enhance their degoog experience. **You can find a bunch of them [here](https://degoog-org.github.io/community-extensions)**.
 
-_**Note:** These have only been INITIALLY vetted, there is no way for me to keep an eye on them once they have been added to the community store repo. It's your own responsibiilty to make sure what you install on your system is safe._
+_**Note:** These have only been INITIALLY vetted, there is no way for me to keep an eye on them once they have been added to the community store repo. It's your own responsibility to make sure what you install on your system is safe._
 
 ## Documentation
 
