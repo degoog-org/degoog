@@ -3,6 +3,7 @@ import type { EngineTiming, ScoredResult } from "../../types";
 import { renderTemplate } from "../../utils/template";
 import { buildResultContext } from "../../modules/renderer/render";
 import { engineCountHtml } from "./engine-failure";
+import { PANEL_LAYOUT_BREAKPOINT } from "../../modules/renderer/render-media";
 
 const t = window.scopedT("themes/degoog");
 
@@ -93,7 +94,8 @@ export function updateEngineTimings(
   if (!panel) {
     sidebar.querySelector(".skeleton-sidebar")?.remove();
     panel = document.createElement("div");
-    panel.className="sidebar-panel sidebar-accordion streaming-engine-panel open degoog-panel degoog-panel--accordion degoog-panel--stack-item";
+    const openClass = window.innerWidth >= PANEL_LAYOUT_BREAKPOINT ? " open" : "";
+    panel.className = `sidebar-panel sidebar-accordion streaming-engine-panel${openClass} degoog-panel degoog-panel--accordion degoog-panel--stack-item`;
     panel.innerHTML = `
       <button class="sidebar-accordion-toggle degoog-accordion-toggle degoog-accordion-toggle--sidebar" type="button">
         <span>${t("search-templates.sidebar.engine-performance")}</span>

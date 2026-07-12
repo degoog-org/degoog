@@ -154,10 +154,10 @@
   max-height: 90vh;
   max-width: 92vw;
   overflow: hidden;
-  width: 30rem;
+  width: $modal-width;
 
   &--wide {
-    width: min(60rem, 92vw);
+    width: $settings-modal-width;
   }
 
   &-overlay {
@@ -198,7 +198,7 @@
 
   &-footer {
     @include flex-between;
-    border-top: 1px solid var(--border-light);
+    background: var(--modal-footer);
     padding: $space-4 $space-6;
   }
 

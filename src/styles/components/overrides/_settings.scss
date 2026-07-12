@@ -899,7 +899,7 @@ html:has(.settings-page-body) {
 }
 
 .ext-modal--wide {
-  width: min(56rem, 92vw);
+  width: $settings-modal-width;
 }
 
 .shortcut-editor-modal {
