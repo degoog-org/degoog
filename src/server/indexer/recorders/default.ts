@@ -26,6 +26,7 @@ export interface Recorder {
     engineType: string,
     results: SearchResult[],
     filtersJson: string | null,
+    positions?: number[],
   ) => IndexRow[];
 }
 
@@ -60,7 +61,7 @@ const extractExtras = (r: SearchResult): string | null => {
 };
 
 export const DEFAULT_RECORDER: Recorder = {
-  toRows: (queryNorm, engineType, results, filtersJson) => {
+  toRows: (queryNorm, engineType, results, filtersJson, positions) => {
     const rows: IndexRow[] = [];
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
@@ -79,7 +80,7 @@ export const DEFAULT_RECORDER: Recorder = {
           r.isGif === true || urlIsGif(r.imageUrl) ? 1 : r.isGif === false ? 0 : null,
         duration: r.duration ?? null,
         extras_json: extractExtras(r),
-        position: i,
+        position: positions ? positions[i] : i,
         sources_json: sourcesOf(r),
         filters_json: filtersJson,
         meta_json: null,

@@ -66,6 +66,7 @@ interface StreamEngineRetry {
 interface StreamDone {
   totalTime: number;
   engineTimings: EngineTiming[];
+  indexedUrls?: string[];
   relatedSearches: string[];
 }
 
@@ -253,6 +254,14 @@ export async function performStreamingSearch(
     const data = JSON.parse(e.data) as StreamDone;
     source.close();
     _activeSource = null;
+
+    if (!isImageType && data.indexedUrls && data.indexedUrls.length > 0) {
+      const indexedSet = new Set(data.indexedUrls);
+      for (const r of currentResults) {
+        if (r.idx !== "recalled" && indexedSet.has(r.url)) r.idx = "indexing";
+      }
+      updateResults(resultsList, currentResults, renderedUrls);
+    }
 
     const searchData: SearchResponse = {
       results: currentResults,

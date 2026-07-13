@@ -15,6 +15,7 @@ import {
   EXACT_SQL,
   FUZZY_SQL,
   LIST_SELECT,
+  LIST_ORDER_BY,
   SEARCH_WHERE,
   EXPORT_SQL,
 } from "./statements";
@@ -129,7 +130,7 @@ export class SqliteAdapter implements IndexerAdapter {
     }
   }
 
-  async writeBatch(type: string, rows: IndexRow[], now: number): Promise<void> {
+  async writeBatch(type: string, rows: IndexRow[], now: number, window: number): Promise<void> {
     const db = this._db(type);
     let upsertUrl = this._upsertUrlStmts.get(type);
     if (!upsertUrl) {
@@ -167,6 +168,7 @@ export class SqliteAdapter implements IndexerAdapter {
           $meta_json: row.meta_json,
           $first_seen: now,
           $last_seen: now,
+          $window: window,
         });
       }
     });
@@ -287,7 +289,7 @@ export class SqliteAdapter implements IndexerAdapter {
         let stmt = this._listSearchQs.get(type);
         if (!stmt) {
           stmt = db.prepare(
-            `${LIST_SELECT} ${SEARCH_WHERE} ORDER BY h.last_seen DESC LIMIT $limit OFFSET $offset`,
+            `${LIST_SELECT} ${SEARCH_WHERE} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`,
           );
           this._listSearchQs.set(type, stmt);
         }
@@ -297,7 +299,7 @@ export class SqliteAdapter implements IndexerAdapter {
       let stmt = this._listAllQs.get(type);
       if (!stmt) {
         stmt = db.prepare(
-          `${LIST_SELECT} ORDER BY h.last_seen DESC LIMIT $limit OFFSET $offset`,
+          `${LIST_SELECT} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`,
         );
         this._listAllQs.set(type, stmt);
       }

@@ -1,5 +1,6 @@
 import { state } from "../../state";
 import type { EngineTiming, SearchResponse, SlotPanel } from "../../types";
+import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
 import { escapeHtml } from "../../utils/dom";
 import { retryEngine } from "../../utils/search-actions";
 import { engineCountHtml } from "../../utils/search/engine-failure";
@@ -42,18 +43,16 @@ export const engineStatsHtml = (timings: EngineTiming[]): string => {
 
   let statsContent = "";
   timings.forEach((et) => {
-    const isIndexed = et.resultCount === 0 && et.indexed === true;
-    const statusClass = et.resultCount === 0 && !isIndexed ? " engine-failed" : "";
+    const isDegoog = et.name === DEGOOG_ENGINE_NAME;
+    const statusClass = !isDegoog && et.resultCount === 0 ? " engine-failed" : "";
     const resultsLabel = t("search-templates.sidebar.results", {
       count: String(et.resultCount),
     });
-    const countHtml = isIndexed
-      ? resultsLabel
+    const countHtml = isDegoog
+      ? t("search-templates.sidebar.from-index", { count: String(et.resultCount) })
       : engineCountHtml(et, resultsLabel);
-    const metaText = isIndexed
-      ? `${t("search-templates.result.just-indexed")} · ${et.time}ms`
-      : `${countHtml} · ${et.time}ms`;
-    const action = isIndexed
+    const metaText = `${countHtml} · ${et.time}ms`;
+    const action = isDegoog
       ? ""
       : `<a class="engine-retry-link degoog-link" data-engine="${escapeHtml(et.name)}">${t("search-templates.sidebar.retry")}</a>`;
     statsContent += `

@@ -16,7 +16,6 @@ import { initThemesTab } from "../../settings/themes/tab";
 import { initServerTab } from "../../settings/server/tab";
 import { initStoreTab } from "../../settings/store/tab";
 import { initIndexerTab } from "../../settings/indexer/tab";
-import { initIndexerPublic } from "../../settings/indexer/public";
 import { initShortcutsTab } from "../../settings/shortcuts/tab";
 import { initGlobalSearch } from "../../settings/shared/settings-search";
 import {
@@ -322,7 +321,6 @@ async function _initPublicSettings(): Promise<void> {
     if (enginesEl)
       enginesEl.innerHTML = `<p>${t("settings-page.errors.load-engines")}</p>`;
   }
-  void initIndexerPublic();
 }
 
 async function _init(): Promise<void> {

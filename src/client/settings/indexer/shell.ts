@@ -20,18 +20,6 @@ export const renderShell = (container: HTMLElement): void => {
 
       <fieldset class="settings-fieldset">
         <fieldset
-          class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
-          id="indexer-public-wrap"
-        >
-          <label class="settings-toggle-wrap degoog-toggle-wrap">
-            <input type="checkbox" id="indexer-public-export" class="settings-toggle" />
-            <span class="toggle-slider degoog-toggle"></span>
-            <span class="settings-toggle-label">${tr("public-export")}</span>
-          </label>
-          <p class="settings-desc">${tr("public-export-desc")}</p>
-        </fieldset>
-
-        <fieldset
           id="indexer-filters-wrap"
           class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
           hidden
@@ -114,6 +102,16 @@ export const renderShell = (container: HTMLElement): void => {
             step="1"
           />
           <p class="settings-desc">${tr("query-limit-desc")}</p>
+          <label class="settings-proxy-urls-label" for="indexer-ranking-window">${tr("ranking-window")}</label>
+          <input
+            type="number"
+            id="indexer-ranking-window"
+            class="settings-rate-limit-input degoog-input"
+            min="2"
+            max="10000"
+            step="1"
+          />
+          <p class="settings-desc">${tr("ranking-window-desc")}</p>
         </fieldset>
 
         <div id="indexer-stats-wrap" class="degoog-indexer-stats" hidden>

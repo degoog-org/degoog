@@ -34,6 +34,7 @@ import { stripHtml, stripCssBlocks } from "./utils/text";
 import { asString, getSettings } from "./utils/plugin-settings";
 import { buildSignedProxyUrl } from "./utils/proxy-sign";
 import { cleanUrl, normalizeUrl, urlIsGif } from "./search/url-normalize";
+import { DEGOOG_ENGINE_NAME } from "../shared/search-types";
 
 const MAX_PAGE = 10;
 
@@ -335,7 +336,7 @@ export const search = async (
   dateFrom?: string,
   dateTo?: string,
   imageFilter?: ImageFilter,
-): Promise<SearchResponse> => {
+): Promise<SearchResponse & { indexBasis: ScoredResult[] }> => {
   const start = performance.now();
   const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
 
@@ -349,6 +350,7 @@ export const search = async (
       type,
       engineTimings: [],
       relatedSearches: [],
+      indexBasis: [],
     };
   }
 
@@ -381,7 +383,7 @@ export const search = async (
     }),
   );
 
-  const allResults: { results: SearchResult[]; multiplier: number }[] = [];
+  const allResults: { results: SearchResult[]; multiplier: number; name: string }[] = [];
   const engineTimings: EngineTiming[] = [];
 
   for (let i = 0; i < settled.length; i++) {
@@ -391,6 +393,7 @@ export const search = async (
       allResults.push({
         results: result.value.results,
         multiplier: rawActiveEngines[i].score,
+        name: engineName,
       });
       engineTimings.push({
         name: engineName,
@@ -421,6 +424,9 @@ export const search = async (
   }
 
   const scored = scoreResults(allResults);
+  const indexBasis = scoreResults(
+    allResults.filter((e) => e.name !== DEGOOG_ENGINE_NAME),
+  );
   const totalTime = Math.round(performance.now() - start);
 
   return {
@@ -430,5 +436,6 @@ export const search = async (
     type,
     engineTimings,
     relatedSearches: [],
+    indexBasis,
   };
 };

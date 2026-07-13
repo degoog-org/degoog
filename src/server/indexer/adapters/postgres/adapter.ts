@@ -136,7 +136,7 @@ export class PgAdapter implements IndexerAdapter {
 
   async checkpoint(_type: string): Promise<void> {}
 
-  async writeBatch(type: string, rows: IndexRow[], now: number): Promise<void> {
+  async writeBatch(type: string, rows: IndexRow[], now: number, window: number): Promise<void> {
     const schema = safeSlug(type);
     await this.open(type);
     await this._sql.begin(async (tx) => {
@@ -172,8 +172,16 @@ export class PgAdapter implements IndexerAdapter {
           ON CONFLICT (query_norm, engine_type, url_id) DO UPDATE SET
             last_seen = EXCLUDED.last_seen,
             best_position = LEAST(query_hits.best_position, EXCLUDED.best_position),
-            pos_sum = query_hits.pos_sum + EXCLUDED.pos_sum,
-            hit_count = query_hits.hit_count + 1,
+            pos_sum = CASE
+              WHEN query_hits.hit_count >= ${window}
+              THEN (query_hits.pos_sum * (${window} - 1) / query_hits.hit_count) + EXCLUDED.pos_sum
+              ELSE query_hits.pos_sum + EXCLUDED.pos_sum
+            END,
+            hit_count = CASE
+              WHEN query_hits.hit_count >= ${window}
+              THEN ${window}
+              ELSE query_hits.hit_count + 1
+            END,
             sources_json = (
               SELECT COALESCE(jsonb_agg(DISTINCT v)::text, '[]')
               FROM (
@@ -349,21 +357,23 @@ export class PgAdapter implements IndexerAdapter {
       if (q?.trim()) {
         const term = `%${q.trim().toLowerCase()}%`;
         return await this._sql<HitRow[]>`
-          SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen
+          SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen,
+                 (h.pos_sum::float / h.hit_count) AS score
           FROM ${this._sql(schema)}.query_hits h
           JOIN ${this._sql(schema)}.urls u ON u.id = h.url_id
           WHERE lower(h.query_norm) LIKE ${term}
              OR lower(u.url) LIKE ${term}
              OR lower(u.title) LIKE ${term}
-          ORDER BY h.last_seen DESC
+          ORDER BY h.query_norm ASC, score ASC
           LIMIT ${limit} OFFSET ${offset}
         `;
       }
       return await this._sql<HitRow[]>`
-        SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen
+        SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen,
+               (h.pos_sum::float / h.hit_count) AS score
         FROM ${this._sql(schema)}.query_hits h
         JOIN ${this._sql(schema)}.urls u ON u.id = h.url_id
-        ORDER BY h.last_seen DESC
+        ORDER BY h.query_norm ASC, score ASC
         LIMIT ${limit} OFFSET ${offset}
       `;
     } catch (err) {

@@ -34,14 +34,6 @@ const gateMaster = async (): Promise<boolean> => {
   return asBoolean(settings.degoogIndexerEnabled);
 };
 
-const gatePublic = async (): Promise<boolean> => {
-  const settings = await getInstanceSettings();
-  return (
-    asBoolean(settings.degoogIndexerEnabled) &&
-    asBoolean(settings.degoogIndexerPublicExport)
-  );
-};
-
 const clientKey = (c: Parameters<typeof getClientIp>[0]): string =>
   c.req.header("x-settings-token") ?? getClientIp(c) ?? "unknown";
 
@@ -51,23 +43,11 @@ router.get("/api/indexer/stats", async (c) => {
 
   if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
 
-  if (!(await gatePublic())) {
-    const denied = await guardSettingsRoute(c, "GET /api/indexer/stats");
-    if (denied) return denied;
-  }
+  const denied = await guardSettingsRoute(c, "GET /api/indexer/stats");
+  if (denied) return denied;
 
   const stats = await getStats();
   return c.json({ ...stats, totalResults: stats.totalHits });
-});
-
-router.get("/api/indexer/public-info", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-
-  const available = await gatePublic();
-  if (!available) return c.json({ available: false });
-
-  return c.json({ available: true, types: discoverTypes() });
 });
 
 router.get("/api/indexer/types", async (c) => {
@@ -76,10 +56,8 @@ router.get("/api/indexer/types", async (c) => {
 
   if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
 
-  if (!(await gatePublic())) {
-    const denied = await guardSettingsRoute(c, "GET /api/indexer/types");
-    if (denied) return denied;
-  }
+  const denied = await guardSettingsRoute(c, "GET /api/indexer/types");
+  if (denied) return denied;
 
   return c.json({ types: discoverTypes() });
 });
@@ -90,10 +68,8 @@ router.get("/api/indexer/sample", async (c) => {
 
   if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
 
-  if (!(await gatePublic())) {
-    const denied = await guardSettingsRoute(c, "GET /api/indexer/sample");
-    if (denied) return denied;
-  }
+  const denied = await guardSettingsRoute(c, "GET /api/indexer/sample");
+  if (denied) return denied;
 
   const type = c.req.query("type")?.trim();
   if (!type) return c.json({ error: "type is required" }, 400);
@@ -173,10 +149,8 @@ router.get("/api/indexer/export", async (c) => {
 
   if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
 
-  if (!(await gatePublic())) {
-    const denied = await guardSettingsRoute(c, "GET /api/indexer/export");
-    if (denied) return denied;
-  }
+  const denied = await guardSettingsRoute(c, "GET /api/indexer/export");
+  if (denied) return denied;
 
   const type = c.req.query("type")?.trim();
   if (!type) return c.json({ error: "type is required" }, 400);

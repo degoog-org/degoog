@@ -34,8 +34,16 @@ export const UPSERT_HIT = `
   ON CONFLICT(query_norm, engine_type, url_id) DO UPDATE SET
     last_seen = excluded.last_seen,
     best_position = MIN(query_hits.best_position, excluded.best_position),
-    pos_sum = query_hits.pos_sum + excluded.pos_sum,
-    hit_count = query_hits.hit_count + 1,
+    pos_sum = CASE
+      WHEN query_hits.hit_count >= $window
+      THEN (query_hits.pos_sum * ($window - 1) / query_hits.hit_count) + excluded.pos_sum
+      ELSE query_hits.pos_sum + excluded.pos_sum
+    END,
+    hit_count = CASE
+      WHEN query_hits.hit_count >= $window
+      THEN $window
+      ELSE query_hits.hit_count + 1
+    END,
     sources_json = (
       SELECT json_group_array(value) FROM (
         SELECT value FROM json_each(COALESCE(query_hits.sources_json, '[]'))
@@ -91,10 +99,13 @@ export const FUZZY_SQL = `
 `;
 
 export const LIST_SELECT = `
-  SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen
+  SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen,
+         (h.pos_sum * 1.0 / h.hit_count) AS score
   FROM query_hits h
   JOIN urls u ON u.id = h.url_id
 `;
+
+export const LIST_ORDER_BY = "ORDER BY h.query_norm ASC, score ASC";
 
 export const SEARCH_WHERE = `
   WHERE h.query_norm LIKE $term ESCAPE '\\'

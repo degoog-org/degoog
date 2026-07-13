@@ -30,6 +30,7 @@ import {
   type ServerSettingValue,
 } from "../utils/server-settings";
 import { writeSyncedDefaults } from "../utils/synced-settings";
+import { startQueue, stopQueue } from "../indexer/queue";
 import {
   SETTINGS_SCHEMA,
   coerceSetting,
@@ -215,6 +216,12 @@ router.get("/api/settings/general", async (c) => {
   return c.json(trimBigFields({ ...settings, ...indexerLists, ...domainLists }));
 });
 
+const _reconcileIndexerQueue = async (): Promise<void> => {
+  const settings = await getInstanceSettings();
+  if (asBoolean(settings.degoogIndexerEnabled)) startQueue();
+  else await stopQueue();
+};
+
 router.post("/api/settings/general", async (c) => {
   const denied = await guardSettingsRoute(c, "POST /api/settings/general");
   if (denied) return denied;
@@ -225,6 +232,7 @@ router.post("/api/settings/general", async (c) => {
   await setInstanceSettings({ ...existing, ...updates });
   await _persistListFields(body);
   await syncBlocklist();
+  await _reconcileIndexerQueue();
   return c.json({ ok: true });
 });
 
@@ -247,6 +255,7 @@ router.post("/api/settings/field", async (c) => {
     await updateInstanceSettings({ [key]: coerced });
   }
   await syncBlocklist();
+  if (key === "degoogIndexerEnabled") await _reconcileIndexerQueue();
   return c.json({ ok: true });
 });
 

@@ -9,10 +9,15 @@ export interface SearchResult {
   duration?: string;
 }
 
+export const DEGOOG_ENGINE_NAME = "Degoog";
+
+export type IndexRelation = "recalled" | "indexing";
+
 export interface ScoredResult extends SearchResult {
   score: number;
   sources: string[];
   insecure?: boolean;
+  idx?: IndexRelation;
 }
 
 export interface EngineTiming {
@@ -22,7 +27,6 @@ export interface EngineTiming {
   status?: string;
   errorReason?: string;
   httpStatus?: number;
-  indexed?: boolean;
 }
 
 export enum SlotPanelPosition {

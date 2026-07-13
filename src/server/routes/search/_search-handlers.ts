@@ -8,7 +8,7 @@ import { applyDomainRules } from "./_domain-rules";
 import { runIntercepts } from "../../utils/run-interceptors";
 import { getInstanceSettings } from "../../utils/server-settings";
 import { asBoolean } from "../../utils/plugin-settings";
-import { DEGOOG_ENGINE_NAME, maybeIndex, toFilterTag } from "../../indexer/store";
+import { DEGOOG_ENGINE_NAME, isRecalled, maybeIndex, tagIndexRelation, toFilterTag } from "../../indexer/store";
 import { engineSettingsFingerprint } from "../../search/engine-selection";
 
 export async function handleSearch(params: SearchParams) {
@@ -54,11 +54,13 @@ export async function handleSearch(params: SearchParams) {
     return {
       ...cached,
       relatedSearches: [],
-      results: signResultThumbnails(await applyDomainRules(cached.results)),
+      results: signResultThumbnails(
+        tagIndexRelation(await applyDomainRules(cached.results)),
+      ),
     };
   }
 
-  const response = await search(
+  const { indexBasis, ...response } = await search(
     query,
     engines,
     type,
@@ -71,7 +73,6 @@ export async function handleSearch(params: SearchParams) {
   );
 
   const settings = await getInstanceSettings();
-  let finalResponse = response;
 
   const displayResults = await applyDomainRules(response.results);
   const filtersTag = toFilterTag({
@@ -81,40 +82,33 @@ export async function handleSearch(params: SearchParams) {
     dateTo,
     imageFilter,
   });
-  const indexed = maybeIndex(
+  const indexedUrls = await maybeIndex(
     asBoolean(settings.degoogIndexerEnabled),
     query,
     type,
-    displayResults,
+    await applyDomainRules(indexBasis),
     filtersTag,
   );
 
   const degoogTiming = response.engineTimings.find(
     (et) => et.name === DEGOOG_ENGINE_NAME,
   );
-  const justIndexed = indexed && degoogTiming?.resultCount === 0;
+  const justIndexed = indexedUrls.length > 0 && degoogTiming?.resultCount === 0;
 
-  if (justIndexed) {
-    finalResponse = {
-      ...response,
-      engineTimings: response.engineTimings.map((et) =>
-        et.name === DEGOOG_ENGINE_NAME ? { ...et, indexed: true } : et,
-      ),
-    };
-  }
-
-  if (!cache.allEnginesFailed(finalResponse)) {
+  if (!cache.allEnginesFailed(response)) {
     const ttl = justIndexed
       ? cache.JUST_INDEXED_TTL_MS
-      : cache.someEnginesFailed(finalResponse)
+      : cache.someEnginesFailed(response)
         ? cache.SHORT_TTL_MS
         : undefined;
-    await cache.set(key, finalResponse, ttl);
+    await cache.set(key, response, ttl);
   }
 
   return {
-    ...finalResponse,
-    results: signResultThumbnails(displayResults),
+    ...response,
+    results: signResultThumbnails(
+      tagIndexRelation(displayResults, new Set(indexedUrls)),
+    ),
   };
 }
 
@@ -190,26 +184,30 @@ export async function handleRetry(
       dateTo,
       imageFilter,
     });
-    maybeIndex(
+    const indexedUrls = await maybeIndex(
       asBoolean(settings.degoogIndexerEnabled),
       query,
       type,
-      displayMerged,
+      displayMerged.filter((r) => !isRecalled(r)),
       filtersTag,
     );
 
     return {
       ...updated,
-      results: signResultThumbnails(displayMerged),
+      results: signResultThumbnails(
+        tagIndexRelation(displayMerged, new Set(indexedUrls)),
+      ),
     };
   }
 
   return {
-    results: newResults.map((r, i) => ({
-      ...r,
-      score: Math.max(10 - i, 1),
-      sources: [r.source],
-    })),
+    results: tagIndexRelation(
+      newResults.map((r, i) => ({
+        ...r,
+        score: Math.max(10 - i, 1),
+        sources: [r.source],
+      })),
+    ),
     timing,
     engineTimings: [timing],
   };

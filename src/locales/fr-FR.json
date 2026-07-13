@@ -347,8 +347,6 @@
       "desc": "Enregistre silencieusement chaque résultat affiché et les réutilise lors des recherches futures.",
       "enable": "Activer l'indexeur",
       "enable-desc": "Lorsque c'est activé, les résultats de vos recherches sont stockés localement.",
-      "public-export": "Autoriser le téléchargement public de cet index",
-      "public-export-desc": "Lorsque c'est activé, tout le monde peut télécharger cet index depuis la page publique (limité).",
       "filters-heading": "Filtres d'indexation",
       "domain-allowlist": "Liste blanche de domaines",
       "domain-allowlist-desc": "Un domaine par ligne. Si non vide, seuls les résultats de ces domaines sont indexés. Laissez vide pour tout autoriser.",
@@ -372,6 +370,8 @@
       "fuzzy-enabled-desc": "Des requêtes proches peuvent faire réapparaître des URL déjà vues.",
       "query-limit": "Max. résultats par recherche Degoog",
       "query-limit-desc": "Nombre de hits renvoyés par le moteur Degoog pour une recherche.",
+      "ranking-window": "Mémoire de classement (hits récents)",
+      "ranking-window-desc": "Combien de vues récentes comptent dans le classement d'un résultat. Une valeur basse permet au classement de s'adapter plus vite aux nouveaux résultats ; une valeur haute le garde plus stable.",
       "stats-heading": "Statistiques de l'index",
       "total-hits": "Liens requête–URL",
       "total-urls": "URL uniques",
@@ -396,6 +396,7 @@
       "manage-col-query": "Requête",
       "manage-col-type": "Type",
       "manage-col-title": "Résultat",
+      "manage-col-score": "Score",
       "manage-col-actions": "",
       "manage-delete": "Supprimer",
       "manage-delete-selected": "Supprimer la sélection",
@@ -411,9 +412,6 @@
       "clear-cancel": "Annuler",
       "save-error": "Échec de l'enregistrement des paramètres de l'indexeur.",
       "disabled": "L'indexeur est désactivé. Activez-le dans les paramètres Serveur."
-    },
-    "indexer-public": {
-      "unavailable": "L'indexeur n'est pas accessible publiquement sur cette instance."
     },
     "store": {
       "repos-heading": "Dépôts",

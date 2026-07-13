@@ -95,6 +95,7 @@
       "people-also-search": "אנשים מחפשים גם",
       "info": "מידע",
       "results": "{count} תוצאות",
+      "from-index": "{count} מהאינדקס שלך",
       "retry": "נסה שוב",
       "retrying": "מנסה שוב...",
       "failure-reasons": {
@@ -109,7 +110,8 @@
       }
     },
     "result": {
-      "just-indexed": "אומת כעת",
+      "from-index": "מהאינדקס שלך",
+      "saving-to-index": "נשמר לאינדקס שלך",
       "insecure": "בלתי מאובטח",
       "insecure-tooltip": "אתר זה משובץ על חיבור HTTP לא מאובטח.",
       "actions": {

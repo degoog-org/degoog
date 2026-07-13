@@ -57,6 +57,8 @@ export const buildResultContext = (
     link_target: state.openInNewTab ? "_blank" : "_self",
     link_rel: state.openInNewTab ? "noopener" : "",
     insecure: !!r.insecure,
+    is_recalled: r.idx === "recalled",
+    is_indexing: r.idx === "indexing",
     show_actions: showBlock || showReplace || showScore,
     action_block: showBlock,
     action_replace: showReplace,

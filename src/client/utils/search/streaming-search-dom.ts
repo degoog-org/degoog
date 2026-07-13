@@ -1,5 +1,6 @@
 import { state } from "../../state";
 import type { EngineTiming, ScoredResult } from "../../types";
+import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
 import { renderTemplate } from "../../utils/template";
 import { buildResultContext } from "../../modules/renderer/render";
 import { engineCountHtml } from "./engine-failure";
@@ -18,6 +19,7 @@ export function renderResultEl(
   const el = wrapper.firstElementChild as HTMLElement | null;
   if (!el) return null;
   el.dataset.resultUrl = r.url;
+  el.dataset.idx = r.idx ?? "";
   return el;
 }
 
@@ -45,7 +47,8 @@ export function updateResults(
       const newSources = r.sources.join(" ");
       const oldSnippet =
         existing.querySelector(".result-snippet")?.textContent?.trim() ?? "";
-      if (oldSources !== newSources || oldSnippet !== r.snippet.trim()) {
+      const idxChanged = (existing.dataset.idx ?? "") !== (r.idx ?? "");
+      if (oldSources !== newSources || oldSnippet !== r.snippet.trim() || idxChanged) {
         const updated = renderResultEl(r, i);
         if (updated) {
           container.replaceChild(updated, existing);
@@ -122,18 +125,22 @@ export function updateEngineTimings(
 
   let html = "";
   for (const et of timings) {
+    const isDegoog = et.name === DEGOOG_ENGINE_NAME;
     const isRetrying = et.resultCount === -1;
     const statusClass = isRetrying
       ? " engine-retrying"
-      : et.resultCount === 0
+      : !isDegoog && et.resultCount === 0
         ? " engine-failed"
         : "";
     const resultsLabel = t("search-templates.sidebar.results", {
       count: String(et.resultCount),
     });
+    const countHtml = isDegoog
+      ? t("search-templates.sidebar.from-index", { count: String(et.resultCount) })
+      : engineCountHtml(et, resultsLabel);
     const meta = isRetrying
       ? `${t("search-templates.sidebar.retrying")} · ${et.time}ms`
-      : `${engineCountHtml(et, resultsLabel)} · ${et.time}ms`;
+      : `${countHtml} · ${et.time}ms`;
     html += `
       <div class="engine-stat-row${statusClass}">
         <div class="engine-stat-info">
