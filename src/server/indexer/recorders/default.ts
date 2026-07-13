@@ -15,11 +15,28 @@ export interface IndexRow {
   duration: string | null;
   extras_json: string | null;
   position: number;
+  sources_json: string | null;
+  filters_json: string | null;
+  meta_json: string | null;
 }
 
 export interface Recorder {
-  toRows: (queryNorm: string, engineType: string, results: SearchResult[]) => IndexRow[];
+  toRows: (
+    queryNorm: string,
+    engineType: string,
+    results: SearchResult[],
+    filtersJson: string | null,
+  ) => IndexRow[];
 }
+
+const sourcesOf = (r: SearchResult): string => {
+  const withSources = r as SearchResult & { sources?: unknown };
+  const list = Array.isArray(withSources.sources)
+    ? withSources.sources.filter((s): s is string => typeof s === "string")
+    : [];
+  const unique = [...new Set(list.length > 0 ? list : [r.source])].filter(Boolean);
+  return JSON.stringify(unique);
+};
 
 const KNOWN_FIELDS = new Set([
   "title",
@@ -43,7 +60,7 @@ const extractExtras = (r: SearchResult): string | null => {
 };
 
 export const DEFAULT_RECORDER: Recorder = {
-  toRows: (queryNorm, engineType, results) => {
+  toRows: (queryNorm, engineType, results, filtersJson) => {
     const rows: IndexRow[] = [];
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
@@ -63,6 +80,9 @@ export const DEFAULT_RECORDER: Recorder = {
         duration: r.duration ?? null,
         extras_json: extractExtras(r),
         position: i,
+        sources_json: sourcesOf(r),
+        filters_json: filtersJson,
+        meta_json: null,
       });
     }
     return rows;

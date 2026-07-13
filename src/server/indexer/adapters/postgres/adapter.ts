@@ -44,10 +44,11 @@ export class PgAdapter implements IndexerAdapter {
       for (const schema of this._types) {
         try {
           await this._ensureHitsIndex(schema);
+          await this._ensureHitsColumns(schema);
         } catch (err) {
           logger.warn(
             "indexer",
-            `hits index maintenance failed for schema=${schema}`,
+            `hits maintenance failed for schema=${schema}`,
             err,
           );
         }
@@ -99,8 +100,26 @@ export class PgAdapter implements IndexerAdapter {
 
     await this._sql.begin(async (tx) => initPgSchema(tx, schema));
     await this._ensureHitsIndex(schema);
+    await this._ensureHitsColumns(schema);
 
     this._types.add(schema);
+  }
+
+  private async _ensureHitsColumns(schema: string): Promise<void> {
+    const [col] = await this._sql<{ ok: number }[]>`
+      SELECT 1 AS ok
+      FROM information_schema.columns
+      WHERE table_schema = ${schema}
+        AND table_name = 'query_hits'
+        AND column_name = 'pos_sum'
+    `;
+    if (col) return;
+
+    await this._sql`ALTER TABLE ${this._sql(schema)}.query_hits ADD COLUMN IF NOT EXISTS pos_sum BIGINT NOT NULL DEFAULT 9999`;
+    await this._sql`ALTER TABLE ${this._sql(schema)}.query_hits ADD COLUMN IF NOT EXISTS sources_json TEXT`;
+    await this._sql`ALTER TABLE ${this._sql(schema)}.query_hits ADD COLUMN IF NOT EXISTS filters_json TEXT`;
+    await this._sql`ALTER TABLE ${this._sql(schema)}.query_hits ADD COLUMN IF NOT EXISTS meta_json TEXT`;
+    await this._sql`UPDATE ${this._sql(schema)}.query_hits SET pos_sum = best_position * hit_count`;
   }
 
   discoverTypes(): string[] {
@@ -145,13 +164,26 @@ export class PgAdapter implements IndexerAdapter {
         `;
         await tx`
           INSERT INTO ${tx(schema)}.query_hits
-            (query_norm, engine_type, url_id, best_position, hit_count, first_seen, last_seen)
+            (query_norm, engine_type, url_id, best_position, pos_sum, hit_count,
+             sources_json, filters_json, meta_json, first_seen, last_seen)
           VALUES
-            (${row.query_norm}, ${row.engine_type}, ${urlRow.id}, ${row.position}, 1, ${now}, ${now})
+            (${row.query_norm}, ${row.engine_type}, ${urlRow.id}, ${row.position}, ${row.position}, 1,
+             ${row.sources_json}, ${row.filters_json}, ${row.meta_json}, ${now}, ${now})
           ON CONFLICT (query_norm, engine_type, url_id) DO UPDATE SET
             last_seen = EXCLUDED.last_seen,
             best_position = LEAST(query_hits.best_position, EXCLUDED.best_position),
-            hit_count = query_hits.hit_count + 1
+            pos_sum = query_hits.pos_sum + EXCLUDED.pos_sum,
+            hit_count = query_hits.hit_count + 1,
+            sources_json = (
+              SELECT COALESCE(jsonb_agg(DISTINCT v)::text, '[]')
+              FROM (
+                SELECT jsonb_array_elements_text(COALESCE(query_hits.sources_json::jsonb, '[]'::jsonb)) AS v
+                UNION
+                SELECT jsonb_array_elements_text(COALESCE(EXCLUDED.sources_json::jsonb, '[]'::jsonb))
+              ) s
+            ),
+            filters_json = COALESCE(NULLIF(EXCLUDED.filters_json, ''), query_hits.filters_json),
+            meta_json = COALESCE(query_hits.meta_json, EXCLUDED.meta_json)
         `;
       }
     });
@@ -224,7 +256,7 @@ export class PgAdapter implements IndexerAdapter {
         FROM ${this._sql(schema)}.query_hits h
         JOIN ${this._sql(schema)}.urls u ON u.id = h.url_id
         WHERE h.query_norm = ${queryNorm} AND h.engine_type = ${type}
-        ORDER BY h.best_position ASC, h.hit_count DESC, h.last_seen DESC
+        ORDER BY (h.pos_sum::float / h.hit_count) ASC, h.hit_count DESC, h.best_position ASC
         LIMIT ${limit} OFFSET ${offset}
       `;
     } catch (err) {

@@ -8,7 +8,7 @@ import { applyDomainRules } from "./_domain-rules";
 import { runIntercepts } from "../../utils/run-interceptors";
 import { getInstanceSettings } from "../../utils/server-settings";
 import { asBoolean } from "../../utils/plugin-settings";
-import { DEGOOG_ENGINE_NAME, maybeIndex } from "../../indexer/store";
+import { DEGOOG_ENGINE_NAME, maybeIndex, toFilterTag } from "../../indexer/store";
 import { engineSettingsFingerprint } from "../../search/engine-selection";
 
 export async function handleSearch(params: SearchParams) {
@@ -74,11 +74,19 @@ export async function handleSearch(params: SearchParams) {
   let finalResponse = response;
 
   const displayResults = await applyDomainRules(response.results);
+  const filtersTag = toFilterTag({
+    lang: resolvedLang,
+    timeFilter: resolvedTime,
+    dateFrom,
+    dateTo,
+    imageFilter,
+  });
   const indexed = maybeIndex(
     asBoolean(settings.degoogIndexerEnabled),
     query,
     type,
     displayResults,
+    filtersTag,
   );
 
   const degoogTiming = response.engineTimings.find(
@@ -175,7 +183,20 @@ export async function handleRetry(
 
     const settings = await getInstanceSettings();
     const displayMerged = await applyDomainRules(merged);
-    maybeIndex(asBoolean(settings.degoogIndexerEnabled), query, type, displayMerged);
+    const filtersTag = toFilterTag({
+      lang,
+      timeFilter,
+      dateFrom,
+      dateTo,
+      imageFilter,
+    });
+    maybeIndex(
+      asBoolean(settings.degoogIndexerEnabled),
+      query,
+      type,
+      displayMerged,
+      filtersTag,
+    );
 
     return {
       ...updated,

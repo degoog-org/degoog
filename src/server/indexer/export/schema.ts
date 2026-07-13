@@ -20,7 +20,11 @@ export const EXPORT_SCHEMA_DDL = [
     engine_type TEXT NOT NULL,
     url_id INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE,
     best_position INTEGER NOT NULL DEFAULT 9999,
+    pos_sum INTEGER NOT NULL DEFAULT 9999,
     hit_count INTEGER NOT NULL DEFAULT 1,
+    sources_json TEXT,
+    filters_json TEXT,
+    meta_json TEXT,
     first_seen INTEGER NOT NULL,
     last_seen INTEGER NOT NULL,
     UNIQUE(query_norm, engine_type, url_id)

@@ -25,7 +25,7 @@ import { signResultThumbnails } from "../utils/proxy-sign";
 import { parseSearchRequest } from "./search/_parsers";
 import { runIntercepts } from "../utils/run-interceptors";
 import { getInstanceSettings } from "../utils/server-settings";
-import { DEGOOG_ENGINE_NAME, maybeIndex } from "../indexer/store";
+import { DEGOOG_ENGINE_NAME, maybeIndex, toFilterTag } from "../indexer/store";
 
 const router = new Hono();
 
@@ -235,11 +235,19 @@ router.get("/api/search/stream", async (c) => {
 
         const indexerSettings = await getInstanceSettings();
         const displayResults = await applyDomainRules(rawScoredResults);
+        const filtersTag = toFilterTag({
+          lang: resolvedLang,
+          timeFilter: resolvedTime,
+          dateFrom,
+          dateTo,
+          imageFilter,
+        });
         const indexed = maybeIndex(
           asBoolean(indexerSettings.degoogIndexerEnabled),
           query,
           type,
           displayResults,
+          filtersTag,
         );
 
         const degoogTiming = allTimings.find((et) => et.name === DEGOOG_ENGINE_NAME);
