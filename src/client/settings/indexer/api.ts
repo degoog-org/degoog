@@ -45,6 +45,13 @@ export const deleteRows = async (items: DeleteItem[]): Promise<boolean> => {
   }
 };
 
+export const orderTypes = (types: string[]): string[] =>
+  [...types].sort((a, b) => {
+    if (a === "web") return -1;
+    if (b === "web") return 1;
+    return a.localeCompare(b);
+  });
+
 export const fetchEngineTypes = async (): Promise<string[]> => {
   try {
     const res = await fetch(`${getBase()}/api/engines`);
@@ -55,7 +62,7 @@ export const fetchEngineTypes = async (): Promise<string[]> => {
       if (eng.id === DEGOOG_ENGINE_ID) continue;
       for (const st of eng.searchTypes) seen.add(st);
     }
-    return [...seen].sort();
+    return orderTypes([...seen]);
   } catch {
     return [];
   }

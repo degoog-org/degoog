@@ -143,7 +143,6 @@ export const renderShell = (container: HTMLElement): void => {
               type="button"
               class="btn btn--secondary degoog-btn degoog-btn--secondary"
               id="indexer-import-btn"
-              hidden
             >
               ${tr("import-btn")}
             </button>

@@ -70,8 +70,14 @@ export const IMPORT_URL = `
 `;
 
 export const IMPORT_HIT = `
-  INSERT INTO query_hits (query_norm, engine_type, url_id, best_position, hit_count, first_seen, last_seen)
-  VALUES ($query_norm, $engine_type, $url_id, 9999, 1, $first_seen, $last_seen)
+  INSERT INTO query_hits (
+    query_norm, engine_type, url_id, best_position, pos_sum, hit_count,
+    sources_json, filters_json, meta_json, first_seen, last_seen
+  )
+  VALUES (
+    $query_norm, $engine_type, $url_id, $best_position, $pos_sum, $hit_count,
+    $sources_json, $filters_json, $meta_json, $first_seen, $last_seen
+  )
   ON CONFLICT(query_norm, engine_type, url_id) DO NOTHING
 `;
 

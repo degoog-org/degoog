@@ -9,6 +9,7 @@ import type {
 import type { IndexRow } from "../../recorders";
 import type { IndexerConfig } from "../../types/config";
 import { safeSlug } from "../../shared/safe-type";
+import { rankFields } from "../../shared/rank-fields";
 import { logger } from "../../../utils/logger";
 import { initPgSchema } from "./schema";
 import { runPgPrune } from "./prune";
@@ -234,11 +235,14 @@ export class PgAdapter implements IndexerAdapter {
 
           if (!existingUrl) continue;
 
+          const rank = rankFields(row);
           const hitRows = await tx<{ id: number }[]>`
             INSERT INTO ${tx(schema)}.query_hits
-              (query_norm, engine_type, url_id, best_position, hit_count, first_seen, last_seen)
+              (query_norm, engine_type, url_id, best_position, pos_sum, hit_count,
+               sources_json, filters_json, meta_json, first_seen, last_seen)
             VALUES
-              (${row.query_norm}, ${type}, ${existingUrl.id}, 9999, 1, ${row.first_seen}, ${row.last_seen})
+              (${row.query_norm}, ${type}, ${existingUrl.id}, ${rank.best_position}, ${rank.pos_sum}, ${rank.hit_count},
+               ${rank.sources_json}, ${rank.filters_json}, ${rank.meta_json}, ${row.first_seen}, ${row.last_seen})
             ON CONFLICT (query_norm, engine_type, url_id) DO NOTHING
             RETURNING id
           `;
@@ -433,7 +437,9 @@ export class PgAdapter implements IndexerAdapter {
       return await this._sql<ExportRow[]>`
         SELECT h.query_norm, h.engine_type, u.url, u.url_norm, u.source_engine,
                u.title, u.snippet, u.thumbnail, u.image_url, u.is_gif, u.duration,
-               u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance
+               u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance,
+               h.best_position, h.pos_sum, h.hit_count,
+               h.sources_json, h.filters_json, h.meta_json
         FROM ${this._sql(schema)}.query_hits h
         JOIN ${this._sql(schema)}.urls u ON u.id = h.url_id
       `;

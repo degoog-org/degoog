@@ -4,6 +4,7 @@ import type { IndexRow } from "../../recorders";
 import type { IndexerConfig } from "../../types/config";
 import type { IndexerAdapter, UrlRow, HitRow, TypeCounts, ExportRow } from "../../types/adapter";
 import { safeSlug } from "../../shared/safe-type";
+import { rankFields } from "../../shared/rank-fields";
 import { indexerDir, indexerDbForType } from "../../../utils/paths";
 import { logger } from "../../../utils/logger";
 import { SQLITE_SCHEMA_DDL } from "./schema";
@@ -202,10 +203,17 @@ export class SqliteAdapter implements IndexerAdapter {
           db.prepare("SELECT id FROM urls WHERE url_norm = ?").get(row.url_norm) as { id: number } | null
         )?.id;
         if (!urlId) continue;
+        const rank = rankFields(row);
         const hitResult = importHit.run({
           $query_norm: row.query_norm,
           $engine_type: type,
           $url_id: urlId,
+          $best_position: rank.best_position,
+          $pos_sum: rank.pos_sum,
+          $hit_count: rank.hit_count,
+          $sources_json: rank.sources_json,
+          $filters_json: rank.filters_json,
+          $meta_json: rank.meta_json,
           $first_seen: row.first_seen,
           $last_seen: row.last_seen,
         });

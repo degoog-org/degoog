@@ -17,6 +17,12 @@ export interface ExportRow {
   first_seen: number;
   last_seen: number;
   source_instance: string | null;
+  best_position?: number | null;
+  pos_sum?: number | null;
+  hit_count?: number | null;
+  sources_json?: string | null;
+  filters_json?: string | null;
+  meta_json?: string | null;
 }
 
 export interface UrlRow {
