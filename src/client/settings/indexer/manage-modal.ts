@@ -59,6 +59,7 @@ const buildRow = (row: HitRow): HTMLTableRowElement => {
   check.className = "indexer-manage-check settings-toggle";
   check.value = String(row.id);
   check.dataset.type = row.engine_type;
+  check.setAttribute("aria-label", tr("manage-select-row"));
   const checkBox = document.createElement("span");
   checkBox.className = "degoog-checkbox";
   checkBox.innerHTML = '<i class="fa-solid fa-check"></i>';
@@ -135,6 +136,7 @@ export const openManageModal = (
   if (scoreHead) scoreHead.textContent = tr("manage-col-score");
   if (prevBtn) prevBtn.textContent = tr("manage-prev");
   if (nextBtn) nextBtn.textContent = tr("manage-next");
+  selectAll?.setAttribute("aria-label", tr("manage-select-all"));
   if (typeEl?.options[0]) typeEl.options[0].textContent = tr("manage-type-all");
 
   const knownTypes = Object.keys(stats?.byType ?? {});

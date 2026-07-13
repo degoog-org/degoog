@@ -107,20 +107,23 @@ export class PgAdapter implements IndexerAdapter {
   }
 
   private async _ensureHitsColumns(schema: string): Promise<void> {
-    const [col] = await this._sql<{ ok: number }[]>`
-      SELECT 1 AS ok
+    const cols = await this._sql<{ column_name: string }[]>`
+      SELECT column_name
       FROM information_schema.columns
       WHERE table_schema = ${schema}
         AND table_name = 'query_hits'
-        AND column_name = 'pos_sum'
+        AND column_name IN ('pos_sum', 'sources_json', 'filters_json', 'meta_json')
     `;
-    if (col) return;
+    const existing = new Set(cols.map((col) => col.column_name));
+    const needsPosBackfill = !existing.has("pos_sum");
 
     await this._sql`ALTER TABLE ${this._sql(schema)}.query_hits ADD COLUMN IF NOT EXISTS pos_sum BIGINT NOT NULL DEFAULT 9999`;
     await this._sql`ALTER TABLE ${this._sql(schema)}.query_hits ADD COLUMN IF NOT EXISTS sources_json TEXT`;
     await this._sql`ALTER TABLE ${this._sql(schema)}.query_hits ADD COLUMN IF NOT EXISTS filters_json TEXT`;
     await this._sql`ALTER TABLE ${this._sql(schema)}.query_hits ADD COLUMN IF NOT EXISTS meta_json TEXT`;
-    await this._sql`UPDATE ${this._sql(schema)}.query_hits SET pos_sum = best_position * hit_count`;
+    if (needsPosBackfill) {
+      await this._sql`UPDATE ${this._sql(schema)}.query_hits SET pos_sum = best_position * hit_count`;
+    }
   }
 
   discoverTypes(): string[] {

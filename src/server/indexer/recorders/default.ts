@@ -80,7 +80,7 @@ export const DEFAULT_RECORDER: Recorder = {
           r.isGif === true || urlIsGif(r.imageUrl) ? 1 : r.isGif === false ? 0 : null,
         duration: r.duration ?? null,
         extras_json: extractExtras(r),
-        position: positions ? positions[i] : i,
+        position: positions?.[i] ?? i,
         sources_json: sourcesOf(r),
         filters_json: filtersJson,
         meta_json: null,

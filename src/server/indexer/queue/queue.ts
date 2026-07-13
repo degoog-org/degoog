@@ -34,11 +34,10 @@ export const enqueue = (rows: IndexRow[]): void => {
   }
 };
 
-const flushType = (type: string, rows: IndexRow[]): Promise<void> =>
+const flushType = (type: string, rows: IndexRow[], rankingWindow: number): Promise<void> =>
   mutexFor(type)(async () => {
     try {
-      const cfg = await getIndexerConfig();
-      await getAdapter().writeBatch(type, rows, Date.now(), cfg.rankingWindow);
+      await getAdapter().writeBatch(type, rows, Date.now(), rankingWindow);
     } catch (err) {
       logger.warn("indexer", `flush failed for type=${type}`, err);
     }
@@ -48,9 +47,10 @@ export const flushQueue = async (): Promise<void> => {
   if (_pending.size === 0) return;
   const snapshot = new Map(_pending);
   _pending.clear();
+  const { rankingWindow } = await getIndexerConfig();
   await Promise.all(
     Array.from(snapshot.entries()).map(([type, rows]) =>
-      rows.length > 0 ? flushType(type, rows) : Promise.resolve(),
+      rows.length > 0 ? flushType(type, rows, rankingWindow) : Promise.resolve(),
     ),
   );
 };
@@ -73,9 +73,9 @@ export const prunePass = async (): Promise<void> => {
   );
 };
 
-export const startQueue = (): void => {
+export const startQueue = async (): Promise<void> => {
   if (_flushTimer) return;
-  void bootAdapter();
+  await bootAdapter();
   _flushTimer = setInterval(() => void flushQueue(), FLUSH_INTERVAL_MS);
   _pruneTimer = setInterval(() => void prunePass(), PRUNE_INTERVAL_MS);
 };

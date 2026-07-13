@@ -401,6 +401,8 @@
       "manage-col-title": "Résultat",
       "manage-col-score": "Score",
       "manage-col-actions": "",
+      "manage-select-all": "Sélectionner tous les résultats indexés de cette page",
+      "manage-select-row": "Sélectionner le résultat indexé",
       "manage-delete": "Supprimer",
       "manage-delete-selected": "Supprimer la sélection",
       "manage-empty": "Aucun résultat indexé.",

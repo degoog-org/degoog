@@ -42,11 +42,16 @@ describe("indexer engine selection", () => {
   });
 
   test("auto-enables degoog engine for known web index type when no explicit config", async () => {
-    writeFileSync(join(SHARED, "index-web.db"), "");
-    await setInstanceSettings({ degoogIndexerEnabled: "true" });
-    clearTypeCache();
-    const active = await getActiveWebEngines({});
-    expect(hasDegoog(active)).toBe(true);
+    const marker = join(SHARED, "index-web.db");
+    try {
+      writeFileSync(marker, "");
+      await setInstanceSettings({ degoogIndexerEnabled: "true" });
+      clearTypeCache();
+      const active = await getActiveWebEngines({});
+      expect(hasDegoog(active)).toBe(true);
+    } finally {
+      rmSync(marker, { force: true });
+    }
   });
 
   test("respects an explicit user disable of the degoog engine", async () => {

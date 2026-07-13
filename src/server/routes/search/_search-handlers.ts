@@ -116,7 +116,7 @@ export async function handleRetry(
   params: SearchParams & { engineName: string },
 ) {
   const {
-    query,
+    query: origQ,
     engineName,
     engines,
     searchType,
@@ -128,14 +128,17 @@ export async function handleRetry(
     imageFilter,
   } = params;
 
-  const { overrides } = await runIntercepts(query, lang);
+  const { query, overrides } = await runIntercepts(origQ, lang);
   const type = (overrides.searchType ?? searchType) as typeof searchType;
+  const resolvedLang = overrides.lang ?? lang;
+  const resolvedTime = (overrides.timeFilter ??
+    timeFilter) as typeof timeFilter;
   const { results: newResults, timing } = await searchSingleEngine(
     engineName,
     query,
     page,
-    timeFilter,
-    lang,
+    resolvedTime,
+    resolvedLang,
     dateFrom,
     dateTo,
     imageFilter,
@@ -147,8 +150,8 @@ export async function handleRetry(
     engines,
     type,
     page,
-    timeFilter,
-    lang,
+    resolvedTime,
+    resolvedLang,
     dateFrom,
     dateTo,
     imageFilter,
@@ -178,8 +181,8 @@ export async function handleRetry(
     const settings = await getInstanceSettings();
     const displayMerged = await applyDomainRules(merged);
     const filtersTag = toFilterTag({
-      lang,
-      timeFilter,
+      lang: resolvedLang,
+      timeFilter: resolvedTime,
       dateFrom,
       dateTo,
       imageFilter,

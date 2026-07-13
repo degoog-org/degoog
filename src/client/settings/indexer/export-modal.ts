@@ -75,13 +75,22 @@ export const openExportModal = (stats: IndexerStats | null): void => {
     return;
   }
 
-  els.bodyEl.innerHTML = `
-    <p>${tr("export-modal-desc")}</p>
-    <div class="degoog-select-wrap">
-      <select id="indexer-export-type" class="degoog-input">
-        ${types.map((type) => `<option value="${type}">${type}</option>`).join("")}
-      </select>
-    </div>`;
+  els.bodyEl.replaceChildren();
+  const desc = document.createElement("p");
+  desc.textContent = tr("export-modal-desc");
+  const wrap = document.createElement("div");
+  wrap.className = "degoog-select-wrap";
+  const select = document.createElement("select");
+  select.id = "indexer-export-type";
+  select.className = "degoog-input";
+  for (const type of types) {
+    const opt = document.createElement("option");
+    opt.value = type;
+    opt.textContent = type;
+    select.append(opt);
+  }
+  wrap.append(select);
+  els.bodyEl.append(desc, wrap);
   els.saveEl.textContent = tr("export-btn");
   els.saveEl.disabled = false;
   els.saveEl.hidden = false;

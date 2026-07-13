@@ -452,6 +452,8 @@
       "manage-col-title": "תוצאה",
       "manage-col-score": "ציון",
       "manage-col-actions": "",
+      "manage-select-all": "בחר את כל התוצאות המאונדקסות בעמוד זה",
+      "manage-select-row": "בחר תוצאה מאונדקסת",
       "manage-delete": "מחק",
       "manage-delete-selected": "מחק נבחרים",
       "manage-empty": "אין תוצאות מאונדקסות.",

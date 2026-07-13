@@ -428,6 +428,8 @@
       "manage-col-title": "Result",
       "manage-col-score": "Score",
       "manage-col-actions": "",
+      "manage-select-all": "Select all indexed results on this page",
+      "manage-select-row": "Select indexed result",
       "manage-delete": "Delete",
       "manage-delete-selected": "Delete selected",
       "manage-empty": "No indexed results.",

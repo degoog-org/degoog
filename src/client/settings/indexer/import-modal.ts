@@ -181,6 +181,5 @@ export const openImportModal = async (onDone: () => void): Promise<void> => {
         saveEl.hidden = false;
       }
     },
-    { once: true },
   );
 };

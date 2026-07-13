@@ -24,7 +24,9 @@ export const listHits = async (opts: {
   );
   const merged = all
     .flat()
-    .sort((a, b) => a.query_norm.localeCompare(b.query_norm) || a.score - b.score);
+    .sort(
+      (a, b) => (a.query_norm ?? "").localeCompare(b.query_norm ?? "") || a.score - b.score,
+    );
   return merged.slice(opts.offset, opts.offset + opts.limit);
 };
 

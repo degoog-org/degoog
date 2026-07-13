@@ -10,9 +10,10 @@ import { searchAuthHeaders, appendSearchAuthParams } from "../request";
 export async function retryEngine(engineName: string): Promise<void> {
   if (!state.currentQuery || !state.currentData) return;
 
+  const retryQuery = state.currentData.query || state.currentQuery;
   const engines = await getEngines();
   const params = new URLSearchParams({
-    q: state.currentQuery,
+    q: retryQuery,
     engine: engineName,
   });
   for (const [key, val] of Object.entries(engines)) {
@@ -33,7 +34,7 @@ export async function retryEngine(engineName: string): Promise<void> {
       ? await fetch(`${getBase()}/api/search/retry`, {
           method: "POST",
           body: JSON.stringify({
-            query: state.currentQuery,
+            query: retryQuery,
             engine: engineName,
             engines: Object.entries(engines)
               .filter(([, v]) => v)

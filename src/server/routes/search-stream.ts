@@ -223,62 +223,68 @@ router.get("/api/search/stream", async (c) => {
         },
       );
 
-      void Promise.all(enginePromises).then(async () => {
-        const totalTime = Math.round(performance.now() - start);
-        const rawScoredResults = scoreResults(allRawResults);
+      void Promise.all(enginePromises)
+        .then(async () => {
+          const totalTime = Math.round(performance.now() - start);
+          const rawScoredResults = scoreResults(allRawResults);
 
-        const response: SearchResponse = {
-          results: rawScoredResults,
-          query,
-          totalTime,
-          type,
-          engineTimings: allTimings,
-          relatedSearches: [],
-        };
+          const response: SearchResponse = {
+            results: rawScoredResults,
+            query,
+            totalTime,
+            type,
+            engineTimings: allTimings,
+            relatedSearches: [],
+          };
 
-        const indexerSettings = await getInstanceSettings();
-        const displayResults = await applyDomainRules(rawScoredResults);
-        const indexBasis = await applyDomainRules(
-          scoreResults(allRawResults.filter((e) => e.name !== DEGOOG_ENGINE_NAME)),
-        );
-        const filtersTag = toFilterTag({
-          lang: resolvedLang,
-          timeFilter: resolvedTime,
-          dateFrom,
-          dateTo,
-          imageFilter,
+          const indexerSettings = await getInstanceSettings();
+          const displayResults = await applyDomainRules(rawScoredResults);
+          const indexBasis = await applyDomainRules(
+            scoreResults(allRawResults.filter((e) => e.name !== DEGOOG_ENGINE_NAME)),
+          );
+          const filtersTag = toFilterTag({
+            lang: resolvedLang,
+            timeFilter: resolvedTime,
+            dateFrom,
+            dateTo,
+            imageFilter,
+          });
+          const indexedUrls = await maybeIndex(
+            asBoolean(indexerSettings.degoogIndexerEnabled),
+            query,
+            type,
+            indexBasis,
+            filtersTag,
+          );
+
+          const degoogTiming = allTimings.find((et) => et.name === DEGOOG_ENGINE_NAME);
+          const justIndexed = indexedUrls.length > 0 && degoogTiming?.resultCount === 0;
+
+          if (!cache.allEnginesFailed(response)) {
+            const ttl = justIndexed
+              ? cache.JUST_INDEXED_TTL_MS
+              : cache.someEnginesFailed(response)
+                ? cache.SHORT_TTL_MS
+                : undefined;
+            await cache.set(key, response, ttl);
+          }
+
+          _send("done", {
+            totalTime,
+            engineTimings: allTimings,
+            indexedUrls,
+            relatedSearches: [],
+          });
+        })
+        .catch((err) => {
+          logger.warn("search-stream", "stream finalization failed", err);
+        })
+        .finally(() => {
+          if (!closed) {
+            closed = true;
+            controller.close();
+          }
         });
-        const indexedUrls = await maybeIndex(
-          asBoolean(indexerSettings.degoogIndexerEnabled),
-          query,
-          type,
-          indexBasis,
-          filtersTag,
-        );
-
-        const degoogTiming = allTimings.find((et) => et.name === DEGOOG_ENGINE_NAME);
-        const justIndexed = indexedUrls.length > 0 && degoogTiming?.resultCount === 0;
-
-        if (!cache.allEnginesFailed(response)) {
-          const ttl = justIndexed
-            ? cache.JUST_INDEXED_TTL_MS
-            : cache.someEnginesFailed(response)
-              ? cache.SHORT_TTL_MS
-              : undefined;
-          await cache.set(key, response, ttl);
-        }
-
-        _send("done", {
-          totalTime,
-          engineTimings: allTimings,
-          indexedUrls,
-          relatedSearches: [],
-        });
-        if (!closed) {
-          closed = true;
-          controller.close();
-        }
-      });
     },
     cancel() {
       closed = true;

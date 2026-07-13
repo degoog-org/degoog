@@ -6,6 +6,7 @@ import { logger } from "../../utils/logger";
 import { indexerTmpDir } from "../../utils/paths";
 
 const SESSION_TTL_MS = 30 * 60_000;
+const SWEEP_INTERVAL_MS = 5 * 60_000;
 
 export interface ExportSession {
   path: string;
@@ -25,6 +26,7 @@ export interface ImportSession {
 
 const _exports = new Map<string, ExportSession>();
 const _imports = new Map<string, ImportSession>();
+let _sweepTimer: ReturnType<typeof setInterval> | null = null;
 
 const newId = (): string => randomBytes(16).toString("hex");
 
@@ -45,18 +47,47 @@ const bin = (path: string): void => {
 const sweep = (): void => {
   const now = Date.now();
   for (const [id, s] of _exports) {
-    if (s.expires < now) {
+    if (s.expires <= now) {
       if (s.cleanup) bin(s.path);
       _exports.delete(id);
     }
   }
   for (const [id, s] of _imports) {
-    if (s.expires < now) {
+    if (s.expires <= now) {
       void s.sink.end();
       bin(s.path);
       _imports.delete(id);
     }
   }
+};
+
+const startSweep = (): void => {
+  if (_sweepTimer) return;
+  _sweepTimer = setInterval(sweep, SWEEP_INTERVAL_MS);
+  _sweepTimer.unref?.();
+};
+
+const getLiveExport = (id: string): ExportSession | undefined => {
+  const s = _exports.get(id);
+  if (!s) return undefined;
+  if (s.expires <= Date.now()) {
+    if (s.cleanup) bin(s.path);
+    _exports.delete(id);
+    return undefined;
+  }
+  return s;
+};
+
+const getLiveImport = (id: string): ImportSession | undefined => {
+  const s = _imports.get(id);
+  if (!s) return undefined;
+  if (s.expires <= Date.now()) {
+    void s.sink.end();
+    bin(s.path);
+    _imports.delete(id);
+    return undefined;
+  }
+  return s;
 };
 
 export const openExportSession = (
@@ -65,6 +96,7 @@ export const openExportSession = (
   cleanup: boolean,
   type: string,
 ): string => {
+  startSweep();
   sweep();
   const id = newId();
   _exports.set(id, { path, size, cleanup, type, expires: Date.now() + SESSION_TTL_MS });
@@ -72,10 +104,10 @@ export const openExportSession = (
 };
 
 export const getExportSession = (id: string): ExportSession | undefined =>
-  _exports.get(id);
+  getLiveExport(id);
 
 export const closeExportSession = (id: string): void => {
-  const s = _exports.get(id);
+  const s = getLiveExport(id);
   if (!s) return;
   if (s.cleanup) bin(s.path);
   _exports.delete(id);
@@ -83,6 +115,7 @@ export const closeExportSession = (id: string): void => {
 };
 
 export const openImportSession = (type: string): { id: string; path: string } => {
+  startSweep();
   sweep();
   const id = newId();
   const path = tempPath("import");
@@ -92,13 +125,13 @@ export const openImportSession = (type: string): { id: string; path: string } =>
 };
 
 export const getImportSession = (id: string): ImportSession | undefined =>
-  _imports.get(id);
+  getLiveImport(id);
 
 export const appendImportChunk = async (
   id: string,
   chunk: ArrayBuffer,
 ): Promise<number | null> => {
-  const s = _imports.get(id);
+  const s = getLiveImport(id);
   if (!s) return null;
   s.sink.write(new Uint8Array(chunk));
   await s.sink.flush();
@@ -108,21 +141,21 @@ export const appendImportChunk = async (
 };
 
 export const finishImportSession = async (id: string): Promise<string | null> => {
-  const s = _imports.get(id);
+  const s = getLiveImport(id);
   if (!s) return null;
   await s.sink.end();
   return s.path;
 };
 
 export const removeImportSession = (id: string): void => {
-  const s = _imports.get(id);
+  const s = getLiveImport(id);
   if (!s) return;
   bin(s.path);
   _imports.delete(id);
 };
 
 export const dropImportSession = (id: string): void => {
-  const s = _imports.get(id);
+  const s = getLiveImport(id);
   if (!s) return;
   void s.sink.end();
   bin(s.path);

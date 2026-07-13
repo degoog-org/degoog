@@ -216,9 +216,12 @@ router.get("/api/settings/general", async (c) => {
   return c.json(trimBigFields({ ...settings, ...indexerLists, ...domainLists }));
 });
 
-const _reconcileIndexerQueue = async (): Promise<void> => {
-  const settings = await getInstanceSettings();
-  if (asBoolean(settings.degoogIndexerEnabled)) startQueue();
+const _reconcileIndexerQueue = async (enabled?: ServerSettingValue): Promise<void> => {
+  const resolved =
+    enabled === undefined
+      ? asBoolean((await getInstanceSettings()).degoogIndexerEnabled)
+      : asBoolean(enabled);
+  if (resolved) await startQueue();
   else await stopQueue();
 };
 
@@ -255,7 +258,7 @@ router.post("/api/settings/field", async (c) => {
     await updateInstanceSettings({ [key]: coerced });
   }
   await syncBlocklist();
-  if (key === "degoogIndexerEnabled") await _reconcileIndexerQueue();
+  if (key === "degoogIndexerEnabled") await _reconcileIndexerQueue(coerced);
   return c.json({ ok: true });
 });
 

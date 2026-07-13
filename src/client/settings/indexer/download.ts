@@ -11,6 +11,7 @@ interface StartResponse {
 interface ChunkWriter {
   write: (bytes: Uint8Array) => Promise<void>;
   close: () => Promise<void>;
+  abort: () => Promise<void>;
 }
 
 export interface DownloadOpts {
@@ -39,12 +40,14 @@ const openWriter = async (filename: string): Promise<ChunkWriter | null> => {
         createWritable: () => Promise<{
           write: (b: Uint8Array) => Promise<void>;
           close: () => Promise<void>;
+          abort?: () => Promise<void>;
         }>;
       };
       const stream = await handle.createWritable();
       return {
         write: (bytes) => stream.write(bytes),
         close: () => stream.close(),
+        abort: () => stream.abort?.() ?? Promise.resolve(),
       };
     } catch {
       return null;
@@ -58,6 +61,9 @@ const openWriter = async (filename: string): Promise<ChunkWriter | null> => {
     },
     close: async () => {
       saveBlob(parts, filename);
+    },
+    abort: async () => {
+      parts.length = 0;
     },
   };
 };
@@ -85,22 +91,29 @@ export const downloadIndexerExport = async (
 
     const { sessionId, size } = start;
     const filename = `degoog-index-${type}.db`;
-    const writer = await openWriter(filename);
-    if (!writer) return;
-
-    let done = 0;
     try {
+      const writer = await openWriter(filename);
+      if (!writer) return;
+
+      let done = 0;
       for (let pos = 0; pos < size; pos += CHUNK_BYTES) {
         const end = Math.min(size, pos + CHUNK_BYTES);
+        const expected = end - pos;
         const res = await fetch(
           `${base}/api/indexer/export/chunk?session=${encodeURIComponent(sessionId)}&start=${pos}&end=${end}`,
           { headers },
         );
         if (!res.ok) {
           setStatus(`Export failed (${res.status})`);
+          await writer.abort();
           return;
         }
         const bytes = new Uint8Array(await res.arrayBuffer());
+        if (bytes.byteLength !== expected) {
+          setStatus("Export failed (incomplete chunk)");
+          await writer.abort();
+          return;
+        }
         await writer.write(bytes);
         done += bytes.byteLength;
         opts?.onProgress?.(done, size);

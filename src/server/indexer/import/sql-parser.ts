@@ -29,11 +29,29 @@ const splitColumns = (list: string): string[] =>
 
 const unescapeCopy = (value: string): Cell => {
   if (value === "\\N") return null;
-  return value
-    .replace(/\\t/g, "\t")
-    .replace(/\\n/g, "\n")
-    .replace(/\\r/g, "\r")
-    .replace(/\\\\/g, "\\");
+  let out = "";
+  for (let i = 0; i < value.length; i++) {
+    const ch = value[i];
+    if (ch !== "\\") {
+      out += ch;
+      continue;
+    }
+    const next = value[++i];
+    if (next === undefined) {
+      out += "\\";
+    } else if (next === "t") {
+      out += "\t";
+    } else if (next === "n") {
+      out += "\n";
+    } else if (next === "r") {
+      out += "\r";
+    } else if (next === "\\") {
+      out += "\\";
+    } else {
+      out += `\\${next}`;
+    }
+  }
+  return out;
 };
 
 const namedFrom = (cols: string[], cells: Cell[]): NamedRow => {
@@ -189,6 +207,12 @@ const num = (v: Cell): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
+const required = (v: Cell): string | null =>
+  typeof v === "string" && v.length > 0 ? v : null;
+
+const presentString = (v: Cell): string | null =>
+  typeof v === "string" ? v : null;
+
 const joinRows = (tables: ParsedTables): ExportRow[] => {
   const urlById = new Map<string, NamedRow>();
   for (const u of tables.urls) {
@@ -198,23 +222,45 @@ const joinRows = (tables: ParsedTables): ExportRow[] => {
   const rows: ExportRow[] = [];
   for (const h of tables.hits) {
     const url = urlById.get(String(h.url_id));
-    if (!url || url.url_norm === null || url.url === null) continue;
+    const firstSeen = num(h.first_seen ?? null);
+    const lastSeen = num(h.last_seen ?? null);
+    const queryNorm = required(h.query_norm ?? null);
+    const engineType = required(h.engine_type ?? null);
+    const href = required(url?.url ?? null);
+    const urlNorm = required(url?.url_norm ?? null);
+    const sourceEngine = required(url?.source_engine ?? null);
+    const title = presentString(url?.title ?? null);
+    const snippet = presentString(url?.snippet ?? null);
+    if (
+      !url ||
+      firstSeen === null ||
+      lastSeen === null ||
+      !queryNorm ||
+      !engineType ||
+      !href ||
+      !urlNorm ||
+      !sourceEngine ||
+      title === null ||
+      snippet === null
+    ) {
+      continue;
+    }
 
     rows.push({
-      query_norm: h.query_norm ?? "",
-      engine_type: h.engine_type ?? "",
-      url: url.url ?? "",
-      url_norm: url.url_norm ?? "",
-      source_engine: url.source_engine ?? "",
-      title: url.title ?? "",
-      snippet: url.snippet ?? "",
+      query_norm: queryNorm,
+      engine_type: engineType,
+      url: href,
+      url_norm: urlNorm,
+      source_engine: sourceEngine,
+      title,
+      snippet,
       thumbnail: url.thumbnail ?? null,
       image_url: url.image_url ?? null,
       is_gif: num(url.is_gif ?? null),
       duration: url.duration ?? null,
       extras_json: url.extras_json ?? null,
-      first_seen: num(h.first_seen ?? null) ?? Date.now(),
-      last_seen: num(h.last_seen ?? null) ?? Date.now(),
+      first_seen: firstSeen,
+      last_seen: lastSeen,
       source_instance: null,
       best_position: num(h.best_position ?? null),
       pos_sum: num(h.pos_sum ?? null),
@@ -238,6 +284,6 @@ export const parseSqlDump = (sql: string): ExportRow[] => {
     return rows;
   } catch (err) {
     logger.warn("indexer", "sql-parser: failed to parse dump", err);
-    return [];
+    throw err;
   }
 };

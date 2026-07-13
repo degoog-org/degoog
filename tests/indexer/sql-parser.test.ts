@@ -41,6 +41,19 @@ describe("parseSqlDump", () => {
     expect(b?.snippet).toBe("Snip, with comma");
   });
 
+  test("decodes COPY escapes without reinterpreting literal backslashes", () => {
+    const dump = `
+COPY public.urls (id, url_norm, url, source_engine, title, snippet, first_seen, last_seen) FROM stdin;
+1\texample.com/a\thttps://example.com/a\tbrave\tTitle A\tC:\\\\next\t1000\t2000
+\\.
+COPY public.query_hits (id, query_norm, engine_type, url_id, first_seen, last_seen) FROM stdin;
+1\thello world\tweb\t1\t1000\t2000
+\\.
+`;
+    const rows = parseSqlDump(dump);
+    expect(rows[0].snippet).toBe("C:\\next");
+  });
+
   test("parses INSERT dump with quotes and parens", () => {
     const rows = parseSqlDump(PG_INSERT_DUMP);
     expect(rows.length).toBe(1);
