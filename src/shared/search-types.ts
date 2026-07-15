@@ -32,6 +32,7 @@ export interface EngineTiming {
 export enum SlotPanelPosition {
   AboveResults = "above-results",
   BelowResults = "below-results",
+  FullWidthAboveResults = "full-width-above-results",
   AboveSidebar = "above-sidebar",
   BelowSidebar = "below-sidebar",
   KnowledgePanel = "knowledge-panel",
