@@ -56,6 +56,10 @@ a {
     border-radius: $radius-xs;
     box-shadow: $box-shadow;
     border: 1px solid transparent;
+
+    &[data-tooltip] {
+      cursor: help;
+    }
   }
 
   &--store-type,
@@ -68,21 +72,11 @@ a {
   &--proxy-exposed,
   &--proxy-safe,
   &--proxy-unknown,
-  &--restart-required,
-  &--recalled,
-  &--indexing {
+  &--restart-required {
     background: transparent;
     cursor: help;
     line-height: 1;
     padding: 0;
-  }
-
-  &--recalled {
-    color: var(--primary);
-  }
-
-  &--indexing {
-    color: var(--text-secondary);
   }
 
   &--proxy-exposed {

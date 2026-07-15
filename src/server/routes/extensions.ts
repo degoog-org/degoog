@@ -48,9 +48,56 @@ import { getInstalledItems, reloadAfterAction } from "../extensions/store/item-o
 import { makeExtID, folderFromExtID } from "../utils/extension-id";
 import { readObjectBody } from "../utils/hono";
 import { isVersionAtLeast, getAppVersion } from "../utils/version";
+import { savePluginUpload } from "../utils/plugin-uploads";
 import { logger } from "../utils/logger";
+import type { SettingField } from "../types";
 
 const router = new Hono();
+
+const _allExtensionMeta = async (): Promise<ExtensionMeta[]> => {
+  const coreT = await getCoreTranslator();
+  const groups = await Promise.all([
+    getEngineExtensionMeta(coreT),
+    getPluginExtensionMeta(coreT),
+    getSlotExtensionMeta(coreT),
+    getInterceptorMeta(),
+    getSearchBarActionExtensionMeta(),
+    getThemeExtensionMeta(),
+    getTransportExtensionMeta(),
+    getAutocompleteExtensionMeta(),
+    getShortcutExtensionMeta(),
+  ]);
+  return groups.flat();
+};
+
+const _fileFieldByKey = (
+  schema: SettingField[],
+  key: string,
+): SettingField | null => {
+  for (const field of schema) {
+    if (field.type === "file" && field.key === key) return field;
+    const nested = field.itemSchema?.find(
+      (sub) => sub.type === "file" && sub.key === key,
+    );
+    if (nested) return nested;
+  }
+  return null;
+};
+
+const _matchesAccept = (file: File, accept: string): boolean => {
+  const tokens = accept
+    .split(",")
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
+  if (tokens.length === 0) return true;
+  const mime = file.type.toLowerCase();
+  const name = file.name.toLowerCase();
+  return tokens.some((token) => {
+    if (token.startsWith(".")) return name.endsWith(token);
+    if (token.endsWith("/*")) return mime.startsWith(token.slice(0, -1));
+    return mime === token;
+  });
+};
 
 type ExtensionGroupKey =
   | "engines"
@@ -300,6 +347,52 @@ router.post("/api/extensions/:id/settings", async (c) => {
   }
 
   return c.json({ ok: true });
+});
+
+router.post("/api/extensions/:id/upload", async (c) => {
+  const token = canBalrogPass(c);
+  if (!(await gandalf(token)))
+    return c.json({ error: "You shall not pass!" }, 401);
+
+  const id = c.req.param("id");
+  let form: FormData;
+  try {
+    form = await c.req.formData();
+  } catch {
+    return c.json({ error: "Invalid upload" }, 400);
+  }
+
+  const key = form.get("key");
+  const file = form.get("file");
+  if (typeof key !== "string" || !(file instanceof File)) {
+    return c.json({ error: "Missing file or key" }, 400);
+  }
+
+  const ext = (await _allExtensionMeta()).find((e) => e.id === id);
+  if (!ext) return c.json({ error: "Extension not found" }, 404);
+
+  const field = _fileFieldByKey(ext.settingsSchema, key);
+  if (!field) return c.json({ error: "Unknown file field" }, 400);
+
+  if (field.accept && !_matchesAccept(file, field.accept)) {
+    return c.json({ error: "File type not allowed" }, 400);
+  }
+  const sizeKb = file.size / 1024;
+  const maxKb = field.maxSizeKb ? Number(field.maxSizeKb) : 0;
+  const minKb = field.minSizeKb ? Number(field.minSizeKb) : 0;
+  if (maxKb > 0 && sizeKb > maxKb) {
+    return c.json({ error: `File exceeds ${maxKb} KB` }, 400);
+  }
+  if (minKb > 0 && sizeKb < minKb) {
+    return c.json({ error: `File smaller than ${minKb} KB` }, 400);
+  }
+
+  const data = new Uint8Array(await file.arrayBuffer());
+  const saved = await savePluginUpload(id, file.name, data);
+  if (!saved) return c.json({ error: "Upload rejected" }, 400);
+
+  logger.debug("uploads", `stored ${saved.name} for ${id} field=${key}`);
+  return c.json({ ok: true, path: saved.path });
 });
 
 router.post("/api/extensions/transports/:name/test", async (c) => {

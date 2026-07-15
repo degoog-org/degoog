@@ -285,7 +285,11 @@
       "test-request-failed": "Richiesta non riuscita",
       "field-remove-aria": "Rimuovi",
       "field-edit-aria": "Modifica",
-      "field-add": "Aggiungi"
+      "field-add": "Aggiungi",
+      "field-choose-file": "Scegli file",
+      "field-drop-hint": "o trascina qui",
+      "field-uploading": "Caricamento…",
+      "field-upload-failed": "Caricamento fallito"
     },
     "confirm": {
       "title": "Conferma",
@@ -438,6 +442,8 @@
       "import-modal-title": "Importa dati indice",
       "import-modal-desc": "Importa un file .db (SQLite) o un dump .sql nel backend attuale dell'indice. Seleziona il tipo di motore e scegli il file da caricare.",
       "import-type-custom": "Tipo personalizzato...",
+      "import-choose-file": "Scegli file",
+      "import-drop-hint": "o trascina qui",
       "import-missing": "Seleziona un tipo e un file.",
       "import-progress": "Importazione in corso...",
       "import-processing": "Elaborazione import in corso, per file grandi puo' richiedere tempo...",

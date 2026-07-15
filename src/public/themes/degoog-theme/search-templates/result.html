@@ -48,24 +48,6 @@
           >{{t:search-templates.result.insecure}}</span
         >
         {{/if insecure}}
-        {{#if is_recalled}}
-        <span
-          class="degoog-badge degoog-badge--recalled"
-          data-tooltip="{{t:search-templates.result.from-index}}"
-          aria-label="{{t:search-templates.result.from-index}}"
-        >
-          <i class="fa-solid fa-database" aria-hidden="true"></i>
-        </span>
-        {{/if is_recalled}}
-        {{#if is_indexing}}
-        <span
-          class="degoog-badge degoog-badge--indexing"
-          data-tooltip="{{t:search-templates.result.saving-to-index}}"
-          aria-label="{{t:search-templates.result.saving-to-index}}"
-        >
-          <i class="fa-solid fa-circle-down" aria-hidden="true"></i>
-        </span>
-        {{/if is_indexing}}
         {{#if show_actions}}
         <div
           id="result-actions-{{ index }}"
@@ -132,7 +114,17 @@
       <p class="result-snippet degoog-result--snippet">{{ snippet }}</p>
       <div class="result-engines degoog-result--engines">
         {{#each sources}}
-        <span class="result-engine-tag degoog-badge degoog-badge--engine-tag">{{ . }}</span>
+        {{#if tooltip}}
+        <span
+          class="result-engine-tag degoog-badge degoog-badge--engine-tag"
+          data-tooltip="{{ tooltip }}"
+          aria-label="{{ tooltip }}"
+          >{{ name }}</span
+        >
+        {{/if tooltip}}
+        {{^if tooltip}}
+        <span class="result-engine-tag degoog-badge degoog-badge--engine-tag">{{ name }}</span>
+        {{/if tooltip}}
         {{/each sources}}
       </div>
     </div>

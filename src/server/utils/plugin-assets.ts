@@ -2,6 +2,15 @@ const pluginCss = new Map<string, string>();
 const scriptFolderSource = new Map<string, "plugin" | "builtin">();
 const folderSettingsIds = new Map<string, Set<string>>();
 const folderNamespaces = new Map<string, string>();
+const extensionDirs = new Map<string, string>();
+
+export function registerExtensionDir(settingsId: string, dir: string): void {
+  extensionDirs.set(settingsId, dir);
+}
+
+export function getExtensionDir(settingsId: string): string | undefined {
+  return extensionDirs.get(settingsId);
+}
 
 export function addPluginCss(id: string, css: string): void {
   pluginCss.set(id, css);
@@ -100,6 +109,7 @@ export async function loadPluginAssets(
   settingsId: string,
   source: "plugin" | "builtin" = "plugin",
 ): Promise<string> {
+  registerExtensionDir(settingsId, entryPath);
   const { readFile, stat } = await import("fs/promises");
   const template = await readFile(
     join(entryPath, "template.html"),
@@ -123,6 +133,7 @@ export async function initPlugin(
 ): Promise<void> {
   const { readFile } = await import("fs/promises");
   const { pluginId } = options;
+  registerExtensionDir(settingsId, entryPath);
   const alreadyInited = _initedPlugins.has(plugin as object);
   if (plugin.init && !alreadyInited) {
     const ctx: PluginContext = {

@@ -285,7 +285,11 @@
       "test-request-failed": "הבקשה נכשלה",
       "field-remove-aria": "הסר",
       "field-edit-aria": "ערוך",
-      "field-add": "הוסף"
+      "field-add": "הוסף",
+      "field-choose-file": "בחר קובץ",
+      "field-drop-hint": "או גרור לכאן",
+      "field-uploading": "מעלה…",
+      "field-upload-failed": "ההעלאה נכשלה"
     },
     "confirm": {
       "title": "אישור",
@@ -438,6 +442,8 @@
       "import-modal-title": "ייבוא נתוני אינדקס",
       "import-modal-desc": "ייבא קובץ ‎.db‎ (SQLite) או ‎.sql‎ אל מנוע האינדקס הנוכחי. בחר את סוג המנוע ואת הקובץ להעלאה.",
       "import-type-custom": "סוג מותאם אישית...",
+      "import-choose-file": "בחר קובץ",
+      "import-drop-hint": "או גרור לכאן",
       "import-missing": "יש לבחור סוג וקובץ.",
       "import-progress": "מייבא...",
       "import-processing": "מעבד ייבוא, עבור קבצים גדולים זה עשוי לקחת זמן...",
