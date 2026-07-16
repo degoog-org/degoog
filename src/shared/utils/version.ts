@@ -25,7 +25,8 @@ const _parseDev = (v: string): number | null => {
 };
 
 export const compareVersions = (a: string, b: string): number => {
-  const base = _parseSemver(a).map((x, i) => x - _parseSemver(b)[i]);
+  const bSemver = _parseSemver(b);
+  const base = _parseSemver(a).map((x, i) => x - bSemver[i]);
   const diff = base.find((d) => d !== 0);
   if (diff !== undefined) return diff > 0 ? 1 : -1;
 
