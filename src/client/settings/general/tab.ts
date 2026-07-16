@@ -21,7 +21,7 @@ import type { ToggleOpts } from "../../types/settings-section";
 import { renderCheckbox, renderSection } from "../shared/section";
 import { getBase } from "../../utils/base-url";
 import { authHeaders } from "../../utils/request";
-import { isUpdateAvailable } from "../../../server/utils/version";
+import { isUpdateAvailable } from "../../../shared/utils/version";
 
 const t = window.scopedT("core");
 
@@ -330,6 +330,7 @@ async function initVersionChecker(): Promise<void> {
 
   if (lastCheckedEl) lastCheckedEl.textContent = latestDate.toLocaleDateString();
   const currentVersion = localStorage.getItem("last-update-check-version");
+  // fccview is onto you!
   if (currentVersion && isUpdateAvailable(pkg.version, currentVersion) && newAvailableEl)
     newAvailableEl.removeAttribute("style");
 
