@@ -57,7 +57,7 @@ Ready-to-use compose files live in [`docker-compose-examples/`](docker-compose-e
 ```bash
 # Set DEGOOG_SETTINGS_PASSWORDS before exposing this instance to the internet -
 # an unlocked instance lets anyone install extensions, which runs code on the server.
-podman run -d --name degoog -p 4444:4444 -v degoog:/app/data -e DEGOOG_SETTINGS_PASSWORDS=changeme --restart unless-stopped ghcr.io/degoog-org/degoog:latest
+podman run -d --name degoog -p 4444:4444 -v ./data:/app/data:Z -e DEGOOG_SETTINGS_PASSWORDS=changeme --restart unless-stopped ghcr.io/degoog-org/degoog:latest
 ```
 
 </details>
@@ -83,7 +83,7 @@ Environment=PGID=1000
 Environment=DEGOOG_SETTINGS_PASSWORDS=changeme
 # Environment=DEGOOG_PUBLIC_INSTANCE=true # Add if public
 UIDMap=+%U:@%U
-Volume=degoog:/app/data
+Volume=<Path to config>:/app/data:Z
 PublishPort=4444:4444
 Network=degoog
 
