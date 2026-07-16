@@ -129,7 +129,6 @@ router.get("/api/extensions", async (c) => {
       return expected.includes(meta.id);
     });
     if (inst?.minDegoogVersion) {
-      // fccview is onto you!
       meta.requiresNewerVersion = !isVersionAtLeast(
         getAppVersion(),
         inst.minDegoogVersion,
