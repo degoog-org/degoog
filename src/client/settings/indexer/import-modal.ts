@@ -1,6 +1,7 @@
 import { getBase } from "../../utils/base-url";
 import { authHeaders } from "../../utils/request";
 import { getStoredToken } from "../../utils/settings-token";
+import { renderFileUpload, initFileUpload } from "../../utils/file-upload";
 import { fetchEngineTypes, IMPORT_CUSTOM_TYPE } from "./api";
 import { mountProgress, type ProgressUi } from "./progress";
 import { tr } from "./i18n";
@@ -120,7 +121,14 @@ export const openImportModal = async (onDone: () => void): Promise<void> => {
       style="margin-top:8px"
       hidden
     />
-    <input type="file" id="indexer-import-file" accept=".db,.sql" class="degoog-input" style="margin-top:8px" />`;
+    <div style="margin-top:8px">
+      ${renderFileUpload({
+        inputId: "indexer-import-file",
+        accept: ".db,.sql",
+        buttonLabel: tr("import-choose-file"),
+        dropLabel: tr("import-drop-hint"),
+      })}
+    </div>`;
   statusEl.textContent = "";
   saveEl.textContent = tr("import-btn");
   saveEl.disabled = false;
@@ -135,6 +143,8 @@ export const openImportModal = async (onDone: () => void): Promise<void> => {
     customTypeEl.hidden = typeEl.value !== IMPORT_CUSTOM_TYPE;
     if (!customTypeEl.hidden) customTypeEl.focus();
   });
+
+  initFileUpload(bodyEl);
 
   const close = (): void => {
     overlay.style.display = "none";

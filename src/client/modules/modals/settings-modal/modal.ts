@@ -1,8 +1,14 @@
 import { renderField, initUrlList, syncConditionalFields } from "./modal-fields";
 import { initListFields } from "./list-field";
+import {
+  initHexFields,
+  initRangeFields,
+  initFileFields,
+} from "./field-widgets";
 import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
+import { escapeHtml } from "../../../utils/dom";
 import type { ExtensionMeta, SettingField } from "../../../types";
 import { openExtensionDocs } from "../docs-modal/docs";
 
@@ -122,6 +128,13 @@ const _collectValues = (): Record<string, string | string[]> => {
       values[key] = hidden?.value?.trim() || "[]";
       return;
     }
+    if (type === "file") {
+      const hidden = fieldEl.querySelector<HTMLInputElement>(
+        ".ext-field-file-value",
+      );
+      values[key] = hidden?.value?.trim() ?? "";
+      return;
+    }
 
     const input =
       fieldEl.querySelector<HTMLTextAreaElement>("textarea") ||
@@ -178,6 +191,41 @@ const _advancedFieldDiffersFromDefault = (
   return val !== defaultStr;
 };
 
+const _fieldValue = (field: SettingField, ext: ExtensionMeta): string =>
+  String(ext.settings[field.key] ?? field.default ?? "");
+
+const _renderFields = (
+  fields: SettingField[],
+  ext: ExtensionMeta,
+): string => {
+  const order: string[] = [];
+  const groups = new Map<string, SettingField[]>();
+  fields.forEach((field, index) => {
+    const set = field.fieldset?.trim();
+    const key = set ? `set:${set}` : `solo:${index}`;
+    const bucket = groups.get(key);
+    if (bucket) {
+      bucket.push(field);
+    } else {
+      groups.set(key, [field]);
+      order.push(key);
+    }
+  });
+  return order
+    .map((key) => {
+      const inner = (groups.get(key) ?? [])
+        .map((field) => renderField(field, _fieldValue(field, ext), ext))
+        .join("");
+      if (!key.startsWith("set:")) return inner;
+      const legend = escapeHtml(key.slice(4));
+      return `<fieldset class="ext-fieldset">
+        <legend class="ext-fieldset-legend">${legend}</legend>
+        ${inner}
+      </fieldset>`;
+    })
+    .join("");
+};
+
 export function openModal(ext: ExtensionMeta): void {
   currentExt = ext;
   const docs = _ensureDocsButton();
@@ -193,15 +241,7 @@ export function openModal(ext: ExtensionMeta): void {
   if (bodyEl) {
     const normalFields = ext.settingsSchema.filter((f) => !f.advanced);
     const advancedFields = ext.settingsSchema.filter((f) => f.advanced);
-    let html = normalFields
-      .map((field) =>
-        renderField(
-          field,
-          String(ext.settings[field.key] ?? field.default ?? ""),
-          ext,
-        ),
-      )
-      .join("");
+    let html = _renderFields(normalFields, ext);
     if (advancedFields.length > 0) {
       const showAdvanced = advancedFields.some((f) =>
         _advancedFieldDiffersFromDefault(f, ext.settings),
@@ -214,15 +254,7 @@ export function openModal(ext: ExtensionMeta): void {
             <span class="toggle-slider degoog-toggle"></span>
           </label>
         </label>
-        <div class="ext-advanced-body"${showAdvanced ? "" : " hidden"}>${advancedFields
-          .map((field) =>
-            renderField(
-              field,
-              String(ext.settings[field.key] ?? field.default ?? ""),
-              ext,
-            ),
-          )
-          .join("")}</div>
+        <div class="ext-advanced-body"${showAdvanced ? "" : " hidden"}>${_renderFields(advancedFields, ext)}</div>
       </div>`;
     }
     if (ext.id.endsWith("-transport") && ext.configurable) {
@@ -246,7 +278,10 @@ export function openModal(ext: ExtensionMeta): void {
       });
     _initTestButton(bodyEl);
     initUrlList(bodyEl);
-    initListFields(bodyEl);
+    initListFields(bodyEl, ext.id);
+    initHexFields(bodyEl);
+    initRangeFields(bodyEl);
+    initFileFields(bodyEl, ext.id);
     syncConditionalFields(bodyEl);
     bodyEl
       .querySelectorAll<HTMLElement>(".ext-field-input--configured")

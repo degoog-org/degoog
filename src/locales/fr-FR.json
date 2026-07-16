@@ -291,7 +291,11 @@
       "test-request-failed": "Échec de la requête",
       "field-remove-aria": "Retirer",
       "field-edit-aria": "Modifier",
-      "field-add": "Ajouter"
+      "field-add": "Ajouter",
+      "field-choose-file": "Choisir un fichier",
+      "field-drop-hint": "ou déposez ici",
+      "field-uploading": "Téléversement…",
+      "field-upload-failed": "Échec du téléversement"
     },
     "confirm": {
       "title": "Confirmer",
@@ -387,6 +391,8 @@
       "import-modal-title": "Importer des données d'index",
       "import-modal-desc": "Importez un fichier .db (SQLite) ou un export .sql dans le backend d'index actuel. Sélectionnez le type de moteur et choisissez le fichier à téléverser.",
       "import-type-custom": "Type personnalisé...",
+      "import-choose-file": "Choisir un fichier",
+      "import-drop-hint": "ou déposez ici",
       "import-missing": "Veuillez sélectionner un type et un fichier.",
       "import-progress": "Importation en cours...",
       "import-processing": "Traitement de l'import, cela peut prendre du temps pour les gros fichiers...",

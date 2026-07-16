@@ -310,7 +310,11 @@
       "test-request-failed": "Request failed",
       "field-remove-aria": "Remove",
       "field-edit-aria": "Edit",
-      "field-add": "Add"
+      "field-add": "Add",
+      "field-choose-file": "Choose file",
+      "field-drop-hint": "or drop here",
+      "field-uploading": "Uploading…",
+      "field-upload-failed": "Upload failed"
     },
     "confirm": {
       "title": "Confirm",
@@ -414,6 +418,8 @@
       "import-modal-title": "Import index data",
       "import-modal-desc": "Import a .db (SQLite) or .sql dump into your current index backend. Select the engine type and pick the file to upload.",
       "import-type-custom": "Custom type...",
+      "import-choose-file": "Choose file",
+      "import-drop-hint": "or drop here",
       "import-missing": "Please select a type and a file.",
       "import-progress": "Importing...",
       "import-processing": "Processing import, this can take a while for large files...",

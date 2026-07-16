@@ -86,6 +86,31 @@ describe("public/list-field-data", () => {
     ]);
   });
 
+  test("serializeRows preserves row order as the item position", () => {
+    const rows = [
+      { name: "First", shortcut: "1", openBase: "true" },
+      { name: "Second", shortcut: "2", openBase: "true" },
+      { name: "Third", shortcut: "3", openBase: "true" },
+    ];
+    const reordered = [rows[2], rows[0], rows[1]];
+    const parsed = parseListValue(serializeRows(reordered, itemSchema), itemSchema);
+    expect(parsed.map((r) => r.name)).toEqual(["Third", "First", "Second"]);
+  });
+
+  test("parseListValue supports hex, range and file sub-fields", () => {
+    const schema: SettingField[] = [
+      { key: "color", label: "Color", type: "hex" },
+      { key: "weight", label: "Weight", type: "range", min: "0", max: "10" },
+      { key: "icon", label: "Icon", type: "file" },
+    ];
+    const raw = JSON.stringify([
+      { color: "#ff0000", weight: "7", icon: "/plugins/x/uploads/a.png" },
+    ]);
+    expect(parseListValue(raw, schema)).toEqual([
+      { color: "#ff0000", weight: "7", icon: "/plugins/x/uploads/a.png" },
+    ]);
+  });
+
   test("rowSummary ignores toggle and info fields", () => {
     const schema: SettingField[] = [
       { key: "note", label: "Note", type: "info", default: "static" },
