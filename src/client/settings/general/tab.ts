@@ -330,7 +330,6 @@ async function initVersionChecker(): Promise<void> {
 
   if (lastCheckedEl) lastCheckedEl.textContent = latestDate.toLocaleDateString();
   const currentVersion = localStorage.getItem("last-update-check-version");
-  // fccview is onto you!
   if (currentVersion && isUpdateAvailable(pkg.version, currentVersion) && newAvailableEl)
     newAvailableEl.removeAttribute("style");
 
