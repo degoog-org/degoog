@@ -17,10 +17,16 @@ const MANAGE_BODY = `
   <table class="degoog-manage-table">
     <thead>
       <tr>
-        <th><input type="checkbox" id="indexer-manage-selectall" /></th>
+        <th>
+          <label class="degoog-checkbox-wrap">
+            <input type="checkbox" id="indexer-manage-selectall" class="settings-toggle" />
+            <span class="degoog-checkbox"><i class="fa-solid fa-check"></i></span>
+          </label>
+        </th>
         <th data-col="query"></th>
         <th data-col="type"></th>
         <th data-col="title"></th>
+        <th data-col="score"></th>
         <th data-col="actions"></th>
       </tr>
     </thead>
@@ -46,12 +52,18 @@ const buildRow = (row: HitRow): HTMLTableRowElement => {
   const tr_ = document.createElement("tr");
 
   const checkCell = document.createElement("td");
+  const checkWrap = document.createElement("label");
+  checkWrap.className = "degoog-checkbox-wrap";
   const check = document.createElement("input");
   check.type = "checkbox";
-  check.className = "indexer-manage-check";
+  check.className = "indexer-manage-check settings-toggle";
   check.value = String(row.id);
   check.dataset.type = row.engine_type;
-  checkCell.append(check);
+  const checkBox = document.createElement("span");
+  checkBox.className = "degoog-checkbox";
+  checkBox.innerHTML = '<i class="fa-solid fa-check"></i>';
+  checkWrap.append(check, checkBox);
+  checkCell.append(checkWrap);
 
   const queryCell = document.createElement("td");
   queryCell.textContent = row.query_norm;
@@ -67,6 +79,10 @@ const buildRow = (row: HitRow): HTMLTableRowElement => {
   link.textContent = row.title || row.url;
   titleCell.append(link);
 
+  const scoreCell = document.createElement("td");
+  scoreCell.className = "degoog-manage-score";
+  scoreCell.textContent = Number.isFinite(row.score) ? row.score.toFixed(2) : "-";
+
   const actionCell = document.createElement("td");
   const del = document.createElement("button");
   del.type = "button";
@@ -77,7 +93,7 @@ const buildRow = (row: HitRow): HTMLTableRowElement => {
   del.innerHTML = '<i class="fa-solid fa-trash"></i>';
   actionCell.append(del);
 
-  tr_.append(checkCell, queryCell, typeCell, titleCell, actionCell);
+  tr_.append(checkCell, queryCell, typeCell, titleCell, scoreCell, actionCell);
   return tr_;
 };
 
@@ -110,11 +126,13 @@ export const openManageModal = (
   const queryHead = bodyEl.querySelector<HTMLElement>('th[data-col="query"]');
   const typeHead = bodyEl.querySelector<HTMLElement>('th[data-col="type"]');
   const titleHead = bodyEl.querySelector<HTMLElement>('th[data-col="title"]');
+  const scoreHead = bodyEl.querySelector<HTMLElement>('th[data-col="score"]');
 
   if (searchEl) searchEl.placeholder = tr("manage-search-placeholder");
   if (queryHead) queryHead.textContent = tr("manage-col-query");
   if (typeHead) typeHead.textContent = tr("manage-col-type");
   if (titleHead) titleHead.textContent = tr("manage-col-title");
+  if (scoreHead) scoreHead.textContent = tr("manage-col-score");
   if (prevBtn) prevBtn.textContent = tr("manage-prev");
   if (nextBtn) nextBtn.textContent = tr("manage-next");
   if (typeEl?.options[0]) typeEl.options[0].textContent = tr("manage-type-all");

@@ -291,7 +291,11 @@
       "test-request-failed": "Échec de la requête",
       "field-remove-aria": "Retirer",
       "field-edit-aria": "Modifier",
-      "field-add": "Ajouter"
+      "field-add": "Ajouter",
+      "field-choose-file": "Choisir un fichier",
+      "field-drop-hint": "ou déposez ici",
+      "field-uploading": "Téléversement…",
+      "field-upload-failed": "Échec du téléversement"
     },
     "confirm": {
       "title": "Confirmer",
@@ -347,8 +351,6 @@
       "desc": "Enregistre silencieusement chaque résultat affiché et les réutilise lors des recherches futures.",
       "enable": "Activer l'indexeur",
       "enable-desc": "Lorsque c'est activé, les résultats de vos recherches sont stockés localement.",
-      "public-export": "Autoriser le téléchargement public de cet index",
-      "public-export-desc": "Lorsque c'est activé, tout le monde peut télécharger cet index depuis la page publique (limité).",
       "filters-heading": "Filtres d'indexation",
       "domain-allowlist": "Liste blanche de domaines",
       "domain-allowlist-desc": "Un domaine par ligne. Si non vide, seuls les résultats de ces domaines sont indexés. Laissez vide pour tout autoriser.",
@@ -372,6 +374,8 @@
       "fuzzy-enabled-desc": "Des requêtes proches peuvent faire réapparaître des URL déjà vues.",
       "query-limit": "Max. résultats par recherche Degoog",
       "query-limit-desc": "Nombre de hits renvoyés par le moteur Degoog pour une recherche.",
+      "ranking-window": "Mémoire de classement (hits récents)",
+      "ranking-window-desc": "Combien de vues récentes comptent dans le classement d'un résultat. Une valeur basse permet au classement de s'adapter plus vite aux nouveaux résultats ; une valeur haute le garde plus stable.",
       "stats-heading": "Statistiques de l'index",
       "total-hits": "Liens requête–URL",
       "total-urls": "URL uniques",
@@ -382,12 +386,17 @@
       "export-btn": "Télécharger l'index (.db)",
       "export-modal-title": "Télécharger l'index",
       "export-modal-desc": "Choisissez le type de moteur à exporter.",
-      "import-btn": "Importer un fichier .db",
+      "export-done": "Téléchargement terminé.",
+      "import-btn": "Importer un fichier d'index",
       "import-modal-title": "Importer des données d'index",
-      "import-modal-desc": "Importez un fichier .db SQLite dans le backend PostgreSQL. Sélectionnez le type de moteur et choisissez le fichier à téléverser.",
+      "import-modal-desc": "Importez un fichier .db (SQLite) ou un export .sql dans le backend d'index actuel. Sélectionnez le type de moteur et choisissez le fichier à téléverser.",
       "import-type-custom": "Type personnalisé...",
+      "import-choose-file": "Choisir un fichier",
+      "import-drop-hint": "ou déposez ici",
       "import-missing": "Veuillez sélectionner un type et un fichier.",
       "import-progress": "Importation en cours...",
+      "import-processing": "Traitement de l'import, cela peut prendre du temps pour les gros fichiers...",
+      "import-close": "Fermer",
       "import-done": "Terminé - {urls} URLs et {hits} liens importés en tant que type : {type}.",
       "manage-btn": "Gérer l'index",
       "manage-title": "Gérer les résultats indexés",
@@ -396,6 +405,7 @@
       "manage-col-query": "Requête",
       "manage-col-type": "Type",
       "manage-col-title": "Résultat",
+      "manage-col-score": "Score",
       "manage-col-actions": "",
       "manage-delete": "Supprimer",
       "manage-delete-selected": "Supprimer la sélection",
@@ -411,9 +421,6 @@
       "clear-cancel": "Annuler",
       "save-error": "Échec de l'enregistrement des paramètres de l'indexeur.",
       "disabled": "L'indexeur est désactivé. Activez-le dans les paramètres Serveur."
-    },
-    "indexer-public": {
-      "unavailable": "L'indexeur n'est pas accessible publiquement sur cette instance."
     },
     "store": {
       "repos-heading": "Dépôts",

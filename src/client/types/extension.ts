@@ -10,6 +10,9 @@ export type SettingFieldType =
   | "select"
   | "urllist"
   | "list"
+  | "hex"
+  | "range"
+  | "file"
   | "info";
 
 export interface SettingField {
@@ -27,6 +30,13 @@ export interface SettingField {
   visibleWhen?: { key: string; equals: string };
   itemSchema?: SettingField[];
   addLabel?: string;
+  fieldset?: string;
+  min?: string;
+  max?: string;
+  step?: string;
+  accept?: string;
+  maxSizeKb?: string;
+  minSizeKb?: string;
 }
 
 export interface ExtensionMeta {

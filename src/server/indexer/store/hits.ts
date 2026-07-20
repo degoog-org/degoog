@@ -22,7 +22,9 @@ export const listHits = async (opts: {
   const all = await Promise.all(
     types.map((t) => adapter.listHitsForType(t, opts.q, fetchLimit, 0)),
   );
-  const merged = all.flat().sort((a, b) => b.last_seen - a.last_seen);
+  const merged = all
+    .flat()
+    .sort((a, b) => a.query_norm.localeCompare(b.query_norm) || a.score - b.score);
   return merged.slice(opts.offset, opts.offset + opts.limit);
 };
 

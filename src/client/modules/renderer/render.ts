@@ -9,6 +9,7 @@ import { attachFaviconFallback } from "../../utils/favicon";
 import { faviconHostname, faviconUrl } from "../../utils/url";
 import { isImageSearchType } from "../../utils/engines";
 import { getBase } from "../../utils/base-url";
+import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
 import { destroyMediaObserver, setupMediaObserver, syncMediaPreviewPanel } from "../media/media";
 import { renderImageGrid } from "./render-media";
 
@@ -42,6 +43,12 @@ export const buildResultContext = (
   const showBlock = !!(flags.authenticated && flags.blockUi);
   const showReplace = !!(flags.authenticated && flags.replaceUi);
   const showScore = !!(flags.authenticated && flags.scoreUi);
+  const isRecalled = r.idx === "recalled";
+  const fromIndexTip = t("search-templates.result.from-index");
+  const sources = (r.sources ?? []).map((name) => ({
+    name,
+    tooltip: isRecalled && name === DEGOOG_ENGINE_NAME ? fromIndexTip : "",
+  }));
   return {
     index,
     title: r.title,
@@ -51,7 +58,7 @@ export const buildResultContext = (
     favicon_url: faviconUrl(r.url),
     favicon_host: faviconHostname(r.url),
     thumbnail_url: r.thumbnail || "",
-    sources: r.sources,
+    sources,
     duration: r.duration || "",
     is_video: state.currentType === "videos" || !!r.duration,
     link_target: state.openInNewTab ? "_blank" : "_self",

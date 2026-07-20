@@ -1,7 +1,7 @@
 import { readFile, mkdir, readdir, stat, rm } from "fs/promises";
 import { join, resolve, dirname } from "path";
 import { removeSettings } from "../../utils/plugin-settings";
-import { isVersionAtLeast, getAppVersion } from "../../utils/version";
+import { isVersionAtLeast, getAppVersion } from "../../../shared/utils/version";
 import {
   ExtensionStoreType,
   type StoreItem,

@@ -17,6 +17,12 @@ export interface ExportRow {
   first_seen: number;
   last_seen: number;
   source_instance: string | null;
+  best_position?: number | null;
+  pos_sum?: number | null;
+  hit_count?: number | null;
+  sources_json?: string | null;
+  filters_json?: string | null;
+  meta_json?: string | null;
 }
 
 export interface UrlRow {
@@ -39,6 +45,7 @@ export interface HitRow {
   title: string;
   snippet: string;
   last_seen: number;
+  score: number;
 }
 
 export interface TypeCounts {
@@ -54,7 +61,7 @@ export interface IndexerAdapter {
   close(): Promise<void>;
   checkpoint(type: string): Promise<void>;
 
-  writeBatch(type: string, rows: IndexRow[], now: number): Promise<void>;
+  writeBatch(type: string, rows: IndexRow[], now: number, window: number): Promise<void>;
   importRows(type: string, rows: ExportRow[]): Promise<{ urls: number; hits: number }>;
 
   queryExact(type: string, queryNorm: string, limit: number, offset?: number): Promise<UrlRow[]>;

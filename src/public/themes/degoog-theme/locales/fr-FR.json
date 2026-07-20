@@ -95,6 +95,7 @@
       "people-also-search": "Les gens recherchent aussi",
       "info": "Info",
       "results": "{count} résultats",
+      "from-index": "{count} depuis votre index",
       "retry": "réessayer",
       "retrying": "réessai en cours...",
       "failure-reasons": {
@@ -109,7 +110,8 @@
       }
     },
     "result": {
-      "just-indexed": "vient d'être indexé",
+      "from-index": "De votre index",
+      "saving-to-index": "Enregistrement dans votre index",
       "insecure": "Insecure",
       "insecure-tooltip": "Ce site est servi sur une connexion HTTP non chiffrée.",
       "actions": {

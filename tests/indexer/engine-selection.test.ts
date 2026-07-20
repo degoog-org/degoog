@@ -1,15 +1,15 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { mkdirSync } from "fs";
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-const SHARED = join(tmpdir(), "degoog-indexer-tests");
-mkdirSync(SHARED, { recursive: true });
+const SHARED = mkdtempSync(join(tmpdir(), "degoog-indexer-tests-"));
 process.env.DEGOOG_INDEXER_DIR = SHARED;
 process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
 import {
+  clearTypeCache,
   initEngines,
   getActiveWebEngines,
 } from "../../src/server/extensions/engines/registry";
@@ -31,22 +31,34 @@ describe("indexer engine selection", () => {
   afterAll(() => {
     if (enginesRestore !== undefined) process.env.DEGOOG_ENGINES_DIR = enginesRestore;
     else delete process.env.DEGOOG_ENGINES_DIR;
+    rmSync(SHARED, { recursive: true, force: true });
   });
 
-  test("auto-enables degoog engine when indexer is on and no explicit config", async () => {
+  test("does not surface degoog engine when indexer has no installed or known web type", async () => {
     await setInstanceSettings({ degoogIndexerEnabled: "true" });
+    clearTypeCache();
+    const active = await getActiveWebEngines({});
+    expect(hasDegoog(active)).toBe(false);
+  });
+
+  test("auto-enables degoog engine for known web index type when no explicit config", async () => {
+    writeFileSync(join(SHARED, "index-web.db"), "");
+    await setInstanceSettings({ degoogIndexerEnabled: "true" });
+    clearTypeCache();
     const active = await getActiveWebEngines({});
     expect(hasDegoog(active)).toBe(true);
   });
 
   test("respects an explicit user disable of the degoog engine", async () => {
     await setInstanceSettings({ degoogIndexerEnabled: "true" });
+    clearTypeCache();
     const active = await getActiveWebEngines({ [DEGOOG]: false });
     expect(hasDegoog(active)).toBe(false);
   });
 
   test("does not surface degoog engine when indexer is off", async () => {
     await setInstanceSettings({ degoogIndexerEnabled: "false" });
+    clearTypeCache();
     const active = await getActiveWebEngines({});
     expect(hasDegoog(active)).toBe(false);
   });

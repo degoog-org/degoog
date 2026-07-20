@@ -141,6 +141,7 @@ async function buildTransportContext(
   opts?: {
     proxyOverrideEnabled?: boolean;
     proxyOverrideUrls?: string | string[];
+    engineId?: string;
   },
 ): Promise<{ transport: Transport; context: TransportContext }> {
   const settings = await getInstanceSettings();
@@ -168,6 +169,7 @@ async function buildTransportContext(
     transport,
     context: {
       proxyUrl,
+      engineId: opts?.engineId,
       fetch: _buildProxyFetch(proxyUrl, transport.timeoutMs),
       useCache,
     },
@@ -181,6 +183,7 @@ export async function outgoingFetch(
   ctx?: {
     proxyOverrideEnabled?: boolean;
     proxyOverrideUrls?: string | string[];
+    engineId?: string;
   },
 ): Promise<Response> {
   const { transport, context } = await buildTransportContext(transportName, ctx);

@@ -95,6 +95,7 @@
       "people-also-search": "Le persone cercano anche",
       "info": "Info",
       "results": "{count} risultati",
+      "from-index": "{count} dal tuo indice",
       "retry": "riprova",
       "retrying": "nuovo tentativo...",
       "failure-reasons": {
@@ -109,7 +110,8 @@
       }
     },
     "result": {
-      "just-indexed": "appena indicizzato",
+      "from-index": "Dal tuo indice",
+      "saving-to-index": "Salvataggio nel tuo indice",
       "insecure": "Non sicuro",
       "insecure-tooltip": "Questo sito è servito su una connessione HTTP non crittata.",
       "actions": {

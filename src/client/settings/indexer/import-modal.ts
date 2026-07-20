@@ -1,8 +1,95 @@
 import { getBase } from "../../utils/base-url";
 import { authHeaders } from "../../utils/request";
 import { getStoredToken } from "../../utils/settings-token";
+import { renderFileUpload, initFileUpload } from "../../utils/file-upload";
 import { fetchEngineTypes, IMPORT_CUSTOM_TYPE } from "./api";
+import { mountProgress, type ProgressUi } from "./progress";
 import { tr } from "./i18n";
+
+const CHUNK_BYTES = 8 * 1024 * 1024;
+
+interface StartResponse {
+  sessionId?: string;
+  error?: string;
+}
+
+interface CompleteResponse {
+  ok?: boolean;
+  urls?: number;
+  hits?: number;
+  error?: string;
+}
+
+const uploadChunks = async (
+  file: File,
+  sessionId: string,
+  bar: ProgressUi,
+): Promise<boolean> => {
+  const base = getBase();
+  for (let pos = 0; pos < file.size; pos += CHUNK_BYTES) {
+    const slice = file.slice(pos, Math.min(file.size, pos + CHUNK_BYTES));
+    const res = await fetch(`${base}/api/indexer/import/chunk`, {
+      method: "POST",
+      headers: {
+        ...authHeaders(getStoredToken),
+        "Content-Type": "application/octet-stream",
+        "x-import-session": sessionId,
+      },
+      body: await slice.arrayBuffer(),
+    });
+    if (!res.ok) return false;
+    const sent = Math.min(file.size, pos + CHUNK_BYTES);
+    bar.set(sent, file.size);
+    bar.label(`${Math.round((sent / Math.max(file.size, 1)) * 100)}%`);
+  }
+  return true;
+};
+
+const runImport = async (
+  type: string,
+  file: File,
+  bodyEl: HTMLElement,
+  statusEl: HTMLElement,
+): Promise<CompleteResponse | null> => {
+  const base = getBase();
+  const bar = mountProgress(bodyEl);
+  bar.label(tr("import-progress"));
+
+  const startRes = await fetch(`${base}/api/indexer/import/start`, {
+    method: "POST",
+    headers: { ...authHeaders(getStoredToken), "Content-Type": "application/json" },
+    body: JSON.stringify({ type }),
+  });
+  const start = (await startRes.json().catch(() => ({}))) as StartResponse;
+  if (!startRes.ok || !start.sessionId) {
+    statusEl.textContent = start.error ?? `Import failed (${startRes.status})`;
+    bar.finish(true);
+    return null;
+  }
+
+  const uploaded = await uploadChunks(file, start.sessionId, bar);
+  if (!uploaded) {
+    statusEl.textContent = tr("import-progress");
+    bar.finish(true);
+    return null;
+  }
+
+  bar.label(tr("import-processing"));
+  const doneRes = await fetch(`${base}/api/indexer/import/complete`, {
+    method: "POST",
+    headers: { ...authHeaders(getStoredToken), "Content-Type": "application/json" },
+    body: JSON.stringify({ session: start.sessionId }),
+  });
+  const data = (await doneRes.json().catch(() => ({}))) as CompleteResponse;
+  if (!doneRes.ok || !data.ok) {
+    statusEl.textContent = data.error ?? `Import failed (${doneRes.status})`;
+    bar.finish(true);
+    return null;
+  }
+
+  bar.finish();
+  return data;
+};
 
 export const openImportModal = async (onDone: () => void): Promise<void> => {
   const overlay = document.getElementById("ext-modal-overlay");
@@ -34,7 +121,14 @@ export const openImportModal = async (onDone: () => void): Promise<void> => {
       style="margin-top:8px"
       hidden
     />
-    <input type="file" id="indexer-import-file" accept=".db" class="degoog-input" style="margin-top:8px" />`;
+    <div style="margin-top:8px">
+      ${renderFileUpload({
+        inputId: "indexer-import-file",
+        accept: ".db,.sql",
+        buttonLabel: tr("import-choose-file"),
+        dropLabel: tr("import-drop-hint"),
+      })}
+    </div>`;
   statusEl.textContent = "";
   saveEl.textContent = tr("import-btn");
   saveEl.disabled = false;
@@ -50,6 +144,8 @@ export const openImportModal = async (onDone: () => void): Promise<void> => {
     if (!customTypeEl.hidden) customTypeEl.focus();
   });
 
+  initFileUpload(bodyEl);
+
   const close = (): void => {
     overlay.style.display = "none";
     statusEl.textContent = "";
@@ -57,45 +153,44 @@ export const openImportModal = async (onDone: () => void): Promise<void> => {
   };
   closeBtn?.addEventListener("click", close, { once: true });
 
-  saveEl.addEventListener("click", async () => {
-    const sel = bodyEl.querySelector<HTMLSelectElement>("#indexer-import-type");
-    const customEl = bodyEl.querySelector<HTMLInputElement>("#indexer-import-custom-type");
-    const fileEl = bodyEl.querySelector<HTMLInputElement>("#indexer-import-file");
-    const type = sel?.value === IMPORT_CUSTOM_TYPE
-      ? customEl?.value.trim()
-      : sel?.value.trim();
-    const file = fileEl?.files?.[0];
-    if (!type || !file) {
-      statusEl.textContent = tr("import-missing");
-      return;
-    }
-    saveEl.disabled = true;
-    statusEl.textContent = tr("import-progress");
-    try {
-      const form = new FormData();
-      form.append("type", type);
-      form.append("file", file);
-      const res = await fetch(`${getBase()}/api/indexer/import`, {
-        method: "POST",
-        headers: authHeaders(getStoredToken),
-        body: form,
-      });
-      const data = (await res.json()) as { ok?: boolean; urls?: number; hits?: number; error?: string };
-      if (!res.ok || !data.ok) {
-        statusEl.textContent = data.error ?? `Import failed (${res.status})`;
-        saveEl.disabled = false;
+  saveEl.addEventListener(
+    "click",
+    async () => {
+      const sel = bodyEl.querySelector<HTMLSelectElement>("#indexer-import-type");
+      const customEl = bodyEl.querySelector<HTMLInputElement>("#indexer-import-custom-type");
+      const fileEl = bodyEl.querySelector<HTMLInputElement>("#indexer-import-file");
+      const type = sel?.value === IMPORT_CUSTOM_TYPE ? customEl?.value.trim() : sel?.value.trim();
+      const file = fileEl?.files?.[0];
+      if (!type || !file) {
+        statusEl.textContent = tr("import-missing");
         return;
       }
-      statusEl.textContent = tr("import-done", {
-        type,
-        urls: String(data.urls ?? 0),
-        hits: String(data.hits ?? 0),
-      });
+      saveEl.disabled = true;
       saveEl.hidden = true;
-      onDone();
-    } catch {
-      statusEl.textContent = "Import failed";
-      saveEl.disabled = false;
-    }
-  }, { once: true });
+
+      try {
+        const data = await runImport(type, file, bodyEl, statusEl);
+        if (!data) {
+          saveEl.disabled = false;
+          saveEl.hidden = false;
+          return;
+        }
+        statusEl.textContent = tr("import-done", {
+          type,
+          urls: String(data.urls ?? 0),
+          hits: String(data.hits ?? 0),
+        });
+        onDone();
+        saveEl.textContent = tr("import-close");
+        saveEl.disabled = false;
+        saveEl.hidden = false;
+        saveEl.addEventListener("click", close, { once: true });
+      } catch {
+        statusEl.textContent = "Import failed";
+        saveEl.disabled = false;
+        saveEl.hidden = false;
+      }
+    },
+    { once: true },
+  );
 };

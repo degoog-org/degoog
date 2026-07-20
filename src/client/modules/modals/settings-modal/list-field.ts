@@ -1,5 +1,14 @@
 import { escapeHtml } from "../../../utils/dom";
 import { renderMdInline } from "../../../utils/md";
+import { initDragOrder } from "../../../utils/drag-order";
+import { renderFileUpload, initFileUpload } from "../../../utils/file-upload";
+import {
+  HEX_RE,
+  DEFAULT_HEX,
+  normalizeHex,
+  basenameOf,
+  uploadExtensionFile,
+} from "./field-widgets";
 import {
   isListToggle,
   isListDisplay,
@@ -78,12 +87,62 @@ const _renderInput = (sub: SettingField, value: string): string => {
     </label>`;
 };
 
+const _renderHex = (sub: SettingField, value: string): string => {
+  const hex = value && HEX_RE.test(value) ? value : (sub.default || DEFAULT_HEX);
+  return `<div class="ext-list-sub">
+      <span class="ext-list-sub-label">${escapeHtml(sub.label)}</span>
+      <div class="ext-field-hex">
+        <input class="ext-field-input ext-list-subfield ext-list-hex-text degoog-input" type="text" data-subkey="${escapeHtml(sub.key)}" data-subtype="text" value="${escapeHtml(hex)}" placeholder="${escapeHtml(sub.placeholder || DEFAULT_HEX)}" autocomplete="off">
+        <input class="ext-field-hex-color ext-list-hex-color" type="color" value="${escapeHtml(normalizeHex(hex))}" aria-label="${escapeHtml(sub.label)}">
+      </div>
+    </div>`;
+};
+
+const _renderRange = (sub: SettingField, value: string): string => {
+  const min = sub.min ?? "0";
+  const max = sub.max ?? "100";
+  const step = sub.step ?? "1";
+  const current = value !== "" ? value : (sub.default ?? min);
+  return `<div class="ext-list-sub">
+      <span class="ext-list-sub-label ext-field-range-label">
+        <span>${escapeHtml(sub.label)}</span>
+        <output class="ext-list-range-value">${escapeHtml(current)}</output>
+      </span>
+      <input class="ext-list-subfield ext-list-range" type="range" data-subkey="${escapeHtml(sub.key)}" data-subtype="text" min="${escapeHtml(min)}" max="${escapeHtml(max)}" step="${escapeHtml(step)}" value="${escapeHtml(current)}">
+    </div>`;
+};
+
+const _renderFile = (sub: SettingField, value: string): string => {
+  const hintParts: string[] = [];
+  if (sub.accept) hintParts.push(sub.accept);
+  if (sub.maxSizeKb) hintParts.push(`≤ ${sub.maxSizeKb} KB`);
+  const uploader = renderFileUpload({
+    inputId: `file-list-${sub.key}-${Math.random().toString(36).slice(2, 8)}`,
+    accept: sub.accept,
+    buttonLabel: t("settings-page.modal.field-choose-file"),
+    dropLabel: t("settings-page.modal.field-drop-hint"),
+    hint: hintParts.join(" · ") || undefined,
+    currentName: value ? basenameOf(value) : undefined,
+  });
+  const maxAttr = sub.maxSizeKb ? ` data-max-kb="${escapeHtml(sub.maxSizeKb)}"` : "";
+  const minAttr = sub.minSizeKb ? ` data-min-kb="${escapeHtml(sub.minSizeKb)}"` : "";
+  return `<div class="ext-list-sub ext-list-sub--file"${maxAttr}${minAttr}>
+      <span class="ext-list-sub-label">${escapeHtml(sub.label)}</span>
+      <input type="hidden" class="ext-list-subfield ext-list-file-value" data-subkey="${escapeHtml(sub.key)}" data-subtype="text" value="${escapeHtml(value)}">
+      ${uploader}
+      <p class="ext-list-file-status" hidden></p>
+    </div>`;
+};
+
 const _renderSubField = (sub: SettingField, row: ListRow): string => {
   const value = row[sub.key] ?? "";
   if (isListToggle(sub)) return _renderToggle(sub, value);
   if (isListDisplay(sub)) return _renderInfo(sub);
   if (sub.type === "textarea") return _renderTextarea(sub, value);
   if (sub.type === "select") return _renderSelect(sub, value);
+  if (sub.type === "hex") return _renderHex(sub, value);
+  if (sub.type === "range") return _renderRange(sub, value);
+  if (sub.type === "file") return _renderFile(sub, value);
   return _renderInput(sub, value);
 };
 
@@ -93,6 +152,7 @@ const _renderRow = (row: ListRow, itemSchema: SettingField[]): string => {
     .join("");
   return `<div class="ext-list-row">
       <div class="ext-list-row-head">
+        <span class="degoog-drag-handle ext-list-row-drag" data-drag-handle tabindex="0" role="button" title="${escapeHtml(t("settings-page.extensions.drag-to-reorder"))}" aria-label="${escapeHtml(t("settings-page.extensions.drag-to-reorder"))}"><i class="fa-solid fa-grip-vertical"></i></span>
         <span class="ext-list-row-summary">${escapeHtml(rowSummary(row, itemSchema))}</span>
         <button type="button" class="ext-list-row-edit" aria-label="${escapeHtml(t("settings-page.modal.field-edit-aria"))}">✎</button>
         <button type="button" class="ext-list-row-remove" aria-label="${escapeHtml(t("settings-page.modal.field-remove-aria"))}">×</button>
@@ -156,13 +216,92 @@ const _collectRow = (
   return row;
 };
 
-export const initListFields = (container: HTMLElement): void => {
+export const initListFields = (container: HTMLElement, extId: string): void => {
   container
     .querySelectorAll<HTMLElement>(".ext-field[data-type='list']")
-    .forEach((fieldEl) => _initOne(fieldEl));
+    .forEach((fieldEl) => _initOne(fieldEl, extId));
 };
 
-const _initOne = (fieldEl: HTMLElement): void => {
+const _bindHexSub = (rowEl: HTMLElement, onChange: () => void): void => {
+  rowEl.querySelectorAll<HTMLElement>(".ext-list-sub").forEach((sub) => {
+    const text = sub.querySelector<HTMLInputElement>(".ext-list-hex-text");
+    const color = sub.querySelector<HTMLInputElement>(".ext-list-hex-color");
+    if (!text || !color) return;
+    text.addEventListener("input", () => {
+      if (HEX_RE.test(text.value.trim())) color.value = normalizeHex(text.value);
+    });
+    color.addEventListener("input", () => {
+      text.value = color.value;
+      onChange();
+    });
+  });
+};
+
+const _bindRangeSub = (rowEl: HTMLElement): void => {
+  rowEl.querySelectorAll<HTMLInputElement>(".ext-list-range").forEach((range) => {
+    const out = range.parentElement?.querySelector<HTMLElement>(
+      ".ext-list-range-value",
+    );
+    range.addEventListener("input", () => {
+      if (out) out.textContent = range.value;
+    });
+  });
+};
+
+const _validateSubSize = (sub: HTMLElement, file: File): string | null => {
+  const maxKb = Number(sub.dataset.maxKb ?? "0");
+  const minKb = Number(sub.dataset.minKb ?? "0");
+  const sizeKb = file.size / 1024;
+  if (maxKb > 0 && sizeKb > maxKb) return `≤ ${maxKb} KB`;
+  if (minKb > 0 && sizeKb < minKb) return `≥ ${minKb} KB`;
+  return null;
+};
+
+const _bindFileSub = (
+  rowEl: HTMLElement,
+  extId: string,
+  onChange: () => void,
+): void => {
+  rowEl.querySelectorAll<HTMLElement>(".ext-list-sub--file").forEach((sub) => {
+    const hidden = sub.querySelector<HTMLInputElement>(".ext-list-file-value");
+    const status = sub.querySelector<HTMLElement>(".ext-list-file-status");
+    const key = hidden?.dataset.subkey;
+    if (!hidden || !key) return;
+
+    const setStatus = (text: string): void => {
+      if (!status) return;
+      status.textContent = text;
+      status.hidden = text === "";
+    };
+
+    const handle = initFileUpload(sub, async (file) => {
+      if (!file) {
+        hidden.value = "";
+        setStatus("");
+        onChange();
+        return;
+      }
+      const sizeError = _validateSubSize(sub, file);
+      if (sizeError) {
+        setStatus(sizeError);
+        handle?.reset();
+        return;
+      }
+      setStatus(t("settings-page.modal.field-uploading"));
+      const path = await uploadExtensionFile(extId, key, file).catch(() => null);
+      if (!path) {
+        setStatus(t("settings-page.modal.field-upload-failed"));
+        handle?.reset();
+        return;
+      }
+      hidden.value = path;
+      setStatus("");
+      onChange();
+    });
+  });
+};
+
+const _initOne = (fieldEl: HTMLElement, extId: string): void => {
   const itemSchema = _readSchema(fieldEl);
   const rowsEl = fieldEl.querySelector<HTMLElement>(".ext-list-rows");
   const addBtn = fieldEl.querySelector<HTMLElement>(".ext-list-add");
@@ -198,19 +337,28 @@ const _initOne = (fieldEl: HTMLElement): void => {
         rowEl.remove();
         sync();
       });
+    const rowChanged = (): void => {
+      updateSummary(rowEl);
+      sync();
+    };
     rowEl.querySelectorAll<HTMLElement>(".ext-list-subfield").forEach((input) => {
-      const handler = (): void => {
-        updateSummary(rowEl);
-        sync();
-      };
-      input.addEventListener("input", handler);
-      input.addEventListener("change", handler);
+      input.addEventListener("input", rowChanged);
+      input.addEventListener("change", rowChanged);
     });
+    _bindHexSub(rowEl, rowChanged);
+    _bindRangeSub(rowEl);
+    _bindFileSub(rowEl, extId, rowChanged);
   };
 
   rowsEl
     .querySelectorAll<HTMLElement>(".ext-list-row")
     .forEach((rowEl) => bindRow(rowEl));
+
+  initDragOrder(rowsEl, {
+    itemSelector: ".ext-list-row",
+    handleSelector: "[data-drag-handle]",
+    onReorder: () => sync(),
+  });
 
   addBtn.addEventListener("click", () => {
     const wrap = document.createElement("div");

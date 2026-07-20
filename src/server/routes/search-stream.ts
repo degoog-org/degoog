@@ -25,7 +25,7 @@ import { signResultThumbnails } from "../utils/proxy-sign";
 import { parseSearchRequest } from "./search/_parsers";
 import { runIntercepts } from "../utils/run-interceptors";
 import { getInstanceSettings } from "../utils/server-settings";
-import { DEGOOG_ENGINE_NAME, maybeIndex } from "../indexer/store";
+import { DEGOOG_ENGINE_NAME, maybeIndex, tagIndexRelation, toFilterTag } from "../indexer/store";
 
 const router = new Hono();
 
@@ -69,7 +69,7 @@ router.get("/api/search/stream", async (c) => {
       `cache hit q="${qShort}" type=${type} page=${page} enginesOn=${enginesOn} results=${cached.results.length} timings=${cached.engineTimings.length}`,
     );
     const liveResults = signResultThumbnails(
-      await applyDomainRules(cached.results),
+      tagIndexRelation(await applyDomainRules(cached.results)),
     );
     const encoder = new TextEncoder();
     const body = new ReadableStream({
@@ -141,6 +141,7 @@ router.get("/api/search/stream", async (c) => {
       const allRawResults: {
         results: SearchResult[];
         multiplier: number;
+        name: string;
       }[] = [];
 
       function _send(event: string, data: unknown) {
@@ -184,13 +185,13 @@ router.get("/api/search/stream", async (c) => {
             lastTiming = timing;
 
             if (timing.resultCount > 0) {
-              allRawResults.push({ results, multiplier: score });
+              allRawResults.push({ results, multiplier: score, name: engineName });
               allTimings.push(timing);
               _send("engine-result", {
                 engine: engineName,
                 timing,
                 results: signResultThumbnails(
-                  await applyDomainRules(scoreResults(allRawResults)),
+                  tagIndexRelation(await applyDomainRules(scoreResults(allRawResults))),
                 ),
                 retry: isRetry,
                 attempt,
@@ -213,7 +214,9 @@ router.get("/api/search/stream", async (c) => {
           _send("engine-result", {
             engine: engineName,
             timing: lastTiming,
-            results: await applyDomainRules(scoreResults(allRawResults)),
+            results: tagIndexRelation(
+              await applyDomainRules(scoreResults(allRawResults)),
+            ),
             retry: false,
             attempt: 0,
           });
@@ -235,20 +238,26 @@ router.get("/api/search/stream", async (c) => {
 
         const indexerSettings = await getInstanceSettings();
         const displayResults = await applyDomainRules(rawScoredResults);
-        const indexed = maybeIndex(
+        const indexBasis = await applyDomainRules(
+          scoreResults(allRawResults.filter((e) => e.name !== DEGOOG_ENGINE_NAME)),
+        );
+        const filtersTag = toFilterTag({
+          lang: resolvedLang,
+          timeFilter: resolvedTime,
+          dateFrom,
+          dateTo,
+          imageFilter,
+        });
+        const indexedUrls = await maybeIndex(
           asBoolean(indexerSettings.degoogIndexerEnabled),
           query,
           type,
-          displayResults,
+          indexBasis,
+          filtersTag,
         );
 
         const degoogTiming = allTimings.find((et) => et.name === DEGOOG_ENGINE_NAME);
-        const justIndexed = indexed && degoogTiming?.resultCount === 0;
-
-        if (justIndexed) {
-          const idx = allTimings.indexOf(degoogTiming!);
-          allTimings[idx] = { ...degoogTiming!, indexed: true };
-        }
+        const justIndexed = indexedUrls.length > 0 && degoogTiming?.resultCount === 0;
 
         if (!cache.allEnginesFailed(response)) {
           const ttl = justIndexed
@@ -262,6 +271,7 @@ router.get("/api/search/stream", async (c) => {
         _send("done", {
           totalTime,
           engineTimings: allTimings,
+          indexedUrls,
           relatedSearches: [],
         });
         if (!closed) {

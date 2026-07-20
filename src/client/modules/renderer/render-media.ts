@@ -142,7 +142,7 @@ function _expandFromPanel(grid: HTMLElement): void {
   _scrollSelectedIntoView(grid);
 }
 
-const PANEL_LAYOUT_BREAKPOINT = 768;
+export const PANEL_LAYOUT_BREAKPOINT = 768;
 
 registerImageGridPanelSync((isOpen) => {
   const grid = document.querySelector<HTMLElement>(".image-grid");

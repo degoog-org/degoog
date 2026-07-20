@@ -420,6 +420,27 @@
   margin: $space-5 0;
 }
 
+#slot-full-width-above-results {
+  &:empty { display: none; }
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 83.25rem;
+  margin: 0 0 $space-5;
+  padding: 0 clamp(1rem, 1rem + max(0px, (100vw - 48rem) * 0.31), 9.375rem);
+
+  .results-slot-panel-full-width {
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    #results-page.centered-mode & {
+      max-width: $results-centered-max;
+      margin-inline: auto;
+      padding-inline: $space-5;
+    }
+  }
+}
+
 #slot-above-sidebar,
 #slot-below-sidebar {
   &:empty { display: none; }

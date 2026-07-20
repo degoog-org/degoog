@@ -16,6 +16,7 @@ export interface IndexerHitRow {
   title: string;
   snippet: string;
   last_seen: number;
+  score: number;
 }
 
 export interface IndexerRowsResponse {

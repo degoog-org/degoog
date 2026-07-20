@@ -54,6 +54,7 @@ export const SETTINGS_SCHEMA = {
   degoogIndexerFuzzyEnabled:       { kind: "boolean", default: true },
   degoogIndexerFuzzyMinTermRatio:  { kind: "number",  default: "0.6" },
   degoogIndexerQueryLimit:         { kind: "number",  default: "30" },
+  degoogIndexerRankingWindow:      { kind: "number",  default: "20" },
   degoogIndexerDomainAllowlist: { kind: "lines",   default: "" },
   degoogIndexerDomainBlocklist: { kind: "lines",   default: "" },
   degoogIndexerWordBlocklist:   { kind: "lines",   default: "" },

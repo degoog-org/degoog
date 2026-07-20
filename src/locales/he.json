@@ -285,7 +285,11 @@
       "test-request-failed": "הבקשה נכשלה",
       "field-remove-aria": "הסר",
       "field-edit-aria": "ערוך",
-      "field-add": "הוסף"
+      "field-add": "הוסף",
+      "field-choose-file": "בחר קובץ",
+      "field-drop-hint": "או גרור לכאן",
+      "field-uploading": "מעלה…",
+      "field-upload-failed": "ההעלאה נכשלה"
     },
     "confirm": {
       "title": "אישור",
@@ -398,8 +402,6 @@
       "desc": "מתעד בשקט כל תוצאה שרואים ומציג אותה מחדש בחיפושים עתידיים.",
       "enable": "הפעל את האינדקסר",
       "enable-desc": "כשמופעל, תוצאות החיפוש שלך נשמרות מקומית.",
-      "public-export": "אפשר הורדה ציבורית של האינדקס",
-      "public-export-desc": "כשמופעל, כל אחד יכול להוריד את האינדקס מדף ההגדרות הציבורי (מוגבל בקצב).",
       "filters-heading": "מסנני אינדוקס",
       "domain-allowlist": "רשימת דומיינים מורשים",
       "domain-allowlist-desc": "דומיין אחד לשורה. כשלא ריק, רק תוצאות מדומיינים אלה יאונדקסו. השאר ריק כדי לאפשר הכל.",
@@ -423,6 +425,8 @@
       "fuzzy-enabled-desc": "כשמופעל, שאילתות דומות מהעבר יכולות לגלות מחדש URL שנצפו לפני כן.",
       "query-limit": "מקסימום תוצאות לחיפוש Degoog",
       "query-limit-desc": "כמה תוצאות אינדקס מנוע Degoog מחזיר לחיפוש בודד.",
+      "ranking-window": "זיכרון דירוג (צפיות אחרונות)",
+      "ranking-window-desc": "כמה צפיות אחרונות נספרות בדירוג של תוצאה. ערך נמוך מאפשר לדירוג להסתגל מהר יותר לתוצאות חדשות; ערך גבוה שומר עליו יציב יותר.",
       "stats-heading": "סטטיסטיקות אינדקס",
       "total-hits": "קישורי שאילתה-URL",
       "total-urls": "כתובות URL ייחודיות",
@@ -433,12 +437,17 @@
       "export-btn": "הורד אינדקס (.db)",
       "export-modal-title": "הורד אינדקס",
       "export-modal-desc": "בחר את סוג המנוע לייצוא.",
-      "import-btn": "ייבא קובץ .db",
+      "export-done": "ההורדה הושלמה.",
+      "import-btn": "ייבא קובץ אינדקס",
       "import-modal-title": "ייבוא נתוני אינדקס",
-      "import-modal-desc": "ייבא קובץ .db מ-SQLite לתוך PostgreSQL. בחר את סוג המנוע ואת הקובץ להעלאה.",
+      "import-modal-desc": "ייבא קובץ ‎.db‎ (SQLite) או ‎.sql‎ אל מנוע האינדקס הנוכחי. בחר את סוג המנוע ואת הקובץ להעלאה.",
       "import-type-custom": "סוג מותאם אישית...",
+      "import-choose-file": "בחר קובץ",
+      "import-drop-hint": "או גרור לכאן",
       "import-missing": "יש לבחור סוג וקובץ.",
       "import-progress": "מייבא...",
+      "import-processing": "מעבד ייבוא, עבור קבצים גדולים זה עשוי לקחת זמן...",
+      "import-close": "סגור",
       "import-done": "בוצע - {urls} כתובות URL ו-{hits} קישורים יובאו כסוג: {type}.",
       "manage-btn": "נהל אינדקס",
       "manage-title": "נהל תוצאות מאונדקסות",
@@ -447,6 +456,7 @@
       "manage-col-query": "שאילתה",
       "manage-col-type": "סוג",
       "manage-col-title": "תוצאה",
+      "manage-col-score": "ציון",
       "manage-col-actions": "",
       "manage-delete": "מחק",
       "manage-delete-selected": "מחק נבחרים",
@@ -462,9 +472,6 @@
       "clear-cancel": "ביטול",
       "save-error": "שמירת הגדרות האינדקסר נכשלה.",
       "disabled": "האינדקסר מושבת. הפעל אותו בהגדרות השרת."
-    },
-    "indexer-public": {
-      "unavailable": "האינדקסר אינו זמין לגישה ציבורית במופע זה."
     },
     "schema": {
       "natural-language": {

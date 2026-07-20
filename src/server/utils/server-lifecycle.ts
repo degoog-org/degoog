@@ -1,4 +1,4 @@
-import { existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import type { Subprocess, Server } from "bun";
 import { logger } from "./logger";
 import { closeAllDbs } from "../indexer/db";
@@ -17,6 +17,14 @@ export const registerServerHandle = (server: Server): void => {
 export const isDockerRuntime = (): boolean =>
   envTruthy("DEGOOG_DOCKER") || existsSync("/.dockerenv");
 
+export const isProxmoxLXCRuntime = (): boolean => {
+  try {
+    return readFileSync("/run/systemd/container", "utf8").trim() === "lxc";
+  } catch {
+    return false;
+  }
+};
+
 const hasControllingTerminal = (): boolean => Boolean(process.stdout.isTTY);
 
 /**
@@ -27,7 +35,7 @@ const hasControllingTerminal = (): boolean => Boolean(process.stdout.isTTY);
  * current one as you exit to give the illusion it's restarting.
  */
 const spawnReplacementProcess = (): Subprocess | undefined => {
-  if (isDockerRuntime()) return undefined;
+  if (isDockerRuntime() || isProxmoxLXCRuntime()) return undefined;
 
   try {
     const child = Bun.spawn({
@@ -59,6 +67,7 @@ export const requestRestart = (reason: string): void => {
   clearRestartPending();
   setTimeout(() => {
     _serverHandle?.stop(true);
+    const exitCode = isProxmoxLXCRuntime() ? 1 : 0;
     const child = spawnReplacementProcess();
     stopQueue()
       .finally(async () => {
@@ -66,7 +75,7 @@ export const requestRestart = (reason: string): void => {
         if (child && hasControllingTerminal()) {
           becomeSignalForwarder(child);
         } else {
-          process.exit(0);
+          process.exit(exitCode);
         }
       });
   }, RESTART_EXIT_DELAY_MS);

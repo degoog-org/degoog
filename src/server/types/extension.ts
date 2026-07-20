@@ -58,6 +58,9 @@ export interface SettingField {
   | "select"
   | "urllist"
   | "list"
+  | "hex"
+  | "range"
+  | "file"
   | "info";
   required?: boolean;
   placeholder?: string;
@@ -70,6 +73,13 @@ export interface SettingField {
   visibleWhen?: { key: string; equals: string };
   itemSchema?: SettingField[];
   addLabel?: string;
+  fieldset?: string;
+  min?: string;
+  max?: string;
+  step?: string;
+  accept?: string;
+  maxSizeKb?: string;
+  minSizeKb?: string;
 }
 
 export interface PluginManifest {
@@ -301,6 +311,7 @@ export type ProxyAwareFetch = (
 
 export interface TransportContext {
   proxyUrl?: string;
+  engineId?: string;
   fetch: ProxyAwareFetch;
   useCache: UseCache;
 }

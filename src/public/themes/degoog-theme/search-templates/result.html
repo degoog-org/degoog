@@ -114,7 +114,17 @@
       <p class="result-snippet degoog-result--snippet">{{ snippet }}</p>
       <div class="result-engines degoog-result--engines">
         {{#each sources}}
-        <span class="result-engine-tag degoog-badge degoog-badge--engine-tag">{{ . }}</span>
+        {{#if tooltip}}
+        <span
+          class="result-engine-tag degoog-badge degoog-badge--engine-tag"
+          data-tooltip="{{ tooltip }}"
+          aria-label="{{ tooltip }}"
+          >{{ name }}</span
+        >
+        {{/if tooltip}}
+        {{^if tooltip}}
+        <span class="result-engine-tag degoog-badge degoog-badge--engine-tag">{{ name }}</span>
+        {{/if tooltip}}
         {{/each sources}}
       </div>
     </div>

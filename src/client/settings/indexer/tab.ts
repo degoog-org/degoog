@@ -19,8 +19,6 @@ export const initIndexerTab = async (container: HTMLElement): Promise<void> => {
     if (stats) {
       _lastStats = stats;
       renderStats(stats);
-      const importBtn = document.getElementById("indexer-import-btn") as HTMLButtonElement | null;
-      if (importBtn) importBtn.hidden = stats.backend !== "postgres";
     }
   };
 

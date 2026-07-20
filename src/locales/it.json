@@ -285,7 +285,11 @@
       "test-request-failed": "Richiesta non riuscita",
       "field-remove-aria": "Rimuovi",
       "field-edit-aria": "Modifica",
-      "field-add": "Aggiungi"
+      "field-add": "Aggiungi",
+      "field-choose-file": "Scegli file",
+      "field-drop-hint": "o trascina qui",
+      "field-uploading": "Caricamento…",
+      "field-upload-failed": "Caricamento fallito"
     },
     "confirm": {
       "title": "Conferma",
@@ -398,8 +402,6 @@
       "desc": "Registra silenziosamente ogni risultato visualizzato e lo ripropone nelle ricerche future.",
       "enable": "Abilita l'indicizzatore",
       "enable-desc": "Se attivato, i risultati delle tue ricerche vengono salvati localmente.",
-      "public-export": "Consenti il download pubblico di questo indice",
-      "public-export-desc": "Se attivato, chiunque può scaricare l'indice dalla pagina pubblica (con limiti di velocità).",
       "filters-heading": "Filtri di indicizzazione",
       "domain-allowlist": "Lista di domini consentiti",
       "domain-allowlist-desc": "Un dominio per riga. Se non vuoto, vengono indicizzati solo i risultati di questi domini. Lascia vuoto per consentire tutto.",
@@ -423,6 +425,8 @@
       "fuzzy-enabled-desc": "Se attivato, query simili passate possono far riemergere URL già visitati.",
       "query-limit": "Max risultati per ricerca Degoog",
       "query-limit-desc": "Quanti risultati indicizzati il motore Degoog restituisce per una singola ricerca.",
+      "ranking-window": "Memoria di ranking (visite recenti)",
+      "ranking-window-desc": "Quante visite recenti contano nel ranking di un risultato. Valori bassi permettono al ranking di adattarsi più in fretta ai risultati nuovi; valori alti lo mantengono più stabile.",
       "stats-heading": "Statistiche indice",
       "total-hits": "Link query–URL",
       "total-urls": "URL uniche",
@@ -433,12 +437,17 @@
       "export-btn": "Scarica indice (.db)",
       "export-modal-title": "Scarica indice",
       "export-modal-desc": "Scegli il tipo di motore da esportare.",
-      "import-btn": "Importa file .db",
+      "export-done": "Download completato.",
+      "import-btn": "Importa file indice",
       "import-modal-title": "Importa dati indice",
-      "import-modal-desc": "Importa un file .db SQLite nel backend PostgreSQL. Seleziona il tipo di motore e scegli il file da caricare.",
+      "import-modal-desc": "Importa un file .db (SQLite) o un dump .sql nel backend attuale dell'indice. Seleziona il tipo di motore e scegli il file da caricare.",
       "import-type-custom": "Tipo personalizzato...",
+      "import-choose-file": "Scegli file",
+      "import-drop-hint": "o trascina qui",
       "import-missing": "Seleziona un tipo e un file.",
       "import-progress": "Importazione in corso...",
+      "import-processing": "Elaborazione import in corso, per file grandi puo' richiedere tempo...",
+      "import-close": "Chiudi",
       "import-done": "Fatto - {urls} URL e {hits} link importati come tipo: {type}.",
       "manage-btn": "Gestisci indice",
       "manage-title": "Gestisci risultati indicizzati",
@@ -447,6 +456,7 @@
       "manage-col-query": "Query",
       "manage-col-type": "Tipo",
       "manage-col-title": "Risultato",
+      "manage-col-score": "Punteggio",
       "manage-col-actions": "",
       "manage-delete": "Elimina",
       "manage-delete-selected": "Elimina selezionati",
@@ -462,9 +472,6 @@
       "clear-cancel": "Annulla",
       "save-error": "Salvataggio impostazioni indicizzatore non riuscito.",
       "disabled": "L'indicizzatore è disabilitato. Abilitalo nelle impostazioni Server."
-    },
-    "indexer-public": {
-      "unavailable": "L'indicizzatore non è abilitato per l'accesso pubblico su questa istanza."
     },
     "schema": {
       "natural-language": {

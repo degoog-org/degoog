@@ -154,10 +154,10 @@
   max-height: 90vh;
   max-width: 92vw;
   overflow: hidden;
-  width: 30rem;
+  width: $modal-width;
 
   &--wide {
-    width: min(60rem, 92vw);
+    width: $settings-modal-width;
   }
 
   &-overlay {
@@ -198,7 +198,7 @@
 
   &-footer {
     @include flex-between;
-    border-top: 1px solid var(--border-light);
+    background: var(--modal-footer);
     padding: $space-4 $space-6;
   }
 
@@ -466,6 +466,88 @@
   &-add {
     align-self: flex-start;
   }
+}
+
+.ext-field-hex {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+
+  .ext-field-hex-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ext-field-hex-color {
+    width: $space-8;
+    height: $space-8;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: $radius-md;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+.ext-field-range {
+  width: 100%;
+  accent-color: $primary;
+  cursor: pointer;
+}
+
+.ext-field-range-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+}
+
+.ext-field-range-value,
+.ext-list-range-value {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ext-list-range {
+  width: 100%;
+  accent-color: $primary;
+  cursor: pointer;
+}
+
+.ext-field-file-status,
+.ext-list-file-status {
+  color: var(--text-secondary);
+  font-size: $font-size-small;
+  margin: 0;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.ext-list-row-drag {
+  padding: 0 $space-1;
+}
+
+.ext-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  margin: 0;
+  padding: $space-4;
+  border: none;
+  background: var(--bg);
+  border-radius: $radius-md;
+}
+
+.ext-fieldset-legend {
+  color: var(--text-secondary);
+  font-size: $font-size-small;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0;
 }
 
 .ext-advanced-section {

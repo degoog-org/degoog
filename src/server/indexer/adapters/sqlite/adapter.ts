@@ -4,6 +4,7 @@ import type { IndexRow } from "../../recorders";
 import type { IndexerConfig } from "../../types/config";
 import type { IndexerAdapter, UrlRow, HitRow, TypeCounts, ExportRow } from "../../types/adapter";
 import { safeSlug } from "../../shared/safe-type";
+import { rankFields } from "../../shared/rank-fields";
 import { indexerDir, indexerDbForType } from "../../../utils/paths";
 import { logger } from "../../../utils/logger";
 import { SQLITE_SCHEMA_DDL } from "./schema";
@@ -15,11 +16,14 @@ import {
   EXACT_SQL,
   FUZZY_SQL,
   LIST_SELECT,
+  LIST_ORDER_BY,
   SEARCH_WHERE,
   EXPORT_SQL,
 } from "./statements";
 import { buildFtsQuery, escapeLike } from "./fts";
 import { pruneOrphans, runSqlitePrune } from "./prune";
+
+const HITS_SCHEMA_VERSION = 1;
 
 export class SqliteAdapter implements IndexerAdapter {
   private readonly _dbs = new Map<string, Database>();
@@ -51,12 +55,36 @@ export class SqliteAdapter implements IndexerAdapter {
     db.exec("PRAGMA foreign_keys = ON");
     try {
       for (const sql of SQLITE_SCHEMA_DDL) db.exec(sql);
+      this._migrateHits(db);
     } catch (err) {
       logger.error("indexer", `schema init failed for type=${key}`, err);
       throw err;
     }
     this._dbs.set(key, db);
     return db;
+  }
+
+  private _migrateHits(db: Database): void {
+    const { user_version: version } = db
+      .prepare("PRAGMA user_version")
+      .get() as { user_version: number };
+    if (version >= HITS_SCHEMA_VERSION) return;
+
+    const existing = new Set(
+      (db.prepare("PRAGMA table_info(query_hits)").all() as { name: string }[]).map(
+        (col) => col.name,
+      ),
+    );
+    const addColumn = (name: string, ddl: string): void => {
+      if (!existing.has(name)) db.exec(`ALTER TABLE query_hits ADD COLUMN ${ddl}`);
+    };
+    addColumn("pos_sum", "pos_sum INTEGER NOT NULL DEFAULT 9999");
+    addColumn("sources_json", "sources_json TEXT");
+    addColumn("filters_json", "filters_json TEXT");
+    addColumn("meta_json", "meta_json TEXT");
+
+    db.exec("UPDATE query_hits SET pos_sum = best_position * hit_count");
+    db.exec(`PRAGMA user_version = ${HITS_SCHEMA_VERSION}`);
   }
 
   private _db(type: string): Database {
@@ -103,7 +131,7 @@ export class SqliteAdapter implements IndexerAdapter {
     }
   }
 
-  async writeBatch(type: string, rows: IndexRow[], now: number): Promise<void> {
+  async writeBatch(type: string, rows: IndexRow[], now: number, window: number): Promise<void> {
     const db = this._db(type);
     let upsertUrl = this._upsertUrlStmts.get(type);
     if (!upsertUrl) {
@@ -136,8 +164,12 @@ export class SqliteAdapter implements IndexerAdapter {
           $engine_type: row.engine_type,
           $url_id: urlIdRow.id,
           $best_position: row.position,
+          $sources_json: row.sources_json,
+          $filters_json: row.filters_json,
+          $meta_json: row.meta_json,
           $first_seen: now,
           $last_seen: now,
+          $window: window,
         });
       }
     });
@@ -171,10 +203,17 @@ export class SqliteAdapter implements IndexerAdapter {
           db.prepare("SELECT id FROM urls WHERE url_norm = ?").get(row.url_norm) as { id: number } | null
         )?.id;
         if (!urlId) continue;
+        const rank = rankFields(row);
         const hitResult = importHit.run({
           $query_norm: row.query_norm,
           $engine_type: type,
           $url_id: urlId,
+          $best_position: rank.best_position,
+          $pos_sum: rank.pos_sum,
+          $hit_count: rank.hit_count,
+          $sources_json: rank.sources_json,
+          $filters_json: rank.filters_json,
+          $meta_json: rank.meta_json,
           $first_seen: row.first_seen,
           $last_seen: row.last_seen,
         });
@@ -258,7 +297,7 @@ export class SqliteAdapter implements IndexerAdapter {
         let stmt = this._listSearchQs.get(type);
         if (!stmt) {
           stmt = db.prepare(
-            `${LIST_SELECT} ${SEARCH_WHERE} ORDER BY h.last_seen DESC LIMIT $limit OFFSET $offset`,
+            `${LIST_SELECT} ${SEARCH_WHERE} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`,
           );
           this._listSearchQs.set(type, stmt);
         }
@@ -268,7 +307,7 @@ export class SqliteAdapter implements IndexerAdapter {
       let stmt = this._listAllQs.get(type);
       if (!stmt) {
         stmt = db.prepare(
-          `${LIST_SELECT} ORDER BY h.last_seen DESC LIMIT $limit OFFSET $offset`,
+          `${LIST_SELECT} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`,
         );
         this._listAllQs.set(type, stmt);
       }

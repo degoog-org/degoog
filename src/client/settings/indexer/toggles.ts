@@ -18,12 +18,7 @@ export const wireToggles = async (
   });
   const settings = res.ok ? ((await res.json()) as Record<string, unknown>) : {};
   const enabled = settings.degoogIndexerEnabled === true || settings.degoogIndexerEnabled === "true";
-  const publicExport =
-    settings.degoogIndexerPublicExport === true ||
-    settings.degoogIndexerPublicExport === "true";
 
-  const publicEl = document.getElementById("indexer-public-export") as HTMLInputElement | null;
-  const publicWrap = document.getElementById("indexer-public-wrap");
   const filtersWrap = document.getElementById("indexer-filters-wrap");
   const storageWrap = document.getElementById("indexer-storage-wrap");
   const statsWrap = document.getElementById("indexer-stats-wrap");
@@ -35,6 +30,7 @@ export const wireToggles = async (
   const maxHitsEl = document.getElementById("indexer-max-hits") as HTMLInputElement | null;
   const maxAgeDaysEl = document.getElementById("indexer-max-age-days") as HTMLInputElement | null;
   const queryLimitEl = document.getElementById("indexer-query-limit") as HTMLInputElement | null;
+  const rankingWindowEl = document.getElementById("indexer-ranking-window") as HTMLInputElement | null;
   const domainAllowEl = document.getElementById("indexer-domain-allowlist") as HTMLTextAreaElement | null;
   const domainBlockEl = document.getElementById("indexer-domain-blocklist") as HTMLTextAreaElement | null;
   const wordBlockEl = document.getElementById("indexer-word-blocklist") as HTMLTextAreaElement | null;
@@ -56,12 +52,11 @@ export const wireToggles = async (
     if (storageWrap) storageWrap.hidden = !isEnabled;
     if (statsWrap) statsWrap.hidden = !isEnabled;
     if (disabledNote) disabledNote.hidden = isEnabled;
-    for (const wrap of [publicWrap, filtersWrap, storageWrap]) {
+    for (const wrap of [filtersWrap, storageWrap]) {
       wrap?.classList.toggle("degoog-fieldset--disabled", !isEnabled);
     }
     const disable = !isEnabled;
     for (const el of [
-      publicEl,
       pruneEl,
       fuzzyEl,
       maxPerSearchEl,
@@ -69,6 +64,7 @@ export const wireToggles = async (
       maxHitsEl,
       maxAgeDaysEl,
       queryLimitEl,
+      rankingWindowEl,
       domainAllowEl,
       domainBlockEl,
       wordBlockEl,
@@ -77,7 +73,6 @@ export const wireToggles = async (
     }
   };
 
-  if (publicEl) publicEl.checked = publicExport;
   if (pruneEl) pruneEl.checked = bool("degoogIndexerPruneEnabled", true);
   if (fuzzyEl) fuzzyEl.checked = bool("degoogIndexerFuzzyEnabled", true);
   if (maxPerSearchEl) maxPerSearchEl.value = str("degoogIndexerMaxPerSearch", "30");
@@ -85,6 +80,7 @@ export const wireToggles = async (
   if (maxHitsEl) maxHitsEl.value = str("degoogIndexerMaxHits", "0");
   if (maxAgeDaysEl) maxAgeDaysEl.value = str("degoogIndexerMaxAgeDays", "0");
   if (queryLimitEl) queryLimitEl.value = str("degoogIndexerQueryLimit", "100");
+  if (rankingWindowEl) rankingWindowEl.value = str("degoogIndexerRankingWindow", "20");
   const oversized = oversizedMap(settings);
 
   const setListField = (
@@ -113,6 +109,7 @@ export const wireToggles = async (
     [maxHitsEl, "degoogIndexerMaxHits", "0"],
     [maxAgeDaysEl, "degoogIndexerMaxAgeDays", "0"],
     [queryLimitEl, "degoogIndexerQueryLimit", "100"],
+    [rankingWindowEl, "degoogIndexerRankingWindow", "20"],
   ];
 
   for (const [field, key, fallback] of fieldSpecs) {
@@ -132,7 +129,6 @@ export const wireToggles = async (
     });
   };
 
-  wireToggle(publicEl, "degoogIndexerPublicExport");
   wireToggle(pruneEl, "degoogIndexerPruneEnabled");
   wireToggle(fuzzyEl, "degoogIndexerFuzzyEnabled");
 
