@@ -47,7 +47,7 @@ import { extensionReadmeExists } from "../utils/extension-docs";
 import { getInstalledItems, reloadAfterAction } from "../extensions/store/item-ops";
 import { makeExtID, folderFromExtID } from "../utils/extension-id";
 import { readObjectBody } from "../utils/hono";
-import { isVersionAtLeast, getAppVersion } from "../utils/version";
+import { isVersionAtLeast, getAppVersion } from "../../shared/utils/version";
 import { savePluginUpload } from "../utils/plugin-uploads";
 import { logger } from "../utils/logger";
 import type { SettingField } from "../types";
