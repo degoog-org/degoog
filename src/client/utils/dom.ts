@@ -3,9 +3,8 @@ import { state } from "../state";
 export const cleanUrl = (url: string): string => {
   try {
     const parsed = new URL(url);
-    // display without www; keep query string unless user opted to hide it
-    const host = parsed.hostname.replace(/^www\./, "");
-    return host + parsed.pathname + (state.hideUrlParams ? "" : parsed.search);
+    // keep query string unless user opted to hide it
+    return parsed.hostname + parsed.pathname + (state.hideUrlParams ? "" : parsed.search);
   } catch {
     return url;
   }

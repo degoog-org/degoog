@@ -18,12 +18,6 @@ describe("public/utils", () => {
     }
   });
 
-  test("cleanUrl strips leading www", () => {
-    expect(cleanUrl("https://www.example.com/path?v=EaY-_Y83WNs")).toBe(
-      "example.com/path?v=EaY-_Y83WNs",
-    );
-  });
-
   test("cleanUrl returns url as-is for invalid url", () => {
     expect(cleanUrl("not-a-url")).toBe("not-a-url");
   });
