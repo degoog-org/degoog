@@ -7,6 +7,7 @@ import {
   POST_METHOD_ENABLED,
   STICKY_SIDEBAR,
   CENTERED_MODE,
+  HIDE_URL_PARAMS,
 } from "../constants";
 import { state, defaultImageFilter } from "../state";
 import { initAutocomplete } from "../utils/autocomplete";
@@ -183,6 +184,9 @@ export async function init(): Promise<void> {
     document
       .getElementById("results-page")
       ?.classList.toggle("centered-mode", v ?? false);
+  });
+  void idbGet<boolean>(HIDE_URL_PARAMS).then((v) => {
+    if (v !== null) state.hideUrlParams = v;
   });
 
   document.body.addEventListener("click", (e) => {

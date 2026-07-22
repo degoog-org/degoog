@@ -50,7 +50,9 @@
       "sticky-sidebar": "Keep the results sidebar sticky while scrolling",
       "sticky-sidebar-aria": "Keep the results sidebar sticky while scrolling",
       "centered-mode": "Center search results",
-      "centered-mode-aria": "Center search results"
+      "centered-mode-aria": "Center search results",
+      "hide-url-params": "Hide query parameters in result URLs",
+      "hide-url-params-aria": "Hide query parameters in result URLs"
     },
     "sync": {
       "heading": "Instance defaults",

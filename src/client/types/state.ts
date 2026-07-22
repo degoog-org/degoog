@@ -26,6 +26,7 @@ export interface AppState {
   postMethodEnabled: boolean;
   inlineGifPlayback: boolean;
   stickySidebar: boolean;
+  hideUrlParams: boolean;
   isInitialLoad: boolean;
   imageFilter: ImageFilter;
 }

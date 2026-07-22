@@ -1,7 +1,10 @@
+import { state } from "../state";
+
 export const cleanUrl = (url: string): string => {
   try {
     const parsed = new URL(url);
-    return parsed.hostname + parsed.pathname;
+    // keep query string unless user opted to hide it
+    return parsed.hostname + parsed.pathname + (state.hideUrlParams ? "" : parsed.search);
   } catch {
     return url;
   }
