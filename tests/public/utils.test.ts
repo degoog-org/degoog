@@ -9,9 +9,13 @@ describe("public/utils", () => {
   });
 
   test("cleanUrl drops query params when hideUrlParams enabled", () => {
+    const prev = state.hideUrlParams;
     state.hideUrlParams = true;
-    expect(cleanUrl("https://example.com/path/to?q=1")).toBe("example.com/path/to");
-    state.hideUrlParams = false;
+    try {
+      expect(cleanUrl("https://example.com/path/to?q=1")).toBe("example.com/path/to");
+    } finally {
+      state.hideUrlParams = prev;
+    }
   });
 
   test("cleanUrl strips leading www", () => {
