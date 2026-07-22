@@ -49,7 +49,9 @@
       "sticky-sidebar": "Garder la barre latérale des résultats fixe lors du défilement",
       "sticky-sidebar-aria": "Garder la barre latérale des résultats fixe lors du défilement",
       "centered-mode": "Centrer les résultats de recherche",
-      "centered-mode-aria": "Centrer les résultats de recherche"
+      "centered-mode-aria": "Centrer les résultats de recherche",
+      "hide-url-params": "Masquer les paramètres de requête dans les URL des résultats",
+      "hide-url-params-aria": "Masquer les paramètres de requête dans les URL des résultats"
     },
     "sync": {
       "heading": "Paramètres par défaut de l'instance",

@@ -48,7 +48,9 @@
       "sticky-sidebar": "Mantieni la barra laterale dei risultati fissa durante lo scorrimento",
       "sticky-sidebar-aria": "Mantieni la barra laterale dei risultati fissa durante lo scorrimento",
       "centered-mode": "Centra i risultati di ricerca",
-      "centered-mode-aria": "Centra i risultati di ricerca"
+      "centered-mode-aria": "Centra i risultati di ricerca",
+      "hide-url-params": "Nascondi i parametri di query negli URL dei risultati",
+      "hide-url-params-aria": "Nascondi i parametri di query negli URL dei risultati"
     },
     "sync": {
       "heading": "Impostazioni predefinite dell'istanza",
