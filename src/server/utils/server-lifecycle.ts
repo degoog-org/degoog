@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "fs";
+import { existsSync } from "fs";
 import type { Subprocess, Server } from "bun";
 import { logger } from "./logger";
 import { closeAllDbs } from "../indexer/db";
@@ -17,13 +17,8 @@ export const registerServerHandle = (server: Server): void => {
 export const isDockerRuntime = (): boolean =>
   envTruthy("DEGOOG_DOCKER") || existsSync("/.dockerenv");
 
-export const isLXCRuntime = (): boolean => {
-  try {
-    return readFileSync("/run/systemd/container", "utf8").trim() === "lxc";
-  } catch {
-    return false;
-  }
-};
+/** systemd sets INVOCATION_ID for every service it supervises, so it will restart us on a non-zero exit */
+export const isSystemdService = (): boolean => Boolean(process.env.INVOCATION_ID);
 
 const hasControllingTerminal = (): boolean => Boolean(process.stdout.isTTY);
 
@@ -35,7 +30,7 @@ const hasControllingTerminal = (): boolean => Boolean(process.stdout.isTTY);
  * current one as you exit to give the illusion it's restarting.
  */
 const spawnReplacementProcess = (): Subprocess | undefined => {
-  if (isDockerRuntime() || isLXCRuntime()) return undefined;
+  if (isDockerRuntime() || isSystemdService()) return undefined;
 
   try {
     const child = Bun.spawn({
@@ -67,7 +62,7 @@ export const requestRestart = (reason: string): void => {
   clearRestartPending();
   setTimeout(() => {
     _serverHandle?.stop(true);
-    const exitCode = isLXCRuntime() ? 1 : 0;
+    const exitCode = isSystemdService() ? 1 : 0;
     const child = spawnReplacementProcess();
     stopQueue()
       .finally(async () => {
