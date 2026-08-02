@@ -670,6 +670,9 @@
     "restart": {
       "heading": "Restart required",
       "desc": "Some installed extensions need a server restart to work properly.",
+      "modal-intro": "These extensions only start working after the server restarts:",
+      "modal-note": "Restarting stops Degoog for a few seconds. You can restart later from Settings › General.",
+      "later": "Not now",
       "button": "Restart server",
       "confirm": "This restarts the Degoog server. Active searches may be interrupted briefly. Continue?",
       "restarting": "Restarting..."

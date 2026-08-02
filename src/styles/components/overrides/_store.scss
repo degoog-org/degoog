@@ -716,3 +716,29 @@
     transform: translateX(275%);
   }
 }
+
+.store-restart-intro {
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.store-restart-list {
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.store-restart-note {
+  color: var(--text-secondary);
+  font-size: $font-size-small;
+  margin: 0;
+}
+
+.store-restart-footer {
+  gap: $space-3;
+  justify-content: flex-end;
+}
