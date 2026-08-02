@@ -1,13 +1,9 @@
 import { authHeaders } from "../../utils/request";
 import { escapeHtml } from "../../utils/dom";
 import { getBase } from "../../utils/base-url";
+import { isRestartState } from "../../../shared/restart-state";
 
 const t = window.scopedT("core");
-
-interface RestartState {
-  pending: boolean;
-  reasons: string[];
-}
 
 let lastShownReasons = "";
 
@@ -46,12 +42,38 @@ function buildModal(reasons: string[]): {
       </div>
     </div>`;
 
+  const previouslyFocused = document.activeElement as HTMLElement | null;
+  const dialog = overlay.querySelector<HTMLElement>(".ext-modal")!;
+
+  const getFocusable = (): HTMLElement[] =>
+    Array.from(
+      dialog.querySelectorAll<HTMLElement>(
+        "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
+      ),
+    ).filter((el) => !el.hasAttribute("disabled"));
+
   const close = (): void => {
     overlay.remove();
     document.removeEventListener("keydown", onKey);
+    previouslyFocused?.focus();
   };
   function onKey(e: KeyboardEvent): void {
-    if (e.key === "Escape") close();
+    if (e.key === "Escape") {
+      close();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    const focusable = getFocusable();
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 
   overlay.addEventListener("click", (e) => {
@@ -63,6 +85,7 @@ function buildModal(reasons: string[]): {
     .forEach((el) => el.addEventListener("click", close));
 
   document.body.appendChild(overlay);
+  getFocusable()[0]?.focus();
   return {
     overlay,
     restartBtn: overlay.querySelector<HTMLButtonElement>(
@@ -75,13 +98,18 @@ function buildModal(reasons: string[]): {
 export async function maybeShowRestartNotice(
   getToken: () => string | null,
 ): Promise<void> {
-  let state: RestartState;
+  let state;
   try {
     const res = await fetch(`${getBase()}/api/settings/restart-state`, {
       headers: authHeaders(getToken),
     });
     if (!res.ok) return;
-    state = (await res.json()) as RestartState;
+    const payload: unknown = await res.json();
+    if (!isRestartState(payload)) {
+      console.debug("[store] restart state payload invalid", payload);
+      return;
+    }
+    state = payload;
   } catch (err) {
     console.debug("[store] restart state fetch failed", err);
     return;
@@ -96,10 +124,11 @@ export async function maybeShowRestartNotice(
     restartBtn.disabled = true;
     restartBtn.textContent = t("settings-page.restart.restarting");
     try {
-      await fetch(`${getBase()}/api/settings/restart`, {
+      const res = await fetch(`${getBase()}/api/settings/restart`, {
         method: "POST",
         headers: authHeaders(getToken),
       });
+      if (!res.ok) throw new Error(`restart request failed: ${res.status}`);
       close();
     } catch (err) {
       console.debug("[store] restart trigger failed", err);
