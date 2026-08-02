@@ -159,12 +159,11 @@ router.get("/api/search/stream", async (c) => {
       void Promise.all(enginePromises)
         .then(async () => {
         const totalTime = Math.round(performance.now() - start);
-        const rawScoredResults = scoreResults(allRawResults);
 
         const indexerSettings = await getInstanceSettings();
-        const displayResults = await applyDomainRules(rawScoredResults);
         const indexBasis = await applyDomainRules(
           scoreResults(allRawResults.filter((e) => e.name !== DEGOOG_ENGINE_NAME)),
+          { checkDeadLinks: false },
         );
         const filtersTag = toFilterTag({
           lang: resolvedLang,
