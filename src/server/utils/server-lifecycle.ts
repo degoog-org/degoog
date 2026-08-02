@@ -32,7 +32,11 @@ const SYSTEMD_RECOVERING_RESTART_POLICIES = new Set([
 const detectSystemdRestartPolicy = (): boolean => {
   try {
     const cgroup = readFileSync("/proc/self/cgroup", "utf8");
-    const unit = cgroup.match(/([\w.@-]+\.service)/)?.[1];
+    /* fccview is onto you! nested slices mean the leaf component is our unit, not the first match */
+    const unit = cgroup
+      .split(/[\n/]/)
+      .filter((part) => /^[\w.@-]+\.service$/.test(part))
+      .pop();
     if (!unit) return false;
 
     const result = Bun.spawnSync(["systemctl", "show", unit, "--property=Restart", "--value"]);
@@ -63,8 +67,8 @@ const hasControllingTerminal = (): boolean => Boolean(process.stdout.isTTY);
  * On native runs, proxmox or whatever shit you all run this stuff on, I'm gonna spawn a new process to replace the
  * current one as you exit to give the illusion it's restarting.
  */
-const spawnReplacementProcess = (): Subprocess | undefined => {
-  if (isDockerRuntime() || (isSystemdService() && isSystemdRestartConfigured())) return undefined;
+const spawnReplacementProcess = (systemdWillRestart: boolean): Subprocess | undefined => {
+  if (isDockerRuntime() || systemdWillRestart) return undefined;
 
   try {
     const child = Bun.spawn({
@@ -96,15 +100,17 @@ export const requestRestart = (reason: string): void => {
   clearRestartPending();
   setTimeout(() => {
     _serverHandle?.stop(true);
-    if (isSystemdService() && !isSystemdRestartConfigured()) {
+    const underSystemd = isSystemdService();
+    const systemdWillRestart = underSystemd && isSystemdRestartConfigured();
+    if (underSystemd && !systemdWillRestart) {
       logger.warn(
         "server",
         "running under systemd but couldn't confirm a recovering Restart= policy (auto-detect failed " +
           "and DEGOOG_SYSTEMD_RESTART_CONFIGURED is not set); falling back to self-managed restart",
       );
     }
-    const exitCode = isSystemdService() && isSystemdRestartConfigured() ? 1 : 0;
-    const child = spawnReplacementProcess();
+    const exitCode = systemdWillRestart ? 1 : 0;
+    const child = spawnReplacementProcess(systemdWillRestart);
     stopQueue()
       .finally(async () => {
         await closeAllDbs();
