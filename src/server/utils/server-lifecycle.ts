@@ -1,4 +1,4 @@
-import { existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import type { Subprocess, Server } from "bun";
 import { logger } from "./logger";
 import { closeAllDbs } from "../indexer/db";
@@ -17,8 +17,42 @@ export const registerServerHandle = (server: Server): void => {
 export const isDockerRuntime = (): boolean =>
   envTruthy("DEGOOG_DOCKER") || existsSync("/.dockerenv");
 
-/** systemd sets INVOCATION_ID for every service it supervises, so it will restart us on a non-zero exit */
+/** systemd sets INVOCATION_ID for every service it supervises, restart-on-failure or not */
 export const isSystemdService = (): boolean => Boolean(process.env.INVOCATION_ID);
+
+const SYSTEMD_RECOVERING_RESTART_POLICIES = new Set([
+  "always",
+  "on-failure",
+  "on-abnormal",
+  "on-watchdog",
+  "on-abort",
+]);
+
+/** Best-effort: resolve our own unit name from the cgroup path and ask systemd for its Restart= policy */
+const detectSystemdRestartPolicy = (): boolean => {
+  try {
+    const cgroup = readFileSync("/proc/self/cgroup", "utf8");
+    const unit = cgroup.match(/([\w.@-]+\.service)/)?.[1];
+    if (!unit) return false;
+
+    const result = Bun.spawnSync(["systemctl", "show", unit, "--property=Restart", "--value"]);
+    if (result.exitCode !== 0) return false;
+
+    const policy = result.stdout.toString().trim();
+    return SYSTEMD_RECOVERING_RESTART_POLICIES.has(policy);
+  } catch (err) {
+    logger.debug("server", "systemd restart policy detection failed", err);
+    return false;
+  }
+};
+
+/**
+ * INVOCATION_ID alone doesn't prove the unit has Restart=on-failure/always configured, so exiting
+ * non-zero and trusting systemd to bring us back is only safe once that's confirmed - either by
+ * auto-detecting the unit's actual policy, or by the user opting in when detection isn't possible.
+ */
+export const isSystemdRestartConfigured = (): boolean =>
+  envTruthy("DEGOOG_SYSTEMD_RESTART_CONFIGURED") || detectSystemdRestartPolicy();
 
 const hasControllingTerminal = (): boolean => Boolean(process.stdout.isTTY);
 
@@ -30,7 +64,7 @@ const hasControllingTerminal = (): boolean => Boolean(process.stdout.isTTY);
  * current one as you exit to give the illusion it's restarting.
  */
 const spawnReplacementProcess = (): Subprocess | undefined => {
-  if (isDockerRuntime() || isSystemdService()) return undefined;
+  if (isDockerRuntime() || (isSystemdService() && isSystemdRestartConfigured())) return undefined;
 
   try {
     const child = Bun.spawn({
@@ -62,7 +96,14 @@ export const requestRestart = (reason: string): void => {
   clearRestartPending();
   setTimeout(() => {
     _serverHandle?.stop(true);
-    const exitCode = isSystemdService() ? 1 : 0;
+    if (isSystemdService() && !isSystemdRestartConfigured()) {
+      logger.warn(
+        "server",
+        "running under systemd but couldn't confirm a recovering Restart= policy (auto-detect failed " +
+          "and DEGOOG_SYSTEMD_RESTART_CONFIGURED is not set); falling back to self-managed restart",
+      );
+    }
+    const exitCode = isSystemdService() && isSystemdRestartConfigured() ? 1 : 0;
     const child = spawnReplacementProcess();
     stopQueue()
       .finally(async () => {
