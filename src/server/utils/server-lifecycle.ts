@@ -17,8 +17,16 @@ export const registerServerHandle = (server: Server): void => {
 export const isDockerRuntime = (): boolean =>
   envTruthy("DEGOOG_DOCKER") || existsSync("/.dockerenv");
 
-/** systemd sets INVOCATION_ID for every service it supervises, restart-on-failure or not */
-export const isSystemdService = (): boolean => Boolean(process.env.INVOCATION_ID);
+export const isLXCRuntime = (): boolean => {
+  try {
+    return readFileSync("/run/systemd/container", "utf8").trim() === "lxc";
+  } catch {
+    return false;
+  }
+};
+
+export const isSystemdService = (): boolean =>
+  Boolean(process.env.INVOCATION_ID) || isLXCRuntime();
 
 const SYSTEMD_RECOVERING_RESTART_POLICIES = new Set([
   "always",
@@ -28,11 +36,9 @@ const SYSTEMD_RECOVERING_RESTART_POLICIES = new Set([
   "on-abort",
 ]);
 
-/** Best-effort: resolve our own unit name from the cgroup path and ask systemd for its Restart= policy */
-const detectSystemdRestartPolicy = (): boolean => {
+export const isSystemdRestartConfigured = (): boolean => {
   try {
     const cgroup = readFileSync("/proc/self/cgroup", "utf8");
-    /* fccview is onto you! nested slices mean the leaf component is our unit, not the first match */
     const unit = cgroup
       .split(/[\n/]/)
       .filter((part) => /^[\w.@-]+\.service$/.test(part))
@@ -49,14 +55,6 @@ const detectSystemdRestartPolicy = (): boolean => {
     return false;
   }
 };
-
-/**
- * INVOCATION_ID alone doesn't prove the unit has Restart=on-failure/always configured, so exiting
- * non-zero and trusting systemd to bring us back is only safe once that's confirmed - either by
- * auto-detecting the unit's actual policy, or by the user opting in when detection isn't possible.
- */
-export const isSystemdRestartConfigured = (): boolean =>
-  envTruthy("DEGOOG_SYSTEMD_RESTART_CONFIGURED") || detectSystemdRestartPolicy();
 
 const hasControllingTerminal = (): boolean => Boolean(process.stdout.isTTY);
 
@@ -105,8 +103,8 @@ export const requestRestart = (reason: string): void => {
     if (underSystemd && !systemdWillRestart) {
       logger.warn(
         "server",
-        "running under systemd but couldn't confirm a recovering Restart= policy (auto-detect failed " +
-          "and DEGOOG_SYSTEMD_RESTART_CONFIGURED is not set); falling back to self-managed restart",
+        "running under systemd but couldn't confirm a recovering Restart= policy; " +
+          "falling back to self-managed restart",
       );
     }
     const exitCode = systemdWillRestart ? 1 : 0;

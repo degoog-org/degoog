@@ -130,8 +130,7 @@ bun run start
 
 **note**: If running as a systemd service, set `Restart=on-failure` (or `always`) in the unit's
 `[Service]` section so restarts hand off to systemd instead of degoog's own self-respawn logic.
-This is auto-detected via `systemctl show`; if that's unavailable in your environment, set
-`DEGOOG_SYSTEMD_RESTART_CONFIGURED=true` in your `.env` to confirm it manually
+The policy is auto-detected; if it can't be confirmed, degoog falls back to respawning itself
 
 </details>
 
