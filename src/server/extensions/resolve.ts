@@ -31,7 +31,6 @@ import type {
   SlotPlugin,
   Transport,
 } from "../types";
-import type { SettingValue } from "../utils/plugin-settings";
 
 const TRANSPORT_SUFFIX = "-transport";
 const AUTOCOMPLETE_SUFFIX = "-autocomplete";
@@ -45,10 +44,7 @@ export interface ResolvedExtension {
   autocomplete: AutocompleteProvider | null;
 }
 
-interface Configurable {
-  configure?(settings: Record<string, SettingValue>): void;
-  getFieldOptions?: GetFieldOptions;
-}
+type LiveTarget = NonNullable<ResolvedExtension[keyof ResolvedExtension]>;
 
 export const getAllExtensionMeta = async (): Promise<ExtensionMeta[]> => {
   const coreT = await getCoreTranslator();
@@ -87,7 +83,7 @@ export const resolveExtension = (id: string): ResolvedExtension => ({
     : null,
 });
 
-const liveTargets = (resolved: ResolvedExtension): Configurable[] =>
+const liveTargets = (resolved: ResolvedExtension): LiveTarget[] =>
   [
     resolved.engine,
     resolved.command,
@@ -95,7 +91,7 @@ const liveTargets = (resolved: ResolvedExtension): Configurable[] =>
     resolved.interceptor,
     resolved.transport,
     resolved.autocomplete,
-  ].filter((entry): entry is Configurable => entry !== null);
+  ].filter((entry): entry is LiveTarget => entry !== null);
 
 export const findOptionsProvider = (id: string): GetFieldOptions | null => {
   const resolved = resolveExtension(id);

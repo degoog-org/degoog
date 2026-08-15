@@ -157,7 +157,9 @@ export const initOptionsFields = (
       const list = fieldEl?.querySelector<HTMLElement>(`.${OPTIONS_LIST_CLASS}`);
       const input = fieldEl?.querySelector<HTMLInputElement>("input");
       let loaded: FieldOption[] = [];
-      if (list && input) _bindCombobox(fieldEl, input, list, () => loaded);
+      if (fieldEl && list && input) {
+        _bindCombobox(fieldEl, input, list, () => loaded);
+      }
 
       const load = async (): Promise<void> => {
         btn.disabled = true;
