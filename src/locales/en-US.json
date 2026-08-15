@@ -326,7 +326,11 @@
       "field-choose-file": "Choose file",
       "field-drop-hint": "or drop here",
       "field-uploading": "Uploading…",
-      "field-upload-failed": "Upload failed"
+      "field-upload-failed": "Upload failed",
+      "field-fetch": "Fetch",
+      "field-fetching": "Fetching…",
+      "field-fetch-failed": "Could not load options",
+      "field-fetch-empty": "No options returned"
     },
     "confirm": {
       "title": "Confirm",
@@ -370,7 +374,7 @@
       "searx-desc": "Pull SearX-compatible engines straight from the SearXNG repository. This will run the python files straight within degoog without the need for a separate running SearXNG instance. Only degoog-compatible engines are listed.",
       "searx-open": "Add from SearX",
       "searx-title": "SearX engines (experimental)",
-      "searx-note":"These are SearXNG engines running through a compatibility layer, not native Degoog ones, so there are trade-offs:",
+      "searx-note": "These are SearXNG engines running through a compatibility layer, not native Degoog ones, so there are trade-offs:",
       "searx-note-native": "Score, safe search, proxies, transports and bangs should all behave exactly like a store installed engine.",
       "searx-note-upstream": "The code comes from SearXNG upstream and is not maintained by Degoog. Use at your own risk.",
       "searx-note-filters": "Image filters beyond safe search are not ported due to incompatibilities, when filtering the searx engines will likely throw no results.",

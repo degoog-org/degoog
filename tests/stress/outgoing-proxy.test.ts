@@ -96,6 +96,31 @@ describe("outgoing proxy integration", () => {
     expect(body).toBe("target-ok");
   });
 
+  test("request expands explicitly allowed env placeholders", async () => {
+    const savedUrl = process.env.REPLIT_PROXY_URL;
+    const savedList = process.env.DEGOOG_PROXY_ENV_ALLOWLIST;
+    process.env.REPLIT_PROXY_URL = `http://localhost:${proxy.port}`;
+    process.env.DEGOOG_PROXY_ENV_ALLOWLIST = "REPLIT_PROXY_URL";
+    try {
+      await updateInstanceSettings({
+        proxyEnabled: "true",
+        proxyUrls: "${REPLIT_PROXY_URL}",
+      });
+
+      const targetUrl = `http://localhost:${targetServer.port}/test`;
+      const res = await outgoingFetch(targetUrl);
+      const body = await res.text();
+
+      expect(proxy.hits.length).toBeGreaterThan(0);
+      expect(body).toBe("target-ok");
+    } finally {
+      if (savedUrl === undefined) delete process.env.REPLIT_PROXY_URL;
+      else process.env.REPLIT_PROXY_URL = savedUrl;
+      if (savedList === undefined) delete process.env.DEGOOG_PROXY_ENV_ALLOWLIST;
+      else process.env.DEGOOG_PROXY_ENV_ALLOWLIST = savedList;
+    }
+  });
+
   test("request goes direct when proxy is disabled", async () => {
     await updateInstanceSettings({
       proxyEnabled: "false",

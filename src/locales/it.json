@@ -293,7 +293,11 @@
       "field-choose-file": "Scegli file",
       "field-drop-hint": "o trascina qui",
       "field-uploading": "Caricamento…",
-      "field-upload-failed": "Caricamento fallito"
+      "field-upload-failed": "Caricamento fallito",
+      "field-fetch": "Carica",
+      "field-fetching": "Caricamento…",
+      "field-fetch-failed": "Impossibile caricare le opzioni",
+      "field-fetch-empty": "Nessuna opzione restituita"
     },
     "confirm": {
       "title": "Conferma",

@@ -5,6 +5,7 @@ import {
   initRangeFields,
   initFileFields,
 } from "./field-widgets";
+import { initOptionsFields } from "./options-field";
 import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
@@ -277,6 +278,7 @@ export function openModal(ext: ExtensionMeta): void {
         syncConditionalFields(bodyEl);
       });
     _initTestButton(bodyEl);
+    initOptionsFields(bodyEl, ext.id, _collectValues);
     initUrlList(bodyEl);
     initListFields(bodyEl, ext.id);
     initHexFields(bodyEl);

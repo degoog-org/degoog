@@ -45,6 +45,29 @@ export enum ExtensionStoreType {
 }
 
 
+export interface FieldOption {
+  value: string;
+  label?: string;
+}
+
+export interface FieldOptionsResult {
+  options: FieldOption[];
+  notice?: string;
+  value?: string;
+}
+
+export interface FieldOptionsSource {
+  dependsOn?: string[];
+  refreshLabel?: string;
+  emptyHint?: string;
+  auto?: boolean;
+}
+
+export type GetFieldOptions = (
+  key: string,
+  values: Record<string, SettingValue>,
+) => Promise<FieldOptionsResult> | FieldOptionsResult;
+
 export interface SettingField {
   key: string;
   label: string;
@@ -80,6 +103,7 @@ export interface SettingField {
   accept?: string;
   maxSizeKb?: string;
   minSizeKb?: string;
+  optionsFrom?: FieldOptionsSource;
 }
 
 export interface PluginManifest {
@@ -88,6 +112,7 @@ export interface PluginManifest {
   description?: string;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
+  getFieldOptions?: GetFieldOptions;
 }
 
 export interface ExtensionMeta {
@@ -132,6 +157,7 @@ export interface SearchEngine {
   needsAppRestart?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
+  getFieldOptions?: GetFieldOptions;
   executeSearch(
     query: string,
     page?: number,
@@ -165,6 +191,7 @@ export interface AutocompleteProvider {
   needsAppRestart?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
+  getFieldOptions?: GetFieldOptions;
   getSuggestions(
     query: string,
     context?: AutocompleteContext,
@@ -202,6 +229,7 @@ export interface SlotPlugin {
   ): Promise<{ title?: string; html: string }>;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
+  getFieldOptions?: GetFieldOptions;
   init?(context: PluginContext): void | Promise<void>;
   t?: Translate;
   pluginManifest?: PluginManifest;
@@ -230,6 +258,7 @@ export interface BangCommand {
   needsAppRestart?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
+  getFieldOptions?: GetFieldOptions;
   isConfigured?(): Promise<boolean>;
   init?(context: PluginContext): void | Promise<void>;
   execute(args: string, context?: CommandContext): Promise<CommandResult>;
@@ -251,6 +280,7 @@ export interface SearchResultTab {
   ): Promise<{ results: SearchResult[]; totalPages?: number }>;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
+  getFieldOptions?: GetFieldOptions;
   init?(context: PluginContext): void | Promise<void>;
   t?: Translate;
 }
@@ -267,6 +297,7 @@ export interface RequestMiddleware {
   needsAppRestart?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
+  getFieldOptions?: GetFieldOptions;
   init?(context: PluginContext): void | Promise<void>;
   handle(
     req: Request,
@@ -337,6 +368,7 @@ export interface Transport {
   needsAppRestart?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
+  getFieldOptions?: GetFieldOptions;
   available(): boolean | Promise<boolean>;
   fetch(
     url: string,
@@ -374,6 +406,7 @@ export interface QueryInterceptor {
   settingsSchema?: SettingField[];
   priority?: number;
   configure?(settings: Record<string, SettingValue>): void;
+  getFieldOptions?: GetFieldOptions;
   init?(context: PluginContext): void | Promise<void>;
   intercept(
     query: string,

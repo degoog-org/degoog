@@ -15,6 +15,18 @@ export type SettingFieldType =
   | "file"
   | "info";
 
+export interface FieldOption {
+  value: string;
+  label?: string;
+}
+
+export interface FieldOptionsSource {
+  dependsOn?: string[];
+  refreshLabel?: string;
+  emptyHint?: string;
+  auto?: boolean;
+}
+
 export interface SettingField {
   key: string;
   label: string;
@@ -37,6 +49,7 @@ export interface SettingField {
   accept?: string;
   maxSizeKb?: string;
   minSizeKb?: string;
+  optionsFrom?: FieldOptionsSource;
 }
 
 export interface ExtensionMeta {

@@ -1,24 +1,11 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import {
-  getEngineExtensionMeta,
-  getEngineMap,
-} from "../extensions/engines/registry";
+import { getEngineExtensionMeta } from "../extensions/engines/registry";
 import { canBalrogPass, gandalf } from "./settings-auth";
-import {
-  getPluginExtensionMeta,
-  getCommandInstanceById,
-} from "../extensions/commands/registry";
+import { getPluginExtensionMeta } from "../extensions/commands/registry";
 import { getCoreTranslator } from "./pages";
-import {
-  getSlotPlugins,
-  getSlotPluginById,
-  getSlotExtensionMeta,
-} from "../extensions/slots/registry";
-import {
-  getInterceptorMeta,
-  getInterceptorBySettingsId,
-} from "../extensions/interceptors/registry";
+import { getSlotExtensionMeta } from "../extensions/slots/registry";
+import { getInterceptorMeta } from "../extensions/interceptors/registry";
 import { getSearchBarActionExtensionMeta } from "../extensions/search-bar/registry";
 import { getThemeExtensionMeta } from "../extensions/themes/registry";
 import {
@@ -37,10 +24,7 @@ import {
   getTransportExtensionMeta,
   getTransport,
 } from "../extensions/transports/registry";
-import {
-  getAutocompleteExtensionMeta,
-  getAutocompleteProviderById,
-} from "../extensions/autocomplete/registry";
+import { getAutocompleteExtensionMeta } from "../extensions/autocomplete/registry";
 import { getShortcutExtensionMeta } from "../extensions/shortcuts/registry";
 import { outgoingFetch } from "../utils/outgoing";
 import { readFile } from "fs/promises";
@@ -51,28 +35,19 @@ import { readObjectBody } from "../utils/hono";
 import { isVersionAtLeast, getAppVersion } from "../../shared/utils/version";
 import { savePluginUpload } from "../utils/plugin-uploads";
 import { logger } from "../utils/logger";
-import type { SettingField } from "../types";
+import {
+  findExtensionMeta,
+  findOptionsProvider,
+  resolveExtension,
+} from "../extensions/resolve";
+import type { FieldOption, SettingField } from "../types";
 
 const router = new Hono();
 
 const FALLBACK_UPLOAD_KB = 5 * 1024;
 const UPLOAD_BODY_LIMIT_BYTES = 25 * 1024 * 1024;
-
-const _allExtensionMeta = async (): Promise<ExtensionMeta[]> => {
-  const coreT = await getCoreTranslator();
-  const groups = await Promise.all([
-    getEngineExtensionMeta(coreT),
-    getPluginExtensionMeta(coreT),
-    getSlotExtensionMeta(coreT),
-    getInterceptorMeta(),
-    getSearchBarActionExtensionMeta(),
-    getThemeExtensionMeta(),
-    getTransportExtensionMeta(),
-    getAutocompleteExtensionMeta(),
-    getShortcutExtensionMeta(),
-  ]);
-  return groups.flat();
-};
+const MAX_FIELD_OPTIONS = 500;
+const OPTIONS_TIMEOUT_MS = 15_000;
 
 const _fileFieldByKey = (
   schema: SettingField[],
@@ -86,6 +61,73 @@ const _fileFieldByKey = (
     if (nested) return nested;
   }
   return null;
+};
+
+const _optionsFieldByKey = (
+  schema: SettingField[],
+  key: string,
+): SettingField | null => {
+  for (const field of schema) {
+    if (field.optionsFrom && field.key === key) return field;
+    const nested = field.itemSchema?.find(
+      (sub) => sub.optionsFrom && sub.key === key,
+    );
+    if (nested) return nested;
+  }
+  return null;
+};
+
+const _schemaValues = (
+  body: Record<string, unknown>,
+  schema: SettingField[],
+): Record<string, SettingValue> => {
+  const keys = new Set(schema.map((f) => f.key));
+  const out: Record<string, SettingValue> = {};
+  for (const [key, value] of Object.entries(body)) {
+    if (!keys.has(key)) continue;
+    if (typeof value === "string") {
+      out[key] = value;
+    } else if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
+      out[key] = value as string[];
+    }
+  }
+  return out;
+};
+
+const _cleanOptions = (raw: unknown): FieldOption[] => {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const out: FieldOption[] = [];
+  for (const entry of raw.slice(0, MAX_FIELD_OPTIONS)) {
+    const value =
+      typeof entry === "string"
+        ? entry
+        : typeof (entry as FieldOption)?.value === "string"
+          ? (entry as FieldOption).value
+          : "";
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    const label = typeof (entry as FieldOption)?.label === "string"
+      ? (entry as FieldOption).label
+      : undefined;
+    out.push(label ? { value, label } : { value });
+  }
+  return out;
+};
+
+const _withDeadline = async <T>(work: Promise<T> | T): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error("Options lookup timed out")),
+      OPTIONS_TIMEOUT_MS,
+    );
+  });
+  try {
+    return await Promise.race([Promise.resolve(work), deadline]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 };
 
 const _matchesAccept = (file: File, accept: string): boolean => {
@@ -231,39 +273,7 @@ router.post("/api/extensions/:id/settings", async (c) => {
   const body = await readObjectBody<Record<string, unknown>>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
-  const coreT = await getCoreTranslator();
-  const [
-    engines,
-    plugins,
-    slotMeta,
-    iceptMeta,
-    searchBarMeta,
-    themes,
-    transportMeta,
-    autocompleteMeta,
-    shortcutMeta,
-  ] = await Promise.all([
-    getEngineExtensionMeta(coreT),
-    getPluginExtensionMeta(coreT),
-    getSlotExtensionMeta(coreT),
-    getInterceptorMeta(),
-    getSearchBarActionExtensionMeta(),
-    getThemeExtensionMeta(),
-    getTransportExtensionMeta(),
-    getAutocompleteExtensionMeta(),
-    getShortcutExtensionMeta(),
-  ]);
-  const ext = [
-    ...engines,
-    ...plugins,
-    ...slotMeta,
-    ...iceptMeta,
-    ...searchBarMeta,
-    ...themes,
-    ...transportMeta,
-    ...autocompleteMeta,
-    ...shortcutMeta,
-  ].find((e) => e.id === id);
+  const ext = await findExtensionMeta(id);
 
   if (!ext) {
     return c.json({ error: "Extension not found" }, 404);
@@ -325,42 +335,62 @@ router.post("/api/extensions/:id/settings", async (c) => {
     }
   }
 
-  const engineInstance = getEngineMap()[id];
-  if (engineInstance?.configure) engineInstance.configure(merged);
+  const resolved = resolveExtension(id);
+  resolved.engine?.configure?.(merged);
+  resolved.command?.configure?.(merged);
+  resolved.slot?.configure?.(merged);
+  resolved.interceptor?.configure?.(merged);
+  resolved.transport?.configure?.(merged);
+  resolved.autocomplete?.configure?.(merged);
 
-  const commandInstance = getCommandInstanceById(id);
-  if (commandInstance?.configure) commandInstance.configure(merged);
-
-  const slotMatch = getSlotPlugins().find((s) => s.settingsId === id)?.id;
-  if (slotMatch) {
-    const slotPlugin = getSlotPluginById(slotMatch);
-    if (slotPlugin?.configure) slotPlugin.configure(merged);
-    if (slotPlugin && merged.priority !== undefined) {
-      const p = parseInt(String(merged.priority), 10);
-      slotPlugin.priority = isNaN(p) ? 0 : p;
-    }
-  }
-
-  const interceptorMatch = getInterceptorBySettingsId(id);
-  if (interceptorMatch) {
-    if (interceptorMatch.configure) interceptorMatch.configure(merged);
-    if (merged.priority !== undefined) {
-      const p = parseInt(String(merged.priority), 10);
-      interceptorMatch.priority = isNaN(p) ? 0 : p;
-    }
-  }
-
-  if (id.endsWith("-transport")) {
-    const transportInstance = getTransport(id);
-    if (transportInstance?.configure) transportInstance.configure(merged);
-  }
-
-  if (id.endsWith("-autocomplete")) {
-    const providerInstance = getAutocompleteProviderById(id);
-    if (providerInstance?.configure) providerInstance.configure(merged);
+  if (merged.priority !== undefined) {
+    const parsed = parseInt(String(merged.priority), 10);
+    const priority = isNaN(parsed) ? 0 : parsed;
+    if (resolved.slot) resolved.slot.priority = priority;
+    if (resolved.interceptor) resolved.interceptor.priority = priority;
   }
 
   return c.json({ ok: true });
+});
+
+router.post("/api/extensions/:id/options/:key", async (c) => {
+  const token = canBalrogPass(c);
+  if (!(await gandalf(token)))
+    return c.json({ error: "You shall not pass!" }, 401);
+
+  const id = c.req.param("id");
+  const key = c.req.param("key");
+  const body = await readObjectBody<Record<string, unknown>>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
+
+  const ext = await findExtensionMeta(id);
+  if (!ext) return c.json({ error: "Extension not found" }, 404);
+
+  const field = _optionsFieldByKey(ext.settingsSchema, key);
+  if (!field) return c.json({ error: "Field has no options source" }, 400);
+
+  const provider = findOptionsProvider(id);
+  if (!provider) return c.json({ error: "Extension cannot list options" }, 400);
+
+  const stored = await getSettings(id);
+  const values = mergeSecrets(
+    _schemaValues(body, ext.settingsSchema),
+    stored,
+    ext.settingsSchema,
+  );
+
+  try {
+    const result = await _withDeadline(provider(key, values));
+    return c.json({
+      ok: true,
+      options: _cleanOptions(result?.options),
+      notice: typeof result?.notice === "string" ? result.notice : "",
+      value: typeof result?.value === "string" ? result.value : "",
+    });
+  } catch (err) {
+    logger.warn("extensions", `Options lookup failed for ${id}.${key}`, err);
+    return c.json({ error: "Could not load options" }, 502);
+  }
 });
 
 router.post(
@@ -385,7 +415,7 @@ router.post(
       return c.json({ error: "Missing file or key" }, 400);
     }
 
-    const ext = (await _allExtensionMeta()).find((e) => e.id === id);
+    const ext = await findExtensionMeta(id);
     if (!ext) return c.json({ error: "Extension not found" }, 404);
 
     const field = _fileFieldByKey(ext.settingsSchema, key);

@@ -293,7 +293,11 @@
       "field-choose-file": "בחר קובץ",
       "field-drop-hint": "או גרור לכאן",
       "field-uploading": "מעלה…",
-      "field-upload-failed": "ההעלאה נכשלה"
+      "field-upload-failed": "ההעלאה נכשלה",
+      "field-fetch": "טעינה",
+      "field-fetching": "טוען…",
+      "field-fetch-failed": "לא ניתן לטעון אפשרויות",
+      "field-fetch-empty": "לא הוחזרו אפשרויות"
     },
     "confirm": {
       "title": "אישור",
