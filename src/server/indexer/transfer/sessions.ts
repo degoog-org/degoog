@@ -38,7 +38,7 @@ const bin = (path: string): void => {
   try {
     unlinkSync(path);
   } catch {
-    // best-effort cleanup
+    // Not leaving a log or it'll spam.
   }
 };
 

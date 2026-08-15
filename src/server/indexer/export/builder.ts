@@ -87,7 +87,7 @@ export const buildSqliteExportFile = async (type: string): Promise<string> => {
     try {
       unlinkSync(tmpPath);
     } catch {
-      // best-effort cleanup
+      // Not leaving a log or it'll spam.
     }
     throw err;
   } finally {
@@ -106,7 +106,7 @@ export const buildSqliteExport = async (type: string): Promise<Buffer> => {
     try {
       unlinkSync(tmpPath);
     } catch {
-      // best-effort cleanup
+      // Not leaving a log or it'll spam.
     }
   }
 };

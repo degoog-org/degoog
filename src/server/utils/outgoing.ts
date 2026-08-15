@@ -54,11 +54,44 @@ export function setOutgoingAllowlist(hosts: string[]): void {
 
 let proxyIndex = 0;
 
+const PROXY_ENV_PLACEHOLDER_RE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
+
+function envNameOk(name: string): boolean {
+  const allowlist = process.env.DEGOOG_PROXY_ENV_ALLOWLIST ?? "";
+  return allowlist
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .some((entry) => {
+      if (entry === "*") return true;
+      if (entry.endsWith("*")) return name.startsWith(entry.slice(0, -1));
+      return name === entry;
+    });
+}
+
+export function proxyEnv(value: string): string {
+  return value.replace(PROXY_ENV_PLACEHOLDER_RE, (match, name: string) => {
+    if (!envNameOk(name)) return match;
+    return process.env[name] ?? match;
+  });
+}
+
+export function maskProxy(proxyUrl: string): string {
+  try {
+    const parsed = new URL(proxyUrl);
+    if (parsed.username) parsed.username = "***";
+    if (parsed.password) parsed.password = "***";
+    return parsed.toString();
+  } catch {
+    return proxyUrl.replace(PROXY_ENV_PLACEHOLDER_RE, "${***}");
+  }
+}
+
 function parseProxyUrls(raw: string): string[] {
   if (!raw || typeof raw !== "string") return [];
   return raw
     .split("\n")
-    .map((s) => s.trim())
+    .map((s) => proxyEnv(s.trim()))
     .filter(Boolean);
 }
 
@@ -67,7 +100,7 @@ function parseProxyUrlsList(rawList: string[]): string[] {
   for (const raw of rawList) {
     if (typeof raw !== "string") continue;
     for (const line of raw.split("\n")) {
-      const trimmed = line.trim();
+      const trimmed = proxyEnv(line.trim());
       if (trimmed) out.push(trimmed);
     }
   }
@@ -191,7 +224,7 @@ export async function outgoingFetch(
   if (context.proxyUrl) {
     logger.debug(
       "outgoing",
-      `${transport.name} via ${context.proxyUrl} -> ${host}`,
+      `${transport.name} via ${maskProxy(context.proxyUrl)} -> ${host}`,
     );
   } else {
     logger.debug("outgoing", `${transport.name} -> ${host}`);

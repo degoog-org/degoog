@@ -5,6 +5,7 @@ import {
   initRangeFields,
   initFileFields,
 } from "./field-widgets";
+import { initOptionsFields, disposeOptionsFields } from "./options-field";
 import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
@@ -264,6 +265,7 @@ export function openModal(ext: ExtensionMeta): void {
         <span class="ext-test-result"></span>
       </div>`;
     }
+    disposeOptionsFields();
     bodyEl.innerHTML = html;
     if (!modalBodyConditionalChangeBound && bodyEl) {
       modalBodyConditionalChangeBound = true;
@@ -277,6 +279,7 @@ export function openModal(ext: ExtensionMeta): void {
         syncConditionalFields(bodyEl);
       });
     _initTestButton(bodyEl);
+    initOptionsFields(bodyEl, ext.id, _collectValues);
     initUrlList(bodyEl);
     initListFields(bodyEl, ext.id);
     initHexFields(bodyEl);
@@ -304,6 +307,7 @@ export function openModal(ext: ExtensionMeta): void {
 }
 
 export function closeModal(): void {
+  disposeOptionsFields();
   if (overlay) overlay.style.display = "none";
   currentExt = null;
   if (saveBtn) saveBtn.style.display = "";
@@ -324,6 +328,7 @@ export function openCustomModal(options: {
   if (docs) docs.style.display = "none";
   if (saveBtn) saveBtn.style.display = "none";
   if (titleEl) titleEl.textContent = options.title;
+  disposeOptionsFields();
   if (bodyEl) bodyEl.innerHTML = options.body;
   if (statusEl) statusEl.textContent = "";
   if (overlay) overlay.style.display = "flex";
