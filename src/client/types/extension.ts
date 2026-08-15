@@ -1,4 +1,11 @@
 import type { EngineFilters } from "../../shared/engine-filters";
+import type { FieldOptionsSource } from "../../shared/field-options";
+
+export type {
+  FieldOption,
+  FieldOptionsResult,
+  FieldOptionsSource,
+} from "../../shared/field-options";
 
 export type SettingFieldType =
   | "text"
@@ -14,18 +21,6 @@ export type SettingFieldType =
   | "range"
   | "file"
   | "info";
-
-export interface FieldOption {
-  value: string;
-  label?: string;
-}
-
-export interface FieldOptionsSource {
-  dependsOn?: string[];
-  refreshLabel?: string;
-  emptyHint?: string;
-  auto?: boolean;
-}
 
 export interface SettingField {
   key: string;

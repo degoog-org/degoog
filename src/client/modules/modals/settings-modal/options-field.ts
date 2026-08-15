@@ -3,6 +3,7 @@ import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
 import { escapeHtml } from "../../../utils/dom";
 import type { FieldOption, SettingField } from "../../../types";
+import { parseFieldOptionsResponse } from "./options-field-parse";
 
 const t = window.scopedT("core");
 
@@ -86,6 +87,7 @@ const _bindCombobox = (
   input: HTMLInputElement,
   list: HTMLElement,
   readOptions: () => FieldOption[],
+  signal: AbortSignal,
 ): void => {
   const close = (): void => {
     list.hidden = true;
@@ -119,9 +121,13 @@ const _bindCombobox = (
     input.dispatchEvent(new Event("change", { bubbles: true }));
   });
 
-  document.addEventListener("click", (event) => {
-    if (!fieldEl.contains(event.target as Node)) close();
-  });
+  document.addEventListener(
+    "click",
+    (event) => {
+      if (!fieldEl.contains(event.target as Node)) close();
+    },
+    { signal },
+  );
 };
 
 const _dependenciesReady = (
@@ -133,11 +139,22 @@ const _dependenciesReady = (
     return Array.isArray(value) ? value.length > 0 : (value ?? "") !== "";
   });
 
+let optionsFieldsAbort: AbortController | null = null;
+
+export const disposeOptionsFields = (): void => {
+  optionsFieldsAbort?.abort();
+  optionsFieldsAbort = null;
+};
+
 export const initOptionsFields = (
   container: HTMLElement,
   extId: string,
   collectValues: () => Record<string, string | string[]>,
 ): void => {
+  disposeOptionsFields();
+  const abort = new AbortController();
+  optionsFieldsAbort = abort;
+
   container
     .querySelectorAll<HTMLButtonElement>(`.${OPTIONS_BTN_CLASS}`)
     .forEach((btn) => {
@@ -158,7 +175,7 @@ export const initOptionsFields = (
       const input = fieldEl?.querySelector<HTMLInputElement>("input");
       let loaded: FieldOption[] = [];
       if (fieldEl && list && input) {
-        _bindCombobox(fieldEl, input, list, () => loaded);
+        _bindCombobox(fieldEl, input, list, () => loaded, abort.signal);
       }
 
       const load = async (): Promise<void> => {
@@ -173,16 +190,13 @@ export const initOptionsFields = (
               body: JSON.stringify(collectValues()),
             },
           );
-          const data = (await res.json().catch(() => null)) as {
-            options?: FieldOption[];
-            notice?: string;
-            value?: string;
-          } | null;
+          const raw: unknown = await res.json().catch(() => null);
+          const data = parseFieldOptionsResponse(raw);
           if (!res.ok || !data) {
             setStatus(t("settings-page.modal.field-fetch-failed"));
             return;
           }
-          const options = data.options ?? [];
+          const options = data.options;
           const chosen = data.value ?? "";
           const select = fieldEl?.querySelector<HTMLSelectElement>("select");
           if (select) {

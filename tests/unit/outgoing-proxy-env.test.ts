@@ -31,6 +31,7 @@ describe("proxy env placeholders", () => {
   });
 
   test("does not expand names that are not explicitly allowed", () => {
+    setEnv("DEGOOG_PROXY_ENV_ALLOWLIST", "");
     setEnv("DEGOOG_SETTINGS_PASSWORDS", "admin-secret");
 
     expect(

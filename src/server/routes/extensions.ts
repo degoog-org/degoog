@@ -7,6 +7,7 @@ import { getCoreTranslator } from "./pages";
 import { getSlotExtensionMeta } from "../extensions/slots/registry";
 import { getInterceptorMeta } from "../extensions/interceptors/registry";
 import { getSearchBarActionExtensionMeta } from "../extensions/search-bar/registry";
+import { getSearchResultTabExtensionMeta } from "../extensions/search-result-tabs/registry";
 import { getThemeExtensionMeta } from "../extensions/themes/registry";
 import {
   getSettings,
@@ -115,16 +116,19 @@ const _cleanOptions = (raw: unknown): FieldOption[] => {
   return out;
 };
 
-const _withDeadline = async <T>(work: Promise<T> | T): Promise<T> => {
+const _withDeadline = async <T>(
+  run: (signal: AbortSignal) => Promise<T> | T,
+): Promise<T> => {
+  const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   const deadline = new Promise<never>((_, reject) => {
-    timer = setTimeout(
-      () => reject(new Error("Options lookup timed out")),
-      OPTIONS_TIMEOUT_MS,
-    );
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error("Options lookup timed out"));
+    }, OPTIONS_TIMEOUT_MS);
   });
   try {
-    return await Promise.race([Promise.resolve(work), deadline]);
+    return await Promise.race([Promise.resolve(run(controller.signal)), deadline]);
   } finally {
     if (timer) clearTimeout(timer);
   }
@@ -181,6 +185,7 @@ router.get("/api/extensions", async (c) => {
     slotMeta,
     interceptorMeta,
     searchBarMeta,
+    tabMeta,
     themes,
     transports,
     autocomplete,
@@ -192,6 +197,7 @@ router.get("/api/extensions", async (c) => {
     getSlotExtensionMeta(coreT),
     getInterceptorMeta(),
     getSearchBarActionExtensionMeta(),
+    getSearchResultTabExtensionMeta(),
     getThemeExtensionMeta(),
     getTransportExtensionMeta(),
     getAutocompleteExtensionMeta(),
@@ -205,6 +211,7 @@ router.get("/api/extensions", async (c) => {
     ...slotMeta,
     ...interceptorMeta,
     ...searchBarMeta,
+    ...tabMeta,
     ...themes,
     ...transports,
     ...autocomplete,
@@ -245,7 +252,7 @@ router.get("/api/extensions", async (c) => {
 
   const full = {
     engines: redact(engines),
-    plugins: redact([...plugins, ...slotMeta, ...interceptorMeta, ...searchBarMeta]),
+    plugins: redact([...plugins, ...slotMeta, ...interceptorMeta, ...searchBarMeta, ...tabMeta]),
     themes: redact(themes),
     transports: redact(transports),
     autocomplete: redact(autocomplete),
@@ -340,6 +347,7 @@ router.post("/api/extensions/:id/settings", async (c) => {
   resolved.command?.configure?.(merged);
   resolved.slot?.configure?.(merged);
   resolved.interceptor?.configure?.(merged);
+  resolved.tab?.configure?.(merged);
   resolved.transport?.configure?.(merged);
   resolved.autocomplete?.configure?.(merged);
 
@@ -380,7 +388,7 @@ router.post("/api/extensions/:id/options/:key", async (c) => {
   );
 
   try {
-    const result = await _withDeadline(provider(key, values));
+    const result = await _withDeadline((signal) => provider(key, values, signal));
     return c.json({
       ok: true,
       options: _cleanOptions(result?.options),

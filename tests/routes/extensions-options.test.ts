@@ -1,16 +1,23 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import {
   ExtensionStoreType,
+  SlotPanelPosition,
   type ExtensionMeta,
   type SearchEngine,
+  type SearchResultTab,
+  type SlotPlugin,
 } from "../../src/server/types";
 import type { SettingValue } from "../../src/server/utils/plugin-settings";
 
 const ENGINES_MOD = "../../src/server/extensions/engines/registry";
 const SETTINGS_MOD = "../../src/server/utils/plugin-settings";
+const TABS_MOD = "../../src/server/extensions/search-result-tabs/registry";
+const SLOTS_MOD = "../../src/server/extensions/slots/registry";
 
 const EXT_ID = "fake-options-engine";
 const BARE_ID = "bare-options-engine";
+const TAB_ID = "fake-options-tab";
+const SLOT_ID = "fake-options-slot";
 const url = (id: string, key: string): string =>
   `http://localhost/api/extensions/${id}/options/${key}`;
 
@@ -37,13 +44,19 @@ const metaFor = (id: string): ExtensionMeta => ({
 });
 
 let seenValues: Record<string, SettingValue> = {};
+let seenSignal: unknown;
 let hookBehaviour: "ok" | "throw" | "choose" | "badValue" = "ok";
 
 const fakeEngine = {
   name: "fake",
   executeSearch: async () => [],
-  getFieldOptions: async (key: string, values: Record<string, SettingValue>) => {
+  getFieldOptions: async (
+    key: string,
+    values: Record<string, SettingValue>,
+    signal?: AbortSignal,
+  ) => {
     seenValues = values;
+    seenSignal = signal;
     if (hookBehaviour === "throw") throw new Error("upstream down");
     if (hookBehaviour === "choose") {
       return { options: ["gemma3:e2b", "qwen3:8b"], value: "qwen3:8b" };
@@ -64,8 +77,41 @@ const fakeEngine = {
   },
 } as unknown as SearchEngine;
 
+const fakeTab = {
+  id: TAB_ID,
+  name: "Fake options tab",
+  settingsId: TAB_ID,
+  settingsSchema: SCHEMA,
+  executeSearch: async () => ({ results: [] }),
+  getFieldOptions: async () => ({
+    options: [{ value: "tab-opt", label: "Tab option" }],
+    notice: "from tab",
+  }),
+} as SearchResultTab;
+
+const fakeSlot = {
+  id: SLOT_ID,
+  name: "Fake options slot",
+  description: "",
+  settingsId: SLOT_ID,
+  position: SlotPanelPosition.AboveResults,
+  trigger: () => false,
+  execute: async () => ({ html: "" }),
+  pluginManifest: {
+    id: SLOT_ID,
+    name: "Fake options manifest",
+    settingsSchema: SCHEMA,
+    getFieldOptions: async () => ({
+      options: [{ value: "manifest-opt" }],
+      notice: "from manifest",
+    }),
+  },
+} as SlotPlugin;
+
 const enginesReal = { ...(await import(ENGINES_MOD)) };
 const settingsReal = { ...(await import(SETTINGS_MOD)) };
+const tabsReal = { ...(await import(TABS_MOD)) };
+const slotsReal = { ...(await import(SLOTS_MOD)) };
 
 const SAVED_ENV_KEYS = [
   "DEGOOG_DANGEROUSLY_NO_PASSWORD",
@@ -99,6 +145,18 @@ describe("POST /api/extensions/:id/options/:key", () => {
       getEngineExtensionMeta: async () => [metaFor(EXT_ID), metaFor(BARE_ID)],
       getEngineMap: () => ({ [EXT_ID]: fakeEngine }),
     }));
+    mock.module(TABS_MOD, () => ({
+      ...tabsReal,
+      getSearchResultTabExtensionMeta: async () => [metaFor(TAB_ID)],
+      getSearchResultTabs: () => [fakeTab],
+      getSearchResultTabById: (id: string) => (id === TAB_ID ? fakeTab : null),
+    }));
+    mock.module(SLOTS_MOD, () => ({
+      ...slotsReal,
+      getSlotExtensionMeta: async () => [metaFor(SLOT_ID)],
+      getSlotPlugins: () => [fakeSlot],
+      getSlotPluginById: (id: string) => (id === SLOT_ID ? fakeSlot : null),
+    }));
     mock.module(SETTINGS_MOD, () => ({
       ...settingsReal,
       getSettings: async () => ({ apiKey: "stored-secret", plain: "stored" }),
@@ -109,6 +167,8 @@ describe("POST /api/extensions/:id/options/:key", () => {
 
   afterAll(() => {
     mock.module(ENGINES_MOD, () => enginesReal);
+    mock.module(TABS_MOD, () => tabsReal);
+    mock.module(SLOTS_MOD, () => slotsReal);
     mock.module(SETTINGS_MOD, () => settingsReal);
     for (const [key, value] of savedEnv) {
       if (value === undefined) delete process.env[key];
@@ -191,5 +251,40 @@ describe("POST /api/extensions/:id/options/:key", () => {
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({ error: "Could not load options" });
     hookBehaviour = "ok";
+  });
+
+  test("passes an abort signal to the provider", async () => {
+    hookBehaviour = "ok";
+    seenSignal = undefined;
+    await post(EXT_ID, "model", {});
+    expect(seenSignal).toBeDefined();
+    expect(
+      typeof seenSignal === "object" &&
+        seenSignal !== null &&
+        "aborted" in seenSignal &&
+        seenSignal.aborted === false,
+    ).toBe(true);
+  });
+
+  test("resolves getFieldOptions from a search result tab", async () => {
+    const res = await post(TAB_ID, "model", {});
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      ok: true,
+      options: [{ value: "tab-opt", label: "Tab option" }],
+      notice: "from tab",
+      value: "",
+    });
+  });
+
+  test("resolves getFieldOptions from a plugin manifest on a slot", async () => {
+    const res = await post(SLOT_ID, "model", {});
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      ok: true,
+      options: [{ value: "manifest-opt" }],
+      notice: "from manifest",
+      value: "",
+    });
   });
 });

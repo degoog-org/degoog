@@ -21,6 +21,11 @@ import {
   getAutocompleteProviderById,
 } from "./autocomplete/registry";
 import { getShortcutExtensionMeta } from "./shortcuts/registry";
+import {
+  getSearchResultTabById,
+  getSearchResultTabExtensionMeta,
+  getSearchResultTabs,
+} from "./search-result-tabs/registry";
 import type {
   AutocompleteProvider,
   BangCommand,
@@ -28,6 +33,7 @@ import type {
   GetFieldOptions,
   QueryInterceptor,
   SearchEngine,
+  SearchResultTab,
   SlotPlugin,
   Transport,
 } from "../types";
@@ -40,11 +46,17 @@ export interface ResolvedExtension {
   command: BangCommand | null;
   slot: SlotPlugin | null;
   interceptor: QueryInterceptor | null;
+  tab: SearchResultTab | null;
   transport: Transport | null;
   autocomplete: AutocompleteProvider | null;
 }
 
 type LiveTarget = NonNullable<ResolvedExtension[keyof ResolvedExtension]>;
+
+type OptionsHost = {
+  getFieldOptions?: GetFieldOptions;
+  pluginManifest?: { getFieldOptions?: GetFieldOptions };
+};
 
 export const getAllExtensionMeta = async (): Promise<ExtensionMeta[]> => {
   const coreT = await getCoreTranslator();
@@ -54,6 +66,7 @@ export const getAllExtensionMeta = async (): Promise<ExtensionMeta[]> => {
     getSlotExtensionMeta(coreT),
     getInterceptorMeta(),
     getSearchBarActionExtensionMeta(),
+    getSearchResultTabExtensionMeta(),
     getThemeExtensionMeta(),
     getTransportExtensionMeta(),
     getAutocompleteExtensionMeta(),
@@ -72,33 +85,54 @@ const findSlotBySettingsId = (id: string): SlotPlugin | null => {
   return slotId ? getSlotPluginById(slotId) : null;
 };
 
+const findTabBySettingsId = (id: string): SearchResultTab | null => {
+  const tabId = getSearchResultTabs().find((t) => (t.settingsId ?? t.id) === id)
+    ?.id;
+  return tabId ? getSearchResultTabById(tabId) : null;
+};
+
 export const resolveExtension = (id: string): ResolvedExtension => ({
   engine: getEngineMap()[id] ?? null,
   command: getCommandInstanceById(id) ?? null,
   slot: findSlotBySettingsId(id),
   interceptor: getInterceptorBySettingsId(id),
+  tab: findTabBySettingsId(id),
   transport: id.endsWith(TRANSPORT_SUFFIX) ? (getTransport(id) ?? null) : null,
   autocomplete: id.endsWith(AUTOCOMPLETE_SUFFIX)
     ? (getAutocompleteProviderById(id) ?? null)
     : null,
 });
 
-const liveTargets = (resolved: ResolvedExtension): LiveTarget[] =>
-  [
+const liveTargets = (resolved: ResolvedExtension): LiveTarget[] => {
+  const entries: Array<LiveTarget | null> = [
     resolved.engine,
     resolved.command,
     resolved.slot,
     resolved.interceptor,
+    resolved.tab,
     resolved.transport,
     resolved.autocomplete,
-  ].filter((entry): entry is LiveTarget => entry !== null);
+  ];
+  return entries.filter((entry): entry is LiveTarget => entry !== null);
+};
+
+const bindOptionsProvider = (
+  host: OptionsHost | null | undefined,
+): GetFieldOptions | null => {
+  if (typeof host?.getFieldOptions === "function") {
+    return host.getFieldOptions.bind(host);
+  }
+  if (typeof host?.pluginManifest?.getFieldOptions === "function") {
+    return host.pluginManifest.getFieldOptions.bind(host.pluginManifest);
+  }
+  return null;
+};
 
 export const findOptionsProvider = (id: string): GetFieldOptions | null => {
   const resolved = resolveExtension(id);
   for (const target of liveTargets(resolved)) {
-    if (typeof target.getFieldOptions === "function") {
-      return target.getFieldOptions.bind(target);
-    }
+    const provider = bindOptionsProvider(target);
+    if (provider) return provider;
   }
   return null;
 };

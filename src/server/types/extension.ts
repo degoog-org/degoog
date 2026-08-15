@@ -7,6 +7,16 @@ import type {
   EngineContext,
 } from "./search";
 import { SlotPanelPosition } from "../../shared/search-types";
+import type {
+  FieldOptionsResult,
+  FieldOptionsSource,
+} from "../../shared/field-options";
+
+export type {
+  FieldOption,
+  FieldOptionsResult,
+  FieldOptionsSource,
+} from "../../shared/field-options";
 
 export type TranslationVars = string | number | boolean;
 export type TranslationRecord = {
@@ -45,27 +55,10 @@ export enum ExtensionStoreType {
 }
 
 
-export interface FieldOption {
-  value: string;
-  label?: string;
-}
-
-export interface FieldOptionsResult {
-  options: FieldOption[];
-  notice?: string;
-  value?: string;
-}
-
-export interface FieldOptionsSource {
-  dependsOn?: string[];
-  refreshLabel?: string;
-  emptyHint?: string;
-  auto?: boolean;
-}
-
 export type GetFieldOptions = (
   key: string,
   values: Record<string, SettingValue>,
+  signal?: AbortSignal,
 ) => Promise<FieldOptionsResult> | FieldOptionsResult;
 
 export interface SettingField {
