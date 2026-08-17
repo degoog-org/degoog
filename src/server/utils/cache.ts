@@ -180,10 +180,7 @@ onInvalidate((payload) => {
   const entry = _registry.get(payload.key);
   if (!entry) return;
   entry.clearLocal();
-  logger.debug(
-    NS,
-    `cleared local memory for namespace=${payload.key} (peer invalidation)`,
-  );
+  logger.debug(NS, `cleared local memory for namespace=${payload.key}`);
 });
 
 export interface CachedEngineRun {
