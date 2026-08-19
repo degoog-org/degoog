@@ -1,3 +1,5 @@
+$img-sidebar-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
 #image-filters-bar {
   display: none;
   position: fixed;
@@ -9,7 +11,7 @@
   background: var(--bg);
   overflow: hidden;
   transform: translateX(100%);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform $img-sidebar-transition;
 
   &.open {
     transform: translateX(0);
@@ -22,6 +24,7 @@
     bottom: auto;
     z-index: auto;
     width: 0;
+    margin-inline: 0;
     flex-shrink: 0;
     align-self: flex-start;
     max-height: calc(100vh - #{$space-6});
@@ -29,7 +32,9 @@
     background: none;
     transform: none;
     box-shadow: none;
-    transition: none;
+    transition:
+      width $img-sidebar-transition,
+      margin-inline $img-sidebar-transition;
 
     &.open {
       width: 17rem;
@@ -238,13 +243,17 @@
 .degoog-img-filter-head {
   display: flex;
   align-items: center;
-  gap: $space-2;
+  gap: $space-1;
   min-width: 0;
 }
 
+.degoog-img-filter-sep {
+  color: var(--text-secondary);
+}
+
 .degoog-img-filter-current {
-  font-size: $font-size-xs;
   color: $primary;
+  font-weight: 500;
   @include truncate;
 }
 

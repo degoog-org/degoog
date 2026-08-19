@@ -28,6 +28,9 @@ const _shortestColumn = (columns: HTMLElement[]): HTMLElement =>
     return a.children.length <= b.children.length ? a : b;
   });
 
+const _imageGrid = (): HTMLElement | null =>
+  document.querySelector<HTMLElement>(".image-grid");
+
 const _imageColumns = (grid: HTMLElement): HTMLElement[] =>
   Array.from(grid.querySelectorAll<HTMLElement>(".image-column"));
 
@@ -42,8 +45,69 @@ function _scrollSelectedIntoView(grid: HTMLElement): void {
     ?.scrollIntoView({ block: "nearest" });
 }
 
+const FLIP_DURATION_MS = 220;
+const FLIP_CLEANUP_DELAY_MS = FLIP_DURATION_MS + 30;
+const FLIP_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
+const FLIP_MIN_DELTA_PX = 1;
+
+type CardMove = { card: HTMLElement; dx: number; dy: number };
+
+const _captureRects = (cards: HTMLElement[]): Map<HTMLElement, DOMRect> =>
+  new Map(cards.map((card) => [card, card.getBoundingClientRect()]));
+
+// How far each card travelled between its captured rect 
+function _cardMoves(
+  cards: HTMLElement[],
+  previousRects: Map<HTMLElement, DOMRect>,
+): CardMove[] {
+  const moves: CardMove[] = [];
+  cards.forEach((card) => {
+    const before = previousRects.get(card);
+    if (!before) return;
+    const after = card.getBoundingClientRect();
+    const dx = before.left - after.left;
+    const dy = before.top - after.top;
+    if (Math.abs(dx) < FLIP_MIN_DELTA_PX && Math.abs(dy) < FLIP_MIN_DELTA_PX) {
+      return;
+    }
+    moves.push({ card, dx, dy });
+  });
+  return moves;
+}
+
+// Image placement animation
+function _flipAnimate(
+  cards: HTMLElement[],
+  previousRects: Map<HTMLElement, DOMRect>,
+): void {
+  const moves = _cardMoves(cards, previousRects);
+  if (!moves.length) return;
+
+  moves.forEach(({ card, dx, dy }) => {
+    card.style.transition = "none";
+    card.style.transform = `translate(${dx}px, ${dy}px)`;
+  });
+
+  // Double rAF so the "before" transform paints as a real frame before the transition to identity starts.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      moves.forEach(({ card }) => {
+        card.style.transition = `transform ${FLIP_DURATION_MS}ms ${FLIP_EASING}`;
+        card.style.transform = "";
+      });
+    });
+  });
+
+  setTimeout(() => {
+    moves.forEach(({ card }) => {
+      card.style.transition = "";
+    });
+  }, FLIP_CLEANUP_DELAY_MS);
+}
+
 function _rebuildColumns(grid: HTMLElement, count: number): HTMLElement[] {
   const cards = _cardsInResultOrder(grid);
+  const previousRects = _captureRects(cards);
   const columns: HTMLElement[] = [];
 
   grid.replaceChildren();
@@ -55,6 +119,7 @@ function _rebuildColumns(grid: HTMLElement, count: number): HTMLElement[] {
   }
 
   cards.forEach((card) => _shortestColumn(columns).appendChild(card));
+  _flipAnimate(cards, previousRects);
   return columns;
 }
 
@@ -86,13 +151,20 @@ function _observeGridResize(grid: HTMLElement): void {
   _gridResizeObserver.observe(grid);
 }
 
+
+export function syncImageGridColumns(): void {
+  const grid = _imageGrid();
+  if (!grid) return;
+  if (_resizeTimer) {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = null;
+  }
+  requestAnimationFrame(() => _ensureImageColumns(grid));
+}
+
 export const PANEL_LAYOUT_BREAKPOINT = 768;
 
-registerImageGridPanelSync(() => {
-  const grid = document.querySelector<HTMLElement>(".image-grid");
-  if (!grid) return;
-  requestAnimationFrame(() => _ensureImageColumns(grid));
-});
+registerImageGridPanelSync(syncImageGridColumns);
 
 const _imageCardUrl = (r: ScoredResult): string => {
   const thumbnail = r.thumbnail || "";
