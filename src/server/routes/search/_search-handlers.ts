@@ -1,15 +1,17 @@
-import { mergeNewResults, search, searchSingleEngine } from "../../search";
+import { scoreResults, search, searchSingleEngine } from "../../search";
 import type { SearchParams } from "../../types";
-import * as cache from "../../utils/cache";
-import { cacheKey } from "../../utils/search";
 import { signResultThumbnails } from "../../utils/proxy-sign";
-import { logger } from "../../utils/logger";
 import { applyDomainRules } from "./_domain-rules";
 import { runIntercepts } from "../../utils/run-interceptors";
 import { getInstanceSettings } from "../../utils/server-settings";
 import { asBoolean } from "../../utils/plugin-settings";
-import { DEGOOG_ENGINE_NAME, maybeIndex } from "../../indexer/store";
-import { engineSettingsFingerprint } from "../../search/engine-selection";
+import { isRecalled, maybeIndex, tagIndexRelation, toFilterTag } from "../../indexer/store";
+import { selectActiveEngines } from "../../search/engine-selection";
+import {
+  isCacheable,
+  readActiveRuns,
+  type RunScope,
+} from "../../search/engine-cache";
 
 export async function handleSearch(params: SearchParams) {
   const {
@@ -30,35 +32,7 @@ export async function handleSearch(params: SearchParams) {
   const resolvedTime = (overrides.timeFilter ??
     timeFilter) as typeof timeFilter;
 
-  const key = cacheKey(
-    query,
-    engines,
-    type,
-    page,
-    resolvedTime,
-    resolvedLang,
-    dateFrom,
-    dateTo,
-    imageFilter,
-    await engineSettingsFingerprint(type, engines),
-  );
-
-  const cached = await cache.get(key);
-  if (cached) {
-    const qShort = query.trim().slice(0, 80);
-    const enginesOn = Object.values(engines).filter(Boolean).length;
-    logger.debug(
-      "search",
-      `cache hit q="${qShort}" type=${type} page=${page} enginesOn=${enginesOn} results=${cached.results.length} timings=${cached.engineTimings.length}`,
-    );
-    return {
-      ...cached,
-      relatedSearches: [],
-      results: signResultThumbnails(await applyDomainRules(cached.results)),
-    };
-  }
-
-  const response = await search(
+  const { indexBasis, ...response } = await search(
     query,
     engines,
     type,
@@ -71,42 +45,28 @@ export async function handleSearch(params: SearchParams) {
   );
 
   const settings = await getInstanceSettings();
-  let finalResponse = response;
 
   const displayResults = await applyDomainRules(response.results);
-  const indexed = maybeIndex(
+  const filtersTag = toFilterTag({
+    lang: resolvedLang,
+    timeFilter: resolvedTime,
+    dateFrom,
+    dateTo,
+    imageFilter,
+  });
+  const indexedUrls = await maybeIndex(
     asBoolean(settings.degoogIndexerEnabled),
     query,
     type,
-    displayResults,
+    await applyDomainRules(indexBasis),
+    filtersTag,
   );
-
-  const degoogTiming = response.engineTimings.find(
-    (et) => et.name === DEGOOG_ENGINE_NAME,
-  );
-  const justIndexed = indexed && degoogTiming?.resultCount === 0;
-
-  if (justIndexed) {
-    finalResponse = {
-      ...response,
-      engineTimings: response.engineTimings.map((et) =>
-        et.name === DEGOOG_ENGINE_NAME ? { ...et, indexed: true } : et,
-      ),
-    };
-  }
-
-  if (!cache.allEnginesFailed(finalResponse)) {
-    const ttl = justIndexed
-      ? cache.JUST_INDEXED_TTL_MS
-      : cache.someEnginesFailed(finalResponse)
-        ? cache.SHORT_TTL_MS
-        : undefined;
-    await cache.set(key, finalResponse, ttl);
-  }
 
   return {
-    ...finalResponse,
-    results: signResultThumbnails(displayResults),
+    ...response,
+    results: signResultThumbnails(
+      tagIndexRelation(displayResults, new Set(indexedUrls)),
+    ),
   };
 }
 
@@ -114,7 +74,7 @@ export async function handleRetry(
   params: SearchParams & { engineName: string },
 ) {
   const {
-    query,
+    query: origQ,
     engineName,
     engines,
     searchType,
@@ -126,70 +86,95 @@ export async function handleRetry(
     imageFilter,
   } = params;
 
-  const { overrides } = await runIntercepts(query, lang);
+  const { query, overrides } = await runIntercepts(origQ, lang);
   const type = (overrides.searchType ?? searchType) as typeof searchType;
+  const resolvedLang = overrides.lang ?? lang;
+  const resolvedTime = (overrides.timeFilter ?? timeFilter) as typeof timeFilter;
+
   const { results: newResults, timing } = await searchSingleEngine(
     engineName,
     query,
     page,
-    timeFilter,
-    lang,
+    resolvedTime,
+    resolvedLang,
     dateFrom,
     dateTo,
     imageFilter,
     undefined,
     type,
+    { forceFresh: true },
   );
-  const key = cacheKey(
+
+  const scope: RunScope = {
     query,
-    engines,
     type,
     page,
-    timeFilter,
-    lang,
+    timeFilter: resolvedTime,
+    lang: resolvedLang,
     dateFrom,
     dateTo,
     imageFilter,
-    await engineSettingsFingerprint(type, engines),
+  };
+  const active = await selectActiveEngines(type, engines, imageFilter);
+  const retried = active.find((e) => e.instance.name === timing.name);
+  const others = active.filter((e) => e.instance.name !== timing.name);
+
+  const liveRuns = await Promise.all(
+    others
+      .filter((e) => !isCacheable(e.instance.name))
+      .map(async (engine) => ({
+        engine,
+        run: await searchSingleEngine(
+          engine.id,
+          query,
+          page,
+          resolvedTime,
+          resolvedLang,
+          dateFrom,
+          dateTo,
+          imageFilter,
+          undefined,
+          type,
+        ),
+      })),
   );
-  const cached = await cache.get(key);
+  const knownRuns = [...(await readActiveRuns(others, scope)), ...liveRuns];
 
-  if (cached) {
-    const updatedTimings = cached.engineTimings.map((et) =>
-      et.name === engineName ? timing : et,
-    );
-    const merged =
-      newResults.length > 0
-        ? mergeNewResults(cached.results, newResults)
-        : cached.results;
-    const updated = {
-      ...cached,
-      results: merged,
-      engineTimings: updatedTimings,
-    };
-    await cache.set(
-      key,
-      updated,
-      cache.someEnginesFailed(updated) ? cache.SHORT_TTL_MS : undefined,
-    );
+  const merged = scoreResults([
+    ...knownRuns.map(({ engine, run }) => ({
+      results: run.results,
+      multiplier: engine.score,
+    })),
+    { results: newResults, multiplier: retried?.score ?? 1 },
+  ]);
+  const engineTimings = [...knownRuns.map(({ run }) => run.timing), timing];
 
-    const settings = await getInstanceSettings();
-    const displayMerged = await applyDomainRules(merged);
-    maybeIndex(asBoolean(settings.degoogIndexerEnabled), query, type, displayMerged);
-
-    return {
-      ...updated,
-      results: signResultThumbnails(displayMerged),
-    };
-  }
+  const settings = await getInstanceSettings();
+  const displayMerged = await applyDomainRules(merged);
+  const filtersTag = toFilterTag({
+    lang: resolvedLang,
+    timeFilter: resolvedTime,
+    dateFrom,
+    dateTo,
+    imageFilter,
+  });
+  const indexedUrls = await maybeIndex(
+    asBoolean(settings.degoogIndexerEnabled),
+    query,
+    type,
+    displayMerged.filter((r) => !isRecalled(r)),
+    filtersTag,
+  );
 
   return {
-    results: newResults.map((r, i) => ({
-      ...r,
-      score: Math.max(10 - i, 1),
-      sources: [r.source],
-    })),
+    query,
+    type,
+    totalTime: timing.time,
+    relatedSearches: [],
     timing,
-    engineTimings: [timing],
+    engineTimings,
+    results: signResultThumbnails(
+      tagIndexRelation(displayMerged, new Set(indexedUrls)),
+    ),
   };
 }

@@ -61,5 +61,8 @@ export const indexerDbFile = (): string =>
 export const indexerConfigFile = (): string =>
   process.env.DEGOOG_INDEXER_CONFIG_FILE ?? join(indexerDir(), "indexer-config.json");
 
+export const indexerTmpDir = (): string =>
+  join(indexerDir(), "tmp");
+
 export const indexerDbForType = (type: string): string =>
   join(indexerDir(), `index-${type}.db`);

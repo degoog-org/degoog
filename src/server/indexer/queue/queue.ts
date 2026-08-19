@@ -37,7 +37,8 @@ export const enqueue = (rows: IndexRow[]): void => {
 const flushType = (type: string, rows: IndexRow[]): Promise<void> =>
   mutexFor(type)(async () => {
     try {
-      await getAdapter().writeBatch(type, rows, Date.now());
+      const cfg = await getIndexerConfig();
+      await getAdapter().writeBatch(type, rows, Date.now(), cfg.rankingWindow);
     } catch (err) {
       logger.warn("indexer", `flush failed for type=${type}`, err);
     }

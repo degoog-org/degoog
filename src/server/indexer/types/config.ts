@@ -7,6 +7,7 @@ export interface IndexerConfig {
   fuzzyEnabled: boolean;
   fuzzyMinTermRatio: number;
   queryLimit: number;
+  rankingWindow: number;
   domainAllowlist: Set<string>;
   domainBlocklist: Set<string>;
   wordBlocklist: string[];

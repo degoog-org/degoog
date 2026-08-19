@@ -1,0 +1,32 @@
+.degoog-progress {
+  display: block;
+  width: 100%;
+  height: $space-2;
+  border-radius: $radius-pill;
+  background: var(--bg-hover);
+  overflow: hidden;
+}
+
+.degoog-progress-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: $radius-pill;
+  background: $primary;
+  transition: width 0.15s ease-out;
+}
+
+.degoog-progress-fill--done {
+  background: $primary;
+}
+
+.degoog-progress-fill--failed {
+  background: $danger;
+}
+
+.degoog-progress-label {
+  display: block;
+  margin-top: $space-2;
+  color: var(--text-secondary);
+  font-size: $font-size-small;
+}

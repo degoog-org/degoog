@@ -36,7 +36,11 @@ export const initPgSchema = async (
       engine_type TEXT NOT NULL,
       url_id BIGINT NOT NULL REFERENCES ${tx(schema)}.urls(id) ON DELETE CASCADE,
       best_position INT NOT NULL DEFAULT 9999,
+      pos_sum BIGINT NOT NULL DEFAULT 9999,
       hit_count INT NOT NULL DEFAULT 1,
+      sources_json TEXT,
+      filters_json TEXT,
+      meta_json TEXT,
       first_seen BIGINT NOT NULL,
       last_seen BIGINT NOT NULL,
       UNIQUE(query_norm, engine_type, url_id)

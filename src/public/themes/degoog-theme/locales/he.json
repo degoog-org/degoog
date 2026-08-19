@@ -95,8 +95,10 @@
       "people-also-search": "אנשים מחפשים גם",
       "info": "מידע",
       "results": "{count} תוצאות",
+      "from-index": "{count} מהאינדקס שלך",
       "retry": "נסה שוב",
       "retrying": "מנסה שוב...",
+      "page-failed": "עמוד {page} נכשל",
       "failure-reasons": {
         "blocked": "נחסם על ידי המנוע",
         "rate_limited": "יותר מדי בקשות",
@@ -109,7 +111,8 @@
       }
     },
     "result": {
-      "just-indexed": "אומת כעת",
+      "from-index": "מהאינדקס שלך",
+      "saving-to-index": "נשמר לאינדקס שלך",
       "insecure": "בלתי מאובטח",
       "insecure-tooltip": "אתר זה משובץ על חיבור HTTP לא מאובטח.",
       "actions": {
@@ -127,6 +130,12 @@
         "modal-cancel": "ביטול",
         "scored": "נקוד"
       }
+    },
+    "pagination": {
+      "previous": "הקודם",
+      "next": "הבא",
+      "page": "עמוד {page}",
+      "end": "אין תוצאות נוספות."
     }
   }
 }

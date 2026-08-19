@@ -6,6 +6,20 @@ import {
 } from "./extensions/engines/registry";
 import { resolveTransport } from "./extensions/transports/registry";
 import { selectActiveEngines } from "./search/engine-selection";
+import {
+  isCacheable,
+  readRun,
+  runKey,
+  saveRun,
+  type RunScope,
+} from "./search/engine-cache";
+import {
+  agreedPageTotal,
+  makePageCounter,
+  sanePage,
+  type PageCounter,
+} from "./search/page-counter";
+import type { CachedEngineRun } from "./utils/cache";
 import type {
   EngineConfig,
   EngineContext,
@@ -34,8 +48,8 @@ import { stripHtml, stripCssBlocks } from "./utils/text";
 import { asString, getSettings } from "./utils/plugin-settings";
 import { buildSignedProxyUrl } from "./utils/proxy-sign";
 import { cleanUrl, normalizeUrl, urlIsGif } from "./search/url-normalize";
+import { DEGOOG_ENGINE_NAME } from "../shared/search-types";
 
-const MAX_PAGE = 10;
 
 export const ENGINE_TIMEOUT_BUFFER_MS = 5000;
 export const ENGINE_TIMEOUT_MIN_MS = 10;
@@ -200,15 +214,29 @@ const _asBool = (v: string | undefined): boolean => {
   return normalized === "true" || normalized === "1" || normalized === "yes";
 };
 
+export interface EngineContextOptions {
+  lang?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  imageFilter?: ImageFilter;
+  signal?: AbortSignal;
+  searchType?: SearchType;
+  pageCounter?: PageCounter;
+}
+
 export const createSearchEngineContext = (
   engineSettingsId: string | undefined,
-  lang?: string,
-  dateFrom?: string,
-  dateTo?: string,
-  imageFilter?: ImageFilter,
-  signal?: AbortSignal,
-  searchType?: SearchType,
+  options: EngineContextOptions = {},
 ): EngineContext => {
+  const {
+    lang,
+    dateFrom,
+    dateTo,
+    imageFilter,
+    signal,
+    searchType,
+    pageCounter,
+  } = options;
   const resolvedLang =
     lang ||
     (process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE || "")
@@ -241,11 +269,13 @@ export const createSearchEngineContext = (
         return outgoingFetch(url, baseInit, transport, {
           proxyOverrideEnabled,
           proxyOverrideUrls,
+          engineId: engineSettingsId,
         });
       const headers = { ...(baseInit.headers ?? {}), "User-Agent": customUa };
       return outgoingFetch(url, { ...baseInit, headers }, transport, {
         proxyOverrideEnabled,
         proxyOverrideUrls,
+        engineId: engineSettingsId,
       });
     },
     lang: resolvedLang,
@@ -261,7 +291,17 @@ export const createSearchEngineContext = (
     engineError: (status, message, opts) =>
       new SentinelBreach(status as ThreatLevel, message, opts),
     searchType,
+    pagination: pageCounter?.report,
   };
+};
+
+const _keepRun = async (key: string, run: CachedEngineRun): Promise<void> => {
+  if (!key) return;
+  try {
+    await saveRun(key, run);
+  } catch (err) {
+    logger.warn("engine", `cache write failed for "${run.timing.name}"`, err);
+  }
 };
 
 export const searchSingleEngine = async (
@@ -275,7 +315,8 @@ export const searchSingleEngine = async (
   imageFilter?: ImageFilter,
   signal?: AbortSignal,
   searchType?: SearchType,
-): Promise<{ results: SearchResult[]; timing: EngineTiming }> => {
+  opts?: { forceFresh?: boolean },
+): Promise<CachedEngineRun> => {
   const engine = resolveEngine(engineName);
   if (!engine) {
     return {
@@ -283,23 +324,57 @@ export const searchSingleEngine = async (
       timing: { name: engineName, time: 0, resultCount: 0, status: THREAT_LEVEL.BLOCKED },
     };
   }
-  const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
+  const p = sanePage(page);
   const t0 = performance.now();
   const engineSettingsId = getEngineIdByInstance(engine);
+  const cacheId = engineSettingsId ?? engine.name;
+  const scope: RunScope = {
+    query,
+    type: searchType ?? "web",
+    page: p,
+    timeFilter,
+    lang,
+    dateFrom,
+    dateTo,
+    imageFilter,
+  };
+  const key = isCacheable(engine.name)
+    ? await runKey(cacheId, scope).catch((err) => {
+        logger.warn("engine", `cache key failed for "${engine.name}", running uncached`, err);
+        return "";
+      })
+    : "";
+  const cacheable = key !== "";
+
+  if (cacheable && !opts?.forceFresh) {
+    const hit = await readRun(key).catch((err) => {
+      logger.warn("engine", `cache read failed for "${engine.name}", running fresh`, err);
+      return null;
+    });
+    if (hit) {
+      logger.debug(
+        "engine",
+        `cache hit engine="${engine.name}" results=${hit.timing.resultCount} status=${hit.timing.status ?? "ok"}`,
+      );
+      return hit;
+    }
+  }
+
   const ac = new AbortController();
   if (signal) {
     if (signal.aborted) ac.abort();
     else signal.addEventListener("abort", () => ac.abort(), { once: true });
   }
-  const engineContext = createSearchEngineContext(
-    engineSettingsId,
+  const pageCounter = makePageCounter();
+  const engineContext = createSearchEngineContext(engineSettingsId, {
     lang,
     dateFrom,
     dateTo,
     imageFilter,
-    ac.signal,
+    signal: ac.signal,
     searchType,
-  );
+    pageCounter,
+  });
   try {
     const timeout = await getEngineTimeout(engineSettingsId);
     const results = await _withTimeout(
@@ -308,18 +383,28 @@ export const searchSingleEngine = async (
       () => ac.abort(),
     );
     const elapsed = Math.round(performance.now() - t0);
-    return {
+    const run: CachedEngineRun = {
       results,
-      timing: { name: engine.name, time: elapsed, resultCount: results.length },
+      timing: {
+        name: engine.name,
+        time: elapsed,
+        resultCount: results.length,
+        status: THREAT_LEVEL.OK,
+      },
+      pages: pageCounter.total(),
     };
+    await _keepRun(key, run);
+    return run;
   } catch (err) {
     const elapsed = Math.round(performance.now() - t0);
     const classified = _classifyReject(err);
     logger.warn("engine", `${engine.name} failed after ${elapsed}ms status=${classified.status}`, err);
-    return {
+    const run: CachedEngineRun = {
       results: [],
       timing: { name: engine.name, time: elapsed, resultCount: 0, status: classified.status, errorReason: classified.reason, httpStatus: classified.httpStatus },
     };
+    await _keepRun(key, run);
+    return run;
   }
 };
 
@@ -333,9 +418,9 @@ export const search = async (
   dateFrom?: string,
   dateTo?: string,
   imageFilter?: ImageFilter,
-): Promise<SearchResponse> => {
+): Promise<SearchResponse & { indexBasis: ScoredResult[] }> => {
   const start = performance.now();
-  const p = Math.max(1, Math.min(MAX_PAGE, Math.floor(page) || 1));
+  const p = sanePage(page);
 
   const rawActiveEngines = await selectActiveEngines(type, config, imageFilter);
 
@@ -347,78 +432,38 @@ export const search = async (
       type,
       engineTimings: [],
       relatedSearches: [],
+      indexBasis: [],
     };
   }
 
-  const settled = await Promise.allSettled(
-    rawActiveEngines.map(async ({ instance, id }) => {
-      const t0 = performance.now();
-      const ac = new AbortController();
-      const ctx = createSearchEngineContext(
+  const runs = await Promise.all(
+    rawActiveEngines.map(({ id }) =>
+      searchSingleEngine(
         id,
+        query,
+        p,
+        timeFilter,
         lang,
         dateFrom,
         dateTo,
         imageFilter,
-        ac.signal,
+        undefined,
         type,
-      );
-      const timeout = await getEngineTimeout(id);
-      try {
-        const results = await _withTimeout(
-          instance.executeSearch(query, p, timeFilter, ctx),
-          timeout,
-          () => ac.abort(),
-        );
-        return { results, elapsed: Math.round(performance.now() - t0) };
-      } catch (err) {
-        const elapsed = Math.round(performance.now() - t0);
-        const wrapped = err instanceof Error ? err : new Error(String(err));
-        throw Object.assign(wrapped, { elapsed });
-      }
-    }),
+      ),
+    ),
   );
 
-  const allResults: { results: SearchResult[]; multiplier: number }[] = [];
-  const engineTimings: EngineTiming[] = [];
-
-  for (let i = 0; i < settled.length; i++) {
-    const result = settled[i];
-    const engineName = rawActiveEngines[i].instance.name;
-    if (result.status === "fulfilled") {
-      allResults.push({
-        results: result.value.results,
-        multiplier: rawActiveEngines[i].score,
-      });
-      engineTimings.push({
-        name: engineName,
-        time: result.value.elapsed,
-        resultCount: result.value.results.length,
-        status: THREAT_LEVEL.OK,
-      });
-    } else {
-      const classified = _classifyReject(result.reason);
-      const reasonElapsed = (result.reason as { elapsed?: unknown } | null)
-        ?.elapsed;
-      const elapsed =
-        typeof reasonElapsed === "number" ? reasonElapsed : ENGINE_TIMEOUT_MS;
-      logger.warn(
-        "search",
-        `engine="${engineName}" status=${classified.status}${classified.httpStatus ? ` http=${classified.httpStatus}` : ""
-        } reason="${classified.reason}"`,
-      );
-      engineTimings.push({
-        name: engineName,
-        time: elapsed,
-        resultCount: 0,
-        status: classified.status,
-        errorReason: classified.reason,
-        httpStatus: classified.httpStatus,
-      });
-    }
-  }
+  const allResults = runs.map((run, i) => ({
+    results: run.results,
+    multiplier: rawActiveEngines[i].score,
+    name: run.timing.name,
+  }));
+  const engineTimings: EngineTiming[] = runs.map((run) => run.timing);
 
   const scored = scoreResults(allResults);
+  const indexBasis = scoreResults(
+    allResults.filter((e) => e.name !== DEGOOG_ENGINE_NAME),
+  );
   const totalTime = Math.round(performance.now() - start);
 
   return {
@@ -428,5 +473,7 @@ export const search = async (
     type,
     engineTimings,
     relatedSearches: [],
+    totalPages: agreedPageTotal(runs.map((run) => run.pages)),
+    indexBasis,
   };
 };

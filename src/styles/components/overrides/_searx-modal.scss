@@ -1,0 +1,47 @@
+.searx-note {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  margin: 0 0 $space-4;
+  padding: $space-3 $space-4;
+  border-radius: $radius-lg;
+  background: var(--bg);
+}
+
+.searx-note-intro {
+  margin: 0;
+  font-size: $font-size-small;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.searx-note-list {
+  margin: 0;
+  padding-left: $space-4;
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  font-size: $font-size-small;
+  line-height: 1.5;
+  color: var(--text-secondary);
+
+  li::marker {
+    color: $warning;
+  }
+}
+
+.searx-meta-key {
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: help;
+}
+
+.searx-status {
+  &:empty {
+    display: none;
+  }
+
+  &--error {
+    color: $danger;
+  }
+}

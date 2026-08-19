@@ -57,7 +57,7 @@ Ready-to-use compose files live in [`docker-compose-examples/`](docker-compose-e
 ```bash
 # Set DEGOOG_SETTINGS_PASSWORDS before exposing this instance to the internet -
 # an unlocked instance lets anyone install extensions, which runs code on the server.
-podman run -d --name degoog -p 4444:4444 -v ./data:/app/data -e DEGOOG_SETTINGS_PASSWORDS=changeme --security-opt label=disable --restart unless-stopped ghcr.io/degoog-org/degoog:latest
+podman run -d --name degoog -p 4444:4444 -v ./data:/app/data:Z -e DEGOOG_SETTINGS_PASSWORDS=changeme --restart unless-stopped ghcr.io/degoog-org/degoog:latest
 ```
 
 </details>
@@ -154,7 +154,7 @@ Some amazing people around the web decided to make their degoog instances availa
 
 Aside from the official store repo community members have been working hard on their own plugins and been sharing them with everyone who wants to enhance their degoog experience. **You can find a bunch of them [here](https://degoog-org.github.io/community-extensions)**.
 
-_**Note:** These have only been INITIALLY vetted, there is no way for me to keep an eye on them once they have been added to the community store repo. If your own responsibiilty to make sure what you install on your system is safe._
+_**Note:** These have only been INITIALLY vetted, there is no way for me to keep an eye on them once they have been added to the community store repo. It's your own responsibility to make sure what you install on your system is safe._
 
 ## Documentation
 

@@ -1,6 +1,18 @@
 import { getBase } from "./base-url";
 
-let _config: { enabled: boolean; disabledTypes: string[] } | null = null;
+export interface SearchUiConfig {
+  enabled: boolean;
+  disabledTypes: string[];
+  infiniteScroll: boolean;
+}
+
+const FALLBACK: SearchUiConfig = {
+  enabled: false,
+  disabledTypes: [],
+  infiniteScroll: false,
+};
+
+let _config: SearchUiConfig | null = null;
 
 if (typeof window !== "undefined") {
   window.addEventListener("extensions-saved", () => {
@@ -8,17 +20,23 @@ if (typeof window !== "undefined") {
   });
 }
 
-export const fetchStreamingConfig = async (): Promise<{ enabled: boolean; disabledTypes: string[] }> => {
+export const fetchStreamingConfig = async (): Promise<SearchUiConfig> => {
   if (_config) return _config;
   try {
     const res = await fetch(`${getBase()}/api/settings/streaming`);
     if (res.ok) {
-      const data = (await res.json()) as { enabled: boolean; disabledTypes?: string[] };
-      _config = { enabled: data.enabled, disabledTypes: data.disabledTypes ?? [] };
+      const data = (await res.json()) as Partial<SearchUiConfig>;
+      _config = {
+        enabled: data.enabled ?? false,
+        disabledTypes: data.disabledTypes ?? [],
+        infiniteScroll: data.infiniteScroll ?? false,
+      };
       return _config;
     }
   } catch (err) {
     console.debug("[streaming] config fetch failed", err);
   }
-  return { enabled: false, disabledTypes: [] };
+  return FALLBACK;
 };
+
+export const infiniteScrollOn = (): boolean => _config?.infiniteScroll ?? false;

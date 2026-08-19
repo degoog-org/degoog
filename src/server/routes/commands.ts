@@ -47,7 +47,7 @@ router.get("/api/command", async (c) => {
     const requestedType = c.req.query("type")?.trim() || undefined;
     const resolvedType =
       (await getEngineSearchType(match.engineId, requestedType)) ?? "web";
-    const { results, timing } = await searchSingleEngine(
+    const { results, timing, pages } = await searchSingleEngine(
       match.engineId,
       match.query,
       page,
@@ -72,6 +72,7 @@ router.get("/api/command", async (c) => {
       totalTime: timing.time,
       engineTimings: [timing],
       relatedSearches: [],
+      totalPages: pages,
     });
   }
 

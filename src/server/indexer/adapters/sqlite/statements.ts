@@ -23,12 +23,36 @@ export const UPSERT_URL = `
 `;
 
 export const UPSERT_HIT = `
-  INSERT INTO query_hits (query_norm, engine_type, url_id, best_position, hit_count, first_seen, last_seen)
-  VALUES ($query_norm, $engine_type, $url_id, $best_position, 1, $first_seen, $last_seen)
+  INSERT INTO query_hits (
+    query_norm, engine_type, url_id, best_position, pos_sum, hit_count,
+    sources_json, filters_json, meta_json, first_seen, last_seen
+  )
+  VALUES (
+    $query_norm, $engine_type, $url_id, $best_position, $best_position, 1,
+    $sources_json, $filters_json, $meta_json, $first_seen, $last_seen
+  )
   ON CONFLICT(query_norm, engine_type, url_id) DO UPDATE SET
     last_seen = excluded.last_seen,
     best_position = MIN(query_hits.best_position, excluded.best_position),
-    hit_count = query_hits.hit_count + 1
+    pos_sum = CASE
+      WHEN query_hits.hit_count >= $window
+      THEN (query_hits.pos_sum * ($window - 1) / query_hits.hit_count) + excluded.pos_sum
+      ELSE query_hits.pos_sum + excluded.pos_sum
+    END,
+    hit_count = CASE
+      WHEN query_hits.hit_count >= $window
+      THEN $window
+      ELSE query_hits.hit_count + 1
+    END,
+    sources_json = (
+      SELECT json_group_array(value) FROM (
+        SELECT value FROM json_each(COALESCE(query_hits.sources_json, '[]'))
+        UNION
+        SELECT value FROM json_each(COALESCE(excluded.sources_json, '[]'))
+      )
+    ),
+    filters_json = COALESCE(NULLIF(excluded.filters_json, ''), query_hits.filters_json),
+    meta_json = COALESCE(query_hits.meta_json, excluded.meta_json)
 `;
 
 export const IMPORT_URL = `
@@ -46,8 +70,14 @@ export const IMPORT_URL = `
 `;
 
 export const IMPORT_HIT = `
-  INSERT INTO query_hits (query_norm, engine_type, url_id, best_position, hit_count, first_seen, last_seen)
-  VALUES ($query_norm, $engine_type, $url_id, 9999, 1, $first_seen, $last_seen)
+  INSERT INTO query_hits (
+    query_norm, engine_type, url_id, best_position, pos_sum, hit_count,
+    sources_json, filters_json, meta_json, first_seen, last_seen
+  )
+  VALUES (
+    $query_norm, $engine_type, $url_id, $best_position, $pos_sum, $hit_count,
+    $sources_json, $filters_json, $meta_json, $first_seen, $last_seen
+  )
   ON CONFLICT(query_norm, engine_type, url_id) DO NOTHING
 `;
 
@@ -57,7 +87,7 @@ export const EXACT_SQL = `
   FROM query_hits h
   JOIN urls u ON u.id = h.url_id
   WHERE h.query_norm = ? AND h.engine_type = ?
-  ORDER BY h.best_position ASC, h.hit_count DESC, h.last_seen DESC
+  ORDER BY (h.pos_sum * 1.0 / h.hit_count) ASC, h.hit_count DESC, h.best_position ASC
   LIMIT ? OFFSET ?
 `;
 
@@ -75,10 +105,13 @@ export const FUZZY_SQL = `
 `;
 
 export const LIST_SELECT = `
-  SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen
+  SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen,
+         (h.pos_sum * 1.0 / h.hit_count) AS score
   FROM query_hits h
   JOIN urls u ON u.id = h.url_id
 `;
+
+export const LIST_ORDER_BY = "ORDER BY h.query_norm ASC, score ASC";
 
 export const SEARCH_WHERE = `
   WHERE h.query_norm LIKE $term ESCAPE '\\'

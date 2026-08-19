@@ -1,5 +1,7 @@
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { readFile } from "fs/promises";
+import { statSync } from "fs";
 import {
   clearAll,
   countHits,
@@ -11,8 +13,19 @@ import {
 } from "../indexer/store";
 import { checkpointType, discoverTypes, isPostgresMode } from "../indexer/db";
 import { clearTypeCache } from "../extensions/engines/registry";
-import { importFromBuffer } from "../indexer/import/importer";
-import { buildSqliteExport } from "../indexer/export/builder";
+import { importFromBuffer, importFromFile } from "../indexer/import/importer";
+import { buildSqliteExport, buildSqliteExportFile } from "../indexer/export/builder";
+import {
+  openExportSession,
+  getExportSession,
+  closeExportSession,
+  openImportSession,
+  getImportSession,
+  appendImportChunk,
+  finishImportSession,
+  removeImportSession,
+  dropImportSession,
+} from "../indexer/transfer/sessions";
 import { indexerDbForType } from "../utils/paths";
 import { getInstanceSettings } from "../utils/server-settings";
 import { asBoolean } from "../utils/plugin-settings";
@@ -26,6 +39,8 @@ const router = new Hono();
 const EXPORT_COOLDOWN_MS = 60_000;
 const MAX_ROWS_LIMIT = 100;
 const MAX_IMPORT_BYTES = 500 * 1024 * 1024;
+const MAX_CHUNK_IMPORT_BYTES = 8 * 1024 * 1024 * 1024;
+const MAX_CHUNK_BYTES = 32 * 1024 * 1024;
 
 const _exportCooldown = new Map<string, number>();
 
@@ -34,16 +49,20 @@ const gateMaster = async (): Promise<boolean> => {
   return asBoolean(settings.degoogIndexerEnabled);
 };
 
-const gatePublic = async (): Promise<boolean> => {
-  const settings = await getInstanceSettings();
-  return (
-    asBoolean(settings.degoogIndexerEnabled) &&
-    asBoolean(settings.degoogIndexerPublicExport)
-  );
-};
-
 const clientKey = (c: Parameters<typeof getClientIp>[0]): string =>
   c.req.header("x-settings-token") ?? getClientIp(c) ?? "unknown";
+
+const guardIndexer = async (c: Context, label: string): Promise<Response | null> => {
+  const limitRes = await _applyRateLimit(c);
+  if (limitRes) return limitRes;
+
+  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
+
+  const denied = await guardSettingsRoute(c, label);
+  if (denied) return denied;
+
+  return null;
+};
 
 router.get("/api/indexer/stats", async (c) => {
   const limitRes = await _applyRateLimit(c);
@@ -51,23 +70,11 @@ router.get("/api/indexer/stats", async (c) => {
 
   if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
 
-  if (!(await gatePublic())) {
-    const denied = await guardSettingsRoute(c, "GET /api/indexer/stats");
-    if (denied) return denied;
-  }
+  const denied = await guardSettingsRoute(c, "GET /api/indexer/stats");
+  if (denied) return denied;
 
   const stats = await getStats();
   return c.json({ ...stats, totalResults: stats.totalHits });
-});
-
-router.get("/api/indexer/public-info", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-
-  const available = await gatePublic();
-  if (!available) return c.json({ available: false });
-
-  return c.json({ available: true, types: discoverTypes() });
 });
 
 router.get("/api/indexer/types", async (c) => {
@@ -76,10 +83,8 @@ router.get("/api/indexer/types", async (c) => {
 
   if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
 
-  if (!(await gatePublic())) {
-    const denied = await guardSettingsRoute(c, "GET /api/indexer/types");
-    if (denied) return denied;
-  }
+  const denied = await guardSettingsRoute(c, "GET /api/indexer/types");
+  if (denied) return denied;
 
   return c.json({ types: discoverTypes() });
 });
@@ -90,10 +95,8 @@ router.get("/api/indexer/sample", async (c) => {
 
   if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
 
-  if (!(await gatePublic())) {
-    const denied = await guardSettingsRoute(c, "GET /api/indexer/sample");
-    if (denied) return denied;
-  }
+  const denied = await guardSettingsRoute(c, "GET /api/indexer/sample");
+  if (denied) return denied;
 
   const type = c.req.query("type")?.trim();
   if (!type) return c.json({ error: "type is required" }, 400);
@@ -173,10 +176,8 @@ router.get("/api/indexer/export", async (c) => {
 
   if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
 
-  if (!(await gatePublic())) {
-    const denied = await guardSettingsRoute(c, "GET /api/indexer/export");
-    if (denied) return denied;
-  }
+  const denied = await guardSettingsRoute(c, "GET /api/indexer/export");
+  if (denied) return denied;
 
   const type = c.req.query("type")?.trim();
   if (!type) return c.json({ error: "type is required" }, 400);
@@ -253,6 +254,163 @@ router.post("/api/indexer/import", async (c) => {
     return c.json({ ok: true, type, ...result });
   } catch (err) {
     logger.error("indexer", `import failed for type=${type}`, err);
+    return c.json({ error: "Import failed" }, 500);
+  }
+});
+
+router.post("/api/indexer/export/start", async (c) => {
+  const denied = await guardIndexer(c, "POST /api/indexer/export/start");
+  if (denied) return denied;
+
+  let body: { type?: unknown };
+  try {
+    body = await c.req.json<{ type?: unknown }>();
+  } catch (err) {
+    logger.debug("indexer", "invalid JSON on export/start", err);
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
+
+  const type = typeof body.type === "string" ? body.type.trim() : "";
+  if (!type) return c.json({ error: "type is required" }, 400);
+  if (!discoverTypes().includes(type)) return c.json({ error: "Unknown type" }, 404);
+
+  const key = `${clientKey(c)}:${type}`;
+  const now = Date.now();
+  const last = _exportCooldown.get(key) ?? 0;
+  if (now - last < EXPORT_COOLDOWN_MS) {
+    const retryIn = Math.ceil((EXPORT_COOLDOWN_MS - (now - last)) / 1000);
+    return c.json({ error: `Cooldown active. Retry in ${retryIn}s` }, 429);
+  }
+
+  try {
+    let path: string;
+    let cleanup: boolean;
+    if (isPostgresMode()) {
+      path = await buildSqliteExportFile(type);
+      cleanup = true;
+    } else {
+      checkpointType(type);
+      path = indexerDbForType(type);
+      cleanup = false;
+    }
+    const size = statSync(path).size;
+    _exportCooldown.set(key, now);
+    const sessionId = openExportSession(path, size, cleanup, type);
+    return c.json({ sessionId, size });
+  } catch (err) {
+    logger.error("indexer", `export start failed for type=${type}`, err);
+    return c.json({ error: "Export failed" }, 500);
+  }
+});
+
+router.get("/api/indexer/export/chunk", async (c) => {
+  const denied = await guardIndexer(c, "GET /api/indexer/export/chunk");
+  if (denied) return denied;
+
+  const session = c.req.query("session")?.trim();
+  const s = session ? getExportSession(session) : undefined;
+  if (!s) return c.json({ error: "Unknown session" }, 404);
+
+  const start = Math.max(0, parseInt(c.req.query("start") ?? "0", 10) || 0);
+  const reqEnd = parseInt(c.req.query("end") ?? "", 10);
+  const end = Math.min(s.size, Number.isFinite(reqEnd) && reqEnd > 0 ? reqEnd : s.size);
+  if (start >= s.size || start >= end) return c.json({ error: "Range out of bounds" }, 416);
+
+  try {
+    const buf = await Bun.file(s.path).slice(start, end).arrayBuffer();
+    return new Response(buf as unknown as BodyInit, {
+      headers: {
+        "Content-Type": "application/octet-stream",
+        "Content-Range": `bytes ${start}-${end - 1}/${s.size}`,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (err) {
+    logger.error("indexer", "export chunk failed", err);
+    return c.json({ error: "Export failed" }, 500);
+  }
+});
+
+router.post("/api/indexer/export/end", async (c) => {
+  const denied = await guardIndexer(c, "POST /api/indexer/export/end");
+  if (denied) return denied;
+
+  let body: { session?: unknown };
+  try {
+    body = await c.req.json<{ session?: unknown }>();
+  } catch {
+    body = {};
+  }
+  const session = typeof body.session === "string" ? body.session : "";
+  if (session) closeExportSession(session);
+  return c.json({ ok: true });
+});
+
+router.post("/api/indexer/import/start", async (c) => {
+  const denied = await guardIndexer(c, "POST /api/indexer/import/start");
+  if (denied) return denied;
+
+  let body: { type?: unknown };
+  try {
+    body = await c.req.json<{ type?: unknown }>();
+  } catch (err) {
+    logger.debug("indexer", "invalid JSON on import/start", err);
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
+
+  const type = typeof body.type === "string" ? body.type.trim() : "";
+  if (!type) return c.json({ error: "type is required" }, 400);
+
+  const { id } = openImportSession(type);
+  return c.json({ sessionId: id });
+});
+
+router.post("/api/indexer/import/chunk", async (c) => {
+  const denied = await guardIndexer(c, "POST /api/indexer/import/chunk");
+  if (denied) return denied;
+
+  const session = c.req.header("x-import-session")?.trim();
+  const s = session ? getImportSession(session) : undefined;
+  if (!session || !s) return c.json({ error: "Unknown session" }, 404);
+
+  const chunk = await c.req.arrayBuffer();
+  if (chunk.byteLength > MAX_CHUNK_BYTES) return c.json({ error: "Chunk too large" }, 413);
+  if (s.received + chunk.byteLength > MAX_CHUNK_IMPORT_BYTES) {
+    dropImportSession(session);
+    return c.json({ error: "File too large" }, 413);
+  }
+
+  const received = await appendImportChunk(session, chunk);
+  return c.json({ received: received ?? 0 });
+});
+
+router.post("/api/indexer/import/complete", async (c) => {
+  const denied = await guardIndexer(c, "POST /api/indexer/import/complete");
+  if (denied) return denied;
+
+  let body: { session?: unknown };
+  try {
+    body = await c.req.json<{ session?: unknown }>();
+  } catch (err) {
+    logger.debug("indexer", "invalid JSON on import/complete", err);
+    return c.json({ error: "Invalid JSON" }, 400);
+  }
+
+  const session = typeof body.session === "string" ? body.session : "";
+  const s = session ? getImportSession(session) : undefined;
+  if (!session || !s) return c.json({ error: "Unknown session" }, 404);
+
+  const type = s.type;
+  try {
+    const path = await finishImportSession(session);
+    if (!path) return c.json({ error: "Unknown session" }, 404);
+    const result = await importFromFile(path, type);
+    clearTypeCache();
+    removeImportSession(session);
+    return c.json({ ok: true, type, ...result });
+  } catch (err) {
+    dropImportSession(session);
+    logger.error("indexer", `import complete failed for type=${type}`, err);
     return c.json({ error: "Import failed" }, 500);
   }
 });

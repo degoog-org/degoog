@@ -1,6 +1,11 @@
 import { escapeHtml } from "../../../utils/dom";
 import { renderMdInline } from "../../../utils/md";
 import { renderListField } from "./list-field";
+import {
+  renderHexField,
+  renderRangeField,
+  renderFileField,
+} from "./field-widgets";
 import type { SettingField, ExtensionMeta } from "../../../types";
 
 const t = window.scopedT("core");
@@ -69,6 +74,12 @@ export function readLiveSettingFieldValue(
   if (type === "list") {
     const hidden = fieldEl.querySelector<HTMLInputElement>(
       ".ext-field-list-value",
+    );
+    return hidden?.value?.trim() ?? "";
+  }
+  if (type === "file") {
+    const hidden = fieldEl.querySelector<HTMLInputElement>(
+      ".ext-field-file-value",
     );
     return hidden?.value?.trim() ?? "";
   }
@@ -273,6 +284,30 @@ export const renderField = (
 
   if (field.type === "list") {
     return _wrapVisibleWhen(field, renderListField(field, ext), ext);
+  }
+
+  if (field.type === "hex") {
+    return _wrapVisibleWhen(
+      field,
+      renderHexField(field, displayValue, descHtml),
+      ext,
+    );
+  }
+
+  if (field.type === "range") {
+    return _wrapVisibleWhen(
+      field,
+      renderRangeField(field, displayValue, descHtml),
+      ext,
+    );
+  }
+
+  if (field.type === "file") {
+    return _wrapVisibleWhen(
+      field,
+      renderFileField(field, currentValue || "", descHtml),
+      ext,
+    );
   }
 
   if (field.type === "toggle") {

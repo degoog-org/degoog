@@ -22,6 +22,7 @@ import { setActiveTab, setTabsForBang } from "../navigation";
 import { buildPaginationHtml } from "../pagination";
 import {
   getNaturalLanguageBangQuery,
+  declaredPages,
   runScriptsInContainer,
 } from "../search-helpers";
 import { buildCommandGlanceHtml } from "../search-utils";
@@ -129,7 +130,7 @@ export async function performSearch(
   state.currentQuery = query;
   state.currentType = resolvedType;
   state.currentPage = resolvedPage;
-  state.lastPage = MAX_PAGE;
+  state.lastPage = null;
   state.imagePage = resolvedPage;
   state.imageLastPage = MAX_PAGE;
   state.videoPage = resolvedPage;
@@ -332,6 +333,7 @@ async function _performBangCommand(
       state.currentResults = data.results ?? [];
       state.currentData = data as unknown as SearchResponse;
       state.currentType = engineType;
+      state.lastPage = declaredPages(data.totalPages);
       state.imagePage = 1;
       state.imageLastPage = MAX_PAGE;
       state.videoPage = 1;

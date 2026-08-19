@@ -8,12 +8,16 @@ import { buildSearchBody, buildSearchUrl } from "../url";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
 import { getBase } from "../base-url";
 import type { SearchResponse } from "../../types";
-import { renderResults } from "../../modules/renderer/render";
+import { clearSlotPanels, renderResults } from "../../modules/renderer/render";
+import { teardownInfinite } from "../../modules/renderer/infinite-scroll";
 import { fetchGlancePanels, fetchSlotPanels } from "../search-utils";
-import { setResultsMeta } from "../search-helpers";
+import { declaredPages, setResultsMeta } from "../search-helpers";
 
 export async function goToPage(pageNum: number): Promise<void> {
   if (pageNum === state.currentPage) return;
+
+  window.scrollTo({ top: 0, behavior: "auto" });
+  teardownInfinite();
 
   const resultsList = document.getElementById("results-list");
   const pagination = document.getElementById("pagination");
@@ -55,6 +59,7 @@ export async function goToPage(pageNum: number): Promise<void> {
     state.currentResults = data.results;
     state.currentData = data;
     state.currentPage = pageNum;
+    state.lastPage = declaredPages(data.totalPages);
     const pageHistoryState = {
       degoog: true,
       query: state.currentQuery,
@@ -75,6 +80,7 @@ export async function goToPage(pageNum: number): Promise<void> {
     }
     const metaText = `About ${state.currentResults.length} results - Page ${state.currentPage}`;
     setResultsMeta(metaText);
+    clearSlotPanels();
     if (state.currentPage === 1 && state.currentType === "web") {
       void fetchGlancePanels(state.currentQuery, data.results);
     }
@@ -82,7 +88,7 @@ export async function goToPage(pageNum: number): Promise<void> {
       void fetchSlotPanels(state.currentQuery, state.currentResults);
     }
     renderResults(state.currentResults);
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "auto" });
   } catch (err) {
     console.error("[search] page failed", err);
     if (resultsList)

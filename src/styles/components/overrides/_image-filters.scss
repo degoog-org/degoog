@@ -29,7 +29,7 @@
     background: none;
     transform: none;
     box-shadow: none;
-    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: none;
 
     &.open {
       width: 17rem;

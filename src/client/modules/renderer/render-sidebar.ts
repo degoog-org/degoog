@@ -1,8 +1,10 @@
 import { state } from "../../state";
-import type { EngineTiming, SearchResponse, SlotPanel } from "../../types";
+import type { SearchResponse, SlotPanel } from "../../types";
+import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
 import { escapeHtml } from "../../utils/dom";
 import { retryEngine } from "../../utils/search-actions";
 import { engineCountHtml } from "../../utils/search/engine-failure";
+import type { EngineTimingWithPage } from "../../utils/search/engine-stats";
 
 const t = window.scopedT("themes/degoog");
 
@@ -15,10 +17,11 @@ export const setupRetryLinks = (container: HTMLElement): void => {
         e.stopPropagation();
         const engineName = link.dataset.engine;
         if (!engineName) return;
+        const page = parseInt(link.dataset.page ?? "", 10);
         link.classList.add("retrying");
         link.textContent = t("search-templates.sidebar.retrying");
         try {
-          await retryEngine(engineName);
+          await retryEngine(engineName, Number.isFinite(page) ? page : undefined);
         } catch (err) {
           console.warn("[sidebar] engine retry failed", err);
         }
@@ -28,8 +31,12 @@ export const setupRetryLinks = (container: HTMLElement): void => {
     });
 };
 
-export const sidebarAccordion = (title: string, content: string): string =>
-  `<div class="sidebar-panel sidebar-accordion degoog-panel degoog-panel--accordion degoog-panel--stack-item">
+export const sidebarAccordion = (
+  title: string,
+  content: string,
+  className = "",
+): string =>
+  `<div class="sidebar-panel sidebar-accordion${className ? ` ${className}` : ""} degoog-panel degoog-panel--accordion degoog-panel--stack-item">
     <button class="sidebar-accordion-toggle degoog-accordion-toggle degoog-accordion-toggle--sidebar" type="button">
       <span>${escapeHtml(title)}</span>
       <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
@@ -37,25 +44,27 @@ export const sidebarAccordion = (title: string, content: string): string =>
     <div class="sidebar-accordion-body degoog-accordion-body">${content}</div>
   </div>`;
 
-export const engineStatsHtml = (timings: EngineTiming[]): string => {
+export const engineStatsHtml = (timings: EngineTimingWithPage[]): string => {
   if (!state.displayEnginePerformance || timings.length === 0) return "";
 
   let statsContent = "";
   timings.forEach((et) => {
-    const isIndexed = et.resultCount === 0 && et.indexed === true;
-    const statusClass = et.resultCount === 0 && !isIndexed ? " engine-failed" : "";
+    const isDegoog = et.name === DEGOOG_ENGINE_NAME;
+    const failed = !!et.status && et.status !== "ok";
+    const statusClass = !isDegoog && failed ? " engine-failed" : "";
     const resultsLabel = t("search-templates.sidebar.results", {
       count: String(et.resultCount),
     });
-    const countHtml = isIndexed
-      ? resultsLabel
+    const countHtml = isDegoog
+      ? t("search-templates.sidebar.from-index", { count: String(et.resultCount) })
       : engineCountHtml(et, resultsLabel);
-    const metaText = isIndexed
-      ? `${t("search-templates.result.just-indexed")} · ${et.time}ms`
-      : `${countHtml} · ${et.time}ms`;
-    const action = isIndexed
+    const failureText = et.failedPage
+      ? ` · ${escapeHtml(t("search-templates.sidebar.page-failed", { page: String(et.failedPage) }))}`
+      : "";
+    const metaText = `${countHtml}${failureText} · ${et.time}ms`;
+    const action = isDegoog
       ? ""
-      : `<a class="engine-retry-link degoog-link" data-engine="${escapeHtml(et.name)}">${t("search-templates.sidebar.retry")}</a>`;
+      : `<a class="engine-retry-link degoog-link" data-engine="${escapeHtml(et.name)}" data-page="${et.failedPage ?? state.currentPage}">${t("search-templates.sidebar.retry")}</a>`;
     statsContent += `
       <div class="engine-stat-row${statusClass}">
         <div class="engine-stat-info">
@@ -69,7 +78,27 @@ export const engineStatsHtml = (timings: EngineTiming[]): string => {
   return sidebarAccordion(
     t("search-templates.sidebar.engine-performance"),
     statsContent,
+    "engine-performance-panel",
   );
+};
+
+export const renderEngineStats = (
+  timings: EngineTimingWithPage[],
+  onRelatedSearch: (q: string) => void,
+): void => {
+  const sidebar = document.getElementById("results-sidebar");
+  if (!sidebar) return;
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = engineStatsHtml(timings);
+  const next = wrapper.firstElementChild as HTMLElement | null;
+  const current = sidebar.querySelector<HTMLElement>(".engine-performance-panel");
+  if (!next) {
+    current?.remove();
+    return;
+  }
+  if (current) current.replaceWith(next);
+  else sidebar.prepend(next);
+  _wireSidebar(sidebar, onRelatedSearch);
 };
 
 const _relatedSearchesHtml = (terms: string[]): string =>

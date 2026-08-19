@@ -19,6 +19,10 @@
   display: flex;
   flex-direction: column;
   gap: $space-7;
+
+  &--more {
+    gap: $space-4;
+  }
 }
 
 .skeleton-card {
@@ -26,6 +30,7 @@
   flex-direction: column;
   gap: $space-2;
   max-width: $results-max-width;
+  padding: $space-4 0;
 }
 
 .skeleton-line {

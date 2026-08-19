@@ -32,11 +32,7 @@ export const buildProviderContext = async (
   const globalSettings = await getInstanceSettings();
   return {
     fetch: (url, init) =>
-      outgoingFetch(
-        url as string,
-        (init ?? {}) as Parameters<typeof outgoingFetch>[1],
-        transportName,
-      ),
+      outgoingFetch(url, (init ?? {}) as Parameters<typeof outgoingFetch>[1], transportName),
     lang: _resolveLang(globalSettings),
     userAgent: () => getRandomUserAgent(),
     createCache,

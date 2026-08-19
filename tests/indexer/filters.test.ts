@@ -4,6 +4,7 @@ import type { IndexerConfig } from "../../src/server/indexer/types/config";
 import type { SearchResult } from "../../src/server/types";
 
 const baseCfg: IndexerConfig = {
+  rankingWindow: 0,
   maxPerSearch: 30,
   maxUrls: 0,
   maxHits: 0,

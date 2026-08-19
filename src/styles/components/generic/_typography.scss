@@ -56,6 +56,10 @@ a {
     border-radius: $radius-xs;
     box-shadow: $box-shadow;
     border: 1px solid transparent;
+
+    &[data-tooltip] {
+      cursor: help;
+    }
   }
 
   &--store-type,
@@ -63,6 +67,23 @@ a {
     font-weight: 500;
     background: var(--bg);
     text-transform: capitalize;
+  }
+
+  &--deps {
+    font-weight: 500;
+    color: $warning;
+    background: var(--bg);
+    cursor: help;
+  }
+
+  &--experimental {
+    margin-left: $space-2;
+    font-weight: 500;
+    color: $warning;
+    background: var(--bg);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
   }
 
   &--proxy-exposed,

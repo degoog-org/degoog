@@ -31,6 +31,10 @@ import { getInstanceSettings } from "../../utils/server-settings";
 import { DEGOOG_ENGINE_ID } from "./builtins/degoog";
 import type { EngineFilters } from "../../../shared/engine-filters";
 import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
+import {
+  loadSearxCompatibilityEngines,
+  type SearxCompatEntry,
+} from "../compatibility-layer/searx";
 
 const builtinsDir = join(import.meta.dir, "builtins");
 
@@ -63,8 +67,16 @@ interface PluginEntry {
   instance: SearchEngine;
   disabledByDefault?: boolean;
   source?: RegistrySource;
+  compatibilityLayer?: string;
   filters?: EngineFilters;
 }
+
+let _searxCompatEntries: SearxCompatEntry[] = [];
+
+const allEngineEntries = (): (PluginEntry | SearxCompatEntry)[] => [
+  ...engineRegistry.items(),
+  ..._searxCompatEntries,
+];
 
 const resolveTypes = (
   baseTypes: string[],
@@ -211,11 +223,11 @@ const engineRegistry = createRegistry<PluginEntry>({
 });
 
 export const listEngineIds = (): string[] =>
-  engineRegistry.items().map((e) => e.id);
+  allEngineEntries().map((e) => e.id);
 
 export const listEngines = async (): Promise<EngineCatalogEntry[]> =>
   Promise.all(
-    engineRegistry.items().map(async (e) => {
+    allEngineEntries().map(async (e) => {
       const searchTypes = await resolveEngineTypes(e);
       return {
         id: e.id,
@@ -229,7 +241,7 @@ export const listEngines = async (): Promise<EngineCatalogEntry[]> =>
   );
 
 export const getEngineMap = (): Record<string, SearchEngine> =>
-  Object.fromEntries(engineRegistry.items().map((e) => [e.id, e.instance]));
+  Object.fromEntries(allEngineEntries().map((e) => [e.id, e.instance]));
 
 export const honorsImageFilters = (
   filters: EngineFilters | undefined,
@@ -251,7 +263,7 @@ export const getEnginesForCustomType = async (
   const results: { id: string; instance: SearchEngine }[] = [];
   const settings = await getInstanceSettings();
   const indexerOn = asBoolean(settings.degoogIndexerEnabled);
-  for (const e of engineRegistry.items()) {
+  for (const e of allEngineEntries()) {
     const enabled = !config || isEngineEnabled(e.id, config, indexerOn);
     if (!enabled) continue;
     if (await isDisabled(e.id)) continue;
@@ -265,7 +277,7 @@ export const getEnginesForCustomType = async (
 
 export const getCustomEngineTypes = async (): Promise<string[]> => {
   const types = new Set<string>();
-  for (const e of engineRegistry.items()) {
+  for (const e of allEngineEntries()) {
     if (await isDisabled(e.id)) continue;
     for (const t of await resolveEngineTypes(e)) {
       if (t !== "web") types.add(t);
@@ -278,7 +290,7 @@ export const getInstalledSearchTypes = async (
   excludeId?: string,
 ): Promise<string[]> => {
   const types = new Set<string>();
-  for (const e of engineRegistry.items()) {
+  for (const e of allEngineEntries()) {
     if (excludeId && e.id === excludeId) continue;
     for (const t of await resolveEngineTypes(e)) types.add(t);
   }
@@ -289,7 +301,7 @@ export const getEngineSearchType = async (
   engineId: string,
   preferredTab?: string,
 ): Promise<string | null> => {
-  const plugin = engineRegistry.items().find((e) => e.id === engineId);
+  const plugin = allEngineEntries().find((e) => e.id === engineId);
   if (!plugin) return null;
   const types = await resolveEngineTypes(plugin);
   return resolveTabSearchType(types, preferredTab);
@@ -321,7 +333,7 @@ export const getActiveWebEngines = async (
   const settings = await getInstanceSettings();
   const indexerOn = asBoolean(settings.degoogIndexerEnabled);
   const active: { id: string; instance: SearchEngine; score: number }[] = [];
-  for (const e of engineRegistry.items()) {
+  for (const e of allEngineEntries()) {
     const enabled = isEngineEnabled(e.id, config, indexerOn);
     if (!enabled) continue;
     const types = await resolveEngineTypes(e);
@@ -355,7 +367,7 @@ export const getDefaultEngineConfig = (): Record<string, boolean> => {
   const engineMap = getEngineMap();
   const overrides = _loadDefaultEngineOverrides();
   return Object.fromEntries(
-    engineRegistry.items().map((e) => {
+    allEngineEntries().map((e) => {
       if (e.id in overrides) return [e.id, overrides[e.id]];
       const instance = engineMap[e.id];
       const disabledByDefault =
@@ -433,7 +445,7 @@ const PROXY_OVERRIDE_URLS_FIELD: SettingField = {
 export const getEngineIdByInstance = (
   instance: SearchEngine,
 ): string | undefined => {
-  for (const e of engineRegistry.items()) {
+  for (const e of allEngineEntries()) {
     if (e.instance === instance) return e.id;
   }
   return undefined;
@@ -452,7 +464,7 @@ export const getEngineDefaultTransport = (
 export const getEngineExtensionMeta = async (
   coreT?: Translate,
 ): Promise<ExtensionMeta[]> => {
-  const items = engineRegistry.items();
+  const items = allEngineEntries();
   const engineMap = getEngineMap();
   const results: ExtensionMeta[] = [];
   const transportOptions = getTransportNames();
@@ -596,6 +608,7 @@ export const getEngineExtensionMeta = async (
       extensionDocsAvailable: exists,
       defaultEnabled: defaults[entry.id],
       source: entry.source,
+      compatibilityLayer: entry.compatibilityLayer,
       needsAppRestart: isExtensionRestartFlagVisible(instance?.needsAppRestart),
     });
   }
@@ -606,6 +619,7 @@ export const getEngineExtensionMeta = async (
 export const initEngines = async (bust = false): Promise<void> => {
   clearTypeCache();
   await (bust ? engineRegistry.reload() : engineRegistry.init());
+  _searxCompatEntries = await loadSearxCompatibilityEngines();
 };
 
 export const reloadEngines = async (bust = true): Promise<void> => {

@@ -1,9 +1,12 @@
+import type { EnginePagination } from "../../shared/search-types";
+
 export type {
   SearchResult,
   ScoredResult,
   EngineTiming,
   SlotPanel,
   SearchResponse,
+  EnginePagination,
 } from "../../shared/search-types";
 export { SlotPanelPosition } from "../../shared/search-types";
 
@@ -77,6 +80,7 @@ export interface SearchBody {
   imgSize?: string;
   imgType?: string;
   imgLayout?: string;
+  format?: string;
   safeMode?: string;
   /** @deprecated use safeMode; still read for old bookmarks/clients. */
   imgNsfw?: string;
@@ -147,4 +151,5 @@ export interface EngineContext {
     message: string,
     opts?: { httpStatus?: number; engine?: string },
   ) => Error;
+  pagination?: (info: EnginePagination) => void;
 }

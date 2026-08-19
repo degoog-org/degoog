@@ -143,25 +143,6 @@ export function parseEngineConfig(query: URLSearchParams): EngineConfig {
   return config;
 }
 
-export function cacheKey(
-  query: string,
-  engines: EngineConfig,
-  type: SearchType,
-  page: number,
-  timeFilter: TimeFilter = "any",
-  lang = "",
-  dateFrom = "",
-  dateTo = "",
-  imageFilter?: ImageFilter,
-  engineSettings = "",
-): string {
-  const q = query.trim().toLowerCase();
-  const imgKey = imageFilter
-    ? `${imageFilter.color || ""}|${imageFilter.size || ""}|${imageFilter.type || ""}|${imageFilter.layout || ""}|${imageFilter.nsfw || ""}`
-    : "";
-  return `${q}|${JSON.stringify(engines)}|${type}|${page}|${timeFilter}|${lang}|${dateFrom}|${dateTo}|${imgKey}|${engineSettings}`;
-}
-
 export async function runSlotPlugins(
   query: string,
   clientIp?: string,

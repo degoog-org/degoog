@@ -13,3 +13,4 @@ dist
 mcp
 degoog-cli
 .DS_Store
+__pycache__

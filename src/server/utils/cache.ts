@@ -1,4 +1,4 @@
-import type { SearchResponse, RichSuggestion } from "../types";
+import type { EngineTiming, RichSuggestion, SearchResult } from "../types";
 import { logger } from "./logger";
 import { THREAT_LEVEL } from "./sentinel";
 import {
@@ -27,8 +27,6 @@ export const SHORT_TTL_MS = _readPositiveIntEnv(
   "DEGOOG_CACHE_SHORT_TTL_MS",
   2 * 60 * 1000,
 );
-export const JUST_INDEXED_TTL_MS = 5_000;
-
 const NS = "cache";
 const SEARCH_NAMESPACE = "search";
 const AUTOCOMPLETE_NAMESPACE = "autocomplete";
@@ -188,7 +186,16 @@ onInvalidate((payload) => {
   );
 });
 
-const _searchCache = useCache<SearchResponse>(SEARCH_NAMESPACE, TTL_MS);
+export interface CachedEngineRun {
+  results: SearchResult[];
+  timing: EngineTiming;
+  pages?: number;
+}
+
+export const engineRunCache = useCache<CachedEngineRun>(
+  SEARCH_NAMESPACE,
+  TTL_MS,
+);
 
 export type AutocompleteCacheItem = {
   text: string;
@@ -200,15 +207,6 @@ export const autocompleteCache = useCache<AutocompleteCacheItem[]>(
   AUTOCOMPLETE_NAMESPACE,
   TTL_MS,
 );
-
-export const get = (key: string): Promise<SearchResponse | null> =>
-  _searchCache.get(key);
-
-export const set = (
-  key: string,
-  value: SearchResponse,
-  ttlMs: number = TTL_MS,
-): Promise<void> => _searchCache.set(key, value, ttlMs);
 
 const _namespacesForScope = (scope: CacheScope): string[] => {
   const all = Array.from(_registry.keys());
@@ -246,12 +244,5 @@ export const clear = (): Promise<string[]> => clearByScope(CACHE_SCOPE.ALL);
 
 export const listCacheNamespaces = (): string[] => Array.from(_registry.keys());
 
-const engineErrored = (status: string | undefined): boolean =>
+export const engineErrored = (status: string | undefined): boolean =>
   status !== undefined && status !== THREAT_LEVEL.OK;
-
-export const someEnginesFailed = (response: SearchResponse): boolean =>
-  response.engineTimings.some((et) => engineErrored(et.status));
-
-export const allEnginesFailed = (response: SearchResponse): boolean =>
-  response.engineTimings.length > 0 &&
-  response.engineTimings.every((et) => engineErrored(et.status));

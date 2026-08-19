@@ -1,14 +1,17 @@
-import { MAX_PAGE } from "../../constants";
 import { state } from "../../state";
 import type { ScoredResult } from "../../types";
 import { cleanUrl, linkHref } from "../../utils/dom";
-import { buildPaginationHtml } from "../../utils/pagination";
+import {
+  buildNavPaginationHtml,
+  buildPaginationHtml,
+} from "../../utils/pagination";
 import { goToPage } from "../../utils/search-actions";
 import { renderTemplate } from "../../utils/template";
 import { attachFaviconFallback } from "../../utils/favicon";
 import { faviconHostname, faviconUrl } from "../../utils/url";
 import { isImageSearchType } from "../../utils/engines";
 import { getBase } from "../../utils/base-url";
+import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
 import { destroyMediaObserver, setupMediaObserver, syncMediaPreviewPanel } from "../media/media";
 import { renderImageGrid } from "./render-media";
 
@@ -16,7 +19,12 @@ import { clearSlotPanels as _clearSlots } from "./render-slots";
 
 const t = window.scopedT("themes/degoog");
 
-export { renderSidebar, renderSidebarSuggestions, prependKnowledgePanels } from "./render-sidebar";
+export {
+  renderEngineStats,
+  renderSidebar,
+  renderSidebarSuggestions,
+  prependKnowledgePanels,
+} from "./render-sidebar";
 export {
   appendSlotPanels,
   clearSlotPanels,
@@ -42,6 +50,12 @@ export const buildResultContext = (
   const showBlock = !!(flags.authenticated && flags.blockUi);
   const showReplace = !!(flags.authenticated && flags.replaceUi);
   const showScore = !!(flags.authenticated && flags.scoreUi);
+  const isRecalled = r.idx === "recalled";
+  const fromIndexTip = t("search-templates.result.from-index");
+  const sources = (r.sources ?? []).map((name) => ({
+    name,
+    tooltip: isRecalled && name === DEGOOG_ENGINE_NAME ? fromIndexTip : "",
+  }));
   return {
     index,
     title: r.title,
@@ -51,7 +65,7 @@ export const buildResultContext = (
     favicon_url: faviconUrl(r.url),
     favicon_host: faviconHostname(r.url),
     thumbnail_url: r.thumbnail || "",
-    sources: r.sources,
+    sources,
     duration: r.duration || "",
     is_video: state.currentType === "videos" || !!r.duration,
     link_target: state.openInNewTab ? "_blank" : "_self",
@@ -70,7 +84,10 @@ const _hydrateFavicons = (container: HTMLElement): void => {
     .forEach((img) => attachFaviconFallback(img));
 };
 
-export function renderResults(results: ScoredResult[]): void {
+export function renderResults(
+  results: ScoredResult[],
+  opts: { paginate?: boolean } = {},
+): void {
   const container = document.getElementById("results-list");
   const layout = document.getElementById("results-layout");
   if (!container || !layout) return;
@@ -91,8 +108,8 @@ export function renderResults(results: ScoredResult[]): void {
       ? t("search-templates.no-engines", { store: storeLink })
       : t("search-templates.no-results");
     container.innerHTML = `<div class="no-results">${msg}</div>`;
-    if (!isImageType) {
-      renderPagination(MAX_PAGE, state.currentPage);
+    if (!isImageType && opts.paginate !== false) {
+      renderPagination(state.lastPage, state.currentPage, false);
     }
     return;
   }
@@ -117,7 +134,35 @@ export function renderResults(results: ScoredResult[]): void {
   _hydrateFavicons(container);
   attachVideoPlayers(container);
 
-  renderPagination(MAX_PAGE, state.currentPage);
+  if (opts.paginate !== false) {
+    renderPagination(state.lastPage, state.currentPage, results.length > 0);
+  } else {
+    const pagination = document.getElementById("pagination");
+    if (pagination) pagination.innerHTML = "";
+  }
+  window.dispatchEvent(new CustomEvent("degoog-results-ready"));
+}
+
+export function appendResults(
+  results: ScoredResult[],
+  startIndex: number,
+): void {
+  const container = document.getElementById("results-list");
+  if (!container || results.length === 0) return;
+
+  container.insertAdjacentHTML(
+    "beforeend",
+    results
+      .map(
+        (r, i) =>
+          renderTemplate("degoog-result", buildResultContext(r, startIndex + i)) ??
+          "",
+      )
+      .join(""),
+  );
+
+  _hydrateFavicons(container);
+  attachVideoPlayers(container);
   window.dispatchEvent(new CustomEvent("degoog-results-ready"));
 }
 
@@ -136,21 +181,35 @@ export const attachVideoPlayers = (container: HTMLElement): void => {
     });
 };
 
-export function renderPagination(totalPages: number, activePage: number): void {
+export function renderPagination(
+  totalPages: number | null,
+  activePage: number,
+  hasNext = true,
+): void {
   const container = document.getElementById("pagination");
   if (!container) return;
-  if (totalPages < 1) {
+  if (totalPages !== null && totalPages < 1) {
+    container.innerHTML = "";
+    return;
+  }
+  if (totalPages === 1) {
     container.innerHTML = "";
     return;
   }
 
-  container.innerHTML = `<div class="pagination">${buildPaginationHtml(totalPages, activePage)}</div>`;
+  const inner =
+    totalPages === null
+      ? buildNavPaginationHtml(activePage, hasNext)
+      : buildPaginationHtml(totalPages, activePage);
+  container.innerHTML = `<div class="pagination">${inner}</div>`;
 
   container.querySelectorAll<HTMLElement>("[data-page]").forEach((el) => {
     el.addEventListener("click", (e) => {
       e.preventDefault();
       const pageNum = parseInt(el.dataset.page ?? "0", 10);
-      if (pageNum >= 1 && pageNum <= MAX_PAGE) void goToPage(pageNum);
+      if (pageNum < 1) return;
+      if (totalPages !== null && pageNum > totalPages) return;
+      void goToPage(pageNum);
     });
   });
 }

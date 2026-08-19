@@ -30,6 +30,8 @@ import {
   type ServerSettingValue,
 } from "../utils/server-settings";
 import { writeSyncedDefaults } from "../utils/synced-settings";
+import { startQueue, stopQueue } from "../indexer/queue";
+import { reloadEngines } from "../extensions/engines/registry";
 import {
   SETTINGS_SCHEMA,
   coerceSetting,
@@ -190,6 +192,7 @@ router.get("/api/settings/streaming", async (c) => {
     autoRetry: asBoolean(settings.streamingAutoRetry),
     maxRetries: parseInt(asString(settings.streamingMaxRetries) || "2", 10),
     disabledTypes: asString(settings.streamingDisabledTypes ?? "").split("\n").map(s => s.trim()).filter(Boolean),
+    infiniteScroll: asBoolean(settings.infiniteScrollEnabled),
   });
 });
 
@@ -215,6 +218,25 @@ router.get("/api/settings/general", async (c) => {
   return c.json(trimBigFields({ ...settings, ...indexerLists, ...domainLists }));
 });
 
+const _reloadSearx = async (): Promise<boolean> => {
+  try {
+    await reloadEngines();
+    return true;
+  } catch (err) {
+    logger.warn("settings", "engine reload after a searx toggle failed", err);
+    return false;
+  }
+};
+
+const _savedBody = (reloaded: boolean): { ok: true; searxReloadFailed?: true } =>
+  reloaded ? { ok: true } : { ok: true, searxReloadFailed: true };
+
+const _reconcileIndexerQueue = async (): Promise<void> => {
+  const settings = await getInstanceSettings();
+  if (asBoolean(settings.degoogIndexerEnabled)) startQueue();
+  else await stopQueue();
+};
+
 router.post("/api/settings/general", async (c) => {
   const denied = await guardSettingsRoute(c, "POST /api/settings/general");
   if (denied) return denied;
@@ -222,10 +244,15 @@ router.post("/api/settings/general", async (c) => {
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const existing = await getInstanceSettings();
   const updates = _applySchemaUpdates(body);
+  const searxWasOn = asBoolean(existing.searxCompatEnabled);
   await setInstanceSettings({ ...existing, ...updates });
   await _persistListFields(body);
   await syncBlocklist();
-  return c.json({ ok: true });
+  await _reconcileIndexerQueue();
+  const toggled =
+    "searxCompatEnabled" in updates &&
+    asBoolean(updates.searxCompatEnabled) !== searxWasOn;
+  return c.json(_savedBody(toggled ? await _reloadSearx() : true));
 });
 
 router.post("/api/settings/field", async (c) => {
@@ -247,7 +274,9 @@ router.post("/api/settings/field", async (c) => {
     await updateInstanceSettings({ [key]: coerced });
   }
   await syncBlocklist();
-  return c.json({ ok: true });
+  if (key === "degoogIndexerEnabled") await _reconcileIndexerQueue();
+  const reloaded = key === "searxCompatEnabled" ? await _reloadSearx() : true;
+  return c.json(_savedBody(reloaded));
 });
 
 router.post("/api/settings/domain-action", async (c) => {

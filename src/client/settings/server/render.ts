@@ -124,90 +124,103 @@ const _renderIndexerSection = (): string => `
     </fieldset>
   </section>`;
 
-const _renderStreamingSection = (): string => `
-  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-streaming">
-    ${_h("settings-page.server.streaming-heading", "fa-solid fa-arrow-down-1-9")}
-    ${_desc("settings-page.server.streaming-desc")}
+const _renderSearxSection = (): string => `
+  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-searx">
+    ${_h("settings-page.server.searx-heading", "fa-solid fa-flask")}
+    ${_desc("settings-page.server.searx-desc")}
     <fieldset class="settings-fieldset">
-      ${_toggle("settings-streaming-enabled", "settings-page.server.streaming-enable", { aria: "settings-page.server.streaming-enable-aria", title: "settings-page.server.streaming-enable-tooltip" })}
-      <div class="settings-streaming-options" id="settings-streaming-options" style="display: none">
-        <fieldset class="settings-fieldset settings-fieldset--compact">
-          <div id="settings-streaming-type-checks" class="settings-streaming-type-checks"></div>
-          ${_toggle("settings-streaming-auto-retry", "settings-page.server.streaming-auto-retry", { aria: "settings-page.server.streaming-auto-retry-aria" })}
-          <div class="settings-streaming-retry-wrap settings-fieldset settings-fieldset-inverse settings-fieldset--compact" id="settings-streaming-retry-wrap" style="display: none">
-            <label for="settings-streaming-max-retries" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.streaming-max-retries-label"))}</label>
-            <input type="number" id="settings-streaming-max-retries" data-save-key="streamingMaxRetries" class="settings-rate-limit-input degoog-input" min="1" max="5" placeholder="2" />
-          </div>
-        </fieldset>
-      </div>
+      ${_toggle("settings-searx-compat-enabled", "settings-page.server.searx-enable", { aria: "settings-page.server.searx-enable-aria" })}
+      ${_desc("settings-page.server.searx-enable-desc")}
+      ${_toggle("settings-searx-api-enabled", "settings-page.server.searx-api-enable", { aria: "settings-page.server.searx-api-enable-aria" })}
+      ${_desc("settings-page.server.searx-api-enable-desc")}
     </fieldset>
   </section>`;
 
-const _renderLanguagesSection = (): string => `
-  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card">
-    ${_h("settings-page.server.languages-heading", "fa-solid fa-language")}
-    ${_desc("settings-page.server.languages-desc")}
-    <fieldset class="settings-fieldset">
-      ${_toggle("settings-languages-enabled", "settings-page.server.languages-toggle", { aria: "settings-page.server.languages-toggle-aria" })}
-      <div class="settings-proxy-urls-wrap settings-fieldset settings-fieldset-inverse settings-fieldset--compact" id="settings-languages-wrap" style="display: none">
-        <label for="settings-languages" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.languages-codes-label"))}</label>
-        <textarea id="settings-languages" data-save-key="languages" class="settings-proxy-urls degoog-input" rows="5" placeholder="en&#10;it&#10;de&#10;fr&#10;es"></textarea>
+const _infiniteScrollBlock = (): string => `
+  ${_toggle("settings-infinite-scroll-enabled", "settings-page.server.infinite-scroll-enable", { aria: "settings-page.server.infinite-scroll-enable-aria" })}
+  ${_desc("settings-page.server.infinite-scroll-enable-desc")}`;
+
+const _languagesBlock = (): string => `
+  ${_toggle("settings-languages-enabled", "settings-page.server.languages-toggle", { aria: "settings-page.server.languages-toggle-aria" })}
+  ${_desc("settings-page.server.languages-desc")}
+  <div class="settings-proxy-urls-wrap settings-fieldset settings-fieldset-inverse settings-fieldset--compact" id="settings-languages-wrap" style="display: none">
+    <label for="settings-languages" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.languages-codes-label"))}</label>
+    <textarea id="settings-languages" data-save-key="languages" class="settings-proxy-urls degoog-input" rows="5" placeholder="en&#10;it&#10;de&#10;fr&#10;es"></textarea>
+  </div>`;
+
+const _streamingBlock = (): string => `
+  ${_toggle("settings-streaming-enabled", "settings-page.server.streaming-enable", { aria: "settings-page.server.streaming-enable-aria", title: "settings-page.server.streaming-enable-tooltip" })}
+  ${_desc("settings-page.server.streaming-desc")}
+  <div class="settings-streaming-options" id="settings-streaming-options" style="display: none">
+    <fieldset class="settings-fieldset settings-fieldset--compact">
+      <div id="settings-streaming-type-checks" class="settings-streaming-type-checks"></div>
+      ${_toggle("settings-streaming-auto-retry", "settings-page.server.streaming-auto-retry", { aria: "settings-page.server.streaming-auto-retry-aria" })}
+      <div class="settings-streaming-retry-wrap settings-fieldset settings-fieldset-inverse settings-fieldset--compact" id="settings-streaming-retry-wrap" style="display: none">
+        <label for="settings-streaming-max-retries" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.streaming-max-retries-label"))}</label>
+        <input type="number" id="settings-streaming-max-retries" data-save-key="streamingMaxRetries" class="settings-rate-limit-input degoog-input" min="1" max="5" placeholder="2" />
       </div>
+    </fieldset>
+  </div>`;
+
+const _renderSearchOptionsSection = (): string => `
+  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-search-options">
+    ${_h("settings-page.server.search-options-heading", "fa-solid fa-arrow-down-1-9")}
+    ${_desc("settings-page.server.search-options-desc")}
+    <fieldset class="settings-fieldset">
+      ${_infiniteScrollBlock()}
+      ${_languagesBlock()}
+      ${_streamingBlock()}
     </fieldset>
   </section>`;
 
-const _renderDomainBlockSection = (): string => `
-  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-domain-block">
-    ${_h("settings-page.server.domain-block-heading", "fa-solid fa-ban")}
-    ${_desc("settings-page.server.domain-block-desc")}
-    <fieldset class="settings-fieldset">
-      ${_toggle("settings-domain-block-enabled", "settings-page.server.domain-block-enable", { aria: "settings-page.server.domain-block-enable-aria" })}
-      <div class="settings-proxy-urls-wrap" id="settings-domain-block-wrap" style="display: none">
-        <fieldset class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact">
-          <label for="settings-domain-block-list" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.domain-block-list-label"))}</label>
-          ${_desc("settings-page.server.domain-block-regex-help")}
-          <textarea id="settings-domain-block-list" data-save-key="domainBlockList" class="settings-proxy-urls degoog-input" rows="5" placeholder="quora.com&#10;tiktok.com&#10;/.*\.spam\.net/"></textarea>
-          ${_toggle("settings-domain-block-ui-enabled", "settings-page.server.domain-block-ui-enable")}
-          ${_desc("settings-page.server.domain-block-ui-desc")}
-        </fieldset>
-      </div>
+const _domainBlockBlock = (): string => `
+  ${_toggle("settings-domain-block-enabled", "settings-page.server.domain-block-enable", { aria: "settings-page.server.domain-block-enable-aria" })}
+  ${_desc("settings-page.server.domain-block-desc")}
+  <div class="settings-proxy-urls-wrap" id="settings-domain-block-wrap" style="display: none">
+    <fieldset class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact">
+      <label for="settings-domain-block-list" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.domain-block-list-label"))}</label>
+      ${_desc("settings-page.server.domain-block-regex-help")}
+      <textarea id="settings-domain-block-list" data-save-key="domainBlockList" class="settings-proxy-urls degoog-input" rows="5" placeholder="quora.com&#10;tiktok.com&#10;/.*\.spam\.net/"></textarea>
+      ${_toggle("settings-domain-block-ui-enabled", "settings-page.server.domain-block-ui-enable")}
+      ${_desc("settings-page.server.domain-block-ui-desc")}
     </fieldset>
-  </section>`;
+  </div>`;
 
-const _renderDomainReplaceSection = (): string => `
-  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-domain-replace">
-    ${_h("settings-page.server.domain-replace-heading", "fa-solid fa-arrow-right-arrow-left")}
-    ${_desc("settings-page.server.domain-replace-desc")}
-    <fieldset class="settings-fieldset">
-      ${_toggle("settings-domain-replace-enabled", "settings-page.server.domain-replace-enable", { aria: "settings-page.server.domain-replace-enable-aria" })}
-      <div class="settings-proxy-urls-wrap" id="settings-domain-replace-wrap" style="display: none">
-        <fieldset class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact">
-          <label for="settings-domain-replace-list" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.domain-replace-list-label"))}</label>
-          <textarea id="settings-domain-replace-list" data-save-key="domainReplaceList" class="settings-proxy-urls degoog-input" rows="5" placeholder="reddit.com -> teddit.example.com&#10;twitter.com -> nitter.example.com"></textarea>
-          ${_toggle("settings-domain-replace-ui-enabled", "settings-page.server.domain-replace-ui-enable")}
-          ${_desc("settings-page.server.domain-replace-ui-desc")}
-        </fieldset>
-      </div>
+const _domainReplaceBlock = (): string => `
+  ${_toggle("settings-domain-replace-enabled", "settings-page.server.domain-replace-enable", { aria: "settings-page.server.domain-replace-enable-aria" })}
+  ${_desc("settings-page.server.domain-replace-desc")}
+  <div class="settings-proxy-urls-wrap" id="settings-domain-replace-wrap" style="display: none">
+    <fieldset class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact">
+      <label for="settings-domain-replace-list" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.domain-replace-list-label"))}</label>
+      <textarea id="settings-domain-replace-list" data-save-key="domainReplaceList" class="settings-proxy-urls degoog-input" rows="5" placeholder="reddit.com -> teddit.example.com&#10;twitter.com -> nitter.example.com"></textarea>
+      ${_toggle("settings-domain-replace-ui-enabled", "settings-page.server.domain-replace-ui-enable")}
+      ${_desc("settings-page.server.domain-replace-ui-desc")}
     </fieldset>
-  </section>`;
+  </div>`;
 
-const _renderDomainScoreSection = (): string => `
-  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-domain-score">
-    ${_h("settings-page.server.domain-score-heading", "fa-solid fa-star")}
-    ${_desc("settings-page.server.domain-score-desc")}
+const _domainScoreBlock = (): string => `
+  ${_toggle("settings-domain-score-enabled", "settings-page.server.domain-score-enable")}
+  ${_desc("settings-page.server.domain-score-desc")}
+  <div class="settings-proxy-urls-wrap" id="settings-domain-score-wrap" style="display: none">
+    <fieldset class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact">
+      <span class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.domain-score-list-label"))}</span>
+      <div id="settings-domain-score-rows" class="settings-score-rows"></div>
+      <button type="button" id="settings-domain-score-add" class="settings-score-add">
+        ${escapeHtml(t("settings-page.server.domain-score-add-row"))}
+      </button>
+      ${_toggle("settings-domain-score-ui-enabled", "settings-page.server.domain-score-ui-enable")}
+      ${_desc("settings-page.server.domain-score-ui-desc")}
+    </fieldset>
+  </div>`;
+
+const _renderDomainSection = (): string => `
+  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-domain-management">
+    ${_h("settings-page.server.domain-management-heading", "fa-solid fa-globe")}
+    ${_desc("settings-page.server.domain-management-desc")}
     <fieldset class="settings-fieldset">
-      ${_toggle("settings-domain-score-enabled", "settings-page.server.domain-score-enable")}
-      <div class="settings-proxy-urls-wrap" id="settings-domain-score-wrap" style="display: none">
-        <fieldset class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact">
-          <span class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.domain-score-list-label"))}</span>
-          <div id="settings-domain-score-rows" class="settings-score-rows"></div>
-          <button type="button" id="settings-domain-score-add" class="settings-score-add">
-            ${escapeHtml(t("settings-page.server.domain-score-add-row"))}
-          </button>
-          ${_toggle("settings-domain-score-ui-enabled", "settings-page.server.domain-score-ui-enable")}
-          ${_desc("settings-page.server.domain-score-ui-desc")}
-        </fieldset>
-      </div>
+      ${_domainBlockBlock()}
+      ${_domainReplaceBlock()}
+      ${_domainScoreBlock()}
     </fieldset>
   </section>`;
 
@@ -325,11 +338,9 @@ export const renderServerContent = (): string =>
     _renderCacheSection(),
     _renderApiKeySection(),
     _renderIndexerSection(),
-    _renderStreamingSection(),
-    _renderLanguagesSection(),
-    _renderDomainBlockSection(),
-    _renderDomainReplaceSection(),
-    _renderDomainScoreSection(),
+    _renderSearxSection(),
+    _renderSearchOptionsSection(),
+    _renderDomainSection(),
     _renderProxySection(),
     _renderRateLimitSection(),
     _renderHoneypotSection(),

@@ -148,6 +148,72 @@ select.degoog-input {
   }
 }
 
+.degoog-file {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $space-3;
+  background: var(--bg);
+  border-radius: $radius-md;
+  padding: $space-3;
+  transition: background $transition-fast;
+
+  &--drag {
+    background: rgba($primary, 0.15);
+  }
+
+  &-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    flex-shrink: 0;
+  }
+
+  &-name {
+    color: var(--text-primary);
+    font-size: $font-size-small;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  &-drop-hint {
+    color: var(--text-secondary);
+    font-size: $font-size-small;
+    margin-inline-start: auto;
+  }
+
+  &-clear {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0 $space-2;
+    flex-shrink: 0;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  &-hint {
+    color: var(--text-secondary);
+    font-size: $font-size-small;
+    margin: $space-1 0 0;
+  }
+}
+
 .degoog-checkbox-wrap {
   display: flex;
   align-items: center;

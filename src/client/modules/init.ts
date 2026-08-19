@@ -7,6 +7,7 @@ import {
   POST_METHOD_ENABLED,
   STICKY_SIDEBAR,
   CENTERED_MODE,
+  HIDE_URL_PARAMS,
 } from "../constants";
 import { state, defaultImageFilter } from "../state";
 import { initAutocomplete } from "../utils/autocomplete";
@@ -41,6 +42,7 @@ type DegoogHistoryState = {
   query: string;
   type: string;
   page: number;
+  loaded?: number;
   imageFilter?: ImageFilter;
 };
 
@@ -205,6 +207,9 @@ export async function init(): Promise<void> {
   const postMethodEnabled = await idbGet<boolean>(POST_METHOD_ENABLED);
   if (postMethodEnabled !== null) state.postMethodEnabled = postMethodEnabled;
 
+  const hideUrlParams = await idbGet<boolean>(HIDE_URL_PARAMS);
+  if (hideUrlParams !== null) state.hideUrlParams = hideUrlParams;
+
   const params = new URLSearchParams(window.location.search);
   const q = params.get("q");
   const postQuery = sessionStorage.getItem("degoog-post-query");
@@ -218,6 +223,8 @@ export async function init(): Promise<void> {
   const resolvedQ = q || postQuery;
   const type = params.get("type") || postType || "web";
   const page = parseInt(params.get("page") ?? postPage ?? "1", 10) || 1;
+  const loadedPage = parseInt(params.get("loaded") ?? "1", 10) || 1;
+  state.restoreInfinitePage = Math.max(page, loadedPage);
 
   if (isImageSearchType(type)) state.imageFilter = readImgFilter(params);
 
@@ -299,6 +306,8 @@ export async function init(): Promise<void> {
     if (popQ) {
       const popType = popParams.get("type") || "web";
       const popPage = parseInt(popParams.get("page") ?? "1", 10) || 1;
+      const popLoadedPage = parseInt(popParams.get("loaded") ?? "1", 10) || 1;
+      state.restoreInfinitePage = Math.max(popPage, popLoadedPage);
       if (isImageSearchType(popType)) state.imageFilter = readImgFilter(popParams);
       else state.imageFilter = defaultImageFilter();
       state.isInitialLoad = true;

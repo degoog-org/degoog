@@ -8,12 +8,17 @@ import {
 import { renderTemplate } from "../../utils/template";
 import type { ScoredResult } from "../../types";
 
+const COLUMN_STEPS: ReadonlyArray<{ upTo: number; columns: number }> = [
+  { upTo: 800, columns: 3 },
+  { upTo: 1100, columns: 4 },
+  { upTo: 1400, columns: 5 },
+];
+const COLUMN_MAX = 6;
+const RELAYOUT_DELAY_MS = 120;
+
 const _getImageColumnCount = (grid: HTMLElement): number => {
-  const w = grid.clientWidth || window.innerWidth;
-  if (w <= 800) return 3;
-  if (w <= 1100) return 4;
-  if (w <= 1400) return 5;
-  return 6;
+  const width = grid.clientWidth || window.innerWidth;
+  return COLUMN_STEPS.find((step) => width <= step.upTo)?.columns ?? COLUMN_MAX;
 };
 
 const _shortestColumn = (columns: HTMLElement[]): HTMLElement =>
@@ -26,39 +31,51 @@ const _shortestColumn = (columns: HTMLElement[]): HTMLElement =>
 const _imageColumns = (grid: HTMLElement): HTMLElement[] =>
   Array.from(grid.querySelectorAll<HTMLElement>(".image-column"));
 
-function _ensureImageColumns(grid: HTMLElement): void {
-  const count = _getImageColumnCount(grid);
-  const columns = _imageColumns(grid);
-  if (columns.length === count) return;
+const _cardsInResultOrder = (grid: HTMLElement): HTMLElement[] =>
+  Array.from(grid.querySelectorAll<HTMLElement>(".image-card")).sort(
+    (a, b) => Number(a.dataset.idx ?? 0) - Number(b.dataset.idx ?? 0),
+  );
 
-  const cards = Array.from(grid.querySelectorAll<HTMLElement>(".image-card"));
-  grid.innerHTML = "";
+function _scrollSelectedIntoView(grid: HTMLElement): void {
+  grid
+    .querySelector<HTMLElement>(".image-card.selected")
+    ?.scrollIntoView({ block: "nearest" });
+}
+
+function _rebuildColumns(grid: HTMLElement, count: number): HTMLElement[] {
+  const cards = _cardsInResultOrder(grid);
+  const columns: HTMLElement[] = [];
+
+  grid.replaceChildren();
   for (let i = 0; i < count; i++) {
     const col = document.createElement("div");
     col.className = "image-column";
+    columns.push(col);
     grid.appendChild(col);
   }
 
-  const freshColumns = _imageColumns(grid);
-  cards.forEach((card) => {
-    _shortestColumn(freshColumns).appendChild(card);
-  });
-  _collapsedOverflow = null;
+  cards.forEach((card) => _shortestColumn(columns).appendChild(card));
+  return columns;
+}
+
+function _ensureImageColumns(grid: HTMLElement): HTMLElement[] {
+  const count = _getImageColumnCount(grid);
+  const columns = _imageColumns(grid);
+  if (columns.length === count) return columns;
+
+  const rebuilt = _rebuildColumns(grid, count);
+  _scrollSelectedIntoView(grid);
+  return rebuilt;
 }
 
 let _resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
-function _clearScheduledSync(): void {
-  if (_resizeTimer) {
-    clearTimeout(_resizeTimer);
-    _resizeTimer = null;
-  }
-}
-
 function _scheduleColumnSync(grid: HTMLElement): void {
-  if (_collapsedOverflow) return;
-  _clearScheduledSync();
-  _resizeTimer = setTimeout(() => _ensureImageColumns(grid), 200);
+  if (_resizeTimer) clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    _resizeTimer = null;
+    _ensureImageColumns(grid);
+  }, RELAYOUT_DELAY_MS);
 }
 
 let _gridResizeObserver: ResizeObserver | null = null;
@@ -69,90 +86,12 @@ function _observeGridResize(grid: HTMLElement): void {
   _gridResizeObserver.observe(grid);
 }
 
-const PANEL_COLUMN_DROP = 2;
+export const PANEL_LAYOUT_BREAKPOINT = 768;
 
-interface _OverflowCard {
-  card: HTMLElement;
-  removedCol: number;
-  row: number;
-}
-
-let _collapsedOverflow: _OverflowCard[] | null = null;
-let _collapsedDropCount = 0;
-
-function _scrollSelectedIntoView(grid: HTMLElement): void {
-  grid
-    .querySelector<HTMLElement>(".image-card.selected")
-    ?.scrollIntoView({ block: "nearest" });
-}
-
-function _collapseForPanel(grid: HTMLElement): void {
-  if (_collapsedOverflow) return;
-
-  const columns = _imageColumns(grid);
-  const dropCount = Math.min(PANEL_COLUMN_DROP, columns.length - 1);
-  if (dropCount <= 0) return;
-
-  const keepCount = columns.length - dropCount;
-  const keep = columns.slice(0, keepCount);
-  const removed = columns.slice(keepCount);
-  const overflow: _OverflowCard[] = [];
-
-  removed.forEach((col, removedCol) => {
-    const target = keep[removedCol % keepCount];
-    const targetRows = Array.from(
-      target.children as HTMLCollectionOf<HTMLElement>,
-    );
-
-    Array.from(col.children as HTMLCollectionOf<HTMLElement>).forEach(
-      (card, row) => {
-        overflow.push({ card, removedCol, row });
-        const anchor = targetRows[row];
-        if (anchor) anchor.after(card);
-        else target.appendChild(card);
-      },
-    );
-    col.remove();
-  });
-
-  _collapsedOverflow = overflow;
-  _collapsedDropCount = dropCount;
-  _scrollSelectedIntoView(grid);
-}
-
-function _expandFromPanel(grid: HTMLElement): void {
-  if (!_collapsedOverflow) return;
-
-  const restored: HTMLElement[] = [];
-  for (let i = 0; i < _collapsedDropCount; i++) {
-    const col = document.createElement("div");
-    col.className = "image-column";
-    grid.appendChild(col);
-    restored.push(col);
-  }
-
-  const overflow = _collapsedOverflow;
-  _collapsedOverflow = null;
-  _collapsedDropCount = 0;
-
-  overflow.forEach(({ card, removedCol }) => {
-    restored[removedCol].appendChild(card);
-  });
-
-  _scrollSelectedIntoView(grid);
-}
-
-const PANEL_LAYOUT_BREAKPOINT = 768;
-
-registerImageGridPanelSync((isOpen) => {
+registerImageGridPanelSync(() => {
   const grid = document.querySelector<HTMLElement>(".image-grid");
   if (!grid) return;
-  if (isOpen) {
-    if (window.innerWidth < PANEL_LAYOUT_BREAKPOINT) return;
-    _collapseForPanel(grid);
-  } else {
-    _expandFromPanel(grid);
-  }
+  requestAnimationFrame(() => _ensureImageColumns(grid));
 });
 
 const _imageCardUrl = (r: ScoredResult): string => {
@@ -183,10 +122,7 @@ export function appendMediaCards(
     type === "image" ? "degoog-image-card" : "degoog-video-card";
 
   if (type === "image") {
-    _ensureImageColumns(grid);
-    const columns = Array.from(
-      grid.querySelectorAll<HTMLElement>(".image-column"),
-    );
+    const columns = _ensureImageColumns(grid);
 
     results.forEach((r, i) => {
       const idx = startIdx + i;

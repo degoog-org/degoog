@@ -10,6 +10,9 @@ import { isDisabled } from "../../utils/plugin-settings";
 import { getClientIp } from "../../utils/request";
 import { _applyRateLimit } from "../../utils/search";
 import { parsePage } from "./_parsers";
+import { agreedPageTotal, makePageCounter } from "../../search/page-counter";
+
+const FALLBACK_TAB_PAGES = 10;
 
 export function registerTabSearchRoute(router: Hono): void {
   router.get("/api/tab-search", async (c) => {
@@ -46,7 +49,10 @@ export function registerTabSearchRoute(router: Hono): void {
         const outcomes = await Promise.all(
           engines.map(async ({ id, instance: e }) => {
             const start = performance.now();
-            const engineContext = createSearchEngineContext(id);
+            const pageCounter = makePageCounter();
+            const engineContext = createSearchEngineContext(id, {
+              pageCounter,
+            });
             try {
               const value = await e.executeSearch(
                 query.trim(),
@@ -59,6 +65,7 @@ export function registerTabSearchRoute(router: Hono): void {
                 time: Math.round(performance.now() - start),
                 resultCount: value.length,
                 results: value,
+                pages: pageCounter.total(),
               };
             } catch (err) {
               logger.warn("tab-search", `${e.name} engine failed`, err);
@@ -67,6 +74,7 @@ export function registerTabSearchRoute(router: Hono): void {
                 time: Math.round(performance.now() - start),
                 resultCount: 0,
                 results: [] as ScoredResult[],
+                pages: undefined,
               };
             }
           }),
@@ -87,7 +95,10 @@ export function registerTabSearchRoute(router: Hono): void {
             idx++;
           }
         }
-        if (allResults.length > 0) totalPages = 10;
+        if (allResults.length > 0) {
+          totalPages =
+            agreedPageTotal(outcomes.map((o) => o.pages)) ?? FALLBACK_TAB_PAGES;
+        }
       }
 
       if (

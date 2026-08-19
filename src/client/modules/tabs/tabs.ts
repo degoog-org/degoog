@@ -62,7 +62,7 @@ const _reorderDomTabs = (order: string[]): void => {
   const byKey = new Map<string, HTMLElement>();
   for (const tab of tabs) byKey.set(_tabKey(tab), tab);
 
-  for (const key of order) {
+  for (const key of applyTabOrder([...byKey.keys()], order)) {
     const el = byKey.get(key);
     if (el) container.insertBefore(el, toolsBar);
   }

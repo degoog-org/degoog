@@ -7,7 +7,8 @@ export const state: AppState = {
   currentQuery: "",
   currentType: "web",
   currentPage: 1,
-  lastPage: 10,
+  restoreInfinitePage: 1,
+  lastPage: null,
   currentResults: [],
   currentData: null,
   currentRelatedSearches: [],
@@ -27,6 +28,7 @@ export const state: AppState = {
   postMethodEnabled: false,
   inlineGifPlayback: true,
   stickySidebar: false,
+  hideUrlParams: false,
   isInitialLoad: false,
   imageFilter: defaultImageFilter(),
 };

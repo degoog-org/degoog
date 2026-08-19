@@ -24,6 +24,7 @@ export const SETTINGS_SCHEMA = {
   languagesEnabled:             { kind: "boolean", default: false },
   languages:                    { kind: "lines",   default: "" },
   streamingEnabled:             { kind: "boolean", default: true },
+  infiniteScrollEnabled:        { kind: "boolean", default: false },
   streamingAutoRetry:           { kind: "boolean", default: true },
   streamingMaxRetries:          { kind: "number",  default: "2" },
   streamingDisabledTypes:       { kind: "lines",   default: "" },
@@ -54,9 +55,12 @@ export const SETTINGS_SCHEMA = {
   degoogIndexerFuzzyEnabled:       { kind: "boolean", default: true },
   degoogIndexerFuzzyMinTermRatio:  { kind: "number",  default: "0.6" },
   degoogIndexerQueryLimit:         { kind: "number",  default: "30" },
+  degoogIndexerRankingWindow:      { kind: "number",  default: "20" },
   degoogIndexerDomainAllowlist: { kind: "lines",   default: "" },
   degoogIndexerDomainBlocklist: { kind: "lines",   default: "" },
   degoogIndexerWordBlocklist:   { kind: "lines",   default: "" },
+  searxCompatEnabled:           { kind: "boolean", default: false },
+  searxApiEnabled:              { kind: "boolean", default: false },
 } satisfies Record<string, SettingDef>;
 
 export type SettingKey = keyof typeof SETTINGS_SCHEMA;

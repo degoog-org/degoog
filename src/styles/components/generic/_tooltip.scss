@@ -11,7 +11,9 @@
     color: var(--tooltip-text, #fff);
     font-size: $font-size-xs;
     font-weight: 400;
-    white-space: nowrap;
+    width: max-content;
+    max-width: min(13rem, 60vw);
+    text-align: left;
     padding: 4px $space-2;
     border-radius: $radius-sm;
     pointer-events: none;
@@ -23,5 +25,21 @@
   &:hover::after,
   &:focus-visible::after {
     opacity: 1;
+  }
+
+  &[data-tooltip-below]::after {
+    bottom: auto;
+    top: calc(100% + 6px);
+  }
+
+  &[data-tooltip-start]::after {
+    left: 0;
+    transform: none;
+  }
+
+  &[data-tooltip-end]::after {
+    left: auto;
+    right: 0;
+    transform: none;
   }
 }

@@ -29,6 +29,9 @@ const _skeletonCard = (): string =>
 export const skeletonResults = (count = 5): string =>
   `<div class="skeleton-results">${Array.from({ length: count }, _skeletonCard).join("")}</div>`;
 
+export const skeletonMoreResults = (count = 2): string =>
+  `<div class="skeleton-results skeleton-results--more">${Array.from({ length: count }, _skeletonCard).join("")}</div>`;
+
 export const skeletonGlance = (): string =>
   `<div class="glance-box">
     <div class="skeleton-glance">

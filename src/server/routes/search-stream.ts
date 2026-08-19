@@ -3,29 +3,24 @@ import {
   scoreResults,
   searchSingleEngine,
 } from "../search";
-import { selectActiveEngines, engineSettingsFingerprint } from "../search/engine-selection";
+import { selectActiveEngines } from "../search/engine-selection";
+import { agreedPageTotal } from "../search/page-counter";
 import {
   EngineTiming,
-  SearchResponse,
   SearchResult,
   SearchType,
   TimeFilter,
 } from "../types";
-import * as cache from "../utils/cache";
 import { logger } from "../utils/logger";
 import { asBoolean, asString } from "../utils/plugin-settings";
-import {
-  _applyRateLimit,
-  cacheKey,
-  isValidQuery,
-} from "../utils/search";
+import { _applyRateLimit, isValidQuery } from "../utils/search";
 import { guardApiKey } from "../utils/api-key-guard";
 import { applyDomainRules } from "./search/_domain-rules";
 import { signResultThumbnails } from "../utils/proxy-sign";
 import { parseSearchRequest } from "./search/_parsers";
 import { runIntercepts } from "../utils/run-interceptors";
 import { getInstanceSettings } from "../utils/server-settings";
-import { DEGOOG_ENGINE_NAME, maybeIndex } from "../indexer/store";
+import { DEGOOG_ENGINE_NAME, maybeIndex, tagIndexRelation, toFilterTag } from "../indexer/store";
 
 const router = new Hono();
 
@@ -46,68 +41,6 @@ router.get("/api/search/stream", async (c) => {
   const type = (overrides.searchType ?? searchType) as SearchType;
   const resolvedLang = overrides.lang ?? lang;
   const resolvedTime = (overrides.timeFilter ?? timeFilter) as TimeFilter;
-
-  const key = cacheKey(
-    query,
-    engines,
-    type,
-    page,
-    resolvedTime,
-    resolvedLang,
-    dateFrom,
-    dateTo,
-    imageFilter,
-    await engineSettingsFingerprint(type, engines),
-  );
-
-  const cached = await cache.get(key);
-  if (cached) {
-    const qShort = query.trim().slice(0, 80);
-    const enginesOn = Object.values(engines).filter(Boolean).length;
-    logger.debug(
-      "search-stream",
-      `cache hit q="${qShort}" type=${type} page=${page} enginesOn=${enginesOn} results=${cached.results.length} timings=${cached.engineTimings.length}`,
-    );
-    const liveResults = signResultThumbnails(
-      await applyDomainRules(cached.results),
-    );
-    const encoder = new TextEncoder();
-    const body = new ReadableStream({
-      start(controller) {
-        for (const et of cached.engineTimings) {
-          controller.enqueue(
-            encoder.encode(
-              `event: engine-result\ndata: ${JSON.stringify({
-                engine: et.name,
-                timing: et,
-                results: liveResults,
-                retry: false,
-                attempt: 0,
-              })}\n\n`,
-            ),
-          );
-        }
-        controller.enqueue(
-          encoder.encode(
-            `event: done\ndata: ${JSON.stringify({
-              totalTime: cached.totalTime,
-              engineTimings: cached.engineTimings,
-              relatedSearches: [],
-            })}\n\n`,
-          ),
-        );
-        controller.close();
-      },
-    });
-
-    return new Response(body, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
-  }
 
   const settings = await getInstanceSettings();
   const autoRetry = asBoolean(settings.streamingAutoRetry);
@@ -138,9 +71,11 @@ router.get("/api/search/stream", async (c) => {
     start(controller) {
       const encoder = new TextEncoder();
       const allTimings: EngineTiming[] = [];
+      const allPages: (number | undefined)[] = [];
       const allRawResults: {
         results: SearchResult[];
         multiplier: number;
+        name: string;
       }[] = [];
 
       function _send(event: string, data: unknown) {
@@ -166,10 +101,11 @@ router.get("/api/search/stream", async (c) => {
             time: 0,
             resultCount: 0,
           };
+          let lastPages: number | undefined;
 
           while (attempt <= (autoRetry ? maxRetries : 0)) {
             const isRetry = attempt > 0;
-            const { results, timing } = await searchSingleEngine(
+            const { results, timing, pages } = await searchSingleEngine(
               id,
               query,
               page,
@@ -180,17 +116,20 @@ router.get("/api/search/stream", async (c) => {
               imageFilter,
               cancelController.signal,
               type,
+              { forceFresh: isRetry },
             );
             lastTiming = timing;
+            lastPages = pages;
 
             if (timing.resultCount > 0) {
-              allRawResults.push({ results, multiplier: score });
+              allRawResults.push({ results, multiplier: score, name: engineName });
               allTimings.push(timing);
+              allPages.push(pages);
               _send("engine-result", {
                 engine: engineName,
                 timing,
                 results: signResultThumbnails(
-                  await applyDomainRules(scoreResults(allRawResults)),
+                  tagIndexRelation(await applyDomainRules(scoreResults(allRawResults))),
                 ),
                 retry: isRetry,
                 attempt,
@@ -210,65 +149,61 @@ router.get("/api/search/stream", async (c) => {
           }
 
           allTimings.push(lastTiming);
+          allPages.push(lastPages);
           _send("engine-result", {
             engine: engineName,
             timing: lastTiming,
-            results: await applyDomainRules(scoreResults(allRawResults)),
+            results: tagIndexRelation(
+              await applyDomainRules(scoreResults(allRawResults)),
+            ),
             retry: false,
             attempt: 0,
           });
         },
       );
 
-      void Promise.all(enginePromises).then(async () => {
+      void Promise.all(enginePromises)
+        .then(async () => {
         const totalTime = Math.round(performance.now() - start);
         const rawScoredResults = scoreResults(allRawResults);
 
-        const response: SearchResponse = {
-          results: rawScoredResults,
-          query,
-          totalTime,
-          type,
-          engineTimings: allTimings,
-          relatedSearches: [],
-        };
-
         const indexerSettings = await getInstanceSettings();
         const displayResults = await applyDomainRules(rawScoredResults);
-        const indexed = maybeIndex(
+        const indexBasis = await applyDomainRules(
+          scoreResults(allRawResults.filter((e) => e.name !== DEGOOG_ENGINE_NAME)),
+        );
+        const filtersTag = toFilterTag({
+          lang: resolvedLang,
+          timeFilter: resolvedTime,
+          dateFrom,
+          dateTo,
+          imageFilter,
+        });
+        const indexedUrls = await maybeIndex(
           asBoolean(indexerSettings.degoogIndexerEnabled),
           query,
           type,
-          displayResults,
+          indexBasis,
+          filtersTag,
         );
-
-        const degoogTiming = allTimings.find((et) => et.name === DEGOOG_ENGINE_NAME);
-        const justIndexed = indexed && degoogTiming?.resultCount === 0;
-
-        if (justIndexed) {
-          const idx = allTimings.indexOf(degoogTiming!);
-          allTimings[idx] = { ...degoogTiming!, indexed: true };
-        }
-
-        if (!cache.allEnginesFailed(response)) {
-          const ttl = justIndexed
-            ? cache.JUST_INDEXED_TTL_MS
-            : cache.someEnginesFailed(response)
-              ? cache.SHORT_TTL_MS
-              : undefined;
-          await cache.set(key, response, ttl);
-        }
 
         _send("done", {
           totalTime,
           engineTimings: allTimings,
+          indexedUrls,
           relatedSearches: [],
+          totalPages: agreedPageTotal(allPages),
         });
-        if (!closed) {
-          closed = true;
-          controller.close();
-        }
-      });
+        })
+        .catch((err) => {
+          logger.error("search-stream", "stream finalization failed", err);
+        })
+        .finally(() => {
+          if (!closed) {
+            closed = true;
+            controller.close();
+          }
+        });
     },
     cancel() {
       closed = true;

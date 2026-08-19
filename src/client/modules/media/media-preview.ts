@@ -1,5 +1,6 @@
 import { closeMediaPreview, navigateMediaPreview } from "./media";
 import { initLightbox } from "./lightbox";
+import { isEditableTarget } from "../../utils/keyboard-shortcuts";
 
 export function initMediaPreview(): void {
   initLightbox();
@@ -15,10 +16,12 @@ export function initMediaPreview(): void {
     const panel = document.getElementById("media-preview-panel");
     if (!panel?.classList.contains("open")) return;
 
-    if (e.key === "ArrowLeft") {
+    const typing = isEditableTarget(e.target);
+
+    if (e.key === "ArrowLeft" && !typing) {
       e.preventDefault();
       navigateMediaPreview(-1);
-    } else if (e.key === "ArrowRight") {
+    } else if (e.key === "ArrowRight" && !typing) {
       e.preventDefault();
       navigateMediaPreview(1);
     } else if (e.key === "Escape") {

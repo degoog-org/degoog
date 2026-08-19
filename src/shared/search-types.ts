@@ -9,10 +9,15 @@ export interface SearchResult {
   duration?: string;
 }
 
+export const DEGOOG_ENGINE_NAME = "Degoog";
+
+export type IndexRelation = "recalled" | "indexing";
+
 export interface ScoredResult extends SearchResult {
   score: number;
   sources: string[];
   insecure?: boolean;
+  idx?: IndexRelation;
 }
 
 export interface EngineTiming {
@@ -22,12 +27,12 @@ export interface EngineTiming {
   status?: string;
   errorReason?: string;
   httpStatus?: number;
-  indexed?: boolean;
 }
 
 export enum SlotPanelPosition {
   AboveResults = "above-results",
   BelowResults = "below-results",
+  FullWidthAboveResults = "full-width-above-results",
   AboveSidebar = "above-sidebar",
   BelowSidebar = "below-sidebar",
   KnowledgePanel = "knowledge-panel",
@@ -42,6 +47,10 @@ export interface SlotPanel {
   gridSize?: 1 | 2 | 3 | 4;
 }
 
+export interface EnginePagination {
+  total?: number;
+}
+
 export interface SearchResponse {
   results: ScoredResult[];
   query: string;
@@ -50,4 +59,5 @@ export interface SearchResponse {
   engineTimings: EngineTiming[];
   relatedSearches: string[];
   slotPanels?: SlotPanel[];
+  totalPages?: number;
 }

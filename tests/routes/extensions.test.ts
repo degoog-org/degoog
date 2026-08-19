@@ -34,6 +34,17 @@ describe("routes/extensions", () => {
     expect(Array.isArray(body.engines)).toBe(true);
   });
 
+  test("GET /api/extensions?type=transports accepts the plural group key", async () => {
+    const res = await extensionsRouter.request(
+      "http://localhost/api/extensions?type=transports",
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty("transports");
+    expect(body).not.toHaveProperty("engines");
+    expect(Array.isArray(body.transports)).toBe(true);
+  });
+
   test("GET /api/extensions?type=bogus returns 400", async () => {
     const res = await extensionsRouter.request(
       "http://localhost/api/extensions?type=bogus",

@@ -65,6 +65,12 @@
   &--sm {
     padding: $space-1 $space-3;
   }
+
+  &--block {
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
 }
 
 .degoog-icon-btn {

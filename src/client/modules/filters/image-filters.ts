@@ -13,6 +13,8 @@ const OVERLAY_CLASS = "degoog-img-sidebar-overlay";
 const LAYOUT_ID = "results-layout";
 const TOOLS_TOGGLE_ID = "tools-toggle";
 const TOOLS_CLOSE_EVENT = "degoog-tools-close";
+const TOOLS_PIN_EVENT = "degoog-tools-pin";
+const PIN_MIN_WIDTH = 768;
 const T_NS = "themes/degoog";
 const T_PFX = "search-templates.image-filters";
 
@@ -127,6 +129,15 @@ const setOpen = (open: boolean): void => {
 const toolsOpen = (): boolean =>
   document.getElementById(TOOLS_TOGGLE_ID)?.getAttribute("aria-expanded") ===
   "true";
+
+const canPin = (): boolean => window.innerWidth >= PIN_MIN_WIDTH;
+
+let pinnedNow = false;
+
+const pinTools = (pinned: boolean): void => {
+  pinnedNow = pinned;
+  window.dispatchEvent(new CustomEvent(TOOLS_PIN_EVENT, { detail: pinned }));
+};
 
 export const toggleImgSidebar = (open: boolean): void => setOpen(open);
 
@@ -298,13 +309,23 @@ export const syncImgFilters = (type: string): void => {
     bar.style.display = "block";
     ensureShell();
     relocateToolsPanel();
-    setOpen(toolsOpen());
+    pinTools(canPin());
+    setOpen(pinnedNow || toolsOpen());
     return;
   }
 
   if (bar.isConnected) {
+    pinTools(false);
     setOpen(false);
     restoreToolsPanel();
     bar.remove();
   }
 };
+
+const onViewportChange = (): void => {
+  if (!isImageSearchType(state.currentType)) return;
+  if (canPin() === pinnedNow) return;
+  syncImgFilters(state.currentType);
+};
+
+window.addEventListener("resize", onViewportChange);

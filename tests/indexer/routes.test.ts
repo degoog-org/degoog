@@ -10,8 +10,7 @@ process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
 import router from "../../src/server/routes/indexer";
-import { clearAll, getStats, recordResults } from "../../src/server/indexer/store";
-import { flushQueue } from "../../src/server/indexer/queue";
+import { clearAll, getStats } from "../../src/server/indexer/store";
 import { setInstanceSettings } from "../../src/server/utils/server-settings";
 
 const get = (path: string): Promise<Response> =>
@@ -79,26 +78,21 @@ describe("indexer routes", () => {
     expect(res.status).toBe(404);
   });
 
-  test("public export requires type param", async () => {
-    await enable({ degoogIndexerPublicExport: "true" });
-    const res = await get("/api/indexer/export");
-    expect(res.status).toBe(400);
+  test("export requires admin auth on a public instance", async () => {
+    await enable();
+    const res = await get("/api/indexer/export?type=web");
+    expect(res.status).toBe(401);
   });
 
-  test("public export is downloadable then rate-limited by cooldown", async () => {
+  test("public export toggle no longer bypasses auth", async () => {
     await enable({ degoogIndexerPublicExport: "true" });
-    await recordResults("cats", "web", [
-      { title: "T", url: "https://example.com/t", snippet: "s", source: "Test" },
-    ]);
-    await flushQueue();
+    const res = await get("/api/indexer/export?type=web");
+    expect(res.status).toBe(401);
+  });
 
-    const first = await get("/api/indexer/export?type=web");
-    expect(first.status).toBe(200);
-    expect(first.headers.get("Content-Type")).toBe("application/octet-stream");
-
-    const second = await get("/api/indexer/export?type=web");
-    expect(second.status).toBe(429);
-    const body = (await second.json()) as { error?: string };
-    expect(body.error ?? "").toContain("Cooldown");
+  test("public-info endpoint no longer exists", async () => {
+    await enable({ degoogIndexerPublicExport: "true" });
+    const res = await get("/api/indexer/public-info");
+    expect(res.status).toBe(404);
   });
 });

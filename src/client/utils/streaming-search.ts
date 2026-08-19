@@ -38,6 +38,12 @@ import {
 } from "./search-utils";
 import { buildSearchUrl, imgFilterRecord } from "./url";
 import { appendSearchAuthParams } from "./request";
+import { declaredPages } from "./search-helpers";
+import { infiniteScrollOn } from "./streaming-config";
+import {
+  setupInfinite,
+  teardownInfinite,
+} from "../modules/renderer/infinite-scroll";
 import { getBase } from "./base-url";
 import { loadSidebarSuggestions } from "./search/search-actions-render";
 import { mergeStreamingMediaResults } from "./search/streaming-media-results";
@@ -66,7 +72,9 @@ interface StreamEngineRetry {
 interface StreamDone {
   totalTime: number;
   engineTimings: EngineTiming[];
+  indexedUrls?: string[];
   relatedSearches: string[];
+  totalPages?: number;
 }
 
 let _activeSource: EventSource | null = null;
@@ -89,12 +97,13 @@ export async function performStreamingSearch(
   state.currentQuery = query;
   state.currentType = type;
   state.currentPage = 1;
-  state.lastPage = MAX_PAGE;
+  state.lastPage = null;
   state.imagePage = 1;
   state.imageLastPage = MAX_PAGE;
   state.videoPage = 1;
   state.videoLastPage = MAX_PAGE;
   destroyMediaObserver();
+  teardownInfinite();
 
   const engines = await getEngines();
   const url = buildSearchUrl(query, engines, type, 1);
@@ -254,6 +263,14 @@ export async function performStreamingSearch(
     source.close();
     _activeSource = null;
 
+    if (!isImageType && data.indexedUrls && data.indexedUrls.length > 0) {
+      const indexedSet = new Set(data.indexedUrls);
+      for (const r of currentResults) {
+        if (r.idx !== "recalled" && indexedSet.has(r.url)) r.idx = "indexing";
+      }
+      updateResults(resultsList, currentResults, renderedUrls);
+    }
+
     const searchData: SearchResponse = {
       results: currentResults,
       query,
@@ -261,9 +278,11 @@ export async function performStreamingSearch(
       type,
       engineTimings: data.engineTimings,
       relatedSearches: data.relatedSearches,
+      totalPages: data.totalPages,
     };
 
     state.currentData = searchData;
+    state.lastPage = declaredPages(data.totalPages);
 
     if (resultsMeta) {
       resultsMeta.textContent = `About ${currentResults.length} results (${(data.totalTime / 1000).toFixed(2)} seconds)`;
@@ -301,7 +320,19 @@ export async function performStreamingSearch(
     }
 
     if (resultsList) attachVideoPlayers(resultsList);
-    if (!isImageType) renderPagination(MAX_PAGE, state.currentPage);
+    if (!isImageType) {
+      if (infiniteScrollOn()) {
+        const pagination = document.getElementById("pagination");
+        if (pagination) pagination.innerHTML = "";
+        setupInfinite(type);
+      } else {
+        renderPagination(
+          state.lastPage,
+          state.currentPage,
+          currentResults.length > 0,
+        );
+      }
+    }
   });
 
   source.addEventListener("error", (e) => {

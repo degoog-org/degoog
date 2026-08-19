@@ -5,15 +5,18 @@ export const faviconCandidates = (hostname: string): string[] => {
   return [`${getBase()}/api/proxy/favicon?domain=${encodeURIComponent(hostname)}`];
 };
 
-const _faviconLetter = (hostname: string): string =>
-  (hostname.replace(/^www\./, "")[0] ?? "?").toUpperCase();
+const _faviconLetter = (img: HTMLImageElement): string => {
+  const own = img.dataset.faviconLetter;
+  if (own) return own[0]!.toUpperCase();
+  const hostname = img.dataset.faviconHost ?? "";
+  return (hostname.replace(/^www\./, "")[0] ?? "?").toUpperCase();
+};
 
 const _replaceWithLetterFallback = (img: HTMLImageElement): void => {
-  const hostname = img.dataset.faviconHost ?? "";
   const span = document.createElement("span");
   span.className = `${img.className} result-favicon-fallback`.trim();
   span.setAttribute("aria-hidden", "true");
-  span.textContent = _faviconLetter(hostname);
+  span.textContent = _faviconLetter(img);
   img.replaceWith(span);
 };
 

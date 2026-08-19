@@ -1,5 +1,6 @@
 import {
   getActiveWebEngines,
+  getEngineMap,
   getEnginesForCustomType,
 } from "../extensions/engines/registry";
 import type { EngineConfig, ImageFilter, SearchEngine } from "../types";
@@ -36,17 +37,8 @@ export const readEngineScore = async (id: string): Promise<number> => {
 const _stableSettings = (settings: Record<string, unknown>): Record<string, unknown> =>
   Object.fromEntries(Object.entries(settings).sort(([a], [b]) => a.localeCompare(b)));
 
-export const engineSettingsFingerprint = async (
-  type: string,
-  config: EngineConfig,
-): Promise<string> => {
-  const active = await selectActiveEngines(type, config);
-  const rows = await Promise.all(
-    active.map(async ({ id, instance }) => {
-      const schema = instance.settingsSchema ?? [];
-      const stored = maskSecrets(await getSettings(id), schema);
-      return [id, _stableSettings(stored)];
-    }),
-  );
-  return JSON.stringify(rows);
+export const engineFingerprint = async (id: string): Promise<string> => {
+  const schema = getEngineMap()[id]?.settingsSchema ?? [];
+  const stored = maskSecrets(await getSettings(id), schema);
+  return JSON.stringify(_stableSettings(stored));
 };

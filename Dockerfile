@@ -13,7 +13,7 @@ RUN bun run build
 
 FROM base AS release
 COPY scripts/install-curl-impersonate.sh /app/
-RUN apk add --no-cache git ca-certificates su-exec curl bash \
+RUN apk add --no-cache git ca-certificates su-exec curl bash python3 py3-lxml py3-babel py3-dateutil \
   && chmod +x /app/install-curl-impersonate.sh \
   && /app/install-curl-impersonate.sh \
   && rm /app/install-curl-impersonate.sh

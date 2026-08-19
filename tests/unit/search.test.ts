@@ -1,12 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { mergeNewResults, scoreResults } from "../../src/server/search";
-import { cacheKey } from "../../src/server/utils/search";
-import {
-  ImgNsfw,
-  type SearchResult,
-  type ScoredResult,
-  type EngineConfig,
-} from "../../src/server/types";
+import type { SearchResult, ScoredResult } from "../../src/server/types";
 
 const result = (
   url: string,
@@ -98,27 +92,6 @@ describe("search", () => {
         { results: [result("https://first.com", "E1"), result("https://second.com", "E1")] },
       ]);
       expect(out[0].url).toBe("https://first.com");
-    });
-  });
-
-  describe("cacheKey", () => {
-    const engines: EngineConfig = { google: true };
-
-    test("differs when only imgNsfw differs", () => {
-      const safe = cacheKey("cats", engines, "images", 1, "any", "", "", "", {
-        nsfw: ImgNsfw.OFF,
-      });
-      const nsfw = cacheKey("cats", engines, "images", 1, "any", "", "", "", {
-        nsfw: ImgNsfw.ON,
-      });
-      expect(safe).not.toBe(nsfw);
-    });
-
-    test("stays stable when imageFilter is absent", () => {
-      const a = cacheKey("cats", engines, "web", 1);
-      const b = cacheKey("cats", engines, "web", 1);
-      expect(a).toBe(b);
-      expect(a.endsWith("|")).toBe(true);
     });
   });
 

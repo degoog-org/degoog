@@ -22,7 +22,7 @@ export const eventKey = (e: KeyboardEvent): string => {
   return match ? (match[1] ?? match[2]).toLowerCase() : e.key;
 };
 
-const _isEditableTarget = (target: EventTarget | null): boolean => {
+export const isEditableTarget = (target: EventTarget | null): boolean => {
   if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName;
   if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
@@ -46,7 +46,7 @@ export function initKeyboardShortcuts(): void {
 
   document.addEventListener("keydown", (e) => {
     const key = eventKey(e);
-    const editable = _isEditableTarget(e.target);
+    const editable = isEditableTarget(e.target);
     for (const s of shortcuts) {
       if (s.key !== key && s.key !== e.key) continue;
       if (!_modifiersMatch(e, s)) continue;

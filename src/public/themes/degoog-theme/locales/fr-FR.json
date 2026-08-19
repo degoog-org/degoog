@@ -95,8 +95,10 @@
       "people-also-search": "Les gens recherchent aussi",
       "info": "Info",
       "results": "{count} résultats",
+      "from-index": "{count} depuis votre index",
       "retry": "réessayer",
       "retrying": "réessai en cours...",
+      "page-failed": "page {page} en échec",
       "failure-reasons": {
         "blocked": "Bloqué par le moteur",
         "rate_limited": "Trop de requêtes",
@@ -109,7 +111,8 @@
       }
     },
     "result": {
-      "just-indexed": "vient d'être indexé",
+      "from-index": "De votre index",
+      "saving-to-index": "Enregistrement dans votre index",
       "insecure": "Insecure",
       "insecure-tooltip": "Ce site est servi sur une connexion HTTP non chiffrée.",
       "actions": {
@@ -127,6 +130,12 @@
         "modal-cancel": "Annuler",
         "scored": "Scoré"
       }
+    },
+    "pagination": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "page": "Page {page}",
+      "end": "Aucun autre résultat."
     }
   }
 }

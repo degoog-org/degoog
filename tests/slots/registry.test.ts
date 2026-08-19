@@ -14,7 +14,9 @@ describe("slots registry", () => {
   const origFetch = globalThis.fetch;
 
   beforeAll(async () => {
-    globalThis.fetch = async () => new Response("", { status: 404 });
+    globalThis.fetch = Object.assign(async () => new Response("", { status: 404 }), {
+      preconnect: origFetch.preconnect,
+    });
 
     const orig = process.env.DEGOOG_PLUGINS_DIR;
     process.env.DEGOOG_PLUGINS_DIR = "/nonexistent-slots-dir";

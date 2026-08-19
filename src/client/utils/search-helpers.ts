@@ -1,5 +1,8 @@
 import type { Command } from "../types";
 
+export const declaredPages = (totalPages?: number): number | null =>
+  totalPages && totalPages > 0 ? totalPages : null;
+
 export function runScriptsInContainer(container: HTMLElement | null): void {
   if (!container) return;
   container.querySelectorAll("script").forEach((oldScript) => {

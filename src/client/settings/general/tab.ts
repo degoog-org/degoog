@@ -7,6 +7,7 @@ import {
   POST_METHOD_ENABLED,
   STICKY_SIDEBAR,
   CENTERED_MODE,
+  HIDE_URL_PARAMS,
   THEME_KEY,
 } from "../../constants";
 import { idbGet, idbSet } from "../../utils/db";
@@ -21,6 +22,7 @@ import type { ToggleOpts } from "../../types/settings-section";
 import { renderCheckbox, renderSection } from "../shared/section";
 import { getBase } from "../../utils/base-url";
 import { authHeaders } from "../../utils/request";
+import { isUpdateAvailable } from "../../../shared/utils/version";
 
 const t = window.scopedT("core");
 
@@ -60,6 +62,11 @@ const SEARCH_OPTION_TOGGLES: ToggleOpts[] = [
     id: "settings-centered-mode",
     labelKey: "settings-page.search-options.centered-mode",
     ariaKey: "settings-page.search-options.centered-mode-aria",
+  },
+  {
+    id: "settings-hide-url-params",
+    labelKey: "settings-page.search-options.hide-url-params",
+    ariaKey: "settings-page.search-options.hide-url-params-aria",
   },
 ];
 
@@ -233,6 +240,7 @@ const PREF_TOGGLES: { id: string; key: string; defaultVal?: boolean; invert?: bo
   { id: "settings-post-method-enabled", key: POST_METHOD_ENABLED, defaultVal: false },
   { id: "settings-sticky-sidebar", key: STICKY_SIDEBAR, defaultVal: false },
   { id: "settings-centered-mode", key: CENTERED_MODE, defaultVal: false },
+  { id: "settings-hide-url-params", key: HIDE_URL_PARAMS, defaultVal: false },
 ];
 
 export async function initAppearanceSettings(): Promise<void> {
@@ -329,7 +337,8 @@ async function initVersionChecker(): Promise<void> {
 
   if (lastCheckedEl) lastCheckedEl.textContent = latestDate.toLocaleDateString();
   const currentVersion = localStorage.getItem("last-update-check-version");
-  if (pkg.version !== currentVersion && newAvailableEl) newAvailableEl.removeAttribute("style");
+  if (currentVersion && isUpdateAvailable(pkg.version, currentVersion) && newAvailableEl)
+    newAvailableEl.removeAttribute("style");
 
   const latestVersion = localStorage.getItem("last-update-check-version");
   if (latestVersion && newestVersionEl) newestVersionEl.textContent = latestVersion;
@@ -341,7 +350,7 @@ async function initVersionChecker(): Promise<void> {
     const newLatest = new Date();
     localStorage.setItem("last-update-check", newLatest.toUTCString());
     if (lastCheckedEl) lastCheckedEl.textContent = newLatest.toLocaleDateString();
-    if (pkg.version !== newest && newAvailableEl && newest != "Unknown")
+    if (newest != "Unknown" && isUpdateAvailable(pkg.version, newest) && newAvailableEl)
       newAvailableEl.removeAttribute("style");
     else
       newAvailableEl?.setAttribute("style","display:none");

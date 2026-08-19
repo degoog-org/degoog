@@ -1,6 +1,7 @@
 import { SlotPanelPosition, type SlotPanel } from "../../types";
 
 const SLOT_IDS = [
+  "slot-full-width-above-results",
   "slot-above-results",
   "slot-below-results",
   "slot-above-sidebar",
@@ -20,6 +21,9 @@ function _renderSlotPanelsInto(panels: SlotPanel[], clearFirst: boolean): void {
   if (!panels || !Array.isArray(panels) || panels.length === 0) return;
   if (clearFirst) clearSlotPanels();
   const byPosition: Record<SlotPanelPosition, HTMLElement | null> = {
+    [SlotPanelPosition.FullWidthAboveResults]: document.getElementById(
+      "slot-full-width-above-results",
+    ),
     [SlotPanelPosition.AboveResults]:
       document.getElementById("slot-above-results"),
     [SlotPanelPosition.BelowResults]:
@@ -36,10 +40,17 @@ function _renderSlotPanelsInto(panels: SlotPanel[], clearFirst: boolean): void {
     if (!container) continue;
     if (panel.position === SlotPanelPosition.AtAGlance) {
       container.innerHTML = panel.html;
+    } else if (panel.position === SlotPanelPosition.FullWidthAboveResults) {
+      const block = document.createElement("div");
+      block.className = "results-slot-panel-full-width";
+      if (panel.id) block.dataset.slot = panel.id;
+      block.innerHTML = panel.html;
+      container.appendChild(block);
     } else {
       const block = document.createElement("div");
       block.className =
         "results-slot-panel degoog-panel degoog-panel--slot degoog-panel--stack-item";
+      if (panel.id) block.dataset.slot = panel.id;
       const grid = panel.gridSize ?? 4;
       block.dataset.grid = String(grid);
       if (panel.title) {

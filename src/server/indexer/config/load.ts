@@ -34,6 +34,7 @@ export const getIndexerConfig = async (): Promise<IndexerConfig> => {
   const maxHits = clampInt(asString(s.degoogIndexerMaxHits), 0, 0, 100_000_000);
   const maxAgeDays = clampInt(asString(s.degoogIndexerMaxAgeDays), 0, 0, 3650);
   const queryLimit = clampInt(asString(s.degoogIndexerQueryLimit), 100, 1, 500);
+  const rankingWindow = clampInt(asString(s.degoogIndexerRankingWindow), 20, 2, 10_000);
   const limitsOn = maxUrls > 0 || maxHits > 0;
   const pruneSetting = asString(s.degoogIndexerPruneEnabled);
   const pruneEnabled =
@@ -50,6 +51,7 @@ export const getIndexerConfig = async (): Promise<IndexerConfig> => {
     fuzzyEnabled: fuzzyRaw !== "false",
     fuzzyMinTermRatio,
     queryLimit,
+    rankingWindow,
     domainAllowlist: parseDomains(lists.degoogIndexerDomainAllowlist),
     domainBlocklist: parseDomains(lists.degoogIndexerDomainBlocklist),
     wordBlocklist: parseLines(lists.degoogIndexerWordBlocklist),

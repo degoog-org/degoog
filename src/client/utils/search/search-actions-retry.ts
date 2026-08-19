@@ -6,8 +6,13 @@ import { renderImgEngines } from "../../modules/filters/image-filters";
 import { renderSidebar, renderResults } from "../../modules/renderer/render";
 import { performSearch } from "./search-actions-perform";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
+import { infiniteScrollOn } from "../streaming-config";
+import { mergeEngineTimings, mergeScoredResults } from "./engine-stats";
 
-export async function retryEngine(engineName: string): Promise<void> {
+export async function retryEngine(
+  engineName: string,
+  page = state.currentPage,
+): Promise<void> {
   if (!state.currentQuery || !state.currentData) return;
 
   const engines = await getEngines();
@@ -21,8 +26,8 @@ export async function retryEngine(engineName: string): Promise<void> {
   if (state.currentType && state.currentType !== "web") {
     params.set("type", state.currentType);
   }
-  if (state.currentPage > 1) {
-    params.set("page", String(state.currentPage));
+  if (page > 1) {
+    params.set("page", String(page));
   }
   if (state.currentTimeFilter && state.currentTimeFilter !== "any") {
     params.set("time", state.currentTimeFilter);
@@ -39,7 +44,7 @@ export async function retryEngine(engineName: string): Promise<void> {
               .filter(([, v]) => v)
               .map(([k]) => k),
             type: state.currentType !== "web" ? state.currentType : undefined,
-            page: state.currentPage > 1 ? state.currentPage : undefined,
+            page: page > 1 ? page : undefined,
             time:
               state.currentTimeFilter !== "any"
                 ? state.currentTimeFilter
@@ -50,23 +55,29 @@ export async function retryEngine(engineName: string): Promise<void> {
       : await fetch(appendSearchAuthParams(`${getBase()}/api/search/retry?${params.toString()}`));
     const data = (await res.json()) as SearchResponse & {
       results: ScoredResult[];
+      timing?: SearchResponse["engineTimings"][number];
     };
 
-    if (data.engineTimings && state.currentData) {
-      state.currentData.engineTimings = data.engineTimings;
+    const infinite = infiniteScrollOn() && !isImageSearchType(state.currentType);
+    if (state.currentData) {
+      state.currentData.engineTimings = infinite && data.timing
+        ? mergeEngineTimings(state.currentData.engineTimings, [data.timing], page)
+        : data.engineTimings;
     }
 
-    if (data.results && data.results.length > state.currentResults.length) {
-      state.currentResults = data.results;
+    if (data.results && (data.results.length > state.currentResults.length || infinite)) {
+      state.currentResults = infinite
+        ? mergeScoredResults(state.currentResults, data.results)
+        : data.results;
       if (state.currentData) {
-        state.currentData.results = data.results;
+        state.currentData.results = state.currentResults;
       }
 
       const resultsMeta = document.getElementById("results-meta");
       if (resultsMeta)
-        resultsMeta.textContent = `About ${data.results.length} results (${((state.currentData?.totalTime ?? 0) / 1000).toFixed(2)} seconds)`;
+        resultsMeta.textContent = `About ${state.currentResults.length} results (${((state.currentData?.totalTime ?? 0) / 1000).toFixed(2)} seconds)`;
 
-      renderResults(data.results);
+      renderResults(state.currentResults, { paginate: !infinite });
     }
 
     const isMediaType = isImageSearchType(state.currentType);

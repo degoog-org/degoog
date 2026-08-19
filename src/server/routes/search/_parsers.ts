@@ -5,12 +5,13 @@ import {
 } from "../../extensions/engines/registry";
 import type { EngineConfig, ImageFilter, ImgColor, ImgLayout, ImgNsfw, ImgSize, ImgType, SearchParams, SearchType, TimeFilter } from "../../types";
 import { parseEngineConfig } from "../../utils/search";
+import { sanePage } from "../../search/page-counter";
 
 export const SAFE_MODE_PARAM = "safeMode";
 export const LEGACY_SAFE_MODE_PARAM = "imgNsfw";
 
 export function parsePage(raw: unknown): number {
-  return Math.max(1, Math.min(10, Math.floor(Number(raw)) || 1));
+  return sanePage(raw);
 }
 
 export function parseEnginesFromBody(enabledList?: string[]): EngineConfig {

@@ -73,6 +73,11 @@
     padding: $space-4;
   }
 
+  &--in-modal {
+    background: var(--bg-hover);
+    overflow: visible;
+  }
+
   &--accordion {
     padding: 0;
   }
@@ -89,5 +94,19 @@
 
   &--lg {
     gap: $space-3;
+  }
+
+  &--fill {
+    height: 100%;
+
+    > :last-child {
+      margin-top: auto;
+    }
+  }
+
+  &--meta {
+    background: var(--bg-light);
+    border-radius: $radius-sm;
+    padding: $space-2;
   }
 }

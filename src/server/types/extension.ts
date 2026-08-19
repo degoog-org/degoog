@@ -58,6 +58,9 @@ export interface SettingField {
   | "select"
   | "urllist"
   | "list"
+  | "hex"
+  | "range"
+  | "file"
   | "info";
   required?: boolean;
   placeholder?: string;
@@ -70,6 +73,13 @@ export interface SettingField {
   visibleWhen?: { key: string; equals: string };
   itemSchema?: SettingField[];
   addLabel?: string;
+  fieldset?: string;
+  min?: string;
+  max?: string;
+  step?: string;
+  accept?: string;
+  maxSizeKb?: string;
+  minSizeKb?: string;
 }
 
 export interface PluginManifest {
@@ -92,6 +102,7 @@ export interface ExtensionMeta {
   settingsSchema: SettingField[];
   settings: Record<string, SettingValue>;
   source?: "builtin" | "plugin";
+  compatibilityLayer?: string;
   extensionDocsAvailable?: boolean;
   defaultEnabled?: boolean;
   defaultFeedUrls?: string[];
@@ -131,7 +142,7 @@ export interface SearchEngine {
 }
 
 export interface AutocompleteContext {
-  fetch: typeof fetch;
+  fetch: (url: string, init?: RequestInit) => Promise<Response>;
   lang?: string;
   userAgent?: () => string;
   /** @deprecated Use `useCache` (async, namespaced, Valkey-backed when enabled). */
@@ -301,6 +312,7 @@ export type ProxyAwareFetch = (
 
 export interface TransportContext {
   proxyUrl?: string;
+  engineId?: string;
   fetch: ProxyAwareFetch;
   useCache: UseCache;
 }

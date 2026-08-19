@@ -1,11 +1,19 @@
-import type { Hono } from "hono";
+import type { Context, Hono } from "hono";
 import type {
   SearchBody,
+  SearchResponse,
   SearchType,
   TimeFilter,
   RetryPostBody,
   ScoredResult
 } from "../../types";
+import {
+  isSearxFormat,
+  SEARX_FORMAT_PARAM,
+  toSearxDoc,
+} from "../../extensions/compatibility-layer/searx/api-shape";
+import { getInstanceSettings } from "../../utils/server-settings";
+import { asBoolean } from "../../utils/plugin-settings";
 import {
   _applyRateLimit,
   isValidQuery,
@@ -24,6 +32,23 @@ const openWebUIFix = <T extends { results: ScoredResult[] }>(r: T) => ({
   results: r.results.map((res) => ({ ...res, content: res.snippet })),
 });
 
+type Shapeable = Pick<SearchResponse, "results" | "engineTimings"> &
+  Partial<Pick<SearchResponse, "query" | "type" | "relatedSearches">>;
+
+const searxApiOn = async (): Promise<boolean> =>
+  asBoolean((await getInstanceSettings()).searxApiEnabled);
+
+const respond = async <T extends Shapeable>(
+  c: Context,
+  result: T,
+  format?: string | null,
+) => {
+  if (isSearxFormat(format) && (await searxApiOn())) {
+    return c.json(await toSearxDoc(result));
+  }
+  return c.json(openWebUIFix(result));
+};
+
 export function registerSearchRoutes(router: Hono): void {
   router.get("/api/search", async (c) => {
     const limitRes = await _applyRateLimit(c);
@@ -37,7 +62,7 @@ export function registerSearchRoutes(router: Hono): void {
 
     const result = await handleSearch({ query, ...params });
 
-    return c.json(openWebUIFix(result));
+    return respond(c, result, c.req.query(SEARX_FORMAT_PARAM));
   });
 
   router.post("/api/search", async (c) => {
@@ -78,7 +103,12 @@ export function registerSearchRoutes(router: Hono): void {
         ),
       });
 
-      return c.json(openWebUIFix(result));
+      return respond(
+        c,
+        result,
+        (form.get(SEARX_FORMAT_PARAM) as string | null) ??
+          c.req.query(SEARX_FORMAT_PARAM),
+      );
     }
 
     let body: SearchBody;
@@ -104,7 +134,7 @@ export function registerSearchRoutes(router: Hono): void {
       imageFilter: parseImageFilter(body.imgColor, body.imgSize, body.imgType, body.imgLayout, body.safeMode ?? body.imgNsfw),
     });
 
-    return c.json(openWebUIFix(result));
+    return respond(c, result, body.format ?? c.req.query(SEARX_FORMAT_PARAM));
   });
 
   router.get("/api/search/retry", async (c) => {
@@ -137,7 +167,7 @@ export function registerSearchRoutes(router: Hono): void {
       ),
     });
 
-    return c.json(openWebUIFix(result));
+    return respond(c, result, c.req.query(SEARX_FORMAT_PARAM));
   });
 
   router.post("/api/search/retry", async (c) => {
@@ -171,6 +201,6 @@ export function registerSearchRoutes(router: Hono): void {
       imageFilter: parseImageFilter(body.imgColor, body.imgSize, body.imgType, body.imgLayout, body.safeMode ?? body.imgNsfw),
     });
 
-    return c.json(openWebUIFix(result));
+    return respond(c, result, body.format ?? c.req.query(SEARX_FORMAT_PARAM));
   });
 }

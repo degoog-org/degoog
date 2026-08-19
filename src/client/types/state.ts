@@ -6,7 +6,8 @@ export interface AppState {
   currentQuery: string;
   currentType: string;
   currentPage: number;
-  lastPage: number;
+  restoreInfinitePage: number;
+  lastPage: number | null;
   currentResults: ScoredResult[];
   currentData: SearchResponse | null;
   currentRelatedSearches: string[];
@@ -26,6 +27,7 @@ export interface AppState {
   postMethodEnabled: boolean;
   inlineGifPlayback: boolean;
   stickySidebar: boolean;
+  hideUrlParams: boolean;
   isInitialLoad: boolean;
   imageFilter: ImageFilter;
 }

@@ -1,9 +1,21 @@
 import { describe, test, expect } from "bun:test";
 import { cleanUrl, cleanHostname } from "../../src/client/utils/dom";
+import { state } from "../../src/client/state";
 
 describe("public/utils", () => {
-  test("cleanUrl returns hostname + pathname", () => {
-    expect(cleanUrl("https://example.com/path/to?q=1")).toBe("example.com/path/to");
+  test("cleanUrl keeps query params by default", () => {
+    state.hideUrlParams = false;
+    expect(cleanUrl("https://example.com/path/to?q=1")).toBe("example.com/path/to?q=1");
+  });
+
+  test("cleanUrl drops query params when hideUrlParams enabled", () => {
+    const prev = state.hideUrlParams;
+    state.hideUrlParams = true;
+    try {
+      expect(cleanUrl("https://example.com/path/to?q=1")).toBe("example.com/path/to");
+    } finally {
+      state.hideUrlParams = prev;
+    }
   });
 
   test("cleanUrl returns url as-is for invalid url", () => {

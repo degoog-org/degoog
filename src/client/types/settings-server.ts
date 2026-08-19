@@ -19,6 +19,7 @@ export type ServerSettingsData = {
   languagesEnabled?: BoolSetting;
   languages?: string;
   streamingEnabled?: BoolSetting;
+  infiniteScrollEnabled?: BoolSetting;
   streamingAutoRetry?: BoolSetting;
   streamingMaxRetries?: string;
   streamingDisabledTypes?: string;
@@ -38,6 +39,8 @@ export type ServerSettingsData = {
   honeypotCssCheck?: BoolSetting;
   honeypotBanDuration?: string;
   degoogIndexerEnabled?: BoolSetting;
+  searxCompatEnabled?: BoolSetting;
+  searxApiEnabled?: BoolSetting;
 };
 
 export type ButtonStateHandler = (

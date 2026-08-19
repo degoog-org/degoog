@@ -15,6 +15,7 @@ const TIME_LABELS: Record<string, string> = {
 
 const TOOLS_OPEN_KEY = "degoog-tools-open";
 const TOOLS_CLOSE_EVENT = "degoog-tools-close";
+const TOOLS_PIN_EVENT = "degoog-tools-pin";
 
 let _langDisplayNames: Intl.DisplayNames | null = null;
 
@@ -131,12 +132,17 @@ export function initOptionsDropdown(): void {
     activeField = menu;
   }
 
-  function setPanelOpen(open: boolean): void {
+  function setPanelOpen(open: boolean, persist = true): void {
     panel!.style.display = open ? "flex" : "none";
     toggle!.classList.toggle("is-open", open);
     toggle!.setAttribute("aria-expanded", open ? "true" : "false");
     if (!open) closeField();
-    writeOpenPref(open);
+    if (persist) writeOpenPref(open);
+  }
+
+  function pinPanel(pinned: boolean): void {
+    toolsBar!.style.display = pinned ? "none" : "";
+    setPanelOpen(pinned ? true : readOpenPref(), false);
   }
 
   function syncTimeOptions(): void {
@@ -229,6 +235,10 @@ export function initOptionsDropdown(): void {
         ({ toggleImgSidebar }) => toggleImgSidebar(open),
       );
     }
+  });
+
+  window.addEventListener(TOOLS_PIN_EVENT, (e) => {
+    pinPanel((e as CustomEvent<boolean>).detail === true);
   });
 
   window.addEventListener(TOOLS_CLOSE_EVENT, () => {

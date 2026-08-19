@@ -8,6 +8,7 @@ export {
   INLINE_GIF_PLAYBACK,
   STICKY_SIDEBAR,
   CENTERED_MODE,
+  HIDE_URL_PARAMS,
   TAB_ORDER_SAVED,
 } from "../shared/sync";
 

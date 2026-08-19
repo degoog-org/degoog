@@ -14,6 +14,7 @@ const TOGGLE_KEYS = [
   "rate-limit-suggest-enabled",
   "streaming-enabled",
   "streaming-auto-retry",
+  "infinite-scroll-enabled",
   "domain-block-enabled",
   "domain-block-ui-enabled",
   "domain-replace-enabled",
@@ -25,6 +26,8 @@ const TOGGLE_KEYS = [
   "honeypot-enabled",
   "honeypot-css-check",
   "degoog-indexer-enabled",
+  "searx-compat-enabled",
+  "searx-api-enabled",
 ] as const;
 
 const RL_SEARCH_KEYS = [
@@ -67,7 +70,7 @@ export const bindToggleAutoSave = (getToken: () => string | null): void => {
         }
         flashSuccess(window.scopedT("core")("settings-page.server.saved"));
         _syncVisibilityToggle(id, input.checked);
-        if (id === "degoog-indexer-enabled") {
+        if (id === "degoog-indexer-enabled" || id === "searx-compat-enabled") {
           window.dispatchEvent(new Event("extensions-saved"));
         }
       } catch (err) {

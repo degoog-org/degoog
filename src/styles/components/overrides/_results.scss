@@ -357,57 +357,125 @@
 }
 
 .pagination {
+  display: flex;
   justify-content: flex-start;
   align-items: center;
-  padding: $space-7 0 $space-8;
+  padding: $space-6 0 $space-8;
   flex-wrap: wrap;
 }
 
 .pagination-pages {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: $space-1;
+  min-height: 2.25rem;
 
   @media (min-width: 768px) {
+    gap: $space-1;
+  }
+
+  &--nav {
     gap: $space-2;
   }
 }
 
 .pagination-link {
   @include flex-center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: $radius-full;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 $space-2;
+  border-radius: $radius-lg;
   text-decoration: none;
-  font-size: $font-size-base;
-  color: $primary;
+  font-size: $font-size-small;
+  font-weight: 500;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: background $transition-fast;
+  transition:
+    background $transition-fast,
+    color $transition-fast;
 
   &:hover {
     background: var(--bg-light);
+    color: var(--text-primary);
   }
 }
 
 .pagination-current {
   @include flex-center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: $radius-full;
-  font-size: $font-size-base;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 $space-2;
+  border-radius: $radius-lg;
+  font-size: $font-size-small;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #fff;
+  background: $primary;
+}
+
+.pagination-page-label {
+  @include flex-center;
+  height: 2rem;
+  padding: 0 $space-3;
+  border-radius: $radius-lg;
+  background: var(--bg-light);
+  font-size: $font-size-small;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.degoog-infinite {
+  --degoog-pull: 0;
+  min-height: 3rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: visible;
+}
+
+.degoog-infinite__pull {
+  width: 2.5rem;
+  height: 3px;
+  margin: $space-5 0 0 $space-1;
+  border-radius: $radius-full;
+  background: $primary;
+  opacity: var(--degoog-pull);
+  transform: scaleX(calc(0.4 + (var(--degoog-pull) * 0.6)))
+    translateY(calc(var(--degoog-pull) * 6px));
+  transition: transform $transition-fast;
+}
+
+.degoog-infinite--loading {
+  height: auto;
+
+  .degoog-infinite__pull {
+    display: none;
+  }
+}
+
+.degoog-infinite__skeleton {
+  width: 100%;
 }
 
 .pagination-nav {
-  color: $primary;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  min-height: 2rem;
+  padding: 0 $space-3;
+  border-radius: $radius-lg;
+  color: var(--text-secondary);
   text-decoration: none;
-  font-size: $font-size-base;
+  font-size: $font-size-small;
+  font-weight: 500;
   cursor: pointer;
-  padding: $space-2 $space-4;
+  transition:
+    background $transition-fast,
+    color $transition-fast;
 
   &:hover {
-    text-decoration: underline;
+    background: var(--bg-light);
+    color: var(--text-primary);
   }
 }
 
@@ -418,6 +486,27 @@
   flex-wrap: wrap;
   gap: $space-3;
   margin: $space-5 0;
+}
+
+#slot-full-width-above-results {
+  &:empty { display: none; }
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 83.25rem;
+  margin: 0 0 $space-5;
+  padding: 0 clamp(1rem, 1rem + max(0px, (100vw - 48rem) * 0.31), 9.375rem);
+
+  .results-slot-panel-full-width {
+    width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    #results-page.centered-mode & {
+      max-width: $results-centered-max;
+      margin-inline: auto;
+      padding-inline: $space-5;
+    }
+  }
 }
 
 #slot-above-sidebar,

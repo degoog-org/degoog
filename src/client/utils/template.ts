@@ -30,7 +30,10 @@ const _processBlocks = (
       if (!Array.isArray(val)) return "";
       return val
         .map((item, i) => {
-          const childCtx = { ...ctx, ".": item, "@index": i };
+          const spreadable = !!item && typeof item === "object";
+          const childCtx = spreadable
+            ? { ...ctx, ...(item as Record<string, unknown>), ".": item, "@index": i }
+            : { ...ctx, ".": item, "@index": i };
           return _fillPlaceholders(_processBlocks(inner, childCtx), childCtx);
         })
         .join("");
