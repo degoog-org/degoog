@@ -173,4 +173,4 @@ Alternatives are what make the internet a fun place, let me share a few other ag
 | OmniSearch | https://git.bwaaa.monster/omnisearch |
 | LibreY     | https://github.com/Ahwxorg/LibreY    |
 
-[![Star History Chart](https://api.star-history.com/image?repos=degoog-org/degoog&type=date&legend=top-left)](https://www.star-history.com/?repos=fccview%2Fdegoog&type=date&legend=top-left)
+[![Star History Chart](https://star-history.dera.page/svg?repos=degoog-org/degoog&type=date&legend=top-left)](https://star-history.dera.page/#degoog-org/degoog&type=date&legend=top-left)
