@@ -1,4 +1,5 @@
 import { getBase } from "./base-url";
+import { onWindowEvent } from "./window-event";
 
 export interface SearchUiConfig {
   enabled: boolean;
@@ -14,11 +15,9 @@ const FALLBACK: SearchUiConfig = {
 
 let _config: SearchUiConfig | null = null;
 
-if (typeof window !== "undefined") {
-  window.addEventListener("extensions-saved", () => {
-    _config = null;
-  });
-}
+onWindowEvent("extensions-saved", () => {
+  _config = null;
+});
 
 export const fetchStreamingConfig = async (): Promise<SearchUiConfig> => {
   if (_config) return _config;

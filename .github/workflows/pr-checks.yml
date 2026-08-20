@@ -39,7 +39,7 @@ jobs:
       - name: Setup the best engine ever
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.3.14
 
       - name: Install all dependencies
         run: bun install --frozen-lockfile

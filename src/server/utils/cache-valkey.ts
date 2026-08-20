@@ -112,14 +112,26 @@ export const initValkey = async (instanceId: string): Promise<void> => {
   return _initPromise;
 };
 
+const _notifyLocal = (payload: InvalidatePayload): void => {
+  for (const handler of _handlers) {
+    try {
+      handler(payload);
+    } catch (err) {
+      logger.error(NS, `local invalidate handler failed scope=${payload.scope}`, err);
+    }
+  }
+};
+
 export const publishInvalidate = async (
   scope: InvalidateScope,
   key?: string,
 ): Promise<void> => {
-  if (!_enabled || !_publisher || !_channel) return;
   const payload: InvalidatePayload = { scope, key, origin: PROCESS_ORIGIN };
+  const wire = JSON.stringify(payload);
+  _notifyLocal(payload);
+  if (!_enabled || !_publisher || !_channel) return;
   try {
-    await _publisher.publish(_channel, JSON.stringify(payload));
+    await _publisher.publish(_channel, wire);
   } catch (err) {
     logger.error(NS, "publishInvalidate failed", err);
   }

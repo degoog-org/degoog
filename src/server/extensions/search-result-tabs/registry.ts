@@ -1,14 +1,21 @@
-import type { SearchResultTab, Translate } from "../../types";
+import {
+  ExtensionStoreType,
+  type ExtensionMeta,
+  type SearchResultTab,
+  type Translate,
+} from "../../types";
 import {
   initPlugin,
   loadPluginAssets,
   lockinNameSpace,
   lockinSettingsId,
 } from "../../utils/plugin-assets";
-import { isDisabled } from "../../utils/plugin-settings";
+import { getSettings, isDisabled } from "../../utils/plugin-settings";
 import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
+import { buildExtensionMeta } from "../extension-meta";
+import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
 
 function isSearchResultTab(val: unknown): val is SearchResultTab {
   if (typeof val !== "object" || val === null) return false;
@@ -56,6 +63,34 @@ export function getSearchResultTabs(): SearchResultTab[] {
 export function getSearchResultTabById(tabId: string): SearchResultTab | null {
   return registry.items().find((t) => t.id === tabId) ?? null;
 }
+
+export const getSearchResultTabExtensionMeta = async (): Promise<
+  ExtensionMeta[]
+> => {
+  const out: ExtensionMeta[] = [];
+  for (const tab of getSearchResultTabs()) {
+    const settingsId = tab.settingsId ?? tab.id;
+    if (!settingsId) continue;
+    const schema = tab.settingsSchema ?? [];
+    if (schema.length === 0) continue;
+    out.push(
+      await buildExtensionMeta({
+        id: settingsId,
+        displayName: tab.name,
+        description: "",
+        type: ExtensionStoreType.Plugin,
+        schema,
+        rawSettings: await getSettings(settingsId),
+        extra: {
+          source: "plugin",
+          isClientExposed: tab.isClientExposed,
+          needsAppRestart: isExtensionRestartFlagVisible(tab.needsAppRestart),
+        },
+      }),
+    );
+  }
+  return out;
+};
 
 export async function reloadSearchResultTabs(bust = true): Promise<void> {
   await (bust ? registry.reload() : registry.refresh());

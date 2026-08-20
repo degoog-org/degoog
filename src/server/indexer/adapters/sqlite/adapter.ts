@@ -282,7 +282,7 @@ export class SqliteAdapter implements IndexerAdapter {
       try {
         total += statSync(indexerDbForType(safeSlug(type))).size;
       } catch {
-        // file may not be flushed to disk yet
+        // file may not be flushed to disk yet. Not leaving a log or it'll spam.
       }
     }
     return total;

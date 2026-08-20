@@ -6,6 +6,7 @@ import {
   renderRangeField,
   renderFileField,
 } from "./field-widgets";
+import { renderOptionsList, wrapOptionsRow } from "./options-field";
 import type { SettingField, ExtensionMeta } from "../../../types";
 
 const t = window.scopedT("core");
@@ -100,6 +101,9 @@ export function syncConditionalFields(container: HTMLElement): void {
       wrapper.hidden = actual !== equals;
     });
 }
+
+const _selectValues = (declared: string[], current: string): string[] =>
+  current && !declared.includes(current) ? [...declared, current] : declared;
 
 const _parseUrlListValue = (
   raw: string | string[] | undefined,
@@ -344,28 +348,29 @@ export const renderField = (
 
   if (
     field.type === "select" &&
-    Array.isArray(field.options) &&
-    field.options.length > 0
+    (field.optionsFrom ||
+      (Array.isArray(field.options) && field.options.length > 0))
   ) {
-    const validValue = field.options.includes(currentValue)
-      ? currentValue
-      : field.options[0];
-    const opts = field.options
-      .map(
-        (v, i) => {
-          const label = field.optionLabels?.[i] ?? (v.charAt(0).toUpperCase() + v.slice(1));
-          return `<option value="${escapeHtml(v)}"${validValue === v ? " selected" : ""}>${escapeHtml(label)}</option>`;
-        },
-      )
+    const declared = field.options ?? [];
+    const known = _selectValues(declared, currentValue);
+    const validValue = known.includes(currentValue) ? currentValue : known[0];
+    const opts = known
+      .map((v) => {
+        const at = declared.indexOf(v);
+        const fallback = at >= 0 ? v.charAt(0).toUpperCase() + v.slice(1) : v;
+        const label = (at >= 0 ? field.optionLabels?.[at] : undefined) ?? fallback;
+        return `<option value="${escapeHtml(v)}"${validValue === v ? " selected" : ""}>${escapeHtml(label)}</option>`;
+      })
       .join("");
+    const control = `<div class="ext-field-select-wrap degoog-select-wrap">
+          <select id="field-${escapeHtml(field.key)}" class="ext-field-input ext-field-select degoog-input">${opts}</select>
+        </div>`;
     return _wrapVisibleWhen(
       field,
       `
       <div class="ext-field" data-key="${escapeHtml(field.key)}" data-type="select">
         <label class="ext-field-label" for="field-${escapeHtml(field.key)}">${escapeHtml(field.label)}</label>
-        <div class="ext-field-select-wrap degoog-select-wrap">
-          <select id="field-${escapeHtml(field.key)}" class="ext-field-input ext-field-select degoog-input">${opts}</select>
-        </div>
+        ${wrapOptionsRow(field, control)}
         ${descHtml}
       </div>`,
       ext,
@@ -380,12 +385,14 @@ export const renderField = (
         : field.type === "number"
           ? "number"
           : "text";
+  const input = `<input class="ext-field-input${configuredClass} degoog-input" type="${inputType}" id="field-${escapeHtml(field.key)}" value="${escapeHtml(displayValue)}" placeholder="${escapeHtml(placeholder)}" autocomplete="off">`;
   return _wrapVisibleWhen(
     field,
     `
     <div class="ext-field" data-key="${escapeHtml(field.key)}" data-type="${escapeHtml(field.type)}" data-secret="${isSecret}" data-was-set="${isSet}">
       <label class="ext-field-label" for="field-${escapeHtml(field.key)}">${escapeHtml(field.label)}${field.required ? " <span class='ext-required'>*</span>" : ""}</label>
-      <input class="ext-field-input${configuredClass} degoog-input" type="${inputType}" id="field-${escapeHtml(field.key)}" value="${escapeHtml(displayValue)}" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
+      ${wrapOptionsRow(field, input)}
+      ${renderOptionsList(field)}
       ${descHtml}
     </div>`,
     ext,
