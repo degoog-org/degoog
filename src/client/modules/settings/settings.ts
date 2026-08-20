@@ -174,6 +174,10 @@ export function switchSettingsTab(value: string, updateUrl = true): void {
     const path = value === "general" ? root : `${root}/${value}`;
     window.history.replaceState({}, "", path);
   }
+
+  window.dispatchEvent(
+    new CustomEvent("settings-tab-changed", { detail: value }),
+  );
 }
 
 function _initTabs(): void {

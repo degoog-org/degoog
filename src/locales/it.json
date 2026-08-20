@@ -555,6 +555,16 @@
           "desc": "Apri il risultato attualmente a fuoco."
         }
       }
+    },
+    "restart": {
+      "heading": "Riavvio richiesto",
+      "desc": "Alcune estensioni installate richiedono un riavvio del server per funzionare correttamente.",
+      "modal-intro": "Queste estensioni inizieranno a funzionare solo dopo il riavvio del server:",
+      "modal-note": "Il riavvio interrompe Degoog per qualche secondo. Puoi riavviare in seguito da Impostazioni › Generale.",
+      "later": "Non ora",
+      "button": "Riavvia il server",
+      "confirm": "Questo riavvierà il server Degoog. Le ricerche attive potrebbero essere interrotte brevemente. Continuare?",
+      "restarting": "Riavvio in corso..."
     }
   }
 }
