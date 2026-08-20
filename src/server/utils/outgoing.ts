@@ -76,6 +76,8 @@ export function proxyEnv(value: string): string {
   });
 }
 
+const MASKED_PROXY = "***";
+
 export function maskProxy(proxyUrl: string): string {
   try {
     const parsed = new URL(proxyUrl);
@@ -83,7 +85,7 @@ export function maskProxy(proxyUrl: string): string {
     if (parsed.password) parsed.password = "***";
     return parsed.toString();
   } catch {
-    return proxyUrl.replace(PROXY_ENV_PLACEHOLDER_RE, "${***}");
+    return MASKED_PROXY;
   }
 }
 

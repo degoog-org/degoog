@@ -188,6 +188,7 @@ export const initOptionsFields = (
               method: "POST",
               headers: jsonHeaders(getStoredToken),
               body: JSON.stringify(collectValues()),
+              signal: abort.signal,
             },
           );
           const raw: unknown = await res.json().catch(() => null);
@@ -204,7 +205,10 @@ export const initOptionsFields = (
             select.dispatchEvent(new Event("change", { bubbles: true }));
           }
           loaded = options;
-          if (input && chosen) input.value = chosen;
+          if (input && chosen) {
+            input.value = chosen;
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+          }
           if (list && input) _paintList(list, options, "");
           setStatus(
             data.notice ||
@@ -213,7 +217,9 @@ export const initOptionsFields = (
                 : ""),
           );
         } catch {
-          setStatus(t("settings-page.modal.field-fetch-failed"));
+          if (!abort.signal.aborted) {
+            setStatus(t("settings-page.modal.field-fetch-failed"));
+          }
         } finally {
           btn.disabled = false;
         }

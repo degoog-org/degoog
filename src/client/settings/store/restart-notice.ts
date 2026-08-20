@@ -6,6 +6,7 @@ import { isRestartState } from "../../../shared/restart-state";
 const t = window.scopedT("core");
 
 let lastShownReasons = "";
+let checkInFlight = false;
 
 const REASON_RE = /^(\w+) "(.+)" was \w+$/;
 
@@ -95,31 +96,47 @@ function buildModal(reasons: string[]): {
   };
 }
 
-export async function maybeShowRestartNotice(
+export const pendingReasons = async (
   getToken: () => string | null,
-): Promise<void> {
+): Promise<string[] | null> => {
   let state;
   try {
     const res = await fetch(`${getBase()}/api/settings/restart-state`, {
       headers: authHeaders(getToken),
     });
-    if (!res.ok) return;
+    if (!res.ok) return null;
     const payload: unknown = await res.json();
     if (!isRestartState(payload)) {
       console.debug("[store] restart state payload invalid", payload);
-      return;
+      return null;
     }
     state = payload;
   } catch (err) {
     console.debug("[store] restart state fetch failed", err);
-    return;
+    return null;
   }
 
   const key = state.reasons.join("|");
-  if (!state.pending || key === lastShownReasons) return;
+  if (!state.pending || key === lastShownReasons) return null;
   lastShownReasons = key;
+  return state.reasons;
+};
 
-  const { restartBtn, close } = buildModal(state.reasons);
+export async function maybeShowRestartNotice(
+  getToken: () => string | null,
+): Promise<void> {
+  if (checkInFlight) return;
+  checkInFlight = true;
+
+  let reasons: string[] | null;
+  try {
+    reasons = await pendingReasons(getToken);
+  } finally {
+    checkInFlight = false;
+  }
+  if (!reasons) return;
+
+  const { restartBtn, close } = buildModal(reasons);
   restartBtn.addEventListener("click", async () => {
     restartBtn.disabled = true;
     restartBtn.textContent = t("settings-page.restart.restarting");

@@ -127,10 +127,11 @@ export const publishInvalidate = async (
   key?: string,
 ): Promise<void> => {
   const payload: InvalidatePayload = { scope, key, origin: PROCESS_ORIGIN };
+  const wire = JSON.stringify(payload);
   _notifyLocal(payload);
   if (!_enabled || !_publisher || !_channel) return;
   try {
-    await _publisher.publish(_channel, JSON.stringify(payload));
+    await _publisher.publish(_channel, wire);
   } catch (err) {
     logger.error(NS, "publishInvalidate failed", err);
   }

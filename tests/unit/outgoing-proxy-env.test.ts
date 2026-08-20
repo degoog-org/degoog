@@ -62,4 +62,12 @@ describe("proxy env placeholders", () => {
       "http://***:***@proxy.example:8080/",
     );
   });
+
+  test("never leaks resolved credentials from a malformed proxy url", () => {
+    process.env.DEGOOG_PROXY_ENV_ALLOWLIST = "REPLIT_*";
+    process.env.REPLIT_PROXY_SECRET = "s3cr3t";
+    const resolved = proxyEnv("http//user:${REPLIT_PROXY_SECRET}@proxy.example:8080");
+    expect(resolved).toContain("s3cr3t");
+    expect(maskProxy(resolved)).toBe("***");
+  });
 });
