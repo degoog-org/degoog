@@ -36,6 +36,11 @@ const loadNotice = async () => {
   return import("../../src/client/settings/store/restart-notice");
 };
 
+const loadFresh = async (tag: string) => {
+  stubWindow();
+  return import(`../../src/client/settings/store/restart-notice?${tag}`);
+};
+
 describe("restart notice state check", () => {
   beforeEach(() => {
     calls = [];
@@ -61,6 +66,26 @@ describe("restart notice state check", () => {
     stubFetch(jsonOnce(body));
 
     expect(await pendingReasons(() => null)).toEqual(body.reasons);
+    expect(await pendingReasons(() => null)).toBeNull();
+  });
+
+  test("keeps split reasons distinct from one reason holding a separator", async () => {
+    const { pendingReasons } = await loadNotice();
+    stubFetch(jsonOnce({ pending: true, reasons: ['plugin "a|b" was added'] }));
+    expect(await pendingReasons(() => null)).toEqual(['plugin "a|b" was added']);
+
+    stubFetch(jsonOnce({ pending: true, reasons: ['plugin "a', 'b" was added'] }));
+    expect(await pendingReasons(() => null)).toEqual([
+      'plugin "a',
+      'b" was added',
+    ]);
+  });
+
+  test("still notifies when a pending restart carries no reasons", async () => {
+    const { pendingReasons } = await loadFresh("empty-reasons");
+    stubFetch(jsonOnce({ pending: true, reasons: [] }));
+
+    expect(await pendingReasons(() => null)).toEqual([]);
     expect(await pendingReasons(() => null)).toBeNull();
   });
 

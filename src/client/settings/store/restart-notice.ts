@@ -116,7 +116,7 @@ export const pendingReasons = async (
     return null;
   }
 
-  const key = state.reasons.join("|");
+  const key = JSON.stringify(state.reasons);
   if (!state.pending || key === lastShownReasons) return null;
   lastShownReasons = key;
   return state.reasons;
