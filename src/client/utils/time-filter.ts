@@ -57,9 +57,8 @@ export function initOptionsDropdown(): void {
   const panel = document.getElementById("tools-panel");
   const submenuTime = document.getElementById("tools-submenu-time");
   const submenuLang = document.getElementById("tools-submenu-lang");
-  // The tools bar only has to exist here — it hosts the toggle and is never otherwise touched.
-  const hasToolsBar = !!document.getElementById("tools-bar");
-  if (!toggle || !panel || !hasToolsBar || !submenuTime || !submenuLang) return;
+  const toolsBar = document.getElementById("tools-bar");
+  if (!toggle || !panel || !toolsBar || !submenuTime || !submenuLang) return;
 
   const customDateWrap = document.getElementById("tools-custom-date");
   const dateFromInput = document.getElementById(
@@ -142,9 +141,9 @@ export function initOptionsDropdown(): void {
     if (persist) writeOpenPref(open);
   }
 
-  // Pinned forces the panel open, unpinned falls back to the remembered preference
   function pinPanel(pinned: boolean): void {
-    setPanelOpen(pinned || readOpenPref(), false);
+    toolsBar!.style.display = pinned ? "none" : "";
+    setPanelOpen(pinned ? true : readOpenPref(), false);
   }
 
   function syncTimeOptions(): void {

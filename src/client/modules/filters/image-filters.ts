@@ -3,7 +3,6 @@ import type { EngineTiming } from "../../types";
 import { escapeHtml, escapeAttribute } from "../../utils/dom";
 import { getRegistry, getEngines, isImageSearchType } from "../../utils/engines";
 import { engineStatsHtml, setupRetryLinks } from "../renderer/render-sidebar";
-import { syncImageGridColumns } from "../renderer/render-media";
 
 const FILTER_BAR_ID = "image-filters-bar";
 const ENGINE_PANEL_ID = "image-engine-panel";
@@ -155,15 +154,6 @@ const ensureOverlay = (): void => {
   document.body.appendChild(overlay);
 };
 
-// Re-sync the image grid's columns exactly when the sidebar's width transition ends, instead of relying on the ResizeObserver's debounce, which would otherwise leave a stale layout for ~120ms after the animation visibly finishes.
-const wireSidebarTransition = (bar: HTMLElement): void => {
-  if (bar.dataset.imgTransitionWired === "true") return;
-  bar.dataset.imgTransitionWired = "true";
-  bar.addEventListener("transitionend", (e) => {
-    if (e.target === bar && e.propertyName === "width") syncImageGridColumns();
-  });
-};
-
 const ensureShell = (): HTMLElement | null => {
   const bar = document.getElementById(FILTER_BAR_ID);
   if (!bar) return null;
@@ -171,7 +161,6 @@ const ensureShell = (): HTMLElement | null => {
     bar.innerHTML = shellHtml();
   }
   ensureOverlay();
-  wireSidebarTransition(bar);
   return bar;
 };
 
