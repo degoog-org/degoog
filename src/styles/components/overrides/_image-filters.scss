@@ -238,13 +238,17 @@
 .degoog-img-filter-head {
   display: flex;
   align-items: center;
-  gap: $space-2;
+  gap: $space-1;
   min-width: 0;
 }
 
+.degoog-img-filter-sep {
+  color: var(--text-secondary);
+}
+
 .degoog-img-filter-current {
-  font-size: $font-size-xs;
   color: $primary;
+  font-weight: 500;
   @include truncate;
 }
 
