@@ -17,6 +17,12 @@ const formatReason = (reason: string): string => {
   return `${type[0].toUpperCase()}${type.slice(1)} - ${name}`;
 };
 
+/**
+ * Creates and displays a modal notifying the user about reasons requiring a restart.
+ *
+ * @param reasons - The restart reasons to display in the modal
+ * @returns The modal element, restart confirmation button, and function for closing the modal
+ */
 function buildModal(reasons: string[]): {
   overlay: HTMLElement;
   restartBtn: HTMLButtonElement;
@@ -122,6 +128,11 @@ export const pendingReasons = async (
   return state.reasons;
 };
 
+/**
+ * Checks for a pending store restart and displays a restart notice when needed.
+ *
+ * @param getToken - Supplies the current authentication token for restart requests
+ */
 export async function maybeShowRestartNotice(
   getToken: () => string | null,
 ): Promise<void> {

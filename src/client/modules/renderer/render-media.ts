@@ -83,6 +83,9 @@ function _scheduleColumnSync(grid: HTMLElement): void {
 
 let _gridResizeObserver: ResizeObserver | null = null;
 
+/**
+ * Observes the image grid and schedules column synchronization when its size changes.
+ */
 function _observeGridResize(grid: HTMLElement): void {
   _gridResizeObserver?.disconnect();
   _gridResizeObserver = new ResizeObserver(() => _scheduleColumnSync(grid));
@@ -90,6 +93,9 @@ function _observeGridResize(grid: HTMLElement): void {
 }
 
 
+/**
+ * Synchronizes the image grid columns with the current layout.
+ */
 export function syncImageGridColumns(): void {
   const grid = _imageGrid();
   if (!grid) return;

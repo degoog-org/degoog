@@ -56,6 +56,12 @@ let proxyIndex = 0;
 
 const PROXY_ENV_PLACEHOLDER_RE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
 
+/**
+ * Determines whether an environment variable name is permitted by the proxy environment allowlist.
+ *
+ * @param name - The environment variable name to check
+ * @returns `true` if the name matches an allowlist entry, prefix wildcard, or global wildcard, `false` otherwise.
+ */
 function envNameOk(name: string): boolean {
   const allowlist = process.env.DEGOOG_PROXY_ENV_ALLOWLIST ?? "";
   return allowlist
@@ -69,6 +75,12 @@ function envNameOk(name: string): boolean {
     });
 }
 
+/**
+ * Expands permitted environment variable placeholders in a proxy value.
+ *
+ * @param value - The proxy value containing `${ENV_NAME}` placeholders
+ * @returns The value with permitted placeholders replaced by their environment values
+ */
 export function proxyEnv(value: string): string {
   return value.replace(PROXY_ENV_PLACEHOLDER_RE, (match, name: string) => {
     if (!envNameOk(name)) return match;
@@ -78,6 +90,12 @@ export function proxyEnv(value: string): string {
 
 const MASKED_PROXY = "***";
 
+/**
+ * Masks proxy credentials in a valid proxy URL.
+ *
+ * @param proxyUrl - The proxy URL to mask
+ * @returns The proxy URL with credentials replaced by `***`, or `***` for an invalid URL
+ */
 export function maskProxy(proxyUrl: string): string {
   try {
     const parsed = new URL(proxyUrl);
@@ -89,6 +107,12 @@ export function maskProxy(proxyUrl: string): string {
   }
 }
 
+/**
+ * Parses newline-separated proxy URLs and expands permitted environment variables.
+ *
+ * @param raw - The proxy configuration text
+ * @returns The non-empty proxy URL entries
+ */
 function parseProxyUrls(raw: string): string[] {
   if (!raw || typeof raw !== "string") return [];
   return raw
@@ -97,6 +121,12 @@ function parseProxyUrls(raw: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Parses proxy configuration entries into a list of expanded proxy URLs.
+ *
+ * @param rawList - The raw proxy configuration entries, which may contain multiple newline-separated values
+ * @returns The non-empty proxy entries after trimming whitespace and expanding permitted environment variables
+ */
 function parseProxyUrlsList(rawList: string[]): string[] {
   const out: string[] = [];
   for (const raw of rawList) {
@@ -211,6 +241,15 @@ async function buildTransportContext(
   };
 }
 
+/**
+ * Sends an outgoing request through the selected transport.
+ *
+ * @param url - The request URL
+ * @param options - Request and transport options
+ * @param transportName - The transport to use
+ * @param ctx - Optional proxy override and engine settings
+ * @returns The response from the outgoing request
+ */
 export async function outgoingFetch(
   url: string,
   options: TransportFetchOptions = {},

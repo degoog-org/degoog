@@ -17,6 +17,12 @@ import { createRegistry } from "../registry-factory";
 import { buildExtensionMeta } from "../extension-meta";
 import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
 
+/**
+ * Determines whether a value has the required shape for a search result tab.
+ *
+ * @param val - The value to check.
+ * @returns `true` if the value has a string `name` and either an `executeSearch` function or a non-empty `engineType` string, `false` otherwise.
+ */
 function isSearchResultTab(val: unknown): val is SearchResultTab {
   if (typeof val !== "object" || val === null) return false;
   const t = val as SearchResultTab;
@@ -60,6 +66,12 @@ export function getSearchResultTabs(): SearchResultTab[] {
   return registry.items();
 }
 
+/**
+ * Finds a registered search result tab by its identifier.
+ *
+ * @param tabId - The identifier of the tab to find
+ * @returns The matching search result tab, or `null` if no tab matches
+ */
 export function getSearchResultTabById(tabId: string): SearchResultTab | null {
   return registry.items().find((t) => t.id === tabId) ?? null;
 }
@@ -92,6 +104,11 @@ export const getSearchResultTabExtensionMeta = async (): Promise<
   return out;
 };
 
+/**
+ * Reloads or refreshes the registered search result tabs.
+ *
+ * @param bust - Whether to fully reload the registry; otherwise, refreshes the existing registry.
+ */
 export async function reloadSearchResultTabs(bust = true): Promise<void> {
   await (bust ? registry.reload() : registry.refresh());
 }

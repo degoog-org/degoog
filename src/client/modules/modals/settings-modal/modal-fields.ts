@@ -90,6 +90,11 @@ export function readLiveSettingFieldValue(
   return input?.value.trim() ?? "";
 }
 
+/**
+ * Updates the visibility of conditional setting fields based on their current dependency values.
+ *
+ * @param container - The container holding the conditional fields and their dependencies
+ */
 export function syncConditionalFields(container: HTMLElement): void {
   container
     .querySelectorAll<HTMLElement>(".ext-conditional-field")

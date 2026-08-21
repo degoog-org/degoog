@@ -20,6 +20,12 @@ const TOOLS_PIN_EVENT = "degoog-tools-pin";
 
 let _langDisplayNames: Intl.DisplayNames | null = null;
 
+/**
+ * Resolves a language code to its English display name.
+ *
+ * @param code - The language code to resolve
+ * @returns The English language name, or `code` if the name cannot be resolved
+ */
 function getLangName(code: string): string {
   try {
     if (!_langDisplayNames) {
@@ -31,10 +37,20 @@ function getLangName(code: string): string {
   }
 }
 
+/**
+ * Determines whether a time or language filter is selected.
+ *
+ * @returns `true` if a time or language filter is selected, `false` otherwise.
+ */
 function isActive(): boolean {
   return state.currentTimeFilter !== TIME_ANY || !!state.currentLanguage;
 }
 
+/**
+ * Reads the persisted open state of the tools panel.
+ *
+ * @returns `true` if the panel is persisted as open, `false` otherwise.
+ */
 function readOpenPref(): boolean {
   try {
     return localStorage.getItem(TOOLS_OPEN_KEY) === "true";
@@ -52,6 +68,9 @@ function writeOpenPref(open: boolean): void {
   }
 }
 
+/**
+ * Initializes the tools and options dropdown, including its controls, menus, persisted open state, and filter interactions.
+ */
 export function initOptionsDropdown(): void {
   const toggle = document.getElementById("tools-toggle");
   const panel = document.getElementById("tools-panel");
