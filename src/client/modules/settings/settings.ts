@@ -156,6 +156,12 @@ function _showAuthGate(): void {
     });
 }
 
+/**
+ * Activates the selected settings tab and synchronizes the related navigation state.
+ *
+ * @param value - The tab identifier to activate
+ * @param updateUrl - Whether to update the browser URL to reflect the selected tab
+ */
 export function switchSettingsTab(value: string, updateUrl = true): void {
   document
     .querySelectorAll<HTMLElement>(".settings-tab-panel")
@@ -180,6 +186,9 @@ export function switchSettingsTab(value: string, updateUrl = true): void {
   );
 }
 
+/**
+ * Initializes settings tab controls and activates the tab specified by the current settings path.
+ */
 function _initTabs(): void {
   const select = document.getElementById(
     "settings-tab-select",

@@ -227,6 +227,11 @@ const _renderFields = (
     .join("");
 };
 
+/**
+ * Opens the extension configuration modal and renders its settings fields.
+ *
+ * @param ext - The extension whose settings and configuration options should be displayed
+ */
 export function openModal(ext: ExtensionMeta): void {
   currentExt = ext;
   const docs = _ensureDocsButton();
@@ -306,6 +311,9 @@ export function openModal(ext: ExtensionMeta): void {
   firstFocusable?.focus();
 }
 
+/**
+ * Closes the extension modal and resets its transient state.
+ */
 export function closeModal(): void {
   disposeOptionsFields();
   if (overlay) overlay.style.display = "none";
@@ -315,6 +323,11 @@ export function closeModal(): void {
   document.getElementById("ext-modal")?.classList.remove("ext-modal--wide");
 }
 
+/**
+ * Opens a modal with custom title and body content.
+ *
+ * @param options - The modal content and optional wide-layout setting
+ */
 export function openCustomModal(options: {
   title: string;
   body: string;

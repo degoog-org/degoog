@@ -27,6 +27,12 @@ import {
   renderRepoList,
 } from "./render";
 
+/**
+ * Initializes the store tab, loads its repository and catalog data, and wires its controls.
+ *
+ * @param container - The element that contains the store tab UI
+ * @param getToken - Supplies the current authentication token
+ */
 export async function initStoreTab(
   container: HTMLElement,
   getToken: () => string | null,

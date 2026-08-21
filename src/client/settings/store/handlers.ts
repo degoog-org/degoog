@@ -10,6 +10,12 @@ import {
 } from "./progress";
 import { maybeShowRestartNotice } from "./restart-notice";
 
+/**
+ * Displays an error message in an element for four seconds.
+ *
+ * @param el - The element in which to display the message
+ * @param msg - The error message to display
+ */
 export function showError(el: HTMLElement | null, msg: string): void {
   if (!el) return;
   el.textContent = msg;
@@ -209,6 +215,13 @@ export async function handleDeleteUntracked(
   }
 }
 
+/**
+ * Updates the store item associated with a button and refreshes the displayed items.
+ *
+ * @param btn - The button containing the repository URL, item path, and item type in its data attributes
+ * @param loadItems - Reloads the available items after a successful update
+ * @param render - Renders the refreshed item list
+ */
 export async function handleUpdate(
   container: HTMLElement,
   btn: HTMLButtonElement,
@@ -244,6 +257,14 @@ export async function handleUpdate(
   }
 }
 
+/**
+ * Updates all available extensions and refreshes the rendered item list.
+ *
+ * @param container - The element containing the update controls and progress state
+ * @param getToken - Provides the current authentication token for restart notifications
+ * @param loadItems - Reloads the extension data after a successful update
+ * @param render - Renders the refreshed extension data
+ */
 export async function handleUpdateAll(
   container: HTMLElement,
   getToken: () => string | null,
