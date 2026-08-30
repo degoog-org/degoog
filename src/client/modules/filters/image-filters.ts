@@ -89,7 +89,7 @@ const groupHtml = (
 ): string => {
   const title = tf(group);
   const suffix = active
-    ? `<span class="degoog-img-filter-current">${escapeHtml(labelFor(active))}</span>`
+    ? ` <span class="degoog-img-filter-sep">·</span> <span class="degoog-img-filter-current">${escapeHtml(labelFor(active))}</span>`
     : "";
   const options = [
     optionHtml(group, "", active),
@@ -213,7 +213,10 @@ let onSearchFn: SearchFn | null = null;
 const selectOption = (option: HTMLElement): void => {
   const group = option.dataset.group;
   if (!group) return;
-  const value = option.dataset.value ?? "";
+  const clicked = option.dataset.value ?? "";
+  const current = filters()[group] ?? "";
+  const value = clicked === current ? "" : clicked;
+  if (value === current) return;
 
   filters()[group] = value;
 
@@ -221,21 +224,23 @@ const selectOption = (option: HTMLElement): void => {
   radiogroup
     ?.querySelectorAll<HTMLElement>(".degoog-img-filter-option")
     .forEach((opt) => {
-      const active = opt === option;
+      const active = (opt.dataset.value ?? "") === value;
       opt.classList.toggle("is-active", active);
       opt.setAttribute("aria-checked", active ? "true" : "false");
     });
 
   const head = option
     .closest(".degoog-img-filter-group")
-    ?.querySelector(".degoog-img-filter-head");
+    ?.querySelector<HTMLElement>(".degoog-img-filter-head");
   if (head) {
-    head.querySelector(".degoog-img-filter-current")?.remove();
+    head
+      .querySelectorAll(".degoog-img-filter-sep, .degoog-img-filter-current")
+      .forEach((el) => el.remove());
     if (value) {
-      const badge = document.createElement("span");
-      badge.className = "degoog-img-filter-current";
-      badge.textContent = labelFor(value);
-      head.appendChild(badge);
+      head.insertAdjacentHTML(
+        "beforeend",
+        ` <span class="degoog-img-filter-sep">·</span> <span class="degoog-img-filter-current">${escapeHtml(labelFor(value))}</span>`,
+      );
     }
   }
 

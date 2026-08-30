@@ -28,6 +28,9 @@ const _shortestColumn = (columns: HTMLElement[]): HTMLElement =>
     return a.children.length <= b.children.length ? a : b;
   });
 
+const _imageGrid = (): HTMLElement | null =>
+  document.querySelector<HTMLElement>(".image-grid");
+
 const _imageColumns = (grid: HTMLElement): HTMLElement[] =>
   Array.from(grid.querySelectorAll<HTMLElement>(".image-column"));
 
@@ -86,13 +89,20 @@ function _observeGridResize(grid: HTMLElement): void {
   _gridResizeObserver.observe(grid);
 }
 
+
+export function syncImageGridColumns(): void {
+  const grid = _imageGrid();
+  if (!grid) return;
+  if (_resizeTimer) {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = null;
+  }
+  requestAnimationFrame(() => _ensureImageColumns(grid));
+}
+
 export const PANEL_LAYOUT_BREAKPOINT = 768;
 
-registerImageGridPanelSync(() => {
-  const grid = document.querySelector<HTMLElement>(".image-grid");
-  if (!grid) return;
-  requestAnimationFrame(() => _ensureImageColumns(grid));
-});
+registerImageGridPanelSync(syncImageGridColumns);
 
 const _imageCardUrl = (r: ScoredResult): string => {
   const thumbnail = r.thumbnail || "";
