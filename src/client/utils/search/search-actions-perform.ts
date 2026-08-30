@@ -33,6 +33,7 @@ import {
 import { buildSearchBody, buildSearchUrl } from "../url";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
 import { getBase } from "../base-url";
+import { onWindowEvent } from "../window-event";
 import { fetchStreamingConfig } from "../streaming-config";
 import {
   loadSidebarSuggestions,
@@ -43,11 +44,9 @@ import {
 
 let commandsCache: Command[] | null = null;
 
-if (typeof window !== "undefined") {
-  window.addEventListener("extensions-saved", () => {
-    commandsCache = null;
-  });
-}
+onWindowEvent("extensions-saved", () => {
+  commandsCache = null;
+});
 
 const _fetchCommands = async (): Promise<Command[]> => {
   if (commandsCache) return commandsCache;

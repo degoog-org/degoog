@@ -574,7 +574,70 @@
   padding-top: $space-1;
 }
 
-.ext-test-btn {
+.ext-field-options-row {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+
+  > .ext-field-select-wrap,
+  > .ext-field-input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.ext-field-options-list {
+  list-style: none;
+  margin: $space-2 0 0;
+  padding: $space-1;
+  max-height: 15rem;
+  overflow-y: auto;
+  background: var(--bg);
+  border-radius: $radius-md;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.ext-field-options-item {
+  display: flex;
+  align-items: baseline;
+  gap: $space-2;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: $radius-sm;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: $font-size-small;
+  padding: $space-2;
+  text-align: left;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--bg-secondary);
+    color: $primary;
+  }
+}
+
+.ext-field-options-detail {
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+.ext-field-options-status {
+  color: var(--text-secondary);
+  font-size: $font-size-small;
+  margin: $space-1 0 0;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.ext-test-btn,
+.ext-field-options-btn {
   background: none;
   border: 1px solid var(--border);
   border-radius: $radius-md;

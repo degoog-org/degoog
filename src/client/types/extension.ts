@@ -1,4 +1,11 @@
 import type { EngineFilters } from "../../shared/engine-filters";
+import type { FieldOptionsSource } from "../../shared/field-options";
+
+export type {
+  FieldOption,
+  FieldOptionsResult,
+  FieldOptionsSource,
+} from "../../shared/field-options";
 
 export type SettingFieldType =
   | "text"
@@ -37,6 +44,7 @@ export interface SettingField {
   accept?: string;
   maxSizeKb?: string;
   minSizeKb?: string;
+  optionsFrom?: FieldOptionsSource;
 }
 
 export interface ExtensionMeta {

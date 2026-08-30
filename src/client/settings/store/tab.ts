@@ -3,6 +3,7 @@ import type { RepoInfo, StoreItem } from "../../types/store-tab";
 import { escapeHtml } from "../../utils/dom";
 import { getBase } from "../../utils/base-url";
 import { initLightbox } from "./lightbox";
+import { maybeShowRestartNotice } from "./restart-notice";
 import { getStoreTabHtml } from "./template";
 import {
   confirmRemoveRepo,
@@ -284,7 +285,7 @@ export async function initStoreTab(
           .querySelector<HTMLButtonElement>(".store-btn-update-all")
           ?.addEventListener(
             "click",
-            () => void handleUpdateAll(container, loadItems, render),
+            () => void handleUpdateAll(container, getToken, loadItems, render),
           );
         updatesPanel
           .querySelectorAll<HTMLButtonElement>(".store-btn-update")
@@ -392,6 +393,13 @@ export async function initStoreTab(
     searchQuery = searchInput?.value || "";
     render();
   });
+
+  const noticeIfVisible = (): void => {
+    if (container.closest(".settings-tab-panel")?.classList.contains("active"))
+      void maybeShowRestartNotice(getToken);
+  };
+  window.addEventListener("settings-tab-changed", noticeIfVisible);
+  noticeIfVisible();
 
   try {
     await refreshAndRender();

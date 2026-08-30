@@ -244,7 +244,7 @@
     #results-tabs,
     #results-meta,
     #results-layout,
-    #tools-panel {
+    #results-tabs + #tools-panel {
       width: 100%;
       max-width: $results-centered-max;
       margin-inline: auto;

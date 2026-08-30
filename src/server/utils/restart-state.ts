@@ -1,7 +1,6 @@
-export interface RestartState {
-  pending: boolean;
-  reasons: string[];
-}
+import type { RestartState } from "../../shared/restart-state";
+
+export type { RestartState };
 
 let _pending = false;
 let _reasons: string[] = [];

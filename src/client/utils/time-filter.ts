@@ -3,8 +3,9 @@ import { performSearch } from "./search-actions";
 import { getBase } from "./base-url";
 import { isImageSearchType } from "./engines";
 
+const TIME_ANY = "any";
 const TIME_LABELS: Record<string, string> = {
-  any: "Any time",
+  [TIME_ANY]: "Any time",
   hour: "Hour",
   day: "24 hours",
   week: "Week",
@@ -31,7 +32,7 @@ function getLangName(code: string): string {
 }
 
 function isActive(): boolean {
-  return state.currentTimeFilter !== "any" || !!state.currentLanguage;
+  return state.currentTimeFilter !== TIME_ANY || !!state.currentLanguage;
 }
 
 function readOpenPref(): boolean {
@@ -54,9 +55,9 @@ function writeOpenPref(open: boolean): void {
 export function initOptionsDropdown(): void {
   const toggle = document.getElementById("tools-toggle");
   const panel = document.getElementById("tools-panel");
-  const toolsBar = document.getElementById("tools-bar");
   const submenuTime = document.getElementById("tools-submenu-time");
   const submenuLang = document.getElementById("tools-submenu-lang");
+  const toolsBar = document.getElementById("tools-bar");
   if (!toggle || !panel || !toolsBar || !submenuTime || !submenuLang) return;
 
   const customDateWrap = document.getElementById("tools-custom-date");
@@ -88,10 +89,10 @@ export function initOptionsDropdown(): void {
   function updateValueLabels(): void {
     if (timeValEl) {
       timeValEl.textContent =
-        TIME_LABELS[state.currentTimeFilter] ?? "Any time";
+        TIME_LABELS[state.currentTimeFilter] ?? TIME_LABELS[TIME_ANY];
       timeValEl.classList.toggle(
         "tools-field-value--set",
-        state.currentTimeFilter !== "any",
+        state.currentTimeFilter !== TIME_ANY,
       );
     }
     if (langValEl) {
@@ -205,7 +206,9 @@ export function initOptionsDropdown(): void {
           ".tools-lang-option",
         );
         if (!opt) return;
-        const lang = opt.dataset.lang ?? "";
+        const clicked = opt.dataset.lang ?? "";
+        // Re-clicking the selected language toggles it back off.
+        const lang = clicked === state.currentLanguage ? "" : clicked;
         if (lang === state.currentLanguage) return;
         state.currentLanguage = lang;
         syncLangOptions(langFilter?.value ?? "");
@@ -275,8 +278,11 @@ export function initOptionsDropdown(): void {
       ".tools-option[data-time]",
     );
     if (!opt) return;
-    const value = opt.dataset.time;
-    if (!value || value === state.currentTimeFilter) return;
+    const clicked = opt.dataset.time;
+    if (!clicked) return;
+    // Re-clicking the selected range toggles it back off ("any").
+    const value = clicked === state.currentTimeFilter ? TIME_ANY : clicked;
+    if (value === state.currentTimeFilter) return;
     state.currentTimeFilter = value;
     syncTimeOptions();
     updateToggle();

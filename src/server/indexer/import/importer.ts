@@ -40,9 +40,8 @@ const buildSelectSql = (db: Database): string => {
   return `
     SELECT h.query_norm, h.engine_type, u.url, u.url_norm, u.source_engine,
            u.title, u.snippet, u.thumbnail, u.image_url, u.is_gif, u.duration,
-           u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance${
-             optional ? `, ${optional}` : ""
-           }
+           u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance${optional ? `, ${optional}` : ""
+    }
     FROM query_hits h
     JOIN urls u ON u.id = h.url_id
   `;
@@ -178,7 +177,7 @@ export const importFromBuffer = async (
     try {
       unlinkSync(tmpPath);
     } catch {
-      // best-effort cleanup
+      // Not leaving a log or it'll spam.
     }
   }
 };

@@ -8,6 +8,7 @@ import {
   streamRefreshAll,
   streamUpdateAll,
 } from "./progress";
+import { maybeShowRestartNotice } from "./restart-notice";
 
 export function showError(el: HTMLElement | null, msg: string): void {
   if (!el) return;
@@ -235,6 +236,7 @@ export async function handleUpdate(
     await loadItems();
     render();
     window.dispatchEvent(new CustomEvent("extensions-saved"));
+    void maybeShowRestartNotice(getToken);
   } catch {
     setItemPhase(container, key, "Updating", "failed", "Network error");
   } finally {
@@ -244,6 +246,7 @@ export async function handleUpdate(
 
 export async function handleUpdateAll(
   container: HTMLElement,
+  getToken: () => string | null,
   loadItems: () => Promise<void>,
   render: () => void,
 ): Promise<void> {
@@ -257,6 +260,7 @@ export async function handleUpdateAll(
     await loadItems();
     render();
     window.dispatchEvent(new CustomEvent("extensions-saved"));
+    void maybeShowRestartNotice(getToken);
   } finally {
     if (btn) btn.disabled = false;
   }

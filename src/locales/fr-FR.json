@@ -299,7 +299,11 @@
       "field-choose-file": "Choisir un fichier",
       "field-drop-hint": "ou déposez ici",
       "field-uploading": "Téléversement…",
-      "field-upload-failed": "Échec du téléversement"
+      "field-upload-failed": "Échec du téléversement",
+      "field-fetch": "Charger",
+      "field-fetching": "Chargement…",
+      "field-fetch-failed": "Impossible de charger les options",
+      "field-fetch-empty": "Aucune option renvoyée"
     },
     "confirm": {
       "title": "Confirmer",
@@ -555,6 +559,16 @@
           "desc": "Ouvre le résultat actuellement ciblé."
         }
       }
+    },
+    "restart": {
+      "heading": "Redémarrage requis",
+      "desc": "Certaines extensions installées nécessitent un redémarrage du serveur pour fonctionner correctement.",
+      "modal-intro": "Ces extensions ne fonctionneront qu'après le redémarrage du serveur :",
+      "modal-note": "Le redémarrage arrête Degoog pendant quelques secondes. Vous pouvez redémarrer plus tard depuis Paramètres › Général.",
+      "later": "Pas maintenant",
+      "button": "Redémarrer le serveur",
+      "confirm": "Ceci redémarre le serveur Degoog. Les recherches en cours peuvent être brièvement interrompues. Continuer ?",
+      "restarting": "Redémarrage..."
     }
   }
 }
