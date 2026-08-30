@@ -29,20 +29,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Also log in as fccview for lazy fuckers who won't change their docker-compose file
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: fccview
-          password: ${{ secrets.FCCVIEW_PAT }}
-
       - name: Carefully and methodically extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
             ghcr.io/${{ steps.repo.outputs.name }}
-            ghcr.io/fccview/degoog
           tags: |
             type=ref,event=branch,suffix=-amd64
             type=ref,event=tag,suffix=-amd64
@@ -85,20 +77,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Also log in as fccview for lazy fuckers who won't change their docker-compose file
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: fccview
-          password: ${{ secrets.FCCVIEW_PAT }}
-
       - name: Carefully and methodically extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
             ghcr.io/${{ steps.repo.outputs.name }}
-            ghcr.io/fccview/degoog
           tags: |
             type=ref,event=branch,suffix=-arm64
             type=ref,event=tag,suffix=-arm64
@@ -134,20 +118,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Also log in as fccview for lazy fuckers who won't change their docker-compose file
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: fccview
-          password: ${{ secrets.FCCVIEW_PAT }}
-
       - name: Carefully and methodically extract metadata for final manifest
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
             ghcr.io/${{ steps.repo.outputs.name }}
-            ghcr.io/fccview/degoog
           tags: |
             type=ref,event=branch
             type=ref,event=tag
