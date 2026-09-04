@@ -92,4 +92,56 @@ describe("domain replacements", () => {
 
     expect(await filterBlockedDomains([result("https://spam.example/x")])).toHaveLength(0);
   });
+
+  test("blocks domains listed in uBlock Origin syntax, subdomains included", async () => {
+    await seedSettings({ domainBlockEnabled: true, domainBlockList: "" });
+    await writeDomainList(
+      "domainBlockList",
+      [
+        "! Title: Huge AI Blocklist",
+        'duckduckgo.com,bing.com##a[href*="forkful.ai"]:upward(li):remove()',
+        'google.com##a[href*="x.com/someartist"]:upward(2):remove()',
+        "google.com##.YzCcne:remove()",
+      ].join("\n"),
+    );
+
+    const out = await filterBlockedDomains([
+      result("https://www.forkful.ai/a"),
+      result("https://x.com/someartist"),
+      result("https://example.org/page"),
+    ]);
+
+    expect(out.map((r) => new URL(r.url).hostname)).toEqual(["x.com", "example.org"]);
+  });
+
+  test("blocks hostname network filters but not data-href selector payloads", async () => {
+    await seedSettings({ domainBlockEnabled: true, domainBlockList: "" });
+    await writeDomainList(
+      "domainBlockList",
+      ['||ads.example.com^', 'google.com##a[data-href*="tracking.example"]'].join("\n"),
+    );
+
+    const out = await filterBlockedDomains([
+      result("https://cdn.ads.example.com/banner"),
+      result("https://tracking.example/page"),
+      result("https://example.org/page"),
+    ]);
+
+    expect(out.map((r) => new URL(r.url).hostname)).toEqual([
+      "tracking.example",
+      "example.org",
+    ]);
+  });
+
+  test("drops an unparseable regex entry instead of the whole list", async () => {
+    await seedSettings({ domainBlockEnabled: true, domainBlockList: "" });
+    await writeDomainList("domainBlockList", "/[unclosed/\nspam.example");
+
+    const out = await filterBlockedDomains([
+      result("https://spam.example/x"),
+      result("https://ok.example/x"),
+    ]);
+
+    expect(out).toHaveLength(1);
+  });
 });

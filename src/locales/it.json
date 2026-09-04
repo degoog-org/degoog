@@ -206,7 +206,7 @@
       "rate-limit-long-max": "Richieste max finestra lunga",
       "domain-management-heading": "Gestione dei domini",
       "domain-management-desc": "Blocca, sostituisci e assegna punteggi ai domini in tutti i risultati di ricerca.",
-      "domain-block-desc": "Nascondi i risultati di ricerca da domini specifici. Un dominio per riga. I sottodomini sono inclusi automaticamente. Racchiudi una riga tra /slash/ per usare una regex.",
+      "domain-block-desc": "Nascondi i risultati di ricerca da domini specifici. Un dominio per riga. I sottodomini sono inclusi automaticamente. Racchiudi una riga tra /slash/ per usare una regex. Gli elenchi di filtri di uBlock Origin possono essere incollati così come sono; i commenti e le regole che non indicano un dominio vengono ignorati.",
       "domain-block-enable": "Abilita blocco dei domini",
       "domain-block-enable-aria": "Abilita blocco dei domini",
       "domain-block-list-label": "Domini bloccati (uno per riga)",
