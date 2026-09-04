@@ -114,6 +114,25 @@ describe("domain replacements", () => {
     expect(out.map((r) => new URL(r.url).hostname)).toEqual(["x.com", "example.org"]);
   });
 
+  test("blocks hostname network filters but not data-href selector payloads", async () => {
+    await seedSettings({ domainBlockEnabled: true, domainBlockList: "" });
+    await writeDomainList(
+      "domainBlockList",
+      ['||ads.example.com^', 'google.com##a[data-href*="tracking.example"]'].join("\n"),
+    );
+
+    const out = await filterBlockedDomains([
+      result("https://cdn.ads.example.com/banner"),
+      result("https://tracking.example/page"),
+      result("https://example.org/page"),
+    ]);
+
+    expect(out.map((r) => new URL(r.url).hostname)).toEqual([
+      "tracking.example",
+      "example.org",
+    ]);
+  });
+
   test("drops an unparseable regex entry instead of the whole list", async () => {
     await seedSettings({ domainBlockEnabled: true, domainBlockList: "" });
     await writeDomainList("domainBlockList", "/[unclosed/\nspam.example");
