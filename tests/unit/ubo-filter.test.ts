@@ -5,6 +5,7 @@ describe("uBO filter line detection", () => {
   test("flags comments, exceptions and cosmetic rules", () => {
     expect(isUboFilterLine("! Title: Huge AI Blocklist")).toBe(true);
     expect(isUboFilterLine("@@||keep.google.com^$ehide")).toBe(true);
+    expect(isUboFilterLine("||ads.example.com^")).toBe(true);
     expect(isUboFilterLine('bing.com##a[href*="forkful.ai"]:upward(li):remove()')).toBe(true);
   });
 
@@ -26,6 +27,15 @@ describe("uBO line to domain", () => {
 
   test("keeps a leading-slash payload that is still just a host", () => {
     expect(uboLineToDomain('google.com##a[href*="/play.ht"]:upward(2):remove()')).toBe("play.ht");
+  });
+
+  test("extracts a hostname-only network filter", () => {
+    expect(uboLineToDomain("||Ads.Example.com^")).toBe("ads.example.com");
+  });
+
+  test("does not treat attribute names containing href as href selectors", () => {
+    expect(uboLineToDomain('google.com##a[data-href*="tracking.example"]')).toBeNull();
+    expect(uboLineToDomain('google.com##a[not-href*="tracking.example"]')).toBeNull();
   });
 
   test("skips path-scoped payloads rather than blocking their host", () => {
