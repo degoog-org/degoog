@@ -226,7 +226,7 @@
       "ac-debounce": "Autocomplete delay (ms)",
       "domain-management-heading": "Domain Management",
       "domain-management-desc": "Block, replace, and score domains across every search result.",
-      "domain-block-desc": "Hide search results from specific domains. One domain per line. Subdomains are included automatically. Wrap a line in /slashes/ for regex.",
+      "domain-block-desc": "Hide search results from specific domains. One domain per line. Subdomains are included automatically. Wrap a line in /slashes/ for regex. uBlock Origin filter lists can be pasted in as-is; comments and rules that do not name a domain are ignored.",
       "domain-block-enable": "Enable domain blocking",
       "domain-block-enable-aria": "Enable domain blocking",
       "domain-block-list-label": "Blocked domains (one per line)",
