@@ -1,5 +1,5 @@
 import { readFile, mkdir, readdir, stat, rm } from "fs/promises";
-import { join, resolve, dirname } from "path";
+import { join, resolve, dirname, sep } from "path";
 import { removeSettings } from "../../utils/plugin-settings";
 import { isVersionAtLeast, getAppVersion } from "../../../shared/utils/version";
 import {
@@ -553,7 +553,7 @@ async function _installItem(
     const storeDir = getStoreDir();
     const srcDir = join(storeDir, repo.localPath, normalizedPath);
     const repoBase = resolve(join(storeDir, repo.localPath));
-    if (!resolve(srcDir).startsWith(repoBase + "/"))
+    if (!resolve(srcDir).startsWith(repoBase + sep))
       throw new Error("Invalid item path.");
     try {
       await stat(srcDir);
@@ -767,7 +767,7 @@ async function _deleteUntracked(
 ): Promise<void> {
   const base = resolve(STORE_TYPE_SPECS[type].destDir());
   const target = resolve(join(base, folderName));
-  if (!target.startsWith(base + "/"))
+  if (!target.startsWith(base + sep))
     throw new Error("Invalid folder name.");
   await rm(target, { recursive: true, force: true });
   await reloadAfterAction(type);
