@@ -5,6 +5,7 @@ import { readDomainLists } from "./domain-lists";
 import { INVALIDATE_SCOPE, onInvalidate } from "./cache-valkey";
 import { isUboFilterLine, uboLineToDomain } from "./ubo-filter";
 import { logger } from "./logger";
+import { parseRule, resolveTarget } from "../../shared/domain-target";
 
 interface BlockPatterns {
   exact: Set<string>;
@@ -82,11 +83,8 @@ const _parseReplaceList = (
   raw
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.includes("->"))
-    .map((line) => {
-      const [source, target] = line.split("->").map((s) => s.trim());
-      return { source, target };
-    });
+    .map(parseRule)
+    .filter((rule): rule is { source: string; target: string } => rule !== null);
 
 const _parseScoreList = (raw: string): { pattern: string; score: number }[] =>
   raw
@@ -144,10 +142,16 @@ export const applyDomainReplacements = async (
     try {
       const url = new URL(result.url);
       for (const rule of rules) {
-        if (_matchesDomain(url.hostname, rule.source)) {
-          url.hostname = rule.target;
-          return { ...result, url: url.toString() };
+        if (!_matchesDomain(url.hostname, rule.source)) continue;
+        const replaced = resolveTarget(result.url, rule.target);
+        if (!replaced) {
+          logger.debug(
+            "domain-filter",
+            `unusable replace target "${rule.target}" for "${result.url}"`,
+          );
+          return result;
         }
+        return { ...result, url: replaced };
       }
       return result;
     } catch (err) {

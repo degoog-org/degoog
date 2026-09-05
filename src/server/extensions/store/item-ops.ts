@@ -1,5 +1,5 @@
 import { readFile, mkdir, readdir, stat, rm } from "fs/promises";
-import { join, resolve, dirname } from "path";
+import { join, dirname } from "path";
 import { removeSettings } from "../../utils/plugin-settings";
 import { isVersionAtLeast, getAppVersion } from "../../../shared/utils/version";
 import {
@@ -22,6 +22,7 @@ import type { StoreStreamPhase } from "../../../shared/store-stream";
 import { bumpPluginRegistryReload } from "../registry-factory";
 import { runStoreExclusive } from "./store-lock";
 import { makeExtID } from "../../utils/extension-id";
+import { resolveChild } from "../../utils/paths";
 import { logger } from "../../utils/logger";
 import type { ShortcutBinding, ShortcutKind } from "../../../shared/shortcuts";
 import { markRestartPending } from "../../utils/restart-state";
@@ -551,10 +552,11 @@ async function _installItem(
   _installingSet.add(key);
   try {
     const storeDir = getStoreDir();
-    const srcDir = join(storeDir, repo.localPath, normalizedPath);
-    const repoBase = resolve(join(storeDir, repo.localPath));
-    if (!resolve(srcDir).startsWith(repoBase + "/"))
-      throw new Error("Invalid item path.");
+    const srcDir = resolveChild(
+      join(storeDir, repo.localPath),
+      normalizedPath,
+    );
+    if (!srcDir) throw new Error("Invalid item path.");
     try {
       await stat(srcDir);
     } catch (err) {
@@ -765,10 +767,11 @@ async function _deleteUntracked(
   type: ExtensionStoreType,
   folderName: string,
 ): Promise<void> {
-  const base = resolve(STORE_TYPE_SPECS[type].destDir());
-  const target = resolve(join(base, folderName));
-  if (!target.startsWith(base + "/"))
-    throw new Error("Invalid folder name.");
+  const target = resolveChild(
+    STORE_TYPE_SPECS[type].destDir(),
+    folderName,
+  );
+  if (!target) throw new Error("Invalid folder name.");
   await rm(target, { recursive: true, force: true });
   await reloadAfterAction(type);
 }

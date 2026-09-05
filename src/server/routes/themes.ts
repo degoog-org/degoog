@@ -45,6 +45,7 @@ router.get("/theme/style.css", (c) => {
   if (!theme?.compiledCss) return c.notFound();
   return c.body(theme.compiledCss, 200, {
     "Content-Type": "text/css; charset=utf-8",
+    "Cache-Control": "no-cache",
   });
 });
 

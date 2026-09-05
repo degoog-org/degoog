@@ -292,6 +292,7 @@ export const getInstalledSearchTypes = async (
   const types = new Set<string>();
   for (const e of allEngineEntries()) {
     if (excludeId && e.id === excludeId) continue;
+    if (await isDisabled(e.id)) continue;
     for (const t of await resolveEngineTypes(e)) types.add(t);
   }
   return [...types];

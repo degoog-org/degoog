@@ -7,9 +7,13 @@ import { logger } from "../../utils/logger";
 export function registerSearchTabsRoutes(router: Hono): void {
   router.get("/api/search-tabs", async (c) => {
     const seen = new Set<string>();
+    const seenLower = new Set<string>();
     const list: { id: string; name: string; icon: string | null }[] = [];
 
     for (const engineType of await getCustomEngineTypes()) {
+      const lower = engineType.toLowerCase();
+      if (seenLower.has(lower)) continue;
+      seenLower.add(lower);
       seen.add(engineType);
       list.push({
         id: `engine:${engineType}`,

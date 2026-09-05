@@ -233,7 +233,7 @@
       "domain-block-regex-help": "Regex entries must be wrapped in /slashes/ and use JavaScript RegExp syntax (no flags). They are matched against the URL hostname only (not the full URL). Example: /(^|\\\\.)instagram\\\\.com$/ blocks instagram.com and all subdomains; /^www\\\\.instagram\\\\.com$/ blocks only www.instagram.com.",
       "domain-block-ui-enable": "Allow blocking from search results",
       "domain-block-ui-desc": "When enabled, authenticated users can block a domain directly from a kebab menu on each result row. Hidden on public or unauthenticated instances regardless of this setting.",
-      "domain-replace-desc": "Replace domains in search result URLs. Use the format: source.com -> target.com (one per line). Subdomains are matched automatically, and the path is preserved.",
+      "domain-replace-desc": "Replace domains in search result URLs. Use the format: source.com -> target.com (one per line). Subdomains are matched automatically, and the path is preserved. A target can also be a full URL, which is used as-is, with optional {{url}}, {{hostname}}, {{path}}, {{query}} and {{hash}} placeholders taken from the original result.",
       "domain-replace-enable": "Enable domain replacement",
       "domain-replace-enable-aria": "Enable domain replacement",
       "domain-replace-list-label": "Replacement rules (one per line)",

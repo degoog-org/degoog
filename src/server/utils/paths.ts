@@ -10,6 +10,15 @@ export const resolveContained = (
   return target;
 };
 
+export const resolveChild = (
+  root: string,
+  ...parts: string[]
+): string | null => {
+  const base = resolve(root);
+  const target = resolveContained(base, ...parts);
+  return target && target !== base ? target : null;
+};
+
 const _dataDir = (): string =>
   process.env.DEGOOG_DATA_DIR ?? join(process.cwd(), "data");
 

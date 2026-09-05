@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import type { CachedEngineRun } from "../../src/server/utils/cache";
 import {
   clear,
   engineErrored,
   engineRunCache,
+  type CachedEngineRun,
 } from "../../src/server/utils/cache";
 
 const mockRun = (

@@ -213,7 +213,7 @@
       "domain-block-ui-enable": "Consenti blocco dai risultati di ricerca",
       "domain-block-ui-desc": "Quando abilitato, gli utenti autenticati possono bloccare un dominio direttamente dal menu a tendina su ogni riga di risultati. Nascosto su istanze pubbliche o non autenticate indipendentemente da questa impostazione.",
       "domain-block-regex-help": "Le voci regex devono essere racchiuse tra /slash/ e usare la sintassi RegExp di JavaScript (senza flag). Vengono confrontate solo con l'hostname dell'URL (non con l'URL completo). Esempio: /(^|\\\\.)instagram\\\\.com$/ blocca instagram.com e tutti i sottodomini; /^www\\\\.instagram\\\\.com$/ blocca solo www.instagram.com.",
-      "domain-replace-desc": "Sostituisci i domini negli URL dei risultati di ricerca. Usa il formato: origine.com -> destinazione.com (una regola per riga). I sottodomini vengono confrontati automaticamente e il percorso viene preservato.",
+      "domain-replace-desc": "Sostituisci i domini negli URL dei risultati di ricerca. Usa il formato: origine.com -> destinazione.com (una regola per riga). I sottodomini vengono confrontati automaticamente e il percorso viene preservato. La destinazione può anche essere un URL completo, usato così com'è, con i segnaposto opzionali {{url}}, {{hostname}}, {{path}}, {{query}} e {{hash}} presi dal risultato originale.",
       "domain-replace-enable": "Abilita sostituzione dei domini",
       "domain-replace-enable-aria": "Abilita sostituzione dei domini",
       "domain-replace-list-label": "Regole di sostituzione (una per riga)",
