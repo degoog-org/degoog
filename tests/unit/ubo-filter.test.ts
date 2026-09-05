@@ -33,6 +33,10 @@ describe("uBO line to domain", () => {
     expect(uboLineToDomain("||Ads.Example.com^")).toBe("ads.example.com");
   });
 
+  test("extracts a hostname-only network filter with options", () => {
+    expect(uboLineToDomain("||Ads.Example.com^$script")).toBe("ads.example.com");
+  });
+
   test("does not treat attribute names containing href as href selectors", () => {
     expect(uboLineToDomain('google.com##a[data-href*="tracking.example"]')).toBeNull();
     expect(uboLineToDomain('google.com##a[not-href*="tracking.example"]')).toBeNull();

@@ -21,8 +21,9 @@ export const getAdapter = (): IndexerAdapter => {
 };
 
 export const bootAdapter = async (): Promise<void> => {
+  const adapter = getAdapter();
   try {
-    await getAdapter().boot();
+    await adapter.boot();
   } catch (err) {
     logger.error("indexer", "adapter boot failed", err);
   }

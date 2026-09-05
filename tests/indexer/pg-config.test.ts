@@ -59,6 +59,7 @@ describe("resolvePgConfig", () => {
         user: "degoog",
         database: "degoog",
         password: "hunter2",
+        ssl: "require",
       },
     });
   });
@@ -79,22 +80,23 @@ describe("resolvePgConfig", () => {
         user: "custom-user",
         database: "custom-db",
         password: "secret",
+        ssl: "require",
       },
     });
   });
 
-  test("falls back to sqlite and logs when password is missing for a tcp host", () => {
+  test("rejects a tcp host without a password", () => {
     process.env.DEGOOG_POSTGRES_HOST = "pg.internal";
 
-    expect(resolvePgConfig()).toEqual({ mode: "sqlite" });
+    expect(() => resolvePgConfig()).toThrow("DEGOOG_POSTGRES_PASSWORD");
   });
 
-  test("falls back to sqlite when the port is not a number", () => {
+  test("rejects a non-numeric port", () => {
     process.env.DEGOOG_POSTGRES_HOST = "pg.internal";
     process.env.DEGOOG_POSTGRES_PASSWORD = "secret";
     process.env.DEGOOG_POSTGRES_PORT = "not-a-port";
 
-    expect(resolvePgConfig()).toEqual({ mode: "sqlite" });
+    expect(() => resolvePgConfig()).toThrow("DEGOOG_POSTGRES_PORT");
   });
 
   test("percent-unsafe characters in the password pass through untouched in config mode", () => {
@@ -172,7 +174,23 @@ describe("resolvePgConfig", () => {
     const resolved = resolvePgConfig();
     expect(resolved.mode).toBe("config");
     if (resolved.mode === "config") {
-      expect(resolved.config.ssl).toBeUndefined();
+      expect(resolved.config.ssl).toBe("require");
     }
+  });
+
+  test("rejects insecure named sslmode values", () => {
+    process.env.DEGOOG_POSTGRES_HOST = "pg.internal";
+    process.env.DEGOOG_POSTGRES_PASSWORD = "secret";
+    process.env.DEGOOG_POSTGRES_SSLMODE = "prefer";
+
+    expect(() => resolvePgConfig()).toThrow("not secure enough");
+  });
+
+  test("rejects false sslmode", () => {
+    process.env.DEGOOG_POSTGRES_HOST = "pg.internal";
+    process.env.DEGOOG_POSTGRES_PASSWORD = "secret";
+    process.env.DEGOOG_POSTGRES_SSLMODE = "false";
+
+    expect(() => resolvePgConfig()).toThrow("not secure enough");
   });
 });

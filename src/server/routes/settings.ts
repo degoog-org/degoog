@@ -233,7 +233,7 @@ const _savedBody = (reloaded: boolean): { ok: true; searxReloadFailed?: true } =
 
 const _reconcileIndexerQueue = async (): Promise<void> => {
   const settings = await getInstanceSettings();
-  if (asBoolean(settings.degoogIndexerEnabled)) startQueue();
+  if (asBoolean(settings.degoogIndexerEnabled)) await startQueue();
   else await stopQueue();
 };
 

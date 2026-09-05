@@ -1,6 +1,6 @@
 const HREF_PAYLOAD = /##.*\[\s*href[*^$~|]?=(["'])(.*?)\1/;
 const HOSTNAME = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/;
-const NETWORK_HOST = /^\|\|([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})\^$/i;
+const NETWORK_HOST = /^\|\|([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})\^(?:\$[^\s]+)?$/i;
 
 /** uBlock Origin filter list syntax */
 export const isUboFilterLine = (line: string): boolean =>

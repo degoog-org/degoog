@@ -145,10 +145,7 @@ export const applyDomainReplacements = async (
         if (!_matchesDomain(url.hostname, rule.source)) continue;
         const replaced = resolveTarget(result.url, rule.target);
         if (!replaced) {
-          logger.debug(
-            "domain-filter",
-            `unusable replace target "${rule.target}" for "${result.url}"`,
-          );
+          logger.debug("domain-filter", "unusable domain replacement target");
           return result;
         }
         return { ...result, url: replaced };

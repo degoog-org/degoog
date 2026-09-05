@@ -73,9 +73,9 @@ export const prunePass = async (): Promise<void> => {
   );
 };
 
-export const startQueue = (): void => {
+export const startQueue = async (): Promise<void> => {
   if (_flushTimer) return;
-  void bootAdapter();
+  await bootAdapter();
   _flushTimer = setInterval(() => void flushQueue(), FLUSH_INTERVAL_MS);
   _pruneTimer = setInterval(() => void prunePass(), PRUNE_INTERVAL_MS);
 };

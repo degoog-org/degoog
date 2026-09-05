@@ -1,4 +1,4 @@
-import { readFile, mkdir, readdir, stat, rm } from "fs/promises";
+import { readFile, mkdir, readdir, stat, rm, lstat } from "fs/promises";
 import { join, dirname } from "path";
 import { removeSettings } from "../../utils/plugin-settings";
 import { isVersionAtLeast, getAppVersion } from "../../../shared/utils/version";
@@ -22,7 +22,7 @@ import type { StoreStreamPhase } from "../../../shared/store-stream";
 import { bumpPluginRegistryReload } from "../registry-factory";
 import { runStoreExclusive } from "./store-lock";
 import { makeExtID } from "../../utils/extension-id";
-import { resolveChild } from "../../utils/paths";
+import { resolveChild, resolveRealChild } from "../../utils/paths";
 import { logger } from "../../utils/logger";
 import type { ShortcutBinding, ShortcutKind } from "../../../shared/shortcuts";
 import { markRestartPending } from "../../utils/restart-state";
@@ -75,6 +75,8 @@ async function copyItemDir(
   destDir: string,
   exclude: string[],
 ): Promise<void> {
+  if ((await lstat(srcDir)).isSymbolicLink())
+    throw new Error("Symlinked store items are not supported.");
   await mkdir(destDir, { recursive: true });
   const entries = await readdir(srcDir, { withFileTypes: true });
   for (const e of entries) {
@@ -82,9 +84,11 @@ async function copyItemDir(
       continue;
     const src = join(srcDir, e.name);
     const dest = join(destDir, e.name);
+    if (e.isSymbolicLink())
+      throw new Error("Symlinked store entries are not supported.");
     if (e.isDirectory()) {
       await copyItemDir(src, dest, []);
-    } else {
+    } else if (e.isFile()) {
       await mkdir(dirname(dest), { recursive: true });
       await Bun.write(dest, await Bun.file(src).arrayBuffer());
     }
@@ -140,6 +144,25 @@ export async function reloadAfterAction(
 }
 
 const STORE_METADATA = ["author.json", "screenshots"];
+
+async function resolveStoreItemDir(
+  repoDir: string,
+  normalizedPath: string,
+): Promise<string> {
+  const manifestPath = resolveChild(repoDir, normalizedPath);
+  if (!manifestPath) throw new Error("Invalid item path.");
+  try {
+    if ((await lstat(manifestPath)).isSymbolicLink())
+      throw new Error("Invalid item path.");
+  } catch (err) {
+    if (err instanceof Error && err.message === "Invalid item path.") throw err;
+    logger.debug("store:item", `item path not found ${manifestPath}`, err);
+    throw new Error("Item path not found in repository.");
+  }
+  const srcDir = resolveRealChild(repoDir, normalizedPath);
+  if (!srcDir) throw new Error("Invalid item path.");
+  return srcDir;
+}
 
 function parseDependencyUrl(depUrl: string): {
   repoUrl: string;
@@ -552,11 +575,8 @@ async function _installItem(
   _installingSet.add(key);
   try {
     const storeDir = getStoreDir();
-    const srcDir = resolveChild(
-      join(storeDir, repo.localPath),
-      normalizedPath,
-    );
-    if (!srcDir) throw new Error("Invalid item path.");
+    const repoDir = join(storeDir, repo.localPath);
+    const srcDir = await resolveStoreItemDir(repoDir, normalizedPath);
     try {
       await stat(srcDir);
     } catch (err) {
@@ -564,7 +584,7 @@ async function _installItem(
       throw new Error("Item path not found in repository.");
     }
     const pkg = JSON.parse(
-      await readFile(join(storeDir, repo.localPath, "package.json"), "utf-8"),
+      await readFile(join(repoDir, "package.json"), "utf-8"),
     ) as RepoPackageJson;
     const entries = getEntriesForType(pkg, type);
     const manifest = entries?.find(
@@ -669,7 +689,8 @@ async function _updateItem(
   );
   if (!inst) throw new Error("Item is not installed.");
   const storeDir = getStoreDir();
-  const srcDir = join(storeDir, repo.localPath, normalizedPath);
+  const repoDir = join(storeDir, repo.localPath);
+  const srcDir = await resolveStoreItemDir(repoDir, normalizedPath);
   try {
     await stat(srcDir);
   } catch (err) {
@@ -677,7 +698,7 @@ async function _updateItem(
     throw new Error("Item path not found in repository.");
   }
   const pkg = JSON.parse(
-    await readFile(join(storeDir, repo.localPath, "package.json"), "utf-8"),
+    await readFile(join(repoDir, "package.json"), "utf-8"),
   ) as RepoPackageJson;
   const entries = getEntriesForType(pkg, type);
   const manifest = entries?.find(

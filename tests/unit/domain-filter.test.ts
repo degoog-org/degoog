@@ -239,5 +239,6 @@ describe("domain replacements", () => {
     ]);
 
     expect(out).toHaveLength(1);
+    expect(new URL(out[0].url).hostname).toBe("ok.example");
   });
 });

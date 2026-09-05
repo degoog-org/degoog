@@ -39,6 +39,9 @@ const withTempEngineEnv = async <T>(fn: (dir: string) => Promise<T>): Promise<T>
   try {
     return await fn(indexerDir);
   } finally {
+    const { initEngines } = await import(
+      "../../src/server/extensions/engines/registry"
+    );
     if (prev.dataDir === undefined) delete process.env.DEGOOG_DATA_DIR;
     else process.env.DEGOOG_DATA_DIR = prev.dataDir;
     if (prev.enginesDir === undefined) delete process.env.DEGOOG_ENGINES_DIR;
@@ -51,6 +54,7 @@ const withTempEngineEnv = async <T>(fn: (dir: string) => Promise<T>): Promise<T>
     else process.env.DEGOOG_INDEXER_DIR = prev.indexerDir;
     clearServerSettingsCache();
     clearTypeCache();
+    await initEngines(true);
     rmSync(dir, { recursive: true, force: true });
   }
 };

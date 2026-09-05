@@ -4,7 +4,7 @@ export const PG_DEFAULT_PORT = 5432;
 export const PG_DEFAULT_DATABASE = "degoog";
 export const PG_DEFAULT_USER = "degoog";
 
-export type PgSslMode = "require" | "allow" | "prefer" | "verify-full" | boolean;
+export type PgSslMode = "require" | "verify-full" | boolean;
 
 export interface PgConnectionConfig {
   host: string;
@@ -26,10 +26,13 @@ const parseSsl = (value: string | undefined): PgSslMode | undefined => {
   if (!value) return undefined;
   const normalized = value.toLowerCase();
   if (normalized === "true") return true;
-  if (normalized === "false") return false;
-  if (["require", "allow", "prefer", "verify-full"].includes(normalized)) {
+  if (normalized === "false")
+    throw new Error(`DEGOOG_POSTGRES_SSLMODE "${value}" is not secure enough`);
+  if (["require", "verify-full"].includes(normalized)) {
     return normalized as PgSslMode;
   }
+  if (["allow", "prefer"].includes(normalized))
+    throw new Error(`DEGOOG_POSTGRES_SSLMODE "${value}" is not secure enough`);
   logger.warn(
     "indexer",
     `unrecognized DEGOOG_POSTGRES_SSLMODE value "${value}", ignoring`,
@@ -52,24 +55,18 @@ const _resolve = (): PgResolved => {
   const password = process.env.DEGOOG_POSTGRES_PASSWORD;
 
   if (!socket && !password) {
-    logger.error(
-      "indexer",
-      "DEGOOG_POSTGRES_HOST is set but DEGOOG_POSTGRES_PASSWORD is missing, falling back to SQLite",
-    );
-    return { mode: "sqlite" };
+    throw new Error("DEGOOG_POSTGRES_HOST requires DEGOOG_POSTGRES_PASSWORD");
   }
 
   const portRaw = process.env.DEGOOG_POSTGRES_PORT;
   const port = portRaw ? Number(portRaw) : PG_DEFAULT_PORT;
   if (Number.isNaN(port)) {
-    logger.error(
-      "indexer",
-      `DEGOOG_POSTGRES_PORT "${portRaw}" is not a valid number, falling back to SQLite`,
-    );
-    return { mode: "sqlite" };
+    throw new Error(`DEGOOG_POSTGRES_PORT "${portRaw}" is not a valid number`);
   }
 
-  const ssl = parseSsl(process.env.DEGOOG_POSTGRES_SSLMODE);
+  const ssl =
+    parseSsl(process.env.DEGOOG_POSTGRES_SSLMODE) ??
+    (!socket && password ? "require" : undefined);
 
   const config: PgConnectionConfig = {
     host,
