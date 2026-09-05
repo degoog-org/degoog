@@ -10,7 +10,7 @@
     "start": "bun run src/server/index.ts",
     "start:dev": "DEGOOG_PORT=4445 bun run src/server/index.ts --debug",
     "develop": "yarn build:watch; yarn run stop; yarn run start:dev",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "./node_modules/typescript-7/bin/tsc --noEmit",
     "lint": "eslint src/ tests/",
     "lint:fix": "eslint src/ tests/ --fix",
     "test": "LOG_LEVEL= DEGOOG_SETTINGS_PATH= bun test $(find tests -name '*.test.ts' ! -path '*/stress/*' | sort | tr '\\n' ' ')",
@@ -34,7 +34,8 @@
     "@types/bun": "1.3.14",
     "esbuild": "0.28.1",
     "eslint": "10.8.1",
-    "typescript": "7.0.2",
+    "typescript": "6.0.3",
+    "typescript-7": "npm:typescript@7.0.2",
     "typescript-eslint": "8.66.0"
   },
   "resolutions": {

@@ -87,13 +87,6 @@ interface ResponsePayload {
   results: SearchResult[];
 }
 
-interface RunnerEnvelope<T> {
-  ok: boolean;
-  data?: T;
-  error?: string;
-  trace?: string;
-}
-
 const runnerPath = join(import.meta.dir, "runner.py");
 
 const DEFAULT_ACCEPT_LANGUAGE = "en-US,en;q=0.9";

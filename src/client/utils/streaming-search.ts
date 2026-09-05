@@ -322,8 +322,8 @@ export async function performStreamingSearch(
     if (resultsList) attachVideoPlayers(resultsList);
     if (!isImageType) {
       if (infiniteScrollOn()) {
-        const pagination = document.getElementById("pagination");
-        if (pagination) pagination.innerHTML = "";
+        const paginationEl = document.getElementById("pagination");
+        if (paginationEl) paginationEl.innerHTML = "";
         setupInfinite(type);
       } else {
         renderPagination(

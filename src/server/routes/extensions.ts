@@ -20,6 +20,8 @@ import { getPluginCssIds, getPluginCssById } from "../utils/plugin-assets";
 import {
   ExtensionStoreType,
   type ExtensionMeta,
+  type FieldOption,
+  type SettingField,
 } from "../types";
 import {
   getTransportExtensionMeta,
@@ -41,7 +43,6 @@ import {
   findOptionsProvider,
   resolveExtension,
 } from "../extensions/resolve";
-import type { FieldOption, SettingField } from "../types";
 
 const router = new Hono();
 

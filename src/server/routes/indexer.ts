@@ -1,5 +1,4 @@
-import { Hono } from "hono";
-import type { Context } from "hono";
+import { Hono, type Context } from "hono";
 import { readFile } from "fs/promises";
 import { statSync } from "fs";
 import {

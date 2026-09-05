@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import type { CachedEngineRun } from "../../src/server/utils/cache";
 import {
+  type CachedEngineRun,
   clear,
   engineErrored,
   engineRunCache,
