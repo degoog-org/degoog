@@ -3,7 +3,7 @@ import { getTraps } from "../extensions/honeypot/registry";
 import { blockIp, honeypotOn } from "../utils/bot-trap";
 import { getClientIp } from "../utils/request";
 import { logger } from "../utils/logger";
-import { getBaseUrl } from "../utils/base-url";
+import { getPublicUrl } from "../utils/public-url";
 
 import "../extensions/honeypot/builtins/wp-trap";
 import "../extensions/honeypot/builtins/env-trap";
@@ -33,7 +33,7 @@ for (const trap of getTraps()) {
 
 router.get("/sitemap.xml", async (c) => {
   if (!(await honeypotOn())) return c.text("Not Found", 404);
-  const base = getBaseUrl() ?? "";
+  const base = getPublicUrl(c);
   const allPaths = getTraps().flatMap((t) => t.paths);
   const entries = allPaths
     .map(
