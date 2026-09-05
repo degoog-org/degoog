@@ -1,15 +1,21 @@
 import type { IndexerAdapter } from "../types/adapter";
 import { SqliteAdapter, PgAdapter } from "../adapters";
 import { logger } from "../../utils/logger";
+import { resolvePgConfig } from "./pg-config";
 
 let _adapter: IndexerAdapter | null = null;
 
-export const isPostgresMode = (): boolean => !!process.env.DEGOOG_POSTGRES;
+export const isPostgresMode = (): boolean => resolvePgConfig().mode !== "sqlite";
 
 export const getAdapter = (): IndexerAdapter => {
   if (!_adapter) {
-    const pgUrl = process.env.DEGOOG_POSTGRES;
-    _adapter = pgUrl ? new PgAdapter(pgUrl) : new SqliteAdapter();
+    const resolved = resolvePgConfig();
+    _adapter =
+      resolved.mode === "url"
+        ? new PgAdapter(resolved.url)
+        : resolved.mode === "config"
+          ? new PgAdapter(resolved.config)
+          : new SqliteAdapter();
   }
   return _adapter;
 };

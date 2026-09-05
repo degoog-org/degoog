@@ -8,6 +8,7 @@ import { MAX_PAGE } from "../constants";
 import {
   closeMediaPreview,
   destroyMediaObserver,
+  MediaPreviewCloseMode,
   setupMediaObserver,
   syncMediaPreviewPanel,
 } from "../modules/media/media";
@@ -112,7 +113,7 @@ export async function performStreamingSearch(
   );
 
   setActiveTab(type);
-  closeMediaPreview();
+  closeMediaPreview(MediaPreviewCloseMode.Reset);
   abortAcReq();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));
@@ -174,7 +175,7 @@ export async function performStreamingSearch(
     page: 1,
     imageFilter: isImageType ? { ...state.imageFilter } : undefined,
   };
-  const searchUrl = `/search?${urlParams.toString()}`;
+  const searchUrl = `${getBase()}/search?${urlParams.toString()}`;
   if (isInitialLoad) {
     history.replaceState(historyState, "", searchUrl);
   } else {

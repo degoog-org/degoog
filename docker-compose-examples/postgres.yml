@@ -24,6 +24,17 @@ services:
       # above even on a local network.
       DEGOOG_PUBLIC_INSTANCE: "false"
       DEGOOG_POSTGRES: "postgresql://degoog:changeme@degoog-postgres:5432/degoog"
+      # Instead of the URL above, you can pass separate values. Useful when
+      # your deployment hands you credentials as individual keys, such as a
+      # Kubernetes secret (CNPG, bjw-s app-template). DEGOOG_POSTGRES wins
+      # when both are set, so drop it to use these.
+      # A HOST starting with / is a unix socket (peer auth, no password),
+      # which a URL cannot express. See the docs for details.
+      # DEGOOG_POSTGRES_HOST: "degoog-postgres"
+      # DEGOOG_POSTGRES_PORT: "5432"
+      # DEGOOG_POSTGRES_USER: "degoog"
+      # DEGOOG_POSTGRES_PASSWORD: "changeme"
+      # DEGOOG_POSTGRES_DATABASE: "degoog"
     depends_on:
       degoog-postgres:
         condition: service_healthy
