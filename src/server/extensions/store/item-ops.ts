@@ -1,5 +1,6 @@
 import { readFile, mkdir, readdir, stat, rm } from "fs/promises";
 import { join, resolve, dirname } from "path";
+import { resolveContained } from "../../utils/paths";
 import { removeSettings } from "../../utils/plugin-settings";
 import { isVersionAtLeast, getAppVersion } from "../../../shared/utils/version";
 import {
@@ -551,9 +552,9 @@ async function _installItem(
   _installingSet.add(key);
   try {
     const storeDir = getStoreDir();
-    const srcDir = join(storeDir, repo.localPath, normalizedPath);
     const repoBase = resolve(join(storeDir, repo.localPath));
-    if (!resolve(srcDir).startsWith(repoBase + "/"))
+    const srcDir = resolveContained(repoBase, normalizedPath);
+    if (!srcDir || srcDir === repoBase)
       throw new Error("Invalid item path.");
     try {
       await stat(srcDir);
@@ -766,9 +767,8 @@ async function _deleteUntracked(
   folderName: string,
 ): Promise<void> {
   const base = resolve(STORE_TYPE_SPECS[type].destDir());
-  const target = resolve(join(base, folderName));
-  if (!target.startsWith(base + "/"))
-    throw new Error("Invalid folder name.");
+  const target = resolveContained(base, folderName);
+  if (!target || target === base) throw new Error("Invalid folder name.");
   await rm(target, { recursive: true, force: true });
   await reloadAfterAction(type);
 }
