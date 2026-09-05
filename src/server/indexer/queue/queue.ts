@@ -13,6 +13,7 @@ const _mutexes = new Map<string, RunExclusive>();
 
 let _flushTimer: ReturnType<typeof setInterval> | null = null;
 let _pruneTimer: ReturnType<typeof setInterval> | null = null;
+let _starting: Promise<void> | null = null;
 
 export const mutexFor = (type: string): RunExclusive => {
   let m = _mutexes.get(type);
@@ -73,14 +74,24 @@ export const prunePass = async (): Promise<void> => {
   );
 };
 
-export const startQueue = async (): Promise<void> => {
-  if (_flushTimer) return;
-  await bootAdapter();
-  _flushTimer = setInterval(() => void flushQueue(), FLUSH_INTERVAL_MS);
-  _pruneTimer = setInterval(() => void prunePass(), PRUNE_INTERVAL_MS);
+const _boot = async (): Promise<void> => {
+  try {
+    await bootAdapter();
+    _flushTimer = setInterval(() => void flushQueue(), FLUSH_INTERVAL_MS);
+    _pruneTimer = setInterval(() => void prunePass(), PRUNE_INTERVAL_MS);
+  } finally {
+    _starting = null;
+  }
+};
+
+export const startQueue = (): Promise<void> => {
+  if (_flushTimer) return Promise.resolve();
+  if (!_starting) _starting = _boot();
+  return _starting;
 };
 
 export const stopQueue = async (): Promise<void> => {
+  if (_starting) await _starting.catch(() => {});
   if (_flushTimer) {
     clearInterval(_flushTimer);
     _flushTimer = null;

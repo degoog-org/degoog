@@ -1,7 +1,10 @@
 import type { IndexerAdapter } from "../types/adapter";
 import { SqliteAdapter, PgAdapter } from "../adapters";
 import { logger } from "../../utils/logger";
+import { withTimeout } from "../../utils/with-timeout";
 import { resolvePgConfig } from "./pg-config";
+
+export const BOOT_TIMEOUT_MS = 30_000;
 
 let _adapter: IndexerAdapter | null = null;
 
@@ -21,9 +24,8 @@ export const getAdapter = (): IndexerAdapter => {
 };
 
 export const bootAdapter = async (): Promise<void> => {
-  const adapter = getAdapter();
   try {
-    await adapter.boot();
+    await withTimeout(getAdapter().boot(), BOOT_TIMEOUT_MS, "adapter boot");
   } catch (err) {
     logger.error("indexer", "adapter boot failed", err);
   }

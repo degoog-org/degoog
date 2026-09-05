@@ -1,5 +1,6 @@
-import { readFile, mkdir, readdir, stat, rm, lstat } from "fs/promises";
+import { readFile, mkdir, readdir, rename, stat, rm, lstat } from "fs/promises";
 import { join, dirname } from "path";
+import { randomUUID } from "crypto";
 import { removeSettings } from "../../utils/plugin-settings";
 import { isVersionAtLeast, getAppVersion } from "../../../shared/utils/version";
 import {
@@ -144,6 +145,23 @@ export async function reloadAfterAction(
 }
 
 const STORE_METADATA = ["author.json", "screenshots"];
+
+async function stageItemDir(
+  srcDir: string,
+  destBase: string,
+  folderName: string,
+  clearExisting?: () => Promise<void>,
+): Promise<void> {
+  const staged = join(destBase, `.staging-${process.pid}-${randomUUID()}`);
+  try {
+    await copyItemDir(srcDir, staged, STORE_METADATA);
+    await clearExisting?.();
+    await rename(staged, join(destBase, folderName));
+  } catch (err) {
+    await rm(staged, { recursive: true, force: true }).catch(() => {});
+    throw err;
+  }
+}
 
 async function resolveStoreItemDir(
   repoDir: string,
@@ -518,6 +536,7 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
         continue;
       }
       for (const folderName of entries) {
+        if (folderName.startsWith(".")) continue;
         if (managedFolders.has(folderName)) continue;
         try {
           const s = await stat(join(destDir, folderName));
@@ -611,7 +630,7 @@ async function _installItem(
     } catch (e) {
       if (e instanceof Error && e.message.includes("already exists")) throw e;
     }
-    await copyItemDir(srcDir, destDir, STORE_METADATA);
+    await stageItemDir(srcDir, destBase, folderName);
     freshData.installed.push({
       repoUrl: repo.url,
       type,
@@ -707,15 +726,16 @@ async function _updateItem(
   const destBase = getDestDir(type);
   const destDir = join(destBase, inst.installedAs);
   const lowerTarget = inst.installedAs.toLowerCase();
-  const siblings = await readdir(destBase).catch(() => [] as string[]);
-  for (const entry of siblings) {
-    if (entry.toLowerCase() === lowerTarget) {
-      await rm(join(destBase, entry), { recursive: true, force: true }).catch(
-        () => {},
-      );
+  await stageItemDir(srcDir, destBase, inst.installedAs, async () => {
+    const siblings = await readdir(destBase).catch(() => [] as string[]);
+    for (const entry of siblings) {
+      if (entry.toLowerCase() === lowerTarget) {
+        await rm(join(destBase, entry), { recursive: true, force: true }).catch(
+          () => {},
+        );
+      }
     }
-  }
-  await copyItemDir(srcDir, destDir, STORE_METADATA);
+  });
   if (manifest?.version) inst.version = manifest.version;
   if (manifest?.minDegoogVersion)
     inst.minDegoogVersion = manifest.minDegoogVersion;

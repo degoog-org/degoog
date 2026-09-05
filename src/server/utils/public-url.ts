@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import { getBasePath, getBaseUrl } from "./base-url";
 import { logger } from "./logger";
+import { isProxyTrusted } from "./request";
 
 interface PublicReq {
   url: string;
@@ -39,6 +40,10 @@ export const buildPublicUrl = (
 export const getPublicUrl = (c: Context): string =>
   buildPublicUrl(getBaseUrl(), getBasePath(), {
     url: c.req.url,
-    proto: c.req.header("x-forwarded-proto"),
-    host: c.req.header("x-forwarded-host") ?? c.req.header("host"),
+    ...(isProxyTrusted()
+      ? {
+          proto: c.req.header("x-forwarded-proto"),
+          host: c.req.header("x-forwarded-host") ?? c.req.header("host"),
+        }
+      : {}),
   });
