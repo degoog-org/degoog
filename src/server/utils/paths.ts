@@ -1,3 +1,4 @@
+import { realpathSync } from "fs";
 import { join, resolve, sep } from "path";
 
 export const resolveContained = (
@@ -8,6 +9,29 @@ export const resolveContained = (
   const target = resolve(base, ...parts);
   if (target !== base && !target.startsWith(base + sep)) return null;
   return target;
+};
+
+export const resolveChild = (
+  root: string,
+  ...parts: string[]
+): string | null => {
+  const base = resolve(root);
+  const target = resolveContained(base, ...parts);
+  return target && target !== base ? target : null;
+};
+
+export const resolveRealChild = (
+  root: string,
+  ...parts: string[]
+): string | null => {
+  try {
+    const base = realpathSync(root);
+    const target = realpathSync(resolve(base, ...parts));
+    if (target === base || !resolveContained(base, target)) return null;
+    return target;
+  } catch {
+    return null;
+  }
 };
 
 const _dataDir = (): string =>

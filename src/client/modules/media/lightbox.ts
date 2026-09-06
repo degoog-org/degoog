@@ -1,3 +1,7 @@
+import { openOverlay, closeOverlay, discardOverlay } from "../../utils/overlay-history";
+
+export const LIGHTBOX_OVERLAY = "lightbox";
+
 let _scale = 1;
 let _tx = 0;
 let _ty = 0;
@@ -32,15 +36,23 @@ export const openLightbox = (src: string): void => {
   img.src = src;
   _reset(img, wrap);
   lb.classList.add("open");
+  openOverlay(LIGHTBOX_OVERLAY, () => closeLightbox(true));
 };
 
-export const closeLightbox = (): void => {
+export const closeLightbox = (fromHistory = false): void => {
   const lb = document.getElementById("img-lightbox");
   const img = document.getElementById("img-lightbox-img") as HTMLImageElement | null;
   if (!lb || !img) return;
+  const wasOpen = lb.classList.contains("open");
   lb.classList.remove("open");
   img.src = "";
+  if (wasOpen && !fromHistory) closeOverlay(LIGHTBOX_OVERLAY);
 };
+
+export const dropLbOverlay = (): void => discardOverlay(LIGHTBOX_OVERLAY);
+
+export const isLbOpen = (): boolean =>
+  document.getElementById("img-lightbox")?.classList.contains("open") ?? false;
 
 export const initLightbox = (): void => {
   const lb = document.getElementById("img-lightbox");
@@ -48,8 +60,8 @@ export const initLightbox = (): void => {
   const wrap = document.getElementById("img-lightbox-wrap");
   if (!lb || !img || !wrap) return;
 
-  document.getElementById("img-lightbox-close")?.addEventListener("click", closeLightbox);
-  document.getElementById("img-lightbox-bg")?.addEventListener("click", closeLightbox);
+  document.getElementById("img-lightbox-close")?.addEventListener("click", () => closeLightbox());
+  document.getElementById("img-lightbox-bg")?.addEventListener("click", () => closeLightbox());
 
   document.addEventListener("keydown", (e) => {
     if (!lb.classList.contains("open")) return;

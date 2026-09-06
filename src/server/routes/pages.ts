@@ -1,5 +1,4 @@
 import { Context, Hono } from "hono";
-import { logger } from "../utils/logger";
 import { SETTINGS_TABS } from "../../shared/settings-tabs";
 import {
   getDefaultEngineConfig,
@@ -20,6 +19,7 @@ import {
 import { ping, verifyToken } from "../utils/link-token";
 import { getClientIp } from "../utils/request";
 import { getBasePath, getBaseUrl } from "../utils/base-url";
+import { getPublicUrl } from "../utils/public-url";
 import { escapeHtml } from "../utils/text";
 import { FAKE_RESULTS } from "../../shared/fake-results";
 import { getInstanceSettings } from "../utils/server-settings";
@@ -226,24 +226,7 @@ router.get("/api/engines", async (c) => {
 });
 
 router.get("/opensearch.xml", (c) => {
-  const proto =
-    c.req.header("x-forwarded-proto") ||
-    new URL(c.req.url).protocol.replace(":", "");
-  const host =
-    c.req.header("x-forwarded-host") ||
-    c.req.header("host") ||
-    new URL(c.req.url).host;
-  const basePath = BASE_URL
-    ? (() => {
-      try {
-        return new URL(BASE_URL).pathname.replace(/\/+$/, "");
-      } catch (err) {
-        logger.debug("pages", `invalid DEGOOG_BASE_URL "${BASE_URL}"`, err);
-        return BASE_URL;
-      }
-    })()
-    : "";
-  return c.body(buildOpenSearchXml(`${proto}://${host}${basePath}`), 200, {
+  return c.body(buildOpenSearchXml(getPublicUrl(c)), 200, {
     "Content-Type": "application/opensearchdescription+xml; charset=utf-8",
   });
 });

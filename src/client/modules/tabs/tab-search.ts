@@ -16,7 +16,7 @@ import {
   performStreamingSearch,
 } from "../../utils/streaming-search";
 import { renderTemplate } from "../../utils/template";
-import { closeMediaPreview, destroyMediaObserver, setupMediaObserver, syncMediaPreviewPanel } from "../media/media";
+import { closeMediaPreview, destroyMediaObserver, MediaPreviewCloseMode, setupMediaObserver, syncMediaPreviewPanel } from "../media/media";
 import {
   buildResultContext,
   clearSlotPanels,
@@ -64,7 +64,7 @@ export async function performTabSearch(
   destroyMediaObserver();
 
   setActiveTab(`tab:${tabId}`);
-  closeMediaPreview();
+  closeMediaPreview(MediaPreviewCloseMode.Reset);
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));
 

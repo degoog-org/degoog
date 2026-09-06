@@ -3,10 +3,17 @@ import { asBoolean } from "./plugin-settings";
 import { getInstanceSettings } from "./server-settings";
 import { readDomainLists } from "./domain-lists";
 import { INVALIDATE_SCOPE, onInvalidate } from "./cache-valkey";
+import { isUboFilterLine, uboLineToDomain } from "./ubo-filter";
 import { logger } from "./logger";
+import { parseRule, resolveTarget } from "../../shared/domain-target";
+
+interface BlockPatterns {
+  exact: Set<string>;
+  regex: RegExp[];
+}
 
 interface ParsedLists {
-  block: string[];
+  block: BlockPatterns;
   replace: { source: string; target: string }[];
   score: { pattern: string; score: number }[];
 }
@@ -26,11 +33,49 @@ const _matchesDomain = (hostname: string, pattern: string): boolean => {
   return hostname === pattern || hostname.endsWith(`.${pattern}`);
 };
 
-const _parseBlockList = (raw: string): string[] =>
-  raw
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
+const _isRegexPattern = (line: string): boolean =>
+  line.length > 2 && line.startsWith("/") && line.endsWith("/");
+
+/**everything is resolved once at parse time*/
+const _parseBlockList = (raw: string): BlockPatterns => {
+  const exact = new Set<string>();
+  const regex: RegExp[] = [];
+
+  for (const line of raw.split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed.length === 0) continue;
+
+    if (isUboFilterLine(trimmed)) {
+      const domain = uboLineToDomain(trimmed);
+      if (domain) exact.add(domain);
+      continue;
+    }
+
+    if (_isRegexPattern(trimmed)) {
+      try {
+        regex.push(new RegExp(trimmed.slice(1, -1)));
+      } catch (err) {
+        logger.debug("domain-filter", `invalid block regex "${trimmed}"`, err);
+      }
+      continue;
+    }
+
+    exact.add(trimmed.toLowerCase());
+  }
+
+  return { exact, regex };
+};
+
+const _matchesBlock = (hostname: string, patterns: BlockPatterns): boolean => {
+  let candidate = hostname;
+  for (;;) {
+    if (patterns.exact.has(candidate)) return true;
+    const dot = candidate.indexOf(".");
+    if (dot === -1) break;
+    candidate = candidate.slice(dot + 1);
+  }
+  return patterns.regex.some((re) => re.test(hostname));
+};
 
 const _parseReplaceList = (
   raw: string,
@@ -38,11 +83,8 @@ const _parseReplaceList = (
   raw
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line.includes("->"))
-    .map((line) => {
-      const [source, target] = line.split("->").map((s) => s.trim());
-      return { source, target };
-    });
+    .map(parseRule)
+    .filter((rule): rule is { source: string; target: string } => rule !== null);
 
 const _parseScoreList = (raw: string): { pattern: string; score: number }[] =>
   raw
@@ -74,12 +116,12 @@ export const filterBlockedDomains = async (
   if (!asBoolean(settings.domainBlockEnabled)) return results;
 
   const patterns = (await getParsed()).block;
-  if (patterns.length === 0) return results;
+  if (patterns.exact.size === 0 && patterns.regex.length === 0) return results;
 
   return results.filter((result) => {
     try {
       const hostname = new URL(result.url).hostname;
-      return !patterns.some((pattern) => _matchesDomain(hostname, pattern));
+      return !_matchesBlock(hostname, patterns);
     } catch (err) {
       logger.debug("domain-filter", `invalid result URL "${result.url}"`, err);
       return true;
@@ -100,10 +142,13 @@ export const applyDomainReplacements = async (
     try {
       const url = new URL(result.url);
       for (const rule of rules) {
-        if (_matchesDomain(url.hostname, rule.source)) {
-          url.hostname = rule.target;
-          return { ...result, url: url.toString() };
+        if (!_matchesDomain(url.hostname, rule.source)) continue;
+        const replaced = resolveTarget(result.url, rule.target);
+        if (!replaced) {
+          logger.debug("domain-filter", "unusable domain replacement target");
+          return result;
         }
+        return { ...result, url: replaced };
       }
       return result;
     } catch (err) {

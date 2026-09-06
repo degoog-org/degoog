@@ -14,19 +14,22 @@ import { logger } from "../../../utils/logger";
 import { initPgSchema } from "./schema";
 import { runPgPrune } from "./prune";
 import { createHash } from "crypto";
+import type { PgConnectionConfig } from "../../db/pg-config";
 
 const IMPORT_BATCH_SIZE = 500;
+const POOL_OPTIONS = { max: 10, idle_timeout: 30, connect_timeout: 10 };
+
+export type PgConnectionInput = string | PgConnectionConfig;
 
 export class PgAdapter implements IndexerAdapter {
   private readonly _sql: ReturnType<typeof postgres>;
   private readonly _types = new Set<string>();
 
-  constructor(url: string) {
-    this._sql = postgres(url, {
-      max: 10,
-      idle_timeout: 30,
-      connect_timeout: 10,
-    });
+  constructor(connection: PgConnectionInput) {
+    this._sql =
+      typeof connection === "string"
+        ? postgres(connection, POOL_OPTIONS)
+        : postgres({ ...connection, ...POOL_OPTIONS });
   }
 
   async boot(): Promise<void> {

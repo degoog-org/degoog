@@ -20,6 +20,7 @@ import { applyDefaults } from "../utils/sync";
 import { initOptionsDropdown } from "../utils/time-filter";
 import { initImgFilters } from "./filters/image-filters";
 import { initMediaPreview } from "./media/media-preview";
+import { onOverlayPop } from "../utils/overlay-history";
 import { performTabSearch } from "./tabs/tab-search";
 import { initTabs } from "./tabs/tabs";
 
@@ -288,6 +289,8 @@ export async function init(): Promise<void> {
   });
 
   window.addEventListener("popstate", (e) => {
+    if (onOverlayPop(e)) return;
+
     const hs = e.state as DegoogHistoryState | null;
     if (hs?.degoog) {
       state.isInitialLoad = true;
