@@ -13,6 +13,11 @@ import { join } from "path";
 import { updateItem } from "../../src/server/extensions/store/item-ops";
 import { ExtensionStoreType } from "../../src/server/types";
 
+const DIR_LINK_TYPE = process.platform === "win32" ? "junction" : "dir";
+
+const linkDir = (target: string, path: string): void =>
+  symlinkSync(target, path, DIR_LINK_TYPE);
+
 const repoUrl = "https://example.com/acme/repo.git";
 const installedAs = "acme-repo-demo";
 
@@ -83,7 +88,7 @@ describe("updateItem staging", () => {
   test("keeps the installed copy when the source contains a nested symlink", async () => {
     const { repoItemDir, installedDir } = seedDataDir();
     mkdirSync(join(repoItemDir, "assets"));
-    symlinkSync(tempDir!, join(repoItemDir, "assets", "escape"));
+    linkDir(tempDir!, join(repoItemDir, "assets", "escape"));
 
     await expect(
       updateItem(repoUrl, "engines/demo", ExtensionStoreType.Engine),

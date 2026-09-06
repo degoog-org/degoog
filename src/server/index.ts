@@ -185,7 +185,10 @@ process.on("SIGINT", () => shutdown("SIGINT"));
 Promise.all([initServerKey(), initExtensionRegistries()])
   .then(async () => {
     const settings = await getInstanceSettings();
-    if (asBoolean(settings.degoogIndexerEnabled)) await startQueue();
+    if (asBoolean(settings.degoogIndexerEnabled))
+      await startQueue().catch((err) =>
+        logger.error("indexer", "queue start failed", err),
+      );
 
     for (const [name] of getTransportWsHandlers()) {
       app.get(`/ws/${name}/:password?`, upgradeWebSocket((c) => {

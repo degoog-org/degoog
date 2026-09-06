@@ -28,5 +28,6 @@ export const bootAdapter = async (): Promise<void> => {
     await withTimeout(getAdapter().boot(), BOOT_TIMEOUT_MS, "adapter boot");
   } catch (err) {
     logger.error("indexer", "adapter boot failed", err);
+    throw err;
   }
 };

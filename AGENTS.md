@@ -37,7 +37,11 @@ One settings migration exists, `runCanonicalIdsMigration052028`, gated on `__sch
 
 ## Two search paths, one session
 
-Page one arrives over SSE from `search-stream.ts`. Page two and everything else comes as JSON from `_search-handlers.ts`. The same user hits both in the same session, so a change that lands in one path and not the other means page two looks like a different search. There is no test asserting the two agree. Walk both by hand.
+Page one arrives over SSE from `search-stream.ts`. Page two and everything after it comes as JSON from `_search-handlers.ts`. The same user hits both in one session without ever knowing there are two, so a change that lands in one path and not the other means page two looks like a different search engine than page one.
+
+They already share the parts that matter: `parseSearchRequest`, `applyDomainRules`, `selectActiveEngines`, `runIntercepts`, `signResultThumbnails`, `agreedPageTotal`. If your change touches the query, the engine set, the result shape or the page count, put it in the shared helper and let both routes call it. Bolting it onto one route body is how they drift.
+
+If it cannot be shared, run one query through both and tell me in the pull request what you compared: engine set, result count and order, page total, tabs, and the proxied thumbnail URLs. "I checked both paths" on its own tells me nothing. Nothing asserts parity for you. That is a hole in the tests, not permission.
 
 The fan-out is `Promise.all`, and it only survives because `searchSingleEngine` never throws. A broken engine returns an empty run with a status. If you let an exception escape, one dead engine takes down search for everybody.
 
@@ -125,7 +129,7 @@ Same words for the same things, please.
 
 ## Verifying
 
-Smallest thing that proves the change works. `yarn typecheck`, `yarn lint` on what you touched, and the tests covering the area. `bun test` runs the suite/
+Smallest thing that proves the change works. `yarn typecheck`, `yarn lint` on what you touched, and the tests covering the area. `bun test` runs the suite.
 
 Bug fixes come with a regression test where it is practical. If you changed behaviour the tests cover, update them and tell me you did.
 

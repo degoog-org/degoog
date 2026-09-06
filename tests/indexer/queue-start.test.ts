@@ -6,6 +6,7 @@ const factoryReal = { ...(await import(FACTORY_MOD)) };
 
 let bootCalls = 0;
 let releaseBoot: () => void = () => {};
+let failBoot: (err: Error) => void = () => {};
 
 let startQueue: typeof import("../../src/server/indexer/queue/queue").startQueue;
 let stopQueue: typeof import("../../src/server/indexer/queue/queue").stopQueue;
@@ -16,8 +17,9 @@ describe("indexer queue startup", () => {
       ...factoryReal,
       bootAdapter: async () => {
         bootCalls += 1;
-        await new Promise<void>((resolve) => {
+        await new Promise<void>((resolve, reject) => {
           releaseBoot = resolve;
+          failBoot = reject;
         });
       },
     }));
@@ -66,6 +68,23 @@ describe("indexer queue startup", () => {
 
     releaseBoot();
     await restart;
+    await stopQueue();
+  });
+
+  test("a failed adapter boot rejects the start and installs no timers", async () => {
+    bootCalls = 0;
+    const start = startQueue();
+
+    failBoot(new Error("adapter boot timed out"));
+
+    await expect(start).rejects.toThrow("adapter boot timed out");
+
+    const retry = startQueue();
+
+    expect(bootCalls).toBe(2);
+
+    releaseBoot();
+    await retry;
     await stopQueue();
   });
 });
