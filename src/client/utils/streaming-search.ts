@@ -78,13 +78,30 @@ interface StreamDone {
   totalPages?: number;
 }
 
+const SAME_TAB_TARGETS = ["", "_self", "_top", "_parent"];
+const MIDDLE_CLICK = 1;
+
 let _activeSource: EventSource | null = null;
+let _linkWatch: AbortController | null = null;
+
+const dropStream = (source: EventSource): void => {
+  source.close();
+  if (_activeSource !== source) return;
+  _activeSource = null;
+  _linkWatch?.abort();
+  _linkWatch = null;
+};
+
+const staysHere = (ev: MouseEvent, anchor: HTMLAnchorElement): boolean =>
+  !ev.metaKey &&
+  !ev.ctrlKey &&
+  !ev.shiftKey &&
+  ev.button !== MIDDLE_CLICK &&
+  !anchor.hasAttribute("download") &&
+  SAME_TAB_TARGETS.includes(anchor.target);
 
 export function abortStreamingSearch(): void {
-  if (_activeSource) {
-    _activeSource.close();
-    _activeSource = null;
-  }
+  if (_activeSource) dropStream(_activeSource);
 }
 
 export async function performStreamingSearch(
@@ -190,14 +207,17 @@ export async function performStreamingSearch(
 
   const source = new EventSource(streamUrl);
   _activeSource = source;
+  _linkWatch = new AbortController();
 
-  resultsList?.addEventListener("click", (ev) => {
-    const anchor = (ev.target as Element).closest("a");
-    if (anchor && _activeSource === source) {
-      source.close();
-      _activeSource = null;
-    }
-  });
+  resultsList?.addEventListener(
+    "click",
+    (ev) => {
+      const anchor = (ev.target as Element).closest("a");
+      if (!anchor || _activeSource !== source) return;
+      if (staysHere(ev, anchor)) dropStream(source);
+    },
+    { signal: _linkWatch.signal },
+  );
 
   source.addEventListener("engine-result", (e) => {
     const data = JSON.parse(e.data) as StreamEngineResult;
@@ -261,8 +281,7 @@ export async function performStreamingSearch(
 
   source.addEventListener("done", (e) => {
     const data = JSON.parse(e.data) as StreamDone;
-    source.close();
-    _activeSource = null;
+    dropStream(source);
 
     if (!isImageType && data.indexedUrls && data.indexedUrls.length > 0) {
       const indexedSet = new Set(data.indexedUrls);
@@ -342,8 +361,7 @@ export async function performStreamingSearch(
       return;
     }
     console.error("[streaming-search] stream error", e);
-    source.close();
-    _activeSource = null;
+    dropStream(source);
     if (resultsMeta) resultsMeta.textContent = "";
     if (resultsList)
       resultsList.innerHTML = `<div class="no-results">${t("search-templates.search-failed")}</div>`;
