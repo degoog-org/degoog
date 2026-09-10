@@ -468,8 +468,8 @@ export const getEngineExtensionMeta = async (
   const items = allEngineEntries();
   const engineMap = getEngineMap();
   const results: ExtensionMeta[] = [];
-  const transportOptions = getTransportNames();
-  const transportLabels = getTransportDisplayNames();
+  const transportOptions = await getTransportNames();
+  const transportLabels = await getTransportDisplayNames();
 
   const baseScoreField = coreT
     ? {
