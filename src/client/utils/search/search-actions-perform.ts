@@ -5,6 +5,7 @@ import {
   MediaPreviewCloseMode,
 } from "../../modules/media/media";
 import { clearSlotPanels, renderResults } from "../../modules/renderer/render";
+import { teardownInfinite } from "../../modules/renderer/infinite-scroll";
 import { renderImgEngines } from "../../modules/filters/image-filters";
 import { state } from "../../state";
 import {
@@ -253,6 +254,8 @@ async function _performBangCommand(
   isInit = false,
 ): Promise<void> {
   closeMediaPreview(MediaPreviewCloseMode.Reset);
+  abortStreamingSearch();
+  teardownInfinite();
   abortAcReq();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));

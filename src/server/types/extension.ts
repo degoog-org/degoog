@@ -390,6 +390,20 @@ export interface QueryInterceptorContext {
   lang?: string;
 }
 
+export interface EngineRunReport {
+  engine: string;
+  engineId?: string;
+  searchType: string;
+  page: number;
+  time: number;
+  resultCount: number;
+  status: string;
+  errorReason?: string;
+  httpStatus?: number;
+  cached: boolean;
+  at: number;
+}
+
 export interface QueryInterceptor {
   name: string;
   description: string;
@@ -405,6 +419,7 @@ export interface QueryInterceptor {
     query: string,
     context?: QueryInterceptorContext,
   ): Promise<InterceptorResult>;
+  observe?(report: EngineRunReport): void | Promise<void>;
   t?: Translate;
   pluginManifest?: PluginManifest;
 }
