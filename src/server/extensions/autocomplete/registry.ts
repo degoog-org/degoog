@@ -194,8 +194,8 @@ export async function getSuggestionsFromProviders(query: string): Promise<
 }
 
 export async function getAutocompleteExtensionMeta(): Promise<ExtensionMeta[]> {
-  const transportOptions = getTransportNames();
-  const transportLabels = getTransportDisplayNames();
+  const transportOptions = await getTransportNames();
+  const transportLabels = await getTransportDisplayNames();
   const results: ExtensionMeta[] = [];
 
   for (const p of _all()) {
