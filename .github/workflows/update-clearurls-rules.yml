@@ -1,0 +1,82 @@
+name: Update ClearURLs rules
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Schedules only run from the default branch, so this lives on main and PRs into develop.
+    - cron: "37 4 1 * *"
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rules:
+    name: Refresh the ruleset
+    # Otherwise every fork opens its own monthly PR.
+    if: github.repository_owner == 'degoog-org'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Setup the best engine ever
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - name: Install all dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Fetch the current ruleset
+        id: fetch
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --retry-all-errors \
+            https://rules2.clearurls.xyz/data.minify.json -o rules.json
+          meta=$(curl -fsSL --retry 3 \
+            https://api.github.com/repos/ClearURLs/Rules/commits/gh-pages)
+          sha=$(jq -r .sha <<< "$meta")
+          date=$(jq -r .commit.committer.date <<< "$meta" | cut -dT -f1)
+          {
+            echo "sha=$sha"
+            echo "short=${sha:0:7}"
+            echo "date=$date"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install it
+        run: |
+          set -euo pipefail
+          mv rules.json src/server/search/clearurls-rules.json
+          sed -i \
+            "s|^// Commit:  .*|// Commit:  ${{ steps.fetch.outputs.sha }}, ${{ steps.fetch.outputs.date }}|" \
+            src/server/search/clearurls.ts
+
+      - name: This will totally fail if upstream served garbage
+        run: bun test tests/unit/clearurls.test.ts
+
+      - name: Open a PR if anything changed
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          base: develop
+          branch: ci/clearurls-rules
+          delete-branch: true
+          title: "search: refresh the ClearURLs ruleset"
+          commit-message: "search: refresh the ClearURLs ruleset"
+          labels: dependencies
+          body: |
+            Automated refresh of `src/server/search/clearurls-rules.json` from
+            [ClearURLs/Rules](https://github.com/ClearURLs/Rules), now at
+            [`${{ steps.fetch.outputs.short }}`](https://github.com/ClearURLs/Rules/commit/${{ steps.fetch.outputs.sha }})
+            (${{ steps.fetch.outputs.date }}).
+
+            Upstream's `data.minify.json` byte for byte, with the provenance comment in
+            `clearurls.ts` moved to match. Opened by GITHUB_TOKEN, so PR Checks need a manual run.

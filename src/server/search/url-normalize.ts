@@ -20,6 +20,7 @@ const TRACKING_PARAMS = new Set([
 ]);
 
 import { logger } from "../utils/logger";
+import { applyClearUrls } from "./clearurls";
 
 export const cleanUrl = (url: string): string => {
   try {
@@ -33,7 +34,10 @@ export const cleanUrl = (url: string): string => {
         parsed.searchParams.delete(k);
       }
     }
-    return parsed.href.replace(/\/+$/, "");
+    // The static list above is the floor and runs even when the ruleset has not loaded. ClearURLs
+    // adds the site-specific rules and unwraps redirector links on top of it.
+    const cleaned = applyClearUrls(parsed.href);
+    return cleaned.replace(/\/+$/, "");
   } catch (err) {
     logger.debug("search", `cleanUrl failed for "${url}"`, err);
     return url;
