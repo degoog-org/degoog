@@ -18,11 +18,19 @@ const _SAFE_FOLDER = /^[A-Za-z0-9._-]+$/;
 
 const _folderById = new Map<string, string>();
 
+const _docsDirById = new Map<string, string>();
+
 export const registerExtensionFolder = (id: string, folder: string): void => {
   _folderById.set(id, folder);
 };
 
+export const registerDocsDir = (id: string, dir: string): void => {
+  _docsDirById.set(id, dir);
+};
+
 export const getExtensionReadmePath = (id: string, folder?: string): string | null => {
+  const known = _docsDirById.get(id);
+  if (known) return join(known, "README.md");
   const base = _destDirFromId(id);
   if (!base) return null;
   const fallbackFolder = id.replace(

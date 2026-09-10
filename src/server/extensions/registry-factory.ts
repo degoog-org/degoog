@@ -5,8 +5,9 @@
  */
 
 import { readdir, stat } from "fs/promises";
-import { join } from "path";
+import { dirname, join } from "path";
 import { pathToFileURL } from "url";
+import { registerDocsDir } from "../utils/extension-docs";
 import { logger } from "../utils/logger";
 import { createMutex } from "../utils/mutex";
 import { makeExtID, dedupeExtID, type ExtensionKind } from "../utils/extension-id";
@@ -145,6 +146,19 @@ async function resolveEntryPath(
   return null;
 }
 
+function _rememberDocs(
+  item: unknown,
+  meta: RegistryLoadMeta,
+  docsDir: string | null,
+): void {
+  if (!docsDir) return;
+  const named = item as { id?: unknown; name?: unknown };
+  const ids = [named.id, named.name, meta.canonicalId].filter(
+    (v): v is string => typeof v === "string" && v.trim().length > 0,
+  );
+  for (const id of new Set(ids)) registerDocsDir(id, docsDir);
+}
+
 /**
  * Creates a typed extension registry backed by a shared file-discovery loop.
  *
@@ -223,7 +237,11 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
     );
 
     // canonical ID assignment must be sequential to keep dedup deterministic
-    const toInit: { extracted: T; meta: RegistryLoadMeta }[] = [];
+    const toInit: {
+      extracted: T;
+      meta: RegistryLoadMeta;
+      docsDir: string | null;
+    }[] = [];
     for (const c of candidates) {
       if (!c) continue;
       const entryPath = join(registryDir.dir, c.r.base);
@@ -243,11 +261,15 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
           source: registryDir.source ?? "plugin",
           canonicalId,
         },
+        docsDir: dirname(c.r.fullPath) === entryPath ? entryPath : null,
       });
     }
 
     if (!opts.onLoad) {
-      for (const { extracted } of toInit) _items.push(extracted);
+      for (const { extracted, meta, docsDir } of toInit) {
+        _rememberDocs(extracted, meta, docsDir);
+        _items.push(extracted);
+      }
       return;
     }
 
@@ -265,6 +287,7 @@ export function createRegistry<T>(opts: RegistryOptions<T>): {
           );
           continue;
         }
+        _rememberDocs(toInit[i].extracted, toInit[i].meta, toInit[i].docsDir);
         _items.push(toInit[i].extracted);
       } else {
         logger.debug(

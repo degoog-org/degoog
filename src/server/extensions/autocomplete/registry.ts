@@ -22,6 +22,7 @@ import { signSuggestionThumbnails } from "../../utils/proxy-sign";
 import { buildProviderContext } from "./context";
 import { mergeSuggestions } from "./merge";
 import { AUTOCOMPLETE_TIMEOUT_MS, withTimeout } from "../../utils/with-timeout";
+import { extensionReadmeExists } from "../../utils/extension-docs";
 import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
 
 interface PluginEntry {
@@ -224,6 +225,8 @@ export async function getAutocompleteExtensionMeta(): Promise<ExtensionMeta[]> {
     const rawSettings = await getSettings(p.id);
     const maskedSettings = maskSecrets(rawSettings, schema);
 
+    const { exists: docsExist } = await extensionReadmeExists(p.id);
+
     results.push({
       id: p.id,
       displayName: p.displayName,
@@ -234,6 +237,7 @@ export async function getAutocompleteExtensionMeta(): Promise<ExtensionMeta[]> {
       settings: maskedSettings,
       defaultEnabled: true,
       needsAppRestart: isExtensionRestartFlagVisible(p.instance.needsAppRestart),
+      extensionDocsAvailable: docsExist,
     });
   }
 
