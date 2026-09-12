@@ -14,14 +14,19 @@ import { isDisabled } from "../utils/plugin-settings";
 import { buildSignedProxyUrl } from "../utils/proxy-sign";
 import { getClientIp } from "../utils/request";
 import { _applyRateLimit, runSlotPlugins } from "../utils/search";
+import { slotShowsOn } from "../utils/slot-types";
+import { DEFAULT_SEARCH_TYPE } from "../../shared/search-types";
 import { applyFilter, syncVortexSignal } from "../utils/translation-circuit";
 
 const router = new Hono();
 
+const _requestedType = (raw: unknown): string =>
+  typeof raw === "string" && raw.trim() ? raw.trim() : DEFAULT_SEARCH_TYPE;
+
 router.post("/api/slots", async (c) => {
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
-  let body: { query?: string; results?: ScoredResult[] };
+  let body: { query?: string; type?: string; results?: ScoredResult[] };
   try {
     body = await c.req.json();
   } catch (err) {
@@ -41,6 +46,7 @@ router.post("/api/slots", async (c) => {
     {
       excludePosition: SlotPanelPosition.AtAGlance,
       locale: getLocale(c),
+      searchType: _requestedType(body.type),
     },
   );
   return c.json({ panels });
@@ -49,7 +55,7 @@ router.post("/api/slots", async (c) => {
 router.post("/api/slots/glance", async (c) => {
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
-  let body: { query?: string; results?: ScoredResult[] };
+  let body: { query?: string; type?: string; results?: ScoredResult[] };
   try {
     body = await c.req.json();
   } catch (err) {
@@ -65,6 +71,7 @@ router.post("/api/slots/glance", async (c) => {
   }
   const clientIp = getClientIp(c);
   const locale = getLocale(c);
+  const searchType = _requestedType(body.type);
   const glancePlugins = getSlotPlugins().filter(
     (p) => p.position === SlotPanelPosition.AtAGlance,
   );
@@ -81,6 +88,7 @@ router.post("/api/slots/glance", async (c) => {
     try {
       const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
       if (await isDisabled(slotSettingsId)) continue;
+      if (!(await slotShowsOn(plugin, slotSettingsId, searchType))) continue;
       const ok = await Promise.resolve(plugin.trigger(body.query!.trim()));
       if (!ok) continue;
       const context: SlotPluginContext = {

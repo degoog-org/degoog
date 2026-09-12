@@ -7,6 +7,7 @@ import {
   renderFileField,
 } from "./field-widgets";
 import { renderOptionsList, wrapOptionsRow } from "./options-field";
+import { renderMultiField } from "./multiselect-field";
 import type { SettingField, ExtensionMeta } from "../../../types";
 
 const t = window.scopedT("core");
@@ -75,6 +76,12 @@ export function readLiveSettingFieldValue(
   if (type === "list") {
     const hidden = fieldEl.querySelector<HTMLInputElement>(
       ".ext-field-list-value",
+    );
+    return hidden?.value?.trim() ?? "";
+  }
+  if (type === "multiselect") {
+    const hidden = fieldEl.querySelector<HTMLInputElement>(
+      ".ext-field-multiselect-value",
     );
     return hidden?.value?.trim() ?? "";
   }
@@ -288,6 +295,10 @@ export const renderField = (
 
   if (field.type === "list") {
     return _wrapVisibleWhen(field, renderListField(field, ext), ext);
+  }
+
+  if (field.type === "multiselect") {
+    return _wrapVisibleWhen(field, renderMultiField(field, ext, descHtml), ext);
   }
 
   if (field.type === "hex") {

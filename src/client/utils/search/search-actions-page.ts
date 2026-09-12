@@ -81,10 +81,11 @@ export async function goToPage(pageNum: number): Promise<void> {
     const metaText = `About ${state.currentResults.length} results - Page ${state.currentPage}`;
     setResultsMeta(metaText);
     clearSlotPanels();
-    if (state.currentPage === 1 && state.currentType === "web") {
+    const isImageType = isImageSearchType(state.currentType);
+    if (state.currentPage === 1 && !isImageType) {
       void fetchGlancePanels(state.currentQuery, data.results);
     }
-    if (state.currentType === "web") {
+    if (!isImageType) {
       void fetchSlotPanels(state.currentQuery, state.currentResults);
     }
     renderResults(state.currentResults);

@@ -1,5 +1,6 @@
 import { renderField, initUrlList, syncConditionalFields } from "./modal-fields";
 import { initListFields } from "./list-field";
+import { initMultiFields } from "./multiselect-field";
 import {
   initHexFields,
   initRangeFields,
@@ -129,6 +130,16 @@ const _collectValues = (): Record<string, string | string[]> => {
       values[key] = hidden?.value?.trim() || "[]";
       return;
     }
+    if (type === "multiselect") {
+      const hidden = fieldEl.querySelector<HTMLInputElement>(
+        ".ext-field-multiselect-value",
+      );
+      values[key] = (hidden?.value ?? "")
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+      return;
+    }
     if (type === "file") {
       const hidden = fieldEl.querySelector<HTMLInputElement>(
         ".ext-field-file-value",
@@ -164,6 +175,13 @@ const _advancedFieldDiffersFromDefault = (
 
   if (field.type === "urllist") {
     return Array.isArray(raw) && raw.length > 0;
+  }
+
+  if (field.type === "multiselect") {
+    const picked = Array.isArray(raw) ? raw : String(raw ?? "").split(",");
+    const chosen = picked.map((v) => v.trim()).filter(Boolean);
+    const def = defaultStr.split(",").map((v) => v.trim()).filter(Boolean);
+    return chosen.slice().sort().join(",") !== def.slice().sort().join(",");
   }
 
   if (field.type === "list") {
@@ -282,6 +300,7 @@ export function openModal(ext: ExtensionMeta): void {
     initOptionsFields(bodyEl, ext.id, _collectValues);
     initUrlList(bodyEl);
     initListFields(bodyEl, ext.id);
+    initMultiFields(bodyEl);
     initHexFields(bodyEl);
     initRangeFields(bodyEl);
     initFileFields(bodyEl, ext.id);

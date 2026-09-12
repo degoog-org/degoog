@@ -78,11 +78,7 @@ export const getKnownSearchTypePrefixes = async (): Promise<Set<string>> => {
   return prefixes;
 };
 
-export const resolveBuiltinSearchType = (type: string): string => {
-  if (type.startsWith("tab:engine:")) return type.slice("tab:engine:".length);
-  if (type.startsWith("engine:")) return type.slice("engine:".length);
-  return type;
-};
-
-export const isImageSearchType = (type: string): boolean =>
-  resolveBuiltinSearchType(type) === "images";
+export {
+  resolveBuiltinSearchType,
+  isImageSearchType,
+} from "../../shared/search-types";

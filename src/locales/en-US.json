@@ -620,6 +620,10 @@
       "slot-position": {
         "label": "Position",
         "description": "Where the slot content appears on the page."
+      },
+      "slot-search-types": {
+        "label": "Search types",
+        "description": "Which result tabs this slot renders on. Images are not supported."
       }
     },
     "shortcuts": {

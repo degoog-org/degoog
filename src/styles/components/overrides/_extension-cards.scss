@@ -472,6 +472,38 @@
   }
 }
 
+.ext-field-multiselect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+
+  &-chip {
+    background: var(--bg-hover);
+    border: none;
+    border-radius: $radius-pill;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: $font-size-small;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    padding: $space-2 $space-4;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    &--on {
+      background: $primary;
+      color: var(--bg);
+
+      &:hover {
+        background: $primary-hover;
+        color: var(--bg);
+      }
+    }
+  }
+}
+
 .ext-field-hex {
   display: flex;
   align-items: center;

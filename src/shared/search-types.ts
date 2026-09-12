@@ -61,3 +61,40 @@ export interface SearchResponse {
   slotPanels?: SlotPanel[];
   totalPages?: number;
 }
+
+export const DEFAULT_SEARCH_TYPE = "web";
+export const IMAGE_SEARCH_TYPE = "images";
+
+const TAB_ENGINE_PREFIX = "tab:engine:";
+const ENGINE_PREFIX = "engine:";
+
+export const resolveBuiltinSearchType = (type: string): string => {
+  if (type.startsWith(TAB_ENGINE_PREFIX)) {
+    return type.slice(TAB_ENGINE_PREFIX.length);
+  }
+  if (type.startsWith(ENGINE_PREFIX)) return type.slice(ENGINE_PREFIX.length);
+  return type;
+};
+
+export const isImageSearchType = (type: string): boolean =>
+  resolveBuiltinSearchType(type) === IMAGE_SEARCH_TYPE;
+
+export const parseTypeList = (
+  raw: string | string[] | boolean | undefined,
+): string[] => {
+  const entries = Array.isArray(raw)
+    ? raw
+    : typeof raw === "string"
+      ? raw.split(",")
+      : [];
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    const type = String(entry).trim();
+    if (type && type !== IMAGE_SEARCH_TYPE) seen.add(type);
+  }
+  return [...seen];
+};
+
+export const slotRunsOn = (allowed: string[], type: string): boolean =>
+  !isImageSearchType(type) &&
+  allowed.includes(resolveBuiltinSearchType(type) || DEFAULT_SEARCH_TYPE);
