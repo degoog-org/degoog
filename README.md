@@ -110,6 +110,38 @@ docker run -d --name degoog -p 4444:4444 -v ./data:/app/data -e DEGOOG_SETTINGS_
 </details>
 
 <details>
+<summary>NixOS Module</summary>
+
+Degoog has a Nix flake including a package and NixOS module. Add it to your flake's `inputs`:
+
+```nix
+degoog = {
+  url = "github:degoog-org/degoog";
+  inputs.nixpkgs.follows = "nixpkgs";
+};
+```
+
+Then, import and configure the module:
+
+```nix
+imports = [ inputs.degoog.nixosModules.default ];
+
+services.degoog = {
+  enable = true;
+  configurePostgres = true;
+
+  environment = {
+    DEGOOG_UNIX_SOCKET = "/var/run/degoog/degoog.sock";
+	# Other environment variables can be found at https://degoog-org.github.io/docs/environment-variables.html
+  };
+
+  # Other option definitions can be found at https://github.com/degoog-org/degoog/blob/main/third-party/nix/module.nix
+};
+```
+
+</details>
+
+<details>
 <summary>Run natively</summary>
 
 You'll need a `.env` file for your env variables and the following required dependencies:
