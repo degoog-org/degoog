@@ -31,6 +31,15 @@ const RULES = {
   },
 };
 
+type VendoredProvider = {
+  urlPattern?: string;
+  rules?: string[];
+  rawRules?: string[];
+  referralMarketing?: string[];
+  exceptions?: string[];
+  redirections?: string[];
+};
+
 describe("clearurls", () => {
   test("strips site-specific parameters the static list does not know", () => {
     loadClearUrlsForTest(RULES);
@@ -45,6 +54,15 @@ describe("clearurls", () => {
   test("strips referral marketing parameters", () => {
     loadClearUrlsForTest(RULES);
     expect(applyClearUrls("https://www.amazon.de/dp/B0TEST?tag=someaffiliate")).not.toContain("tag=");
+  });
+
+  test("cleanUrl drops a fragment carried in from a redirect destination", () => {
+    loadClearUrlsForTest(RULES);
+    const out = cleanUrl(
+      "https://www.google.com/url?sa=t&url=https%3A%2F%2Fnixos.org%2Fmanual%23install",
+    );
+    expect(out).toBe("https://nixos.org/manual");
+    expect(out).not.toContain("#");
   });
 
   test("unwraps a redirector to its destination", () => {
@@ -120,11 +138,16 @@ describe("clearurls", () => {
   // rather than downloaded. This is that check, moved to where a bad refresh gets caught instead.
   // Reads the JSON directly, so it does not depend on which fixture a previous test left loaded.
   test("the vendored ruleset is complete and every provider compiles", () => {
-    const providers = rulesData.providers as Record<string, { urlPattern?: string }>;
+    const providers = rulesData.providers as Record<string, VendoredProvider>;
     expect(Object.keys(providers).length).toBeGreaterThanOrEqual(100);
     for (const p of Object.values(providers)) {
       expect(typeof p.urlPattern).toBe("string");
       expect(() => new RegExp(p.urlPattern as string, "i")).not.toThrow();
+      for (const r of [...(p.rules ?? []), ...(p.referralMarketing ?? [])])
+        expect(() => new RegExp(`^${r}$`, "i")).not.toThrow();
+      for (const r of p.rawRules ?? []) expect(() => new RegExp(r, "gi")).not.toThrow();
+      for (const r of [...(p.exceptions ?? []), ...(p.redirections ?? [])])
+        expect(() => new RegExp(r, "i")).not.toThrow();
     }
   });
 });

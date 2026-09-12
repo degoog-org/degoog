@@ -36,8 +36,9 @@ export const cleanUrl = (url: string): string => {
     }
     // The static list above is the floor and runs even when the ruleset has not loaded. ClearURLs
     // adds the site-specific rules and unwraps redirector links on top of it.
-    const cleaned = applyClearUrls(parsed.href);
-    return cleaned.replace(/\/+$/, "");
+    const cleaned = new URL(applyClearUrls(parsed.href));
+    cleaned.hash = "";
+    return cleaned.href.replace(/\/+$/, "");
   } catch (err) {
     logger.debug("search", `cleanUrl failed for "${url}"`, err);
     return url;

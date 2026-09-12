@@ -83,13 +83,15 @@ const _enabledTransports = async (): Promise<Transport[]> => {
   return results;
 };
 
-export async function getTransportNames(): Promise<string[]> {
-  return (await _enabledTransports()).map((t) => t.name);
-}
+export type TransportPicks = { names: string[]; labels: string[] };
 
-export async function getTransportDisplayNames(): Promise<string[]> {
-  return (await _enabledTransports()).map((t) => t.displayName ?? t.name);
-}
+export const transportPicks = async (): Promise<TransportPicks> => {
+  const enabled = await _enabledTransports();
+  return {
+    names: enabled.map((t) => t.name),
+    labels: enabled.map((t) => t.displayName ?? t.name),
+  };
+};
 
 export const getAvailableTransportNames = async (): Promise<string[]> => {
   const results: string[] = [];

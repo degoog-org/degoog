@@ -228,16 +228,32 @@ const _reloadSearx = async (): Promise<boolean> => {
   }
 };
 
-const _savedBody = (reloaded: boolean): { ok: true; searxReloadFailed?: true } =>
-  reloaded ? { ok: true } : { ok: true, searxReloadFailed: true };
+type SaveResult = {
+  ok: true;
+  searxReloadFailed?: true;
+  indexerStartFailed?: true;
+};
 
-const _reconcileIndexerQueue = async (): Promise<void> => {
+const _savedBody = (reloaded: boolean, indexerUp = true): SaveResult => {
+  const body: SaveResult = { ok: true };
+  if (!reloaded) body.searxReloadFailed = true;
+  if (!indexerUp) body.indexerStartFailed = true;
+  return body;
+};
+
+const _reconcileIndexerQueue = async (): Promise<boolean> => {
   const settings = await getInstanceSettings();
-  if (asBoolean(settings.degoogIndexerEnabled))
-    await startQueue().catch((err) =>
-      logger.error("indexer", "queue start failed", err),
-    );
-  else await stopQueue();
+  if (!asBoolean(settings.degoogIndexerEnabled)) {
+    await stopQueue();
+    return true;
+  }
+  try {
+    await startQueue();
+    return true;
+  } catch (err) {
+    logger.error("indexer", "queue start failed", err);
+    return false;
+  }
 };
 
 router.post("/api/settings/general", async (c) => {
@@ -251,11 +267,11 @@ router.post("/api/settings/general", async (c) => {
   await setInstanceSettings({ ...existing, ...updates });
   await _persistListFields(body);
   await syncBlocklist();
-  await _reconcileIndexerQueue();
+  const indexerUp = await _reconcileIndexerQueue();
   const toggled =
     "searxCompatEnabled" in updates &&
     asBoolean(updates.searxCompatEnabled) !== searxWasOn;
-  return c.json(_savedBody(toggled ? await _reloadSearx() : true));
+  return c.json(_savedBody(toggled ? await _reloadSearx() : true, indexerUp));
 });
 
 router.post("/api/settings/field", async (c) => {
@@ -277,9 +293,10 @@ router.post("/api/settings/field", async (c) => {
     await updateInstanceSettings({ [key]: coerced });
   }
   await syncBlocklist();
-  if (key === "degoogIndexerEnabled") await _reconcileIndexerQueue();
+  const indexerUp =
+    key === "degoogIndexerEnabled" ? await _reconcileIndexerQueue() : true;
   const reloaded = key === "searxCompatEnabled" ? await _reloadSearx() : true;
-  return c.json(_savedBody(reloaded));
+  return c.json(_savedBody(reloaded, indexerUp));
 });
 
 router.post("/api/settings/domain-action", async (c) => {

@@ -14,7 +14,7 @@ import {
 } from "../../utils/plugin-settings";
 import { autocompleteDir } from "../../utils/paths";
 import { autocompleteCache } from "../../utils/cache";
-import { getTransportNames, getTransportDisplayNames } from "../transports/registry";
+import { transportPicks } from "../transports/registry";
 import { createRegistry } from "../registry-factory";
 import { makeExtID } from "../../utils/extension-id";
 import { logger } from "../../utils/logger";
@@ -195,8 +195,8 @@ export async function getSuggestionsFromProviders(query: string): Promise<
 }
 
 export async function getAutocompleteExtensionMeta(): Promise<ExtensionMeta[]> {
-  const transportOptions = await getTransportNames();
-  const transportLabels = await getTransportDisplayNames();
+  const { names: transportOptions, labels: transportLabels } =
+    await transportPicks();
   const results: ExtensionMeta[] = [];
 
   for (const p of _all()) {

@@ -17,10 +17,7 @@ import {
   mergeDefaults,
 } from "../../utils/plugin-settings";
 import { bootCircuitFromPath } from "../../utils/translation-circuit";
-import {
-  getTransportNames,
-  getTransportDisplayNames,
-} from "../transports/registry";
+import { transportPicks } from "../transports/registry";
 import { enginesDir, defaultEnginesFile } from "../../utils/paths";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -468,8 +465,8 @@ export const getEngineExtensionMeta = async (
   const items = allEngineEntries();
   const engineMap = getEngineMap();
   const results: ExtensionMeta[] = [];
-  const transportOptions = await getTransportNames();
-  const transportLabels = await getTransportDisplayNames();
+  const { names: transportOptions, labels: transportLabels } =
+    await transportPicks();
 
   const baseScoreField = coreT
     ? {

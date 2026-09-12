@@ -48,12 +48,13 @@ import {
 import { getBase } from "./base-url";
 import { loadSidebarSuggestions } from "./search/search-actions-render";
 import { mergeStreamingMediaResults } from "./search/streaming-media-results";
-
-const t = window.scopedT("themes/degoog");
+import { staysHere } from "./plain-click";
 import {
   updateEngineTimings,
   updateResults,
 } from "./search/streaming-search-dom";
+
+const t = window.scopedT("themes/degoog");
 
 interface StreamEngineResult {
   engine: string;
@@ -78,9 +79,6 @@ interface StreamDone {
   totalPages?: number;
 }
 
-const SAME_TAB_TARGETS = ["", "_self", "_top", "_parent"];
-const MIDDLE_CLICK = 1;
-
 let _activeSource: EventSource | null = null;
 let _linkWatch: AbortController | null = null;
 
@@ -91,14 +89,6 @@ const dropStream = (source: EventSource): void => {
   _linkWatch?.abort();
   _linkWatch = null;
 };
-
-const staysHere = (ev: MouseEvent, anchor: HTMLAnchorElement): boolean =>
-  !ev.metaKey &&
-  !ev.ctrlKey &&
-  !ev.shiftKey &&
-  ev.button !== MIDDLE_CLICK &&
-  !anchor.hasAttribute("download") &&
-  SAME_TAB_TARGETS.includes(anchor.target);
 
 export function abortStreamingSearch(): void {
   if (_activeSource) dropStream(_activeSource);
