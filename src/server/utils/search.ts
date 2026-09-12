@@ -22,6 +22,8 @@ import { getClientIp } from "./request";
 import { applyFilter, syncVortexSignal } from "./translation-circuit";
 import { getInstanceSettings } from "./server-settings";
 import { SLOT_PLUGIN_TIMEOUT_MS, withTimeout } from "./with-timeout";
+import { DEFAULT_SEARCH_TYPE } from "../../shared/search-types";
+import { slotShowsOn } from "./slot-types";
 
 export const DEFAULT_LANGUAGES = [
   "af",
@@ -144,12 +146,17 @@ export async function runSlotPlugins(
   query: string,
   clientIp?: string,
   results?: ScoredResult[],
-  options?: { excludePosition?: SlotPanelPosition; locale?: string },
+  options?: {
+    excludePosition?: SlotPanelPosition;
+    locale?: string;
+    searchType?: string;
+  },
 ): Promise<SlotPanel[]> {
   const plugins = getSlotPlugins();
   const panels: SlotPanel[] = [];
   const exclude = options?.excludePosition;
   const locale = options?.locale;
+  const searchType = options?.searchType ?? DEFAULT_SEARCH_TYPE;
   for (const plugin of plugins) {
     if (!plugin.id) {
       logger.warn(
@@ -172,6 +179,7 @@ export async function runSlotPlugins(
       }
     }
     if (exclude && definedPosition === exclude) continue;
+    if (!(await slotShowsOn(plugin, slotSettingsId, searchType))) continue;
     const withResults = results !== undefined;
     if (withResults && !plugin.waitForResults) continue;
     if (!withResults && plugin.waitForResults) continue;

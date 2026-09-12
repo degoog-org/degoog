@@ -25,7 +25,7 @@ The contract that community authors code against is wider than it looks:
 - Canonical IDs from `makeExtID`, which is `{folder}-{kind}`. Every settings key, the enabled-engine map, the active theme and every shortcut binding hang off these strings.
 - Export names the registries match on: `executeSearch`, `getSuggestions`, `intercept`, `trigger` and `execute`, `fetch`, `run`, `plugin`, `routes`, `searchBarActions`.
 - Context fields those hooks receive: `ctx.fetch`, `ctx.signProxyUrl`, `ctx.useCache`, `ctx.sentinel`, `ctx.pluginId`, `ctx.apiBase`.
-- Reserved settings keys: `disabled`, `outgoingTransport`, `searchTypeOverride`, `slotPosition`, `priority`, `score`, `theme`, `shortcuts`.
+- Reserved settings keys: `disabled`, `outgoingTransport`, `searchTypeOverride`, `slotPosition`, `slotSearchTypes`, `priority`, `score`, `theme`, `shortcuts`.
 - Slot position strings, `data-slot`, the `degoog-*` template keys and the DOM IDs that shortcuts and themes query from the browser.
 - `/api/plugin/<folder>/` and the injected `__PLUGIN_ID__`.
 

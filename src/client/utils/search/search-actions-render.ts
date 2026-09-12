@@ -90,7 +90,7 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
   if (isImageType) {
     abortGlancePanels();
     abortSlotPanels();
-  } else if (resolvedType === "web") {
+  } else {
     void fetchSlotPanels(query).then((panels) => {
       const kp = panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel);
       if (kp.length > 0) prependKnowledgePanels(kp);
@@ -98,8 +98,7 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
     void fetchGlancePanels(query);
   }
   const glanceEl = document.getElementById("at-a-glance");
-  if (glanceEl)
-    glanceEl.innerHTML = resolvedType === "web" ? skeletonGlance() : "";
+  if (glanceEl) glanceEl.innerHTML = isImageType ? "" : skeletonGlance();
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
     resultsList.innerHTML = isImageType
@@ -171,7 +170,7 @@ export const renderSearchResponse = (
     if (glanceEl) glanceEl.innerHTML = "";
     renderImgEngines(data.engineTimings ?? []);
     if (sidebar) sidebar.innerHTML = "";
-  } else if (type === "web") {
+  } else {
     if (opts.fetchGlance) void fetchGlancePanels(query, data.results);
     void fetchSlotPanels(query, data.results).then((panels) => {
       const kpPanels = panels.filter(
@@ -183,9 +182,6 @@ export const renderSearchResponse = (
         kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
       );
     });
-  } else {
-    renderSidebar(data, navigate);
-    if (glanceEl) glanceEl.innerHTML = "";
   }
   const infinite = infiniteScrollOn() && !isImageType;
   renderResults(data.results, { paginate: !infinite });

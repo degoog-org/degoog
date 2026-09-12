@@ -42,12 +42,12 @@ export const abortSlotPanels = (): void => {
 const _slotRequestBody = (
   query: string,
   results?: ScoredResult[],
-): string =>
-  JSON.stringify(
-    results !== undefined
-      ? { query: query.trim(), results }
-      : { query: query.trim() },
+): string => {
+  const base = { query: query.trim(), type: state.currentType };
+  return JSON.stringify(
+    results !== undefined ? { ...base, results } : base,
   );
+};
 
 const _renderGlanceHtml = (panels: SlotPanel[], clearIfEmpty: boolean): void => {
   const glanceEl = document.getElementById("at-a-glance");

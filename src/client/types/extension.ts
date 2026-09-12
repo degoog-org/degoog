@@ -15,6 +15,7 @@ export type SettingFieldType =
   | "toggle"
   | "textarea"
   | "select"
+  | "multiselect"
   | "urllist"
   | "list"
   | "hex"

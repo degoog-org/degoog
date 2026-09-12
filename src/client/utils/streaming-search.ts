@@ -157,7 +157,7 @@ export async function performStreamingSearch(
   if (isImageType) {
     abortGlancePanels();
     abortSlotPanels();
-  } else if (type === "web") {
+  } else {
     void fetchSlotPanels(query).then((panels) => {
       const kp = panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel);
       if (kp.length > 0) prependKnowledgePanels(kp);
@@ -165,7 +165,7 @@ export async function performStreamingSearch(
     void fetchGlancePanels(query);
   }
   const glanceEl = document.getElementById("at-a-glance");
-  if (glanceEl) glanceEl.innerHTML = type === "web" ? skeletonGlance() : "";
+  if (glanceEl) glanceEl.innerHTML = isImageType ? "" : skeletonGlance();
   document.title = `${query} - degoog`;
 
   const urlParams = new URLSearchParams({ q: query });
@@ -302,7 +302,7 @@ export async function performStreamingSearch(
       renderImgEngines(data.engineTimings);
       if (sidebar) sidebar.innerHTML = "";
       if (currentResults.length > 0) setupMediaObserver("images");
-    } else if (type === "web") {
+    } else {
       updateEngineTimings(sidebar, data.engineTimings);
       void fetchGlancePanels(query, currentResults);
       void fetchSlotPanels(query, currentResults).then((panels) => {
@@ -315,10 +315,6 @@ export async function performStreamingSearch(
           kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
         );
       });
-    } else {
-      updateEngineTimings(sidebar, data.engineTimings);
-      renderSidebar(searchData, (q) => onComplete(q));
-      if (glanceEl) glanceEl.innerHTML = "";
     }
 
     if (currentResults.length === 0 && resultsList) {

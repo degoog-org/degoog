@@ -72,6 +72,7 @@ export interface SettingField {
   | "toggle"
   | "textarea"
   | "select"
+  | "multiselect"
   | "urllist"
   | "list"
   | "hex"
@@ -192,6 +193,7 @@ export interface AutocompleteProvider {
 }
 
 export const SLOT_POSITION_SETTING_KEY = "slotPosition";
+export const SLOT_SEARCH_TYPES_KEY = "slotSearchTypes";
 
 export interface SlotPluginContext {
   clientIp?: string;
@@ -209,6 +211,7 @@ export interface SlotPlugin {
   description: string;
   position: SlotPanelPosition;
   slotPositions?: SlotPanelPosition[];
+  searchTypes?: string[];
   settingsId?: string;
   isClientExposed?: boolean;
   needsAppRestart?: boolean;
