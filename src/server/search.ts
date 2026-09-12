@@ -43,6 +43,7 @@ import {
 import { extractImageUrl } from "./utils/extract-image";
 import { getRandomUserAgent } from "./utils/user-agents";
 import { logger } from "./utils/logger";
+import { reportEngineRun } from "./utils/run-observers";
 import { outgoingFetch, parseOutgoingTransport } from "./utils/outgoing";
 import { stripHtml, stripCssBlocks } from "./utils/text";
 import { asString, getSettings } from "./utils/plugin-settings";
@@ -304,6 +305,27 @@ const _keepRun = async (key: string, run: CachedEngineRun): Promise<void> => {
   }
 };
 
+const _tellObservers = (
+  timing: EngineTiming,
+  engineId: string | undefined,
+  scope: RunScope,
+  cached: boolean,
+): void => {
+  reportEngineRun({
+    engine: timing.name,
+    engineId,
+    searchType: scope.type,
+    page: scope.page,
+    time: timing.time,
+    resultCount: timing.resultCount,
+    status: timing.status ?? THREAT_LEVEL.OK,
+    errorReason: timing.errorReason,
+    httpStatus: timing.httpStatus,
+    cached,
+    at: Date.now(),
+  });
+};
+
 export const searchSingleEngine = async (
   engineName: string,
   query: string,
@@ -356,6 +378,7 @@ export const searchSingleEngine = async (
         "engine",
         `cache hit engine="${engine.name}" results=${hit.timing.resultCount} status=${hit.timing.status ?? "ok"}`,
       );
+      _tellObservers(hit.timing, engineSettingsId, scope, true);
       return hit;
     }
   }
@@ -393,6 +416,7 @@ export const searchSingleEngine = async (
       },
       pages: pageCounter.total(),
     };
+    _tellObservers(run.timing, engineSettingsId, scope, false);
     await _keepRun(key, run);
     return run;
   } catch (err) {
@@ -403,6 +427,7 @@ export const searchSingleEngine = async (
       results: [],
       timing: { name: engine.name, time: elapsed, resultCount: 0, status: classified.status, errorReason: classified.reason, httpStatus: classified.httpStatus },
     };
+    _tellObservers(run.timing, engineSettingsId, scope, false);
     await _keepRun(key, run);
     return run;
   }

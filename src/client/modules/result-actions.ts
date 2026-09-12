@@ -1,6 +1,7 @@
 import { cleanUrl } from "../utils/dom";
 import { getBase } from "../utils/base-url";
 import { attachFaviconFallback } from "../utils/favicon";
+import { resolveTarget } from "../../shared/domain-target";
 import { confirmModal } from "./modals/confirm-modal/confirm";
 import { promptModal } from "./modals/prompt-modal/prompt";
 
@@ -92,15 +93,19 @@ function _applyReplaceToRow(row: HTMLElement, target: string): void {
   const wrap = row.querySelector<HTMLElement>('[id^="result-actions-"]');
   if (!link) return;
   try {
-    const url = new URL(link.href);
-    url.hostname = target;
-    link.href = url.toString();
-    if (cite) cite.textContent = cleanUrl(url.toString());
+    const replaced = resolveTarget(link.href, target);
+    if (!replaced) {
+      console.debug("[result-actions] unusable replace target", target);
+      return;
+    }
+    const host = new URL(replaced).hostname;
+    link.href = replaced;
+    if (cite) cite.textContent = cleanUrl(replaced);
     if (favicon) {
-      favicon.dataset.faviconHost = target;
+      favicon.dataset.faviconHost = host;
       attachFaviconFallback(favicon);
     }
-    if (wrap) wrap.dataset.host = target;
+    if (wrap) wrap.dataset.host = host;
   } catch (err) {
     console.debug("[result-actions] URL replace failed", err);
   }

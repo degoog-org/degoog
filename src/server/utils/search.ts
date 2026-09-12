@@ -6,14 +6,11 @@ import {
 import { getSlotPlugins } from "../extensions/slots/registry";
 import {
   EngineConfig,
-  ImageFilter,
   ScoredResult,
-  SearchType,
   SLOT_POSITION_SETTING_KEY,
   SlotPanelPosition,
   SlotPanel,
   SlotPluginContext,
-  TimeFilter,
 } from "../types";
 import { createCache, useCache } from "./cache";
 import { logger } from "./logger";

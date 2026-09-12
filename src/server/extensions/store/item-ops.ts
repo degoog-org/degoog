@@ -1,6 +1,6 @@
-import { readFile, mkdir, readdir, stat, rm } from "fs/promises";
-import { join, resolve, dirname } from "path";
-import { resolveContained } from "../../utils/paths";
+import { readFile, mkdir, readdir, rename, stat, rm, lstat } from "fs/promises";
+import { join, dirname } from "path";
+import { randomUUID } from "crypto";
 import { removeSettings } from "../../utils/plugin-settings";
 import { isVersionAtLeast, getAppVersion } from "../../../shared/utils/version";
 import {
@@ -23,6 +23,7 @@ import type { StoreStreamPhase } from "../../../shared/store-stream";
 import { bumpPluginRegistryReload } from "../registry-factory";
 import { runStoreExclusive } from "./store-lock";
 import { makeExtID } from "../../utils/extension-id";
+import { resolveChild, resolveRealChild } from "../../utils/paths";
 import { logger } from "../../utils/logger";
 import type { ShortcutBinding, ShortcutKind } from "../../../shared/shortcuts";
 import { markRestartPending } from "../../utils/restart-state";
@@ -75,6 +76,8 @@ async function copyItemDir(
   destDir: string,
   exclude: string[],
 ): Promise<void> {
+  if ((await lstat(srcDir)).isSymbolicLink())
+    throw new Error("Symlinked store items are not supported.");
   await mkdir(destDir, { recursive: true });
   const entries = await readdir(srcDir, { withFileTypes: true });
   for (const e of entries) {
@@ -82,9 +85,11 @@ async function copyItemDir(
       continue;
     const src = join(srcDir, e.name);
     const dest = join(destDir, e.name);
+    if (e.isSymbolicLink())
+      throw new Error("Symlinked store entries are not supported.");
     if (e.isDirectory()) {
       await copyItemDir(src, dest, []);
-    } else {
+    } else if (e.isFile()) {
       await mkdir(dirname(dest), { recursive: true });
       await Bun.write(dest, await Bun.file(src).arrayBuffer());
     }
@@ -140,6 +145,42 @@ export async function reloadAfterAction(
 }
 
 const STORE_METADATA = ["author.json", "screenshots"];
+
+async function stageItemDir(
+  srcDir: string,
+  destBase: string,
+  folderName: string,
+  clearExisting?: () => Promise<void>,
+): Promise<void> {
+  const staged = join(destBase, `.staging-${process.pid}-${randomUUID()}`);
+  try {
+    await copyItemDir(srcDir, staged, STORE_METADATA);
+    await clearExisting?.();
+    await rename(staged, join(destBase, folderName));
+  } catch (err) {
+    await rm(staged, { recursive: true, force: true }).catch(() => {});
+    throw err;
+  }
+}
+
+async function resolveStoreItemDir(
+  repoDir: string,
+  normalizedPath: string,
+): Promise<string> {
+  const manifestPath = resolveChild(repoDir, normalizedPath);
+  if (!manifestPath) throw new Error("Invalid item path.");
+  try {
+    if ((await lstat(manifestPath)).isSymbolicLink())
+      throw new Error("Invalid item path.");
+  } catch (err) {
+    if (err instanceof Error && err.message === "Invalid item path.") throw err;
+    logger.debug("store:item", `item path not found ${manifestPath}`, err);
+    throw new Error("Item path not found in repository.");
+  }
+  const srcDir = resolveRealChild(repoDir, normalizedPath);
+  if (!srcDir) throw new Error("Invalid item path.");
+  return srcDir;
+}
 
 function parseDependencyUrl(depUrl: string): {
   repoUrl: string;
@@ -495,6 +536,7 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
         continue;
       }
       for (const folderName of entries) {
+        if (folderName.startsWith(".")) continue;
         if (managedFolders.has(folderName)) continue;
         try {
           const s = await stat(join(destDir, folderName));
@@ -552,10 +594,8 @@ async function _installItem(
   _installingSet.add(key);
   try {
     const storeDir = getStoreDir();
-    const repoBase = resolve(join(storeDir, repo.localPath));
-    const srcDir = resolveContained(repoBase, normalizedPath);
-    if (!srcDir || srcDir === repoBase)
-      throw new Error("Invalid item path.");
+    const repoDir = join(storeDir, repo.localPath);
+    const srcDir = await resolveStoreItemDir(repoDir, normalizedPath);
     try {
       await stat(srcDir);
     } catch (err) {
@@ -563,7 +603,7 @@ async function _installItem(
       throw new Error("Item path not found in repository.");
     }
     const pkg = JSON.parse(
-      await readFile(join(storeDir, repo.localPath, "package.json"), "utf-8"),
+      await readFile(join(repoDir, "package.json"), "utf-8"),
     ) as RepoPackageJson;
     const entries = getEntriesForType(pkg, type);
     const manifest = entries?.find(
@@ -590,7 +630,7 @@ async function _installItem(
     } catch (e) {
       if (e instanceof Error && e.message.includes("already exists")) throw e;
     }
-    await copyItemDir(srcDir, destDir, STORE_METADATA);
+    await stageItemDir(srcDir, destBase, folderName);
     freshData.installed.push({
       repoUrl: repo.url,
       type,
@@ -668,7 +708,8 @@ async function _updateItem(
   );
   if (!inst) throw new Error("Item is not installed.");
   const storeDir = getStoreDir();
-  const srcDir = join(storeDir, repo.localPath, normalizedPath);
+  const repoDir = join(storeDir, repo.localPath);
+  const srcDir = await resolveStoreItemDir(repoDir, normalizedPath);
   try {
     await stat(srcDir);
   } catch (err) {
@@ -676,7 +717,7 @@ async function _updateItem(
     throw new Error("Item path not found in repository.");
   }
   const pkg = JSON.parse(
-    await readFile(join(storeDir, repo.localPath, "package.json"), "utf-8"),
+    await readFile(join(repoDir, "package.json"), "utf-8"),
   ) as RepoPackageJson;
   const entries = getEntriesForType(pkg, type);
   const manifest = entries?.find(
@@ -685,15 +726,16 @@ async function _updateItem(
   const destBase = getDestDir(type);
   const destDir = join(destBase, inst.installedAs);
   const lowerTarget = inst.installedAs.toLowerCase();
-  const siblings = await readdir(destBase).catch(() => [] as string[]);
-  for (const entry of siblings) {
-    if (entry.toLowerCase() === lowerTarget) {
-      await rm(join(destBase, entry), { recursive: true, force: true }).catch(
-        () => {},
-      );
+  await stageItemDir(srcDir, destBase, inst.installedAs, async () => {
+    const siblings = await readdir(destBase).catch(() => [] as string[]);
+    for (const entry of siblings) {
+      if (entry.toLowerCase() === lowerTarget) {
+        await rm(join(destBase, entry), { recursive: true, force: true }).catch(
+          () => {},
+        );
+      }
     }
-  }
-  await copyItemDir(srcDir, destDir, STORE_METADATA);
+  });
   if (manifest?.version) inst.version = manifest.version;
   if (manifest?.minDegoogVersion)
     inst.minDegoogVersion = manifest.minDegoogVersion;
@@ -766,9 +808,11 @@ async function _deleteUntracked(
   type: ExtensionStoreType,
   folderName: string,
 ): Promise<void> {
-  const base = resolve(STORE_TYPE_SPECS[type].destDir());
-  const target = resolveContained(base, folderName);
-  if (!target || target === base) throw new Error("Invalid folder name.");
+  const target = resolveChild(
+    STORE_TYPE_SPECS[type].destDir(),
+    folderName,
+  );
+  if (!target) throw new Error("Invalid folder name.");
   await rm(target, { recursive: true, force: true });
   await reloadAfterAction(type);
 }

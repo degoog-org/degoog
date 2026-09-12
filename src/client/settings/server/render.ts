@@ -192,7 +192,7 @@ const _domainReplaceBlock = (): string => `
   <div class="settings-proxy-urls-wrap" id="settings-domain-replace-wrap" style="display: none">
     <fieldset class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact">
       <label for="settings-domain-replace-list" class="settings-proxy-urls-label">${escapeHtml(t("settings-page.server.domain-replace-list-label"))}</label>
-      <textarea id="settings-domain-replace-list" data-save-key="domainReplaceList" class="settings-proxy-urls degoog-input" rows="5" placeholder="reddit.com -> teddit.example.com&#10;twitter.com -> nitter.example.com"></textarea>
+      <textarea id="settings-domain-replace-list" data-save-key="domainReplaceList" class="settings-proxy-urls degoog-input" rows="5" placeholder="reddit.com -> teddit.example.com&#10;twitter.com -> nitter.example.com&#10;wikipedia.org -> https://wiki.example.com/viewer#wikipedia_en_all{{path}}"></textarea>
       ${_toggle("settings-domain-replace-ui-enabled", "settings-page.server.domain-replace-ui-enable")}
       ${_desc("settings-page.server.domain-replace-ui-desc")}
     </fieldset>

@@ -7,10 +7,14 @@ import { logger } from "../../utils/logger";
 export function registerSearchTabsRoutes(router: Hono): void {
   router.get("/api/search-tabs", async (c) => {
     const seen = new Set<string>();
+    const seenLower = new Set<string>();
     const list: { id: string; name: string; icon: string | null }[] = [];
 
     for (const engineType of await getCustomEngineTypes()) {
-      seen.add(engineType);
+      const lower = engineType.toLowerCase();
+      if (seenLower.has(lower)) continue;
+      seenLower.add(lower);
+      seen.add(lower);
       list.push({
         id: `engine:${engineType}`,
         name: engineType.charAt(0).toUpperCase() + engineType.slice(1),
@@ -27,8 +31,11 @@ export function registerSearchTabsRoutes(router: Hono): void {
         );
         continue;
       }
-      if (tab.engineType && seen.has(tab.engineType)) {
-        const existing = list.find((t) => t.id === `engine:${tab.engineType}`);
+      const engineType = tab.engineType?.toLowerCase();
+      if (engineType && seen.has(engineType)) {
+        const existing = list.find(
+          (t) => t.id.toLowerCase() === `engine:${engineType}`,
+        );
         if (existing) {
           existing.name = tab.name;
           existing.icon = tab.icon ?? null;

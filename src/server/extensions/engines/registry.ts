@@ -17,10 +17,7 @@ import {
   mergeDefaults,
 } from "../../utils/plugin-settings";
 import { bootCircuitFromPath } from "../../utils/translation-circuit";
-import {
-  getTransportNames,
-  getTransportDisplayNames,
-} from "../transports/registry";
+import { transportPicks } from "../transports/registry";
 import { enginesDir, defaultEnginesFile } from "../../utils/paths";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -292,6 +289,7 @@ export const getInstalledSearchTypes = async (
   const types = new Set<string>();
   for (const e of allEngineEntries()) {
     if (excludeId && e.id === excludeId) continue;
+    if (await isDisabled(e.id)) continue;
     for (const t of await resolveEngineTypes(e)) types.add(t);
   }
   return [...types];
@@ -467,8 +465,8 @@ export const getEngineExtensionMeta = async (
   const items = allEngineEntries();
   const engineMap = getEngineMap();
   const results: ExtensionMeta[] = [];
-  const transportOptions = getTransportNames();
-  const transportLabels = getTransportDisplayNames();
+  const { names: transportOptions, labels: transportLabels } =
+    await transportPicks();
 
   const baseScoreField = coreT
     ? {

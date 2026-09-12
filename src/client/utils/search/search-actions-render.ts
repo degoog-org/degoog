@@ -4,7 +4,7 @@ import {
   skeletonResults,
   skeletonSidebar,
 } from "../../animations/skeleton";
-import { closeMediaPreview, syncMediaPreviewPanel } from "../../modules/media/media";
+import { closeMediaPreview, MediaPreviewCloseMode, syncMediaPreviewPanel } from "../../modules/media/media";
 import {
   clearSlotPanels,
   renderResults,
@@ -64,7 +64,7 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
   teardownInfinite();
   showAllTabs();
   setActiveTab(resolvedType);
-  closeMediaPreview();
+  closeMediaPreview(MediaPreviewCloseMode.Reset);
   abortAcReq();
   hideAcDropdown(document.getElementById("ac-dropdown-home"));
   hideAcDropdown(document.getElementById("ac-dropdown-results"));

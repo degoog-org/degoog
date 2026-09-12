@@ -22,7 +22,6 @@ import {
   resolveRepoAssetPath,
 } from "../extensions/store";
 import { ExtensionStoreType } from "../types";
-import { getBaseUrl } from "../utils/base-url";
 import { logger } from "../utils/logger";
 
 const router = new Hono();
@@ -335,7 +334,7 @@ router.get("/api/store/installed", async (c) => {
 });
 
 router.get(
-  `${getBaseUrl()}/api/store/screenshots/:repoSlug/:type/:item/:filename`,
+  "/api/store/screenshots/:repoSlug/:type/:item/:filename",
   async (c) => {
     if (!(await gandalf(canBalrogPass(c))))
       return c.json({ error: "You shall not pass!" }, 401);

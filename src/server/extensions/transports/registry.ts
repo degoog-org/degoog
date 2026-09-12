@@ -73,13 +73,25 @@ export function getTransport(name: string): Transport | undefined {
   return _all().find((t) => t.name === name);
 }
 
-export function getTransportNames(): string[] {
-  return _all().map((t) => t.name);
-}
+// Non-builtin transports can be disabled; keep those out of pickers.
+const _enabledTransports = async (): Promise<Transport[]> => {
+  const results: Transport[] = [];
+  for (const t of _all()) {
+    const settings = await getSettings(t.name);
+    if (settings["disabled"] !== "true") results.push(t);
+  }
+  return results;
+};
 
-export function getTransportDisplayNames(): string[] {
-  return _all().map((t) => t.displayName ?? t.name);
-}
+export type TransportPicks = { names: string[]; labels: string[] };
+
+export const transportPicks = async (): Promise<TransportPicks> => {
+  const enabled = await _enabledTransports();
+  return {
+    names: enabled.map((t) => t.name),
+    labels: enabled.map((t) => t.displayName ?? t.name),
+  };
+};
 
 export const getAvailableTransportNames = async (): Promise<string[]> => {
   const results: string[] = [];

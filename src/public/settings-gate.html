@@ -101,6 +101,7 @@
     <script>
       (function () {
         var t = window.scopedT("core");
+        var baseUrl = window.__DEGOOG_BASE_URL__ || "";
         const TOKEN_KEY = "degoog-settings-token";
         const form = document.getElementById("settings-auth-form");
         const errorEl = document.getElementById("settings-auth-error");
@@ -109,7 +110,7 @@
           const password = document.getElementById("settings-auth-input").value;
           errorEl.textContent = "";
           try {
-            const res = await fetch("/api/settings/auth", {
+            const res = await fetch(baseUrl + "/api/settings/auth", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ password }),

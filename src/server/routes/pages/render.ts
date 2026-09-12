@@ -105,7 +105,8 @@ function getTextDirection(locale: string): "rtl" | "ltr" {
 function themeCssPlaceholder(): string {
   const theme = getActiveTheme();
   if (!theme?.manifest.css) return "";
-  return `<link rel="stylesheet" href="/theme/style.css?v=${pkg.version}">`;
+  const themeId = encodeURIComponent(theme.id);
+  return `<link rel="stylesheet" href="/theme/style.css?v=${pkg.version}&theme=${themeId}">`;
 }
 
 const customCssPlaceholder = async (): Promise<string> => {

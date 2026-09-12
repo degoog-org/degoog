@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { mkdirSync } from "fs";
+import { mkdirSync, statSync } from "fs";
 import { tmpdir } from "os";
-import { join } from "path";
+import { dirname, join } from "path";
 
 const SHARED = join(tmpdir(), "degoog-indexer-tests");
 mkdirSync(SHARED, { recursive: true });
@@ -32,8 +32,6 @@ import {
   removeImportSession,
 } from "../../src/server/indexer/transfer/sessions";
 import type { SearchResult } from "../../src/server/types";
-import { statSync } from "fs";
-import { dirname } from "path";
 
 const TYPE = "web";
 

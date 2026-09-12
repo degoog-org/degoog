@@ -1,5 +1,5 @@
 import { closeMediaPreview, navigateMediaPreview } from "./media";
-import { initLightbox } from "./lightbox";
+import { initLightbox, isLbOpen } from "./lightbox";
 import { isEditableTarget } from "../../utils/keyboard-shortcuts";
 
 export function initMediaPreview(): void {
@@ -25,6 +25,7 @@ export function initMediaPreview(): void {
       e.preventDefault();
       navigateMediaPreview(1);
     } else if (e.key === "Escape") {
+      if (isLbOpen()) return;
       e.preventDefault();
       closeMediaPreview();
     }

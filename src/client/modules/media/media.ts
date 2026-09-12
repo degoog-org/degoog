@@ -5,11 +5,19 @@ import { cleanHostname, escapeHtml } from "../../utils/dom";
 import { getEngines, isImageSearchType } from "../../utils/engines";
 import { buildSearchBody, buildSearchUrl, faviconHostname } from "../../utils/url";
 import { attachFaviconFallback } from "../../utils/favicon";
-import { openLightbox } from "./lightbox";
+import { openLightbox, dropLbOverlay } from "./lightbox";
 import { searchAuthHeaders, appendSearchAuthParams } from "../../utils/request";
 import { renderTemplate } from "../../utils/template";
+import { openOverlay, closeOverlay, discardOverlay } from "../../utils/overlay-history";
 
 const MORE_IMAGES_COUNT = 15;
+export const MEDIA_PREVIEW_OVERLAY = "media-preview";
+
+export enum MediaPreviewCloseMode {
+  User = "user",
+  HistoryPop = "historyPop",
+  Reset = "reset",
+}
 
 let mediaObserver: IntersectionObserver | null = null;
 let appendMediaCardsRef:
@@ -174,6 +182,7 @@ export function openMediaPreview(
     "media-preview-img",
   ) as HTMLImageElement | null;
   const info = document.getElementById("media-preview-info");
+  const wasOpen = panel?.classList.contains("open") ?? false;
 
   currentMediaIdx = idx;
   currentCardSelector = cardSelector;
@@ -253,6 +262,12 @@ export function openMediaPreview(
   panel?.classList.add("open");
   if (!isVideo) imageGridPanelSyncRef?.(true);
   syncFilters(false);
+
+  if (!wasOpen) {
+    openOverlay(MEDIA_PREVIEW_OVERLAY, () =>
+      closeMediaPreview(MediaPreviewCloseMode.HistoryPop),
+    );
+  }
 
   _updateNavButtons();
 }
@@ -462,13 +477,18 @@ export const syncMediaPreviewPanel = (isMediaType: boolean): void => {
   }
 
   if (panel.isConnected) {
-    closeMediaPreview();
+    closeMediaPreview(MediaPreviewCloseMode.Reset);
     panel.remove();
   }
 };
 
-export function closeMediaPreview(): void {
-  document.getElementById("media-preview-panel")?.classList.remove("open");
+export function closeMediaPreview(
+  mode: MediaPreviewCloseMode = MediaPreviewCloseMode.User,
+): void {
+  const panel = document.getElementById("media-preview-panel");
+  const wasOpen = panel?.classList.contains("open") ?? false;
+
+  panel?.classList.remove("open");
   if (currentCardSelector !== ".video-card") imageGridPanelSyncRef?.(false);
   syncFilters(true);
   document.querySelector(".media-preview-embed")?.remove();
@@ -480,4 +500,13 @@ export function closeMediaPreview(): void {
     .querySelectorAll<HTMLElement>(".image-card, .video-card")
     .forEach((c) => c.classList.remove("selected"));
   currentMediaIdx = -1;
+
+  if (!wasOpen) return;
+
+  if (mode === MediaPreviewCloseMode.Reset) {
+    discardOverlay(MEDIA_PREVIEW_OVERLAY);
+    dropLbOverlay();
+  } else if (mode === MediaPreviewCloseMode.User) {
+    closeOverlay(MEDIA_PREVIEW_OVERLAY);
+  }
 }

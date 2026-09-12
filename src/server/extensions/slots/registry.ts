@@ -16,6 +16,7 @@ import {
   lockinNameSpace,
   lockinSettingsId,
 } from "../../utils/plugin-assets";
+import { extensionReadmeExists } from "../../utils/extension-docs";
 import { getSettings, isDisabled, maskSecrets } from "../../utils/plugin-settings";
 import { bootCircuitFromPath } from "../../utils/translation-circuit";
 import { createRegistry } from "../registry-factory";
@@ -190,6 +191,8 @@ export const getSlotExtensionMeta = async (
         : slot.position;
     }
 
+    const { exists: docsExist } = await extensionReadmeExists(id);
+
     out.push({
       id,
       displayName: manifest?.name ?? slot.name,
@@ -201,6 +204,7 @@ export const getSlotExtensionMeta = async (
       source: getSlotSource(slot.id),
       isClientExposed: slot.isClientExposed,
       needsAppRestart: isExtensionRestartFlagVisible(slot.needsAppRestart),
+      extensionDocsAvailable: docsExist,
     });
   }
 

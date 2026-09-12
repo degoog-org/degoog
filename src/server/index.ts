@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { serveStatic, upgradeWebSocket, websocket } from "hono/bun";
-import { trimTrailingSlash } from "hono/trailing-slash";
 import { lstatSync, unlinkSync } from "fs";
 import net from "net";
 import pkg from "../../package.json";
 import { getBasePath } from "./utils/base-url";
+import { trimSlash } from "./utils/trailing-slash";
 import { getLocale } from "./utils/hono";
 import { initPlugins } from "./extensions/commands/registry";
 import { initUovadipasquas } from "./extensions/uovadipasqua/registry";
@@ -38,7 +38,7 @@ const BASE_PATH = getBasePath();
 
 const app = new Hono();
 
-app.use(trimTrailingSlash());
+app.use(trimSlash());
 
 app.use("*", async (c, next) => {
   await next();
@@ -185,7 +185,10 @@ process.on("SIGINT", () => shutdown("SIGINT"));
 Promise.all([initServerKey(), initExtensionRegistries()])
   .then(async () => {
     const settings = await getInstanceSettings();
-    if (asBoolean(settings.degoogIndexerEnabled)) startQueue();
+    if (asBoolean(settings.degoogIndexerEnabled))
+      await startQueue().catch((err) =>
+        logger.error("indexer", "queue start failed", err),
+      );
 
     for (const [name] of getTransportWsHandlers()) {
       app.get(`/ws/${name}/:password?`, upgradeWebSocket((c) => {

@@ -17,9 +17,14 @@ const isIndexerOn = async (): Promise<boolean> => {
 export const type = async (): Promise<string[]> => {
   if (!(await isIndexerOn())) return [];
   const { getInstalledSearchTypes } = await import("../../registry");
-  const seen = new Set(await getInstalledSearchTypes(DEGOOG_ENGINE_ID));
-  for (const t of getKnownTypes()) seen.add(t);
-  return [...seen];
+  const installed = await getInstalledSearchTypes(DEGOOG_ENGINE_ID);
+  const installedByLower = new Map(installed.map((t) => [t.toLowerCase(), t]));
+  const matched = new Set<string>();
+  for (const known of getKnownTypes()) {
+    const match = installedByLower.get(known.toLowerCase());
+    if (match) matched.add(match);
+  }
+  return [...matched];
 };
 
 class DegoogEngine {
