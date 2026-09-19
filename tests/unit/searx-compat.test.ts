@@ -532,7 +532,7 @@ describe("SearX compatibility layer", () => {
 
   test("scrubs control characters out of bridge log messages", async () => {
     const { scrubLog } = await import(
-      "../../src/server/extensions/compatibility-layer/searx/index"
+      "../../src/server/extensions/compatibility-layer/scrub-log"
     );
     const forged = "ftp://evil.test/x\r\nWARN searx-compat forged line\u0000";
     expect(scrubLog(forged)).toBe("ftp://evil.test/xWARN searx-compat forged line");

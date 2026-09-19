@@ -1,0 +1,7 @@
+{
+  "wikipedia": {
+    "name": "Wikipedia",
+    "description": "Zeigt eine Wikipedia-Zusammenfassung in der Seitenleiste, wenn die Suchanfrage zu einem Artikel passt.",
+    "view-on-wikipedia": "Wikipedia ↗"
+  }
+}

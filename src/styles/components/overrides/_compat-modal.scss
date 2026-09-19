@@ -1,4 +1,4 @@
-.searx-note {
+.compat-note {
   display: flex;
   flex-direction: column;
   gap: $space-2;
@@ -8,14 +8,14 @@
   background: var(--bg);
 }
 
-.searx-note-intro {
+.compat-note-intro {
   margin: 0;
   font-size: $font-size-small;
   line-height: 1.5;
   color: var(--text-secondary);
 }
 
-.searx-note-list {
+.compat-note-list {
   margin: 0;
   padding-left: $space-4;
   display: flex;
@@ -30,13 +30,13 @@
   }
 }
 
-.searx-meta-key {
+.compat-meta-key {
   font-weight: 600;
   color: var(--text-primary);
   cursor: help;
 }
 
-.searx-status {
+.compat-status {
   &:empty {
     display: none;
   }

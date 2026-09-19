@@ -29,9 +29,9 @@ import { DEGOOG_ENGINE_ID } from "./builtins/degoog";
 import type { EngineFilters } from "../../../shared/engine-filters";
 import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
 import {
-  loadSearxCompatibilityEngines,
-  type SearxCompatEntry,
-} from "../compatibility-layer/searx";
+  loadCompatEngines,
+  type CompatEntry,
+} from "../compatibility-layer/registry";
 
 const builtinsDir = join(import.meta.dir, "builtins");
 
@@ -68,11 +68,11 @@ interface PluginEntry {
   filters?: EngineFilters;
 }
 
-let _searxCompatEntries: SearxCompatEntry[] = [];
+let _compatEntries: CompatEntry[] = [];
 
-const allEngineEntries = (): (PluginEntry | SearxCompatEntry)[] => [
+const allEngineEntries = (): (PluginEntry | CompatEntry)[] => [
   ...engineRegistry.items(),
-  ..._searxCompatEntries,
+  ..._compatEntries,
 ];
 
 const resolveTypes = (
@@ -617,7 +617,7 @@ export const getEngineExtensionMeta = async (
 export const initEngines = async (bust = false): Promise<void> => {
   clearTypeCache();
   await (bust ? engineRegistry.reload() : engineRegistry.init());
-  _searxCompatEntries = await loadSearxCompatibilityEngines();
+  _compatEntries = await loadCompatEngines();
 };
 
 export const reloadEngines = async (bust = true): Promise<void> => {

@@ -7,7 +7,7 @@ type Router = {
 const GATED_APIS: Array<{
   method: "GET" | "POST" | "DELETE";
   path: string;
-  routerKey: "store" | "themes" | "extensions" | "pages";
+  routerKey: "store" | "themes" | "extensions" | "pages" | "compat";
   body?: string;
 }> = [
   {
@@ -62,6 +62,44 @@ const GATED_APIS: Array<{
     path: "/api/store/screenshots/fake/plugin/item/thumb.png",
     routerKey: "store",
   },
+  { method: "GET", path: "/api/compat/searx/engines", routerKey: "compat" },
+  { method: "GET", path: "/api/compat/4get/engines", routerKey: "compat" },
+  {
+    method: "POST",
+    path: "/api/compat/searx/install",
+    routerKey: "compat",
+    body: '{"code":"fake"}',
+  },
+  {
+    method: "POST",
+    path: "/api/compat/searx/update",
+    routerKey: "compat",
+    body: '{"code":"fake"}',
+  },
+  {
+    method: "POST",
+    path: "/api/compat/searx/uninstall",
+    routerKey: "compat",
+    body: '{"code":"fake"}',
+  },
+  {
+    method: "POST",
+    path: "/api/compat/4get/install",
+    routerKey: "compat",
+    body: '{"code":"fake"}',
+  },
+  {
+    method: "POST",
+    path: "/api/compat/4get/update",
+    routerKey: "compat",
+    body: '{"code":"fake"}',
+  },
+  {
+    method: "POST",
+    path: "/api/compat/4get/uninstall",
+    routerKey: "compat",
+    body: '{"code":"fake"}',
+  },
 ];
 
 let routers: Record<string, Router>;
@@ -70,17 +108,19 @@ let envRestore: string | undefined;
 beforeAll(async () => {
   envRestore = process.env.DEGOOG_PUBLIC_INSTANCE;
   process.env.DEGOOG_PUBLIC_INSTANCE = "true";
-  const [storeMod, themesMod, extensionsMod, pagesMod] = await Promise.all([
+  const [storeMod, themesMod, extensionsMod, pagesMod, compatMod] = await Promise.all([
     import("../../src/server/routes/store"),
     import("../../src/server/routes/themes"),
     import("../../src/server/routes/extensions"),
     import("../../src/server/routes/pages"),
+    import("../../src/server/routes/compat-engines"),
   ]);
   routers = {
     store: storeMod.default,
     themes: themesMod.default,
     extensions: extensionsMod.default,
     pages: pagesMod.default,
+    compat: compatMod.default,
   };
 });
 

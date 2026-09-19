@@ -124,15 +124,17 @@ const _renderIndexerSection = (): string => `
     </fieldset>
   </section>`;
 
-const _renderSearxSection = (): string => `
+const _renderCompatSection = (): string => `
   <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-searx">
-    ${_h("settings-page.server.searx-heading", "fa-solid fa-flask")}
-    ${_desc("settings-page.server.searx-desc")}
+    ${_h("settings-page.server.compat-heading", "fa-solid fa-flask")}
+    ${_desc("settings-page.server.compat-desc")}
     <fieldset class="settings-fieldset">
       ${_toggle("settings-searx-compat-enabled", "settings-page.server.searx-enable", { aria: "settings-page.server.searx-enable-aria" })}
       ${_desc("settings-page.server.searx-enable-desc")}
       ${_toggle("settings-searx-api-enabled", "settings-page.server.searx-api-enable", { aria: "settings-page.server.searx-api-enable-aria" })}
       ${_desc("settings-page.server.searx-api-enable-desc")}
+      ${_toggle("settings-fourget-compat-enabled", "settings-page.server.4get-enable", { aria: "settings-page.server.4get-enable-aria" })}
+      ${_desc("settings-page.server.4get-enable-desc")}
     </fieldset>
   </section>`;
 
@@ -338,7 +340,7 @@ export const renderServerContent = (): string =>
     _renderCacheSection(),
     _renderApiKeySection(),
     _renderIndexerSection(),
-    _renderSearxSection(),
+    _renderCompatSection(),
     _renderSearchOptionsSection(),
     _renderDomainSection(),
     _renderProxySection(),

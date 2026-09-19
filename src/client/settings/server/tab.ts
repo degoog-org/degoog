@@ -182,6 +182,7 @@ async function _loadServerSettings(
 
     setToggle("searx-compat-enabled", data.searxCompatEnabled);
     setToggle("searx-api-enabled", data.searxApiEnabled);
+    setToggle("fourget-compat-enabled", data.fourgetCompatEnabled);
     setToggle("degoog-indexer-enabled", data.degoogIndexerEnabled);
     setIndexerNavVisible(
       data.degoogIndexerEnabled === true || data.degoogIndexerEnabled === "true",

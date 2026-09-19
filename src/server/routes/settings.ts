@@ -31,6 +31,7 @@ import {
 import { writeSyncedDefaults } from "../utils/synced-settings";
 import { startQueue, stopQueue } from "../indexer/queue";
 import { ReloadMode, reloadSync } from "../extensions/store/reload-sync";
+import { COMPAT_SETTING_KEYS } from "../extensions/compatibility-layer/registry";
 import { ExtensionStoreType } from "../types";
 import {
   SETTINGS_SCHEMA,
@@ -218,15 +219,23 @@ router.get("/api/settings/general", async (c) => {
   return c.json(trimBigFields({ ...settings, ...indexerLists, ...domainLists }));
 });
 
-const _reloadSearx = async (): Promise<boolean> => {
+const _reloadCompat = async (): Promise<boolean> => {
   try {
     await reloadSync(ExtensionStoreType.Engine, ReloadMode.Bust);
     return true;
   } catch (err) {
-    logger.warn("settings", "engine reload after a searx toggle failed", err);
+    logger.warn("settings", "engine reload after a compatibility layer toggle failed", err);
     return false;
   }
 };
+
+const _compatToggled = (
+  updates: Record<string, string | boolean>,
+  existing: Record<string, ServerSettingValue>,
+): boolean =>
+  COMPAT_SETTING_KEYS.some(
+    (key) => key in updates && asBoolean(updates[key]) !== asBoolean(existing[key]),
+  );
 
 type SaveResult = {
   ok: true;
@@ -263,15 +272,12 @@ router.post("/api/settings/general", async (c) => {
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const existing = await getInstanceSettings();
   const updates = _applySchemaUpdates(body);
-  const searxWasOn = asBoolean(existing.searxCompatEnabled);
   await setInstanceSettings({ ...existing, ...updates });
   await _persistListFields(body);
   await syncBlocklist();
   const indexerUp = await _reconcileIndexerQueue();
-  const toggled =
-    "searxCompatEnabled" in updates &&
-    asBoolean(updates.searxCompatEnabled) !== searxWasOn;
-  return c.json(_savedBody(toggled ? await _reloadSearx() : true, indexerUp));
+  const toggled = _compatToggled(updates, existing);
+  return c.json(_savedBody(toggled ? await _reloadCompat() : true, indexerUp));
 });
 
 router.post("/api/settings/field", async (c) => {
@@ -295,7 +301,7 @@ router.post("/api/settings/field", async (c) => {
   await syncBlocklist();
   const indexerUp =
     key === "degoogIndexerEnabled" ? await _reconcileIndexerQueue() : true;
-  const reloaded = key === "searxCompatEnabled" ? await _reloadSearx() : true;
+  const reloaded = COMPAT_SETTING_KEYS.includes(key) ? await _reloadCompat() : true;
   return c.json(_savedBody(reloaded, indexerUp));
 });
 

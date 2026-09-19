@@ -31,7 +31,7 @@ const saveField = (key: string, value: string) =>
     }),
   );
 
-describe("POST /api/settings/field searx reload", () => {
+describe("POST /api/settings/field compatibility layer reload", () => {
   beforeAll(async () => {
     for (const key of SAVED_ENV_KEYS) savedEnv.set(key, process.env[key]);
     tempDir = mkdtempSync(join(tmpdir(), "degoog-searx-reload-"));
@@ -72,6 +72,20 @@ describe("POST /api/settings/field searx reload", () => {
   test("stays quiet when the reload works", async () => {
     reloadFails = false;
     const res = await saveField("searxCompatEnabled", "false");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
+  });
+
+  test("the 4get toggle reloads engines the same way", async () => {
+    reloadFails = true;
+    const res = await saveField("fourgetCompatEnabled", "true");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, searxReloadFailed: true });
+  });
+
+  test("the 4get toggle stays quiet when the reload works", async () => {
+    reloadFails = false;
+    const res = await saveField("fourgetCompatEnabled", "false");
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
   });

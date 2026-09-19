@@ -20,6 +20,7 @@ import {
 } from "../../../utils/plugin-settings";
 import { getInstanceSettings } from "../../../utils/server-settings";
 import { runPython, type RpcFetchReply, type RpcHandlers } from "./rpc";
+import { scrubLog } from "../scrub-log";
 import { isSupportFile, isSupportedEngine } from "./catalog";
 import {
   optionFields,
@@ -168,11 +169,6 @@ const _setCookies = (headers: Headers): Record<string, string> => {
   }
   return out;
 };
-
-const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/g;
-
-export const scrubLog = (raw: string): string =>
-  String(raw ?? "").replace(CONTROL_CHARS, "");
 
 const _isWebUrl = (raw: string): boolean => {
   try {

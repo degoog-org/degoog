@@ -14,19 +14,37 @@ import { getStoredToken } from "../../utils/settings-token";
 import { openTabOrderModal } from "../shared/tab-order-modal";
 import { extCardRestartWarning } from "../shared/ext-card";
 import { typeLabel } from "./type-label";
-import { openSearxModal } from "./searx-modal";
-import { searxOn } from "./searx-api";
+import { openCompatModal } from "./compat-modal";
+import { enabledLayers, type CompatLayerView } from "./compat-api";
 
 const t = window.scopedT("core");
 
 let _orderSavedHandler: (() => void) | null = null;
 
-const SEARX_NOTES = [
-  "settings-page.extensions.searx-note-native",
-  "settings-page.extensions.searx-note-upstream",
-  "settings-page.extensions.searx-note-filters",
-  "settings-page.extensions.searx-note-shared",
+const _layerBtnId = (layer: CompatLayerView): string => `open-compat-${layer.id}`;
+
+const COMPAT_NOTES = [
+  "compat-note-native",
+  "compat-note-upstream",
+  "compat-note-updates",
+  "compat-note-needs",
 ];
+
+const _layerButton = (layer: CompatLayerView): string =>
+  `<button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="${_layerBtnId(layer)}" type="button">${escapeHtml(t("settings-page.extensions.compat-open", { layer: layer.label }))}</button>`;
+
+const _compatSection = (layers: CompatLayerView[]): string => `
+    <section class="settings-section ext-card degoog-panel degoog-panel--ext-card">
+      <div class="setting-section-heading-wrapper">
+        <h2 class="settings-section-heading">${escapeHtml(t("settings-page.extensions.compat-heading"))}<span class="degoog-badge degoog-badge--experimental">${escapeHtml(t("settings-page.extensions.compat-experimental"))}</span></h2>
+        <div class="floating-section-icon"><i class="fa-solid fa-flask"></i></div>
+      </div>
+      <p class="settings-desc">${escapeHtml(t("settings-page.extensions.compat-desc"))}</p>
+      <div class="compat-note">
+        <ul class="compat-note-list">${COMPAT_NOTES.map((key) => `<li>${escapeHtml(t(`settings-page.extensions.${key}`))}</li>`).join("")}</ul>
+      </div>
+      <div class="settings-page-actions">${layers.map(_layerButton).join("")}</div>
+    </section>`;
 
 
 const _engineTypes = (engine: ExtensionMeta): string[] => {
@@ -120,8 +138,8 @@ const _renderEngineCard = (
           escapeHtml(t("settings-page.extensions.status-needs-config")) +
           '"></span>'
         : "";
-  const searxBadge = engine.compatibilityLayer === "searx"
-    ? '<span class="degoog-badge degoog-badge--engine-type">searx</span>'
+  const searxBadge = engine.compatibilityLayer
+    ? `<span class="degoog-badge degoog-badge--engine-type">${escapeHtml(engine.compatibilityLayer)}</span>`
     : "";
   const configureBtn =
     allowConfigure && engine.configurable
@@ -170,7 +188,7 @@ export async function initEnginesTab(
     ...savedEnginesMap,
   };
 
-  const searxEnabled = allowConfigure && (await searxOn());
+  const layers = allowConfigure ? await enabledLayers() : [];
   const rawGroups = _groupByType(allExtensions.engines);
   const savedOrder = await getTabOrder();
   const groups = _sortGroups(rawGroups, savedOrder);
@@ -194,21 +212,8 @@ export async function initEnginesTab(
     </section>`;
   }
 
-  if (searxEnabled) {
-    html += `<section class="settings-section ext-card degoog-panel degoog-panel--ext-card">
-      <div class="setting-section-heading-wrapper">
-        <h2 class="settings-section-heading">${escapeHtml(t("settings-page.extensions.searx-heading"))}<span class="degoog-badge degoog-badge--experimental">${escapeHtml(t("settings-page.extensions.searx-experimental"))}</span></h2>
-        <div class="floating-section-icon"><i class="fa-solid fa-flask"></i></div>
-      </div>
-      <p class="settings-desc">${escapeHtml(t("settings-page.extensions.searx-desc"))}</p>
-      <div class="searx-note">
-        <p class="searx-note-intro">${escapeHtml(t("settings-page.extensions.searx-note"))}</p>
-        <ul class="searx-note-list">${SEARX_NOTES.map((key) => `<li>${escapeHtml(t(key))}</li>`).join("")}</ul>
-      </div>
-      <div class="settings-page-actions">
-        <button class="btn btn--secondary degoog-btn degoog-btn--secondary" id="open-searx-modal" type="button">${escapeHtml(t("settings-page.extensions.searx-open"))}</button>
-      </div>
-    </section>`;
+  if (layers.length > 0) {
+    html += _compatSection(layers);
   }
 
   for (const { label, engines } of groups) {
@@ -253,10 +258,10 @@ export async function initEnginesTab(
         });
       });
 
-    if (searxEnabled) {
+    for (const layer of layers) {
       document
-        .getElementById("open-searx-modal")
-        ?.addEventListener("click", () => void openSearxModal());
+        .getElementById(_layerBtnId(layer))
+        ?.addEventListener("click", () => void openCompatModal(layer));
     }
 
     document

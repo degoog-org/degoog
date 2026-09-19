@@ -41,6 +41,7 @@ export type ServerSettingsData = {
   degoogIndexerEnabled?: BoolSetting;
   searxCompatEnabled?: BoolSetting;
   searxApiEnabled?: BoolSetting;
+  fourgetCompatEnabled?: BoolSetting;
 };
 
 export type ButtonStateHandler = (

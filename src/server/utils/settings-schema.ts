@@ -61,6 +61,7 @@ export const SETTINGS_SCHEMA = {
   degoogIndexerWordBlocklist:   { kind: "lines",   default: "" },
   searxCompatEnabled:           { kind: "boolean", default: false },
   searxApiEnabled:              { kind: "boolean", default: false },
+  fourgetCompatEnabled:         { kind: "boolean", default: false },
 } satisfies Record<string, SettingDef>;
 
 export type SettingKey = keyof typeof SETTINGS_SCHEMA;

@@ -6,6 +6,8 @@ import { OVERSIZED_CLASS } from "../shared/oversized";
 import { boolStr, el } from "./fields";
 import { serializeScoreRows } from "./domain-score";
 
+const COMPAT_TOGGLES = ["searx-compat-enabled", "fourget-compat-enabled"];
+
 const TOGGLE_KEYS = [
   "proxy-enabled",
   "image-proxy-allow-local",
@@ -28,6 +30,7 @@ const TOGGLE_KEYS = [
   "degoog-indexer-enabled",
   "searx-compat-enabled",
   "searx-api-enabled",
+  "fourget-compat-enabled",
 ] as const;
 
 const RL_SEARCH_KEYS = [
@@ -70,7 +73,7 @@ export const bindToggleAutoSave = (getToken: () => string | null): void => {
         }
         flashSuccess(window.scopedT("core")("settings-page.server.saved"));
         _syncVisibilityToggle(id, input.checked);
-        if (id === "degoog-indexer-enabled" || id === "searx-compat-enabled") {
+        if (COMPAT_TOGGLES.includes(id) || id === "degoog-indexer-enabled") {
           window.dispatchEvent(new Event("extensions-saved"));
         }
       } catch (err) {
