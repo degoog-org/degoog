@@ -77,6 +77,9 @@ const _renderGlanceHtml = (panels: SlotPanel[], clearIfEmpty: boolean): void => 
   runScriptsInContainer(glanceEl);
 };
 
+/**
+ * Fetches at-a-glance panels, replacing any older in-flight glance request.
+ */
 export async function fetchGlancePanels(
   query: string,
   results?: ScoredResult[],
@@ -87,12 +90,8 @@ export async function fetchGlancePanels(
     if (glanceEl) glanceEl.innerHTML = "";
     return;
   }
-  if (results === undefined) {
-    abortGlancePanels();
-    glanceAbortController = new AbortController();
-  } else if (!glanceAbortController) {
-    glanceAbortController = new AbortController();
-  }
+  abortGlancePanels();
+  glanceAbortController = new AbortController();
   const signal = glanceAbortController!.signal;
   try {
     const res = await fetch(`${getBase()}/api/slots/glance`, {
