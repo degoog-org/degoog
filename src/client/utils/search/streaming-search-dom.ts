@@ -3,6 +3,7 @@ import type { EngineTiming, ScoredResult } from "../../types";
 import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
 import { renderTemplate } from "../../utils/template";
 import { buildResultContext } from "../../modules/renderer/render";
+import { escapeHtml } from "../dom";
 import { engineCountHtml } from "./engine-failure";
 import { originSlot, paintOrigins } from "./engine-origins";
 import { PANEL_LAYOUT_BREAKPOINT } from "../../modules/renderer/render-media";
@@ -145,7 +146,7 @@ export function updateEngineTimings(
     html += `
       <div class="engine-stat-row${statusClass}">
         <div class="engine-stat-info">
-          <div class="engine-stat-label">${originSlot(et.name, et.id)}${et.name}</div>
+          <div class="engine-stat-label">${originSlot(et.name, et.id)}${escapeHtml(et.name)}</div>
           <div class="engine-stat-meta">${meta}</div>
         </div>
       </div>`;

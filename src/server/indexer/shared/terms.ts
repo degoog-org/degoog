@@ -2,9 +2,11 @@ export const MIN_PREFIX_LEN = 3;
 export const FUZZY_CANDIDATE_CAP = 10000;
 export const FTS_SCAN_CAP = 2000;
 
-const PUNCTUATION = /[^a-z0-9-]/g;
+const PUNCTUATION = /[^\p{L}\p{N}-]/gu;
 const EDGE_DASHES = /^-+|-+$/g;
-const ALPHANUMERIC = /[a-z0-9]/;
+const WORD_SPLIT = /[\s_]+/;
+const ALPHANUMERIC = /[\p{L}\p{N}]/u;
+const BOUNDARY = "[^\\p{L}\\p{N}]";
 
 export interface IndexTerm {
   raw: string;
@@ -17,13 +19,13 @@ const stripTerm = (s: string): string =>
 
 export const splitTerms = (queryNorm: string): IndexTerm[] =>
   queryNorm
-    .split(/\s+/)
+    .split(WORD_SPLIT)
     .filter(Boolean)
     .map((raw) => ({ raw, token: stripTerm(raw) }))
     .filter((t) => ALPHANUMERIC.test(t.token))
     .map((t) => ({
       ...t,
-      word: new RegExp(`(^|[^a-z0-9])${t.token}([^a-z0-9]|$)`),
+      word: new RegExp(`(^|${BOUNDARY})${t.token}(${BOUNDARY}|$)`, "u"),
     }));
 
 export const canPrefix = (term: IndexTerm): boolean =>

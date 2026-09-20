@@ -503,6 +503,8 @@
       "export-btn": "Index herunterladen (.db)",
       "export-modal-title": "Index herunterladen",
       "export-modal-desc": "Wähle den Suchmaschinentyp für den Export.",
+      "export-memory-warning": "Dieser Browser schreibt den Download nicht direkt auf die Festplatte, die ganze Datei bleibt also bis zum Ende im Arbeitsspeicher. Ein großer Index bringt den Tab zum Absturz. Firefox und Safari haben keine Save-File-API, und manche Chromium-Browser schalten sie ab.",
+      "export-insecure-warning": "Diese Seite läuft nicht über HTTPS, deshalb versteckt der Browser die Save-File-API und der ganze Download bleibt bis zum Ende im Arbeitsspeicher. Ein großer Index bringt den Tab zum Absturz. Betreibe die Instanz über HTTPS oder öffne sie auf localhost.",
       "export-done": "Download abgeschlossen.",
       "import-btn": "Index-Datei importieren",
       "import-modal-title": "Indexdaten importieren",

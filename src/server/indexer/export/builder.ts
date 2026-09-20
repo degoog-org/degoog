@@ -3,14 +3,16 @@ import { unlinkSync, mkdirSync } from "fs";
 import { join } from "path";
 import { randomBytes } from "crypto";
 import { getAdapter } from "../db/factory";
+import type { ExportRow } from "../types/adapter";
 import { rankFields } from "../shared/rank-fields";
 import { EXPORT_SCHEMA_DDL } from "./schema";
 import { logger } from "../../utils/logger";
 import { indexerTmpDir } from "../../utils/paths";
 
+export const EXPORT_BATCH_SIZE = 1000;
+
 export const buildSqliteExportFile = async (type: string): Promise<string> => {
   const adapter = getAdapter();
-  const rows = await adapter.exportRows(type);
 
   const dir = indexerTmpDir();
   mkdirSync(dir, { recursive: true });
@@ -42,8 +44,8 @@ export const buildSqliteExportFile = async (type: string): Promise<string> => {
     `);
     const selectUrl = db.prepare("SELECT id FROM urls WHERE url_norm = ?");
 
-    const tx = db.transaction(() => {
-      for (const row of rows) {
+    const tx = db.transaction((batch: ExportRow[]) => {
+      for (const row of batch) {
         const inserted = insertUrl.get({
           $url_norm: row.url_norm,
           $url: row.url,
@@ -80,7 +82,9 @@ export const buildSqliteExportFile = async (type: string): Promise<string> => {
       }
     });
 
-    tx();
+    for await (const batch of adapter.exportBatches(type, EXPORT_BATCH_SIZE)) {
+      tx(batch);
+    }
     db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
   } catch (err) {
     logger.error("indexer", `export-builder failed for type=${type}`, err);
@@ -97,16 +101,42 @@ export const buildSqliteExportFile = async (type: string): Promise<string> => {
   return tmpPath;
 };
 
-export const buildSqliteExport = async (type: string): Promise<Buffer> => {
-  const tmpPath = await buildSqliteExportFile(type);
+const _discard = (path: string): void => {
   try {
-    const buf = await Bun.file(tmpPath).arrayBuffer();
-    return Buffer.from(buf);
-  } finally {
-    try {
-      unlinkSync(tmpPath);
-    } catch {
-      // Not leaving a log or it'll spam.
-    }
+    unlinkSync(path);
+  } catch (err) {
+    logger.debug("indexer", `could not remove the export temp file ${path}`, err);
   }
+};
+
+export const exportStream = (
+  path: string,
+  size: number,
+  removeAfter: boolean,
+): ReadableStream<Uint8Array> => {
+  const source = Bun.file(path).slice(0, size).stream();
+  if (!removeAfter) return source;
+
+  const reader = source.getReader();
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          controller.close();
+          _discard(path);
+          return;
+        }
+        controller.enqueue(value);
+      } catch (err) {
+        logger.warn("indexer", `export stream failed for ${path}`, err);
+        _discard(path);
+        throw err;
+      }
+    },
+    async cancel(reason) {
+      await reader.cancel(reason);
+      _discard(path);
+    },
+  });
 };

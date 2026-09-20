@@ -7,7 +7,7 @@ const hostsFile = join(tmpdir(), `degoog-engine-hosts-${Date.now()}.json`);
 const _originalHostsFile = process.env.DEGOOG_ENGINE_HOSTS_FILE;
 process.env.DEGOOG_ENGINE_HOSTS_FILE = hostsFile;
 
-const { engineHost, noteEngineHost, primeEngineHosts } = await import(
+const { engineHost, flushHosts, noteEngineHost, primeEngineHosts } = await import(
   "../../src/server/extensions/engines/engine-hosts"
 );
 
@@ -66,9 +66,8 @@ describe("engine hosts", () => {
   test("the file on disk is valid json", async () => {
     noteEngineHost("mojeek-engine", "https://www.mojeek.com/search?q=cats");
     await settle();
-    await writeFile(hostsFile, JSON.stringify({ "mojeek-engine": "www.mojeek.com" }), "utf-8");
-    expect(JSON.parse(await readFile(hostsFile, "utf-8"))).toEqual({
-      "mojeek-engine": "www.mojeek.com",
-    });
+    await flushHosts();
+    const onDisk = JSON.parse(await readFile(hostsFile, "utf-8"));
+    expect(onDisk["mojeek-engine"]).toBe("www.mojeek.com");
   });
 });

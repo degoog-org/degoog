@@ -221,7 +221,9 @@ const _bindImport = (getToken: () => string | null): void => {
       }
       upload.reset();
       _announce(data);
-      setTimeout(() => window.location.reload(), RELOAD_DELAY_MS);
+      if (_countFailed(data) === 0) {
+        setTimeout(() => window.location.reload(), RELOAD_DELAY_MS);
+      }
     } catch (err) {
       console.warn("[settings] settings import failed", err);
       _fail(KEY.ImportFailed);

@@ -73,7 +73,7 @@ export interface IndexerAdapter {
   listHitsForType(type: string, q: string | undefined, limit: number, offset: number): Promise<HitRow[]>;
   countHitsForType(type: string, q: string | undefined): Promise<number>;
   sampleRows(type: string, limit: number): Promise<ExportRow[]>;
-  exportRows(type: string): Promise<ExportRow[]>;
+  exportBatches(type: string, size: number): AsyncIterable<ExportRow[]>;
 
   deleteHitsForType(type: string, ids: number[]): Promise<void>;
   clearType(type: string): Promise<void>;

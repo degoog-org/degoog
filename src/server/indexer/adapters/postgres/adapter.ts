@@ -449,10 +449,10 @@ export class PgAdapter implements IndexerAdapter {
     }
   }
 
-  async exportRows(type: string): Promise<ExportRow[]> {
+  async *exportBatches(type: string, size: number): AsyncIterable<ExportRow[]> {
     const schema = safeSlug(type);
     try {
-      return await this._sql<ExportRow[]>`
+      const cursor = this._sql<ExportRow[]>`
         SELECT h.query_norm, h.engine_type, u.url, u.url_norm, u.source_engine,
                u.title, u.snippet, u.thumbnail, u.image_url, u.is_gif, u.duration,
                u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance,
@@ -460,10 +460,11 @@ export class PgAdapter implements IndexerAdapter {
                h.sources_json, h.filters_json, h.meta_json
         FROM ${this._sql(schema)}.query_hits h
         JOIN ${this._sql(schema)}.urls u ON u.id = h.url_id
-      `;
+      `.cursor(size);
+      for await (const rows of cursor) yield rows as ExportRow[];
     } catch (err) {
-      logger.warn("indexer", `exportRows failed for type=${type}`, err);
-      return [];
+      logger.error("indexer", `exportBatches failed for type=${type}`, err);
+      throw err;
     }
   }
 

@@ -513,6 +513,8 @@
       "export-btn": "Download index (.db)",
       "export-modal-title": "Download index",
       "export-modal-desc": "Choose the engine type to export.",
+      "export-memory-warning": "This browser will not write the download straight to disk, so the whole file sits in memory until it finishes. A large index will kill the tab. Firefox and Safari have no save-file API, and some Chromium browsers switch it off.",
+      "export-insecure-warning": "This page is not on HTTPS, so the browser hides the save-file API and the whole download sits in memory until it finishes. A large index will kill the tab. Serve the instance over HTTPS, or open it on localhost.",
       "export-done": "Download complete.",
       "import-btn": "Import index file",
       "import-modal-title": "Import index data",

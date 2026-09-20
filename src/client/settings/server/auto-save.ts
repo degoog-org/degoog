@@ -95,20 +95,24 @@ export const bindSelectAutoSave = (getToken: () => string | null): void => {
     const key = _toCamel(id);
     let previous = select.value;
     select.addEventListener("change", async () => {
+      const chosen = select.value;
+      select.disabled = true;
       try {
-        const ok = await saveField(key, select.value, getToken);
+        const ok = await saveField(key, chosen, getToken);
         if (!ok) {
           console.error("[auto-save] select save failed", { key });
           select.value = previous;
           flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
           return;
         }
-        previous = select.value;
+        previous = chosen;
         flashSuccess(window.scopedT("core")("settings-page.server.saved"));
       } catch (err) {
         console.error("[auto-save] select save error", { key, err });
         select.value = previous;
         flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
+      } finally {
+        select.disabled = false;
       }
     });
   }

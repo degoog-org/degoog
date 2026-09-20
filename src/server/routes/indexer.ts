@@ -1,5 +1,4 @@
 import { Hono, type Context } from "hono";
-import { readFile } from "fs/promises";
 import { statSync } from "fs";
 import {
   clearAll,
@@ -13,7 +12,7 @@ import {
 import { checkpointType, discoverTypes, isPostgresMode } from "../indexer/db";
 import { clearTypeCache } from "../extensions/engines/registry";
 import { importFromBuffer, importFromFile } from "../indexer/import/importer";
-import { buildSqliteExport, buildSqliteExportFile } from "../indexer/export/builder";
+import { buildSqliteExportFile, exportStream } from "../indexer/export/builder";
 import {
   openExportSession,
   getExportSession,
@@ -193,22 +192,23 @@ router.get("/api/indexer/export", async (c) => {
   }
 
   try {
-    let buf: Buffer;
+    let path: string;
+    let temporary: boolean;
     if (isPostgresMode()) {
-      buf = await buildSqliteExport(type);
+      path = await buildSqliteExportFile(type);
+      temporary = true;
     } else {
       checkpointType(type);
-      buf = await readFile(indexerDbForType(type));
+      path = indexerDbForType(type);
+      temporary = false;
     }
     _exportCooldown.set(key, now);
 
-    // Honestly I hate casting types but for fuck sake this fucking thing is only allowing me to either 
-    // BREAK IT TO FIX TYPING or if I ignore it with @ts-expect-error it throws with Unused '@ts-expect-error' directive.
-    // Sometimes typescript makes no fucking sense.
-
-    return new Response(buf as unknown as BodyInit, {
+    const size = statSync(path).size;
+    return new Response(exportStream(path, size, temporary), {
       headers: {
         "Content-Type": "application/octet-stream",
+        "Content-Length": String(size),
         "Content-Disposition": `attachment; filename="degoog-index-${type}.db"`,
         "Cache-Control": "no-store",
       },

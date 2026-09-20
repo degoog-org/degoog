@@ -524,6 +524,8 @@
       "export-btn": "Scarica indice (.db)",
       "export-modal-title": "Scarica indice",
       "export-modal-desc": "Scegli il tipo di motore da esportare.",
+      "export-memory-warning": "Questo browser non scrive il download direttamente su disco, quindi l'intero file resta in memoria fino alla fine. Un indice grande fa crashare la scheda. Firefox e Safari non hanno un'API per salvare su file, e alcuni browser Chromium la disattivano.",
+      "export-insecure-warning": "Questa pagina non è su HTTPS, quindi il browser nasconde l'API per salvare su file e l'intero download resta in memoria fino alla fine. Un indice grande fa crashare la scheda. Servi l'istanza via HTTPS, oppure aprila su localhost.",
       "export-done": "Download completato.",
       "import-btn": "Importa file indice",
       "import-modal-title": "Importa dati indice",

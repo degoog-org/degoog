@@ -374,13 +374,25 @@ export class SqliteAdapter implements IndexerAdapter {
     }
   }
 
-  async exportRows(type: string): Promise<ExportRow[]> {
+  async *exportBatches(type: string, size: number): AsyncIterable<ExportRow[]> {
+    let stmt: Statement;
     try {
-      const db = this._db(type);
-      return db.prepare(EXPORT_SQL).all() as ExportRow[];
+      stmt = this._db(type).prepare(EXPORT_SQL);
     } catch (err) {
-      logger.warn("indexer", `exportRows failed for type=${type}`, err);
-      return [];
+      logger.warn("indexer", `exportBatches failed for type=${type}`, err);
+      return;
+    }
+    let batch: ExportRow[] = [];
+    try {
+      for (const row of stmt.iterate() as Iterable<ExportRow>) {
+        batch.push(row);
+        if (batch.length < size) continue;
+        yield batch;
+        batch = [];
+      }
+      if (batch.length > 0) yield batch;
+    } finally {
+      stmt.finalize();
     }
   }
 

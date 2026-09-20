@@ -473,6 +473,8 @@
       "export-btn": "Télécharger l'index (.db)",
       "export-modal-title": "Télécharger l'index",
       "export-modal-desc": "Choisissez le type de moteur à exporter.",
+      "export-memory-warning": "Ce navigateur n'écrit pas le téléchargement directement sur le disque, le fichier entier reste donc en mémoire jusqu'à la fin. Un index volumineux fait planter l'onglet. Firefox et Safari n'ont pas d'API d'enregistrement de fichier, et certains navigateurs Chromium la désactivent.",
+      "export-insecure-warning": "Cette page n'est pas en HTTPS, le navigateur masque donc l'API d'enregistrement de fichier et tout le téléchargement reste en mémoire jusqu'à la fin. Un index volumineux fait planter l'onglet. Sers l'instance en HTTPS, ou ouvre-la sur localhost.",
       "export-done": "Téléchargement terminé.",
       "import-btn": "Importer un fichier d'index",
       "import-modal-title": "Importer des données d'index",

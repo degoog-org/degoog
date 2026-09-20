@@ -1,7 +1,7 @@
 import { authHeaders } from "../../utils/request";
 import { getStoredToken } from "../../utils/settings-token";
 import type { IndexerStats } from "../../types/indexer";
-import { downloadIndexerExport } from "./download";
+import { canSaveStream, downloadIndexerExport } from "./download";
 import { orderTypes } from "./api";
 import { mountProgress } from "./progress";
 import { tr } from "./i18n";
@@ -25,6 +25,9 @@ const getEls = (): ExportEls | null => {
   if (!overlay || !titleEl || !bodyEl || !statusEl || !saveEl) return null;
   return { overlay, titleEl, bodyEl, statusEl, saveEl, closeBtn };
 };
+
+const _warnKey = (): string =>
+  window.isSecureContext ? "export-memory-warning" : "export-insecure-warning";
 
 const runExport = async (type: string, els: ExportEls): Promise<void> => {
   els.saveEl.hidden = true;
@@ -67,41 +70,45 @@ export const openExportModal = (stats: IndexerStats | null): void => {
     els.overlay.style.display = "none";
     els.statusEl.textContent = "";
     els.bodyEl.innerHTML = "";
+    els.saveEl.onclick = null;
   };
   els.closeBtn?.addEventListener("click", close, { once: true });
 
-  if (types.length === 1) {
+  const streams = canSaveStream();
+  if (types.length === 1 && streams) {
     void runExport(types[0], els);
     return;
   }
 
-  els.bodyEl.innerHTML = `
-    <p>${tr("export-modal-desc")}</p>
-    <div class="degoog-select-wrap"></div>`;
+  const warning = streams ? "" : `<p class="indexer-memory-warning">${tr(_warnKey())}</p>`;
+  const picker =
+    types.length === 1
+      ? ""
+      : `<p>${tr("export-modal-desc")}</p><div class="degoog-select-wrap"></div>`;
+  els.bodyEl.innerHTML = `${warning}${picker}`;
 
-  const select = document.createElement("select");
-  select.id = "indexer-export-type";
-  select.className = "degoog-input";
-  for (const type of types) {
-    const option = document.createElement("option");
-    option.value = type;
-    option.textContent = type;
-    select.append(option);
+  if (types.length > 1) {
+    const select = document.createElement("select");
+    select.id = "indexer-export-type";
+    select.className = "degoog-input";
+    for (const type of types) {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type;
+      select.append(option);
+    }
+    els.bodyEl.querySelector(".degoog-select-wrap")?.append(select);
   }
-  els.bodyEl.querySelector(".degoog-select-wrap")?.append(select);
 
   els.saveEl.textContent = tr("export-btn");
   els.saveEl.disabled = false;
   els.saveEl.hidden = false;
 
-  els.saveEl.addEventListener(
-    "click",
-    () => {
-      const sel = els.bodyEl.querySelector<HTMLSelectElement>("#indexer-export-type");
-      const type = sel?.value;
-      if (!type) return;
-      void runExport(type, els);
-    },
-    { once: true },
-  );
+  els.saveEl.onclick = () => {
+    const sel = els.bodyEl.querySelector<HTMLSelectElement>("#indexer-export-type");
+    const type = sel?.value ?? types[0];
+    if (!type) return;
+    els.saveEl.onclick = null;
+    void runExport(type, els);
+  };
 };

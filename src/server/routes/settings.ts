@@ -44,6 +44,7 @@ import {
   reloadCompat,
   savedBody,
   writeListField,
+  settingsLock,
 } from "../utils/settings-write";
 import { readIndexerLists } from "../indexer/config/lists";
 import { readDomainLists, writeDomainList } from "../utils/domain-lists";
@@ -205,11 +206,13 @@ router.post("/api/settings/field", async (c) => {
     return c.json({ error: "Invalid value" }, 400);
   }
   const coerced = coerceSetting(SETTINGS_SCHEMA[key as SettingKey], value);
-  if (isListField(key)) {
-    await writeListField(key, typeof coerced === "string" ? coerced : value);
-  } else {
-    await updateInstanceSettings({ [key]: coerced });
-  }
+  await settingsLock(async () => {
+    if (isListField(key)) {
+      await writeListField(key, typeof coerced === "string" ? coerced : value);
+    } else {
+      await updateInstanceSettings({ [key]: coerced });
+    }
+  });
   await syncBlocklist();
   const indexerUp =
     key === "degoogIndexerEnabled" ? await reconcileIndexerQueue() : true;
@@ -291,7 +294,7 @@ router.post("/api/settings/api-key/regenerate", async (c) => {
     "POST /api/settings/api-key/regenerate",
   );
   if (denied) return denied;
-  await regenerateServerKey();
+  await settingsLock(regenerateServerKey);
   return c.json({ key: getServerKeyHex() ?? "" });
 });
 
@@ -409,8 +412,10 @@ router.post("/api/settings/tab-order", async (c) => {
   ) {
     return c.json({ error: "engineTabsOrder must be a string array" }, 400);
   }
-  await updateInstanceSettings({
-    engineTabsOrder: body.engineTabsOrder as string[],
+  await settingsLock(async () => {
+    await updateInstanceSettings({
+      engineTabsOrder: body.engineTabsOrder as string[],
+    });
   });
   return c.json({ ok: true });
 });

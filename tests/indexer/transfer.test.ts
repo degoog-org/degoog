@@ -20,6 +20,7 @@ import {
 import { flushQueue } from "../../src/server/indexer/queue";
 import { setInstanceSettings } from "../../src/server/utils/server-settings";
 import { buildSqliteExportFile } from "../../src/server/indexer/export/builder";
+import { getAdapter } from "../../src/server/indexer/db/factory";
 import { importFromFile } from "../../src/server/indexer/import/importer";
 import {
   openExportSession,
@@ -53,6 +54,33 @@ const seed = async (): Promise<void> => {
   await recordResults("hello", TYPE, [mk(1), mk(2), mk(3)]);
   await flushQueue();
 };
+
+describe("export streaming", () => {
+  test("rows arrive in batches instead of one huge array", async () => {
+    await setInstanceSettings({
+      degoogIndexerEnabled: "true",
+      degoogIndexerMaxPerSearch: "300",
+      degoogIndexerFuzzyEnabled: "false",
+      degoogIndexerQueryLimit: "30",
+    });
+    await clearAll();
+    await recordResults(
+      "batching",
+      TYPE,
+      Array.from({ length: 250 }, (_, i) => mk(1000 + i)),
+    );
+    await flushQueue();
+
+    const sizes: number[] = [];
+    for await (const batch of getAdapter().exportBatches(TYPE, 100)) {
+      sizes.push(batch.length);
+    }
+
+    expect(sizes.length).toBeGreaterThan(1);
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(100);
+    expect(sizes.reduce((a, b) => a + b, 0)).toBe(250);
+  });
+});
 
 describe("indexer chunked transfer", () => {
   beforeAll(seed);

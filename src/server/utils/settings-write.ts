@@ -108,7 +108,15 @@ const _compatToggled = (
       key in updates && asBoolean(updates[key]) !== asBoolean(existing[key]),
   );
 
-const _runSettingsExclusive = createMutex();
+/**
+ * @fccview here, for future headaches: Serializes settings mutations. 
+ * Basically anything that is already running inside `applySettingsBatch`, 
+ * including the `after` callback, mustn't take it again or it'll deadlock the write. 
+ * Kinda stupid if you think about it, but I can't really think of a better way to do it. 
+ * I guess you could use another mutex for the `after` callback, but that's just as stupid sooo... yeah, 
+ * this is what we get instead.
+ */
+export const settingsLock = createMutex();
 
 const _listSnapshot = async (
   body: Record<string, string>,
@@ -157,7 +165,7 @@ export const applySettingsBatch = async (
   body: Record<string, string>,
   after?: AfterBatch,
 ): Promise<SettingsSaveResult> => {
-  const { updates, existing } = await _runSettingsExclusive(async () => {
+  const { updates, existing } = await settingsLock(async () => {
     const before = await getInstanceSettings();
     const lists = await _listSnapshot(body);
     const next = _schemaUpdates(body);

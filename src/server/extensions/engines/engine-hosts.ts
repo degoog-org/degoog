@@ -60,6 +60,11 @@ const _flush = async (): Promise<void> => {
   }
 };
 
+export const flushHosts = async (): Promise<void> => {
+  if (_flushTimer) clearTimeout(_flushTimer);
+  await _flush();
+};
+
 const _scheduleFlush = (): void => {
   if (_flushTimer) return;
   _flushTimer = setTimeout(() => void _flush(), FLUSH_DELAY_MS);
