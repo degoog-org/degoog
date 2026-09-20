@@ -185,6 +185,14 @@ describe("export holds the wal fold-back", () => {
   });
 });
 
+const walSizeOf = (type: string): number => {
+  try {
+    return statSync(join(SHARED, `index-${type}.db-wal`)).size;
+  } catch {
+    return 0;
+  }
+};
+
 describe("export stream lifecycle", () => {
   const drain = async (stream: ReadableStream<Uint8Array>): Promise<number> => {
     const reader = stream.getReader();
@@ -209,6 +217,36 @@ describe("export stream lifecycle", () => {
     });
     expect(await drain(stream)).toBe(size);
     expect(ends).toBe(1);
+  });
+
+  test("reading keeps a long download's hold alive", async () => {
+    await seed();
+    const adapter = getAdapter();
+    const hold = adapter.holdExport(TYPE);
+    const holds = (adapter as unknown as {
+      _holds: Map<string, { type: string; since: number }>;
+    })._holds;
+
+    const entry = holds.get(hold);
+    if (entry) entry.since = Date.now() - 31 * 60_000;
+
+    const path = await buildSqliteExportFile(TYPE);
+    const stream = exportStream(path, {
+      size: statSync(path).size,
+      removeAfter: true,
+      onRead: () => adapter.touchHold(hold),
+    });
+    const reader = stream.getReader();
+    await reader.read();
+    await reader.cancel("enough");
+
+    await recordResults("longdownload", TYPE, [mk(99)]);
+    await flushQueue();
+    await adapter.checkpoint(TYPE);
+    expect(holds.has(hold)).toBe(true);
+    expect(walSizeOf(TYPE)).toBeGreaterThan(0);
+
+    adapter.freeExport(hold);
   });
 
   test("onEnd fires once when the reader cancels early", async () => {

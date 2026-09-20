@@ -112,6 +112,7 @@ const _discard = (path: string): void => {
 export interface StreamOpts {
   size: number;
   removeAfter: boolean;
+  onRead?: () => void;
   onEnd?: () => void;
 }
 
@@ -120,7 +121,7 @@ export const exportStream = (
   opts: StreamOpts,
 ): ReadableStream<Uint8Array> => {
   const source = Bun.file(path).slice(0, opts.size).stream();
-  if (!opts.removeAfter && !opts.onEnd) return source;
+  if (!opts.removeAfter && !opts.onEnd && !opts.onRead) return source;
 
   const reader = source.getReader();
 
@@ -141,6 +142,7 @@ export const exportStream = (
           end();
           return;
         }
+        opts.onRead?.();
         controller.enqueue(value);
       } catch (err) {
         logger.warn("indexer", `export stream failed for ${path}`, err);

@@ -207,15 +207,19 @@ router.get("/api/indexer/export", async (c) => {
     _exportCooldown.set(key, now);
 
     const size = statSync(path).size;
+    const onRead = hold ? (): void => getAdapter().touchHold(hold) : undefined;
     const onEnd = hold ? (): void => getAdapter().freeExport(hold) : undefined;
-    return new Response(exportStream(path, { size, removeAfter: temporary, onEnd }), {
-      headers: {
-        "Content-Type": "application/octet-stream",
-        "Content-Length": String(size),
-        "Content-Disposition": `attachment; filename="degoog-index-${type}.db"`,
-        "Cache-Control": "no-store",
+    return new Response(
+      exportStream(path, { size, removeAfter: temporary, onRead, onEnd }),
+      {
+        headers: {
+          "Content-Type": "application/octet-stream",
+          "Content-Length": String(size),
+          "Content-Disposition": `attachment; filename="degoog-index-${type}.db"`,
+          "Cache-Control": "no-store",
+        },
       },
-    });
+    );
   } catch (err) {
     if (hold) getAdapter().freeExport(hold);
     logger.error("indexer", `export failed for type=${type}`, err);
