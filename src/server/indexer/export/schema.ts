@@ -31,6 +31,7 @@ export const EXPORT_SCHEMA_DDL = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_hits_query_type ON query_hits(query_norm, engine_type)`,
   `CREATE INDEX IF NOT EXISTS idx_hits_type ON query_hits(engine_type)`,
+  `CREATE INDEX IF NOT EXISTS idx_hits_url_id ON query_hits(url_id)`,
   `CREATE INDEX IF NOT EXISTS idx_hits_last_seen ON query_hits(last_seen)`,
   `CREATE INDEX IF NOT EXISTS idx_urls_last_seen ON urls(last_seen)`,
 ];

@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeAll, beforeEach } from "bun:test";
 import { mkdirSync } from "fs";
+import { Database } from "bun:sqlite";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -10,6 +11,8 @@ process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
 import { buildFtsQuery } from "../../src/server/indexer/adapters/sqlite/fts";
+import { FUZZY_SQL } from "../../src/server/indexer/adapters/sqlite/statements";
+import { FUZZY_CANDIDATE_CAP } from "../../src/server/indexer/shared/terms";
 import { splitTerms, termHit, canPrefix } from "../../src/server/indexer/shared/terms";
 import { clearAll, queryIndex, recordResults } from "../../src/server/indexer/store";
 import { flushQueue } from "../../src/server/indexer/queue";
@@ -150,5 +153,33 @@ describe("fuzzy results are not eaten by the query_hits join", () => {
     const urls = out.map((r) => r.url);
     expect(new Set(urls).size).toBe(urls.length);
     expect(urls.length).toBe(10);
+  });
+});
+
+describe("query_hits join is indexed", () => {
+  beforeEach(async () => {
+    await fuzzySettings();
+    await clearAll();
+  });
+
+  test("url_id has an index so the fuzzy join is not a scan", async () => {
+    await recordResults("indexcheck", TYPE, [res("A page", "https://example.org/a")]);
+    await flushQueue();
+
+    const db = new Database(join(SHARED, `index-${TYPE}.db`), { readonly: true });
+    try {
+      const indexes = db
+        .prepare(`SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'query_hits'`)
+        .all() as { name: string }[];
+      expect(indexes.map((i) => i.name)).toContain("idx_hits_url_id");
+
+      const plan = db
+        .prepare(`EXPLAIN QUERY PLAN ${FUZZY_SQL}`)
+        .all(`"page"*`, TYPE, "zzz", FUZZY_CANDIDATE_CAP, 10, 0) as { detail: string }[];
+      const joinStep = plan.map((p) => p.detail).join(" | ");
+      expect(joinStep).toContain("idx_hits_url_id");
+    } finally {
+      db.close();
+    }
   });
 });

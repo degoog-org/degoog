@@ -21,6 +21,7 @@ import {
   EXPORT_SQL,
 } from "./statements";
 import { buildFtsQuery, escapeLike } from "./fts";
+import { FUZZY_CANDIDATE_CAP } from "../../shared/terms";
 import { pruneOrphans, runSqlitePrune } from "./prune";
 
 const HITS_SCHEMA_VERSION = 1;
@@ -254,7 +255,14 @@ export class SqliteAdapter implements IndexerAdapter {
         stmt = db.prepare(FUZZY_SQL);
         this._fuzzyQs.set(type, stmt);
       }
-      return stmt.all(ftsQuery, type, queryNorm, limit, offset) as UrlRow[];
+      return stmt.all(
+        ftsQuery,
+        type,
+        queryNorm,
+        FUZZY_CANDIDATE_CAP,
+        limit,
+        offset,
+      ) as UrlRow[];
     } catch (err) {
       logger.warn("indexer", `queryFuzzy failed for type=${type}`, err);
       return [];

@@ -92,16 +92,25 @@ export const EXACT_SQL = `
 `;
 
 export const FUZZY_SQL = `
+  WITH recent AS (
+    SELECT f.rowid AS rid, f.rank AS rank_score, u.last_seen AS last_seen
+    FROM urls_fts f
+    JOIN urls u ON u.id = f.rowid
+    WHERE urls_fts MATCH ?
+      AND EXISTS (
+        SELECT 1 FROM query_hits h
+        WHERE h.url_id = u.id
+          AND h.engine_type = ?
+          AND h.query_norm != ?
+      )
+    ORDER BY u.last_seen DESC
+    LIMIT ?
+  )
   SELECT u.url, u.source_engine, u.title, u.snippet, u.thumbnail,
          u.image_url, u.is_gif, u.duration, u.extras_json
-  FROM urls_fts f
-  JOIN urls u ON u.id = f.rowid
-  JOIN query_hits h ON h.url_id = u.id
-  WHERE urls_fts MATCH ?
-    AND h.engine_type = ?
-    AND h.query_norm != ?
-  GROUP BY u.id
-  ORDER BY rank, MAX(h.last_seen) DESC
+  FROM recent r
+  JOIN urls u ON u.id = r.rid
+  ORDER BY r.rank_score, r.last_seen DESC
   LIMIT ? OFFSET ?
 `;
 
