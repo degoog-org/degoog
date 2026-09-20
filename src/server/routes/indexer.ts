@@ -9,13 +9,14 @@ import {
   sampleRows,
   type DeleteItem,
 } from "../indexer/store";
-import { checkpointType, discoverTypes, isPostgresMode } from "../indexer/db";
+import { discoverTypes, getAdapter, isPostgresMode } from "../indexer/db";
 import { clearTypeCache } from "../extensions/engines/registry";
 import { importFromBuffer, importFromFile } from "../indexer/import/importer";
 import { buildSqliteExportFile, exportStream } from "../indexer/export/builder";
 import {
   openExportSession,
   getExportSession,
+  touchExport,
   closeExportSession,
   openImportSession,
   getImportSession,
@@ -191,6 +192,7 @@ router.get("/api/indexer/export", async (c) => {
     return c.json({ error: `Cooldown active. Retry in ${retryIn}s` }, 429);
   }
 
+  let hold = "";
   try {
     let path: string;
     let temporary: boolean;
@@ -198,14 +200,15 @@ router.get("/api/indexer/export", async (c) => {
       path = await buildSqliteExportFile(type);
       temporary = true;
     } else {
-      checkpointType(type);
+      hold = getAdapter().holdExport(type);
       path = indexerDbForType(type);
       temporary = false;
     }
     _exportCooldown.set(key, now);
 
     const size = statSync(path).size;
-    return new Response(exportStream(path, size, temporary), {
+    const onEnd = hold ? (): void => getAdapter().freeExport(hold) : undefined;
+    return new Response(exportStream(path, { size, removeAfter: temporary, onEnd }), {
       headers: {
         "Content-Type": "application/octet-stream",
         "Content-Length": String(size),
@@ -214,6 +217,7 @@ router.get("/api/indexer/export", async (c) => {
       },
     });
   } catch (err) {
+    if (hold) getAdapter().freeExport(hold);
     logger.error("indexer", `export failed for type=${type}`, err);
     return c.json({ error: "Export failed" }, 500);
   }
@@ -281,6 +285,7 @@ router.post("/api/indexer/export/start", async (c) => {
     return c.json({ error: `Cooldown active. Retry in ${retryIn}s` }, 429);
   }
 
+  let hold = "";
   try {
     let path: string;
     let cleanup: boolean;
@@ -288,15 +293,16 @@ router.post("/api/indexer/export/start", async (c) => {
       path = await buildSqliteExportFile(type);
       cleanup = true;
     } else {
-      checkpointType(type);
+      hold = getAdapter().holdExport(type);
       path = indexerDbForType(type);
       cleanup = false;
     }
     const size = statSync(path).size;
     _exportCooldown.set(key, now);
-    const sessionId = openExportSession(path, size, cleanup, type);
+    const sessionId = openExportSession({ path, size, cleanup, type, hold });
     return c.json({ sessionId, size });
   } catch (err) {
+    if (hold) getAdapter().freeExport(hold);
     logger.error("indexer", `export start failed for type=${type}`, err);
     return c.json({ error: "Export failed" }, 500);
   }
@@ -308,7 +314,8 @@ router.get("/api/indexer/export/chunk", async (c) => {
 
   const session = c.req.query("session")?.trim();
   const s = session ? getExportSession(session) : undefined;
-  if (!s) return c.json({ error: "Unknown session" }, 404);
+  if (!session || !s) return c.json({ error: "Unknown session" }, 404);
+  touchExport(session);
 
   const start = Math.max(0, parseInt(c.req.query("start") ?? "0", 10) || 0);
   const reqEnd = parseInt(c.req.query("end") ?? "", 10);

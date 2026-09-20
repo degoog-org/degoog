@@ -109,34 +109,51 @@ const _discard = (path: string): void => {
   }
 };
 
+export interface StreamOpts {
+  size: number;
+  removeAfter: boolean;
+  onEnd?: () => void;
+}
+
 export const exportStream = (
   path: string,
-  size: number,
-  removeAfter: boolean,
+  opts: StreamOpts,
 ): ReadableStream<Uint8Array> => {
-  const source = Bun.file(path).slice(0, size).stream();
-  if (!removeAfter) return source;
+  const source = Bun.file(path).slice(0, opts.size).stream();
+  if (!opts.removeAfter && !opts.onEnd) return source;
 
   const reader = source.getReader();
+
+  let ended = false;
+  const end = (): void => {
+    if (ended) return;
+    ended = true;
+    if (opts.removeAfter) _discard(path);
+    opts.onEnd?.();
+  };
+
   return new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
         const { done, value } = await reader.read();
         if (done) {
           controller.close();
-          _discard(path);
+          end();
           return;
         }
         controller.enqueue(value);
       } catch (err) {
         logger.warn("indexer", `export stream failed for ${path}`, err);
-        _discard(path);
+        end();
         throw err;
       }
     },
     async cancel(reason) {
-      await reader.cancel(reason);
-      _discard(path);
+      try {
+        await reader.cancel(reason);
+      } finally {
+        end();
+      }
     },
   });
 };

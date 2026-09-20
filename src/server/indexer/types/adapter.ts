@@ -60,6 +60,9 @@ export interface IndexerAdapter {
   discoverTypes(): string[];
   close(): Promise<void>;
   checkpoint(type: string): Promise<void>;
+  holdExport(type: string): string;
+  touchHold(id: string): void;
+  freeExport(id: string): void;
 
   writeBatch(type: string, rows: IndexRow[], now: number, window: number): Promise<void>;
   importRows(type: string, rows: ExportRow[]): Promise<{ urls: number; hits: number }>;

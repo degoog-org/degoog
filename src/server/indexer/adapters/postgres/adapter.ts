@@ -449,6 +449,14 @@ export class PgAdapter implements IndexerAdapter {
     }
   }
 
+  holdExport(): string {
+    return "";
+  }
+
+  touchHold(): void { }
+
+  freeExport(): void { }
+
   async *exportBatches(type: string, size: number): AsyncIterable<ExportRow[]> {
     const schema = safeSlug(type);
     try {

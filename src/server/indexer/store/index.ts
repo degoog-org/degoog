@@ -1,4 +1,3 @@
-export { checkpointType } from "../db/lifecycle";
 export type { ExportRow, HitRow } from "../types/adapter";
 export type { DeleteItem, ServerIndexerStats as IndexerStats } from "../../../shared/indexer";
 export { DEGOOG_ENGINE_NAME } from "./mapper";

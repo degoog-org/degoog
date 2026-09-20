@@ -1,2 +1,2 @@
 export { getAdapter, bootAdapter, isPostgresMode } from "./factory";
-export { discoverTypes, checkpointType, closeAllDbs } from "./lifecycle";
+export { discoverTypes, closeAllDbs } from "./lifecycle";

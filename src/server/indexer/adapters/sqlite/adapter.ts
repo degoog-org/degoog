@@ -1,4 +1,5 @@
 import { Database, type Statement } from "bun:sqlite";
+import { randomBytes } from "crypto";
 import { mkdirSync, readdirSync, statSync, unlinkSync } from "fs";
 import type { IndexRow } from "../../recorders";
 import type { IndexerConfig } from "../../types/config";
@@ -25,6 +26,13 @@ import { FUZZY_CANDIDATE_CAP } from "../../shared/terms";
 import { pruneOrphans, runSqlitePrune } from "./prune";
 
 const HITS_SCHEMA_VERSION = 1;
+const AUTO_CHECKPOINT_PAGES = 1000;
+const HOLD_MAX_MS = 30 * 60_000;
+
+interface ExportHold {
+  type: string;
+  since: number;
+}
 
 export class SqliteAdapter implements IndexerAdapter {
   private readonly _dbs = new Map<string, Database>();
@@ -37,6 +45,7 @@ export class SqliteAdapter implements IndexerAdapter {
   private readonly _countAllQs = new Map<string, Statement>();
   private readonly _countSearchQs = new Map<string, Statement>();
   private readonly _sampleQs = new Map<string, Statement>();
+  private readonly _holds = new Map<string, ExportHold>();
 
   async boot(): Promise<void> { }
 
@@ -54,6 +63,7 @@ export class SqliteAdapter implements IndexerAdapter {
     db.exec("PRAGMA journal_mode = WAL");
     db.exec("PRAGMA synchronous = NORMAL");
     db.exec("PRAGMA foreign_keys = ON");
+    if (this._isHeld(key)) this._setAutoCheck(db, 0);
     try {
       db.transaction(() => {
         for (const sql of SQLITE_SCHEMA_DDL) db.exec(sql);
@@ -127,17 +137,81 @@ export class SqliteAdapter implements IndexerAdapter {
     ]) cache.clear();
   }
 
-  async checkpoint(type: string): Promise<void> {
-    const db = this._dbs.get(safeSlug(type));
+  private _setAutoCheck(db: Database, pages: number): void {
+    try {
+      db.exec(`PRAGMA wal_autocheckpoint = ${pages}`);
+    } catch (err) {
+      logger.warn("indexer", `could not set wal_autocheckpoint to ${pages}`, err);
+    }
+  }
+
+  private _isHeld(key: string): boolean {
+    for (const hold of this._holds.values()) if (hold.type === key) return true;
+    return false;
+  }
+
+  private _fold(key: string): void {
+    const db = this._dbs.get(key);
     if (!db) return;
     try {
       db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
     } catch (err) {
-      logger.warn("indexer", `checkpoint failed for type=${type}`, err);
+      logger.warn("indexer", `checkpoint failed for type=${key}`, err);
     }
   }
 
+  private _release(id: string): void {
+    const hold = this._holds.get(id);
+    if (!hold) return;
+    this._holds.delete(id);
+    if (this._isHeld(hold.type)) return;
+    const db = this._dbs.get(hold.type);
+    if (!db) return;
+    this._setAutoCheck(db, AUTO_CHECKPOINT_PAGES);
+    this._fold(hold.type);
+  }
+
+  private _dropStaleHolds(): void {
+    const cutoff = Date.now() - HOLD_MAX_MS;
+    for (const [id, hold] of this._holds) {
+      if (hold.since > cutoff) continue;
+      logger.warn("indexer", `export hold on type=${hold.type} outlived its download`);
+      this._release(id);
+    }
+  }
+
+  holdExport(type: string): string {
+    this._dropStaleHolds();
+    const key = safeSlug(type);
+    const first = !this._isHeld(key);
+    const id = randomBytes(8).toString("hex");
+    this._holds.set(id, { type: key, since: Date.now() });
+    const db = this._dbs.get(key);
+    if (db && first) {
+      this._setAutoCheck(db, 0);
+      this._fold(key);
+    }
+    return id;
+  }
+
+  touchHold(id: string): void {
+    const hold = this._holds.get(id);
+    if (hold) hold.since = Date.now();
+  }
+
+  freeExport(id: string): void {
+    this._release(id);
+  }
+
+  async checkpoint(type: string): Promise<void> {
+    this._dropStaleHolds();
+    const key = safeSlug(type);
+    if (this._isHeld(key)) return;
+    this._fold(key);
+  }
+
   async writeBatch(type: string, rows: IndexRow[], now: number, window: number): Promise<void> {
+    this._dropStaleHolds();
     const db = this._db(type);
     let upsertUrl = this._upsertUrlStmts.get(type);
     if (!upsertUrl) {
@@ -409,6 +483,9 @@ export class SqliteAdapter implements IndexerAdapter {
 
   async clearType(type: string): Promise<void> {
     const key = safeSlug(type);
+    for (const [id, hold] of this._holds) {
+      if (hold.type === key) this._holds.delete(id);
+    }
     const db = this._db(key);
     db.exec("DELETE FROM query_hits");
     db.exec("DELETE FROM urls");
