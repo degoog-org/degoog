@@ -115,18 +115,13 @@ describe("/api/compat/:layer", () => {
     expect(searxCodes.has("wiby")).toBe(false);
   });
 
-  test("a mutation without a code is rejected before anything is touched", async () => {
+  test("a mutation with a missing or non-string code is rejected", async () => {
     enable(false, true);
-    const res = await post("/api/compat/4get/install", {});
-    expect(res.status).toBe(400);
-    expect(((await res.json()) as Listing).error).toContain("Missing code");
-  });
-
-  test("a code that is not a string is refused, not a crash", async () => {
-    enable(false, true);
-    const res = await post("/api/compat/4get/install", { code: 12 });
-    expect(res.status).toBe(400);
-    expect(((await res.json()) as Listing).error).toContain("Missing code");
+    for (const body of [{}, { code: 12 }]) {
+      const res = await post("/api/compat/4get/install", body);
+      expect(res.status).toBe(400);
+      expect(((await res.json()) as Listing).error).toContain("Missing code");
+    }
   });
 
   test("an unknown scraper is refused", async () => {

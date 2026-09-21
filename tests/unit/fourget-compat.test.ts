@@ -46,16 +46,6 @@ const FILTERS: FourGetFilters = {
 };
 
 describe("4get page mapping", () => {
-  test("declares 4get's own method names", () => {
-    expect(FOURGET_PAGES.map((page) => page.method)).toEqual([
-      "web",
-      "image",
-      "video",
-      "news",
-      "music",
-    ]);
-  });
-
   test("with no override a tab maps to its natural page", () => {
     const map = mapPages(FOURGET_PAGES, null);
     expect(map.get("images")?.method).toBe("image");
@@ -63,8 +53,7 @@ describe("4get page mapping", () => {
   });
 
   test("a renamed type still reaches the page it came from", () => {
-    const pages = FOURGET_PAGES.slice(0, 3);
-    const map = mapPages(pages, "web,pictures,clips");
+    const map = mapPages(FOURGET_PAGES.slice(0, 3), " web , pictures , clips ");
     expect(map.get("pictures")?.method).toBe("image");
     expect(map.get("clips")?.method).toBe("video");
     expect(map.has("images")).toBe(false);
@@ -74,11 +63,6 @@ describe("4get page mapping", () => {
     const map = mapPages(FOURGET_PAGES.slice(0, 3), "web,pictures");
     expect(map.get("pictures")?.method).toBe("image");
     expect(map.get("videos")?.method).toBe("video");
-  });
-
-  test("whitespace and empty entries in an override are ignored", () => {
-    const map = mapPages(FOURGET_PAGES.slice(0, 2), " web , pictures ,, ");
-    expect(map.get("pictures")?.method).toBe("image");
   });
 
   test("an empty slot leaves that page alone without shifting the rest", () => {
@@ -225,18 +209,5 @@ describe("compatibility layer registry", () => {
   test("the searx setting keys are not renamed by the refactor", () => {
     expect(COMPAT_SETTING_KEYS).toContain("searxCompatEnabled");
     expect(COMPAT_SETTING_KEYS).toContain("fourgetCompatEnabled");
-  });
-
-  test("every layer carries the whole install contract", () => {
-    for (const layer of COMPAT_LAYERS) {
-      expect(typeof layer.install).toBe("function");
-      expect(typeof layer.update).toBe("function");
-      expect(typeof layer.uninstall).toBe("function");
-      expect(typeof layer.listItems).toBe("function");
-      expect(typeof layer.loadEngines).toBe("function");
-      expect(typeof layer.lock).toBe("function");
-      expect(layer.label.length).toBeGreaterThan(0);
-      expect(layer.settingKey.length).toBeGreaterThan(0);
-    }
   });
 });

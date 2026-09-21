@@ -38,6 +38,8 @@ export type ServerSettingsData = {
   honeypotEnabled?: BoolSetting;
   honeypotCssCheck?: BoolSetting;
   honeypotBanDuration?: string;
+  nojsEnabled?: BoolSetting;
+  nojsCssCheck?: BoolSetting;
   degoogIndexerEnabled?: BoolSetting;
   searxCompatEnabled?: BoolSetting;
   searxApiEnabled?: BoolSetting;

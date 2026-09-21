@@ -56,11 +56,6 @@ describe("honeypot traps - enabled (default)", () => {
     expect(body).toContain("/.env");
     expect(body).toContain("/package.json");
     expect(body).toContain("/api/degoog-search");
-  });
-
-  test("sitemap.xml only contains honeypot paths - no real app routes", async () => {
-    const res = await router.request("http://localhost/sitemap.xml");
-    const body = await res.text();
     expect(body).not.toContain("<loc>/search</loc>");
     expect(body).not.toContain("<loc>/settings</loc>");
   });

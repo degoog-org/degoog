@@ -39,16 +39,12 @@ describe("engine hosts", () => {
     expect(engineHost("google-videos-engine")).toBe("www.google.com");
   });
 
-  test("ignores junk urls and engines with no id", async () => {
+  test("ignores junk urls, dotless hosts and engines with no id", async () => {
     noteEngineHost("broken-engine", "not a url");
     noteEngineHost(undefined, "https://example.com");
-    await settle();
-    expect(engineHost("broken-engine")).toBeUndefined();
-  });
-
-  test("a host with no dot is not a site", async () => {
     noteEngineHost("localhost-engine", "http://localhost:8080/search");
     await settle();
+    expect(engineHost("broken-engine")).toBeUndefined();
     expect(engineHost("localhost-engine")).toBeUndefined();
   });
 

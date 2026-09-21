@@ -11,13 +11,6 @@ export const skeletonImageGrid = (cols = 4, rows = 6): string => {
   return `<div class="skeleton-image-grid">${columns}</div>`;
 };
 
-export const skeletonVideoGrid = (count = 12): string => {
-  const items = Array.from({ length: count }, () =>
-    `<div class="skeleton-video-card"><div class="skeleton-media-thumb"></div></div>`
-  ).join("");
-  return `<div class="skeleton-video-grid">${items}</div>`;
-};
-
 const _skeletonCard = (): string =>
   `<div class="skeleton-card">
     <div class="skeleton-line skeleton-line--url"></div>

@@ -3,7 +3,20 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { clearServerSettingsCache } from "../../src/server/utils/server-settings";
-import { clearTypeCache } from "../../src/server/extensions/engines/registry";
+import {
+  ENGINE_TIMEOUT_MS,
+  clearTypeCache,
+  initEngines,
+  listEngineIds,
+} from "../../src/server/extensions/engines/registry";
+import { initTransports } from "../../src/server/extensions/transports/registry";
+import { setSettings } from "../../src/server/utils/plugin-settings";
+import {
+  ENGINE_TIMEOUT_BUFFER_MS,
+  ENGINE_TIMEOUT_MAX_MS,
+  ENGINE_TIMEOUT_MIN_MS,
+  getEngineTimeout,
+} from "../../src/server/search";
 
 const withTempTimeoutEnv = async <T>(fn: () => Promise<T>): Promise<T> => {
   const dir = mkdtempSync(join(tmpdir(), "degoog-engine-timeout-"));
@@ -94,28 +107,12 @@ const writeTransport = (
 
 describe("getEngineTimeout", () => {
   test("returns ENGINE_TIMEOUT_MS when engineSettingsId is undefined", async () => {
-    const { getEngineTimeout } = await import("../../src/server/search");
-    const { ENGINE_TIMEOUT_MS } = await import(
-      "../../src/server/extensions/engines/registry"
-    );
     expect(await getEngineTimeout(undefined)).toBe(ENGINE_TIMEOUT_MS);
   });
 
   test("uses a valid positive stored timeout override", async () => {
     await withTempTimeoutEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { setSettings } = await import(
-        "../../src/server/utils/plugin-settings"
-      );
-      const { getEngineTimeout } = await import("../../src/server/search");
-
-      writeEngine(
-        process.env.DEGOOG_ENGINES_DIR!,
-        "alpha-web",
-        "Alpha",
-      );
+      writeEngine(process.env.DEGOOG_ENGINES_DIR!, "alpha-web", "Alpha");
       await initEngines(true);
       const id = listEngineIds().find((i) => i.includes("alpha-web"));
       expect(id).toBeTruthy();
@@ -128,19 +125,7 @@ describe("getEngineTimeout", () => {
 
   test("falls back to ENGINE_TIMEOUT_MS for an invalid or absent stored timeout", async () => {
     await withTempTimeoutEnv(async () => {
-      const { initEngines, listEngineIds, ENGINE_TIMEOUT_MS } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { setSettings } = await import(
-        "../../src/server/utils/plugin-settings"
-      );
-      const { getEngineTimeout } = await import("../../src/server/search");
-
-      writeEngine(
-        process.env.DEGOOG_ENGINES_DIR!,
-        "beta-web",
-        "Beta",
-      );
+      writeEngine(process.env.DEGOOG_ENGINES_DIR!, "beta-web", "Beta");
       await initEngines(true);
       const id = listEngineIds().find((i) => i.includes("beta-web"));
       expect(id).toBeTruthy();
@@ -159,19 +144,6 @@ describe("getEngineTimeout", () => {
 
   test("adds the buffer when the resolved transport timeout exceeds the base", async () => {
     await withTempTimeoutEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { initTransports } = await import(
-        "../../src/server/extensions/transports/registry"
-      );
-      const { setSettings } = await import(
-        "../../src/server/utils/plugin-settings"
-      );
-      const { getEngineTimeout, ENGINE_TIMEOUT_BUFFER_MS } = await import(
-        "../../src/server/search"
-      );
-
       writeTransport(
         process.env.DEGOOG_TRANSPORTS_DIR!,
         "slow-transport",
@@ -196,48 +168,17 @@ describe("getEngineTimeout", () => {
     });
   });
 
-  test("clamps a stored timeout above the max down to the max", async () => {
+  test("clamps a stored timeout into the min/max range", async () => {
     await withTempTimeoutEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { setSettings } = await import(
-        "../../src/server/utils/plugin-settings"
-      );
-      const { getEngineTimeout, ENGINE_TIMEOUT_MAX_MS } = await import(
-        "../../src/server/search"
-      );
-
       writeEngine(process.env.DEGOOG_ENGINES_DIR!, "delta-web", "Delta");
       await initEngines(true);
       const id = listEngineIds().find((i) => i.includes("delta-web"));
       expect(id).toBeTruthy();
 
       await setSettings(id!, { timeoutMs: String(ENGINE_TIMEOUT_MAX_MS * 10) });
-
       expect(await getEngineTimeout(id!)).toBe(ENGINE_TIMEOUT_MAX_MS);
-    });
-  });
-
-  test("clamps a stored timeout below the min up to the min", async () => {
-    await withTempTimeoutEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { setSettings } = await import(
-        "../../src/server/utils/plugin-settings"
-      );
-      const { getEngineTimeout, ENGINE_TIMEOUT_MIN_MS } = await import(
-        "../../src/server/search"
-      );
-
-      writeEngine(process.env.DEGOOG_ENGINES_DIR!, "epsilon-web", "Epsilon");
-      await initEngines(true);
-      const id = listEngineIds().find((i) => i.includes("epsilon-web"));
-      expect(id).toBeTruthy();
 
       await setSettings(id!, { timeoutMs: "1" });
-
       expect(await getEngineTimeout(id!)).toBe(ENGINE_TIMEOUT_MIN_MS);
     });
   });

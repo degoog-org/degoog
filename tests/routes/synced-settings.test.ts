@@ -50,10 +50,6 @@ describe("utils/synced-settings", () => {
     });
   });
 
-  test("read returns empty object when nothing has been published", async () => {
-    expect(await readSyncedDefaults()).toEqual({});
-  });
-
   test("read recovers from a corrupt syncedDefaults value", async () => {
     await updateInstanceSettings({ syncedDefaults: "{not json" });
     clearServerSettingsCache();

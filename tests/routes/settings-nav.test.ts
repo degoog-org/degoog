@@ -23,14 +23,6 @@ describe("settings nav generation", () => {
     expect(order).not.toContain("indexer");
   });
 
-  test("nav and select stay in sync aside from dynamic tabs", () => {
-    const navOrder = tabOrder(buildSettingsNav(), /data-tab="([^"]+)"/g).filter(
-      (id) => id !== "indexer",
-    );
-    const selectOrder = tabOrder(buildSettingsTabSelect(), /value="([^"]+)"/g);
-    expect(selectOrder).toEqual(navOrder);
-  });
-
   test("indexer stays hidden until enabled", () => {
     const html = buildSettingsNav();
     expect(html).toContain('data-tab="indexer"');

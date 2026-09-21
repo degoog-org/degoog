@@ -1,0 +1,10 @@
+{
+  "nojs": {
+    "title": "עמוד ללא JS",
+    "description": "פתיחת העמוד ללא JavaScript, או חיפוש בו כאשר מוסיפים שאילתה",
+    "disabled": "העמוד ללא JavaScript מושבת במופע הזה.",
+    "redirecting": "מעביר אותך לעמוד ללא JavaScript...",
+    "open-link": "פתח את העמוד ללא JavaScript",
+    "search-link": "חפש \"{query}\" ללא JavaScript"
+  }
+}

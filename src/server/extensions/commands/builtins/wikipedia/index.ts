@@ -176,6 +176,7 @@ const wikipediaSlot: SlotPlugin = {
     return this.t!("wikipedia.description");
   },
   position: SlotPanelPosition.KnowledgePanel,
+  supportsNojs: true,
   isClientExposed: false,
 
   t: TranslateFunction,

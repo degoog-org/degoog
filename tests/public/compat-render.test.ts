@@ -87,20 +87,19 @@ describe("compatibility layer catalogue rendering", () => {
     expect(compatPackages(makeItem())).toEqual([]);
   });
 
-  test("search placeholder and empty state carry the layer name", () => {
+  test("placeholder, empty state, shared hint and update tooltip carry the layer name", () => {
     expect(compatShellHtml(CompatLayerId.FourGet)).toContain(
       "settings-page.extensions.compat-search|4get",
     );
     expect(compatListHtml([], "SearX")).toContain(
       "settings-page.extensions.compat-empty|SearX",
     );
-  });
-
-  test("shared files hint and update tooltip name the layer", () => {
-    const shared = compatListHtml([makeItem({ deps: ["backend"] })], "4get");
-    expect(shared).toContain("settings-page.extensions.compat-shared-hint|4get");
-    const update = compatListHtml([makeItem({ installed: true })], "SearX");
-    expect(update).toContain("settings-page.extensions.compat-update|SearX");
+    expect(compatListHtml([makeItem({ deps: ["backend"] })], "4get")).toContain(
+      "settings-page.extensions.compat-shared-hint|4get",
+    );
+    expect(compatListHtml([makeItem({ installed: true })], "SearX")).toContain(
+      "settings-page.extensions.compat-update|SearX",
+    );
   });
 
   test("modal shell explains the layer and links to its repo", () => {
@@ -109,12 +108,6 @@ describe("compatibility layer catalogue rendering", () => {
     expect(searx).toContain(`href="${COMPAT_LAYER_REPOS[CompatLayerId.Searx]}"`);
     expect(searx).toContain("is SearXNG");
     expect(searx).not.toContain("{link}");
-    const fourget = compatShellHtml(CompatLayerId.FourGet);
-    expect(fourget).toContain(
-      `href="${COMPAT_LAYER_REPOS[CompatLayerId.FourGet]}"`,
-    );
-    expect(fourget).toContain("is 4get");
-    expect(fourget).not.toContain("{link}");
   });
 
   test("quotes in catalogue values cannot escape an attribute", () => {

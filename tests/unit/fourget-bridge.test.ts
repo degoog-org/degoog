@@ -5,6 +5,7 @@ import { join } from "path";
 import {
   runBridge,
   type RpcFetchRequest,
+  type RpcHandlers,
   type RunnerSpec,
 } from "../../src/server/extensions/compatibility-layer/rpc";
 import {
@@ -191,6 +192,26 @@ interface SearchResult {
   related: string[];
 }
 
+const search = (
+  extra: Record<string, unknown>,
+  h: RpcHandlers = handlers([]),
+): Promise<SearchResult> =>
+  runBridge<SearchResult>(
+    SPEC,
+    runnerPath,
+    {
+      ...basePayload(),
+      action: "search",
+      code: "demo",
+      type: "web",
+      query: "cats",
+      npt: false,
+      source: "Demo",
+      ...extra,
+    },
+    h,
+  );
+
 describe("4get php bridge", () => {
   maybe("discovery reflects the methods a scraper actually has", async () => {
     const out = await runBridge<DiscoverResult>(SPEC, runnerPath, {
@@ -206,12 +227,7 @@ describe("4get php bridge", () => {
 
   maybe("the scraper's curl call comes out through degoog's fetch", async () => {
     const seen: RpcFetchRequest[] = [];
-    await runBridge<SearchResult>(
-      SPEC,
-      runnerPath,
-      { ...basePayload(), action: "search", code: "demo", type: "web", query: "cats", npt: false, source: "Demo" },
-      handlers(seen),
-    );
+    await search({}, handlers(seen));
     expect(seen.length).toBe(1);
     expect(seen[0].url).toContain("q=cats");
     expect(seen[0].method).toBe("GET");
@@ -222,20 +238,13 @@ describe("4get php bridge", () => {
 
   maybe("CURLOPT_FOLLOWLOCATION is forwarded so degoog can honor it", async () => {
     const seen: RpcFetchRequest[] = [];
-    await runBridge<SearchResult>(
-      SPEC,
-      runnerPath,
-      { ...basePayload(), action: "search", code: "demo", type: "web", query: "follow", npt: false, source: "Demo" },
-      handlers(seen),
-    );
+    await search({ query: "follow" }, handlers(seen));
     expect(seen[0].follow).toBe(true);
   });
 
   maybe("set-cookie from a 302 is replayed into CURLOPT_HEADERFUNCTION", async () => {
-    const out = await runBridge<SearchResult>(
-      SPEC,
-      runnerPath,
-      { ...basePayload(), action: "search", code: "demo", type: "web", query: "cats", npt: false, source: "Demo" },
+    const out = await search(
+      {},
       {
         onFetch: async (req: RpcFetchRequest) => ({
           url: req.url,
@@ -251,119 +260,47 @@ describe("4get php bridge", () => {
     expect(out.results[0].snippet).toContain("techaro.lol-anubis-cookie=token");
   });
 
-  maybe("response headers are replayed into CURLOPT_HEADERFUNCTION", async () => {
-    const out = await runBridge<SearchResult>(
-      SPEC,
-      runnerPath,
-      { ...basePayload(), action: "search", code: "demo", type: "web", query: "cats", npt: false, source: "Demo" },
-      handlers([]),
-    );
+  maybe("response headers are replayed and results come back shaped for degoog", async () => {
+    const out = await search({});
     expect(out.results[0].snippet).toContain("http=200");
     expect(out.results[0].snippet).toContain("headers=4");
-  });
-
-  maybe("results come back already shaped for degoog", async () => {
-    const out = await runBridge<SearchResult>(
-      SPEC,
-      runnerPath,
-      { ...basePayload(), action: "search", code: "demo", type: "web", query: "cats", npt: false, source: "Demo" },
-      handlers([]),
-    );
     expect(out.results[0].url).toBe("https://example.invalid/result/1");
     expect(out.results[0].thumbnail).toBe("https://example.invalid/thumb.png");
     expect(out.related).toEqual(["more like this"]);
   });
 
   maybe("image results use the biggest source and keep the thumbnail", async () => {
-    const out = await runBridge<SearchResult>(
-      SPEC,
-      runnerPath,
-      { ...basePayload(), action: "search", code: "demo", type: "images", query: "cats", npt: false, source: "Demo" },
-      handlers([]),
-    );
+    const out = await search({ type: "images" });
     expect(out.results[0].imageUrl).toBe("https://example.invalid/big.jpg");
     expect(out.results[0].thumbnail).toBe("https://example.invalid/small.jpg");
   });
 
   maybe("engine settings reach the scraper as 4get filter values", async () => {
-    const out = await runBridge<SearchResult>(
-      SPEC,
-      runnerPath,
-      {
-        ...basePayload(),
-        action: "search",
-        code: "demo",
-        type: "web",
-        query: "cats",
-        npt: false,
-        source: "Demo",
-        overrides: { country: "fr" },
-        nsfw: "no",
-      },
-      handlers([]),
-    );
+    const out = await search({ overrides: { country: "fr" }, nsfw: "no" });
     expect(out.results[0].title).toBe("page 1 fr no");
   });
 
   maybe("an unknown override is ignored rather than passed through", async () => {
-    const out = await runBridge<SearchResult>(
-      SPEC,
-      runnerPath,
-      {
-        ...basePayload(),
-        action: "search",
-        code: "demo",
-        type: "web",
-        query: "cats",
-        npt: false,
-        source: "Demo",
-        overrides: { country: "not-an-option" },
-      },
-      handlers([]),
-    );
+    const out = await search({ overrides: { country: "not-an-option" } });
     expect(out.results[0].title).toBe("page 1 us yes");
   });
 
   maybe("a next page token survives into a whole new process", async () => {
     cache.clear();
-    const first = await runBridge<SearchResult>(
-      SPEC,
-      runnerPath,
-      { ...basePayload(), action: "search", code: "demo", type: "web", query: "cats", npt: false, source: "Demo" },
-      handlers([]),
-    );
+    const first = await search({});
     expect(first.npt).toBeTruthy();
-    const second = await runBridge<SearchResult>(
-      SPEC,
-      runnerPath,
-      { ...basePayload(), action: "search", code: "demo", type: "web", query: "cats", npt: first.npt, source: "Demo" },
-      handlers([]),
-    );
+    const second = await search({ npt: first.npt });
     expect(second.results[0].title).toContain("page 2");
     expect(second.npt).not.toBe(first.npt);
   });
 
   maybe("a token the cache has forgotten fails the way 4get expects", async () => {
     cache.clear();
-    await expect(
-      runBridge<SearchResult>(
-        SPEC,
-        runnerPath,
-        { ...basePayload(), action: "search", code: "demo", type: "web", query: "cats", npt: "demo999", source: "Demo" },
-        handlers([]),
-      ),
-    ).rejects.toThrow("expired");
+    await expect(search({ npt: "demo999" })).rejects.toThrow("expired");
   });
 
   maybe("a type the scraper has no method for is refused", async () => {
-    await expect(
-      runBridge<SearchResult>(
-        SPEC,
-        runnerPath,
-        { ...basePayload(), action: "search", code: "demo", type: "news", query: "cats", npt: false, source: "Demo" },
-        handlers([]),
-      ),
-    ).rejects.toThrow("no news results");
+    await expect(search({ type: "news" })).rejects.toThrow("no news results");
   });
 
   maybe("two scrapers in one process do not redeclare the shared lib", async () => {

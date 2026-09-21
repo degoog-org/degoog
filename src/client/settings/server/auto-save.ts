@@ -27,6 +27,8 @@ const TOGGLE_KEYS = [
   "api-key-suggest-enabled",
   "honeypot-enabled",
   "honeypot-css-check",
+  "nojs-enabled",
+  "nojs-css-check",
   "degoog-indexer-enabled",
   "searx-compat-enabled",
   "searx-api-enabled",

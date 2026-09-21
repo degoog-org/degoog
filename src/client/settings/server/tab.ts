@@ -46,6 +46,7 @@ const TOGGLE_WRAP_PAIRS = [
   ["domain-block-enabled", "domain-block-wrap"],
   ["domain-replace-enabled", "domain-replace-wrap"],
   ["domain-score-enabled", "domain-score-wrap"],
+  ["nojs-enabled", "nojs-wrap"],
 ] as const;
 
 async function _initStreamingTypeChecks(
@@ -181,6 +182,9 @@ async function _loadServerSettings(
     setToggle("honeypot-enabled", data.honeypotEnabled ?? "true");
     setToggle("honeypot-css-check", data.honeypotCssCheck ?? "true");
     setVal("honeypot-ban-duration", data.honeypotBanDuration);
+
+    setToggle("nojs-enabled", data.nojsEnabled);
+    setToggle("nojs-css-check", data.nojsCssCheck);
 
     setSelect("engine-origin-display", data.engineOriginDisplay);
 

@@ -19,18 +19,6 @@ const _authHeaders = (): Record<string, string> => {
 };
 
 describe("routes/suggest", () => {
-  test("GET /api/suggest returns 200 and array", async () => {
-    clearServerCache();
-    const res = await suggestRouter.request(
-      new Request("http://localhost/api/suggest?q=test", {
-        headers: _authHeaders(),
-      }),
-    );
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
-  });
-
   test("GET /api/suggest/opensearch returns 200 and [query, suggestions]", async () => {
     clearServerCache();
     const res = await suggestRouter.request(

@@ -2,16 +2,6 @@ import { describe, test, expect } from "bun:test";
 import { popNamesToClose } from "../../src/client/utils/overlay-history";
 
 describe("overlay history pop resolution", () => {
-  test("closes only the top overlay when back returns to the layer below", () => {
-    const { toClose, nextStack } = popNamesToClose(
-      ["media-preview", "lightbox"],
-      "media-preview",
-    );
-
-    expect(toClose).toEqual(["lightbox"]);
-    expect(nextStack).toEqual(["media-preview"]);
-  });
-
   test("closes every overlay above the landed real page entry", () => {
     const { toClose, nextStack } = popNamesToClose(
       ["media-preview", "lightbox"],

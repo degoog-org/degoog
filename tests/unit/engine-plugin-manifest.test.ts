@@ -3,7 +3,13 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { clearServerSettingsCache } from "../../src/server/utils/server-settings";
-import { clearTypeCache } from "../../src/server/extensions/engines/registry";
+import * as registry from "../../src/server/extensions/engines/registry";
+import {
+  getSettings,
+  setSettings,
+} from "../../src/server/utils/plugin-settings";
+import { syncExtSettings } from "../../src/server/extensions/settings-sync";
+import { engineFingerprint } from "../../src/server/search/engine-selection";
 import {
   INVALIDATE_SCOPE,
   publishInvalidate,
@@ -45,7 +51,7 @@ const withEngineEnv = async <T>(
   writeFileSync(settingsFile, JSON.stringify(seedSettings));
 
   clearServerSettingsCache();
-  clearTypeCache();
+  registry.clearTypeCache();
   await publishInvalidate(INVALIDATE_SCOPE.PLUGIN_SETTINGS);
 
   try {
@@ -61,7 +67,7 @@ const withEngineEnv = async <T>(
     restore("DEGOOG_PLUGIN_SETTINGS_FILE", prev.settingsFile);
     restore("DEGOOG_SERVER_SETTINGS_FILE", prev.serverSettingsFile);
     clearServerSettingsCache();
-    clearTypeCache();
+    registry.clearTypeCache();
     await publishInvalidate(INVALIDATE_SCOPE.PLUGIN_SETTINGS);
     rmSync(dir, { recursive: true, force: true });
   }
@@ -114,11 +120,9 @@ const writePairedEngine = (enginesDir: string) => {
 };
 
 const bootEngines = async () => {
-  const registry = await import("../../src/server/extensions/engines/registry");
   writePlainEngine(process.env.DEGOOG_ENGINES_DIR!);
   writePairedEngine(process.env.DEGOOG_ENGINES_DIR!);
   await registry.initEngines(true);
-  return registry;
 };
 
 type Configured = { lastConfig: Record<string, unknown> | null };
@@ -131,11 +135,7 @@ describe("engines paired with a plugin manifest", () => {
         [SHARED_ID]: { baseUrl: "https://shared.example", ownField: "nope" },
       },
       async () => {
-        const registry = await bootEngines();
-        const { getSettings } = await import(
-          "../../src/server/utils/plugin-settings"
-        );
-
+        await bootEngines();
         expect(registry.listEngineIds()).toContain(PLAIN_ID);
 
         const view = await registry.getEngineSettingsView(PLAIN_ID);
@@ -165,8 +165,7 @@ describe("engines paired with a plugin manifest", () => {
         [SHARED_ID]: { baseUrl: "https://shared.example", apiToken: "t0ken" },
       },
       async () => {
-        const registry = await bootEngines();
-
+        await bootEngines();
         expect(registry.listEngineIds()).toContain(PAIRED_ID);
 
         const view = await registry.getEngineSettingsView(PAIRED_ID);
@@ -190,8 +189,7 @@ describe("engines paired with a plugin manifest", () => {
         [SHARED_ID]: { score: "9", disabled: "true" },
       },
       async () => {
-        const registry = await bootEngines();
-
+        await bootEngines();
         const active = await registry.getActiveWebEngines({
           [PAIRED_ID]: true,
         });
@@ -209,7 +207,7 @@ describe("engines paired with a plugin manifest", () => {
     await withEngineEnv(
       { [PAIRED_ID]: { disabled: "true" } },
       async () => {
-        const registry = await bootEngines();
+        await bootEngines();
         const forType = await registry.getEnginesForCustomType("web", {
           [PAIRED_ID]: true,
         });
@@ -222,7 +220,7 @@ describe("engines paired with a plugin manifest", () => {
     await withEngineEnv(
       { [SHARED_ID]: { baseUrl: "https://shared.example" } },
       async () => {
-        const registry = await bootEngines();
+        await bootEngines();
         const meta = await registry.getEngineExtensionMeta();
 
         const card = meta.find((m) => m.id === PAIRED_ID);
@@ -245,14 +243,7 @@ describe("engines paired with a plugin manifest", () => {
         [SHARED_ID]: { baseUrl: "https://old.example" },
       },
       async () => {
-        const registry = await bootEngines();
-        const { setSettings, getSettings } = await import(
-          "../../src/server/utils/plugin-settings"
-        );
-        const { syncExtSettings } = await import(
-          "../../src/server/extensions/settings-sync"
-        );
-
+        await bootEngines();
         const instance = registry.getEngineMap()[
           PAIRED_ID
         ] as unknown as Configured;
@@ -272,13 +263,6 @@ describe("engines paired with a plugin manifest", () => {
       { [SHARED_ID]: { baseUrl: "https://old.example" } },
       async () => {
         await bootEngines();
-        const { engineFingerprint } = await import(
-          "../../src/server/search/engine-selection"
-        );
-        const { setSettings } = await import(
-          "../../src/server/utils/plugin-settings"
-        );
-
         const before = await engineFingerprint(PAIRED_ID);
         await setSettings(SHARED_ID, { baseUrl: "https://new.example" });
         const after = await engineFingerprint(PAIRED_ID);

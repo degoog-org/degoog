@@ -9,10 +9,13 @@ import {
 } from "../../src/server/extensions/transports/utils/curl-cookie-cache";
 
 describe("curl-cookie-cache", () => {
-  test("emptyCookieJar returns a valid Netscape header", () => {
-    const jar = emptyCookieJar();
-    expect(jar).toBe(COOKIE_JAR_HEADER);
-    expect(jar.startsWith("# Netscape HTTP Cookie File")).toBe(true);
+  test("emptyCookieJar is a header-only Netscape jar curl will accept", () => {
+    expect(emptyCookieJar().startsWith("# Netscape HTTP Cookie File\n")).toBe(true);
+    expect(
+      emptyCookieJar()
+        .split("\n")
+        .filter((line) => line && !line.startsWith("#")),
+    ).toEqual([]);
   });
 
   test("cookieJarFromCookieHeader creates rows for each cookie", () => {
@@ -38,10 +41,11 @@ describe("curl-cookie-cache", () => {
     const statusDelim = randomUUID();
     const cookieDelim = randomUUID();
     const jar = `${COOKIE_JAR_HEADER}127.0.0.1\tFALSE\t/\tFALSE\t0\tnextcookie\txyz\n`;
-    const stdout = `<html>ok</html>\n${statusDelim}200\n${cookieDelim}\n${jar}`;
+    const body = "<html>\nok\n</html>";
+    const stdout = `${body}\n${statusDelim}200\n${cookieDelim}\n${jar}`;
 
     const parsed = parseCurlStdoutWithCookieJar(stdout, statusDelim, cookieDelim);
-    expect(parsed.bodyText).toBe("<html>ok</html>");
+    expect(parsed.bodyText).toBe(body);
     expect(parsed.status).toBe(200);
     expect(parsed.cookieJarText).toBe(jar);
   });
@@ -55,18 +59,6 @@ describe("curl-cookie-cache", () => {
     expect(parsed.bodyText).toBe("body here");
     expect(parsed.status).toBe(404);
     expect(parsed.cookieJarText).toBeNull();
-  });
-
-  test("parseCurlStdoutWithCookieJar tolerates newlines in body", () => {
-    const statusDelim = randomUUID();
-    const cookieDelim = randomUUID();
-    const body = "line one\nline two\nline three";
-    const stdout = `${body}\n${statusDelim}200\n${cookieDelim}\n${COOKIE_JAR_HEADER}`;
-
-    const parsed = parseCurlStdoutWithCookieJar(stdout, statusDelim, cookieDelim);
-    expect(parsed.bodyText).toBe(body);
-    expect(parsed.status).toBe(200);
-    expect(parsed.cookieJarText).toBe(COOKIE_JAR_HEADER);
   });
 
   test("appendCurlCookieStdoutDelimiters adds no-disk cookie flags", () => {

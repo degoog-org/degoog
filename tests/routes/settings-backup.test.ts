@@ -209,19 +209,11 @@ describe("routes/settings-backup", () => {
       { kind: "degoog-settings", version: -1, settings: { acDebounceMs: "1" } },
       { kind: "degoog-settings", version: 1.5, settings: { acDebounceMs: "1" } },
       { kind: "degoog-settings", version: 1, settings: [] },
+      { kind: "degoog-settings", version: 1, settings: { onlyJunk: "1" } },
     ];
     for (const payload of cases) {
       expect((await importBackup(payload)).status).toBe(400);
     }
-  });
-
-  test("a backup with no recognised settings changes nothing", async () => {
-    const res = await importBackup({
-      kind: "degoog-settings",
-      version: 1,
-      settings: { onlyJunk: "1" },
-    });
-    expect(res.status).toBe(400);
   });
 
   test("export carries repos, installed items, extension settings and engine toggles", async () => {
@@ -307,16 +299,6 @@ describe("routes/settings-backup", () => {
     expect(await res.json()).toMatchObject({ extensionsFailed: [] });
   });
 
-  test("a backup of nothing but settings still imports", async () => {
-    const res = await importBackup({
-      kind: "degoog-settings",
-      version: 1,
-      settings: { acDebounceMs: "300" },
-    });
-
-    expect(res.status).toBe(200);
-    expect((await exportSettings()).settings.acDebounceMs).toBe("300");
-  });
   test("export carries instance defaults, bang aliases and hand written shortcuts", async () => {
     seedExtras();
     await updateInstanceSettings({

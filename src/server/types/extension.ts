@@ -168,12 +168,8 @@ export interface SlotPluginContext {
   /** @deprecated Use `useCache` (async, namespaced, Valkey-backed when enabled). */
   createCache: CreateCache;
   useCache: UseCache;
-  /**
-   * Locale of the current request (e.g. `de-DE`). Pass it as the third argument of
-   * `this.t(...)` when building translated strings inside `execute`, otherwise the
-   * translator falls back to its default locale.
-   */
   locale?: string;
+  nojs?: boolean;
 }
 
 export interface SlotPlugin {
@@ -189,6 +185,7 @@ export interface SlotPlugin {
   priority?: number;
   trigger: (query: string) => boolean | Promise<boolean>;
   waitForResults?: boolean;
+  supportsNojs?: boolean;
   gridSize?: 1 | 2 | 3 | 4;
   execute(
     query: string,
@@ -213,6 +210,7 @@ export interface CommandContext {
   clientIp?: string;
   page?: number;
   signProxyUrl?: (url: string) => string;
+  nojs?: boolean;
 }
 
 export interface BangCommand {
@@ -227,6 +225,8 @@ export interface BangCommand {
   configure?(settings: Record<string, SettingValue>): void;
   getFieldOptions?: GetFieldOptions;
   isConfigured?(): Promise<boolean>;
+  hideWhenUnconfigured?: boolean;
+  supportsNojs?: boolean;
   init?(context: PluginContext): void | Promise<void>;
   execute(args: string, context?: CommandContext): Promise<CommandResult>;
   t?: Translate;

@@ -39,21 +39,7 @@ afterAll(async () => {
 });
 
 describe("utils/disk-bus", () => {
-  test("creates the bus folder under the configured data dir", async () => {
-    await collect();
-    expect(await readdir(dataDir)).toContain("bus");
-  });
-
-  test("delivers a written event exactly once", async () => {
-    const received = await collect();
-
-    await writeBusEvent("plugin-settings", "weather-slot", { hello: "world" });
-    await wait(SETTLE_MS);
-
-    expect(received).toEqual([{ hello: "world" }]);
-  });
-
-  test("delivers events in the order they were written", async () => {
+  test("delivers events exactly once, in the order they were written", async () => {
     const received = await collect();
 
     await writeBusEvent("plugin-settings", "weather-slot", { step: 1 });

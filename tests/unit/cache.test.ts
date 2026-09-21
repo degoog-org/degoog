@@ -55,26 +55,17 @@ describe("cache", () => {
         ...mockRun(8, "ok"),
         pages: 12,
       });
-      expect((await engineRunCache.get("jellyfin|cats"))?.pages).toBe(12);
-    });
-
-    test("leaves the page total unknown when the engine never declared one", async () => {
       await engineRunCache.set("bing|cats", mockRun(8, "ok"));
+      expect((await engineRunCache.get("jellyfin|cats"))?.pages).toBe(12);
       expect((await engineRunCache.get("bing|cats"))?.pages).toBeUndefined();
     });
   });
 
   describe("engineErrored", () => {
-    test("returns true for a threat status", () => {
+    test("only threat statuses count as errored, undefined stays ok", () => {
       expect(engineErrored("timeout")).toBe(true);
       expect(engineErrored("blocked")).toBe(true);
-    });
-
-    test("returns false for ok", () => {
       expect(engineErrored("ok")).toBe(false);
-    });
-
-    test("returns false when status is undefined (legacy timings treated as ok)", () => {
       expect(engineErrored(undefined)).toBe(false);
     });
   });

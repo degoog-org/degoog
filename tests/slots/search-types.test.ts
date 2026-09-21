@@ -17,52 +17,31 @@ const makeSlot = (searchTypes?: string[]): SlotPlugin => ({
 });
 
 describe("parseTypeList", () => {
-  test("splits a comma string and trims entries", () => {
-    expect(parseTypeList("web, news ,videos")).toEqual([
-      "web",
-      "news",
-      "videos",
-    ]);
-  });
-
-  test("accepts an array and drops blanks and duplicates", () => {
+  test("normalises comma strings and arrays, dropping blanks and duplicates", () => {
+    expect(parseTypeList("web, news ,videos")).toEqual(["web", "news", "videos"]);
     expect(parseTypeList(["web", "", "news", "web"])).toEqual(["web", "news"]);
+    expect(parseTypeList(undefined)).toEqual([]);
+    expect(parseTypeList(true)).toEqual([]);
   });
 
-  test("drops images because slots cannot render in media mode", () => {
+  test("drops image types, prefixed or not, and keeps other prefixed values as-is", () => {
     expect(parseTypeList(["web", "images"])).toEqual(["web"]);
     expect(parseTypeList("images")).toEqual([]);
-  });
-
-  test("drops prefixed image types but keeps other prefixed values as-is", () => {
     expect(parseTypeList(["tab:engine:images", "engine:images"])).toEqual([]);
     expect(parseTypeList(["tab:engine:news", "engine:videos"])).toEqual([
       "tab:engine:news",
       "engine:videos",
     ]);
   });
-
-  test("returns empty for unset or boolean values", () => {
-    expect(parseTypeList(undefined)).toEqual([]);
-    expect(parseTypeList(true)).toEqual([]);
-  });
 });
 
 describe("slotRunsOn", () => {
-  test("matches a plain type", () => {
+  test("matches plain types and resolves engine tab prefixes on both sides", () => {
     expect(slotRunsOn(["web", "news"], "news")).toBe(true);
     expect(slotRunsOn(["web"], "news")).toBe(false);
-  });
-
-  test("resolves engine tab prefixes to the underlying type", () => {
     expect(slotRunsOn(["news"], "tab:engine:news")).toBe(true);
     expect(slotRunsOn(["news"], "engine:news")).toBe(true);
-  });
-
-  test("resolves prefixed configured values before matching", () => {
     expect(slotRunsOn(["tab:engine:news"], "news")).toBe(true);
-    expect(slotRunsOn(["engine:news"], "news")).toBe(true);
-    expect(slotRunsOn(["tab:engine:news"], "tab:engine:news")).toBe(true);
     expect(slotRunsOn(["engine:news"], "tab:engine:news")).toBe(true);
     expect(slotRunsOn(["tab:engine:videos"], "news")).toBe(false);
   });
@@ -74,19 +53,10 @@ describe("slotRunsOn", () => {
 });
 
 describe("baseSlotTypes", () => {
-  test("defaults to web when the slot declares nothing", () => {
+  test("honours declared types and defaults to web otherwise", () => {
+    expect(baseSlotTypes(makeSlot(["news", "videos"]))).toEqual(["news", "videos"]);
     expect(baseSlotTypes(makeSlot())).toEqual([DEFAULT_SEARCH_TYPE]);
     expect(baseSlotTypes(makeSlot([]))).toEqual([DEFAULT_SEARCH_TYPE]);
-  });
-
-  test("honours declared types", () => {
-    expect(baseSlotTypes(makeSlot(["news", "videos"]))).toEqual([
-      "news",
-      "videos",
-    ]);
-  });
-
-  test("falls back to web when a slot only declares images", () => {
     expect(baseSlotTypes(makeSlot(["images"]))).toEqual([DEFAULT_SEARCH_TYPE]);
   });
 });

@@ -15,3 +15,4 @@ mcp
 degoog-cli
 .DS_Store
 __pycache__
+src/public/nojs.css

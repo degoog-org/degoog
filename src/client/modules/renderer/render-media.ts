@@ -180,18 +180,3 @@ export function renderImageGrid(
   }
   appendMediaCards(grid, results, "image");
 }
-
-export function renderVideoGrid(
-  results: ScoredResult[],
-  container: HTMLElement,
-): void {
-  let grid = container.querySelector<HTMLElement>(".video-grid");
-  if (!grid) {
-    container.innerHTML =
-      '<div class="video-grid"></div><div class="media-scroll-sentinel"></div>';
-    grid = container.querySelector<HTMLElement>(".video-grid")!;
-  } else {
-    grid.innerHTML = "";
-  }
-  appendMediaCards(grid, results, "video");
-}

@@ -10,37 +10,22 @@ const mockCtx = (acceptLang?: string) =>
   }) as Parameters<typeof getLocale>[0];
 
 describe("matchField", () => {
-  test("returns exact match when present", () => {
-    expect(matchField("en-US", ["en-US", "fr-FR"])).toBe("en-US");
-  });
+  const cases: [string, string, string[], string | null][] = [
+    ["exact match wins", "en-US", ["en-US", "fr-FR"], "en-US"],
+    ["regional tag falls back to the same base language", "en-GB", ["en-US", "fr-FR"], "en-US"],
+    ["base tag falls back to a regional bundle", "en", ["en-US", "fr-FR"], "en-US"],
+    ["no base match falls back to english", "de", ["en-US", "fr-FR"], "en-US"],
+    ["english missing falls back to the first bundle", "en", ["it", "fr-FR"], "fr-FR"],
+    ["english is preferred over bundle order", "en", ["it", "en-US"], "en-US"],
+    ["same-base bundle beats english absence", "fr-CA", ["it", "fr-FR"], "fr-FR"],
+    ["an empty bundle list has no match", "en", [], null],
+  ];
 
-  test("maps regional tag to first available same base language bundle", () => {
-    expect(matchField("en-GB", ["en-US", "fr-FR"])).toBe("en-US");
-  });
-
-  test("maps base tag to first available regional bundle", () => {
-    expect(matchField("en", ["en-US", "fr-FR"])).toBe("en-US");
-  });
-
-  test("returns first en-prefixed bundle when no base match", () => {
-    expect(matchField("de", ["en-US", "fr-FR"])).toBe("en-US");
-  });
-
-  test("returns alphabetically first bundle when no match and no English bundle exists", () => {
-    expect(matchField("en", ["it", "fr-FR"])).toBe("fr-FR");
-  });
-
-  test("prefers en-US over it when forced en and extension has no en base match", () => {
-    expect(matchField("en", ["it", "en-US"])).toBe("en-US");
-  });
-
-  test("picks same-base bundle when english is absent", () => {
-    expect(matchField("fr-CA", ["it", "fr-FR"])).toBe("fr-FR");
-  });
-
-  test("returns null when list empty", () => {
-    expect(matchField("en", [])).toBeNull();
-  });
+  for (const [name, locale, bundles, expected] of cases) {
+    test(name, () => {
+      expect(matchField(locale, bundles)).toBe(expected);
+    });
+  }
 });
 
 describe("getLocale", () => {

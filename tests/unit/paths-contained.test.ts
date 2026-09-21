@@ -30,14 +30,11 @@ describe("resolveContained", () => {
 });
 
 describe("resolveChild", () => {
-  test("accepts a valid nested item path", () => {
+  test("accepts a nested item path but rejects a relative escape", () => {
     const root = join(sep, "store", "repo");
-    const result = resolveChild(root, "engines", "google");
-    expect(result).toBe(join(root, "engines", "google"));
-  });
-
-  test("rejects a relative escape via ..", () => {
-    const root = join(sep, "store", "repo");
+    expect(resolveChild(root, "engines", "google")).toBe(
+      join(root, "engines", "google"),
+    );
     expect(resolveChild(root, "..", "..", "etc", "passwd")).toBeNull();
   });
 

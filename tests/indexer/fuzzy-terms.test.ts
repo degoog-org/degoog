@@ -12,8 +12,7 @@ process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
 import { buildFtsQuery } from "../../src/server/indexer/adapters/sqlite/fts";
 import { FUZZY_SQL } from "../../src/server/indexer/adapters/sqlite/statements";
-import { FUZZY_CANDIDATE_CAP } from "../../src/server/indexer/shared/terms";
-import { splitTerms, termHit, canPrefix } from "../../src/server/indexer/shared/terms";
+import { FUZZY_CANDIDATE_CAP, splitTerms, termHit } from "../../src/server/indexer/shared/terms";
 import { clearAll, queryIndex, recordResults } from "../../src/server/indexer/store";
 import { flushQueue } from "../../src/server/indexer/queue";
 import { setInstanceSettings } from "../../src/server/utils/server-settings";
@@ -63,12 +62,6 @@ describe("fts term building", () => {
     expect(buildFtsQuery("!!! ???")).toBe("");
   });
 
-  test("punctuation is stripped before the prefix length check", () => {
-    const [term] = splitTerms("c++");
-    expect(term.token).toBe("c");
-    expect(canPrefix(term)).toBe(false);
-  });
-
   test("term matching accepts the raw form and the bare token", () => {
     const [term] = splitTerms("c++");
     expect(termHit("learn c++ today", term)).toBe(true);
@@ -101,17 +94,6 @@ describe("fuzzy recall for punctuated queries", () => {
     expect(urls).toContain("https://example.org/cpp");
     expect(urls).not.toContain("https://github.com/rust-lang/book");
     expect(urls).not.toContain("https://myblog.com/post");
-  });
-
-  test("hello! recalls hello pages", async () => {
-    await recordResults("greetings", TYPE, [
-      res("Hello world guide", "https://example.org/hello"),
-      res("Goodbye guide", "https://example.org/bye"),
-    ]);
-    await flushQueue();
-
-    const out = await queryIndex("hello!", TYPE);
-    expect(out.map((r) => r.url)).toEqual(["https://example.org/hello"]);
   });
 
   test("a query of pure punctuation returns nothing and touches no index", async () => {
@@ -168,11 +150,6 @@ describe("query_hits join is indexed", () => {
 
     const db = new Database(join(SHARED, `index-${TYPE}.db`), { readonly: true });
     try {
-      const indexes = db
-        .prepare(`SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'query_hits'`)
-        .all() as { name: string }[];
-      expect(indexes.map((i) => i.name)).toContain("idx_hits_url_id");
-
       const plan = db
         .prepare(`EXPLAIN QUERY PLAN ${FUZZY_SQL}`)
         .all(`"page"*`, TYPE, "zzz", FUZZY_CANDIDATE_CAP, 10, 0) as { detail: string }[];

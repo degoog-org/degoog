@@ -16,6 +16,7 @@ export const ipCommand: BangCommand = {
   },
   trigger: "ip",
   naturalLanguagePhrases: ["what's my ip", "my ip"],
+  supportsNojs: true,
   isClientExposed: true,
 
   t: TranslateFunction,
@@ -33,9 +34,15 @@ export const ipCommand: BangCommand = {
       ip === "localhost" ||
       /^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(ip)
     ) {
+      const detectFailedHint = this.t!("ip.detect-failed-hint");
+      if (context?.nojs) {
+        return {
+          title: this.t!("ip.title"),
+          html: `<div id="ip-detect-root"><p>${detectFailedHint}</p></div>`,
+        };
+      }
       const detecting = this.t!("ip.detecting");
       const detectFailed = this.t!("ip.detect-failed");
-      const detectFailedHint = this.t!("ip.detect-failed-hint");
       const detectHtml = `<div id="ip-detect-root"><p>${detecting}</p></div><script>(function(){var c=document.getElementById('ip-detect-root');if(!c)return;fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){return fetch('${getBaseUrl()}/api/command?q='+encodeURIComponent('!ip '+d.ip));}).then(function(r){return r.json();}).then(function(d){if(d&&d.html)c.innerHTML=d.html;else c.innerHTML='<p>${detectFailed}</p>';}).catch(function(){c.innerHTML='<p>${detectFailedHint}</p>';});})();<\/script>`;
       return {
         title: this.t!("ip.title"),

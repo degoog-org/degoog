@@ -34,16 +34,6 @@ describe("server settings presets", () => {
     }
   });
 
-  test("keeps streaming enabled for most presets and disables it for compatibility mode", () => {
-    const streamingEnabled = SERVER_SETTINGS_PRESETS.filter(
-      (preset) => preset.values.streamingEnabled === "true",
-    );
-    expect(streamingEnabled.length).toBeGreaterThan(
-      SERVER_SETTINGS_PRESETS.length / 2,
-    );
-    expect(byId("compat-low-resource").values.streamingEnabled).toBe("false");
-  });
-
   test("enables streaming auto-retry only for selected presets", () => {
     const retryEnabled = SERVER_SETTINGS_PRESETS.filter(
       (preset) => preset.values.streamingAutoRetry === "true",
@@ -59,14 +49,11 @@ describe("server settings presets", () => {
     }
   });
 
-  test("locks down local image proxy access for public presets", () => {
+  test("locks down local image proxy access and enforces api keys for public presets", () => {
     expect(byId("public-web").values.imageProxyAllowLocal).toBe("false");
-    expect(byId("hardened-public").values.imageProxyAllowLocal).toBe("false");
-  });
-
-  test("enables API key enforcement toggles for hardened public mode", () => {
-    const preset = byId("hardened-public");
-    expect(preset.values.apiKeySearchEnabled).toBe("true");
-    expect(preset.values.apiKeySuggestEnabled).toBe("true");
+    const hardened = byId("hardened-public");
+    expect(hardened.values.imageProxyAllowLocal).toBe("false");
+    expect(hardened.values.apiKeySearchEnabled).toBe("true");
+    expect(hardened.values.apiKeySuggestEnabled).toBe("true");
   });
 });

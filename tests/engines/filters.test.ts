@@ -51,17 +51,12 @@ export default class { name = "NoFilters"; async executeSearch() { return []; } 
     await rm(dir, { recursive: true, force: true });
   });
 
-  test("exposes declared filters and drops empty groups", async () => {
+  test("exposes declared filters, drops empty groups and leaves undeclared engines bare", async () => {
     const engines = await listEngines();
-    const withFilters = engines.find((e) => e.displayName === "WithFilters");
-    expect(withFilters?.filters).toEqual({
+    expect(engines.find((e) => e.displayName === "WithFilters")?.filters).toEqual({
       color: ["red", "transparent"],
       nsfw: ["moderate"],
     });
-  });
-
-  test("engine without a filters export exposes no filters", async () => {
-    const engines = await listEngines();
     const noFilters = engines.find((e) => e.displayName === "NoFilters");
     expect(noFilters).toBeDefined();
     expect(noFilters?.filters).toBeUndefined();

@@ -1,6 +1,7 @@
 import {
   TranslateFunction,
   type BangCommand,
+  type CommandContext,
   type CommandResult,
   type PluginContext,
 } from "../../../../types";
@@ -17,6 +18,7 @@ export const helpCommand: BangCommand = {
     return this.t!("help.description");
   },
   trigger: "help",
+  supportsNojs: true,
 
   t: TranslateFunction,
 
@@ -24,7 +26,11 @@ export const helpCommand: BangCommand = {
     template = ctx.template;
   },
 
-  async execute(): Promise<CommandResult> {
+  async execute(
+    _args: string,
+    context?: CommandContext,
+  ): Promise<CommandResult> {
+    const nojs = context?.nojs === true;
     const [commands, engineTypes] = await Promise.all([
       getFilteredCommandRegistry(),
       getCustomEngineTypes(),
@@ -71,13 +77,22 @@ export const helpCommand: BangCommand = {
           </div>`;
         })
         .join("");
-      panels += `<div class="help-panel${i === 0 ? " active" : ""}" data-help-panel="${escapeHtml(cat)}"><div class="help-panel-card">${rows}</div></div>`;
+      panels += `<div class="help-panel${nojs || i === 0 ? " active" : ""}" data-help-panel="${escapeHtml(cat)}"><div class="help-panel-card">${rows}</div></div>`;
     }
 
     const prefixHint =
       engineTypes.length > 0
         ? `<div class="help-hint">${this.t!("help.prefix-hint", { types: engineTypes.map((t) => `<code>${escapeHtml(t)}:query</code>`).join(", ") })}</div>`
         : "";
+
+    if (nojs) {
+      return {
+        title: this.t!("help.title"),
+        html: `<div class="command-result help-container">
+        ${prefixHint}
+        <div class="help-layout"><div class="help-panels">${panels}</div></div></div>`,
+      };
+    }
 
     if (template) {
       const html = template

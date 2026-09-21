@@ -42,10 +42,19 @@ const app = new Hono();
 
 app.use(trimSlash());
 
+const NOJS_CSP =
+  "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'";
+const NOJS_HEADER_PREFIX = `${BASE_PATH}/nojs`;
+
 app.use("*", async (c, next) => {
   await next();
   c.res.headers.set("Referrer-Policy", "no-referrer");
   c.res.headers.set("X-Content-Type-Options", "nosniff");
+  c.res.headers.set("X-Frame-Options", "SAMEORIGIN");
+  const path = c.req.path;
+  if (path === NOJS_HEADER_PREFIX || path.startsWith(`${NOJS_HEADER_PREFIX}/`)) {
+    c.res.headers.set("Content-Security-Policy", NOJS_CSP);
+  }
 });
 
 app.use(`${BASE_PATH}/public/*.js`, async (c, next) => {

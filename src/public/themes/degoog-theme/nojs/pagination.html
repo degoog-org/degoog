@@ -1,0 +1,22 @@
+<nav class="pagination-pages" aria-label="{{t:nojs.pagination-label}}">
+  {{#if prev_href}}
+  <a class="pagination-nav" href="{{ prev_href }}" rel="prev">
+    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+    <span>{{t:search-templates.pagination.previous}}</span>
+  </a>
+  {{/if prev_href}}
+  {{#each pages}}
+  {{#if current}}
+  <span class="pagination-current" aria-current="page">{{ number }}</span>
+  {{/if current}}
+  {{^if current}}
+  <a class="pagination-link" href="{{ href }}">{{ number }}</a>
+  {{/if current}}
+  {{/each pages}}
+  {{#if next_href}}
+  <a class="pagination-nav" href="{{ next_href }}" rel="next">
+    <span>{{t:search-templates.pagination.next}}</span>
+    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+  </a>
+  {{/if next_href}}
+</nav>

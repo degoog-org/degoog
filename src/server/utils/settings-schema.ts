@@ -51,6 +51,8 @@ export const SETTINGS_SCHEMA = {
   honeypotEnabled:              { kind: "boolean", default: true },
   honeypotCssCheck:             { kind: "boolean", default: true },
   honeypotBanDuration:          { kind: "string",  default: "24h" },
+  nojsEnabled:                  { kind: "boolean", default: false },
+  nojsCssCheck:                 { kind: "boolean", default: false },
   degoogIndexerEnabled:         { kind: "boolean", default: false },
   degoogIndexerPublicExport:    { kind: "boolean", default: false },
   degoogIndexerMaxPerSearch:    { kind: "number",  default: "30" },

@@ -20,6 +20,7 @@ import {
 } from "../../../../utils/text";
 import { getRandomUserAgent } from "../../../../utils/user-agents";
 import { logger } from "../../../../utils/logger";
+import { isSafeHost } from "../../../../utils/ssrf";
 
 const WIKIPEDIA_SETTINGS_ID = "wikipedia-slot";
 const WIKIPEDIA_HOSTNAME = "wikipedia.org";
@@ -154,6 +155,17 @@ const _extractCacheKey = (
   return `${url}\x1e${excerptMode}\x1e${maxLength}\x1e${maxParagraphs}\x1e${termsKey}`;
 };
 
+const _isFetchableUrl = async (url: string): Promise<boolean> => {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+  return await isSafeHost(parsed.hostname);
+};
+
 const _fetchExtract = async (
   url: string,
   queryTerms: string[],
@@ -172,6 +184,8 @@ const _fetchExtract = async (
   );
   const cached = await _extractCache.get(cacheKey);
   if (cached !== null) return cached;
+
+  if (!(await _isFetchableUrl(url))) return null;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -239,6 +253,7 @@ const atAGlanceSlot: SlotPlugin = {
     SlotPanelPosition.BelowResults,
   ],
   waitForResults: true,
+  supportsNojs: true,
   isClientExposed: false,
 
   t: TranslateFunction,
