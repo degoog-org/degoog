@@ -81,7 +81,7 @@ const NOJS_PAGE_TOTAL = 10;
 
 interface NojsOutcome {
   results: ScoredResult[];
-  totalPages: number;
+  totalPages: number | undefined;
   totalTime: number;
   engineTimings: EngineTiming[];
   canRetry: boolean;
@@ -255,7 +255,7 @@ const _runSearch = async (
     );
     return {
       results: response.results,
-      totalPages: response.totalPages ?? 1,
+      totalPages: response.totalPages,
       totalTime: response.totalTime,
       engineTimings: response.engineTimings ?? [],
       canRetry: false,
@@ -293,7 +293,7 @@ const _runSearch = async (
     const retried = await handleRetry({ ...params, engineName: retry });
     return {
       results: retried.results,
-      totalPages: query.page && query.page > 1 ? query.page : 1,
+      totalPages: undefined,
       totalTime: retried.totalTime,
       engineTimings: retried.engineTimings,
       canRetry: true,
@@ -303,7 +303,7 @@ const _runSearch = async (
   const response = await handleSearch(params);
   return {
     results: response.results,
-    totalPages: response.totalPages ?? 1,
+    totalPages: response.totalPages,
     totalTime: response.totalTime,
     engineTimings: response.engineTimings ?? [],
     canRetry: true,
@@ -517,7 +517,7 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
 
   const tabId = stripTabTypePrefix(query.type || WEB_TAB_ID);
   const currentType = nojsTabType(tabId);
-  const isImages = isImageSearchType(query.type ?? "");
+  const isImages = isImageSearchType(tabId);
   const isVideos = resolveBuiltinSearchType(tabId) === VIDEO_SEARCH_TYPE;
 
   const meta =
@@ -531,12 +531,17 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
           ),
         )}</span>`;
 
+  const pageTotal =
+    outcome.results.length === 0
+      ? 1
+      : (outcome.totalPages ?? NOJS_PAGE_TOTAL);
+
   const slots = await renderNojsSlots(
     query.q.trim(),
     ip,
     outcome.results,
     locale,
-    currentType,
+    resolveBuiltinSearchType(tabId) || WEB_TAB_ID,
   );
 
   const html = await _buildResultsPage(
@@ -549,7 +554,7 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
         c,
         query,
         query.page ?? 1,
-        NOJS_PAGE_TOTAL,
+        pageTotal,
         t,
         locale,
       ),

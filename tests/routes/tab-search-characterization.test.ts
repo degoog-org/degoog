@@ -384,7 +384,7 @@ describe("GET /api/tab-search tab extensions", () => {
     expect(await res.text()).not.toContain("internal secret detail");
   });
 
-  test("a tab without settingsId is looked up as tab-<id>", async () => {
+  test("a tab without settingsId is looked up by its id", async () => {
     harness({
       tab: {
         id: "solo-tab",
@@ -394,7 +394,7 @@ describe("GET /api/tab-search tab extensions", () => {
     });
 
     await call("?tab=solo-tab&q=cats");
-    expect(disabledLookups).toEqual(["tab-solo-tab"]);
+    expect(disabledLookups).toEqual(["solo-tab"]);
   });
 });
 

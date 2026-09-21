@@ -33,14 +33,17 @@ export async function handleTabSearch({
 }: TabSearchParams): Promise<TabSearchResult | null> {
   let engineType: string | undefined;
   const tab = getSearchResultTabById(tabId);
+  const tabDisabled = tab
+    ? await isDisabled(tab.settingsId ?? tab.id ?? tabId)
+    : false;
 
   if (tabId.startsWith("engine:")) {
     engineType = tabId.slice(7);
     if (!engineType) return null;
-  } else if (tab?.engineType) {
-    engineType = tab.engineType;
   } else if (!tab) {
     return null;
+  } else if (tab.engineType && !tabDisabled) {
+    engineType = tab.engineType;
   }
 
   const startTime = performance.now();
@@ -105,10 +108,7 @@ export async function handleTabSearch({
     }
   }
 
-  if (
-    tab?.executeSearch &&
-    !(await isDisabled(tab.settingsId ?? `tab-${tab.id}`))
-  ) {
+  if (tab?.executeSearch && !tabDisabled) {
     const tabStart = performance.now();
     try {
       const result = await tab.executeSearch(query.trim(), page, {

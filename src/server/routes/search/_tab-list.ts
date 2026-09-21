@@ -35,6 +35,8 @@ export async function listSearchTabs(): Promise<SearchTabEntry[]> {
       );
       continue;
     }
+    const settingsId = tab.settingsId ?? tab.id;
+    if (await isDisabled(settingsId)) continue;
     const engineType = tab.engineType?.toLowerCase();
     if (engineType && seen.has(engineType)) {
       const existing = list.find(
@@ -47,8 +49,6 @@ export async function listSearchTabs(): Promise<SearchTabEntry[]> {
       }
       continue;
     }
-    const settingsId = tab.settingsId ?? tab.id;
-    if (await isDisabled(settingsId)) continue;
     list.push({ id: tab.id, name: tab.name, icon: tab.icon ?? null });
   }
 
