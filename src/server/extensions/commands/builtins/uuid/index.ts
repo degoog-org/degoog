@@ -1,6 +1,7 @@
 import {
   TranslateFunction,
   type BangCommand,
+  type CommandContext,
   type CommandResult,
 } from "../../../../types";
 
@@ -15,10 +16,14 @@ export const uuidCommand: BangCommand = {
   },
   trigger: "uuid",
   naturalLanguagePhrases: ["uuid", "generate uuid", "generate uuids"],
+  supportsNojs: true,
 
   t: TranslateFunction,
 
-  async execute(args: string): Promise<CommandResult> {
+  async execute(
+    args: string,
+    context?: CommandContext,
+  ): Promise<CommandResult> {
     const raw = args.trim();
     const count = raw
       ? Math.min(
@@ -28,10 +33,14 @@ export const uuidCommand: BangCommand = {
       : DEFAULT_UUID_COUNT;
     const uuids = Array.from({ length: count }, () => crypto.randomUUID());
     const copyLabel = this.t!("uuid.copy");
+    const copyButton = (u: string): string =>
+      context?.nojs
+        ? ""
+        : `<button type="button" class="uuid-copy" data-uuid="${u}">${copyLabel}</button>`;
     const rows = uuids
       .map(
         (u) =>
-          `<div class="uuid-row"><code class="uuid-value">${u}</code><button type="button" class="uuid-copy" data-uuid="${u}">${copyLabel}</button></div>`,
+          `<div class="uuid-row"><code class="uuid-value">${u}</code>${copyButton(u)}</div>`,
       )
       .join("");
     return {

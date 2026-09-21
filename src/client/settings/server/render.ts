@@ -231,6 +231,21 @@ const _renderSearchOptionsSection = (): string => `
     </fieldset>
   </section>`;
 
+const _renderNojsSection = (): string => `
+  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-nojs">
+    ${_h("settings-page.server.nojs-heading", "fa-solid fa-file-code")}
+    ${_desc("settings-page.server.nojs-desc")}
+    <fieldset class="settings-fieldset">
+      ${_toggle("settings-nojs-enabled", "settings-page.server.nojs-enable", { aria: "settings-page.server.nojs-enable-aria" })}
+      <div class="settings-proxy-urls-wrap" id="settings-nojs-wrap" style="display: none">
+        <fieldset class="settings-fieldset settings-fieldset-inverse settings-fieldset--compact">
+          ${_toggle("settings-nojs-css-check", "settings-page.server.nojs-css-check-enable")}
+          ${_desc("settings-page.server.nojs-css-check-desc")}
+        </fieldset>
+      </div>
+    </fieldset>
+  </section>`;
+
 const _domainBlockBlock = (): string => `
   ${_toggle("settings-domain-block-enabled", "settings-page.server.domain-block-enable", { aria: "settings-page.server.domain-block-enable-aria" })}
   ${_desc("settings-page.server.domain-block-desc")}
@@ -398,6 +413,7 @@ export const renderServerContent = (): string =>
     _renderIndexerSection(),
     _renderCompatSection(),
     _renderSearchOptionsSection(),
+    _renderNojsSection(),
     _renderDomainSection(),
     _renderProxySection(),
     _renderRateLimitSection(),

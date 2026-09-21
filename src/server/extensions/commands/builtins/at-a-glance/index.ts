@@ -239,6 +239,7 @@ const atAGlanceSlot: SlotPlugin = {
     SlotPanelPosition.BelowResults,
   ],
   waitForResults: true,
+  supportsNojs: true,
   isClientExposed: false,
 
   t: TranslateFunction,

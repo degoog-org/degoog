@@ -174,6 +174,12 @@ export interface SlotPluginContext {
    * translator falls back to its default locale.
    */
   locale?: string;
+  /**
+   * `true` when the panel is being rendered for the no-JS page. Return simpler markup
+   * in that case: the page carries no scripts, so anything that needs the browser to
+   * run will not work there.
+   */
+  nojs?: boolean;
 }
 
 export interface SlotPlugin {
@@ -189,6 +195,13 @@ export interface SlotPlugin {
   priority?: number;
   trigger: (query: string) => boolean | Promise<boolean>;
   waitForResults?: boolean;
+  /**
+   * Opt in to the no-JS page. Only slots that set this to exactly `true` are rendered
+   * there, because that page promises it emits no `<script>` tag and no inline `on*=`
+   * handler. Set it once you have checked that every branch of your `execute` returns
+   * markup free of both, and read `context.nojs` to tailor it.
+   */
+  supportsNojs?: boolean;
   gridSize?: 1 | 2 | 3 | 4;
   execute(
     query: string,
@@ -213,6 +226,12 @@ export interface CommandContext {
   clientIp?: string;
   page?: number;
   signProxyUrl?: (url: string) => string;
+  /**
+   * `true` when the command is being executed for the no-JS page. Return simpler markup
+   * in that case: the page carries no scripts, so anything that needs the browser to
+   * run will not work there.
+   */
+  nojs?: boolean;
 }
 
 export interface BangCommand {
@@ -227,6 +246,14 @@ export interface BangCommand {
   configure?(settings: Record<string, SettingValue>): void;
   getFieldOptions?: GetFieldOptions;
   isConfigured?(): Promise<boolean>;
+  /**
+   * Opt in to the no-JS page. Only commands that set this to exactly `true` run there,
+   * because that page promises it emits no `<script>` tag and no inline `on*=` handler.
+   * Set it once you have checked that every branch of your `execute` returns markup free
+   * of both, and read `context.nojs` to tailor it. Commands without it render a notice
+   * telling the user the extension has not been set up for that page.
+   */
+  supportsNojs?: boolean;
   init?(context: PluginContext): void | Promise<void>;
   execute(args: string, context?: CommandContext): Promise<CommandResult>;
   t?: Translate;

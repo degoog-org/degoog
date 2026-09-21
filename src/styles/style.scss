@@ -82,6 +82,12 @@
   }
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    @include _themeDarkVars;
+  }
+}
+
 [data-theme="light"] {
   @include _themeLightVars;
 }

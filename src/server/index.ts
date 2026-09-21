@@ -194,6 +194,11 @@ Promise.all([initServerKey(), initExtensionRegistries()])
         logger.error("indexer", "queue start failed", err),
       );
 
+    if (asBoolean(settings.nojsEnabled)) {
+      const { default: nojsRouter } = await import("./nojs/router");
+      app.route(BASE_PATH || "/", nojsRouter);
+    }
+
     for (const [name] of getTransportWsHandlers()) {
       app.get(`/ws/${name}/:password?`, upgradeWebSocket((c) => {
         const transportName = name;

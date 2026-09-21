@@ -163,12 +163,14 @@ export async function runSlotPlugins(
     excludePosition?: SlotPanelPosition;
     locale?: string;
     searchType?: string;
+    nojs?: boolean;
   },
 ): Promise<SlotPanel[]> {
   const plugins = getSlotPlugins();
   const panels: SlotPanel[] = [];
   const exclude = options?.excludePosition;
   const locale = options?.locale;
+  const nojs = options?.nojs === true;
   const searchType = options?.searchType ?? DEFAULT_SEARCH_TYPE;
   for (const plugin of plugins) {
     if (!plugin.id) {
@@ -178,6 +180,7 @@ export async function runSlotPlugins(
       );
       continue;
     }
+    if (nojs && plugin.supportsNojs !== true) continue;
     const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
     const definedPosition = await slotPosition(plugin, slotSettingsId);
     if (exclude && definedPosition === exclude) continue;
@@ -197,6 +200,7 @@ export async function runSlotPlugins(
         createCache,
         useCache,
         locale,
+        ...(nojs ? { nojs: true } : {}),
       };
       const t0 = performance.now();
       const out = await withTimeout(
