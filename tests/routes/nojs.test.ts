@@ -1020,6 +1020,7 @@ const makeBangCommand = (
   trigger: string,
   supportsNojs: boolean | undefined,
   spy: CommandSpy,
+  totalPages?: number,
 ): BangCommand => ({
   name: trigger,
   description: trigger,
@@ -1031,6 +1032,7 @@ const makeBangCommand = (
     return {
       title: `${trigger} title`,
       html: `<p class="${trigger}-body">${trigger} output</p>`,
+      ...(totalPages === undefined ? {} : { totalPages }),
     };
   },
 });
@@ -1221,6 +1223,49 @@ describe("nojs bang commands", () => {
     expect(html).not.toContain("help-search-input");
     expect(html).not.toContain("help-tab");
     expect(INLINE_HANDLER_RE.test(html)).toBe(false);
+  });
+
+  test("a paginating command can reach its next page", async () => {
+    const spy: CommandSpy = { args: [], contexts: [] };
+    bangHarness({
+      match: {
+        type: "command",
+        command: makeBangCommand("paged", true, spy, 3),
+        commandId: "paged-command",
+        args: "",
+      },
+    });
+    const html = await text("/nojs/search?q=!paged");
+    expect(html).toContain("page=2");
+    expect(spy.contexts[0].page).toBe(1);
+  });
+
+  test("a paginating command keeps its page number on the way through", async () => {
+    const spy: CommandSpy = { args: [], contexts: [] };
+    bangHarness({
+      match: {
+        type: "command",
+        command: makeBangCommand("paged", true, spy, 3),
+        commandId: "paged-command",
+        args: "",
+      },
+    });
+    await text("/nojs/search?q=!paged&page=2");
+    expect(spy.contexts[0].page).toBe(2);
+  });
+
+  test("a single page command renders no pagination", async () => {
+    const spy: CommandSpy = { args: [], contexts: [] };
+    bangHarness({
+      match: {
+        type: "command",
+        command: makeBangCommand("lonely", true, spy),
+        commandId: "lonely-command",
+        args: "",
+      },
+    });
+    const html = await text("/nojs/search?q=!lonely");
+    expect(sliceById(html, "pagination").trim()).toBe("");
   });
 
   test("the uuid builtin renders values without a copy button", async () => {

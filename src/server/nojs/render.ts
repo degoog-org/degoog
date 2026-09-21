@@ -18,6 +18,23 @@ const BASE_PATH = getBasePath();
 const BASE_PREFIX =
   BASE_PATH || (BASE_URL && !/^https?:\/\//i.test(BASE_URL) ? BASE_URL : "");
 
+const _escapeRe = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const _rootRelativeUrl = (prefix: string): RegExp =>
+  new RegExp(
+    `(<(?:link|script|a|form)[^>]*(?:href|src|action)=")/(?!/)(?!${_escapeRe(
+      prefix.replace(/^\//, ""),
+    )}(?:[/?#"]))`,
+    "g",
+  );
+
+export const prefixRootRelativeUrls = (
+  html: string,
+  prefix: string,
+): string =>
+  prefix ? html.replace(_rootRelativeUrl(prefix), `$1${prefix}/`) : html;
+
 const RTL_LANGS = ["ar", "he", "fa", "ur", "ps", "ckb"];
 
 const NOJS_STYLESHEET = `<link rel="stylesheet" href="/public/nojs.css?v=${pkg.version}">`;
@@ -116,12 +133,7 @@ export const applyNojsPlaceholders = async (
 
   result = syncVortexSignal(result, t, locale);
 
-  if (BASE_PREFIX) {
-    result = result.replace(
-      /(<(?:link|script|a|form)[^>]*(?:href|src|action)=")\/(?!\/)/g,
-      `$1${BASE_PREFIX}/`,
-    );
-  }
+  result = prefixRootRelativeUrls(result, BASE_PREFIX);
 
   return result;
 };

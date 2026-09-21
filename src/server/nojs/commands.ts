@@ -14,6 +14,11 @@ const PANEL_BODY_CLASS =
 
 export type NojsCommandMatch = Extract<BangMatch, { type: "command" }>;
 
+export interface NojsCommandRender {
+  html: string;
+  totalPages: number;
+}
+
 const _panel = (id: string, title: string, body: string): string =>
   `<div class="${PANEL_CLASS}" data-command="${escapeAttribute(id)}">` +
   (title ? `<div class="${PANEL_TITLE_CLASS}">${escapeAttribute(title)}</div>` : "") +
@@ -29,9 +34,11 @@ export const renderNojsCommand = async (
   locale: string,
   t: Translate,
   page: number,
-): Promise<string> => {
-  const notice = (key: string): string =>
-    _notice(match.commandId, String(t(key, undefined, locale)));
+): Promise<NojsCommandRender> => {
+  const notice = (key: string): NojsCommandRender => ({
+    html: _notice(match.commandId, String(t(key, undefined, locale))),
+    totalPages: 1,
+  });
 
   if (await isDisabled(match.commandId)) {
     return notice("nojs.command-disabled");
@@ -56,7 +63,10 @@ export const renderNojsCommand = async (
     const html = match.command.t
       ? syncVortexSignal(result.html, match.command.t, locale)
       : result.html;
-    return _panel(match.commandId, result.title ?? "", html);
+    return {
+      html: _panel(match.commandId, result.title ?? "", html),
+      totalPages: result.totalPages && result.totalPages > 0 ? result.totalPages : 1,
+    };
   } catch (err) {
     logger.error("nojs", `command ${match.commandId} failed`, err);
     return notice("nojs.command-failed");

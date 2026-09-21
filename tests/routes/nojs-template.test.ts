@@ -14,6 +14,7 @@ import {
   wrapElementById,
 } from "../../src/server/nojs/dom";
 import { loadNojsTemplate } from "../../src/server/nojs/templates";
+import { prefixRootRelativeUrls } from "../../src/server/nojs/render";
 
 describe("nojs renderTemplateString", () => {
   test("fills plain placeholders", () => {
@@ -303,5 +304,56 @@ describe("the nojs template chain", () => {
 
   test("returns null for a name no theme registers", async () => {
     expect(await loadNojsTemplate("not-a-template")).toBeNull();
+  });
+});
+
+describe("base path rewriting", () => {
+  const link = (href: string): string => `<a href="${href}">x</a>`;
+
+  test("prefixes root relative urls that are missing the base path", () => {
+    expect(prefixRootRelativeUrls(link("/search"), "/base")).toBe(
+      link("/base/search"),
+    );
+    expect(
+      prefixRootRelativeUrls(
+        '<link rel="stylesheet" href="/public/nojs.css">',
+        "/base",
+      ),
+    ).toBe('<link rel="stylesheet" href="/base/public/nojs.css">');
+  });
+
+  test("leaves urls that already carry the base path alone", () => {
+    for (const href of [
+      "/base/nojs/search",
+      "/base/nojs/search?q=hello",
+      "/base/",
+      "/base#top",
+    ]) {
+      expect(prefixRootRelativeUrls(link(href), "/base")).toBe(link(href));
+    }
+  });
+
+  test("is idempotent, so a page rendered twice keeps one prefix", () => {
+    const once = prefixRootRelativeUrls(link("/nojs/search"), "/base");
+    expect(prefixRootRelativeUrls(once, "/base")).toBe(once);
+  });
+
+  test("still prefixes a path that merely starts with the base word", () => {
+    expect(prefixRootRelativeUrls(link("/baseball"), "/base")).toBe(
+      link("/base/baseball"),
+    );
+  });
+
+  test("leaves protocol relative and absolute urls alone", () => {
+    expect(prefixRootRelativeUrls(link("//cdn.test/x"), "/base")).toBe(
+      link("//cdn.test/x"),
+    );
+    expect(prefixRootRelativeUrls(link("https://example.test"), "/base")).toBe(
+      link("https://example.test"),
+    );
+  });
+
+  test("does nothing without a base path", () => {
+    expect(prefixRootRelativeUrls(link("/search"), "")).toBe(link("/search"));
   });
 });

@@ -373,6 +373,23 @@ const _renderTabRow = async (
   });
 };
 
+const _renderPagination = async (
+  c: Context,
+  query: NojsQuery,
+  activePage: number,
+  totalPages: number,
+  t: Translate,
+  locale: string,
+): Promise<string> => {
+  if (totalPages <= 1) return "";
+  const template = await loadNojsPartial("pagination", t, locale);
+  if (!template) return "";
+  return renderTemplateString(
+    template,
+    buildPaginationContext(c, query, activePage, totalPages),
+  );
+};
+
 interface ResultsPageParts {
   header: string;
   tabs: string;
@@ -454,20 +471,28 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
 
   const bang = matchBangCommand(query.q);
   if (bang?.type === "command") {
-    const commandHtml = await renderNojsCommand(
+    const commandPageNumber = query.page ?? 1;
+    const command = await renderNojsCommand(
       bang,
       ip,
       locale,
       t,
-      query.page ?? 1,
+      commandPageNumber,
     );
     const commandPage = await _buildResultsPage(
       {
         header: await _resultsHeader(c, query, t, locale),
         tabs: "",
         meta: "",
-        list: commandHtml,
-        pagination: "",
+        list: command.html,
+        pagination: await _renderPagination(
+          c,
+          query,
+          commandPageNumber,
+          command.totalPages,
+          t,
+          locale,
+        ),
         sidebar: "",
         slots: {},
         mediaMode: false,
@@ -489,15 +514,6 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
   const currentType = nojsTabType(tabId);
   const isImages = isImageSearchType(query.type ?? "");
   const isVideos = resolveBuiltinSearchType(tabId) === VIDEO_SEARCH_TYPE;
-
-  const paginationTemplate = await loadNojsPartial("pagination", t, locale);
-  const paginationHtml =
-    paginationTemplate && outcome.totalPages > 1
-      ? renderTemplateString(
-          paginationTemplate,
-          buildPaginationContext(c, query, query.page ?? 1, outcome.totalPages),
-        )
-      : "";
 
   const meta =
     outcome.results.length === 0
@@ -524,7 +540,14 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
       tabs: await _renderTabRow(c, query, currentType, t, locale),
       meta,
       list: await _renderResults(outcome.results, isImages, isVideos, t, locale),
-      pagination: paginationHtml,
+      pagination: await _renderPagination(
+        c,
+        query,
+        query.page ?? 1,
+        outcome.totalPages,
+        t,
+        locale,
+      ),
       sidebar:
         renderNojsKnowledgePanels(slots.knowledgePanels, locale, t) +
         (await renderNojsSidebar(

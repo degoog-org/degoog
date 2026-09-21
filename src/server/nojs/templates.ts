@@ -1,7 +1,10 @@
 import { access, readFile, readdir } from "fs/promises";
 import { join } from "path";
-import { getActiveTheme } from "../extensions/themes/registry";
-import type { ThemeManifest } from "../extensions/themes/registry";
+import {
+  getActiveTheme,
+  getThemeGeneration,
+  type ThemeManifest,
+} from "../extensions/themes/registry";
 import { rewriteThemePaths } from "../utils/extension-id";
 import { logger } from "../utils/logger";
 import { sanitizeTemplate } from "./dom";
@@ -32,8 +35,11 @@ const KNOWN_FILES = new Set(
 );
 
 const auditedThemes = new Set<string>();
+const resolved = new Map<string, string | null>();
 
 let defaultManifest: ThemeManifest | null = null;
+let cachedGeneration = -1;
+let cachedTheme: string | null = null;
 
 const _exists = async (path: string): Promise<boolean> => {
   try {
@@ -162,10 +168,27 @@ const _resolve = async (name: string): Promise<string | null> => {
   return inherited;
 };
 
+function _syncCache(themeId: string): void {
+  const generation = getThemeGeneration();
+  if (cachedGeneration === generation && cachedTheme === themeId) return;
+  cachedGeneration = generation;
+  cachedTheme = themeId;
+  resolved.clear();
+}
+
 export const loadNojsTemplate = async (
   name: string,
 ): Promise<string | null> => {
   if (!SAFE_NAME_RE.test(name)) return null;
+
+  const theme = await getActiveTheme();
+  _syncCache(theme?.id ?? "");
+
+  const hit = resolved.get(name);
+  if (hit !== undefined) return hit;
+
   const html = await _resolve(name);
-  return html === null ? null : sanitizeTemplate(html);
+  const template = html === null ? null : sanitizeTemplate(html);
+  resolved.set(name, template);
+  return template;
 };

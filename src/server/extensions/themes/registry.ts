@@ -82,6 +82,12 @@ async function saveActiveThemeId(id: string | null): Promise<void> {
   await setSettings(THEME_SETTINGS_ID, { active: id ?? "" });
 }
 
+let themeGeneration = 0;
+
+export function getThemeGeneration(): number {
+  return themeGeneration;
+}
+
 export async function initThemes(): Promise<void> {
   const loaded: LoadedTheme[] = [];
 
@@ -128,6 +134,7 @@ export async function initThemes(): Promise<void> {
   }
 
   themes = loaded;
+  themeGeneration++;
 
   const activeId = await loadActiveThemeId();
   if (activeId && !getThemeById(activeId)) {
