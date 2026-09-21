@@ -236,12 +236,12 @@ describe("nojs home page", () => {
     expect(html).not.toContain("lucky-slot-inner");
   });
 
-  test("renders the binary logo with the monospace class on every letter", async () => {
+  test("renders the monospace logo with the monospace class on every letter", async () => {
     harness({ settings: enabled() });
     const html = await text("/nojs");
     const logo = sliceById(html, "home-logo");
-    expect(logo).toContain("00100100");
-    expect(logo).toContain("00101111");
+    expect(logo).toContain("\u{1D68D}");
+    expect(logo).toContain("\u{1D698}");
     for (const letter of LOGO_LETTERS) {
       expect(logo).toContain(`${letter} logo-letter nojs-logo-letter`);
     }
@@ -787,7 +787,7 @@ describe("nojs image results", () => {
 
 const NOJS_DIR = "src/public/themes/degoog-theme/nojs";
 
-const NOJS_ONLY_TEMPLATES = ["logo", "pagination", "tabs"];
+const NOJS_ONLY_TEMPLATES = ["logo", "pagination", "search-header", "tabs"];
 
 describe("nojs template names", () => {
   for (const name of NOJS_TEMPLATE_NAMES) {

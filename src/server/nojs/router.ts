@@ -442,7 +442,11 @@ router.get("/nojs", async (c) => {
   content = fillById(
     content,
     "home-logo",
-    (await loadNojsPartial("logo", t, locale)) ?? "",
+    addClassWhereClass(
+      (await loadNojsPartial("logo", t, locale)) ?? "",
+      "logo-letter",
+      "nojs-logo-letter",
+    ),
   );
   content = fillById(content, "home-search", await _homeSearchForm(c, t, locale));
   content = fillById(content, "home-footer", await _footer(t, locale));

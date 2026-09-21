@@ -292,8 +292,8 @@ describe("nojs template sanitising", () => {
 describe("the nojs template chain", () => {
   test("serves the nojs override for a name that has one", async () => {
     const html = await loadNojsTemplate("logo");
-    expect(html).toContain("00100100");
-    expect(html).toContain("nojs-logo-letter");
+    expect(html).toContain("\u{1D68D}");
+    expect(html).toContain("logo-letter");
   });
 
   test("inherits the theme template for a name with no override", async () => {
