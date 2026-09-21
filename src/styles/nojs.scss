@@ -3,11 +3,6 @@
 $nojs-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Liberation Mono",
   Menlo, Monaco, Consolas, monospace;
 
-.logo .nojs-logo-letter,
-.results-logo .nojs-logo-letter {
-  font-family: $nojs-mono;
-}
-
 .nojs-results-form {
   display: contents;
 }

@@ -35,15 +35,13 @@ describe("nojs renderTemplateString", () => {
   });
 
   test("escapes html and quote characters", () => {
-    expect(
-      renderTemplateString("{{ v }}", { v: `<script>&"'</script>` }),
-    ).toBe("&lt;script&gt;&amp;&quot;&#39;&lt;/script&gt;");
+    expect(renderTemplateString("{{ v }}", { v: `<script>&"'</script>` })).toBe(
+      "&lt;script&gt;&amp;&quot;&#39;&lt;/script&gt;",
+    );
   });
 
   test("escapes non breaking spaces", () => {
-    expect(renderTemplateString("{{ v }}", { v: "a\u00a0b" })).toBe(
-      "a&nbsp;b",
-    );
+    expect(renderTemplateString("{{ v }}", { v: "a\u00a0b" })).toBe("a&nbsp;b");
   });
 
   test("stringifies non string values", () => {
@@ -199,18 +197,26 @@ describe("nojs shell filling", () => {
 
   test("replaces an attribute rather than duplicating it", () => {
     expect(
-      setAttributesById('<form id="f" action="/search" method="get"></form>', "f", {
-        action: "/nojs/search",
-        method: "post",
-      }),
+      setAttributesById(
+        '<form id="f" action="/search" method="get"></form>',
+        "f",
+        {
+          action: "/nojs/search",
+          method: "post",
+        },
+      ),
     ).toBe('<form id="f" action="/nojs/search" method="post"></form>');
   });
 
   test("sets attributes on the first element carrying a class", () => {
     expect(
-      setAttributesByClass('<a href="/" class="results-logo">d</a>', "results-logo", {
-        href: "/nojs",
-      }),
+      setAttributesByClass(
+        '<a href="/" class="results-logo">d</a>',
+        "results-logo",
+        {
+          href: "/nojs",
+        },
+      ),
     ).toBe('<a class="results-logo" href="/nojs">d</a>');
   });
 
@@ -228,7 +234,9 @@ describe("nojs shell filling", () => {
 
   test("never adds the same class twice", () => {
     const html = '<span class="logo-letter nojs-logo-letter">d</span>';
-    expect(addClassWhereClass(html, "logo-letter", "nojs-logo-letter")).toBe(html);
+    expect(addClassWhereClass(html, "logo-letter", "nojs-logo-letter")).toBe(
+      html,
+    );
   });
 
   test("inserts stylesheets before the closing head tag", () => {
@@ -240,14 +248,16 @@ describe("nojs shell filling", () => {
 
 describe("nojs template sanitising", () => {
   test("strips script blocks and their contents", () => {
-    expect(sanitizeTemplate('<p>a</p><script>var t = "</p>";</script><p>b</p>')).toBe(
-      "<p>a</p><p>b</p>",
-    );
+    expect(
+      sanitizeTemplate('<p>a</p><script>var t = "</p>";</script><p>b</p>'),
+    ).toBe("<p>a</p><p>b</p>");
   });
 
   test("strips a module script tag", () => {
     expect(
-      sanitizeTemplate('<body><script type="module" src="/app.js"></script></body>'),
+      sanitizeTemplate(
+        '<body><script type="module" src="/app.js"></script></body>',
+      ),
     ).toBe("<body></body>");
   });
 
@@ -267,7 +277,9 @@ describe("nojs template sanitising", () => {
 
   test("strips module preload links", () => {
     expect(
-      sanitizeTemplate('<link rel="modulepreload" href="/public/app.js" /><title>x</title>'),
+      sanitizeTemplate(
+        '<link rel="modulepreload" href="/public/app.js" /><title>x</title>',
+      ),
     ).toBe("<title>x</title>");
   });
 
@@ -294,7 +306,9 @@ describe("the nojs template chain", () => {
 
   test("inherits the theme page shells", async () => {
     expect(await loadNojsTemplate("index")).toContain('id="home-search"');
-    expect(await loadNojsTemplate("search")).toContain('id="slot-above-sidebar"');
+    expect(await loadNojsTemplate("search")).toContain(
+      'id="slot-above-sidebar"',
+    );
     expect(await loadNojsTemplate("layout")).not.toContain("<script");
   });
 
