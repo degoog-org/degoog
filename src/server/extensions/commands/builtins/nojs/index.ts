@@ -1,4 +1,10 @@
 import {
+  renderNojsLink,
+  renderNojsLinkPanel,
+  renderNojsMessage,
+  renderNojsRedirectPanel,
+} from "./render";
+import {
   TranslateFunction,
   type BangCommand,
   type CommandContext,
@@ -7,7 +13,6 @@ import {
 import { getBasePath, getBaseUrl } from "../../../../utils/base-url";
 import { isNojsEnabled } from "../../../../nojs/settings";
 import { NOJS_SEGMENT } from "../../../../nojs/links";
-import { escapeHtml } from "../../../../utils/text";
 
 const _root = (): string => {
   const base = getBaseUrl() || getBasePath();
@@ -45,28 +50,27 @@ export const nojsCommand: BangCommand = {
     if (!(await isNojsEnabled())) {
       return {
         title: this.t!("nojs.title"),
-        html: `<div class="command-result command-nojs"><p>${this.t!("nojs.disabled")}</p></div>`,
+        html: renderNojsMessage(String(this.t!("nojs.disabled"))),
       };
     }
 
     const url = _target(args);
-    const href = escapeHtml(url);
     const linkLabel = args.trim()
       ? this.t!("nojs.search-link", { query: args.trim() })
       : this.t!("nojs.open-link");
-    const link = `<p><a class="degoog-link" href="${href}">${escapeHtml(String(linkLabel))}</a></p>`;
+    const link = renderNojsLink(url, String(linkLabel));
 
     if (context?.nojs) {
       return {
         title: this.t!("nojs.title"),
-        html: `<div class="command-result command-nojs">${link}</div>`,
+        html: renderNojsLinkPanel(link),
       };
     }
 
     const redirect = `<script>(function(){window.location.href=${JSON.stringify(url).replace(/</g, "\\u003c")};})();<\/script>`;
     return {
       title: this.t!("nojs.title"),
-      html: `<div class="command-result command-nojs"><p>${this.t!("nojs.redirecting")}</p>${link}</div>${redirect}`,
+      html: `${renderNojsRedirectPanel(String(this.t!("nojs.redirecting")), link)}${redirect}`,
     };
   },
 };

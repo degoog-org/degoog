@@ -1,6 +1,6 @@
+import { renderFieldDesc } from "./field-desc";
 import { renderHtml } from "../../../../shared/ui/core/html";
 import { raw } from "../../../../shared/ui/core/raw";
-import { renderMdInline } from "../../../utils/md";
 import { renderListField } from "./list-field";
 import {
   renderHexField,
@@ -155,9 +155,7 @@ const _renderUrlListField = (
     ext.settings[field.key] as string | string[] | undefined,
     defaultUrls,
   );
-  const descHtml = field.description
-    ? `<p class="ext-field-desc">${renderMdInline(field.description)}</p>`
-    : "";
+  const descHtml = renderFieldDesc(field.description);
   return renderHtml(
     <div class="ext-field" data-key={field.key} data-type="urllist">
       <label class="ext-field-label">{field.label}</label>
@@ -308,14 +306,10 @@ export const renderField = (
   const configuredClass =
     isSecret && isSet ? " ext-field-input--configured" : "";
   const placeholder = isSecret && isSet ? "••••••••" : field.placeholder || "";
-  const descHtml = field.description
-    ? `<p class="ext-field-desc">${renderMdInline(field.description)}</p>`
-    : "";
+  const descHtml = renderFieldDesc(field.description);
 
   if (field.type === "info") {
-    const descriptionHtml = field.description
-      ? `<p class="ext-field-desc">${renderMdInline(field.description)}</p>`
-      : "";
+    const descriptionHtml = renderFieldDesc(field.description);
     const hasValue = field.default != null && field.default !== "";
     return renderHtml(
       <div class="ext-field" data-key={field.key} data-type="info">

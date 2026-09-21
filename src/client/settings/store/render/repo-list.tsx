@@ -8,9 +8,15 @@ export interface RepoListProps {
   repos: RepoInfo[];
   statusByUrl: Record<string, number>;
   selectedUrl: string | null;
+  onSelect?: (url: string) => void;
 }
 
-export const RepoList = ({ repos, statusByUrl, selectedUrl }: RepoListProps): JSX.Element => {
+export const RepoList = ({
+  repos,
+  statusByUrl,
+  selectedUrl,
+  onSelect,
+}: RepoListProps): JSX.Element => {
   if (!repos.length) {
     return (
       <p class="store-empty">
@@ -38,6 +44,7 @@ export const RepoList = ({ repos, statusByUrl, selectedUrl }: RepoListProps): JS
               role="button"
               tabindex="0"
               title={repo.name || repo.url}
+              onClick={onSelect ? () => onSelect(repo.url) : undefined}
             >
               <div class="store-repo-item-media">
                 <RepoImage src={repoImageSrc(repo)} alt={repo.name || ""} />

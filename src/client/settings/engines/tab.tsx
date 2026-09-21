@@ -1,3 +1,5 @@
+import { renderHtml } from "../../../shared/ui/core/html";
+import { StoreLinkButton } from "./store-link-button";
 import { render } from "../../../shared/ui/core/dom";
 import { raw } from "../../../shared/ui/core/raw";
 import { Badge } from "../../../shared/ui/components/primitives/badge";
@@ -319,7 +321,11 @@ export async function initEnginesTab(
           <p class="degoog-text degoog-text--sm degoog-text--secondary">
             {raw(
               t("settings-page.extensions.no-engines", {
-                store: `<button class="degoog-link-btn" type="button" data-switch-tab="store">${t("settings-page.extensions.no-engines-store")}</button>`,
+                store: renderHtml(
+                  <StoreLinkButton
+                    label={t("settings-page.extensions.no-engines-store")}
+                  />,
+                ),
               }),
             )}
           </p>

@@ -27,6 +27,9 @@ export {
 } from "./layout/sidebar-accordion";
 export type { AccordionProps } from "./layout/sidebar-accordion";
 
+export { LoadingDots } from "./feedback/loading-dots";
+export { NoResults } from "./feedback/no-results";
+
 export { Modal } from "./overlay/modal";
 export type { ModalProps } from "./overlay/modal";
 export { mountModalShell } from "./overlay/shell";

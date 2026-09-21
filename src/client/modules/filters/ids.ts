@@ -1,0 +1,10 @@
+export const FILTER_BAR_ID = "image-filters-bar";
+export const ENGINE_PANEL_ID = "image-engine-panel";
+export const TOOLS_PANEL_ID = "tools-panel";
+export const RESULTS_TABS_ID = "results-tabs";
+export const GROUPS_ID = "image-filter-groups";
+export const OVERLAY_CLASS = "degoog-img-sidebar-overlay";
+export const LAYOUT_ID = "results-layout";
+export const TOOLS_TOGGLE_ID = "tools-toggle";
+export const TOOLS_CLOSE_EVENT = "degoog-tools-close";
+export const TOOLS_PIN_EVENT = "degoog-tools-pin";

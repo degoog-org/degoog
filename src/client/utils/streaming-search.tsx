@@ -1,0 +1,367 @@
+import { render } from "../../shared/ui/core/dom";
+import { renderHtml } from "../../shared/ui/core/html";
+import { Raw } from "../../shared/ui/core/raw";
+import { NoResults } from "../../shared/ui/components/feedback/no-results";
+import { NoEnginesLink } from "./search/no-engines-link";
+import {
+  skeletonImageGrid,
+  skeletonResults,
+  skeletonSidebar,
+} from "../animations/skeleton";
+import { MAX_PAGE } from "../constants";
+import {
+  closeMediaPreview,
+  destroyMediaObserver,
+  MediaPreviewCloseMode,
+  setupMediaObserver,
+  syncMediaPreviewPanel,
+} from "../modules/media/media";
+import {
+  attachVideoPlayers,
+  clearSlotPanels,
+  renderPagination,
+  renderSidebar,
+  prependKnowledgePanels,
+} from "../modules/renderer/render";
+import { renderImageGrid } from "../modules/renderer/render-media";
+import { renderImgEngines } from "../modules/filters/image-filters";
+import { state } from "../state";
+import {
+  EngineTiming,
+  ScoredResult,
+  SearchResponse,
+  SlotPanelPosition,
+} from "../types";
+import { abortAcReq, hideAcDropdown } from "./autocomplete";
+import { getEngines, isImageSearchType } from "./engines";
+import { setActiveTab } from "./navigation";
+import {
+  abortGlancePanels,
+  abortSlotPanels,
+  fetchGlancePanels,
+  fetchSlotPanels,
+} from "./search-utils";
+import { buildSearchUrl, imgFilterRecord } from "./url";
+import { appendSearchAuthParams } from "./request";
+import { declaredPages } from "./search-helpers";
+import { infiniteScrollOn } from "./streaming-config";
+import {
+  setupInfinite,
+  teardownInfinite,
+} from "../modules/renderer/infinite-scroll";
+import { getBase } from "./base-url";
+import { loadSidebarSuggestions } from "./search/search-actions-render";
+import { mergeStreamingMediaResults } from "./search/streaming-media-results";
+import { staysHere } from "./plain-click";
+import {
+  updateEngineTimings,
+  updateResults,
+} from "./search/streaming-search-dom";
+
+const t = window.scopedT("themes/degoog");
+
+interface StreamEngineResult {
+  engine: string;
+  timing: EngineTiming;
+  results: ScoredResult[];
+  retry: boolean;
+  attempt: number;
+}
+
+interface StreamEngineRetry {
+  engine: string;
+  attempt: number;
+  maxRetries: number;
+  timing: EngineTiming;
+}
+
+interface StreamDone {
+  totalTime: number;
+  engineTimings: EngineTiming[];
+  indexedUrls?: string[];
+  relatedSearches: string[];
+  totalPages?: number;
+}
+
+let _activeSource: EventSource | null = null;
+let _linkWatch: AbortController | null = null;
+
+const dropStream = (source: EventSource): void => {
+  source.close();
+  if (_activeSource !== source) return;
+  _activeSource = null;
+  _linkWatch?.abort();
+  _linkWatch = null;
+};
+
+export function abortStreamingSearch(): void {
+  if (_activeSource) dropStream(_activeSource);
+}
+
+export async function performStreamingSearch(
+  query: string,
+  type: string,
+  onComplete: (q: string) => void,
+  isInitialLoad = false,
+): Promise<void> {
+  abortStreamingSearch();
+
+  state.currentQuery = query;
+  state.currentType = type;
+  state.currentPage = 1;
+  state.lastPage = null;
+  state.imagePage = 1;
+  state.imageLastPage = MAX_PAGE;
+  state.videoPage = 1;
+  state.videoLastPage = MAX_PAGE;
+  destroyMediaObserver();
+  teardownInfinite();
+
+  const engines = await getEngines();
+  const url = buildSearchUrl(query, engines, type, 1);
+  const streamUrl = appendSearchAuthParams(
+    url.replace("/api/search?", "/api/search/stream?"),
+  );
+
+  setActiveTab(type);
+  closeMediaPreview(MediaPreviewCloseMode.Reset);
+  abortAcReq();
+  hideAcDropdown(document.getElementById("ac-dropdown-home"));
+  hideAcDropdown(document.getElementById("ac-dropdown-results"));
+  (document.activeElement as HTMLElement | null)?.blur();
+  const resultsInput = document.getElementById(
+    "results-search-input",
+  ) as HTMLInputElement | null;
+  if (resultsInput) {
+    resultsInput.value = query;
+    resultsInput.defaultValue = query;
+  }
+  const isImageType = isImageSearchType(type);
+  const layout = document.getElementById("results-layout");
+  if (isImageType) {
+    layout?.classList.add("media-mode");
+  } else {
+    layout?.classList.remove("media-mode");
+  }
+  syncMediaPreviewPanel(isImageType);
+  const resultsMeta = document.getElementById("results-meta");
+  if (resultsMeta) resultsMeta.textContent = "Searching...";
+  const resultsList = document.getElementById("results-list");
+  if (resultsList) {
+    resultsList.innerHTML = isImageType
+      ? skeletonImageGrid()
+      : skeletonResults();
+  }
+  const pagination = document.getElementById("pagination");
+  if (pagination) pagination.innerHTML = "";
+  const sidebar = document.getElementById("results-sidebar");
+  if (sidebar) sidebar.innerHTML = isImageType ? "" : skeletonSidebar();
+  loadSidebarSuggestions(query, type, onComplete);
+  clearSlotPanels();
+  if (isImageType) {
+    abortGlancePanels();
+    abortSlotPanels();
+  } else {
+    void fetchSlotPanels(query).then((panels) => {
+      const kp = panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel);
+      if (kp.length > 0) prependKnowledgePanels(kp);
+    });
+    void fetchGlancePanels(query);
+  }
+  const glanceEl = document.getElementById("at-a-glance");
+  if (glanceEl) glanceEl.innerHTML = "";
+  document.title = `${query} - degoog`;
+
+  const urlParams = new URLSearchParams({ q: query });
+  if (type !== "web") urlParams.set("type", type);
+  if (isImageType) {
+    for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
+      urlParams.set(k, v);
+    }
+  }
+  const historyState = {
+    degoog: true,
+    query,
+    type,
+    page: 1,
+    imageFilter: isImageType ? { ...state.imageFilter } : undefined,
+  };
+  const searchUrl = `${getBase()}/search?${urlParams.toString()}`;
+  if (isInitialLoad) {
+    history.replaceState(historyState, "", searchUrl);
+  } else {
+    history.pushState(historyState, "", searchUrl);
+  }
+
+  const engineTimings: EngineTiming[] = [];
+  let firstResult = true;
+  let currentResults: ScoredResult[] = [];
+  const renderedUrls = new Set<string>();
+  const renderedImages: ScoredResult[] = [];
+
+  const source = new EventSource(streamUrl);
+  _activeSource = source;
+  _linkWatch = new AbortController();
+
+  resultsList?.addEventListener(
+    "click",
+    (ev) => {
+      const anchor = (ev.target as Element).closest("a");
+      if (!anchor || _activeSource !== source) return;
+      if (staysHere(ev, anchor)) dropStream(source);
+    },
+    { signal: _linkWatch.signal },
+  );
+
+  source.addEventListener("engine-result", (e) => {
+    const data = JSON.parse(e.data) as StreamEngineResult;
+
+    const existingIdx = engineTimings.findIndex((timing) => timing.name === data.engine);
+    if (existingIdx >= 0) {
+      engineTimings[existingIdx] = data.timing;
+    } else {
+      engineTimings.push(data.timing);
+    }
+
+    if (isImageType) {
+      if (firstResult) {
+        firstResult = false;
+        if (resultsList) {
+          resultsList.innerHTML =
+            '<div class="image-grid"></div><div class="media-scroll-sentinel"></div>';
+        }
+      }
+      for (const r of data.results) renderedUrls.add(r.url);
+      renderedImages.splice(
+        0,
+        renderedImages.length,
+        ...mergeStreamingMediaResults(renderedImages, data.results),
+      );
+      currentResults = renderedImages;
+      state.currentResults = renderedImages;
+      if (resultsList) renderImageGrid(currentResults, resultsList);
+    } else {
+      currentResults = data.results;
+      state.currentResults = currentResults;
+      if (firstResult) {
+        firstResult = false;
+        if (resultsList) resultsList.innerHTML = "";
+      }
+      updateResults(resultsList, currentResults, renderedUrls);
+      if (resultsList) attachVideoPlayers(resultsList);
+    }
+
+    if (resultsMeta) {
+      resultsMeta.textContent = `About ${currentResults.length} results (streaming...)`;
+    }
+
+    if (isImageType) {
+      renderImgEngines(engineTimings);
+    } else {
+      updateEngineTimings(sidebar, engineTimings);
+    }
+  });
+
+  source.addEventListener("engine-retry", (e) => {
+    const data = JSON.parse(e.data) as StreamEngineRetry;
+    const existingIdx = engineTimings.findIndex((timing) => timing.name === data.engine);
+    if (existingIdx >= 0) {
+      engineTimings[existingIdx] = { ...data.timing, resultCount: -1 };
+    } else {
+      engineTimings.push({ ...data.timing, resultCount: -1 });
+    }
+    updateEngineTimings(sidebar, engineTimings);
+  });
+
+  source.addEventListener("done", (e) => {
+    const data = JSON.parse(e.data) as StreamDone;
+    dropStream(source);
+
+    if (!isImageType && data.indexedUrls && data.indexedUrls.length > 0) {
+      const indexedSet = new Set(data.indexedUrls);
+      for (const r of currentResults) {
+        if (r.idx !== "recalled" && indexedSet.has(r.url)) r.idx = "indexing";
+      }
+      updateResults(resultsList, currentResults, renderedUrls);
+    }
+
+    const searchData: SearchResponse = {
+      results: currentResults,
+      query,
+      totalTime: data.totalTime,
+      type,
+      engineTimings: data.engineTimings,
+      relatedSearches: data.relatedSearches,
+      totalPages: data.totalPages,
+    };
+
+    state.currentData = searchData;
+    state.lastPage = declaredPages(data.totalPages);
+
+    if (resultsMeta) {
+      resultsMeta.textContent = `About ${currentResults.length} results (${(data.totalTime / 1000).toFixed(2)} seconds)`;
+    }
+
+    if (isImageType) {
+      renderImgEngines(data.engineTimings);
+      if (sidebar) sidebar.innerHTML = "";
+      if (currentResults.length > 0) setupMediaObserver("images");
+    } else {
+      updateEngineTimings(sidebar, data.engineTimings);
+      void fetchGlancePanels(query, currentResults);
+      void fetchSlotPanels(query, currentResults).then((panels) => {
+        const kpPanels = panels.filter(
+          (p) => p.position === SlotPanelPosition.KnowledgePanel,
+        );
+        renderSidebar(
+          searchData,
+          (q) => onComplete(q),
+          kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
+        );
+      });
+    }
+
+    if (currentResults.length === 0 && resultsList) {
+      const storeLink = renderHtml(
+        <NoEnginesLink
+          href={`${getBase()}/settings/store`}
+          label={t("search-templates.no-engines-store")}
+        />,
+      );
+      const msg = engineTimings.length === 0
+        ? t("search-templates.no-engines", { store: storeLink })
+        : t("search-templates.no-results");
+      render(<NoResults><Raw html={msg} /></NoResults>, resultsList);
+    }
+
+    if (resultsList) attachVideoPlayers(resultsList);
+    if (!isImageType) {
+      if (infiniteScrollOn()) {
+        const paginationBox = document.getElementById("pagination");
+        if (paginationBox) paginationBox.innerHTML = "";
+        setupInfinite(type);
+      } else {
+        renderPagination(
+          state.lastPage,
+          state.currentPage,
+          currentResults.length > 0,
+        );
+      }
+    }
+  });
+
+  source.addEventListener("error", (e) => {
+    if (_activeSource !== source) {
+      source.close();
+      return;
+    }
+    console.error("[streaming-search] stream error", e);
+    dropStream(source);
+    if (resultsMeta) resultsMeta.textContent = "";
+    if (resultsList)
+      render(
+        <NoResults>{t("search-templates.search-failed")}</NoResults>,
+        resultsList,
+      );
+  });
+}

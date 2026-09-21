@@ -1,6 +1,5 @@
 import pkg from "../../../../package.json";
-import { Button } from "../../../shared/ui/components/primitives/button";
-import { buttonClass } from "../../../shared/ui/components/primitives/button";
+import { Button, buttonClass } from "../../../shared/ui/components/primitives/button";
 import { SettingsSection } from "../shared/settings-section";
 
 const t = window.scopedT("core");

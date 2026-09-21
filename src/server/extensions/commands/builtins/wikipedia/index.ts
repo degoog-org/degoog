@@ -1,3 +1,4 @@
+import { renderWikiThumbnail } from "./render";
 import {
   SlotPanelPosition,
   TranslateFunction,
@@ -237,7 +238,11 @@ const wikipediaSlot: SlotPlugin = {
       description: escapeHtml(page.description || ""),
       extract: escapeHtml(page.extract),
       thumbnail: page.thumbnail
-        ? `<img class="${page.thumbnail.isLogo ? "wiki-thumb--logo" : "wiki-thumb"}" src="${escapeHtml(proxy(page.thumbnail.source))}" alt="${escapeHtml(page.title)}" loading="lazy">`
+        ? renderWikiThumbnail(
+            proxy(page.thumbnail.source),
+            page.title,
+            page.thumbnail.isLogo,
+          )
         : "",
       url: page.fullurl ?? `https://${host}/?curid=${page.pageid}`,
     };
