@@ -51,117 +51,64 @@ afterAll(() => {
 });
 
 describe("domain replacements", () => {
-  test("rewrites the hostname of matching results and subdomains", async () => {
-    await seedSettings({
-      domainReplaceEnabled: true,
-      domainReplaceList: "reddit.com -> redlib.example.com",
-    });
-
-    const out = await applyDomainReplacements([
-      result("https://www.reddit.com/r/selfhosted/comments/1"),
-      result("https://example.org/page"),
-    ]);
-
-    expect(new URL(out[0].url).hostname).toBe("redlib.example.com");
-    expect(new URL(out[0].url).pathname).toBe("/r/selfhosted/comments/1");
-    expect(out[1].url).toBe("https://example.org/page");
-  });
-
-  test("keeps query and hash when only the hostname is swapped", async () => {
-    await seedSettings({
-      domainReplaceEnabled: true,
-      domainReplaceList: "wikipedia.org -> wiki.example.com",
-    });
-
-    const out = await applyDomainReplacements([
-      result("https://en.wikipedia.org/wiki/Test?x=1#A"),
-    ]);
-
-    expect(out[0].url).toBe("https://wiki.example.com/wiki/Test?x=1#A");
-  });
-
-  test("sends matches to a fixed full URL target", async () => {
-    await seedSettings({
-      domainReplaceEnabled: true,
-      domainReplaceList:
-        "wikipedia.org -> https://wiki.example.com/viewer#wikipedia_en_all",
-    });
-
-    const out = await applyDomainReplacements([
-      result("https://en.wikipedia.org/wiki/Test?x=1"),
-    ]);
-
-    expect(out[0].url).toBe("https://wiki.example.com/viewer#wikipedia_en_all");
-  });
-
-  test("expands placeholders in a full URL target", async () => {
-    await seedSettings({
-      domainReplaceEnabled: true,
-      domainReplaceList:
-        "wikipedia.org -> https://wiki.example.com/viewer#wikipedia_en_all{{path}}",
-    });
-
-    const out = await applyDomainReplacements([
-      result("https://en.wikipedia.org/wiki/Test"),
-    ]);
-
-    expect(out[0].url).toBe(
-      "https://wiki.example.com/viewer#wikipedia_en_all/wiki/Test",
-    );
-  });
-
-  test("expands the remaining placeholders", async () => {
-    await seedSettings({
-      domainReplaceEnabled: true,
-      domainReplaceList:
-        "wikipedia.org -> https://viewer.example.com/go{{path}}{{query}}{{hash}}?host={{hostname}}",
-    });
-
-    const out = await applyDomainReplacements([
-      result("https://en.wikipedia.org/wiki/Test?x=1#A"),
-    ]);
-
-    expect(out[0].url).toBe(
+  const rewrites: [string, string, string, string][] = [
+    [
+      "rewrites the hostname of matching results and subdomains",
+      "reddit.com -> redlib.example.com",
+      "https://www.reddit.com/r/selfhosted/comments/1",
+      "https://redlib.example.com/r/selfhosted/comments/1",
+    ],
+    [
+      "keeps query and hash when only the hostname is swapped",
+      "wikipedia.org -> wiki.example.com",
+      "https://en.wikipedia.org/wiki/Test?x=1#A",
+      "https://wiki.example.com/wiki/Test?x=1#A",
+    ],
+    [
+      "sends matches to a fixed full URL target",
+      "wikipedia.org -> https://wiki.example.com/viewer#wikipedia_en_all",
+      "https://en.wikipedia.org/wiki/Test?x=1",
+      "https://wiki.example.com/viewer#wikipedia_en_all",
+    ],
+    [
+      "expands placeholders in a full URL target",
+      "wikipedia.org -> https://viewer.example.com/go{{path}}{{query}}{{hash}}?host={{hostname}}",
+      "https://en.wikipedia.org/wiki/Test?x=1#A",
       "https://viewer.example.com/go/wiki/Test?x=1#A?host=en.wikipedia.org",
-    );
-  });
+    ],
+    [
+      "inherits the original protocol for scheme-less path targets",
+      "wikipedia.org -> wiki.example.com/viewer#zim",
+      "https://en.wikipedia.org/wiki/Test",
+      "https://wiki.example.com/viewer#zim",
+    ],
+    [
+      "ignores rules with a missing source or target",
+      "wikipedia.org ->\n-> wiki.example.com",
+      "https://en.wikipedia.org/wiki/Test",
+      "https://en.wikipedia.org/wiki/Test",
+    ],
+    [
+      "leaves results with an unparseable URL untouched",
+      "wikipedia.org -> wiki.example.com",
+      "not a url",
+      "not a url",
+    ],
+  ];
 
-  test("inherits the original protocol for scheme-less path targets", async () => {
-    await seedSettings({
-      domainReplaceEnabled: true,
-      domainReplaceList: "wikipedia.org -> wiki.example.com/viewer#zim",
+  for (const [name, domainReplaceList, input, expected] of rewrites) {
+    test(name, async () => {
+      await seedSettings({ domainReplaceEnabled: true, domainReplaceList });
+
+      const out = await applyDomainReplacements([
+        result(input),
+        result("https://example.org/page"),
+      ]);
+
+      expect(out[0].url).toBe(expected);
+      expect(out[1].url).toBe("https://example.org/page");
     });
-
-    const out = await applyDomainReplacements([
-      result("https://en.wikipedia.org/wiki/Test"),
-    ]);
-
-    expect(out[0].url).toBe("https://wiki.example.com/viewer#zim");
-  });
-
-  test("ignores rules with a missing source or target", async () => {
-    await seedSettings({
-      domainReplaceEnabled: true,
-      domainReplaceList: "wikipedia.org ->\n-> wiki.example.com",
-    });
-
-    const out = await applyDomainReplacements([
-      result("https://en.wikipedia.org/wiki/Test"),
-    ]);
-
-    expect(out[0].url).toBe("https://en.wikipedia.org/wiki/Test");
-  });
-
-  test("leaves results with an unparseable URL untouched", async () => {
-    await seedSettings({
-      domainReplaceEnabled: true,
-      domainReplaceList: "wikipedia.org -> wiki.example.com",
-    });
-
-    const out = await applyDomainReplacements([result("not a url")]);
-
-    expect(out[0].url).toBe("not a url");
-  });
+  }
 
   test("picks up list edits without a restart", async () => {
     await seedSettings({ domainReplaceEnabled: true, domainReplaceList: "" });

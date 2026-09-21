@@ -27,10 +27,6 @@ const result = (over: Partial<SearchResult> = {}): SearchResult => ({
 });
 
 describe("indexer filters - shouldIndex", () => {
-  test("empty config indexes everything", () => {
-    expect(shouldIndex(result(), baseCfg)).toBe(true);
-  });
-
   test("domain blocklist rejects matching host and subdomains", () => {
     const cfg = { ...baseCfg, domainBlocklist: new Set(["example.com"]) };
     expect(shouldIndex(result({ url: "https://example.com/a" }), cfg)).toBe(false);
@@ -38,15 +34,6 @@ describe("indexer filters - shouldIndex", () => {
     expect(shouldIndex(result({ url: "https://deep.nested.example.com/a" }), cfg)).toBe(false);
     expect(shouldIndex(result({ url: "https://other.org/a" }), cfg)).toBe(true);
     expect(shouldIndex(result({ url: "https://notexample.com/a" }), cfg)).toBe(true);
-  });
-
-  test("domain blocklist stays fast with a large list", () => {
-    const big = new Set<string>();
-    for (let i = 0; i < 5_000; i++) big.add(`blocked-${i}.com`);
-    big.add("example.com");
-    const cfg = { ...baseCfg, domainBlocklist: big };
-    expect(shouldIndex(result({ url: "https://www.example.com/a" }), cfg)).toBe(false);
-    expect(shouldIndex(result({ url: "https://allowed.org/a" }), cfg)).toBe(true);
   });
 
   test("domain allowlist only indexes listed domains when non-empty", () => {

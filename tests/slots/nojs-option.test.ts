@@ -56,18 +56,11 @@ beforeEach(() => {
 });
 
 describe("runSlotPlugins without the nojs option is unchanged", () => {
-  test("every eligible plugin still runs, opted in or not", async () => {
+  test("every eligible plugin runs with no nojs key on its context", async () => {
     const panels = await runSlotPlugins("hello");
     expect(panels.map((panel) => panel.id)).toEqual([PLAIN_SLOT, OPTED_IN_SLOT]);
     expect(seen.map((entry) => entry.id)).toEqual([PLAIN_SLOT, OPTED_IN_SLOT]);
-  });
-
-  test("no context carries a nojs key", async () => {
-    await runSlotPlugins("hello");
-    for (const entry of seen) {
-      expect("nojs" in entry.context).toBe(false);
-      expect(entry.context.nojs).toBeUndefined();
-    }
+    for (const entry of seen) expect("nojs" in entry.context).toBe(false);
   });
 
   test("an explicit nojs false behaves like the option being absent", async () => {
@@ -95,16 +88,12 @@ describe("runSlotPlugins without the nojs option is unchanged", () => {
 });
 
 describe("runSlotPlugins with the nojs option is default deny", () => {
-  test("only plugins with supportsNojs true run", async () => {
+  test("only plugins with supportsNojs true run, and they receive nojs true", async () => {
     const panels = await runSlotPlugins("hello", undefined, undefined, {
       nojs: true,
     });
     expect(panels.map((panel) => panel.id)).toEqual([OPTED_IN_SLOT]);
     expect(seen.map((entry) => entry.id)).toEqual([OPTED_IN_SLOT]);
-  });
-
-  test("the opted in plugin receives nojs true", async () => {
-    await runSlotPlugins("hello", undefined, undefined, { nojs: true });
     expect(seen[0].context.nojs).toBe(true);
   });
 });

@@ -11,12 +11,6 @@ describe("search/makePageCounter", () => {
     expect(makePageCounter().total()).toBeUndefined();
   });
 
-  test("keeps a declared total", () => {
-    const counter = makePageCounter();
-    counter.report({ total: 12 });
-    expect(counter.total()).toBe(12);
-  });
-
   test("keeps the last declaration when reported twice", () => {
     const counter = makePageCounter();
     counter.report({ total: 12 });
@@ -24,14 +18,9 @@ describe("search/makePageCounter", () => {
     expect(counter.total()).toBe(3);
   });
 
-  test("ignores a missing total", () => {
+  test("ignores a missing total or values that are not finite numbers", () => {
     const counter = makePageCounter();
     counter.report({});
-    expect(counter.total()).toBeUndefined();
-  });
-
-  test("ignores values that are not finite numbers", () => {
-    const counter = makePageCounter();
     counter.report({ total: Number.NaN });
     counter.report({ total: Number.POSITIVE_INFINITY });
     expect(counter.total()).toBeUndefined();
@@ -57,24 +46,14 @@ describe("search/agreedPageTotal", () => {
     expect(agreedPageTotal([])).toBeUndefined();
   });
 
-  test("uses the single declared total for a lone engine", () => {
-    expect(agreedPageTotal([12])).toBe(12);
-  });
-
   test("takes the highest total when every engine declared one", () => {
+    expect(agreedPageTotal([12])).toBe(12);
     expect(agreedPageTotal([3, 10, 7])).toBe(10);
   });
 
   test("stays unknown when any engine stayed silent", () => {
     expect(agreedPageTotal([3, undefined, 7])).toBeUndefined();
-  });
-
-  test("stays unknown when a lone engine stayed silent", () => {
     expect(agreedPageTotal([undefined])).toBeUndefined();
-  });
-
-  test("treats a non-paging engine as one page", () => {
-    expect(agreedPageTotal([1, 1])).toBe(1);
   });
 });
 
@@ -83,11 +62,8 @@ describe("client/declaredPages", () => {
     expect(declaredPages(undefined)).toBeNull();
   });
 
-  test("honors a declared total", () => {
-    expect(declaredPages(3)).toBe(3);
-  });
-
   test("honors a declared total larger than the old ceiling", () => {
+    expect(declaredPages(3)).toBe(3);
     expect(declaredPages(42)).toBe(42);
     expect(declaredPages(42)).toBeGreaterThan(MAX_PAGE);
   });

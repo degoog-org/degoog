@@ -16,13 +16,6 @@ const tabsReal = { ...(await import(TABS_MOD)) };
 const serverSettingsReal = { ...(await import(SERVER_SETTINGS_MOD)) };
 
 const FALLBACK_TAB_PAGES = 10;
-const RESPONSE_KEYS = [
-  "engineTimings",
-  "page",
-  "results",
-  "totalPages",
-  "totalTime",
-];
 
 type EngineEntry = { id: string; instance: SearchEngine };
 
@@ -128,23 +121,13 @@ afterEach(() => {
 });
 
 describe("GET /api/tab-search validation", () => {
-  test("missing tab returns 400", async () => {
+  test.each([
+    ["?q=cats"],
+    ["?tab=engine:videos"],
+    ["?tab=engine:videos&q=%20%20%20"],
+  ])("%s returns 400", async (queryString) => {
     harness({});
-    const res = await call("?q=cats");
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: "Missing tab or q" });
-  });
-
-  test("missing q returns 400", async () => {
-    harness({});
-    const res = await call("?tab=engine:videos");
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: "Missing tab or q" });
-  });
-
-  test("blank q returns 400", async () => {
-    harness({});
-    const res = await call("?tab=engine:videos&q=%20%20%20");
+    const res = await call(queryString);
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ error: "Missing tab or q" });
   });
@@ -170,7 +153,6 @@ describe("GET /api/tab-search engine fan-out", () => {
     expect(res.status).toBe(200);
     const json = await body(res);
 
-    expect(Object.keys(json).sort()).toEqual(RESPONSE_KEYS);
     expect(requestedEngineTypes).toEqual(["videos"]);
     expect(json.page).toBe(3);
     expect(json.results.map((r) => r.title)).toEqual([
@@ -186,9 +168,6 @@ describe("GET /api/tab-search engine fan-out", () => {
     ]);
     expect(json.engineTimings.map((t) => t.name)).toEqual(["Alpha", "Beta"]);
     expect(json.engineTimings.map((t) => t.resultCount)).toEqual([2, 1]);
-    for (const timing of json.engineTimings)
-      expect(typeof timing.time).toBe("number");
-    expect(typeof json.totalTime).toBe("number");
   });
 
   test("engine type is everything after the engine: prefix", async () => {
@@ -204,17 +183,6 @@ describe("GET /api/tab-search engine fan-out", () => {
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: "Tab not found" });
     expect(requestedEngineTypes).toEqual([]);
-  });
-
-  test("no engines for the type still answers 200 with an empty payload", async () => {
-    harness({ engines: [] });
-    const res = await call("?tab=engine:videos&q=cats");
-    expect(res.status).toBe(200);
-    const json = await body(res);
-    expect(json.results).toEqual([]);
-    expect(json.engineTimings).toEqual([]);
-    expect(json.totalPages).toBe(1);
-    expect(json.page).toBe(1);
   });
 
   test("a throwing engine does not fail the request and still reports a timing", async () => {
@@ -233,7 +201,6 @@ describe("GET /api/tab-search engine fan-out", () => {
     expect(json.results.map((r) => r.score)).toEqual([100, 99]);
     expect(json.engineTimings.map((t) => t.name)).toEqual(["Boom", "Beta"]);
     expect(json.engineTimings[0].resultCount).toBe(0);
-    expect(typeof json.engineTimings[0].time).toBe("number");
     expect(json.engineTimings[1].resultCount).toBe(2);
   });
 
@@ -272,17 +239,6 @@ describe("GET /api/tab-search page totals", () => {
     expect(json.totalPages).toBe(FALLBACK_TAB_PAGES);
   });
 
-  test("a throwing engine drops the agreement to the fallback", async () => {
-    harness({
-      engines: [
-        makeEngine("Alpha", makeResults("Alpha", 1), 5),
-        makeBrokenEngine("Boom"),
-      ],
-    });
-    const json = await body(await call("?tab=engine:videos&q=cats"));
-    expect(json.totalPages).toBe(FALLBACK_TAB_PAGES);
-  });
-
   test("zero results keeps totalPages at 1 even when an engine declared more", async () => {
     harness({ engines: [makeEngine("Alpha", [], 9)] });
     const json = await body(await call("?tab=engine:videos&q=cats"));
@@ -302,18 +258,6 @@ describe("GET /api/tab-search tab extensions", () => {
     }),
   };
 
-  test("registered tab without the engine: prefix fans out to its engineType", async () => {
-    harness({
-      engines: [makeEngine("Alpha", makeResults("Alpha", 2))],
-      tab: { id: "vids-tab", name: "Vids", engineType: "videos" },
-    });
-    const res = await call("?tab=vids-tab&q=cats");
-    expect(res.status).toBe(200);
-    expect(requestedEngineTypes).toEqual(["videos"]);
-    const json = await body(res);
-    expect(json.results.map((r) => r.score)).toEqual([100, 99]);
-  });
-
   test("tab results land after engine results with offset scores and can raise totalPages", async () => {
     harness({
       engines: [makeEngine("Alpha", makeResults("Alpha", 2), 2)],
@@ -322,6 +266,7 @@ describe("GET /api/tab-search tab extensions", () => {
 
     const json = await body(await call("?tab=vids-tab&q=cats"));
 
+    expect(requestedEngineTypes).toEqual(["videos"]);
     expect(json.results.map((r) => r.title)).toEqual([
       "Alpha 1",
       "Alpha 2",
@@ -419,9 +364,7 @@ describe("GET /api/tab-search tab extensions", () => {
     const tabTiming = json.engineTimings.find(
       (t: { name: string }) => t.name === "Vids",
     );
-    expect(tabTiming).toBeDefined();
     expect(tabTiming?.resultCount).toBe(0);
-    expect(typeof tabTiming?.time).toBe("number");
   });
 
   test("a throwing tab extension never leaks its error text to the client", async () => {

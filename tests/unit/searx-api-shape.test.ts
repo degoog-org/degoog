@@ -63,24 +63,17 @@ describe("toSearxDoc", () => {
     expect(r).not.toHaveProperty("source");
   });
 
-  test("maps degoog web type to the general category", async () => {
-    const doc = await toSearxDoc({ ...base, results: [result()] });
-    expect(doc.results[0]!.category).toBe("general");
-    expect(doc.results[0]!.template).toBe("default.html");
-  });
-
-  test("maps media types to their category and template", async () => {
-    const imgs = await toSearxDoc({ ...base, type: "images", results: [result()] });
-    expect(imgs.results[0]!.category).toBe("images");
-    expect(imgs.results[0]!.template).toBe("images.html");
-
-    const vids = await toSearxDoc({ ...base, type: "videos", results: [result()] });
-    expect(vids.results[0]!.template).toBe("videos.html");
-  });
-
-  test("falls back to general for unknown custom tab types", async () => {
-    const doc = await toSearxDoc({ ...base, type: "recipes", results: [result()] });
-    expect(doc.results[0]!.category).toBe("general");
+  test("maps degoog types onto searx categories and templates", async () => {
+    for (const [type, category, template] of [
+      ["web", "general", "default.html"],
+      ["images", "images", "images.html"],
+      ["videos", "videos", "videos.html"],
+      ["recipes", "general", "default.html"],
+    ]) {
+      const doc = await toSearxDoc({ ...base, type, results: [result()] });
+      expect(doc.results[0]!.category).toBe(category);
+      expect(doc.results[0]!.template).toBe(template);
+    }
   });
 
   test("splits parsed_url into the urlparse six-tuple", async () => {
@@ -135,24 +128,13 @@ describe("toSearxDoc", () => {
         { name: "Zoo", time: 1, resultCount: 0, status: THREAT_LEVEL.TIMEOUT },
         { name: "Brave", time: 2, resultCount: 5, status: THREAT_LEVEL.OK },
         { name: "Ape", time: 3, resultCount: 0, status: THREAT_LEVEL.RATE_LIMITED },
+        { name: "Mojeek", time: 2, resultCount: 5 },
       ],
     });
     expect(doc.unresponsive_engines).toEqual([
       ["ape", "Too many requests"],
       ["zoo", "Timeout"],
     ]);
-  });
-
-  test("omits engines that succeeded or reported no status", async () => {
-    const doc = await toSearxDoc({
-      ...base,
-      results: [],
-      engineTimings: [
-        { name: "Brave", time: 2, resultCount: 5, status: THREAT_LEVEL.OK },
-        { name: "Mojeek", time: 2, resultCount: 5 },
-      ],
-    });
-    expect(doc.unresponsive_engines).toEqual([]);
   });
 
   test("tolerates a retry payload with no query or type", async () => {

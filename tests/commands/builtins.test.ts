@@ -20,27 +20,13 @@ describe("commands builtins", () => {
     delete process.env.DEGOOG_ENGINES_DIR;
   });
 
-  test("helpCommand.execute returns title and html with command list", async () => {
-    const result = await helpCommand.execute("");
-    expect(result.title).toBe("Available Commands");
-    expect(result.html).toContain("help-container");
-    expect(result.html).toContain("!help");
-  });
-
-  test("uuidCommand.execute returns title and html with UUIDs", async () => {
-    const result = await uuidCommand.execute("");
-    expect(result.title).toBe("Generated UUIDs");
-    expect(result.html).toContain("uuid-value");
-    const uuidMatch = result.html.match(
-      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
-    );
-    expect(uuidMatch).not.toBeNull();
-  });
-
   test("helpCommand keeps its tabs, search box and script without a context", async () => {
     const noContext = await helpCommand.execute("");
     const emptyContext = await helpCommand.execute("", {});
+    expect(noContext.title).toBe("Available Commands");
     for (const html of [noContext.html, emptyContext.html]) {
+      expect(html).toContain("help-container");
+      expect(html).toContain("!help");
       expect(html).toContain("help-search-input");
       expect(html).toContain("help-tabs");
       expect(html).toContain("help-tab ");
@@ -50,7 +36,6 @@ describe("commands builtins", () => {
 
   test("helpCommand drops the tabs and search box under nojs", async () => {
     const result = await helpCommand.execute("", { nojs: true });
-    expect(result.title).toBe("Available Commands");
     expect(result.html).toContain("help-container");
     expect(result.html).toContain("!help");
     expect(result.html).not.toContain("help-search-input");
@@ -93,6 +78,10 @@ describe("commands builtins", () => {
   test("uuidCommand keeps its copy button without a context", async () => {
     const noContext = await uuidCommand.execute("2");
     const emptyContext = await uuidCommand.execute("2", {});
+    expect(noContext.title).toBe("Generated UUIDs");
+    expect(noContext.html).toMatch(
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
+    );
     for (const result of [noContext, emptyContext]) {
       expect(result.html).toContain("uuid-copy");
       expect(result.html.split("uuid-value").length - 1).toBe(2);
@@ -105,14 +94,8 @@ describe("commands builtins", () => {
     expect(result.html.split("uuid-value").length - 1).toBe(2);
   });
 
-  test("builtins declare their nojs support", () => {
-    expect(helpCommand.supportsNojs).toBe(true);
-    expect(ipCommand.supportsNojs).toBe(true);
-    expect(uuidCommand.supportsNojs).toBe(true);
+  test("speedtestCommand opts out of nojs and keeps its browser side widget", async () => {
     expect(speedtestCommand.supportsNojs).toBeUndefined();
-  });
-
-  test("speedtestCommand still returns its browser side widget", async () => {
     const result = await speedtestCommand.execute("");
     expect(result.html).toContain("<script");
   });

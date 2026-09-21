@@ -1,5 +1,9 @@
 import { describe, test, expect, beforeEach, afterAll } from "bun:test";
-import { resolvePgConfig, resetPgConfig } from "../../src/server/indexer/db/pg-config";
+import {
+  resolvePgConfig,
+  resetPgConfig,
+  type PgSslMode,
+} from "../../src/server/indexer/db/pg-config";
 
 const PG_ENV_KEYS = [
   "DEGOOG_POSTGRES",
@@ -125,72 +129,29 @@ describe("resolvePgConfig", () => {
     });
   });
 
-  test("unix socket host still accepts a password if provided", () => {
-    process.env.DEGOOG_POSTGRES_HOST = "/var/run/postgresql";
-    process.env.DEGOOG_POSTGRES_PASSWORD = "secret";
+  const sslCases: [string, PgSslMode | null][] = [
+    ["true", true],
+    ["require", "require"],
+    ["nonsense", "require"],
+    ["prefer", null],
+    ["false", null],
+  ];
 
-    const resolved = resolvePgConfig();
-    expect(resolved).toEqual({
-      mode: "config",
-      config: {
-        host: "/var/run/postgresql",
-        port: 5432,
-        user: "degoog",
-        database: "degoog",
-        password: "secret",
-      },
+  for (const [value, expected] of sslCases) {
+    test(`sslmode ${value} ${expected === null ? "is rejected as insecure" : `resolves to ${String(expected)}`}`, () => {
+      process.env.DEGOOG_POSTGRES_HOST = "pg.internal";
+      process.env.DEGOOG_POSTGRES_PASSWORD = "secret";
+      process.env.DEGOOG_POSTGRES_SSLMODE = value;
+
+      if (expected === null) {
+        expect(() => resolvePgConfig()).toThrow("not secure enough");
+        return;
+      }
+      const resolved = resolvePgConfig();
+      expect(resolved.mode).toBe("config");
+      if (resolved.mode === "config") {
+        expect(resolved.config.ssl).toBe(expected);
+      }
     });
-  });
-
-  test("recognizes a boolean sslmode value", () => {
-    process.env.DEGOOG_POSTGRES_HOST = "pg.internal";
-    process.env.DEGOOG_POSTGRES_PASSWORD = "secret";
-    process.env.DEGOOG_POSTGRES_SSLMODE = "true";
-
-    const resolved = resolvePgConfig();
-    expect(resolved.mode).toBe("config");
-    if (resolved.mode === "config") {
-      expect(resolved.config.ssl).toBe(true);
-    }
-  });
-
-  test("recognizes a named sslmode value", () => {
-    process.env.DEGOOG_POSTGRES_HOST = "pg.internal";
-    process.env.DEGOOG_POSTGRES_PASSWORD = "secret";
-    process.env.DEGOOG_POSTGRES_SSLMODE = "require";
-
-    const resolved = resolvePgConfig();
-    expect(resolved.mode).toBe("config");
-    if (resolved.mode === "config") {
-      expect(resolved.config.ssl).toBe("require");
-    }
-  });
-
-  test("ignores an unrecognized sslmode value", () => {
-    process.env.DEGOOG_POSTGRES_HOST = "pg.internal";
-    process.env.DEGOOG_POSTGRES_PASSWORD = "secret";
-    process.env.DEGOOG_POSTGRES_SSLMODE = "nonsense";
-
-    const resolved = resolvePgConfig();
-    expect(resolved.mode).toBe("config");
-    if (resolved.mode === "config") {
-      expect(resolved.config.ssl).toBe("require");
-    }
-  });
-
-  test("rejects insecure named sslmode values", () => {
-    process.env.DEGOOG_POSTGRES_HOST = "pg.internal";
-    process.env.DEGOOG_POSTGRES_PASSWORD = "secret";
-    process.env.DEGOOG_POSTGRES_SSLMODE = "prefer";
-
-    expect(() => resolvePgConfig()).toThrow("not secure enough");
-  });
-
-  test("rejects false sslmode", () => {
-    process.env.DEGOOG_POSTGRES_HOST = "pg.internal";
-    process.env.DEGOOG_POSTGRES_PASSWORD = "secret";
-    process.env.DEGOOG_POSTGRES_SSLMODE = "false";
-
-    expect(() => resolvePgConfig()).toThrow("not secure enough");
-  });
+  }
 });

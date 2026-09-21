@@ -4,26 +4,19 @@ import {
   resolveScreenshotPath,
 } from "../../src/server/extensions/store";
 
+const REJECTED: [string, string, string][] = [
+  ["a repoSlug that tries to escape the store dir", "../../../etc", "ssl/certs/ca.svg"],
+  ["a repoSlug with a slash", "foo/bar", "logo.png"],
+  ["traversal inside the relative path", "author-repo", "../../secret.png"],
+  ["a non-image extension", "author-repo", "config.json"],
+];
+
 describe("store/resolveRepoAssetPath containment", () => {
-  test("rejects a repoSlug that tries to escape the store dir", () => {
-    expect(
-      resolveRepoAssetPath("../../../etc", "ssl/certs/ca.svg"),
-    ).toBeNull();
-  });
-
-  test("rejects a repoSlug with a slash", () => {
-    expect(resolveRepoAssetPath("foo/bar", "logo.png")).toBeNull();
-  });
-
-  test("rejects traversal inside the relative path", () => {
-    expect(
-      resolveRepoAssetPath("author-repo", "../../secret.png"),
-    ).toBeNull();
-  });
-
-  test("rejects a non-image extension", () => {
-    expect(resolveRepoAssetPath("author-repo", "config.json")).toBeNull();
-  });
+  for (const [label, slug, rel] of REJECTED) {
+    test(`rejects ${label}`, () => {
+      expect(resolveRepoAssetPath(slug, rel)).toBeNull();
+    });
+  }
 
   test("resolves a normal asset within a valid repo slug", () => {
     const resolved = resolveRepoAssetPath("author-repo", "logo.png");
@@ -35,8 +28,6 @@ describe("store/resolveRepoAssetPath containment", () => {
 
 describe("store/resolveScreenshotPath containment", () => {
   test("rejects a repoSlug that tries to escape the store dir", () => {
-    expect(
-      resolveScreenshotPath("../../../etc", "themes/x", "ca.svg"),
-    ).toBeNull();
+    expect(resolveScreenshotPath("../../../etc", "themes/x", "ca.svg")).toBeNull();
   });
 });

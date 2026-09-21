@@ -21,8 +21,6 @@ describe("routes/themes", () => {
     const res = await themesRouter.request("http://localhost/api/themes");
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toHaveProperty("themes");
-    expect(body).toHaveProperty("activeId");
     expect(Array.isArray(body.themes)).toBe(true);
   });
 });

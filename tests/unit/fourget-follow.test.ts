@@ -58,87 +58,52 @@ describe("4get followEngineFetch", () => {
     });
   });
 
-  test("a 302 turns a POST into a GET and drops its body", async () => {
-    const seen: { method?: string; body?: string; type?: string }[] = [];
-    const fetcher: EngineFetcher = async (url, init) => {
-      seen.push({
-        method: init.method,
-        body: init.body,
-        type: init.headers["Content-Type"],
+  const rewrites: [number, string, { method?: string; body?: string; type?: string }][] = [
+    [302, "POST", { method: undefined, body: undefined, type: undefined }],
+    [303, "PUT", { method: undefined, body: undefined, type: undefined }],
+    [
+      307,
+      "POST",
+      {
+        method: "POST",
+        body: "q=cats",
+        type: "application/x-www-form-urlencoded",
+      },
+    ],
+  ];
+
+  for (const [status, method, landed] of rewrites) {
+    test(`a ${status} redirect of a ${method} sends ${landed.method ?? "GET"} with ${landed.body ?? "no body"}`, async () => {
+      const seen: { method?: string; body?: string; type?: string }[] = [];
+      const fetcher: EngineFetcher = async (url, init) => {
+        seen.push({
+          method: init.method,
+          body: init.body,
+          type: init.headers["Content-Type"],
+        });
+        if (url.endsWith("/search")) {
+          return new Response(null, {
+            status,
+            headers: { Location: "https://start.example/landed" },
+          });
+        }
+        return new Response("ok");
+      };
+      await followEngineFetch(fetcher, {
+        url: "https://start.example/search",
+        method,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        data: "q=cats",
+        follow: true,
       });
-      if (url.endsWith("/search")) {
-        return new Response(null, {
-          status: 302,
-          headers: { Location: "https://start.example/landed" },
-        });
-      }
-      return new Response("ok");
-    };
-    await followEngineFetch(fetcher, {
-      url: "https://start.example/search",
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      data: "q=cats",
-      follow: true,
+      expect(seen[0]).toEqual({
+        method,
+        body: "q=cats",
+        type: "application/x-www-form-urlencoded",
+      });
+      expect(seen[1]).toEqual(landed);
     });
-    expect(seen[0]).toEqual({
-      method: "POST",
-      body: "q=cats",
-      type: "application/x-www-form-urlencoded",
-    });
-    expect(seen[1]).toEqual({
-      method: undefined,
-      body: undefined,
-      type: undefined,
-    });
-  });
-
-  test("a 303 turns even a PUT into a GET", async () => {
-    const seen: (string | undefined)[] = [];
-    const fetcher: EngineFetcher = async (url, init) => {
-      seen.push(init.method);
-      if (url.endsWith("/search")) {
-        return new Response(null, {
-          status: 303,
-          headers: { Location: "https://start.example/landed" },
-        });
-      }
-      return new Response("ok");
-    };
-    await followEngineFetch(fetcher, {
-      url: "https://start.example/search",
-      method: "PUT",
-      headers: {},
-      data: "q=cats",
-      follow: true,
-    });
-    expect(seen).toEqual(["PUT", undefined]);
-  });
-
-  test("a 307 keeps the method and the body", async () => {
-    const seen: { method?: string; body?: string }[] = [];
-    const fetcher: EngineFetcher = async (url, init) => {
-      seen.push({ method: init.method, body: init.body });
-      if (url.endsWith("/search")) {
-        return new Response(null, {
-          status: 307,
-          headers: { Location: "https://start.example/landed" },
-        });
-      }
-      return new Response("ok");
-    };
-    await followEngineFetch(fetcher, {
-      url: "https://start.example/search",
-      method: "POST",
-      headers: {},
-      data: "q=cats",
-      follow: true,
-    });
-    expect(seen).toEqual([
-      { method: "POST", body: "q=cats" },
-      { method: "POST", body: "q=cats" },
-    ]);
-  });
+  }
 
   test("does not follow when the scraper did not ask", async () => {
     let calls = 0;

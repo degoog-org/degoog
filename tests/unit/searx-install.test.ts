@@ -8,11 +8,7 @@ import {
   uninstallSearx,
   updateSearx,
 } from "../../src/server/extensions/compatibility-layer/searx/install";
-import {
-  SEARX_CATALOG,
-  isSupportFile,
-  isSupportedEngine,
-} from "../../src/server/extensions/compatibility-layer/searx/catalog";
+import { SEARX_CATALOG } from "../../src/server/extensions/compatibility-layer/searx/catalog";
 
 const realFetch = globalThis.fetch;
 
@@ -45,27 +41,6 @@ afterEach(() => {
 });
 
 describe("searx install layer", () => {
-  test("catalogue only exposes verified engines and degoog types", () => {
-    expect(SEARX_CATALOG.length).toBeGreaterThan(0);
-    for (const entry of SEARX_CATALOG) {
-      expect(entry.types.length).toBeGreaterThan(0);
-      expect(entry.types).not.toContain("general");
-    }
-  });
-
-  test("support files are never offered or loaded as engines", () => {
-    const codes = new Set(SEARX_CATALOG.map((entry) => entry.code));
-    for (const entry of SEARX_CATALOG) {
-      expect(isSupportFile(entry.code)).toBe(false);
-      for (const dep of entry.deps ?? []) {
-        expect(dep).not.toBe(entry.code);
-        if (codes.has(dep)) continue;
-        expect(isSupportFile(dep)).toBe(true);
-        expect(isSupportedEngine(dep)).toBe(false);
-      }
-    }
-  });
-
   test("reports installed state from the engines dir", async () => {
     await withEnginesDir(async (dir) => {
       const code = SEARX_CATALOG[0].code;

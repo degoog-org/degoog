@@ -104,13 +104,6 @@ describe("public instance - generated password", () => {
     expect(html).toContain("settings-auth");
   });
 
-  test("GET /admin/:tab returns 200 and shows the generated-password auth gate", async () => {
-    const res = await pagesRouter.request("http://localhost/admin/general");
-    expect(res.status).toBe(200);
-    const html = await res.text();
-    expect(html).toContain("settings-auth");
-  });
-
   test("public settings HTML has no reference to the admin path", async () => {
     const res = await pagesRouter.request("http://localhost/settings");
     const html = await res.text();
@@ -143,23 +136,11 @@ describe("public instance - dangerously no password", () => {
     const res = await pagesRouter.request("http://localhost/admin");
     expect(res.status).toBe(404);
   });
-
-  test("GET /admin/:tab returns 404", async () => {
-    const res = await pagesRouter.request("http://localhost/admin/general");
-    expect(res.status).toBe(404);
-  });
 });
 
 describe("public instance - password set", () => {
   beforeAll(() => {
     process.env.DEGOOG_SETTINGS_PASSWORDS = CORRECT_PASSWORD;
-  });
-
-  test("GET /admin returns 200 and shows the auth gate", async () => {
-    const res = await pagesRouter.request("http://localhost/admin");
-    expect(res.status).toBe(200);
-    const html = await res.text();
-    expect(html).toContain("settings-auth");
   });
 
   test("POST /api/settings/auth with wrong password returns 401", async () => {

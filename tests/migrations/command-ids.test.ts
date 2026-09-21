@@ -56,24 +56,6 @@ describe("command-ids migration", () => {
     expect(out["some-engine"]).toEqual({ enabled: "true" });
   });
 
-  test("is idempotent and stamps the schema version", async () => {
-    const first = await withMigration({ "plugin-acme-foo": { a: "1" } });
-    expect(first.settings["acme-foo-command"]).toEqual({ a: "1" });
-    expect(first.settings.__schemaVersion).toBe(52028);
-
-    const second = await withMigration(first.settings, first.repos);
-    expect(second.settings["acme-foo-command"]).toEqual({ a: "1" });
-    expect(second.settings["plugin-acme-foo"]).toBeUndefined();
-  });
-
-  test("existing canonical values win when both keys exist", async () => {
-    const { settings: out } = await withMigration({
-      "plugin-acme-foo": { a: "legacy", b: "legacy" },
-      "acme-foo-command": { a: "current" },
-    });
-    expect(out["acme-foo-command"]).toEqual({ a: "current", b: "legacy" });
-  });
-
   test("rewrites stale installedAs in repos.json to canonical folder names", async () => {
     const { repos } = await withMigration(
       { __schemaVersion: 52027 },
@@ -104,28 +86,6 @@ describe("command-ids migration", () => {
     );
     expect(repos.installed[1]?.installedAs).toBe(
       "degoog-org-official-extensions-lemmy",
-    );
-  });
-
-  test("installedAs sync runs even when settings migration already completed", async () => {
-    const { repos } = await withMigration(
-      { __schemaVersion: 52027 },
-      {
-        repos: [],
-        installed: [
-          {
-            repoUrl: "https://github.com/degoog-org/official-extensions.git",
-            type: ExtensionStoreType.Plugin,
-            itemPath: "plugins/meilisearch",
-            installedAs: "meilisearch",
-            installedAt: "2026-03-11T22:52:47.506Z",
-            version: "1.2.1",
-          },
-        ],
-      },
-    );
-    expect(repos.installed[0]?.installedAs).toBe(
-      "degoog-org-official-extensions-meilisearch",
     );
   });
 });

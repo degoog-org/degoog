@@ -297,23 +297,12 @@ describe("export streaming", () => {
 describe("indexer chunked transfer", () => {
   beforeAll(seed);
 
-  test("export session slices reassemble to the full file", async () => {
+  test("an export session exposes the file size and is gone once closed", async () => {
     const path = await buildSqliteExportFile(TYPE);
     const size = statSync(path).size;
     const sessionId = openExportSession({ path, size, cleanup: true, type: TYPE, hold: "" });
 
-    const s = getExportSession(sessionId);
-    expect(s?.size).toBe(size);
-
-    const chunkBytes = 4096;
-    const parts: Uint8Array[] = [];
-    for (let pos = 0; pos < size; pos += chunkBytes) {
-      const end = Math.min(size, pos + chunkBytes);
-      const slice = await Bun.file(path).slice(pos, end).arrayBuffer();
-      parts.push(new Uint8Array(slice));
-    }
-    const total = parts.reduce((sum, p) => sum + p.byteLength, 0);
-    expect(total).toBe(size);
+    expect(getExportSession(sessionId)?.size).toBe(size);
 
     closeExportSession(sessionId);
     expect(getExportSession(sessionId)).toBeUndefined();
@@ -353,7 +342,6 @@ describe("indexer chunked transfer", () => {
     const { id } = openImportSession(TYPE);
     const s = getImportSession(id);
 
-    expect(s?.path.startsWith(join(SHARED, "tmp"))).toBe(true);
     expect(dirname(s?.path ?? "")).toBe(join(SHARED, "tmp"));
 
     removeImportSession(id);

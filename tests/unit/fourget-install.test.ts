@@ -54,28 +54,18 @@ afterEach(() => {
 });
 
 describe("4get catalogue", () => {
-  test("every entry names a type and a unique code", () => {
+  test("every entry is a unique scraper with types and known shared deps", () => {
     const seen = new Set<string>();
     expect(FOURGET_CATALOG.length).toBeGreaterThan(0);
     for (const entry of FOURGET_CATALOG) {
       expect(entry.types.length).toBeGreaterThan(0);
       expect(seen.has(entry.code)).toBe(false);
       seen.add(entry.code);
-    }
-  });
-
-  test("shared libs are never offered as scrapers", () => {
-    for (const entry of FOURGET_CATALOG) {
       expect(isSharedFile(entry.code)).toBe(false);
+      expect(catalogDeps(entry.code)).toContain("backend");
       for (const dep of entry.deps ?? []) {
         expect(FOURGET_SHARED_FILES).toContain(dep);
       }
-    }
-  });
-
-  test("every catalogued scraper depends on backend", () => {
-    for (const entry of FOURGET_CATALOG) {
-      expect(catalogDeps(entry.code)).toContain("backend");
     }
   });
 

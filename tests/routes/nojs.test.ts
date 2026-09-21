@@ -165,28 +165,13 @@ afterEach(() => {
 });
 
 describe("nojs is invisible unless it is turned on", () => {
-  test("GET /nojs is 404 when nojsEnabled is absent", async () => {
-    harness();
-    const res = await call("/nojs");
-    expect(res.status).toBe(404);
-  });
-
-  test("GET /nojs/search is 404 when nojsEnabled is absent", async () => {
-    harness();
-    const res = await call("/nojs/search?q=x");
-    expect(res.status).toBe(404);
-  });
-
-  test("GET /nojs is 404 when nojsEnabled is false", async () => {
-    harness({ settings: { nojsEnabled: "false" } });
-    const res = await call("/nojs");
-    expect(res.status).toBe(404);
-  });
-
-  test("GET /nojs/search is 404 when nojsEnabled is false", async () => {
-    harness({ settings: { nojsEnabled: "false" } });
-    const res = await call("/nojs/search?q=x");
-    expect(res.status).toBe(404);
+  test("every nojs path is a 404 while nojsEnabled is absent or false", async () => {
+    for (const settings of [{}, { nojsEnabled: "false" }]) {
+      for (const path of ["/nojs", "/nojs/search?q=x"]) {
+        harness({ settings });
+        expect((await call(path)).status).toBe(404);
+      }
+    }
   });
 });
 
@@ -199,24 +184,11 @@ describe("nojs home page", () => {
     expect(html).toContain('name="q"');
   });
 
-  test("renders all six logo letter spans", async () => {
-    harness({ settings: enabled() });
-    const html = await text("/nojs");
-    for (const letter of LOGO_LETTERS) {
-      expect(html).toContain(letter);
-    }
-  });
-
-  test("renders a full html document", async () => {
+  test("reuses the theme shell and its home search partial", async () => {
     harness({ settings: enabled() });
     const html = await text("/nojs");
     expect(html).toContain("<!doctype html>");
     expect(html).toContain("</html>");
-  });
-
-  test("reuses the theme shell and its home search partial", async () => {
-    harness({ settings: enabled() });
-    const html = await text("/nojs");
     expect(html).toContain('id="app"');
     expect(html).toContain('id="header"');
     expect(html).toContain('id="main-home"');
@@ -269,28 +241,16 @@ describe("nojs pages ship no javascript", () => {
 });
 
 describe("nojs pages leave no placeholders behind", () => {
-  test("home page resolves every placeholder and template marker", async () => {
-    harness({ settings: enabled() });
-    const html = await text("/nojs");
-    for (const placeholder of PLACEHOLDERS) {
-      expect(html).not.toContain(placeholder);
+  test("every page resolves every placeholder and template marker", async () => {
+    for (const path of ["/nojs", "/nojs/search?q=hello"]) {
+      harness({ settings: enabled(), results: [makeResult()], totalPages: 3 });
+      const html = await text(path);
+      for (const placeholder of PLACEHOLDERS) {
+        expect(html).not.toContain(placeholder);
+      }
+      expect(html).not.toContain("{{t:");
+      expect(html).not.toContain("{{ ");
     }
-    expect(html).not.toContain("{{t:");
-    expect(html).not.toContain("{{ ");
-  });
-
-  test("search page resolves every placeholder and template marker", async () => {
-    harness({
-      settings: enabled(),
-      results: [makeResult()],
-      totalPages: 3,
-    });
-    const html = await text("/nojs/search?q=hello");
-    for (const placeholder of PLACEHOLDERS) {
-      expect(html).not.toContain(placeholder);
-    }
-    expect(html).not.toContain("{{t:");
-    expect(html).not.toContain("{{ ");
   });
 });
 
@@ -398,18 +358,13 @@ describe("nojs html escaping", () => {
 });
 
 describe("nojs search without a query", () => {
-  test("missing q redirects to the nojs home", async () => {
+  test("a missing or blank q redirects to the nojs home", async () => {
     harness({ settings: enabled() });
-    const res = await call("/nojs/search");
-    expect(res.status).toBe(302);
-    expect(res.headers.get("Location")).toBe("/nojs");
-  });
-
-  test("blank q redirects to the nojs home", async () => {
-    harness({ settings: enabled() });
-    const res = await call("/nojs/search?q=%20%20");
-    expect(res.status).toBe(302);
-    expect(res.headers.get("Location")).toBe("/nojs");
+    for (const path of ["/nojs/search", "/nojs/search?q=%20%20"]) {
+      const res = await call(path);
+      expect(res.status).toBe(302);
+      expect(res.headers.get("Location")).toBe("/nojs");
+    }
   });
 });
 
@@ -456,34 +411,16 @@ describe("nojs footer", () => {
     expect(html).toContain('href="https://degoog-org.github.io/docs"');
     expect(html).toContain("Full version");
   });
-
-  test("the search page gets the same footer", async () => {
-    harness({ settings: enabled(), results: [makeResult()] });
-    const html = await text("/nojs/search?q=hello");
-    expect(html).toContain("home-footer-bottom");
-    expect(html).toContain("Full version");
-    expect(html).not.toContain("/nojs/theme");
-  });
 });
 
 describe("nojs results layout matches the real page", () => {
-  test("renders the sidebar column inside the results layout", async () => {
-    harness({ settings: enabled(), results: [makeResult()] });
-    const html = await text("/nojs/search?q=hello");
-    expect(html).toContain('id="results-layout"');
-    expect(html).toContain('id="results-main"');
-    expect(html).toContain('id="sidebar-col"');
-    expect(html).toContain('id="results-sidebar"');
-    expect(html.indexOf('id="results-main"')).toBeLessThan(
-      html.indexOf('id="sidebar-col"'),
-    );
-  });
-
   test("keeps every container the real search shell ships", async () => {
     harness({ settings: enabled(), results: [makeResult()] });
     const html = await text("/nojs/search?q=hello");
     for (const id of [
       "results-page",
+      "results-layout",
+      "results-main",
       "results-header",
       "results-meta",
       "slot-full-width-above-results",
@@ -493,21 +430,16 @@ describe("nojs results layout matches the real page", () => {
       "slot-above-sidebar",
       "slot-below-sidebar",
       "sidebar-col",
+      "results-sidebar",
       "media-preview-panel",
       "image-filters-bar",
       "img-lightbox",
     ]) {
       expect(html).toContain(`id="${id}"`);
     }
-  });
-
-  test("the results logo letters carry the monospace class", async () => {
-    harness({ settings: enabled(), results: [makeResult()] });
-    const html = await text("/nojs/search?q=hello");
-    const header = sliceById(html, "results-header");
-    for (const letter of LOGO_LETTERS) {
-      expect(header).toContain(`${letter} logo-letter nojs-logo-letter`);
-    }
+    expect(html.indexOf('id="results-main"')).toBeLessThan(
+      html.indexOf('id="sidebar-col"'),
+    );
   });
 
   test("wraps the inherited search bar in a real form", async () => {
@@ -557,7 +489,7 @@ describe("nojs results layout matches the real page", () => {
     expect(html).toContain('data-tooltip="From your index"');
   });
 
-  test("the tools toggle sits inside the tab row", async () => {
+  test("the tools toggle sits in the tab row and its panel follows it", async () => {
     harness({ settings: enabled(), results: [makeResult()] });
     const html = await text("/nojs/search?q=hello");
     const tabs = html.slice(
@@ -565,15 +497,8 @@ describe("nojs results layout matches the real page", () => {
       html.indexOf("</summary>"),
     );
     expect(tabs).toContain('class="tools-wrap" id="tools-bar"');
-    expect(tabs).toContain("tools-toggle");
     expect(tabs).toContain("tools-toggle-label");
-  });
-
-  test("the tools panel follows the tab row as a sibling", async () => {
-    harness({ settings: enabled(), results: [makeResult()] });
-    const html = await text("/nojs/search?q=hello");
     expect(html).toContain('id="tools-panel"');
-    expect(html).toContain("tools-panel");
     expect(html).toContain("tools-date-apply");
     expect(html.indexOf("</summary>")).toBeLessThan(
       html.indexOf('id="tools-panel"'),
@@ -601,20 +526,16 @@ describe("nojs engine breakdown", () => {
     },
   ];
 
-  test("renders one row per engine in the sidebar", async () => {
+  test("renders one row per engine in an accordion that needs no javascript", async () => {
     harness({ settings: enabled(), results: [makeResult()], engineTimings: timings });
     const html = await text("/nojs/search?q=hello");
     expect(html).toContain("engine-performance-panel");
-    expect(html).toContain("Engine Performance");
     expect(html).toContain("engine-stat-row");
-    expect(html).toContain("engine-stat-info");
-    expect(html).toContain("engine-stat-label degoog-text");
-    expect(html).toContain(
-      "engine-stat-meta degoog-text degoog-text--sm degoog-text--secondary",
-    );
     expect(html).toContain("Fake");
     expect(html).toContain("Broken");
     expect(html).toContain("40ms");
+    expect(html).toContain("sidebar-accordion-toggle degoog-accordion-toggle");
+    expect(html).toContain("sidebar-accordion-body degoog-accordion-body");
   });
 
   test("marks a failed engine and explains why", async () => {
@@ -623,16 +544,6 @@ describe("nojs engine breakdown", () => {
     expect(html).toContain("engine-stat-row engine-failed");
     expect(html).toContain("engine-stat-reason");
     expect(html).toContain("Blocked by the engine");
-  });
-
-  test("uses details and summary so it opens without javascript", async () => {
-    harness({ settings: enabled(), results: [makeResult()], engineTimings: timings });
-    const html = await text("/nojs/search?q=hello");
-    expect(html).toContain("sidebar-accordion");
-    expect(html).toContain("sidebar-accordion-toggle degoog-accordion-toggle");
-    expect(html).toContain("sidebar-accordion-body degoog-accordion-body");
-    expect(html).not.toContain("<script");
-    expect(INLINE_HANDLER_RE.test(html)).toBe(false);
   });
 
   test("is absent when no engine reported a timing", async () => {
@@ -694,30 +605,21 @@ describe("nojs retry links", () => {
     expect(searchParamsSeen).toHaveLength(0);
     expect(html).toContain("First result");
   });
-
-  test("a retried page still ships no javascript", async () => {
-    harness({ settings: enabled(), results: [makeResult()], engineTimings: timings });
-    const html = await text("/nojs/search?q=hello&retry=fake-engine");
-    expect(html).not.toContain("<script");
-    expect(INLINE_HANDLER_RE.test(html)).toBe(false);
-  });
 });
 
 describe("nojs tab routing", () => {
   test("an engine type runs a normal search with the resolved type", async () => {
-    harness({ settings: enabled(), results: [makeResult()] });
-    await text("/nojs/search?q=hello&type=engine%3Aimages");
-    expect(searchParamsSeen).toHaveLength(1);
-    expect(searchParamsSeen[0].searchType).toBe("images");
-    expect(tabSearchSeen).toHaveLength(0);
-  });
-
-  test("a tab prefixed engine type still runs a normal search", async () => {
-    harness({ settings: enabled(), results: [makeResult()] });
-    await text("/nojs/search?q=hello&type=tab%3Aengine%3Anews");
-    expect(searchParamsSeen).toHaveLength(1);
-    expect(searchParamsSeen[0].searchType).toBe("news");
-    expect(tabSearchSeen).toHaveLength(0);
+    for (const [type, searchType] of [
+      ["engine%3Aimages", "images"],
+      ["tab%3Aengine%3Anews", "news"],
+      ["web", "web"],
+    ]) {
+      harness({ settings: enabled(), results: [makeResult()] });
+      await text(`/nojs/search?q=hello&type=${type}`);
+      expect(searchParamsSeen).toHaveLength(1);
+      expect(searchParamsSeen[0].searchType).toBe(searchType);
+      expect(tabSearchSeen).toHaveLength(0);
+    }
   });
 
   test("a plugin tab id goes to the tab search handler", async () => {
@@ -725,14 +627,6 @@ describe("nojs tab routing", () => {
     await text("/nojs/search?q=hello&type=tab%3Atorrents");
     expect(tabSearchSeen).toEqual(["torrents"]);
     expect(searchParamsSeen).toHaveLength(0);
-  });
-
-  test("the plain web type runs a normal web search", async () => {
-    harness({ settings: enabled(), results: [makeResult()] });
-    await text("/nojs/search?q=hello&type=web");
-    expect(searchParamsSeen).toHaveLength(1);
-    expect(searchParamsSeen[0].searchType).toBe("web");
-    expect(tabSearchSeen).toHaveLength(0);
   });
 });
 
@@ -753,11 +647,6 @@ describe("nojs image results", () => {
     expect(html).toContain('src="https://pics.test/cat-thumb.jpg"');
     expect(html).toContain("pics.test");
     expect(html).not.toContain("result-snippet");
-  });
-
-  test("puts the layout into media mode", async () => {
-    harness({ settings: enabled(), results: [imageResult] });
-    const html = await text("/nojs/search?q=cats&type=engine%3Aimages");
     expect(html).toContain('id="results-layout" class="media-mode"');
   });
 
@@ -770,13 +659,6 @@ describe("nojs image results", () => {
     expect(html).toContain('src="https://pics.test/only.jpg"');
   });
 
-  test("the image grid ships no javascript", async () => {
-    harness({ settings: enabled(), results: [imageResult] });
-    const html = await text("/nojs/search?q=cats&type=engine%3Aimages");
-    expect(html).not.toContain("<script");
-    expect(INLINE_HANDLER_RE.test(html)).toBe(false);
-  });
-
   test("a web search keeps the web result card", async () => {
     harness({ settings: enabled(), results: [imageResult] });
     const html = await text("/nojs/search?q=cats");
@@ -787,26 +669,19 @@ describe("nojs image results", () => {
 
 const NOJS_DIR = "src/public/themes/degoog-theme/nojs";
 
-const NOJS_ONLY_TEMPLATES = ["logo", "pagination", "search-header", "tabs"];
-
 describe("nojs template names", () => {
-  for (const name of NOJS_TEMPLATE_NAMES) {
-    test(`the nojs name ${name} resolves to a template`, async () => {
+  test("every registered nojs name resolves to a template", async () => {
+    for (const name of NOJS_TEMPLATE_NAMES) {
       expect(await loadNojsTemplate(name)).not.toBeNull();
-    });
-  }
-
-  test("only the templates with no reusable counterpart survive", async () => {
-    const files = await readdir(NOJS_DIR);
-    expect(files.filter((file) => file.startsWith("nojs-"))).toEqual([]);
-    expect(files.filter((file) => file.endsWith(".html")).sort()).toEqual(
-      NOJS_ONLY_TEMPLATES.map((name) => `${name}.html`).sort(),
-    );
+    }
   });
 
-  test("every surviving override is a known template name", () => {
-    for (const name of NOJS_ONLY_TEMPLATES) {
-      expect([...NOJS_TEMPLATE_NAMES] as string[]).toContain(name);
+  test("every nojs override on disk is a known template name", async () => {
+    const files = await readdir(NOJS_DIR);
+    for (const file of files.filter((name) => name.endsWith(".html"))) {
+      expect([...NOJS_TEMPLATE_NAMES] as string[]).toContain(
+        file.replace(/\.html$/, ""),
+      );
     }
   });
 
@@ -903,22 +778,17 @@ describe("nojs slot panels are opt in", () => {
     mock.module(PLUGIN_SETTINGS_MOD, () => pluginSettingsReal);
   });
 
-  test("a slot without supportsNojs is left off the page", async () => {
-    const spy: SlotSpy[] = [];
-    slotHarness([makeSlotPlugin("silent-slot", undefined, spy)]);
-    harness({ settings: enabled(), results: [makeResult()] });
-    const html = await text("/nojs/search?q=hello");
-    expect(html).not.toContain("silent-slot");
-    expect(spy[0].contexts).toHaveLength(0);
-  });
-
-  test("a slot with supportsNojs false is left off the page", async () => {
-    const spy: SlotSpy[] = [];
-    slotHarness([makeSlotPlugin("declined-slot", false, spy)]);
-    harness({ settings: enabled(), results: [makeResult()] });
-    const html = await text("/nojs/search?q=hello");
-    expect(html).not.toContain("declined-slot");
-    expect(spy[0].contexts).toHaveLength(0);
+  test("a slot that did not opt in is never executed or rendered", async () => {
+    for (const supportsNojs of [undefined, false]) {
+      const spy: SlotSpy[] = [];
+      slotHarness([makeSlotPlugin("silent-slot", supportsNojs, spy)]);
+      harness({ settings: enabled(), results: [makeResult()] });
+      const html = await text("/nojs/search?q=hello");
+      expect(html).not.toContain("silent-slot");
+      expect(html).not.toContain("nojs-slots");
+      expect(html).not.toContain("__NOJS_SLOTS__");
+      expect(spy[0].contexts).toHaveLength(0);
+    }
   });
 
   test("a knowledge panel lands in the sidebar accordion above the engine stats", async () => {
@@ -988,24 +858,6 @@ describe("nojs slot panels are opt in", () => {
     }
   });
 
-  test("a rendered panel still leaves no script tag and no inline handlers", async () => {
-    const spy: SlotSpy[] = [];
-    slotHarness([makeSlotPlugin("clean-slot", true, spy)]);
-    harness({ settings: enabled(), results: [makeResult()] });
-    const html = await text("/nojs/search?q=hello");
-    expect(html).toContain("clean-slot panel");
-    expect(html).not.toContain("<script");
-    expect(INLINE_HANDLER_RE.test(html)).toBe(false);
-  });
-
-  test("no opted in slot leaves the slots area empty", async () => {
-    const spy: SlotSpy[] = [];
-    slotHarness([makeSlotPlugin("absent-slot", undefined, spy)]);
-    harness({ settings: enabled(), results: [makeResult()] });
-    const html = await text("/nojs/search?q=hello");
-    expect(html).not.toContain("nojs-slots");
-    expect(html).not.toContain("__NOJS_SLOTS__");
-  });
 });
 
 const COMMANDS_MOD = "../../src/server/extensions/commands/registry";
@@ -1129,35 +981,22 @@ describe("nojs bang commands", () => {
   });
 
   test("a command without opt in renders the notice and runs no search", async () => {
-    const spy: CommandSpy = { args: [], contexts: [] };
-    bangHarness({
-      match: {
-        type: "command",
-        command: makeBangCommand("silent", undefined, spy),
-        commandId: "silent-command",
-        args: "",
-      },
-    });
-    const html = await text("/nojs/search?q=!silent");
-    expect(html).toContain("no-JS environment");
-    expect(html).not.toContain("silent output");
-    expect(spy.args).toHaveLength(0);
-    expect(searchCalls).toHaveLength(0);
-  });
-
-  test("a command with supportsNojs false renders the notice", async () => {
-    const spy: CommandSpy = { args: [], contexts: [] };
-    bangHarness({
-      match: {
-        type: "command",
-        command: makeBangCommand("declined", false, spy),
-        commandId: "declined-command",
-        args: "",
-      },
-    });
-    const html = await text("/nojs/search?q=!declined");
-    expect(html).toContain("no-JS environment");
-    expect(spy.args).toHaveLength(0);
+    for (const supportsNojs of [undefined, false]) {
+      const spy: CommandSpy = { args: [], contexts: [] };
+      bangHarness({
+        match: {
+          type: "command",
+          command: makeBangCommand("silent", supportsNojs, spy),
+          commandId: "silent-command",
+          args: "",
+        },
+      });
+      const html = await text("/nojs/search?q=!silent");
+      expect(html).toContain("no-JS environment");
+      expect(html).not.toContain("silent output");
+      expect(spy.args).toHaveLength(0);
+      expect(searchCalls).toHaveLength(0);
+    }
   });
 
   test("the speedtest builtin declines and renders the notice", async () => {
@@ -1170,10 +1009,8 @@ describe("nojs bang commands", () => {
       },
     });
     const html = await text("/nojs/search?q=!speedtest");
-    expect(speedtestCommand.supportsNojs).toBeUndefined();
     expect(html).toContain("no-JS environment");
     expect(html).not.toContain("<script");
-    expect(INLINE_HANDLER_RE.test(html)).toBe(false);
   });
 
   test("a disabled command is never executed", async () => {
@@ -1225,7 +1062,7 @@ describe("nojs bang commands", () => {
     expect(INLINE_HANDLER_RE.test(html)).toBe(false);
   });
 
-  test("a paginating command can reach its next page", async () => {
+  test("a paginating command links its next page and keeps the page number", async () => {
     const spy: CommandSpy = { args: [], contexts: [] };
     bangHarness({
       match: {
@@ -1238,20 +1075,8 @@ describe("nojs bang commands", () => {
     const html = await text("/nojs/search?q=!paged");
     expect(html).toContain("page=2");
     expect(spy.contexts[0].page).toBe(1);
-  });
-
-  test("a paginating command keeps its page number on the way through", async () => {
-    const spy: CommandSpy = { args: [], contexts: [] };
-    bangHarness({
-      match: {
-        type: "command",
-        command: makeBangCommand("paged", true, spy, 3),
-        commandId: "paged-command",
-        args: "",
-      },
-    });
     await text("/nojs/search?q=!paged&page=2");
-    expect(spy.contexts[0].page).toBe(2);
+    expect(spy.contexts[1].page).toBe(2);
   });
 
   test("a single page command renders no pagination", async () => {

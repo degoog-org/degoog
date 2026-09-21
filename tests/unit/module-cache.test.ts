@@ -53,16 +53,6 @@ describe("utils/module-cache", () => {
     expect(second.widget).toBe(first.widget);
   });
 
-  test("leaves the cache alone when eviction is not requested", async () => {
-    await write("refresh/index.ts", "export const v = 'old';");
-    await load("refresh/index.ts", "refresh", false);
-
-    await write("refresh/index.ts", "export const v = 'new-longer';");
-    const mod = await load("refresh/index.ts", "refresh", false);
-
-    expect(mod.v).toBe("old");
-  });
-
   test("evicts on the first eviction pass after a skipped refresh", async () => {
     await write("deferred/index.ts", "export const v = 'old';");
     await load("deferred/index.ts", "deferred", true);

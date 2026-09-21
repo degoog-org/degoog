@@ -216,21 +216,6 @@ def response(resp):
 `;
 
 describe("SearX engine parity with native engines", () => {
-  test("engines that cannot page return nothing past page one", async () => {
-    await withSearxEnv(async (dir) => {
-      writeEngine(dir, "statics", STATIC_ENGINE);
-      const { initEngines, getEngineMap } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      await initEngines(true);
-      const engine = getEngineMap()["searx-statics-engine"];
-      const first = await engine.executeSearch("q", 1, "any", { fetch: okFetch });
-      const second = await engine.executeSearch("q", 2, "any", { fetch: okFetch });
-      expect(first.length).toBe(1);
-      expect(second).toEqual([]);
-    });
-  });
-
   test("engines declare their page ceiling through the pagination context", async () => {
     await withSearxEnv(async (dir) => {
       writeEngine(dir, "statics", STATIC_ENGINE);
@@ -245,11 +230,16 @@ describe("SearX engine parity with native engines", () => {
         declared.push(info.total);
       };
 
-      await getEngineMap()["searx-statics-engine"].executeSearch("q", 1, "any", {
+      const statics = getEngineMap()["searx-statics-engine"];
+      const first = await statics.executeSearch("q", 1, "any", {
         fetch: okFetch,
         pagination,
       });
+      expect(first.length).toBe(1);
       expect(declared).toEqual([1]);
+      expect(await statics.executeSearch("q", 2, "any", { fetch: okFetch })).toEqual(
+        [],
+      );
 
       declared.length = 0;
       await getEngineMap()["searx-pager-engine"].executeSearch("q", 1, "any", {
@@ -285,7 +275,7 @@ describe("SearX engine parity with native engines", () => {
     });
   });
 
-  test("time filters reach engines that support them and are withheld from those that do not", async () => {
+  test("time filters reach only engines that support them, custom ranges included", async () => {
     await withSearxEnv(async (dir) => {
       writeEngine(dir, "statics", STATIC_ENGINE);
       writeEngine(dir, "pager", PAGER_ENGINE);
@@ -306,6 +296,12 @@ describe("SearX engine parity with native engines", () => {
         fetch: capture,
       });
       expect(seen).not.toContain("range=week");
+
+      await getEngineMap()["searx-pager-engine"].executeSearch("q", 1, "custom", {
+        dateFrom: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        fetch: capture,
+      });
+      expect(seen).toContain("range=week");
     });
   });
 
@@ -351,24 +347,6 @@ describe("SearX engine parity with native engines", () => {
     });
   });
 
-  test("a custom date range collapses onto the nearest supported bucket", async () => {
-    await withSearxEnv(async (dir) => {
-      writeEngine(dir, "pager", PAGER_ENGINE);
-      const { initEngines, getEngineMap } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      await initEngines(true);
-      let seen = "";
-      await getEngineMap()["searx-pager-engine"].executeSearch("q", 1, "custom", {
-        dateFrom: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        fetch: async (url: string) => {
-          seen = url;
-          return new Response("<html></html>", { status: 200 });
-        },
-      });
-      expect(seen).toContain("range=week");
-    });
-  });
 });
 
 describe("SearX engine configuration", () => {

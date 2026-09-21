@@ -24,14 +24,15 @@ describe("snippetDate", () => {
     });
   });
 
-  test("reads a month-first prefix", () => {
-    expect(snippetDate(`Jan 12, 2024 - ${BODY}`)?.iso).toBe("2024-01-12");
-    expect(snippetDate(`January 12, 2024 · ${BODY}`)?.iso).toBe("2024-01-12");
-  });
-
-  test("reads a day-first prefix", () => {
-    expect(snippetDate(`12 January 2024 - ${BODY}`)?.iso).toBe("2024-01-12");
-    expect(snippetDate(`3 Feb. 2020 – ${BODY}`)?.iso).toBe("2020-02-03");
+  test("reads month-first and day-first prefixes", () => {
+    for (const [prefix, iso] of [
+      ["Jan 12, 2024 - ", "2024-01-12"],
+      ["January 12, 2024 · ", "2024-01-12"],
+      ["12 January 2024 - ", "2024-01-12"],
+      ["3 Feb. 2020 – ", "2020-02-03"],
+    ]) {
+      expect(snippetDate(`${prefix}${BODY}`)?.iso).toBe(iso);
+    }
   });
 
   test("resolves a relative prefix against now", () => {
@@ -41,22 +42,17 @@ describe("snippetDate", () => {
     expect(snippetDate(`3 days ago - ${BODY}`)?.iso).toBe(expected);
   });
 
-  test("rejects an impossible day", () => {
-    expect(snippetDate(`2024-02-31 - ${BODY}`)).toBeNull();
-    expect(snippetDate(`Feb 30, 2024 - ${BODY}`)).toBeNull();
-  });
-
-  test("needs a separator and a body", () => {
-    expect(snippetDate(`2024-01-12 ${BODY}`)).toBeNull();
-    expect(snippetDate("2024-01-12 - ")).toBeNull();
-  });
-
-  test("leaves an ambiguous slash date alone", () => {
-    expect(snippetDate(`01/12/2024 - ${BODY}`)).toBeNull();
-  });
-
-  test("ignores a date that is not at the start", () => {
-    expect(snippetDate(`Filmed on 2024-01-12 - ${BODY}`)).toBeNull();
+  test("rejects impossible, ambiguous, unseparated and off-start dates", () => {
+    for (const snippet of [
+      `2024-02-31 - ${BODY}`,
+      `Feb 30, 2024 - ${BODY}`,
+      `2024-01-12 ${BODY}`,
+      "2024-01-12 - ",
+      `01/12/2024 - ${BODY}`,
+      `Filmed on 2024-01-12 - ${BODY}`,
+    ]) {
+      expect(snippetDate(snippet)).toBeNull();
+    }
   });
 
   test("stripSnippetPrefix still drops the whole prefix", () => {
@@ -65,27 +61,24 @@ describe("snippetDate", () => {
 });
 
 describe("isPublishDate", () => {
-  test("rejects the epoch sentinel and anything near it", () => {
-    expect(isPublishDate("1970-01-01")).toBe(false);
-    expect(isPublishDate("1970-01-02")).toBe(false);
-    expect(isPublishDate("1989-12-31")).toBe(false);
-  });
-
-  test("rejects dates comfortably in the future", () => {
-    const next = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
-    expect(isPublishDate(next)).toBe(false);
-  });
-
   test("accepts a plausible date", () => {
     expect(isPublishDate("2024-01-12")).toBe(true);
     expect(isPublishDate(new Date().toISOString().slice(0, 10))).toBe(true);
   });
 
-  test("rejects anything that is not a plain ISO day", () => {
-    expect(isPublishDate("")).toBe(false);
-    expect(isPublishDate("2024-1-2")).toBe(false);
-    expect(isPublishDate("2024-01-12T00:00:00Z")).toBe(false);
-    expect(isPublishDate("2024-02-31")).toBe(false);
+  test("rejects epoch sentinels, future days and anything not a plain ISO day", () => {
+    for (const day of [
+      "1970-01-01",
+      "1970-01-02",
+      "1989-12-31",
+      new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10),
+      "",
+      "2024-1-2",
+      "2024-01-12T00:00:00Z",
+      "2024-02-31",
+    ]) {
+      expect(isPublishDate(day)).toBe(false);
+    }
   });
 });
 
@@ -125,12 +118,6 @@ describe("scoreResults publication dates", () => {
       },
     ]);
     expect(merged.publishedAt).toBe("2024-01-12");
-    expect(merged.snippet).toBe(BODY);
-  });
-
-  test("leaves an undated snippet untouched", () => {
-    const [merged] = scoreResults([{ results: [result(BODY)] }]);
-    expect(merged.publishedAt).toBeUndefined();
     expect(merged.snippet).toBe(BODY);
   });
 

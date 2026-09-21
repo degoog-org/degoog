@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { makeExtID } from "../../src/server/utils/extension-id";
 import {
   getSlotPluginById,
-  getSlotPlugins,
   initSlotPlugins,
 } from "../../src/server/extensions/slots/registry";
 import {
@@ -33,40 +32,25 @@ describe("slots registry", () => {
     globalThis.fetch = origFetch;
   });
 
-  test("getSlotPlugins returns array", () => {
-    const plugins = getSlotPlugins();
-    expect(Array.isArray(plugins)).toBe(true);
-  });
-
   test("getSlotPluginById returns null for unknown id", () => {
     expect(getSlotPluginById("unknown-slot")).toBeNull();
   });
 
-  test("built-in at-a-glance slot has position at-a-glance and waitForResults", () => {
-    const slot = getSlotPluginById(AT_A_GLANCE_ID);
-    expect(slot).not.toBeNull();
-    expect(slot!.position).toBe(SlotPanelPosition.AtAGlance);
-    expect(slot!.waitForResults).toBe(true);
+  test("built-in slots declare their panel position", () => {
+    const glance = getSlotPluginById(AT_A_GLANCE_ID);
+    expect(glance).not.toBeNull();
+    expect(glance!.position).toBe(SlotPanelPosition.AtAGlance);
+    expect(glance!.waitForResults).toBe(true);
+    expect(getSlotPluginById(WIKIPEDIA_ID)!.position).toBe(
+      SlotPanelPosition.KnowledgePanel,
+    );
   });
 
-  test("built-in wikipedia slot has position knowledge-panel", () => {
+  test("built-in wikipedia slot skips short queries and uncached pages", async () => {
     const slot = getSlotPluginById(WIKIPEDIA_ID);
     expect(slot).not.toBeNull();
-    expect(slot!.position).toBe(SlotPanelPosition.KnowledgePanel);
-  });
-
-  test("built-in wikipedia slot trigger returns false for very short queries", async () => {
-    const slot = getSlotPluginById(WIKIPEDIA_ID);
-    expect(slot).not.toBeNull();
-    const result = await slot!.trigger("x");
-    expect(result).toBe(false);
-  });
-
-  test("built-in wikipedia slot execute returns empty html when no page cached", async () => {
-    const slot = getSlotPluginById(WIKIPEDIA_ID);
-    expect(slot).not.toBeNull();
-    const result = await slot!.execute("__nonexistent_query_xyz__");
-    expect(result.html).toBe("");
+    expect(await slot!.trigger("x")).toBe(false);
+    expect((await slot!.execute("__nonexistent_query_xyz__")).html).toBe("");
   });
 
   test("built-in at-a-glance slot translates its strings with the request locale", async () => {

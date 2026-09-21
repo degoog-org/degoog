@@ -3,7 +3,13 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { clearServerSettingsCache } from "../../src/server/utils/server-settings";
-import { clearTypeCache } from "../../src/server/extensions/engines/registry";
+import {
+  clearTypeCache,
+  getInstalledSearchTypes,
+  initEngines,
+} from "../../src/server/extensions/engines/registry";
+import { setSettings } from "../../src/server/utils/plugin-settings";
+import { type } from "../../src/server/extensions/engines/builtins/degoog/index";
 
 const withTempEngineEnv = async <T>(fn: (dir: string) => Promise<T>): Promise<T> => {
   const dir = mkdtempSync(join(tmpdir(), "degoog-ghost-tabs-"));
@@ -39,9 +45,6 @@ const withTempEngineEnv = async <T>(fn: (dir: string) => Promise<T>): Promise<T>
   try {
     return await fn(indexerDir);
   } finally {
-    const { initEngines } = await import(
-      "../../src/server/extensions/engines/registry"
-    );
     if (prev.dataDir === undefined) delete process.env.DEGOOG_DATA_DIR;
     else process.env.DEGOOG_DATA_DIR = prev.dataDir;
     if (prev.enginesDir === undefined) delete process.env.DEGOOG_ENGINES_DIR;
@@ -79,13 +82,6 @@ describe("degoog indexer engine type()", () => {
     await withTempEngineEnv(async (indexerDir) => {
       writeFileSync(join(indexerDir, "index-consumer.db"), "");
 
-      const { initEngines } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { type } = await import(
-        "../../src/server/extensions/engines/builtins/degoog/index"
-      );
-
       await initEngines(true);
       expect(await type()).toEqual([]);
     });
@@ -95,17 +91,9 @@ describe("degoog indexer engine type()", () => {
     await withTempEngineEnv(async (indexerDir) => {
       writeFileSync(join(indexerDir, "index-privacy.db"), "");
 
-      const { initEngines } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-
       writeEngine(process.env.DEGOOG_ENGINES_DIR!, "tosdr", "Privacy");
 
       await initEngines(true);
-      const { type } = await import(
-        "../../src/server/extensions/engines/builtins/degoog/index"
-      );
-
       expect(await type()).toEqual(["Privacy"]);
     });
   });
@@ -115,13 +103,6 @@ describe("getInstalledSearchTypes", () => {
   test("skips disabled engines", async () => {
     await withTempEngineEnv(async () => {
       writeEngine(process.env.DEGOOG_ENGINES_DIR!, "tosdr", "Privacy");
-
-      const { initEngines, getInstalledSearchTypes } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { setSettings } = await import(
-        "../../src/server/utils/plugin-settings"
-      );
 
       await initEngines(true);
       const before = await getInstalledSearchTypes();

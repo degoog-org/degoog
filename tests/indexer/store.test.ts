@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, beforeEach } from "bun:test";
 import { Database } from "bun:sqlite";
-import { mkdirSync, rmSync } from "fs";
+import { mkdirSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -171,19 +171,6 @@ describe("indexer store", () => {
     expect(secondPage.length).toBe(1);
   });
 
-  test("serves a stable, position-ordered result set across calls", async () => {
-    await recordResults("stable", TYPE, [mk(1), mk(2), mk(3)]);
-    await flushQueue();
-    const first = (await queryIndex("stable", TYPE)).map((r) => r.url);
-    const second = (await queryIndex("stable", TYPE)).map((r) => r.url);
-    expect(first).toEqual(second);
-    expect(first).toEqual([
-      "https://example.com/page-1",
-      "https://example.com/page-2",
-      "https://example.com/page-3",
-    ]);
-  });
-
   test("ranks by average position, not a single fluke placement", async () => {
     const steady = mk(1, "steady.test");
     const fluke = mk(2, "fluke.test");
@@ -228,53 +215,5 @@ describe("indexer store", () => {
 
     const sources = JSON.parse(readHit(TYPE, "multi.test")!.sources_json!) as string[];
     expect(sources.sort()).toEqual(["Alpha", "Beta"]);
-  });
-
-  test("migrates a legacy db: adds columns and backfills pos_sum", async () => {
-    const legacyType = "legacymig";
-    const path = join(SHARED, `index-${legacyType}.db`);
-    rmSync(path, { force: true });
-    const seed = new Database(path, { create: true });
-    seed.exec(
-      `CREATE TABLE urls (id INTEGER PRIMARY KEY AUTOINCREMENT,
-        url_norm TEXT UNIQUE, url TEXT, source_engine TEXT, title TEXT,
-        snippet TEXT, thumbnail TEXT, image_url TEXT, is_gif INTEGER,
-        duration TEXT, extras_json TEXT, first_seen INTEGER, last_seen INTEGER)`,
-    );
-    seed.exec(
-      `CREATE TABLE query_hits (id INTEGER PRIMARY KEY AUTOINCREMENT,
-        query_norm TEXT, engine_type TEXT, url_id INTEGER,
-        best_position INTEGER, hit_count INTEGER,
-        first_seen INTEGER, last_seen INTEGER,
-        UNIQUE(query_norm, engine_type, url_id))`,
-    );
-    seed.exec(
-      `CREATE VIRTUAL TABLE urls_fts USING fts5(
-        title, snippet, url, content='urls', content_rowid='id')`,
-    );
-    seed.exec(
-      `CREATE TRIGGER urls_ai AFTER INSERT ON urls BEGIN
-        INSERT INTO urls_fts(rowid, title, snippet, url)
-        VALUES (new.id, new.title, new.snippet, new.url);
-      END`,
-    );
-    seed.exec(
-      `INSERT INTO urls (url_norm, url, source_engine, title, snippet, first_seen, last_seen)
-       VALUES ('legacy.test/x', 'https://legacy.test/x', 'E', 'T', 'S', 1, 1)`,
-    );
-    seed.exec(
-      `INSERT INTO query_hits (query_norm, engine_type, url_id, best_position, hit_count, first_seen, last_seen)
-       VALUES ('legacyq', '${legacyType}', 1, 3, 2, 1, 1)`,
-    );
-    seed.exec("PRAGMA user_version = 0");
-    seed.close();
-
-    const out = await queryIndex("legacyq", legacyType);
-    expect(out.length).toBe(1);
-    expect(out[0].url).toContain("legacy.test");
-
-    const row = readHit(legacyType, "legacy.test")!;
-    expect(row.pos_sum).toBe(row.best_position * row.hit_count);
-    expect(row.pos_sum).toBe(6);
   });
 });

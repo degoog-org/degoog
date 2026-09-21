@@ -3,7 +3,24 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { clearServerSettingsCache } from "../../src/server/utils/server-settings";
-import { clearTypeCache } from "../../src/server/extensions/engines/registry";
+import {
+  clearTypeCache,
+  initEngines,
+  listEngineIds,
+} from "../../src/server/extensions/engines/registry";
+import { setSettings } from "../../src/server/utils/plugin-settings";
+import {
+  engineFingerprint,
+  selectActiveEngines,
+} from "../../src/server/search/engine-selection";
+import {
+  isCacheable,
+  runKey,
+  runTtl,
+} from "../../src/server/search/engine-cache";
+import { SHORT_TTL_MS, TTL_MS } from "../../src/server/utils/cache";
+import { ImgNsfw } from "../../src/server/types";
+import { DEGOOG_ENGINE_NAME } from "../../src/shared/search-types";
 
 const withTempEngineEnv = async <T>(fn: () => Promise<T>): Promise<T> => {
   const dir = mkdtempSync(join(tmpdir(), "degoog-engine-score-"));
@@ -62,14 +79,6 @@ const withTempEngineEnv = async <T>(fn: () => Promise<T>): Promise<T> => {
 describe("engine scoring outside web search", () => {
   test("selectActiveEngines applies stored scores for image engines", async () => {
     await withTempEngineEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { setSettings } = await import("../../src/server/utils/plugin-settings");
-      const { selectActiveEngines } = await import(
-        "../../src/server/search/engine-selection"
-      );
-
       await initEngines(true);
       const ids = listEngineIds().filter((id) => id.includes("images"));
       const alpha = ids.find((id) => id.includes("alpha-images"));
@@ -94,14 +103,6 @@ describe("engine scoring outside web search", () => {
 
   test("engine fingerprint changes when that engine's score changes", async () => {
     await withTempEngineEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { setSettings } = await import("../../src/server/utils/plugin-settings");
-      const { engineFingerprint } = await import(
-        "../../src/server/search/engine-selection"
-      );
-
       await initEngines(true);
       const alpha = listEngineIds().find((id) => id.includes("alpha-images"));
       expect(alpha).toBeTruthy();
@@ -119,14 +120,6 @@ describe("engine scoring outside web search", () => {
 
   test("engine fingerprint ignores other engines' settings", async () => {
     await withTempEngineEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { setSettings } = await import("../../src/server/utils/plugin-settings");
-      const { engineFingerprint } = await import(
-        "../../src/server/search/engine-selection"
-      );
-
       await initEngines(true);
       const ids = listEngineIds().filter((id) => id.includes("images"));
       const alpha = ids.find((id) => id.includes("alpha-images"));
@@ -153,11 +146,6 @@ describe("per engine cache keys", () => {
 
   test("a key belongs to a single engine", async () => {
     await withTempEngineEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { runKey } = await import("../../src/server/search/engine-cache");
-
       await initEngines(true);
       const ids = listEngineIds().filter((id) => id.includes("images"));
       const alpha = ids.find((id) => id.includes("alpha-images"));
@@ -170,12 +158,6 @@ describe("per engine cache keys", () => {
 
   test("an engine key survives another engine's settings change", async () => {
     await withTempEngineEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { setSettings } = await import("../../src/server/utils/plugin-settings");
-      const { runKey } = await import("../../src/server/search/engine-cache");
-
       await initEngines(true);
       const ids = listEngineIds().filter((id) => id.includes("images"));
       const alpha = ids.find((id) => id.includes("alpha-images"));
@@ -189,12 +171,6 @@ describe("per engine cache keys", () => {
 
   test("differs when only imgNsfw differs", async () => {
     await withTempEngineEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { runKey } = await import("../../src/server/search/engine-cache");
-      const { ImgNsfw } = await import("../../src/server/types");
-
       await initEngines(true);
       const alpha = listEngineIds().find((id) => id.includes("alpha-images"));
 
@@ -212,11 +188,6 @@ describe("per engine cache keys", () => {
 
   test("stays stable when imageFilter is absent", async () => {
     await withTempEngineEnv(async () => {
-      const { initEngines, listEngineIds } = await import(
-        "../../src/server/extensions/engines/registry"
-      );
-      const { runKey } = await import("../../src/server/search/engine-cache");
-
       await initEngines(true);
       const alpha = listEngineIds().find((id) => id.includes("alpha-images"));
 
@@ -226,10 +197,7 @@ describe("per engine cache keys", () => {
 });
 
 describe("per engine cache policy", () => {
-  test("a healthy run keeps the long ttl, a failed one backs off", async () => {
-    const { runTtl } = await import("../../src/server/search/engine-cache");
-    const { SHORT_TTL_MS, TTL_MS } = await import("../../src/server/utils/cache");
-
+  test("a healthy run keeps the long ttl, a failed one backs off", () => {
     const timing = (status?: string) => ({
       name: "e",
       time: 1,
@@ -243,10 +211,7 @@ describe("per engine cache policy", () => {
     expect(runTtl(timing("blocked"))).toBe(SHORT_TTL_MS);
   });
 
-  test("the local index engine is never cached", async () => {
-    const { isCacheable } = await import("../../src/server/search/engine-cache");
-    const { DEGOOG_ENGINE_NAME } = await import("../../src/shared/search-types");
-
+  test("the local index engine is never cached", () => {
     expect(isCacheable(DEGOOG_ENGINE_NAME)).toBe(false);
     expect(isCacheable("Alpha Images")).toBe(true);
   });

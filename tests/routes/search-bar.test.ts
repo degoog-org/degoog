@@ -23,7 +23,6 @@ describe("routes/search-bar", () => {
     );
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toHaveProperty("actions");
     expect(Array.isArray(body.actions)).toBe(true);
   });
 });

@@ -7,16 +7,10 @@ describe("client/hasMorePages", () => {
     expect(hasMorePages(37, null, false)).toBe(true);
   });
 
-  test("stops at a declared total", () => {
+  test("stops at or past a declared total", () => {
     expect(hasMorePages(2, 3, false)).toBe(true);
     expect(hasMorePages(3, 3, false)).toBe(false);
-  });
-
-  test("stops past a declared total", () => {
     expect(hasMorePages(4, 3, false)).toBe(false);
-  });
-
-  test("stops on a single declared page", () => {
     expect(hasMorePages(1, 1, false)).toBe(false);
   });
 

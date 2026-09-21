@@ -6,35 +6,20 @@ import {
   isSupportFile,
   isSupportedEngine,
 } from "../../src/server/extensions/compatibility-layer/searx/catalog";
-import {
-  LIB_PACKAGES,
-  PythonLib,
-} from "../../src/server/extensions/compatibility-layer/searx/python-deps";
+import { PythonLib } from "../../src/server/extensions/compatibility-layer/searx/python-deps";
 
 describe("searx python libs", () => {
-  test("engines without third party imports need nothing", () => {
-    expect(engineLibs("mwmbl")).toEqual([]);
-    expect(engineLibs("tagesschau")).toEqual([]);
-  });
-
-  test("engines inherit the libs their shared files import", () => {
-    expect(engineLibs("google_cse")).toEqual([PythonLib.Babel, PythonLib.Lxml]);
-    expect(engineLibs("apple_maps")).toEqual([
-      PythonLib.Babel,
-      PythonLib.DateUtil,
-      PythonLib.Lxml,
-    ]);
-    expect(engineLibs("boardreader")).toEqual([PythonLib.Babel]);
-    expect(engineLibs("mojeek")).toEqual([
-      PythonLib.Babel,
-      PythonLib.DateUtil,
-      PythonLib.Lxml,
-    ]);
-  });
-
-  test("every lib has an installable package name", () => {
-    for (const lib of Object.values(PythonLib)) {
-      expect(LIB_PACKAGES[lib]).toBeTruthy();
+  test("engines inherit the libs their shared files import, and nothing more", () => {
+    const cases: [string, PythonLib[]][] = [
+      ["mwmbl", []],
+      ["tagesschau", []],
+      ["google_cse", [PythonLib.Babel, PythonLib.Lxml]],
+      ["apple_maps", [PythonLib.Babel, PythonLib.DateUtil, PythonLib.Lxml]],
+      ["boardreader", [PythonLib.Babel]],
+      ["mojeek", [PythonLib.Babel, PythonLib.DateUtil, PythonLib.Lxml]],
+    ];
+    for (const [code, libs] of cases) {
+      expect(engineLibs(code)).toEqual(libs);
     }
   });
 
@@ -47,7 +32,9 @@ describe("searx python libs", () => {
     }
     for (const entry of SEARX_CATALOG) {
       expect(isSupportedEngine(entry.code)).toBe(true);
+      expect(isSupportFile(entry.code)).toBe(false);
       for (const dep of entry.deps ?? []) {
+        expect(dep).not.toBe(entry.code);
         expect(codes.has(dep) || isSupportFile(dep)).toBe(true);
       }
     }

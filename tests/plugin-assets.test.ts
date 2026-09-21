@@ -19,15 +19,10 @@ describe("plugin-assets", () => {
     expect(all).toContain(".p2 { color: blue; }");
   });
 
-  test("registerPluginScript and getPluginScriptFolders", () => {
-    registerPluginScript("my-plugin");
-    const folders = getPluginScriptFolders();
-    expect(folders).toContain("my-plugin");
-  });
-
-  test("getScriptFolderSource returns source for registered folders", () => {
+  test("registered script folders are listed and keep their source", () => {
     registerPluginScript("builtin-folder", "builtin");
     registerPluginScript("user-folder", "plugin");
+    expect(getPluginScriptFolders()).toContain("user-folder");
     expect(getScriptFolderSource("builtin-folder")).toBe("builtin");
     expect(getScriptFolderSource("user-folder")).toBe("plugin");
     expect(getScriptFolderSource("unregistered")).toBeNull();

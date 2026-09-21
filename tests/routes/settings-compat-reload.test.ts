@@ -83,13 +83,6 @@ describe("POST /api/settings/field compatibility layer reload", () => {
     expect(await res.json()).toEqual({ ok: true, searxReloadFailed: true });
   });
 
-  test("the 4get toggle stays quiet when the reload works", async () => {
-    reloadFails = false;
-    const res = await saveField("fourgetCompatEnabled", "false");
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
-  });
-
   test("leaves unrelated settings untouched by the reload state", async () => {
     reloadFails = true;
     const res = await saveField("streamingEnabled", "true");

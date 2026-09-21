@@ -89,32 +89,19 @@ describe("restart notice state check", () => {
     expect(await pendingReasons(() => null)).toBeNull();
   });
 
-  test("returns nothing when the restart is not pending", async () => {
+  test("returns nothing when the restart is not pending, malformed or unreachable", async () => {
     const { pendingReasons } = await loadNotice();
-    stubFetch(jsonOnce({ pending: false, reasons: ['engine "gamma" was added'] }));
+    const responders = [
+      jsonOnce({ pending: false, reasons: ['engine "gamma" was added'] }),
+      jsonOnce({ pending: "yes", reasons: [42] }),
+      jsonOnce({ pending: true, reasons: ["nope"] }, 500),
+      () => Promise.reject(new Error("offline")),
+    ];
 
-    expect(await pendingReasons(() => null)).toBeNull();
-  });
-
-  test("returns nothing when the payload shape is invalid", async () => {
-    const { pendingReasons } = await loadNotice();
-    stubFetch(jsonOnce({ pending: "yes", reasons: [42] }));
-
-    expect(await pendingReasons(() => null)).toBeNull();
-  });
-
-  test("returns nothing when the request fails", async () => {
-    const { pendingReasons } = await loadNotice();
-    stubFetch(jsonOnce({ pending: true, reasons: ["nope"] }, 500));
-
-    expect(await pendingReasons(() => null)).toBeNull();
-  });
-
-  test("returns nothing when the request throws", async () => {
-    const { pendingReasons } = await loadNotice();
-    stubFetch(() => Promise.reject(new Error("offline")));
-
-    expect(await pendingReasons(() => null)).toBeNull();
+    for (const respond of responders) {
+      stubFetch(respond);
+      expect(await pendingReasons(() => null)).toBeNull();
+    }
   });
 
   test("runs a single check when tab changes arrive concurrently", async () => {

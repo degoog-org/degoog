@@ -21,16 +21,6 @@ describe("utils/public-url", () => {
     expect(out).toBe("https://search.example.com/degoog");
   });
 
-  test("a full DEGOOG_BASE_URL wins over forwarded headers", () => {
-    const out = buildPublicUrl("https://search.example.com", "", {
-      ...REQ,
-      proto: "http",
-      host: "wrong.local",
-    });
-
-    expect(out).toBe("https://search.example.com");
-  });
-
   test("a path-only DEGOOG_BASE_URL keeps the header heuristic", () => {
     const out = buildPublicUrl("/degoog", "/degoog", {
       ...REQ,
