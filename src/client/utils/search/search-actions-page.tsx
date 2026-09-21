@@ -1,8 +1,8 @@
-import { renderHtml } from "../../../shared/ui/core/html";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
 import {
-  skeletonImageGrid,
-  skeletonResults,
+  SkeletonImageGrid,
+  SkeletonResults,
 } from "../../animations/skeleton";
 import { getEngines, isImageSearchType } from "../engines";
 import { state } from "../../state";
@@ -30,12 +30,12 @@ export async function goToPage(pageNum: number): Promise<void> {
   const pagination = document.getElementById("pagination");
   if (resultsList) {
     if (isImageSearchType(state.currentType)) {
-      resultsList.innerHTML = skeletonImageGrid();
+      render(<SkeletonImageGrid />, resultsList);
     } else {
-      resultsList.innerHTML = skeletonResults();
+      render(<SkeletonResults />, resultsList);
     }
   }
-  if (pagination) pagination.innerHTML = "";
+  if (pagination) clear(pagination);
   const engines = await getEngines();
   const url = buildSearchUrl(
     state.currentQuery,
@@ -102,7 +102,6 @@ export async function goToPage(pageNum: number): Promise<void> {
   } catch (err) {
     console.error("[search] page failed", err);
     if (resultsList)
-      resultsList.innerHTML =
-        renderHtml(<NoResults>Search failed. Please try again.</NoResults>);
+      render(<NoResults>Search failed. Please try again.</NoResults>, resultsList);
   }
 }

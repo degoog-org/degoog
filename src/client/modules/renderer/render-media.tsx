@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { MediaGridShell } from "./media-grid-shell";
 import { state } from "../../state";
 import { cleanHostname, linkHref } from "../../utils/dom";
@@ -177,7 +177,7 @@ export function renderImageGrid(
     render(<MediaGridShell />, container);
     grid = container.querySelector<HTMLElement>(".image-grid")!;
   } else {
-    grid.innerHTML = "";
+    clear(grid);
   }
   appendMediaCards(grid, results, "image");
 }

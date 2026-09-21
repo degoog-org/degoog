@@ -1,25 +1,14 @@
 import { renderHtml } from "../../../../../shared/ui/core/html";
 import { HelpContainer, type HelpContainerProps } from "./container";
-import { HelpPanel } from "./panel";
+import { HelpPanels } from "./panels";
 import { HelpPrefixHint } from "./prefix-hint";
-import { HelpTabButton } from "./tab-button";
+import { HelpTabButtons } from "./tab-buttons";
 import type { HelpRowCommand } from "./row";
 
 export const renderTabButtons = (
   categories: string[],
   groups: Record<string, HelpRowCommand[]>,
-): string =>
-  categories
-    .map((category, index) =>
-      renderHtml(
-        <HelpTabButton
-          category={category}
-          count={groups[category].length}
-          active={index === 0}
-        />,
-      ),
-    )
-    .join("");
+): string => renderHtml(<HelpTabButtons categories={categories} groups={groups} />);
 
 export const renderPanels = (
   categories: string[],
@@ -27,21 +16,17 @@ export const renderPanels = (
   nojs: boolean,
   aliasesLabel: (aliases: string) => string,
 ): string =>
-  categories
-    .map((category, index) =>
-      renderHtml(
-        <HelpPanel
-          category={category}
-          commands={groups[category]}
-          active={nojs || index === 0}
-          aliasesLabel={aliasesLabel}
-        />,
-      ),
-    )
-    .join("");
+  renderHtml(
+    <HelpPanels
+      categories={categories}
+      groups={groups}
+      nojs={nojs}
+      aliasesLabel={aliasesLabel}
+    />,
+  );
 
 export const renderPrefixHint = (html: string): string =>
-  renderHtml(<HelpPrefixHint html={html} />);
+  html ? renderHtml(<HelpPrefixHint html={html} />) : "";
 
 export const renderEngineTypeCode = (type: string): string =>
   renderHtml(<code>{`${type}:query`}</code>);

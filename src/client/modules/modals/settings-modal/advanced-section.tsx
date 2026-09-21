@@ -1,15 +1,15 @@
-import { Raw } from "../../../../shared/ui/core/raw";
+import type { Child } from "../../../../shared/ui/core/types";
 
 export interface AdvancedSectionProps {
   label: string;
   expanded: boolean;
-  fieldsHtml: string;
+  children?: Child;
 }
 
 export const AdvancedSection = ({
   label,
   expanded,
-  fieldsHtml,
+  children,
 }: AdvancedSectionProps): JSX.Element => (
   <div class="ext-advanced-section">
     <label class="ext-field-toggle-row ext-advanced-header">
@@ -20,7 +20,7 @@ export const AdvancedSection = ({
       </label>
     </label>
     <div class="ext-advanced-body" hidden={!expanded}>
-      <Raw html={fieldsHtml} />
+      {children}
     </div>
   </div>
 );

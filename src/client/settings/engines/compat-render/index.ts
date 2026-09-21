@@ -11,5 +11,5 @@ export {
   CompatUpdateButton,
 } from "./update-button";
 export type { CompatListUi } from "./update-button";
-export { CompatList, compatListHtml } from "./list";
-export { CompatShell, compatShellHtml } from "./shell";
+export { CompatList } from "./list";
+export { CompatShell } from "./shell";

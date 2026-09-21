@@ -1,5 +1,4 @@
 import {
-  renderNojsLink,
   renderNojsLinkPanel,
   renderNojsMessage,
   renderNojsRedirectPanel,
@@ -58,19 +57,17 @@ export const nojsCommand: BangCommand = {
     const linkLabel = args.trim()
       ? this.t!("nojs.search-link", { query: args.trim() })
       : this.t!("nojs.open-link");
-    const link = renderNojsLink(url, String(linkLabel));
-
     if (context?.nojs) {
       return {
         title: this.t!("nojs.title"),
-        html: renderNojsLinkPanel(link),
+        html: renderNojsLinkPanel(url, String(linkLabel)),
       };
     }
 
     const redirect = `<script>(function(){window.location.href=${JSON.stringify(url).replace(/</g, "\\u003c")};})();<\/script>`;
     return {
       title: this.t!("nojs.title"),
-      html: `${renderNojsRedirectPanel(String(this.t!("nojs.redirecting")), link)}${redirect}`,
+      html: `${renderNojsRedirectPanel(String(this.t!("nojs.redirecting")), url, String(linkLabel))}${redirect}`,
     };
   },
 };

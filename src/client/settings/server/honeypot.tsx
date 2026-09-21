@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { Icon } from "../../../shared/ui/components/primitives/icon";
 import { getBase } from "../../utils/base-url";
 import { authHeaders } from "../../utils/request";
@@ -31,7 +31,7 @@ const _loadBlocklist = async (getToken: () => string | null): Promise<void> => {
       entries: { ip: string; time: string }[];
       banHours: number;
     };
-    wrap.innerHTML = "";
+    clear(wrap);
     if (data.entries.length === 0) {
       _appendEmpty(wrap);
       return;

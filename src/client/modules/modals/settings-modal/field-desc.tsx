@@ -1,6 +1,6 @@
 import { Raw } from "../../../../shared/ui/core/raw";
-import { renderHtml } from "../../../../shared/ui/core/html";
 import { renderMdInline } from "../../../utils/md";
+import type { Child } from "../../../../shared/ui/core/types";
 
 export const FieldDesc = ({ markdown }: { markdown: string }): JSX.Element => (
   <p class="ext-field-desc">
@@ -8,5 +8,5 @@ export const FieldDesc = ({ markdown }: { markdown: string }): JSX.Element => (
   </p>
 );
 
-export const renderFieldDesc = (markdown?: string): string =>
-  markdown ? renderHtml(<FieldDesc markdown={markdown} />) : "";
+export const fieldDesc = (markdown?: string): Child =>
+  markdown ? <FieldDesc markdown={markdown} /> : null;

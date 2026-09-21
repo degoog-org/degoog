@@ -2,12 +2,12 @@ import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
 import { render } from "../../../../shared/ui/core/dom";
-import { renderHtml } from "../../../../shared/ui/core/html";
-import { OptionsButton, OPTIONS_BTN_CLASS } from "./options-button";
+import { OPTIONS_BTN_CLASS } from "./options-button";
 import { OptionsList, OPTIONS_LIST_CLASS } from "./options-list";
 import { OptionsListItem, OPTIONS_ITEM_CLASS } from "./options-list-item";
 import { OptionsRow, OPTIONS_STATUS_CLASS } from "./options-row";
 import { OptionsSelectOption } from "./options-select-option";
+import type { Child } from "../../../../shared/ui/core/types";
 import type { FieldOption, SettingField } from "../../../types";
 import { parseFieldOptionsResponse } from "./options-field-parse";
 
@@ -15,18 +15,11 @@ const t = window.scopedT("core");
 
 const MAX_VISIBLE_OPTIONS = 50;
 
-export const renderOptionsButton = (field: SettingField): string => {
-  const node = OptionsButton({ field });
-  return node ? renderHtml(node) : "";
-};
+export const wrapOptionsRow = (field: SettingField, inner: Child): Child =>
+  field.optionsFrom ? <OptionsRow field={field}>{inner}</OptionsRow> : inner;
 
-export const wrapOptionsRow = (field: SettingField, inner: string): string =>
-  field.optionsFrom
-    ? renderHtml(<OptionsRow field={field} innerHtml={inner} />)
-    : inner;
-
-export const renderOptionsList = (field: SettingField): string =>
-  field.optionsFrom ? renderHtml(<OptionsList />) : "";
+export const optionsListFor = (field: SettingField): Child =>
+  field.optionsFrom ? <OptionsList /> : null;
 
 const _fillSelect = (
   select: HTMLSelectElement,

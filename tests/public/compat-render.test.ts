@@ -55,8 +55,10 @@ beforeAll(async () => {
   const render = await import("../../src/client/settings/engines/compat-render");
   compatGroups = render.compatGroups;
   compatPackages = render.compatPackages;
-  compatListHtml = render.compatListHtml;
-  compatShellHtml = render.compatShellHtml;
+  const { renderHtml } = await import("../../src/shared/ui/core/html");
+  compatListHtml = (items, layer) =>
+    renderHtml(render.CompatList({ items, layer }));
+  compatShellHtml = (id) => renderHtml(render.CompatShell({ id }));
 });
 
 afterAll(() => {

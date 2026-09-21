@@ -6,7 +6,7 @@ export {
   OFFICIAL_REPO_URL,
   repoImageSrc,
 } from "./repo-url";
-export { ItemCard, renderItemCard } from "./item-card";
-export { RepoDetail, renderRepoDetail } from "./repo-detail";
-export { RepoList, renderRepoList } from "./repo-list";
-export { ShortcutKeycaps, renderShortcutKeycaps } from "./shortcut-keycaps";
+export { ItemCard } from "./item-card";
+export { RepoDetail } from "./repo-detail";
+export { RepoList } from "./repo-list";
+export { ShortcutKeycaps } from "./shortcut-keycaps";

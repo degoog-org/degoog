@@ -1,5 +1,4 @@
-import { Raw } from "../../../shared/ui/core/raw";
-import { renderFileUpload } from "../../utils/file-upload";
+import { FileUploadWidget } from "../../utils/file-upload-widget";
 import { tr } from "./i18n";
 
 export interface ImportBodyProps {
@@ -33,13 +32,11 @@ export const ImportBody = ({
       hidden={true}
     />
     <div style="margin-top:8px">
-      <Raw
-        html={renderFileUpload({
-          inputId: "indexer-import-file",
-          accept: ".db,.sql",
-          buttonLabel: tr("import-choose-file"),
-          dropLabel: tr("import-drop-hint"),
-        })}
+      <FileUploadWidget
+        inputId="indexer-import-file"
+        accept=".db,.sql"
+        buttonLabel={tr("import-choose-file")}
+        dropLabel={tr("import-drop-hint")}
       />
     </div>
     <div id={progressHostId} style="margin-top:8px"></div>

@@ -2,14 +2,12 @@ import { renderHtml } from "../../../shared/ui/core/html";
 import { StoreLinkButton } from "./store-link-button";
 import { render } from "../../../shared/ui/core/dom";
 import { raw } from "../../../shared/ui/core/raw";
-import { Badge } from "../../../shared/ui/components/primitives/badge";
 import { Button } from "../../../shared/ui/components/primitives/button";
 import { Icon } from "../../../shared/ui/components/primitives/icon";
-import { ExtCard } from "../../../shared/ui/components/extensions/ext-card";
-import { ExtCardDesc } from "../../../shared/ui/components/extensions/ext-card-desc";
-import { ExtCardName } from "../../../shared/ui/components/extensions/ext-card-name";
 import { ExtGroup } from "../../../shared/ui/components/extensions/ext-group";
-import { ExtToggle } from "../../../shared/ui/components/extensions/ext-toggle";
+import { CompatSection } from "./compat-section";
+import { EngineCard } from "./engine-card";
+import { engineTypes, primaryType } from "./engine-types";
 import { idbGet, idbSet } from "../../utils/db";
 import { SETTINGS_KEY, TAB_ORDER_SAVED } from "../../constants";
 import { resetDefaults } from "../../utils/sync";
@@ -19,80 +17,21 @@ import { openModal } from "../../modules/modals/settings-modal/modal";
 import type { ExtensionMeta, EngineRecord, AllExtensions } from "../../types";
 import type { GroupEntry, TypeEntry } from "../../types/engines-tab";
 import { getBase } from "../../utils/base-url";
-import { renderMdInline } from "../../utils/md";
 import { getTabOrder, applyTabOrder } from "../../utils/tab-order";
 import { getStoredToken } from "../../utils/settings-token";
 import { openTabOrderModal } from "../shared/tab-order-modal";
-import {
-  extCardBadgeNode,
-  extCardRestartWarningNode,
-  extCardVersionWarningNode,
-} from "../shared/ext-card";
 import { typeLabel } from "./type-label";
 import { openCompatModal } from "./compat-modal";
-import { enabledLayers, type CompatLayerView } from "./compat-api";
+import { enabledLayers } from "./compat-api";
 
 const t = window.scopedT("core");
 
 let _orderSavedHandler: (() => void) | null = null;
 
-const _layerBtnId = (layer: CompatLayerView): string => `open-compat-${layer.id}`;
-
-const COMPAT_NOTES = [
-  "compat-note-native",
-  "compat-note-upstream",
-  "compat-note-updates",
-  "compat-note-needs",
-];
-
-
-const CompatSection = ({
-  layers,
-  onOpen,
-}: {
-  layers: CompatLayerView[];
-  onOpen: (layer: CompatLayerView) => void;
-}): JSX.Element => (
-  <section class="settings-section ext-card degoog-panel degoog-panel--ext-card">
-    <div class="setting-section-heading-wrapper">
-      <h2 class="settings-section-heading">
-        {t("settings-page.extensions.compat-heading")}
-        <Badge modifier="experimental">{t("settings-page.extensions.compat-experimental")}</Badge>
-      </h2>
-      <div class="floating-section-icon">
-        <Icon name="fa-solid fa-flask" />
-      </div>
-    </div>
-    <p class="settings-desc">{t("settings-page.extensions.compat-desc")}</p>
-    <div class="compat-note">
-      <ul class="compat-note-list">
-        {COMPAT_NOTES.map((key) => (
-          <li>{t(`settings-page.extensions.${key}`)}</li>
-        ))}
-      </ul>
-    </div>
-    <div class="settings-page-actions">
-      {layers.map((layer) => (
-        <Button variant="secondary" id={_layerBtnId(layer)} onClick={() => onOpen(layer)}>
-          {t("settings-page.extensions.compat-open", { layer: layer.label })}
-        </Button>
-      ))}
-    </div>
-  </section>
-);
-
-const _engineTypes = (engine: ExtensionMeta): string[] => {
-  if (engine.searchTypes?.length) return engine.searchTypes;
-  return [engine.primaryType ?? "web"];
-};
-
-const _primaryType = (types: string[]): string =>
-  types.length > 0 ? types[0] : "web";
-
 const _groupByType = (engines: ExtensionMeta[]): GroupEntry[] => {
   const map = new Map<string, ExtensionMeta[]>();
   for (const engine of engines) {
-    const key = _primaryType(_engineTypes(engine)).toLowerCase();
+    const key = primaryType(engineTypes(engine)).toLowerCase();
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(engine);
   }
@@ -113,7 +52,7 @@ const _allTypeEntries = (engines: ExtensionMeta[]): TypeEntry[] => {
   const seen = new Set<string>();
   const result: TypeEntry[] = [];
   for (const engine of engines) {
-    for (const type of _engineTypes(engine)) {
+    for (const type of engineTypes(engine)) {
       const key = type.toLowerCase();
       if (!seen.has(key)) {
         seen.add(key);
@@ -134,75 +73,6 @@ const _sortGroups = (groups: GroupEntry[], saved: string[]): GroupEntry[] => {
     .map((k) => groups.find((g) => g.key === k))
     .filter((g): g is GroupEntry => g !== undefined);
 };
-
-const _extraTypeLabels = (engine: ExtensionMeta): string[] => {
-  const types = _engineTypes(engine);
-  const primary = _primaryType(types).toLowerCase();
-  return types
-    .filter((type) => type.toLowerCase() !== primary)
-    .map((type) => typeLabel(type.toLowerCase()));
-};
-
-
-const EngineCard = ({
-  engine,
-  enabled,
-  allowConfigure,
-  onToggle,
-  onConfigure,
-}: {
-  engine: ExtensionMeta;
-  enabled: boolean;
-  allowConfigure: boolean;
-  onToggle: (event: Event) => void;
-  onConfigure: () => void;
-}): JSX.Element => {
-  const toggleId = `engine-toggle-${engine.id}`;
-  const extraTypes = _extraTypeLabels(engine);
-
-  return (
-    <ExtCard
-      id={engine.id}
-      nameRow={[
-        extCardRestartWarningNode(engine),
-        <ExtCardName htmlFor={toggleId} class="engine-toggle-label" name={engine.displayName} />,
-        engine.compatibilityLayer ? (
-          <Badge modifier="engine-type">{engine.compatibilityLayer}</Badge>
-        ) : null,
-      ]}
-      info={[
-        engine.description ? <ExtCardDesc html={raw(renderMdInline(engine.description))} /> : null,
-        extraTypes.length ? (
-          <div class="ext-card-extra-types">
-            <span class="ext-card-extra-types-label">
-              {t("settings-page.extensions.extra-types")}
-            </span>
-            {extraTypes.map((label) => (
-              <Badge modifier="engine-type">{label}</Badge>
-            ))}
-          </div>
-        ) : null,
-        extCardVersionWarningNode(engine),
-      ]}
-      actions={[
-        allowConfigure ? extCardBadgeNode(engine) : null,
-        allowConfigure && engine.configurable ? (
-          <Button variant="secondary" class="ext-card-configure" data-id={engine.id} onClick={onConfigure}>
-            {t("settings-page.extensions.configure")}
-          </Button>
-        ) : null,
-        <ExtToggle
-          id={toggleId}
-          inputClass="engine-toggle-input"
-          dataId={engine.id}
-          checked={enabled}
-          onChange={onToggle}
-        />,
-      ]}
-    />
-  );
-};
-
 
 export async function initEnginesTab(
   allExtensions: AllExtensions,

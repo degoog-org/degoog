@@ -1,11 +1,7 @@
-import { renderHtml } from "../../../../shared/ui/core/html";
-import { raw } from "../../../../shared/ui/core/raw";
-import type { Child } from "../../../../shared/ui/core/types";
-import { renderFileUpload, initFileUpload } from "../../../utils/file-upload";
+import { initFileUpload } from "../../../utils/file-upload";
 import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { authHeaders } from "../../../utils/request";
-import type { SettingField } from "../../../types";
 
 const t = window.scopedT("core");
 
@@ -18,127 +14,6 @@ export const basenameOf = (path: string): string =>
 export const normalizeHex = (value: string): string =>
   HEX_RE.test(value.trim()) ? value.trim() : DEFAULT_HEX;
 
-const _basename = basenameOf;
-const _normalizeHex = normalizeHex;
-
-const ExtField = ({
-  fieldKey,
-  type,
-  extra,
-  children,
-}: {
-  fieldKey: string;
-  type: string;
-  extra?: Record<string, string | undefined>;
-  children?: Child;
-}): JSX.Element => (
-  <div class="ext-field" data-key={fieldKey} data-type={type} {...(extra ?? {})}>
-    {children}
-  </div>
-);
-
-export const renderHexField = (
-  field: SettingField,
-  value: string,
-  descHtml: string,
-): string => {
-  const hex = value && HEX_RE.test(value) ? value : field.default || DEFAULT_HEX;
-  return renderHtml(
-    <ExtField fieldKey={field.key} type="hex">
-      <label class="ext-field-label" for={`field-${field.key}`}>
-        {field.label}
-      </label>
-      <div class="ext-field-hex">
-        <input
-          class="ext-field-input ext-field-hex-text degoog-input"
-          type="text"
-          id={`field-${field.key}`}
-          value={hex}
-          placeholder={field.placeholder || DEFAULT_HEX}
-          autocomplete="off"
-        />
-        <input
-          class="ext-field-hex-color"
-          type="color"
-          value={_normalizeHex(hex)}
-          aria-label={field.label}
-        />
-      </div>
-      {raw(descHtml)}
-    </ExtField>,
-  );
-};
-
-export const renderRangeField = (
-  field: SettingField,
-  value: string,
-  descHtml: string,
-): string => {
-  const min = field.min ?? "0";
-  const max = field.max ?? "100";
-  const step = field.step ?? "1";
-  const current = value !== "" ? value : (field.default ?? min);
-  return renderHtml(
-    <ExtField fieldKey={field.key} type="range">
-      <label class="ext-field-label ext-field-range-label" for={`field-${field.key}`}>
-        <span>{field.label}</span>
-        <output class="ext-field-range-value">{current}</output>
-      </label>
-      <input
-        class="ext-field-range"
-        type="range"
-        id={`field-${field.key}`}
-        min={min}
-        max={max}
-        step={step}
-        value={current}
-      />
-      {raw(descHtml)}
-    </ExtField>,
-  );
-};
-
-export const renderFileField = (
-  field: SettingField,
-  value: string,
-  descHtml: string,
-): string => {
-  const hintParts: string[] = [];
-  if (field.accept) hintParts.push(field.accept);
-  if (field.maxSizeKb) hintParts.push(`≤ ${field.maxSizeKb} KB`);
-  const hint = hintParts.join(" · ") || undefined;
-  const uploader = renderFileUpload({
-    inputId: `file-input-${field.key}`,
-    accept: field.accept,
-    buttonLabel: t("settings-page.modal.field-choose-file"),
-    dropLabel: t("settings-page.modal.field-drop-hint"),
-    hint,
-    currentName: value ? _basename(value) : undefined,
-  });
-
-  return renderHtml(
-    <ExtField
-      fieldKey={field.key}
-      type="file"
-      extra={{
-        "data-max-kb": field.maxSizeKb ? String(field.maxSizeKb) : undefined,
-        "data-min-kb": field.minSizeKb ? String(field.minSizeKb) : undefined,
-      }}
-    >
-      <label class="ext-field-label">{field.label}</label>
-      <input
-        type="hidden"
-        id={`field-${field.key}`}
-        class="ext-field-file-value"
-        value={value}
-      />
-      {raw(uploader)}
-      <p class="ext-field-file-status" hidden={true}></p>
-      {raw(descHtml)}
-    </ExtField>,
-  );
-};
-
 export const initHexFields = (container: HTMLElement): void => {
   container
     .querySelectorAll<HTMLElement>(".ext-field[data-type='hex']")
@@ -147,7 +22,7 @@ export const initHexFields = (container: HTMLElement): void => {
       const color = fieldEl.querySelector<HTMLInputElement>(".ext-field-hex-color");
       if (!text || !color) return;
       text.addEventListener("input", () => {
-        if (HEX_RE.test(text.value.trim())) color.value = _normalizeHex(text.value);
+        if (HEX_RE.test(text.value.trim())) color.value = normalizeHex(text.value);
       });
       color.addEventListener("input", () => {
         text.value = color.value;

@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { ClearBody } from "./clear-body";
 import { getBase } from "../../utils/base-url";
 import { jsonHeaders } from "../../utils/request";
@@ -25,7 +25,7 @@ export const openClearModal = (onCleared: () => void): void => {
   const close = (): void => {
     overlay.style.display = "none";
     statusEl.textContent = "";
-    bodyEl.innerHTML = "";
+    clear(bodyEl);
   };
   closeBtn?.addEventListener("click", close, { once: true });
 

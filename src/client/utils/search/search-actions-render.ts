@@ -1,8 +1,9 @@
 import {
-  skeletonImageGrid,
-  skeletonResults,
-  skeletonSidebar,
+  SkeletonImageGrid,
+  SkeletonResults,
+  SkeletonSidebar,
 } from "../../animations/skeleton";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { closeMediaPreview, MediaPreviewCloseMode, syncMediaPreviewPanel } from "../../modules/media/media";
 import {
   clearSlotPanels,
@@ -97,17 +98,18 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
     void fetchGlancePanels(query);
   }
   const glanceEl = document.getElementById("at-a-glance");
-  if (glanceEl) glanceEl.innerHTML = "";
+  if (glanceEl) clear(glanceEl);
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    resultsList.innerHTML = isImageType
-      ? skeletonImageGrid()
-      : skeletonResults();
+    render(isImageType ? SkeletonImageGrid() : SkeletonResults(), resultsList);
   }
   const pagination = document.getElementById("pagination");
-  if (pagination) pagination.innerHTML = "";
+  if (pagination) clear(pagination);
   const sidebar = document.getElementById("results-sidebar");
-  if (sidebar) sidebar.innerHTML = isImageType ? "" : skeletonSidebar();
+  if (sidebar) {
+    if (isImageType) clear(sidebar);
+    else render(SkeletonSidebar(), sidebar);
+  }
   document.title = `${query} - degoog`;
 };
 
@@ -166,9 +168,9 @@ export const renderSearchResponse = (
   const isImageType = isImageSearchType(type);
 
   if (isImageType) {
-    if (glanceEl) glanceEl.innerHTML = "";
+    if (glanceEl) clear(glanceEl);
     renderImgEngines(data.engineTimings ?? []);
-    if (sidebar) sidebar.innerHTML = "";
+    if (sidebar) clear(sidebar);
   } else {
     if (opts.fetchGlance) void fetchGlancePanels(query, data.results);
     void fetchSlotPanels(query, data.results).then((panels) => {

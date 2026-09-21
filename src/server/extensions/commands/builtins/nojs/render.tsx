@@ -1,5 +1,4 @@
 import { renderHtml } from "../../../../../shared/ui/core/html";
-import { Raw } from "../../../../../shared/ui/core/raw";
 import { NojsLink } from "./link";
 import { NojsPanel } from "./panel";
 
@@ -10,23 +9,21 @@ export const renderNojsMessage = (message: string): string =>
     </NojsPanel>,
   );
 
-export const renderNojsLink = (href: string, label: string): string =>
-  renderHtml(<NojsLink href={href} label={label} />);
-
-export const renderNojsLinkPanel = (linkHtml: string): string =>
+export const renderNojsLinkPanel = (href: string, label: string): string =>
   renderHtml(
     <NojsPanel>
-      <Raw html={linkHtml} />
+      <NojsLink href={href} label={label} />
     </NojsPanel>,
   );
 
 export const renderNojsRedirectPanel = (
   message: string,
-  linkHtml: string,
+  href: string,
+  label: string,
 ): string =>
   renderHtml(
     <NojsPanel>
       <p>{message}</p>
-      <Raw html={linkHtml} />
+      <NojsLink href={href} label={label} />
     </NojsPanel>,
   );

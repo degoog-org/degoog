@@ -1,27 +1,25 @@
-import { Raw } from "../../../shared/ui/core/raw";
+import type { Child } from "../../../shared/ui/core/types";
 
 export interface StreamingStatRowProps {
   statusClass: "" | "engine-retrying" | "engine-failed";
-  originHtml: string;
+  origin: Child;
   name: string;
-  metaHtml: string;
+  meta: Child;
 }
 
 export const StreamingStatRow = ({
   statusClass,
-  originHtml,
+  origin,
   name,
-  metaHtml,
+  meta,
 }: StreamingStatRowProps): JSX.Element => (
   <div class={statusClass ? `engine-stat-row ${statusClass}` : "engine-stat-row"}>
     <div class="engine-stat-info">
       <div class="engine-stat-label">
-        <Raw html={originHtml} />
+        {origin}
         {name}
       </div>
-      <div class="engine-stat-meta">
-        <Raw html={metaHtml} />
-      </div>
+      <div class="engine-stat-meta">{meta}</div>
     </div>
   </div>
 );

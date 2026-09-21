@@ -244,6 +244,11 @@ export const render = (node: VNode | VNode[], container: Element): void => {
   _roots.set(container, _patchChildren(container, previous, next));
 };
 
+export const clear = (container: Element): void => {
+  _roots.delete(container);
+  container.replaceChildren();
+};
+
 /**
  * Render `view` into `container` and re-render whenever a signal it read
  * changes. Returns a dispose function.

@@ -23,7 +23,6 @@ import { ping, verifyToken } from "../utils/link-token";
 import { getClientIp } from "../utils/request";
 import { getBasePath, getBaseUrl } from "../utils/base-url";
 import { getPublicUrl } from "../utils/public-url";
-import { escapeHtml } from "../utils/text";
 import { FAKE_RESULTS } from "../../shared/fake-results";
 import { getInstanceSettings } from "../utils/server-settings";
 import {
@@ -117,11 +116,8 @@ const _injectIntoHead = (html: string, fragment: string): string => {
   return `${fragment}\n${html}`;
 };
 
-const _highlightEnvVars = (text: string): string =>
-  text.replace(/DEGOOG_[A-Z_]+(?:=[A-Za-z0-9]+)?/g, "<code>$&</code>");
-
 const _buildGateNote = (text: string): string =>
-  renderHtml(<GateNote html={_highlightEnvVars(escapeHtml(text))} />);
+  renderHtml(<GateNote text={text} />);
 
 const _buildSettingsGatePage = async (locale?: string): Promise<string> => {
   const html = await buildPage("settings-gate.html", locale);

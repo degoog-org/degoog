@@ -1,3 +1,4 @@
+import { clear, render } from "../../../shared/ui/core/dom";
 import { attachFaviconFallback } from "../../utils/favicon";
 import { bindCompatClicks } from "./compat-clicks";
 import { openCustomModal } from "../../modules/modals/settings-modal/modal";
@@ -11,9 +12,9 @@ import {
 } from "./compat-api";
 import {
   compatFilter,
-  compatListHtml,
+  CompatList,
   compatPackages,
-  compatShellHtml,
+  CompatShell,
   COMPAT_UPDATE_ICON,
   COMPAT_UPDATE_ICON_BUSY,
   type CompatListUi,
@@ -49,7 +50,8 @@ const _paint = (
 ): void => {
   const list = document.querySelector<HTMLElement>(`#${MODAL_BODY_ID} #compat-list`);
   if (!list) return;
-  list.innerHTML = compatListHtml(compatFilter(items, query), layer, ui);
+  clear(list);
+  render(<CompatList items={compatFilter(items, query)} layer={layer} ui={ui} />, list);
   list
     .querySelectorAll<HTMLImageElement>(".compat-favicon")
     .forEach(attachFaviconFallback);
@@ -133,12 +135,14 @@ export const openCompatModal = async (layer: CompatLayerView): Promise<void> => 
 
   openCustomModal({
     title: t(`${KEY}compat-title`, { layer: name }),
-    body: compatShellHtml(layer.id),
+    body: "",
     wide: true,
   });
 
   const body = document.getElementById(MODAL_BODY_ID);
   if (!body) return;
+  clear(body);
+  render(<CompatShell id={layer.id} />, body);
 
   const runAction = async (
     action: CompatAction,

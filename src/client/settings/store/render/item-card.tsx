@@ -1,4 +1,3 @@
-import { renderHtml } from "../../../../shared/ui/core/html";
 import { Raw } from "../../../../shared/ui/core/raw";
 import { Badge } from "../../../../shared/ui/components/primitives/badge";
 import { ItemCardActions } from "./item-card-actions";
@@ -117,7 +116,3 @@ export const ItemCard = ({ item }: { item: StoreItem }): JSX.Element => {
     </div>
   );
 };
-
-export function renderItemCard(item: StoreItem): string {
-  return renderHtml(<ItemCard item={item} />);
-}

@@ -1,7 +1,11 @@
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
 import { PaginationWrap } from "../../utils/pagination-wrap";
-import { skeletonImageGrid, skeletonResults, skeletonSidebar } from "../../animations/skeleton";
+import {
+  SkeletonImageGrid,
+  SkeletonResults,
+  SkeletonSidebar,
+} from "../../animations/skeleton";
 import { state } from "../../state";
 import {
   SlotPanelPosition,
@@ -12,7 +16,7 @@ import { hideAcDropdown } from "../../utils/autocomplete";
 import { isImageSearchType } from "../../utils/engines";
 import { setActiveTab } from "../../utils/navigation";
 import { fetchStreamingConfig } from "../../utils/streaming-config";
-import { buildPaginationHtml } from "../../utils/pagination";
+import { Pagination } from "../../utils/pagination";
 import { fetchGlancePanels, fetchSlotPanels } from "../../utils/search-utils";
 import {
   abortStreamingSearch,
@@ -79,16 +83,17 @@ export async function performTabSearch(
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    resultsList.innerHTML = isImageType
-      ? skeletonImageGrid()
-      : skeletonResults();
+    render(isImageType ? <SkeletonImageGrid /> : <SkeletonResults />, resultsList);
   }
   const pagination = document.getElementById("pagination");
-  if (pagination) pagination.innerHTML = "";
+  if (pagination) clear(pagination);
   const sidebar = document.getElementById("results-sidebar");
-  if (sidebar) sidebar.innerHTML = isImageType ? "" : skeletonSidebar();
+  if (sidebar) {
+    if (isImageType) clear(sidebar);
+    else render(<SkeletonSidebar />, sidebar);
+  }
   const glanceEl = document.getElementById("at-a-glance");
-  if (glanceEl) glanceEl.innerHTML = "";
+  if (glanceEl) clear(glanceEl);
   clearSlotPanels();
   if (!isImageType) {
     void fetchSlotPanels(query).then((panels) => {
@@ -225,7 +230,9 @@ function _renderTabPagination(
   tabId: string,
 ): void {
   render(
-    <PaginationWrap html={buildPaginationHtml(totalPages, activePage)} />,
+    <PaginationWrap>
+      <Pagination totalPages={totalPages} activePage={activePage} />
+    </PaginationWrap>,
     container,
   );
   container.querySelectorAll<HTMLElement>("[data-page]").forEach((el) => {

@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { ExportBody } from "./export-body";
 import { authHeaders } from "../../utils/request";
 import { getStoredToken } from "../../utils/settings-token";
@@ -33,7 +33,7 @@ const _warnKey = (): string =>
 
 const runExport = async (type: string, els: ExportEls): Promise<void> => {
   els.saveEl.hidden = true;
-  els.bodyEl.innerHTML = "";
+  clear(els.bodyEl);
   const bar = mountProgress(els.bodyEl);
   bar.label(tr("export-btn"));
 
@@ -71,7 +71,7 @@ export const openExportModal = (stats: IndexerStats | null): void => {
   const close = (): void => {
     els.overlay.style.display = "none";
     els.statusEl.textContent = "";
-    els.bodyEl.innerHTML = "";
+    clear(els.bodyEl);
     els.saveEl.onclick = null;
   };
   els.closeBtn?.addEventListener("click", close, { once: true });

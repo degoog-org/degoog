@@ -1,8 +1,8 @@
-import { renderHtml } from "../../../shared/ui/core/html";
+import { render } from "../../../shared/ui/core/dom";
 import { InfiniteSentinel } from "./infinite-sentinel";
 import { InfiniteSkeleton } from "./infinite-skeleton";
 import { SENTINEL_CLASS, SKELETON_CLASS } from "./infinite-scroll-classes";
-import { skeletonMoreResults } from "../../animations/skeleton";
+import { SkeletonMoreResults } from "../../animations/skeleton";
 import { state } from "../../state";
 import type { ScoredResult, SearchResponse } from "../../types";
 import { getBase } from "../../utils/base-url";
@@ -23,7 +23,11 @@ let sentinel: HTMLElement | null = null;
 let loading = false;
 let exhausted = false;
 
-const _sentinelHtml = (): string => renderHtml(<InfiniteSentinel />);
+const _detached = (node: JSX.Element): Element | null => {
+  const wrapper = document.createElement("div");
+  render(node, wrapper);
+  return wrapper.firstElementChild;
+};
 
 const _hasMorePages = (): boolean =>
   hasMorePages(state.currentPage, state.lastPage, exhausted);
@@ -50,10 +54,12 @@ const _rearm = (): void => {
 const _showSkeleton = (): void => {
   if (!sentinel) return;
   sentinel.classList.add(`${SENTINEL_CLASS}--loading`);
-  sentinel.insertAdjacentHTML(
-    "beforeend",
-    renderHtml(<InfiniteSkeleton html={skeletonMoreResults(SKELETON_COUNT)} />),
+  const skeleton = _detached(
+    <InfiniteSkeleton>
+      <SkeletonMoreResults count={SKELETON_COUNT} />
+    </InfiniteSkeleton>,
   );
+  if (skeleton) sentinel.appendChild(skeleton);
 };
 
 const _clearSkeleton = (): void => {
@@ -176,9 +182,10 @@ export const setupInfinite = (type: string): void => {
   if (!container || state.currentResults.length === 0) return;
   if (!_hasMorePages()) return;
 
-  container.insertAdjacentHTML("afterend", _sentinelHtml());
-  sentinel = document.querySelector<HTMLElement>(`.${SENTINEL_CLASS}`);
-  if (!sentinel) return;
+  const sentinelEl = _detached(<InfiniteSentinel />);
+  if (!sentinelEl) return;
+  container.after(sentinelEl);
+  sentinel = sentinelEl as HTMLElement;
 
   observer = new IntersectionObserver(
     (entries) => {

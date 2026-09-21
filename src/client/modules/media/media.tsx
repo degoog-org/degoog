@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { LoadingDots } from "../../../shared/ui/components/feedback/loading-dots";
 import { MediaPreviewActions } from "./media-preview-actions";
 import { MediaPreviewInfo } from "./media-preview-info";
@@ -153,7 +153,7 @@ export async function loadMoreMedia(type: string): Promise<void> {
     }
   } finally {
     state.mediaLoading = false;
-    if (sentinel) sentinel.innerHTML = "";
+    if (sentinel) clear(sentinel);
   }
 }
 
@@ -283,7 +283,7 @@ const _setPreviewSource = (item: ScoredResult): void => {
   favicon.className = "media-preview-favicon";
   favicon.alt = "";
   favicon.dataset.faviconHost = faviconHostname(item.url);
-  favWrap.innerHTML = "";
+  clear(favWrap);
   favWrap.appendChild(favicon);
   attachFaviconFallback(favicon);
 };
@@ -328,7 +328,7 @@ const _renderMoreMedia = (excludeIdx: number, cardSelector: string): void => {
   if (!container) return;
 
   const picks = _pickOtherMedia(excludeIdx, MORE_IMAGES_COUNT, cardSelector);
-  container.innerHTML = "";
+  clear(container);
   if (picks.length === 0) return;
 
   const grid = document.createElement("div");

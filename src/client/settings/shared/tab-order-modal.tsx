@@ -1,4 +1,4 @@
-import { renderHtml } from "../../../shared/ui/core/html";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { TabOrderList } from "./tab-order-list";
 import { getTabOrder, saveTabOrder, applyTabOrder } from "../../utils/tab-order";
 import { TAB_ORDER_SAVED } from "../../constants";
@@ -26,9 +26,13 @@ export const openTabOrderModal = async (
     .map((key) => types.find((entry) => entry.key === key))
     .filter((entry): entry is TypeEntry => entry !== undefined);
 
-  const bodyHtml = renderHtml(<TabOrderList entries={ordered} />);
+  openCustomModal({ title: t("settings-page.extensions.order-tabs"), body: "" });
 
-  openCustomModal({ title: t("settings-page.extensions.order-tabs"), body: bodyHtml });
+  const bodyEl = document.getElementById("ext-modal-body");
+  if (bodyEl) {
+    clear(bodyEl);
+    render(<TabOrderList entries={ordered} />, bodyEl);
+  }
 
   const list = document.querySelector<HTMLElement>("#ext-modal-body ul");
   if (list) {

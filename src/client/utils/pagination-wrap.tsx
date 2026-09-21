@@ -1,7 +1,5 @@
-import { Raw } from "../../shared/ui/core/raw";
+import type { Child } from "../../shared/ui/core/types";
 
-export const PaginationWrap = ({ html }: { html: string }): JSX.Element => (
-  <div class="pagination">
-    <Raw html={html} />
-  </div>
+export const PaginationWrap = ({ children }: { children?: Child }): JSX.Element => (
+  <div class="pagination">{children}</div>
 );

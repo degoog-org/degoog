@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { ImportBody } from "./import-body";
 import { getBase } from "../../utils/base-url";
 import { authHeaders } from "../../utils/request";
@@ -145,7 +145,7 @@ export const openImportModal = async (onDone: () => void): Promise<void> => {
   const close = (): void => {
     overlay.style.display = "none";
     statusEl.textContent = "";
-    bodyEl.innerHTML = "";
+    clear(bodyEl);
     saveEl.removeEventListener("click", onSave);
   };
   closeBtn?.addEventListener("click", close, { once: true });

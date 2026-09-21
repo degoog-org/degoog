@@ -1,15 +1,12 @@
-import { RelatedSearchLink } from "./related-search-link";
-import { SidebarStatRow } from "./sidebar-stat-row";
+import { EngineStatsPanel } from "./engine-stats-panel";
+import { RelatedSearches } from "./related-searches";
 import { state } from "../../state";
 import type { SearchResponse, SlotPanel } from "../../types";
-import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
-import { renderHtml } from "../../../shared/ui/core/html";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { raw } from "../../../shared/ui/core/raw";
 import { SidebarAccordion } from "../../../shared/ui/components/layout/sidebar-accordion";
-import { escapeHtml } from "../../utils/dom";
 import { retryEngine } from "../../utils/search-actions";
-import { engineCountHtml } from "../../utils/search/engine-failure";
-import { originSlot, paintOrigins } from "../../utils/search/engine-origins";
+import { paintOrigins } from "../../utils/search/engine-origins";
 import type { EngineTimingWithPage } from "../../utils/search/engine-stats";
 
 const t = window.scopedT("themes/degoog");
@@ -37,54 +34,10 @@ export const setupRetryLinks = (container: HTMLElement): void => {
     });
 };
 
-export const sidebarAccordion = (
-  title: string,
-  content: string,
-  className = "",
-): string =>
-  renderHtml(
-    SidebarAccordion({
-      title,
-      class: className || undefined,
-      children: raw(content),
-    }),
-  );
-
-export const engineStatsHtml = (timings: EngineTimingWithPage[]): string => {
-  if (!state.displayEnginePerformance || timings.length === 0) return "";
-
-  const statsContent = timings
-    .map((et) => {
-      const isDegoog = et.name === DEGOOG_ENGINE_NAME;
-      const failed = !!et.status && et.status !== "ok";
-      const resultsLabel = t("search-templates.sidebar.results", {
-        count: String(et.resultCount),
-      });
-      const countHtml = isDegoog
-        ? t("search-templates.sidebar.from-index", { count: String(et.resultCount) })
-        : engineCountHtml(et, resultsLabel);
-      const failureText = et.failedPage
-        ? ` · ${escapeHtml(t("search-templates.sidebar.page-failed", { page: String(et.failedPage) }))}`
-        : "";
-      return renderHtml(
-        <SidebarStatRow
-          statusClass={!isDegoog && failed ? "engine-failed" : ""}
-          originHtml={originSlot(et.name, et.id)}
-          name={et.name}
-          metaHtml={`${countHtml}${failureText} · ${et.time}ms`}
-          retryEngine={isDegoog ? undefined : (et.id ?? et.name)}
-          retryPage={et.failedPage ?? state.currentPage}
-          retryLabel={t("search-templates.sidebar.retry")}
-        />,
-      );
-    })
-    .join("");
-
-  return sidebarAccordion(
-    t("search-templates.sidebar.engine-performance"),
-    statsContent,
-    "engine-performance-panel",
-  );
+const _detached = (node: JSX.Element): HTMLElement | null => {
+  const wrapper = document.createElement("div");
+  render(node, wrapper);
+  return wrapper.firstElementChild as HTMLElement | null;
 };
 
 export const renderEngineStats = (
@@ -93,9 +46,8 @@ export const renderEngineStats = (
 ): void => {
   const sidebar = document.getElementById("results-sidebar");
   if (!sidebar) return;
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = engineStatsHtml(timings);
-  const next = wrapper.firstElementChild as HTMLElement | null;
+  const stats = EngineStatsPanel({ timings });
+  const next = stats ? _detached(stats) : null;
   const current = sidebar.querySelector<HTMLElement>(".engine-performance-panel");
   if (!next) {
     current?.remove();
@@ -105,12 +57,6 @@ export const renderEngineStats = (
   else sidebar.prepend(next);
   _wireSidebar(sidebar, onRelatedSearch);
 };
-
-const _relatedSearchesHtml = (terms: string[]): string =>
-  sidebarAccordion(
-    t("search-templates.sidebar.people-also-search"),
-    terms.map((term) => renderHtml(<RelatedSearchLink term={term} />)).join(""),
-  );
 
 const _wireSidebar = (
   sidebar: HTMLElement,
@@ -162,9 +108,7 @@ export function renderSidebarSuggestions(
 
   sidebar.querySelector(".skeleton-sidebar")?.remove();
   const existing = sidebar.querySelector<HTMLElement>(".related-searches-panel");
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = _relatedSearchesHtml(terms);
-  const panel = wrapper.firstElementChild as HTMLElement | null;
+  const panel = _detached(<RelatedSearches terms={terms} />);
   if (!panel) return;
 
   panel.classList.add("related-searches-panel");
@@ -184,38 +128,43 @@ export function renderSidebar(
   const sidebar = document.getElementById("results-sidebar");
   if (!sidebar) return;
 
-  let html = "";
+  const panels: JSX.Element[] = [];
 
-  const sidebarTop = options?.sidebarTopPanels?.length
-    ? options.sidebarTopPanels
-    : [];
-  if (sidebarTop.length > 0) {
-    for (const panel of sidebarTop) {
-      const title = panel.title ?? t("search-templates.sidebar.info");
-      html += sidebarAccordion(title, panel.html);
-    }
+  for (const panel of options?.sidebarTopPanels ?? []) {
+    const title = panel.title ?? t("search-templates.sidebar.info");
+    panels.push(
+      <SidebarAccordion title={title}>{raw(panel.html)}</SidebarAccordion>,
+    );
   }
 
-  html += engineStatsHtml(data.engineTimings ?? []);
+  const stats = EngineStatsPanel({ timings: data.engineTimings ?? [] });
+  if (stats) panels.push(stats);
 
   const relatedSearches = data.relatedSearches?.length
     ? data.relatedSearches
     : state.currentRelatedSearches;
   if (state.displaySearchSuggestions && relatedSearches.length > 0) {
-    html += _relatedSearchesHtml(relatedSearches);
+    panels.push(<RelatedSearches terms={relatedSearches} />);
   }
 
-  sidebar.innerHTML = html;
+  clear(sidebar);
+  render(panels, sidebar);
   _wireSidebar(sidebar, onRelatedSearch);
 }
 
 export function prependKnowledgePanels(panels: SlotPanel[]): void {
   const sidebar = document.getElementById("results-sidebar");
   if (!sidebar || !panels.length) return;
-  const html = panels
-    .map((p) => sidebarAccordion(p.title ?? t("search-templates.sidebar.info"), p.html))
-    .join("");
-  sidebar.insertAdjacentHTML("afterbegin", html);
+  const wrapper = document.createElement("div");
+  render(
+    panels.map((p) =>
+      <SidebarAccordion title={p.title ?? t("search-templates.sidebar.info")}>
+        {raw(p.html)}
+      </SidebarAccordion>,
+    ),
+    wrapper,
+  );
+  sidebar.prepend(...Array.from(wrapper.children));
   if (window.innerWidth >= 768) {
     sidebar
       .querySelectorAll<HTMLElement>(".sidebar-accordion")

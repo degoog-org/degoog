@@ -1,4 +1,5 @@
 import { SlotPanelPosition, type SlotPanel } from "../../types";
+import { clear } from "../../../shared/ui/core/dom";
 import { renderHtml } from "../../../shared/ui/core/html";
 import { FullWidthSlotPanel } from "../../../shared/ui/components/search/full-width-slot-panel";
 import { DEFAULT_SLOT_GRID, SlotPanel as SlotPanelView } from "../../../shared/ui/components/search/slot-panel";
@@ -14,10 +15,10 @@ const SLOT_IDS = [
 export function clearSlotPanels(): void {
   for (const id of SLOT_IDS) {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = "";
+    if (el) clear(el);
   }
   const glanceEl = document.getElementById("at-a-glance");
-  if (glanceEl) glanceEl.innerHTML = "";
+  if (glanceEl) clear(glanceEl);
 }
 
 function _renderSlotPanelsInto(panels: SlotPanel[], clearFirst: boolean): void {

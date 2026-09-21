@@ -89,9 +89,14 @@ export class FakeElement extends FakeNode {
     }
   }
 
+  replaceChildren(...nodes: FakeNode[]): void {
+    for (const node of [...this.childNodes]) this.removeChild(node);
+    for (const node of nodes) this.appendChild(node);
+  }
+
   set innerHTML(html: string) {
     const target = this.content ?? this;
-    target.childNodes = [];
+    target.replaceChildren();
     for (const node of parseHtml(html)) target.appendChild(node);
   }
 }

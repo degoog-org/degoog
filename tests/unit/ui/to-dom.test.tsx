@@ -4,7 +4,7 @@ import {
   innerHtmlOf,
   installFakeDom,
 } from "../../helpers/fake-dom";
-import { mount, render } from "../../../src/shared/ui/core/dom";
+import { clear, mount, render } from "../../../src/shared/ui/core/dom";
 import { signal } from "../../../src/shared/ui/state/signal";
 import { Raw } from "../../../src/shared/ui/core/raw";
 import type { VNode } from "../../../src/shared/ui/core/types";
@@ -187,5 +187,28 @@ describe("render diffing", () => {
     dispose();
     count.value = 9;
     expect(innerHtmlOf(el)).toBe("<span>5</span>");
+  });
+});
+
+describe("render alongside direct DOM writes", () => {
+  test("a raw innerHTML write between renders leaves no stale nodes behind", () => {
+    const el = host();
+    into(el, <p>first</p>);
+    (el as unknown as { innerHTML: string }).innerHTML = "<span>outside</span>";
+
+    into(el, <p>second</p>);
+
+    expect(innerHtmlOf(el)).toBe("<p>second</p>");
+  });
+
+  test("clear empties the container and drops the cached tree", () => {
+    const el = host();
+    into(el, <p>first</p>);
+
+    clear(el as unknown as Element);
+    expect(innerHtmlOf(el)).toBe("");
+
+    into(el, <p>second</p>);
+    expect(innerHtmlOf(el)).toBe("<p>second</p>");
   });
 });

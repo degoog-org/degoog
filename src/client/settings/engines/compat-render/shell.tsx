@@ -1,4 +1,3 @@
-import { renderHtml } from "../../../../shared/ui/core/html";
 import { escapeHtml } from "../../../../shared/ui/core/escape";
 import { Raw } from "../../../../shared/ui/core/raw";
 import { copy } from "./copy";
@@ -33,6 +32,3 @@ export const CompatShell = ({ id }: { id: CompatLayerId }): JSX.Element => {
     </>
   );
 };
-
-export const compatShellHtml = (id: CompatLayerId): string =>
-  renderHtml(<CompatShell id={id} />);

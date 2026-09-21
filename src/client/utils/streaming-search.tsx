@@ -1,12 +1,12 @@
-import { render } from "../../shared/ui/core/dom";
+import { clear, render } from "../../shared/ui/core/dom";
 import { renderHtml } from "../../shared/ui/core/html";
 import { Raw } from "../../shared/ui/core/raw";
 import { NoResults } from "../../shared/ui/components/feedback/no-results";
 import { NoEnginesLink } from "./search/no-engines-link";
 import {
-  skeletonImageGrid,
-  skeletonResults,
-  skeletonSidebar,
+  SkeletonImageGrid,
+  SkeletonResults,
+  SkeletonSidebar,
 } from "../animations/skeleton";
 import { MAX_PAGE } from "../constants";
 import {
@@ -148,14 +148,15 @@ export async function performStreamingSearch(
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    resultsList.innerHTML = isImageType
-      ? skeletonImageGrid()
-      : skeletonResults();
+    render(isImageType ? <SkeletonImageGrid /> : <SkeletonResults />, resultsList);
   }
   const pagination = document.getElementById("pagination");
-  if (pagination) pagination.innerHTML = "";
+  if (pagination) clear(pagination);
   const sidebar = document.getElementById("results-sidebar");
-  if (sidebar) sidebar.innerHTML = isImageType ? "" : skeletonSidebar();
+  if (sidebar) {
+    if (isImageType) clear(sidebar);
+    else render(<SkeletonSidebar />, sidebar);
+  }
   loadSidebarSuggestions(query, type, onComplete);
   clearSlotPanels();
   if (isImageType) {
@@ -169,7 +170,7 @@ export async function performStreamingSearch(
     void fetchGlancePanels(query);
   }
   const glanceEl = document.getElementById("at-a-glance");
-  if (glanceEl) glanceEl.innerHTML = "";
+  if (glanceEl) clear(glanceEl);
   document.title = `${query} - degoog`;
 
   const urlParams = new URLSearchParams({ q: query });
@@ -227,8 +228,13 @@ export async function performStreamingSearch(
       if (firstResult) {
         firstResult = false;
         if (resultsList) {
-          resultsList.innerHTML =
-            '<div class="image-grid"></div><div class="media-scroll-sentinel"></div>';
+          render(
+            <>
+              <div class="image-grid"></div>
+              <div class="media-scroll-sentinel"></div>
+            </>,
+            resultsList,
+          );
         }
       }
       for (const r of data.results) renderedUrls.add(r.url);
@@ -245,7 +251,7 @@ export async function performStreamingSearch(
       state.currentResults = currentResults;
       if (firstResult) {
         firstResult = false;
-        if (resultsList) resultsList.innerHTML = "";
+        if (resultsList) clear(resultsList);
       }
       updateResults(resultsList, currentResults, renderedUrls);
       if (resultsList) attachVideoPlayers(resultsList);
@@ -304,7 +310,7 @@ export async function performStreamingSearch(
 
     if (isImageType) {
       renderImgEngines(data.engineTimings);
-      if (sidebar) sidebar.innerHTML = "";
+      if (sidebar) clear(sidebar);
       if (currentResults.length > 0) setupMediaObserver("images");
     } else {
       updateEngineTimings(sidebar, data.engineTimings);
@@ -338,7 +344,7 @@ export async function performStreamingSearch(
     if (!isImageType) {
       if (infiniteScrollOn()) {
         const paginationBox = document.getElementById("pagination");
-        if (paginationBox) paginationBox.innerHTML = "";
+        if (paginationBox) clear(paginationBox);
         setupInfinite(type);
       } else {
         renderPagination(

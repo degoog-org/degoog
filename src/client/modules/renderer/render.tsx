@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { renderHtml } from "../../../shared/ui/core/html";
 import { Raw } from "../../../shared/ui/core/raw";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
@@ -7,10 +7,8 @@ import { PaginationWrap } from "../../utils/pagination-wrap";
 import { state } from "../../state";
 import type { ScoredResult } from "../../types";
 import { cleanUrl, linkHref } from "../../utils/dom";
-import {
-  buildNavPaginationHtml,
-  buildPaginationHtml,
-} from "../../utils/pagination";
+import { Pagination } from "../../utils/pagination";
+import { PaginationNav } from "../../utils/pagination-nav";
 import { goToPage } from "../../utils/search-actions";
 import { renderTemplate } from "../../utils/template";
 import { attachFaviconFallback } from "../../utils/favicon";
@@ -148,7 +146,7 @@ export function renderResults(
     setupMediaObserver("images");
     _clearSlots();
     const pagination = document.getElementById("pagination");
-    if (pagination) pagination.innerHTML = "";
+    if (pagination) clear(pagination);
     return;
   }
 
@@ -167,7 +165,7 @@ export function renderResults(
     renderPagination(state.lastPage, state.currentPage, results.length > 0);
   } else {
     const pagination = document.getElementById("pagination");
-    if (pagination) pagination.innerHTML = "";
+    if (pagination) clear(pagination);
   }
   window.dispatchEvent(new CustomEvent("degoog-results-ready"));
 }
@@ -218,19 +216,19 @@ export function renderPagination(
   const container = document.getElementById("pagination");
   if (!container) return;
   if (totalPages !== null && totalPages < 1) {
-    container.innerHTML = "";
+    clear(container);
     return;
   }
   if (totalPages === 1) {
-    container.innerHTML = "";
+    clear(container);
     return;
   }
 
   const inner =
     totalPages === null
-      ? buildNavPaginationHtml(activePage, hasNext)
-      : buildPaginationHtml(totalPages, activePage);
-  render(<PaginationWrap html={inner} />, container);
+      ? <PaginationNav activePage={activePage} hasNext={hasNext} />
+      : <Pagination totalPages={totalPages} activePage={activePage} />;
+  render(<PaginationWrap>{inner}</PaginationWrap>, container);
 
   container.querySelectorAll<HTMLElement>("[data-page]").forEach((el) => {
     el.addEventListener("click", (e) => {

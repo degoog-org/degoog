@@ -1,4 +1,3 @@
-import { renderHtml } from "../../../../shared/ui/core/html";
 import { RepoDetail } from "./repo-detail";
 import { RepoImage } from "./repo-image";
 import { normalizeRepoUrl, repoImageSrc } from "./repo-url";
@@ -58,13 +57,3 @@ export const RepoList = ({
     </>
   );
 };
-
-export function renderRepoList(
-  repos: RepoInfo[],
-  statusByUrl: Record<string, number>,
-  selectedUrl: string | null,
-): string {
-  return renderHtml(
-    <RepoList repos={repos} statusByUrl={statusByUrl} selectedUrl={selectedUrl} />,
-  );
-}

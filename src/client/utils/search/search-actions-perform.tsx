@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { LoadingDots } from "../../../shared/ui/components/feedback/loading-dots";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
 import { PaginationWrap } from "../pagination-wrap";
@@ -25,13 +25,13 @@ import {
   isImageSearchType,
 } from "../engines";
 import { setActiveTab, setTabsForBang } from "../navigation";
-import { buildPaginationHtml } from "../pagination";
+import { Pagination } from "../pagination";
 import {
   getNaturalLanguageBangQuery,
   declaredPages,
   runScriptsInContainer,
 } from "../search-helpers";
-import { buildCommandGlanceHtml } from "../search-utils";
+import { buildCommandGlance } from "../search-utils";
 import {
   abortStreamingSearch,
   performStreamingSearch,
@@ -233,9 +233,10 @@ async function _performSearchWithBang(
         title?: string;
         html?: string;
       };
-      const glanceHtml = buildCommandGlanceHtml(cmdData);
-      if (glanceHtml) {
-        glanceEl.innerHTML = glanceHtml;
+      const glance = buildCommandGlance(cmdData);
+      if (glance) {
+        clear(glanceEl);
+        render(glance, glanceEl);
       } else if (cmdData.title !== undefined && cmdData.html !== undefined) {
         glanceEl.innerHTML = `<div class="command-result">${cmdData.html || ""}</div>`;
         runScriptsInContainer(glanceEl);
@@ -272,14 +273,14 @@ async function _performBangCommand(
   const resultsMeta = document.getElementById("results-meta");
   if (resultsMeta) resultsMeta.textContent = "Running command...";
   const glanceEl = document.getElementById("at-a-glance");
-  if (glanceEl) glanceEl.innerHTML = "";
+  if (glanceEl) clear(glanceEl);
   const resultsList = document.getElementById("results-list");
   if (resultsList)
     render(<LoadingDots />, resultsList);
   const pagination = document.getElementById("pagination");
-  if (pagination) pagination.innerHTML = "";
+  if (pagination) clear(pagination);
   const sidebar = document.getElementById("results-sidebar");
-  if (sidebar) sidebar.innerHTML = "";
+  if (sidebar) clear(sidebar);
   clearSlotPanels();
   document.title = `${query} - degoog`;
   setTabsForBang(null);
@@ -347,9 +348,9 @@ async function _performBangCommand(
       setTabsForBang(engineType);
       if (isMedia) {
         const glanceElMedia = document.getElementById("at-a-glance");
-        if (glanceElMedia) glanceElMedia.innerHTML = "";
+        if (glanceElMedia) clear(glanceElMedia);
         const sidebarMedia = document.getElementById("results-sidebar");
-        if (sidebarMedia) sidebarMedia.innerHTML = "";
+        if (sidebarMedia) clear(sidebarMedia);
       }
       if (resultsMeta)
         resultsMeta.textContent = `About ${data.results?.length ?? 0} results (${((data.totalTime ?? 0) / 1000).toFixed(2)} seconds)`;
@@ -389,7 +390,9 @@ function _renderBangPagination(
   query: string,
 ): void {
   render(
-    <PaginationWrap html={buildPaginationHtml(totalPages, activePage)} />,
+    <PaginationWrap>
+      <Pagination totalPages={totalPages} activePage={activePage} />
+    </PaginationWrap>,
     container,
   );
   container.querySelectorAll<HTMLElement>("[data-page]").forEach((el) => {

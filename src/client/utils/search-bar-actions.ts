@@ -1,3 +1,4 @@
+import { clear } from "../../shared/ui/core/dom";
 import { escapeHtml } from "./dom";
 import { performSearch } from "./search-actions";
 import type { SearchBarAction } from "../types";
@@ -82,7 +83,7 @@ export function initSearchBarActions(): void {
     .then((data: { actions?: SearchBarAction[] }) => {
       const actions = data.actions ?? [];
       containers.forEach((container) => {
-        container.innerHTML = "";
+        clear(container);
         const inputId =
           container.id === "search-bar-actions-results"
             ? resultsInputId

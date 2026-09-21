@@ -1,18 +1,15 @@
-import { renderHtml } from "../../../../shared/ui/core/html";
-import { raw } from "../../../../shared/ui/core/raw";
-import { renderMdInline } from "../../../utils/md";
+import { render } from "../../../../shared/ui/core/dom";
 import { initDragOrder } from "../../../utils/drag-order";
-import { renderFileUpload, initFileUpload } from "../../../utils/file-upload";
+import { initFileUpload } from "../../../utils/file-upload";
+import { ExtField } from "./ext-field";
+import { fieldDesc } from "./field-desc";
+import { ListFieldRow } from "./list-field-row";
 import {
   HEX_RE,
-  DEFAULT_HEX,
   normalizeHex,
-  basenameOf,
   uploadExtensionFile,
 } from "./field-widgets";
 import {
-  isListToggle,
-  isListDisplay,
   defaultListRow,
   parseListValue,
   serializeRows,
@@ -23,260 +20,29 @@ import type { SettingField, ExtensionMeta } from "../../../types";
 
 const t = window.scopedT("core");
 
-const SubLabel = ({ label }: { label: string }): JSX.Element => (
-  <span class="ext-list-sub-label">{label}</span>
-);
-
-const _renderToggle = (sub: SettingField, value: string): string =>
-  renderHtml(
-    <label class="ext-list-sub ext-list-sub--toggle">
-      <SubLabel label={sub.label} />
-      <div class="engine-toggle degoog-toggle-wrap degoog-toggle-wrap--transparent">
-        <input
-          type="checkbox"
-          class="ext-list-subfield"
-          data-subkey={sub.key}
-          data-subtype="toggle"
-          checked={value === "true"}
-        />
-        <span class="toggle-slider degoog-toggle"></span>
-      </div>
-    </label>,
-  );
-
-const _renderInfo = (sub: SettingField): string => {
-  const hasValue = sub.default != null && sub.default !== "";
-  return renderHtml(
-    <label class="ext-list-sub">
-      <SubLabel label={sub.label} />
-      {hasValue ? (
-        <input
-          class="ext-field-input degoog-input"
-          type="text"
-          value={sub.default ?? ""}
-          disabled={true}
-        />
-      ) : null}
-      {sub.description ? (
-        <span class="ext-field-desc">{raw(renderMdInline(sub.description))}</span>
-      ) : null}
-    </label>,
-  );
-};
-
-const _renderTextarea = (sub: SettingField, value: string): string =>
-  renderHtml(
-    <label class="ext-list-sub">
-      <SubLabel label={sub.label} />
-      <textarea
-        class="ext-field-input ext-list-subfield degoog-input"
-        data-subkey={sub.key}
-        data-subtype="text"
-        rows={2}
-        placeholder={sub.placeholder || ""}
-        autocomplete="off"
-      >
-        {value}
-      </textarea>
-    </label>,
-  );
-
-const _renderSelect = (sub: SettingField, value: string): string => {
-  const options = sub.options ?? [];
-  const selected = options.includes(value) ? value : (options[0] ?? "");
-  return renderHtml(
-    <label class="ext-list-sub">
-      <SubLabel label={sub.label} />
-      <div class="ext-field-select-wrap degoog-select-wrap">
-        <select
-          class="ext-field-input ext-list-subfield ext-field-select degoog-input"
-          data-subkey={sub.key}
-          data-subtype="text"
-        >
-          {options.map((opt, i) => (
-            <option value={opt} selected={opt === selected}>
-              {sub.optionLabels?.[i] ?? opt}
-            </option>
-          ))}
-        </select>
-      </div>
-    </label>,
-  );
-};
-
-const _inputTypeFor = (type: SettingField["type"]): string => {
-  if (type === "url") return "url";
-  if (type === "number") return "number";
-  if (type === "password") return "password";
-  return "text";
-};
-
-const _renderInput = (sub: SettingField, value: string): string =>
-  renderHtml(
-    <label class="ext-list-sub">
-      <SubLabel label={sub.label} />
-      <input
-        class="ext-field-input ext-list-subfield degoog-input"
-        type={_inputTypeFor(sub.type)}
-        data-subkey={sub.key}
-        data-subtype="text"
-        value={value}
-        placeholder={sub.placeholder || ""}
-        autocomplete="off"
-      />
-    </label>,
-  );
-
-const _renderHex = (sub: SettingField, value: string): string => {
-  const hex = value && HEX_RE.test(value) ? value : sub.default || DEFAULT_HEX;
-  return renderHtml(
-    <div class="ext-list-sub">
-      <SubLabel label={sub.label} />
-      <div class="ext-field-hex">
-        <input
-          class="ext-field-input ext-list-subfield ext-list-hex-text degoog-input"
-          type="text"
-          data-subkey={sub.key}
-          data-subtype="text"
-          value={hex}
-          placeholder={sub.placeholder || DEFAULT_HEX}
-          autocomplete="off"
-        />
-        <input
-          class="ext-field-hex-color ext-list-hex-color"
-          type="color"
-          value={normalizeHex(hex)}
-          aria-label={sub.label}
-        />
-      </div>
-    </div>,
-  );
-};
-
-const _renderRange = (sub: SettingField, value: string): string => {
-  const min = sub.min ?? "0";
-  const max = sub.max ?? "100";
-  const step = sub.step ?? "1";
-  const current = value !== "" ? value : (sub.default ?? min);
-  return renderHtml(
-    <div class="ext-list-sub">
-      <span class="ext-list-sub-label ext-field-range-label">
-        <span>{sub.label}</span>
-        <output class="ext-list-range-value">{current}</output>
-      </span>
-      <input
-        class="ext-list-subfield ext-list-range"
-        type="range"
-        data-subkey={sub.key}
-        data-subtype="text"
-        min={min}
-        max={max}
-        step={step}
-        value={current}
-      />
-    </div>,
-  );
-};
-
-const _renderFile = (sub: SettingField, value: string): string => {
-  const hintParts: string[] = [];
-  if (sub.accept) hintParts.push(sub.accept);
-  if (sub.maxSizeKb) hintParts.push(`≤ ${sub.maxSizeKb} KB`);
-  const uploader = renderFileUpload({
-    inputId: `file-list-${sub.key}-${Math.random().toString(36).slice(2, 8)}`,
-    accept: sub.accept,
-    buttonLabel: t("settings-page.modal.field-choose-file"),
-    dropLabel: t("settings-page.modal.field-drop-hint"),
-    hint: hintParts.join(" · ") || undefined,
-    currentName: value ? basenameOf(value) : undefined,
-  });
-  return renderHtml(
-    <div
-      class="ext-list-sub ext-list-sub--file"
-      data-max-kb={sub.maxSizeKb ? String(sub.maxSizeKb) : undefined}
-      data-min-kb={sub.minSizeKb ? String(sub.minSizeKb) : undefined}
-    >
-      <SubLabel label={sub.label} />
-      <input
-        type="hidden"
-        class="ext-list-subfield ext-list-file-value"
-        data-subkey={sub.key}
-        data-subtype="text"
-        value={value}
-      />
-      {raw(uploader)}
-      <p class="ext-list-file-status" hidden={true}></p>
-    </div>,
-  );
-};
-
-const _renderSubField = (sub: SettingField, row: ListRow): string => {
-  const value = row[sub.key] ?? "";
-  if (isListToggle(sub)) return _renderToggle(sub, value);
-  if (isListDisplay(sub)) return _renderInfo(sub);
-  if (sub.type === "textarea") return _renderTextarea(sub, value);
-  if (sub.type === "select") return _renderSelect(sub, value);
-  if (sub.type === "hex") return _renderHex(sub, value);
-  if (sub.type === "range") return _renderRange(sub, value);
-  if (sub.type === "file") return _renderFile(sub, value);
-  return _renderInput(sub, value);
-};
-
-const _renderRow = (row: ListRow, itemSchema: SettingField[]): string => {
-  const reorder = t("settings-page.extensions.drag-to-reorder");
-  return renderHtml(
-    <div class="ext-list-row">
-      <div class="ext-list-row-head">
-        <span
-          class="degoog-drag-handle ext-list-row-drag"
-          data-drag-handle={true}
-          tabindex="0"
-          role="button"
-          title={reorder}
-          aria-label={reorder}
-        >
-          <i class="fa-solid fa-grip-vertical"></i>
-        </span>
-        <span class="ext-list-row-summary">{rowSummary(row, itemSchema)}</span>
-        <button
-          type="button"
-          class="ext-list-row-edit"
-          aria-label={t("settings-page.modal.field-edit-aria")}
-        >
-          ✎
-        </button>
-        <button
-          type="button"
-          class="ext-list-row-remove"
-          aria-label={t("settings-page.modal.field-remove-aria")}
-        >
-          ×
-        </button>
-      </div>
-      <div class="ext-list-row-editor" hidden={true}>
-        {raw(itemSchema.map((sub) => _renderSubField(sub, row)).join(""))}
-      </div>
-    </div>,
-  );
-};
-
-export const renderListField = (
-  field: SettingField,
-  ext: ExtensionMeta,
-): string => {
+export const ListField = ({
+  field,
+  ext,
+}: {
+  field: SettingField;
+  ext: ExtensionMeta;
+}): JSX.Element => {
   const itemSchema = field.itemSchema ?? [];
   const rows = parseListValue(ext.settings[field.key], itemSchema);
-  return renderHtml(
-    <div
-      class="ext-field"
-      data-key={field.key}
-      data-type="list"
-      data-item-schema={encodeURIComponent(JSON.stringify(itemSchema))}
+  return (
+    <ExtField
+      fieldKey={field.key}
+      type="list"
+      extra={{
+        "data-item-schema": encodeURIComponent(JSON.stringify(itemSchema)),
+      }}
     >
       <label class="ext-field-label">{field.label}</label>
       <div class="ext-list">
         <div class="ext-list-rows">
-          {raw(rows.map((row) => _renderRow(row, itemSchema)).join(""))}
+          {rows.map((row, at) => (
+            <ListFieldRow key={String(at)} row={row} itemSchema={itemSchema} />
+          ))}
         </div>
         <button
           type="button"
@@ -286,10 +52,8 @@ export const renderListField = (
         </button>
       </div>
       <input type="hidden" id={`field-${field.key}`} class="ext-field-list-value" />
-      {field.description ? (
-        <p class="ext-field-desc">{raw(renderMdInline(field.description))}</p>
-      ) : null}
-    </div>,
+      {fieldDesc(field.description)}
+    </ExtField>
   );
 };
 
@@ -471,7 +235,10 @@ const _initOne = (fieldEl: HTMLElement, extId: string): void => {
 
   addBtn.addEventListener("click", () => {
     const wrap = document.createElement("div");
-    wrap.innerHTML = _renderRow(defaultListRow(itemSchema), itemSchema);
+    render(
+      <ListFieldRow row={defaultListRow(itemSchema)} itemSchema={itemSchema} />,
+      wrap,
+    );
     const rowEl = wrap.firstElementChild as HTMLElement | null;
     if (!rowEl) return;
     const editor = rowEl.querySelector<HTMLElement>(".ext-list-row-editor");

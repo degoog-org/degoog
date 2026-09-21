@@ -1,5 +1,5 @@
 import type { IndexerStats } from "../../types/indexer";
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { ManageBody } from "./manage-body";
 import { ManageRow } from "./manage-row";
 import { tr } from "./i18n";
@@ -58,7 +58,7 @@ export const openManageModal = (
     modal?.classList.remove("ext-modal--wide");
     overlay.style.display = "none";
     statusEl.textContent = "";
-    bodyEl.innerHTML = "";
+    clear(bodyEl);
     if (dirty) onChanged();
   };
   closeBtn?.addEventListener("click", close, { once: true });

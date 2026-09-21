@@ -1,8 +1,6 @@
-import { Raw } from "../../../shared/ui/core/raw";
+import type { Child } from "../../../shared/ui/core/types";
 import { SKELETON_CLASS } from "./infinite-scroll-classes";
 
-export const InfiniteSkeleton = ({ html }: { html: string }): JSX.Element => (
-  <div class={SKELETON_CLASS}>
-    <Raw html={html} />
-  </div>
+export const InfiniteSkeleton = ({ children }: { children?: Child }): JSX.Element => (
+  <div class={SKELETON_CLASS}>{children}</div>
 );

@@ -1,5 +1,4 @@
 import { getConfigStatus } from "../../utils/dom";
-import { renderHtml } from "../../../shared/ui/core/html";
 import { Badge } from "../../../shared/ui/components/primitives/badge";
 import { Button } from "../../../shared/ui/components/primitives/button";
 import { Icon } from "../../../shared/ui/components/primitives/icon";
@@ -52,13 +51,3 @@ export const extCardRestartWarningNode = (ext: ExtensionMeta): VNode | null =>
       <Icon name="fa-solid fa-triangle-exclamation" />
     </Badge>
   ) : null;
-
-const _asHtml = (node: VNode | null): string => (node ? renderHtml(node) : "");
-
-export const extCardBadge = (ext: ExtensionMeta): string => _asHtml(extCardBadgeNode(ext));
-export const extCardConfigureBtn = (ext: ExtensionMeta): string =>
-  _asHtml(extCardConfigureNode(ext));
-export const extCardVersionWarning = (ext: ExtensionMeta): string =>
-  _asHtml(extCardVersionWarningNode(ext));
-export const extCardRestartWarning = (ext: ExtensionMeta): string =>
-  _asHtml(extCardRestartWarningNode(ext));

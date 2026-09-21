@@ -1,4 +1,3 @@
-import { renderHtml } from "../../../shared/ui/core/html";
 import { EngineOriginSlot } from "./engine-origin-slot";
 import {
   DEFAULT_ENGINE_ORIGIN_DISPLAY,
@@ -82,8 +81,9 @@ const _lookupOrigins = async (): Promise<OriginLookup> => {
   return _inflight;
 };
 
-export const originSlot = (engineName: string, engineId?: string): string =>
-  renderHtml(<EngineOriginSlot engineName={engineName} engineId={engineId} />);
+export const originSlot = (engineName: string, engineId?: string): JSX.Element => (
+  <EngineOriginSlot engineName={engineName} engineId={engineId} />
+);
 
 const _glyph = (origin: EngineOrigin): HTMLElement => {
   const glyph = document.createElement("i");

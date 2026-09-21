@@ -1,4 +1,3 @@
-import { renderHtml } from "../../../../shared/ui/core/html";
 import { bindingParts } from "../../../shortcuts/binding";
 import type { StoreItem } from "../../../types/store-tab";
 
@@ -17,8 +16,3 @@ export const ShortcutKeycaps = ({ item }: { item: StoreItem }): JSX.Element | nu
     </div>
   );
 };
-
-export function renderShortcutKeycaps(item: StoreItem): string {
-  const node = ShortcutKeycaps({ item });
-  return node ? renderHtml(node) : "";
-}

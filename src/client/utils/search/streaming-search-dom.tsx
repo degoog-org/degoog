@@ -6,7 +6,7 @@ import type { EngineTiming, ScoredResult } from "../../types";
 import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
 import { renderTemplate } from "../../utils/template";
 import { buildResultContext } from "../../modules/renderer/render";
-import { engineCountHtml } from "./engine-failure";
+import { engineCount } from "./engine-failure";
 import { originSlot, paintOrigins } from "./engine-origins";
 import { PANEL_LAYOUT_BREAKPOINT } from "../../modules/renderer/render-media";
 
@@ -129,11 +129,11 @@ export function updateEngineTimings(
         const resultsLabel = t("search-templates.sidebar.results", {
           count: String(et.resultCount),
         });
-        const countHtml = isDegoog
+        const count = isDegoog
           ? t("search-templates.sidebar.from-index", {
               count: String(et.resultCount),
             })
-          : engineCountHtml(et, resultsLabel);
+          : engineCount(et, resultsLabel);
         return (
           <StreamingStatRow
             key={et.id ?? et.name}
@@ -144,12 +144,12 @@ export function updateEngineTimings(
                   ? "engine-failed"
                   : ""
             }
-            originHtml={originSlot(et.name, et.id)}
+            origin={originSlot(et.name, et.id)}
             name={et.name}
-            metaHtml={
+            meta={
               isRetrying
                 ? `${t("search-templates.sidebar.retrying")} · ${et.time}ms`
-                : `${countHtml} · ${et.time}ms`
+                : [count, ` · ${et.time}ms`]
             }
           />
         );

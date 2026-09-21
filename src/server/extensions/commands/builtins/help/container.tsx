@@ -1,19 +1,24 @@
-import { Raw } from "../../../../../shared/ui/core/raw";
+import { HelpPanels } from "./panels";
+import { HelpPrefixHint } from "./prefix-hint";
+import { HelpTabButtons } from "./tab-buttons";
+import type { HelpRowCommand } from "./row";
 
 export interface HelpContainerProps {
   nojs: boolean;
   searchPlaceholder: string;
   prefixHint: string;
-  tabButtons: string;
-  panels: string;
+  categories: string[];
+  groups: Record<string, HelpRowCommand[]>;
+  aliasesLabel: (aliases: string) => string;
 }
 
 export const HelpContainer = ({
   nojs,
   searchPlaceholder,
   prefixHint,
-  tabButtons,
-  panels,
+  categories,
+  groups,
+  aliasesLabel,
 }: HelpContainerProps): JSX.Element => (
   <div class="command-result help-container">
     {nojs ? null : (
@@ -27,15 +32,20 @@ export const HelpContainer = ({
         />
       </div>
     )}
-    <Raw html={prefixHint} />
+    {prefixHint ? <HelpPrefixHint html={prefixHint} /> : null}
     <div class="help-layout">
       {nojs ? null : (
         <div class="help-tabs">
-          <Raw html={tabButtons} />
+          <HelpTabButtons categories={categories} groups={groups} />
         </div>
       )}
       <div class="help-panels">
-        <Raw html={panels} />
+        <HelpPanels
+          categories={categories}
+          groups={groups}
+          nojs={nojs}
+          aliasesLabel={aliasesLabel}
+        />
       </div>
     </div>
   </div>

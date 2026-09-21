@@ -1,4 +1,4 @@
-import { renderHtml } from "../../../shared/ui/core/html";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { getBase } from "../../utils/base-url";
 import { authHeaders, jsonHeaders } from "../../utils/request";
 
@@ -95,7 +95,8 @@ export const openAddShortcutModal = async (
   if (statusEl) statusEl.textContent = "";
   saveEl.style.display = "";
   saveEl.textContent = t("settings-page.modal.save");
-  bodyEl.innerHTML = renderHtml(<ShortcutEditorFields scaffold={scaffold} />);
+  clear(bodyEl);
+  render(<ShortcutEditorFields scaffold={scaffold} />, bodyEl);
   overlay.style.display = "flex";
   const sourceEl = document.getElementById("shortcut-source") as HTMLTextAreaElement | null;
   const nameEl = document.getElementById("shortcut-file-name") as HTMLInputElement | null;

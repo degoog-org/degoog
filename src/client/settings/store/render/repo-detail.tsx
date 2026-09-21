@@ -1,4 +1,3 @@
-import { renderHtml } from "../../../../shared/ui/core/html";
 import { Button } from "../../../../shared/ui/components/primitives/button";
 import { RepoImage } from "./repo-image";
 import { formatRelativeTime, normalizeRepoUrl, OFFICIAL_REPO_URL, repoImageSrc } from "./repo-url";
@@ -52,10 +51,3 @@ export const RepoDetail = ({ repo, statusByUrl }: RepoDetailProps): JSX.Element 
     </div>
   );
 };
-
-export function renderRepoDetail(
-  repo: RepoInfo,
-  statusByUrl: Record<string, number>,
-): string {
-  return renderHtml(<RepoDetail repo={repo} statusByUrl={statusByUrl} />);
-}

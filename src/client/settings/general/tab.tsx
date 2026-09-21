@@ -1,13 +1,7 @@
 import pkg from "../../../../package.json";
 import { render } from "../../../shared/ui/core/dom";
-import { renderHtml } from "../../../shared/ui/core/html";
-import { AppearanceSection } from "./appearance-section";
-import { InstallSection } from "./install-section";
-import { ResetSection } from "./reset-section";
-import { SearchOptionsSection } from "./search-options-section";
-import { SyncSection } from "./sync-section";
-import { UpdateSection } from "./update-section";
-import { WizardSection } from "./wizard-section";
+import { GeneralContent } from "./general-content";
+import { PublicSettingsTop } from "./public-settings-top";
 import { INSTANCE_DEFAULT_VALUE, PREF_TOGGLES } from "./toggles";
 import { ENGINE_ORIGIN_DISPLAY, THEME_KEY } from "../../constants";
 import { idbDel, idbGet, idbSet } from "../../utils/db";
@@ -19,29 +13,6 @@ import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
 import { isUpdateAvailable } from "../../../shared/utils/version";
 
 const t = window.scopedT("core");
-
-const GeneralContent = (): JSX.Element => (
-  <>
-    <AppearanceSection icon="fa-solid fa-palette" />
-    <SearchOptionsSection icon="fa-solid fa-magnifying-glass" />
-    <SyncSection />
-    <WizardSection />
-    <InstallSection />
-    <UpdateSection />
-  </>
-);
-
-const PublicSettingsTop = (): JSX.Element => (
-  <>
-    <ResetSection />
-    <AppearanceSection />
-    <SearchOptionsSection />
-  </>
-);
-
-export const renderGeneralContent = (): string => renderHtml(<GeneralContent />);
-
-export const renderPublicSettingsTop = (): string => renderHtml(<PublicSettingsTop />);
 
 async function getNewestRelease(): Promise<string> {
   const tags = await fetch("https://api.github.com/repos/degoog-org/degoog/tags");

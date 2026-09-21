@@ -1,4 +1,3 @@
-import { renderHtml } from "../../../../shared/ui/core/html";
 import { CompatCard } from "./card";
 import { compatGroups } from "./grouping";
 import { copy } from "./copy";
@@ -32,9 +31,3 @@ export const CompatList = ({
     </>
   );
 };
-
-export const compatListHtml = (
-  items: CompatCatalogItem[],
-  layer: string,
-  ui?: CompatListUi,
-): string => renderHtml(<CompatList items={items} layer={layer} ui={ui} />);

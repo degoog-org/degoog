@@ -59,46 +59,33 @@ export const helpCommand: BangCommand = {
     const aliasesLabel = (aliases: string): string =>
       this.t!("help.aliases", { aliases });
 
-    const tabButtons = renderTabButtons(sortedCategories, groups);
-    const panels = renderPanels(sortedCategories, groups, nojs, aliasesLabel);
     const prefixHint =
       engineTypes.length > 0
-        ? renderPrefixHint(
-            this.t!("help.prefix-hint", {
-              types: engineTypes.map(renderEngineTypeCode).join(", "),
-            }),
-          )
+        ? this.t!("help.prefix-hint", {
+            types: engineTypes.map(renderEngineTypeCode).join(", "),
+          })
         : "";
 
-    if (nojs) {
-      return {
-        title: this.t!("help.title"),
-        html: renderHelpContainer({
-          nojs: true,
-          searchPlaceholder: "",
-          prefixHint,
-          tabButtons,
-          panels,
-        }),
-      };
-    }
-
-    if (template) {
+    if (!nojs && template) {
       const html = template
-        .replace("{{tabButtons}}", tabButtons)
-        .replace("{{panels}}", panels)
-        .replace("{{prefixHint}}", prefixHint);
+        .replace("{{tabButtons}}", renderTabButtons(sortedCategories, groups))
+        .replace(
+          "{{panels}}",
+          renderPanels(sortedCategories, groups, nojs, aliasesLabel),
+        )
+        .replace("{{prefixHint}}", renderPrefixHint(prefixHint));
       return { title: this.t!("help.title"), html };
     }
 
     return {
       title: this.t!("help.title"),
       html: renderHelpContainer({
-        nojs: false,
-        searchPlaceholder: this.t!("help.search-placeholder"),
+        nojs,
+        searchPlaceholder: nojs ? "" : this.t!("help.search-placeholder"),
         prefixHint,
-        tabButtons,
-        panels,
+        categories: sortedCategories,
+        groups,
+        aliasesLabel,
       }),
     };
   },

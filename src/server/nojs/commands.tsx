@@ -1,4 +1,5 @@
 import { renderHtml } from "../../shared/ui/core/html";
+import { Raw } from "../../shared/ui/core/raw";
 import { CommandNotice } from "./command-notice";
 import { CommandPanel } from "./command-panel";
 import type { BangMatch } from "../extensions/commands/registry";
@@ -16,10 +17,18 @@ export interface NojsCommandRender {
 }
 
 const _panel = (id: string, title: string, body: string): string =>
-  renderHtml(<CommandPanel id={id} title={title} bodyHtml={body} />);
+  renderHtml(
+    <CommandPanel id={id} title={title}>
+      <Raw html={body} />
+    </CommandPanel>,
+  );
 
 const _notice = (id: string, message: string): string =>
-  _panel(id, "", renderHtml(<CommandNotice message={message} />));
+  renderHtml(
+    <CommandPanel id={id} title="">
+      <CommandNotice message={message} />
+    </CommandPanel>,
+  );
 
 export const renderNojsCommand = async (
   match: NojsCommandMatch,

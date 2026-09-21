@@ -1,10 +1,10 @@
-import { Raw } from "../../../shared/ui/core/raw";
+import type { Child } from "../../../shared/ui/core/types";
 
 export interface SidebarStatRowProps {
   statusClass: string;
-  originHtml: string;
+  origin: Child;
   name: string;
-  metaHtml: string;
+  meta: Child;
   retryEngine?: string;
   retryPage?: number;
   retryLabel?: string;
@@ -12,9 +12,9 @@ export interface SidebarStatRowProps {
 
 export const SidebarStatRow = ({
   statusClass,
-  originHtml,
+  origin,
   name,
-  metaHtml,
+  meta,
   retryEngine,
   retryPage,
   retryLabel,
@@ -22,11 +22,11 @@ export const SidebarStatRow = ({
   <div class={statusClass ? `engine-stat-row ${statusClass}` : "engine-stat-row"}>
     <div class="engine-stat-info">
       <div class="engine-stat-label degoog-text">
-        <Raw html={originHtml} />
+        {origin}
         {name}
       </div>
       <div class="engine-stat-meta degoog-text degoog-text--sm degoog-text--secondary">
-        <Raw html={metaHtml} />
+        {meta}
       </div>
     </div>
     {retryEngine ? (

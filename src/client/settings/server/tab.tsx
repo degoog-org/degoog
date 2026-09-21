@@ -19,7 +19,7 @@ import { markOversized, oversizedMap } from "../shared/oversized";
 import { renderScoreRows, scoreRowTemplate } from "./domain-score";
 import { initHoneypot } from "./honeypot";
 import { bindSelectAutoSave, bindToggleAutoSave, injectFieldSaveBtns } from "./auto-save";
-import { renderServerContent } from "./render";
+import { API_KEY_COPY_ICON, ServerContent } from "./render";
 import { initBackupControls } from "./backup";
 import { flashError, flashSuccess } from "../shared/flash-msg";
 import { fetchRestartState } from "../shared/restart-state";
@@ -409,12 +409,11 @@ const _initApiKeyControls = (
       if (!_apiKey) return;
       const btn = document.getElementById("settings-api-key-copy");
       if (!btn) return;
-      const prevInner = btn.innerHTML;
       void copyTextToClipboard(_apiKey).then((ok) => {
         if (!ok) return;
         btn.textContent = t("settings-page.server.api-key-copied");
         setTimeout(() => {
-          btn.innerHTML = prevInner;
+          render(<Icon name={API_KEY_COPY_ICON} />, btn);
         }, 1200);
       });
     });
@@ -495,7 +494,7 @@ export async function initServerTab(
   getToken: () => string | null,
 ): Promise<void> {
   const container = document.getElementById("server-content");
-  if (container) container.innerHTML = renderServerContent();
+  if (container) render(<ServerContent />, container);
 
   _bindRestartButton(getToken);
   void _syncRestartPending(getToken);

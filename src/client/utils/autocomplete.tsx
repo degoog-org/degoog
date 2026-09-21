@@ -1,4 +1,4 @@
-import { render } from "../../shared/ui/core/dom";
+import { clear, render } from "../../shared/ui/core/dom";
 import { AutocompleteItem } from "./autocomplete-item";
 import { state } from "../state";
 import { searchAuthHeaders } from "./request";
@@ -30,7 +30,7 @@ export const abortAcReq = (): void => {
 
 export function hideAcDropdown(dropdown: HTMLElement | null): void {
   if (!dropdown) return;
-  dropdown.innerHTML = "";
+  clear(dropdown);
   dropdown.style.display = "none";
   dropdown.parentElement?.classList.remove("ac-open");
   acSelectedIdx = -1;
@@ -69,7 +69,7 @@ async function _fetchSuggestions(
     const suggestions = Array.isArray(raw) ? raw : [];
 
     if (!suggestions.length || input.value.trim() !== query) {
-      dropdown.innerHTML = "";
+      clear(dropdown);
       dropdown.style.display = "none";
       return;
     }
@@ -110,7 +110,7 @@ export function initAutocomplete(
     if (acTimeout) clearTimeout(acTimeout);
     const q = input.value.trim();
     if (!q || q.startsWith("!")) {
-      dropdown.innerHTML = "";
+      clear(dropdown);
       dropdown.style.display = "none";
       dropdown.parentElement?.classList.remove("ac-open");
       return;

@@ -1,7 +1,9 @@
-import { renderHtml } from "../../../../shared/ui/core/html";
+import { clear, render } from "../../../../shared/ui/core/dom";
+import { Raw } from "../../../../shared/ui/core/raw";
 import { AdvancedSection } from "./advanced-section";
 import { TestConnection } from "./test-connection";
-import { renderField, initUrlList, syncConditionalFields } from "./modal-fields";
+import { renderField, syncConditionalFields } from "./modal-fields";
+import { initUrlList } from "./url-list-field";
 import { initListFields } from "./list-field";
 import { initMultiFields } from "./multiselect-field";
 import {
@@ -13,7 +15,7 @@ import { initOptionsFields, disposeOptionsFields } from "./options-field";
 import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
-import { escapeHtml } from "../../../utils/dom";
+import type { Child } from "../../../../shared/ui/core/types";
 import type { ExtensionMeta, SettingField } from "../../../types";
 import { openExtensionDocs } from "../docs-modal/docs";
 
@@ -217,10 +219,7 @@ const _advancedFieldDiffersFromDefault = (
 const _fieldValue = (field: SettingField, ext: ExtensionMeta): string =>
   String(ext.settings[field.key] ?? field.default ?? "");
 
-const _renderFields = (
-  fields: SettingField[],
-  ext: ExtensionMeta,
-): string => {
+const _renderFields = (fields: SettingField[], ext: ExtensionMeta): Child => {
   const order: string[] = [];
   const groups = new Map<string, SettingField[]>();
   fields.forEach((field, index) => {
@@ -234,19 +233,18 @@ const _renderFields = (
       order.push(key);
     }
   });
-  return order
-    .map((key) => {
-      const inner = (groups.get(key) ?? [])
-        .map((field) => renderField(field, _fieldValue(field, ext), ext))
-        .join("");
-      if (!key.startsWith("set:")) return inner;
-      const legend = escapeHtml(key.slice(4));
-      return `<fieldset class="ext-fieldset">
-        <legend class="ext-fieldset-legend">${legend}</legend>
-        ${inner}
-      </fieldset>`;
-    })
-    .join("");
+  return order.map((key) => {
+    const inner = (groups.get(key) ?? []).map((field) =>
+      renderField(field, _fieldValue(field, ext), ext),
+    );
+    if (!key.startsWith("set:")) return inner;
+    return (
+      <fieldset key={key} class="ext-fieldset">
+        <legend class="ext-fieldset-legend">{key.slice(4)}</legend>
+        {inner}
+      </fieldset>
+    );
+  });
 };
 
 export function openModal(ext: ExtensionMeta): void {
@@ -264,29 +262,33 @@ export function openModal(ext: ExtensionMeta): void {
   if (bodyEl) {
     const normalFields = ext.settingsSchema.filter((f) => !f.advanced);
     const advancedFields = ext.settingsSchema.filter((f) => f.advanced);
-    let html = _renderFields(normalFields, ext);
-    if (advancedFields.length > 0) {
-      const showAdvanced = advancedFields.some((f) =>
+    const showAdvanced =
+      advancedFields.length > 0 &&
+      advancedFields.some((f) =>
         _advancedFieldDiffersFromDefault(f, ext.settings),
       );
-      html += renderHtml(
-        <AdvancedSection
-          label={t("settings-page.modal.advanced")}
-          expanded={showAdvanced}
-          fieldsHtml={_renderFields(advancedFields, ext)}
-        />,
-      );
-    }
-    if (ext.id.endsWith("-transport") && ext.configurable) {
-      html += renderHtml(
-        <TestConnection
-          transport={ext.id}
-          label={t("settings-page.modal.test-connection")}
-        />,
-      );
-    }
     disposeOptionsFields();
-    bodyEl.innerHTML = html;
+    clear(bodyEl);
+    render(
+      <>
+        {_renderFields(normalFields, ext)}
+        {advancedFields.length > 0 ? (
+          <AdvancedSection
+            label={t("settings-page.modal.advanced")}
+            expanded={showAdvanced}
+          >
+            {_renderFields(advancedFields, ext)}
+          </AdvancedSection>
+        ) : null}
+        {ext.id.endsWith("-transport") && ext.configurable ? (
+          <TestConnection
+            transport={ext.id}
+            label={t("settings-page.modal.test-connection")}
+          />
+        ) : null}
+      </>,
+      bodyEl,
+    );
     if (!modalBodyConditionalChangeBound && bodyEl) {
       modalBodyConditionalChangeBound = true;
       bodyEl.addEventListener("change", () => syncConditionalFields(bodyEl));
@@ -339,7 +341,7 @@ export function closeModal(): void {
 
 export function openCustomModal(options: {
   title: string;
-  body: string;
+  body: Child;
   wide?: boolean;
 }): void {
   currentExt = null;
@@ -351,7 +353,15 @@ export function openCustomModal(options: {
   if (saveBtn) saveBtn.style.display = "none";
   if (titleEl) titleEl.textContent = options.title;
   disposeOptionsFields();
-  if (bodyEl) bodyEl.innerHTML = options.body;
+  if (bodyEl) {
+    clear(bodyEl);
+    render(
+      <>
+        {typeof options.body === "string" ? <Raw html={options.body} /> : options.body}
+      </>,
+      bodyEl,
+    );
+  }
   if (statusEl) statusEl.textContent = "";
   if (overlay) overlay.style.display = "flex";
 }

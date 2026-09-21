@@ -1,6 +1,6 @@
 import { state } from "../../state";
 import type { EngineTiming } from "../../types";
-import { render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/core/dom";
 import { renderHtml } from "../../../shared/ui/core/html";
 import { ImgFilterGroup } from "./img-filter-group";
 import { ImgFilterSuffix } from "./img-filter-suffix";
@@ -18,7 +18,8 @@ import {
   TOOLS_TOGGLE_ID,
 } from "./ids";
 import { getRegistry, getEngines, isImageSearchType } from "../../utils/engines";
-import { engineStatsHtml, setupRetryLinks } from "../renderer/render-sidebar";
+import { setupRetryLinks } from "../renderer/render-sidebar";
+import { EngineStatsPanel } from "../renderer/engine-stats-panel";
 import { paintOrigins } from "../../utils/search/engine-origins";
 
 const PIN_MIN_WIDTH = 768;
@@ -228,7 +229,9 @@ export const renderImgEngines = (timings: EngineTiming[]): void => {
   const bar = ensureShell();
   const panel = document.getElementById(ENGINE_PANEL_ID);
   if (panel) {
-    panel.innerHTML = engineStatsHtml(timings);
+    const stats = EngineStatsPanel({ timings });
+    if (stats) render(stats, panel);
+    else clear(panel);
     void paintOrigins(panel);
   }
   if (bar) {

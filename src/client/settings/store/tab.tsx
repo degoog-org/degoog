@@ -1,6 +1,6 @@
 import { jsonHeaders, authHeaders } from "../../utils/request";
 import type { RepoInfo, StoreItem } from "../../types/store-tab";
-import { render as renderNodes } from "../../../shared/ui/core/dom";
+import { clear, render as renderNodes } from "../../../shared/ui/core/dom";
 import { FilterOptions } from "./filter-options";
 import { RepoErrors } from "./repo-errors";
 import { StoreEmpty } from "./store-empty";
@@ -8,7 +8,7 @@ import { UpdatesPanel } from "./updates-panel";
 import { getBase } from "../../utils/base-url";
 import { initLightbox } from "./lightbox";
 import { maybeShowRestartNotice } from "./restart-notice";
-import { getStoreTabHtml } from "./template";
+import { StoreTabTemplate } from "./template";
 import {
   confirmRemoveRepo,
   handleAddRepo,
@@ -175,7 +175,7 @@ export async function initStoreTab(
     if (subtypeSelect) {
       if (subtypes.length === 0) {
         subtypeSelect.style.display = "none";
-        subtypeSelect.innerHTML = "";
+        clear(subtypeSelect);
       } else {
         subtypeSelect.style.display = "";
         const filteredForType = (scopedItems).filter((i) => i.type === typeFilter);
@@ -248,7 +248,7 @@ export async function initStoreTab(
     if (updatesPanel) {
       if (updatable.length === 0) {
         updatesPanel.style.display = "none";
-        updatesPanel.innerHTML = "";
+        clear(updatesPanel);
       } else {
         updatesPanel.style.display = "";
         updatesPanel.classList.toggle("open", updatesOpen);
@@ -272,7 +272,8 @@ export async function initStoreTab(
     }
   }
 
-  container.innerHTML = getStoreTabHtml();
+  clear(container);
+  renderNodes(<StoreTabTemplate />, container);
 
   container.querySelector<HTMLElement>(".store-catalog-grid")?.addEventListener("click", (e) => {
     const t = e.target as HTMLElement;

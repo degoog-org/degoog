@@ -2,12 +2,12 @@ import { CommandGlance } from "./search/command-glance";
 import { appendSlotPanels } from "../modules/renderer/render-slots";
 import { state } from "../state";
 import { getBase } from "./base-url";
-import { renderHtml } from "../../shared/ui/core/html";
+import { clear, render } from "../../shared/ui/core/dom";
 import { SlotPanel as SlotPanelView } from "../../shared/ui/components/search/slot-panel";
 import { SlotPanelPosition, type ScoredResult, type SlotPanel } from "../types";
 import { isImageSearchType } from "./engines";
 import { runScriptsInContainer } from "./search-helpers";
-import { skeletonGlance } from "../animations/skeleton";
+import { SkeletonGlance } from "../animations/skeleton";
 
 let glanceAbortController: AbortController | null = null;
 let slotsAbortController: AbortController | null = null;
@@ -63,14 +63,16 @@ const _renderGlanceHtml = (panels: SlotPanel[], clearIfEmpty: boolean): void => 
     (p) => p.position === SlotPanelPosition.AtAGlance,
   );
   if (glancePanels.length === 0) {
-    if (clearIfEmpty) glanceEl.innerHTML = "";
+    if (clearIfEmpty) clear(glanceEl);
     return;
   }
-  glanceEl.innerHTML = glancePanels
-    .map((panel) =>
-      renderHtml(SlotPanelView({ title: panel.title, html: panel.html })),
-    )
-    .join("");
+  clear(glanceEl);
+  render(
+    glancePanels.map((panel) =>
+      SlotPanelView({ title: panel.title, html: panel.html }),
+    ),
+    glanceEl,
+  );
   runScriptsInContainer(glanceEl);
 };
 
@@ -84,7 +86,7 @@ export async function fetchGlancePanels(
   if (results !== undefined && results.length === 0) {
     abortGlancePanels();
     const glanceEl = document.getElementById("at-a-glance");
-    if (glanceEl) glanceEl.innerHTML = "";
+    if (glanceEl) clear(glanceEl);
     return;
   }
   abortGlancePanels();
@@ -107,14 +109,14 @@ export async function fetchGlancePanels(
     const panels = data.panels ?? [];
     if (results === undefined && panels.length === 0 && data.pending) {
       const glanceEl = document.getElementById("at-a-glance");
-      if (glanceEl) glanceEl.innerHTML = skeletonGlance();
+      if (glanceEl) render(<SkeletonGlance />, glanceEl);
       return;
     }
     _renderGlanceHtml(panels, results !== undefined);
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") return;
     const glanceEl = document.getElementById("at-a-glance");
-    if (glanceEl) glanceEl.innerHTML = "";
+    if (glanceEl) clear(glanceEl);
   }
 }
 
@@ -155,26 +157,18 @@ export async function fetchSlotPanels(
   }
 }
 
-export const buildCommandGlanceHtml = (cmdData: {
+export const buildCommandGlance = (cmdData: {
   type: string;
   results?: ScoredResult[];
-}): string => {
-  if (
-    cmdData.type === "engine" &&
-    cmdData.results &&
-    cmdData.results.length > 0
-  ) {
-    return renderHtml(
+}): JSX.Element | null => {
+  if (cmdData.type !== "engine") return null;
+  if (cmdData.results && cmdData.results.length > 0) {
+    return (
       <CommandGlance
         snippet={cmdData.results[0].snippet}
         resultCount={cmdData.results.length}
-      />,
+      />
     );
   }
-  if (cmdData.type === "engine") {
-    return renderHtml(
-      <CommandGlance resultCount={cmdData.results?.length ?? 0} />,
-    );
-  }
-  return "";
+  return <CommandGlance resultCount={cmdData.results?.length ?? 0} />;
 };

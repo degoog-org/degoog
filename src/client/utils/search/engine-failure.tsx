@@ -1,4 +1,4 @@
-import { renderHtml } from "../../../shared/ui/core/html";
+import type { Child } from "../../../shared/ui/core/types";
 import { EngineStatReason } from "./engine-stat-reason";
 import type { EngineTiming } from "../../types";
 
@@ -15,8 +15,8 @@ export const engineFailureText = (et: EngineTiming): string => {
   return et.httpStatus ? `${base} (${et.httpStatus})` : base;
 };
 
-export const engineCountHtml = (et: EngineTiming, label: string): string => {
+export const engineCount = (et: EngineTiming, label: string): Child => {
   const reason = engineFailureText(et);
   if (!reason) return label;
-  return renderHtml(<EngineStatReason reason={reason} label={label} />);
+  return <EngineStatReason reason={reason} label={label} />;
 };
