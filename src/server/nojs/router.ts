@@ -77,6 +77,7 @@ const router = new Hono();
 const VIDEO_SEARCH_TYPE = "videos";
 const HOME_BODY_CLASS = "nojs nojs-home";
 const RESULTS_BODY_CLASS = "nojs nojs-results";
+const NOJS_PAGE_TOTAL = 10;
 
 interface NojsOutcome {
   results: ScoredResult[];
@@ -544,7 +545,7 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
         c,
         query,
         query.page ?? 1,
-        outcome.totalPages,
+        NOJS_PAGE_TOTAL,
         t,
         locale,
       ),

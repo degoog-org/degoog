@@ -309,6 +309,12 @@ export async function getPluginExtensionMeta(
     : NATURAL_LANGUAGE_FIELD;
 
   for (const entry of registry.items()) {
+    if (entry.instance.hideWhenUnconfigured === true) {
+      const configured = entry.instance.isConfigured
+        ? await entry.instance.isConfigured()
+        : true;
+      if (!configured) continue;
+    }
     const baseSchema = entry.instance.settingsSchema ?? [];
     const schema = schemaWithNaturalLanguage(
       baseSchema,

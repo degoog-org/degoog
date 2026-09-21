@@ -301,7 +301,7 @@
       "honeypot-ban-expires": "expires",
       "honeypot-ban-permanent": "permanent",
       "nojs-heading": "No-JS page",
-      "nojs-desc": "A minimal JavaScript-free search page served at /nojs. Disabled by default.",
+      "nojs-desc": "A minimal JavaScript-free search page served at /nojs.",
       "nojs-enable": "Enable the no-JS page",
       "nojs-enable-aria": "Enable the no-JS page",
       "nojs-css-check-enable": "Apply the CSS bot check to no-JS searches",

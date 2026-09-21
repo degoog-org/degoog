@@ -5,9 +5,9 @@ import { ENGINE_ORIGIN_DISPLAY_VALUES } from "../../../shared/engine-origins";
 
 const t = window.scopedT("core");
 
-const _h = (headingKey: string, icon: string): string =>
+const _h = (headingKey: string, icon: string, badgeKey?: string): string =>
   `<div class="setting-section-heading-wrapper">
-    <h2 class="settings-section-heading">${escapeHtml(t(headingKey))}</h2>
+    <h2 class="settings-section-heading">${escapeHtml(t(headingKey))}${badgeKey ? `<span class="degoog-badge degoog-badge--experimental">${escapeHtml(t(badgeKey))}</span>` : ""}</h2>
     <div class="floating-section-icon"><i class="${icon}"></i></div>
   </div>`;
 
@@ -233,7 +233,7 @@ const _renderSearchOptionsSection = (): string => `
 
 const _renderNojsSection = (): string => `
   <section class="settings-section ext-card degoog-panel degoog-panel--ext-card" id="settings-section-nojs">
-    ${_h("settings-page.server.nojs-heading", "fa-solid fa-file-code")}
+    ${_h("settings-page.server.nojs-heading", "fa-solid fa-file-code", "settings-page.extensions.compat-experimental")}
     ${_desc("settings-page.server.nojs-desc")}
     <fieldset class="settings-fieldset">
       ${_toggle("settings-nojs-enabled", "settings-page.server.nojs-enable", { aria: "settings-page.server.nojs-enable-aria" })}

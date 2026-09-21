@@ -288,6 +288,10 @@ html:has(.settings-page-body) {
   font-size: $font-size-small;
   color: var(--text-secondary);
 
+  &[hidden] {
+    display: none;
+  }
+
   .store-restart-intro,
   .store-restart-list {
     color: inherit;

@@ -1,0 +1,10 @@
+{
+  "nojs": {
+    "title": "No-JS page",
+    "description": "Open the JavaScript-free page, or search it when you add a query",
+    "disabled": "The no-JS page is turned off on this instance.",
+    "redirecting": "Taking you to the no-JS page...",
+    "open-link": "Open the no-JS page",
+    "search-link": "Search \"{query}\" without JavaScript"
+  }
+}
