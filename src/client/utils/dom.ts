@@ -17,15 +17,7 @@ export const cleanHostname = (url: string): string => {
   }
 };
 
-export const escapeHtml = (str: string | null | undefined): string => {
-  if (!str) return "";
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-};
-
-export const escapeAttribute = (str: string | null | undefined): string =>
-  escapeHtml(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+export { escapeHtml, escapeAttribute } from "../../shared/ui/core/escape";
 
 const ALLOWED_URL_SCHEMES = new Set([
   "http",

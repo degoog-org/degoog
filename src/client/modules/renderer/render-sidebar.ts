@@ -1,6 +1,9 @@
 import { state } from "../../state";
 import type { SearchResponse, SlotPanel } from "../../types";
 import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
+import { renderHtml } from "../../../shared/ui/core/html";
+import { raw } from "../../../shared/ui/core/raw";
+import { SidebarAccordion } from "../../../shared/ui/components/layout/sidebar-accordion";
 import { escapeHtml } from "../../utils/dom";
 import { retryEngine } from "../../utils/search-actions";
 import { engineCountHtml } from "../../utils/search/engine-failure";
@@ -37,13 +40,13 @@ export const sidebarAccordion = (
   content: string,
   className = "",
 ): string =>
-  `<div class="sidebar-panel sidebar-accordion${className ? ` ${className}` : ""} degoog-panel degoog-panel--accordion degoog-panel--stack-item">
-    <button class="sidebar-accordion-toggle degoog-accordion-toggle degoog-accordion-toggle--sidebar" type="button">
-      <span>${escapeHtml(title)}</span>
-      <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="sidebar-accordion-body degoog-accordion-body">${content}</div>
-  </div>`;
+  renderHtml(
+    SidebarAccordion({
+      title,
+      class: className || undefined,
+      children: raw(content),
+    }),
+  );
 
 export const engineStatsHtml = (timings: EngineTimingWithPage[]): string => {
   if (!state.displayEnginePerformance || timings.length === 0) return "";

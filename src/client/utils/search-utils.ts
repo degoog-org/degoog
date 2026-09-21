@@ -1,6 +1,8 @@
 import { appendSlotPanels } from "../modules/renderer/render-slots";
 import { state } from "../state";
 import { getBase } from "./base-url";
+import { renderHtml } from "../../shared/ui/core/html";
+import { SlotPanel as SlotPanelView } from "../../shared/ui/components/search/slot-panel";
 import { SlotPanelPosition, type ScoredResult, type SlotPanel } from "../types";
 import { escapeHtml } from "./dom";
 import { isImageSearchType } from "./engines";
@@ -64,16 +66,11 @@ const _renderGlanceHtml = (panels: SlotPanel[], clearIfEmpty: boolean): void => 
     if (clearIfEmpty) glanceEl.innerHTML = "";
     return;
   }
-  const parts: string[] = [];
-  for (const panel of glancePanels) {
-    const titleHtml = panel.title
-      ? `<div class="results-slot-panel-title degoog-panel--slot-title">${escapeHtml(panel.title)}</div>`
-      : "";
-    parts.push(
-      `<div class="results-slot-panel degoog-panel degoog-panel--slot degoog-panel--stack-item">${titleHtml}<div class="results-slot-panel-body degoog-panel--slot-body degoog-panel--slot-body-padded">${panel.html}</div></div>`,
-    );
-  }
-  glanceEl.innerHTML = parts.join("");
+  glanceEl.innerHTML = glancePanels
+    .map((panel) =>
+      renderHtml(SlotPanelView({ title: panel.title, html: panel.html })),
+    )
+    .join("");
   runScriptsInContainer(glanceEl);
 };
 

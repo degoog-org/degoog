@@ -1,58 +1,34 @@
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
 import { getBase } from "../../../utils/base-url";
+import { mountModalShell, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
 
-let overlay: HTMLDivElement | null = null;
-let titleEl: HTMLHeadingElement | null = null;
-let bodyEl: HTMLDivElement | null = null;
-let closeBtn: HTMLButtonElement | null = null;
+const MODAL_ID = "ext-docs";
+
+let shell: MountedModal | null = null;
 
 function _ensureMounted(): void {
-  if (overlay) return;
+  if (shell) return;
 
-  overlay = document.createElement("div");
-  overlay.className = "ext-modal-overlay";
-  overlay.id = "ext-docs-overlay";
-  overlay.style.display = "none";
+  shell = mountModalShell({
+    id: MODAL_ID,
+    wide: true,
+    modalClass: "ext-docs-modal",
+    bodyClass: "ext-docs-body",
+  });
 
-  const modal = document.createElement("div");
-  modal.className = "ext-modal ext-docs-modal ext-modal--wide";
-  modal.id = "ext-docs-modal";
-  modal.setAttribute("role", "dialog");
-  modal.setAttribute("aria-modal", "true");
-  modal.setAttribute("aria-labelledby", "ext-docs-title");
-
-  const header = document.createElement("div");
-  header.className = "ext-modal-header";
-  titleEl = document.createElement("h2");
-  titleEl.className = "ext-modal-title";
-  titleEl.id = "ext-docs-title";
-  closeBtn = document.createElement("button");
-  closeBtn.className = "ext-modal-close degoog-icon-btn";
-  closeBtn.type = "button";
-  closeBtn.innerHTML = "&times;";
-  header.append(titleEl, closeBtn);
-
-  bodyEl = document.createElement("div");
-  bodyEl.className = "ext-modal-body ext-docs-body";
-  bodyEl.id = "ext-docs-body";
-
-  modal.append(header, bodyEl);
-  overlay.append(modal);
-  document.body.appendChild(overlay);
-
-  closeBtn.addEventListener("click", closeDocs);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeDocs();
+  shell.close.addEventListener("click", closeDocs);
+  shell.overlay.addEventListener("click", (e) => {
+    if (e.target === shell?.overlay) closeDocs();
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay?.style.display === "flex") closeDocs();
+    if (e.key === "Escape" && shell?.isOpen()) closeDocs();
   });
 }
 
 export function closeDocs(): void {
-  if (overlay) overlay.style.display = "none";
-  if (bodyEl) bodyEl.textContent = "";
+  shell?.hide();
+  if (shell) shell.body.textContent = "";
 }
 
 export async function openExtensionDocs(options: {
@@ -60,9 +36,11 @@ export async function openExtensionDocs(options: {
   title: string;
 }): Promise<void> {
   _ensureMounted();
-  if (titleEl) titleEl.textContent = options.title;
-  if (bodyEl) bodyEl.textContent = "Loading…";
-  if (overlay) overlay.style.display = "flex";
+  if (shell) {
+    shell.title.textContent = options.title;
+    shell.body.textContent = "Loading…";
+    shell.open();
+  }
 
   try {
     const res = await fetch(
@@ -83,11 +61,11 @@ export async function openExtensionDocs(options: {
       USE_PROFILES: { html: true },
     }) as string;
 
-    if (bodyEl) bodyEl.innerHTML = safe || "<p>(Empty README)</p>";
+    if (shell) shell.body.innerHTML = safe || "<p>(Empty README)</p>";
   } catch {
-    if (bodyEl)
-      bodyEl.innerHTML = '<p class="ext-docs-error">Failed to load docs.</p>';
+    if (shell)
+      shell.body.innerHTML = '<p class="ext-docs-error">Failed to load docs.</p>';
   }
 
-  setTimeout(() => closeBtn?.focus(), 0);
+  setTimeout(() => shell?.close.focus(), 0);
 }

@@ -12,17 +12,17 @@ import { logger } from "../utils/logger";
 import { asString } from "../utils/plugin-settings";
 import { getInstanceSettings } from "../utils/server-settings";
 import { retryHref, type NojsQuery } from "./links";
+import { CHEVRON_SVG } from "../../shared/ui/components/layout/chevron";
+import { SIDEBAR_BODY_CLASS, SIDEBAR_TOGGLE_CLASS } from "../../shared/ui/components/layout/sidebar-accordion";
 import { escapeAttribute } from "./template";
 
 const ACCORDION_BASE_CLASS =
   "sidebar-panel sidebar-accordion degoog-panel degoog-panel--accordion degoog-panel--stack-item";
 const ACCORDION_CLASS =
   "sidebar-panel sidebar-accordion engine-performance-panel degoog-panel degoog-panel--accordion degoog-panel--stack-item";
-const TOGGLE_CLASS =
-  "sidebar-accordion-toggle degoog-accordion-toggle degoog-accordion-toggle--sidebar";
-const BODY_CLASS = "sidebar-accordion-body degoog-accordion-body";
-const CHEVRON =
-  '<svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+const TOGGLE_CLASS = SIDEBAR_TOGGLE_CLASS;
+const BODY_CLASS = SIDEBAR_BODY_CLASS;
+const CHEVRON = CHEVRON_SVG;
 
 interface OriginLookup {
   byId: Map<string, EngineOrigin>;

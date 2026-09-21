@@ -1,15 +1,11 @@
 import { SlotPanelPosition } from "../../shared/search-types";
 import type { ScoredResult, SlotPanel } from "../types";
 import { runSlotPlugins } from "../utils/search";
-import { escapeAttribute } from "./template";
+import { renderHtml } from "../../shared/ui/core/html";
+import { FullWidthSlotPanel } from "../../shared/ui/components/search/full-width-slot-panel";
+import { DEFAULT_SLOT_GRID, SlotPanel as SlotPanelView } from "../../shared/ui/components/search/slot-panel";
 
-const PANEL_CLASS =
-  "results-slot-panel degoog-panel degoog-panel--slot degoog-panel--stack-item";
-const PANEL_TITLE_CLASS = "results-slot-panel-title degoog-panel--slot-title";
-const PANEL_BODY_CLASS =
-  "results-slot-panel-body degoog-panel--slot-body degoog-panel--slot-body-padded";
-const FULL_WIDTH_CLASS = "results-slot-panel-full-width";
-const DEFAULT_GRID_SIZE = 4;
+
 
 export const SLOT_CONTAINER_IDS: Record<string, string> = {
   [SlotPanelPosition.FullWidthAboveResults]: "slot-full-width-above-results",
@@ -27,19 +23,18 @@ export interface NojsSlotRender {
 
 const _renderPanel = (panel: SlotPanel): string => {
   if (panel.position === SlotPanelPosition.AtAGlance) return panel.html;
-  const slotAttr = ` data-slot="${escapeAttribute(panel.id)}"`;
   if (panel.position === SlotPanelPosition.FullWidthAboveResults) {
-    return `<div class="${FULL_WIDTH_CLASS}"${slotAttr}>${panel.html}</div>`;
+    return renderHtml(
+      FullWidthSlotPanel({ id: panel.id, html: panel.html }),
+    );
   }
-  const grid = panel.gridSize ?? DEFAULT_GRID_SIZE;
-  const title = panel.title
-    ? `<div class="${PANEL_TITLE_CLASS}">${escapeAttribute(panel.title)}</div>`
-    : "";
-  return (
-    `<div class="${PANEL_CLASS}"${slotAttr} data-grid="${grid}">` +
-    title +
-    `<div class="${PANEL_BODY_CLASS}">${panel.html}</div>` +
-    "</div>"
+  return renderHtml(
+    SlotPanelView({
+      id: panel.id,
+      title: panel.title,
+      html: panel.html,
+      grid: panel.gridSize ?? DEFAULT_SLOT_GRID,
+    }),
   );
 };
 
