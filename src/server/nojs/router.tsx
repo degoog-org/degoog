@@ -184,13 +184,13 @@ const _homeSearchForm = async (
 ): Promise<string> => {
   const template = await loadNojsPartial("home-search", t, locale);
   if (!template) return "";
-  let html = removeElementById(template, "btn-lucky");
-  html = setAttributesById(html, "search-form-home", {
+  let html = await removeElementById(template, "btn-lucky");
+  html = await setAttributesById(html, "search-form-home", {
     action: escapeAttribute(nojsSearchAction(c)),
     method: await _postMethod(),
     role: "search",
   });
-  return setAttributesById(html, "search-input", {
+  return await setAttributesById(html, "search-input", {
     "aria-label": _searchLabel(t, locale),
     autofocus: "autofocus",
   });
@@ -204,21 +204,21 @@ const _resultsHeader = async (
 ): Promise<string> => {
   const template = await loadNojsPartial("search-header", t, locale);
   if (!template) return "";
-  let html = addClassWhereClass(template, "logo-letter", "nojs-logo-letter");
-  html = setAttributesByClass(html, "results-logo", {
+  let html = await addClassWhereClass(template, "logo-letter", "nojs-logo-letter");
+  html = await setAttributesByClass(html, "results-logo", {
     href: escapeAttribute(nojsHome(c)),
   });
-  html = removeElementById(html, "results-search-clear-btn");
-  html = setAttributesById(html, "results-search-input", {
+  html = await removeElementById(html, "results-search-clear-btn");
+  html = await setAttributesById(html, "results-search-input", {
     name: "q",
     value: escapeAttribute(query.q),
     "aria-label": _searchLabel(t, locale),
   });
-  html = setAttributesById(html, "results-search-btn", { type: "submit" });
+  html = await setAttributesById(html, "results-search-btn", { type: "submit" });
   const hidden = query.type
     ? `<input type="hidden" name="type" value="${escapeAttribute(query.type)}" />`
     : "";
-  return wrapElementById(
+  return await wrapElementById(
     html,
     "results-search-bar",
     `<form class="nojs-results-form" action="${escapeAttribute(nojsSearchAction(c))}" method="${await _postMethod()}" role="search">`,
@@ -418,17 +418,23 @@ const _buildResultsPage = async (
   const shell = await loadNojsShell("search");
   if (!shell) return null;
 
-  let html = fillById(shell, "results-header", parts.header);
-  html = replaceElementById(html, "results-tabs", parts.tabs);
-  html = fillById(html, "results-meta", parts.meta);
+  let html = await fillById(shell, "results-header", parts.header);
+  html = await replaceElementById(html, "results-tabs", parts.tabs);
+  html = await fillById(html, "results-meta", parts.meta);
   for (const id of Object.values(SLOT_CONTAINER_IDS)) {
-    html = fillById(html, id, parts.slots[id] ?? "");
+    html = await fillById(html, id, parts.slots[id] ?? "");
   }
-  html = fillById(html, "results-list", parts.list);
-  html = fillById(html, "pagination", parts.pagination);
-  html = fillById(html, "results-sidebar", parts.sidebar);
-  if (parts.mediaMode) html = addClassById(html, "results-layout", "media-mode");
-  html = appendToId(html, "app", renderHtml(<HomeFooter html={parts.footer} />));
+  html = await fillById(html, "results-list", parts.list);
+  html = await fillById(html, "pagination", parts.pagination);
+  html = await fillById(html, "results-sidebar", parts.sidebar);
+  if (parts.mediaMode) {
+    html = await addClassById(html, "results-layout", "media-mode");
+  }
+  html = await appendToId(
+    html,
+    "app",
+    renderHtml(<HomeFooter html={parts.footer} />),
+  );
 
   return buildNojsDocument(html, locale, RESULTS_BODY_CLASS);
 };
@@ -442,22 +448,26 @@ router.get("/nojs", async (c) => {
   const shell = await loadNojsShell("index");
   if (!shell) return _notFound(c);
 
-  let content = fillById(
+  let content = await fillById(
     shell,
     "header",
     (await loadNojsPartial("home-header", t, locale)) ?? "",
   );
-  content = fillById(
+  content = await fillById(
     content,
     "home-logo",
-    addClassWhereClass(
+    await addClassWhereClass(
       (await loadNojsPartial("logo", t, locale)) ?? "",
       "logo-letter",
       "nojs-logo-letter",
     ),
   );
-  content = fillById(content, "home-search", await _homeSearchForm(c, t, locale));
-  content = fillById(content, "home-footer", await _footer(t, locale));
+  content = await fillById(
+    content,
+    "home-search",
+    await _homeSearchForm(c, t, locale),
+  );
+  content = await fillById(content, "home-footer", await _footer(t, locale));
 
   const html = await buildNojsDocument(content, locale, HOME_BODY_CLASS);
   if (!html) return _notFound(c);

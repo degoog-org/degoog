@@ -11,7 +11,6 @@ import {
   type SlotPluginContext,
 } from "../../src/server/types";
 import { readdir } from "fs/promises";
-import { locateById } from "../../src/server/nojs/dom";
 import {
   loadNojsTemplate,
   NOJS_TEMPLATE_NAMES,
@@ -54,10 +53,22 @@ const LOGO_LETTERS = [
 
 const INLINE_HANDLER_RE = /<[^>]*\son[a-z]+\s*=/i;
 
-const sliceById = (html: string, id: string): string => {
-  const span = locateById(html, id);
-  if (!span) throw new Error(`no element with id ${id} in the rendered page`);
-  return html.slice(span.innerStart, span.innerEnd);
+const OPEN_MARK = "\u0000degoog-open\u0000";
+const CLOSE_MARK = "\u0000degoog-close\u0000";
+
+const sliceById = async (html: string, id: string): Promise<string> => {
+  const marked = await new HTMLRewriter()
+    .on(`[id="${id}"]`, {
+      element(element) {
+        element.prepend(OPEN_MARK, { html: true });
+        element.append(CLOSE_MARK, { html: true });
+      },
+    })
+    .transform(new Response(html))
+    .text();
+  const from = marked.indexOf(OPEN_MARK);
+  if (from < 0) throw new Error(`no element with id ${id} in the rendered page`);
+  return marked.slice(from + OPEN_MARK.length, marked.indexOf(CLOSE_MARK, from));
 };
 
 const makeResult = (over: Partial<ScoredResult> = {}): ScoredResult => ({
@@ -211,7 +222,7 @@ describe("nojs home page", () => {
   test("renders the monospace logo with the monospace class on every letter", async () => {
     harness({ settings: enabled() });
     const html = await text("/nojs");
-    const logo = sliceById(html, "home-logo");
+    const logo = await sliceById(html, "home-logo");
     expect(logo).toContain("\u{1D68D}");
     expect(logo).toContain("\u{1D698}");
     for (const letter of LOGO_LETTERS) {
@@ -445,7 +456,7 @@ describe("nojs results layout matches the real page", () => {
   test("wraps the inherited search bar in a real form", async () => {
     harness({ settings: enabled(), results: [makeResult()] });
     const html = await text("/nojs/search?q=hello");
-    const header = sliceById(html, "results-header");
+    const header = await sliceById(html, "results-header");
     expect(header).toContain(
       '<form class="nojs-results-form" action="/nojs/search" method="get" role="search">',
     );
@@ -803,7 +814,7 @@ describe("nojs slot panels are opt in", () => {
     expect(html).toContain('data-slot="willing-slot"');
     expect(html).toContain("willing-slot title");
     expect(html).toContain("willing-slot panel");
-    const sidebar = sliceById(html, "results-sidebar");
+    const sidebar = await sliceById(html, "results-sidebar");
     expect(sidebar).toContain("willing-slot panel");
     expect(sidebar).toContain("sidebar-accordion");
     expect(sidebar.indexOf("willing-slot panel")).toBeLessThan(
@@ -821,7 +832,7 @@ describe("nojs slot panels are opt in", () => {
     harness({ settings: enabled(), results: [makeResult()] });
     const html = await text("/nojs/search?q=hello");
 
-    const aboveResults = sliceById(html, "slot-above-results");
+    const aboveResults = await sliceById(html, "slot-above-results");
     expect(aboveResults).toContain("above-slot panel");
     expect(aboveResults).toContain(
       'class="results-slot-panel degoog-panel degoog-panel--slot degoog-panel--stack-item" data-slot="above-slot" data-grid="4"',
@@ -830,7 +841,7 @@ describe("nojs slot panels are opt in", () => {
       "results-slot-panel-body degoog-panel--slot-body degoog-panel--slot-body-padded",
     );
 
-    const glanceBox = sliceById(html, "at-a-glance");
+    const glanceBox = await sliceById(html, "at-a-glance");
     expect(glanceBox).toContain("glance-slot panel");
     expect(glanceBox).not.toContain("results-slot-panel");
   });
@@ -1090,7 +1101,7 @@ describe("nojs bang commands", () => {
       },
     });
     const html = await text("/nojs/search?q=!lonely");
-    expect(sliceById(html, "pagination").trim()).toBe("");
+    expect((await sliceById(html, "pagination")).trim()).toBe("");
   });
 
   test("the uuid builtin renders values without a copy button", async () => {

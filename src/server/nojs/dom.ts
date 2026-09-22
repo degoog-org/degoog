@@ -1,242 +1,213 @@
-const SCRIPT_RE = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi;
-const BARE_SCRIPT_RE = /<script\b[^>]*\/?>/gi;
-const INLINE_HANDLER_RE = /\son[a-zA-Z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/g;
-const MODULEPRELOAD_RE = /<link\b[^>]*\brel=["']modulepreload["'][^>]*>\s*/gi;
+import { logger } from "../utils/logger";
 
-export interface ElementSpan {
-  tag: string;
-  start: number;
-  openEnd: number;
-  innerStart: number;
-  innerEnd: number;
-  end: number;
-}
+const _idSelector = (id: string): string => `[id="${id.replace(/"/g, '\\"')}"]`;
 
-export const sanitizeTemplate = (html: string): string =>
-  html
-    .replace(SCRIPT_RE, "")
-    .replace(BARE_SCRIPT_RE, "")
-    .replace(MODULEPRELOAD_RE, "")
-    .replace(INLINE_HANDLER_RE, "");
+const _classSelector = (className: string): string =>
+  `[class~="${className.replace(/"/g, '\\"')}"]`;
 
-const _openTagEnd = (html: string, start: number): number => {
-  let quote = "";
-  for (let i = start; i < html.length; i++) {
-    const ch = html[i];
-    if (quote) {
-      if (ch === quote) quote = "";
-      continue;
-    }
-    if (ch === '"' || ch === "'") {
-      quote = ch;
-      continue;
-    }
-    if (ch === ">") return i;
-  }
-  return -1;
+const _missing = (op: string, selector: string, loud: boolean): void => {
+  const message = `${op} found no element matching ${selector} in the theme template`;
+  if (loud) logger.warn("nojs", message);
+  else logger.debug("nojs", message);
 };
 
-const VOID_TAGS = new Set([
-  "area",
-  "base",
-  "br",
-  "col",
-  "embed",
-  "hr",
-  "img",
-  "input",
-  "link",
-  "meta",
-  "param",
-  "source",
-  "track",
-  "wbr",
-]);
-
-const _spanFromOpen = (html: string, start: number): ElementSpan | null => {
-  const name = /^<([a-zA-Z][\w-]*)/.exec(html.slice(start, start + 32));
-  if (!name) return null;
-  const tag = name[1];
-  const openEnd = _openTagEnd(html, start);
-  if (openEnd < 0) return null;
-  if (VOID_TAGS.has(tag.toLowerCase())) {
-    return {
-      tag,
-      start,
-      openEnd,
-      innerStart: openEnd + 1,
-      innerEnd: openEnd + 1,
-      end: openEnd,
-    };
-  }
-  const scan = new RegExp(`</?${tag}\\b`, "gi");
-  scan.lastIndex = openEnd + 1;
-  let depth = 1;
-  let hit = scan.exec(html);
-  while (hit) {
-    if (html[hit.index + 1] === "/") {
-      depth -= 1;
-      if (depth === 0) {
-        const end = _openTagEnd(html, hit.index);
-        if (end < 0) return null;
-        return {
-          tag,
-          start,
-          openEnd,
-          innerStart: openEnd + 1,
-          innerEnd: hit.index,
-          end,
-        };
-      }
-    } else {
-      depth += 1;
-      scan.lastIndex = _openTagEnd(html, hit.index) + 1;
-    }
-    hit = scan.exec(html);
-  }
-  return null;
-};
-
-const _locate = (html: string, marker: RegExp): ElementSpan | null => {
-  const hit = marker.exec(html);
-  if (!hit) return null;
-  const start = html.lastIndexOf("<", hit.index);
-  if (start < 0) return null;
-  return _spanFromOpen(html, start);
-};
-
-export const locateById = (html: string, id: string): ElementSpan | null =>
-  _locate(html, new RegExp(`\\sid=["']${id}["']`));
-
-export const locateByClass = (
+const _transform = async (
   html: string,
-  className: string,
-): ElementSpan | null =>
-  _locate(html, new RegExp(`\\sclass=["'][^"']*\\b${className}\\b[^"']*["']`));
+  selector: string,
+  handler: (element: HTMLRewriterTypes.Element) => void,
+  op: string,
+  loud = false,
+  firstOnly = true,
+): Promise<string> => {
+  let seen = 0;
+  const out = await new HTMLRewriter()
+    .on(selector, {
+      element(element) {
+        seen += 1;
+        if (firstOnly && seen > 1) return;
+        handler(element);
+      },
+    })
+    .transform(new Response(html))
+    .text();
+  if (seen === 0) {
+    _missing(op, selector, loud);
+    return html;
+  }
+  return out;
+};
 
-const _splice = (
+export const sanitizeTemplate = async (html: string): Promise<string> =>
+  await new HTMLRewriter()
+    .on("script", {
+      element(element) {
+        element.remove();
+      },
+    })
+    .on("link[rel=modulepreload]", {
+      element(element) {
+        element.remove();
+      },
+    })
+    .on("*", {
+      element(element) {
+        const handlers = [...element.attributes]
+          .map(([name]) => name)
+          .filter((name) => /^on[a-z]+$/i.test(name));
+        if (handlers.length === 0) return;
+        for (const name of handlers) element.removeAttribute(name);
+      },
+    })
+    .transform(new Response(html))
+    .text();
+
+export const fillById = async (
   html: string,
-  from: number,
-  to: number,
-  value: string,
-): string => html.slice(0, from) + value + html.slice(to);
+  id: string,
+  inner: string,
+): Promise<string> =>
+  _transform(
+    html,
+    _idSelector(id),
+    (element) => element.setInnerContent(inner, { html: true }),
+    "fillById",
+    true,
+  );
 
-export const fillById = (html: string, id: string, inner: string): string => {
-  const span = locateById(html, id);
-  if (!span) return html;
-  return _splice(html, span.innerStart, span.innerEnd, inner);
-};
+export const appendToId = async (
+  html: string,
+  id: string,
+  extra: string,
+): Promise<string> =>
+  _transform(
+    html,
+    _idSelector(id),
+    (element) => element.append(extra, { html: true }),
+    "appendToId",
+    true,
+  );
 
-export const appendToId = (html: string, id: string, extra: string): string => {
-  const span = locateById(html, id);
-  if (!span) return html;
-  return _splice(html, span.innerEnd, span.innerEnd, extra);
-};
-
-export const replaceElementById = (
+export const replaceElementById = async (
   html: string,
   id: string,
   replacement: string,
-): string => {
-  const span = locateById(html, id);
-  if (!span) return html;
-  return _splice(html, span.start, span.end + 1, replacement);
-};
+): Promise<string> =>
+  _transform(
+    html,
+    _idSelector(id),
+    (element) => element.replace(replacement, { html: true }),
+    "replaceElementById",
+    true,
+  );
 
-export const removeElementById = (html: string, id: string): string =>
-  replaceElementById(html, id, "");
+export const removeElementById = async (
+  html: string,
+  id: string,
+): Promise<string> =>
+  _transform(
+    html,
+    _idSelector(id),
+    (element) => element.remove(),
+    "removeElementById",
+  );
 
-export const wrapElementById = (
+export const wrapElementById = async (
   html: string,
   id: string,
   open: string,
   close: string,
-): string => {
-  const span = locateById(html, id);
-  if (!span) return html;
-  const element = html.slice(span.start, span.end + 1);
-  return _splice(html, span.start, span.end + 1, open + element + close);
-};
-
-const _stripAttributes = (openTag: string, names: string[]): string => {
-  let result = openTag;
-  for (const name of names) {
-    result = result.replace(
-      new RegExp(`\\s${name}=(?:"[^"]*"|'[^']*'|[^\\s>]+)`, "gi"),
-      "",
-    );
-  }
-  return result;
-};
+): Promise<string> =>
+  _transform(
+    html,
+    _idSelector(id),
+    (element) => {
+      element.before(open, { html: true });
+      element.after(close, { html: true });
+    },
+    "wrapElementById",
+  );
 
 const _setAttributes = (
-  html: string,
-  span: ElementSpan | null,
+  element: HTMLRewriterTypes.Element,
   attrs: Record<string, string>,
-): string => {
-  if (!span) return html;
-  const names = Object.keys(attrs);
-  if (names.length === 0) return html;
-  const openTag = html.slice(span.start, span.openEnd);
-  const stripped = _stripAttributes(openTag, names).replace(/\s*\/$/, "");
-  const added = names
-    .map((name) => ` ${name}="${attrs[name]}"`)
-    .join("");
-  return _splice(html, span.start, span.openEnd, stripped + added);
-};
-
-export const setAttributesById = (
-  html: string,
-  id: string,
-  attrs: Record<string, string>,
-): string => _setAttributes(html, locateById(html, id), attrs);
-
-export const setAttributesByClass = (
-  html: string,
-  className: string,
-  attrs: Record<string, string>,
-): string => _setAttributes(html, locateByClass(html, className), attrs);
-
-export const addClassById = (
-  html: string,
-  id: string,
-  className: string,
-): string => {
-  const span = locateById(html, id);
-  if (!span) return html;
-  const openTag = html.slice(span.start, span.openEnd);
-  if (!/\sclass=/i.test(openTag)) {
-    return _splice(
-      html,
-      span.start,
-      span.openEnd,
-      `${openTag.replace(/\s*\/$/, "")} class="${className}"`,
-    );
+): void => {
+  for (const [name, value] of Object.entries(attrs)) {
+    element.setAttribute(name, value);
   }
-  const widened = openTag.replace(
-    /(\sclass=)("([^"]*)"|'([^']*)')/i,
-    (_full, lead: string, _quoted: string, dq?: string, sq?: string) => {
-      const current = dq ?? sq ?? "";
-      return `${lead}"${current ? `${current} ${className}` : className}"`;
-    },
-  );
-  return _splice(html, span.start, span.openEnd, widened);
 };
 
-export const addClassWhereClass = (
+export const setAttributesById = async (
+  html: string,
+  id: string,
+  attrs: Record<string, string>,
+): Promise<string> =>
+  Object.keys(attrs).length === 0
+    ? html
+    : _transform(
+        html,
+        _idSelector(id),
+        (element) => _setAttributes(element, attrs),
+        "setAttributesById",
+      );
+
+export const setAttributesByClass = async (
+  html: string,
+  className: string,
+  attrs: Record<string, string>,
+): Promise<string> =>
+  Object.keys(attrs).length === 0
+    ? html
+    : _transform(
+        html,
+        _classSelector(className),
+        (element) => _setAttributes(element, attrs),
+        "setAttributesByClass",
+      );
+
+const _withClass = (
+  element: HTMLRewriterTypes.Element,
+  className: string,
+): void => {
+  const current = element.getAttribute("class") ?? "";
+  if (current.split(/\s+/).includes(className)) return;
+  element.setAttribute("class", current ? `${current} ${className}` : className);
+};
+
+export const addClassById = async (
+  html: string,
+  id: string,
+  className: string,
+): Promise<string> =>
+  _transform(
+    html,
+    _idSelector(id),
+    (element) => _withClass(element, className),
+    "addClassById",
+  );
+
+export const addClassWhereClass = async (
   html: string,
   present: string,
   added: string,
-): string =>
-  html.replace(/\sclass="([^"]*)"/g, (full, value: string) => {
-    const names = value.split(/\s+/).filter(Boolean);
-    if (!names.includes(present) || names.includes(added)) return full;
-    return ` class="${value} ${added}"`;
-  });
+): Promise<string> =>
+  _transform(
+    html,
+    _classSelector(present),
+    (element) => _withClass(element, added),
+    "addClassWhereClass",
+    false,
+    false,
+  );
 
-export const insertBeforeHeadEnd = (html: string, extra: string): string => {
-  if (!extra) return html;
-  const at = html.toLowerCase().indexOf("</head>");
-  if (at < 0) return html;
-  return _splice(html, at, at, extra);
-};
+export const insertBeforeHeadEnd = async (
+  html: string,
+  extra: string,
+): Promise<string> =>
+  extra
+    ? _transform(
+        html,
+        "head",
+        (element) => element.append(extra, { html: true }),
+        "insertBeforeHeadEnd",
+      )
+    : html;
