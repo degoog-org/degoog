@@ -5,18 +5,24 @@ import { join } from "path";
 
 let dir: string;
 let previousDataDir: string | undefined;
+let previousSettingsFile: string | undefined;
 
 const CORRUPT = '{"settings": {"proxy": "on"';
 
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), "degoog-corrupt-"));
   previousDataDir = process.env["DEGOOG_DATA_DIR"];
+  previousSettingsFile = process.env["DEGOOG_SERVER_SETTINGS_FILE"];
   process.env["DEGOOG_DATA_DIR"] = dir;
+  process.env["DEGOOG_SERVER_SETTINGS_FILE"] = join(dir, "server-settings.json");
 });
 
 afterEach(() => {
   if (previousDataDir === undefined) delete process.env["DEGOOG_DATA_DIR"];
   else process.env["DEGOOG_DATA_DIR"] = previousDataDir;
+  if (previousSettingsFile === undefined)
+    delete process.env["DEGOOG_SERVER_SETTINGS_FILE"];
+  else process.env["DEGOOG_SERVER_SETTINGS_FILE"] = previousSettingsFile;
 });
 
 const quarantined = async (base: string): Promise<string[]> =>
