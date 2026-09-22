@@ -172,7 +172,7 @@ function _initSettingsMainOffset(): void {
     frame = requestAnimationFrame(() => {
       main.style.paddingTop = "";
       if (!desktop.matches) return;
-      // Measured inside the sidebar because it is sticky: against main the offset grows with page scroll.
+
       const offset =
         search.getBoundingClientRect().top -
         sidebar.getBoundingClientRect().top +

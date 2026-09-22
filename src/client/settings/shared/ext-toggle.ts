@@ -3,11 +3,6 @@ import { flashError, flashSuccess } from "./flash-msg";
 
 const t = window.scopedT("core");
 
-/**
- * Builds a change handler that persists an extension's disabled flag.
- * Keeps its own request token so a slow response cannot overwrite a newer one,
- * and rolls the checkbox back to the last confirmed state on failure.
- */
 export const extToggleHandler = (
   id: string,
   initiallyEnabled: boolean,

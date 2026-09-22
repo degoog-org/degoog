@@ -74,9 +74,6 @@ const _renderGlanceHtml = (
   runScriptsInContainer(glanceEl);
 };
 
-/**
- * Fetches at-a-glance panels, replacing any older in-flight glance request.
- */
 export async function fetchGlancePanels(
   query: string,
   results?: ScoredResult[],
