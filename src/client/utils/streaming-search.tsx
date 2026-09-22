@@ -1,6 +1,5 @@
 import { clear, render } from "../../shared/ui/core/dom";
-import { renderHtml } from "../../shared/ui/core/html";
-import { Raw } from "../../shared/ui/core/raw";
+import { TransText } from "../../shared/ui/components/primitives/trans-text";
 import { NoResults } from "../../shared/ui/components/feedback/no-results";
 import { NoEnginesLink } from "./search/no-engines-link";
 import {
@@ -328,16 +327,22 @@ export async function performStreamingSearch(
     }
 
     if (currentResults.length === 0 && resultsList) {
-      const storeLink = renderHtml(
-        <NoEnginesLink
-          href={`${getBase()}/settings/store`}
-          label={t("search-templates.no-engines-store")}
-        />,
+      const body = engineTimings.length === 0 ? (
+        <TransText
+          text={t("search-templates.no-engines", { store: "{store}" })}
+          slots={{
+            store: (
+              <NoEnginesLink
+                href={`${getBase()}/settings/store`}
+                label={t("search-templates.no-engines-store")}
+              />
+            ),
+          }}
+        />
+      ) : (
+        t("search-templates.no-results")
       );
-      const msg = engineTimings.length === 0
-        ? t("search-templates.no-engines", { store: storeLink })
-        : t("search-templates.no-results");
-      render(<NoResults><Raw html={msg} /></NoResults>, resultsList);
+      render(<NoResults>{body}</NoResults>, resultsList);
     }
 
     if (resultsList) attachVideoPlayers(resultsList);

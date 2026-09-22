@@ -1,6 +1,5 @@
 import { SlotPanelPosition, type SlotPanel } from "../../types";
-import { clear } from "../../../shared/ui/core/dom";
-import { renderHtml } from "../../../shared/ui/core/html";
+import { append, clear } from "../../../shared/ui/core/dom";
 import { FullWidthSlotPanel } from "../../../shared/ui/components/search/full-width-slot-panel";
 import { DEFAULT_SLOT_GRID, SlotPanel as SlotPanelView } from "../../../shared/ui/components/search/slot-panel";
 
@@ -45,21 +44,16 @@ function _renderSlotPanelsInto(panels: SlotPanel[], clearFirst: boolean): void {
     if (panel.position === SlotPanelPosition.AtAGlance) {
       container.innerHTML = panel.html;
     } else if (panel.position === SlotPanelPosition.FullWidthAboveResults) {
-      container.insertAdjacentHTML(
-        "beforeend",
-        renderHtml(FullWidthSlotPanel({ id: panel.id, html: panel.html })),
-      );
+      append(FullWidthSlotPanel({ id: panel.id, html: panel.html }), container);
     } else {
-      container.insertAdjacentHTML(
-        "beforeend",
-        renderHtml(
-          SlotPanelView({
-            id: panel.id,
-            title: panel.title,
-            html: panel.html,
-            grid: panel.gridSize ?? DEFAULT_SLOT_GRID,
-          }),
-        ),
+      append(
+        SlotPanelView({
+          id: panel.id,
+          title: panel.title,
+          html: panel.html,
+          grid: panel.gridSize ?? DEFAULT_SLOT_GRID,
+        }),
+        container,
       );
     }
   }

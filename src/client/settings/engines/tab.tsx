@@ -1,7 +1,6 @@
-import { renderHtml } from "../../../shared/ui/core/html";
-import { StoreLinkButton } from "./store-link-button";
+import { TransText } from "../../../shared/ui/components/primitives/trans-text";
+import { StoreLinkButton } from "../shared/store-link-button";
 import { render } from "../../../shared/ui/core/dom";
-import { raw } from "../../../shared/ui/core/raw";
 import { Button } from "../../../shared/ui/components/primitives/button";
 import { Icon } from "../../../shared/ui/components/primitives/icon";
 import { ExtGroup } from "../../../shared/ui/components/extensions/ext-group";
@@ -189,15 +188,18 @@ export async function initEnginesTab(
       {!hasStoreEngines ? (
         <div class="ext-group">
           <p class="degoog-text degoog-text--sm degoog-text--secondary">
-            {raw(
-              t("settings-page.extensions.no-engines", {
-                store: renderHtml(
+            <TransText
+              text={t("settings-page.extensions.no-engines", {
+                store: "{store}",
+              })}
+              slots={{
+                store: (
                   <StoreLinkButton
                     label={t("settings-page.extensions.no-engines-store")}
-                  />,
+                  />
                 ),
-              }),
-            )}
+              }}
+            />
           </p>
         </div>
       ) : null}

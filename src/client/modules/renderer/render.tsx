@@ -1,6 +1,5 @@
 import { clear, render } from "../../../shared/ui/core/dom";
-import { renderHtml } from "../../../shared/ui/core/html";
-import { Raw } from "../../../shared/ui/core/raw";
+import { TransText } from "../../../shared/ui/components/primitives/trans-text";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
 import { NoEnginesLink } from "../../utils/search/no-engines-link";
 import { PaginationWrap } from "../../utils/pagination-wrap";
@@ -125,16 +124,22 @@ export function renderResults(
 
   if (results.length === 0) {
     const noEngines = state.currentData?.engineTimings.length === 0;
-    const storeLink = renderHtml(
-      <NoEnginesLink
-        href={`${getBase()}/settings/store`}
-        label={t("search-templates.no-engines-store")}
-      />,
+    const body = noEngines ? (
+      <TransText
+        text={t("search-templates.no-engines", { store: "{store}" })}
+        slots={{
+          store: (
+            <NoEnginesLink
+              href={`${getBase()}/settings/store`}
+              label={t("search-templates.no-engines-store")}
+            />
+          ),
+        }}
+      />
+    ) : (
+      t("search-templates.no-results")
     );
-    const msg = noEngines
-      ? t("search-templates.no-engines", { store: storeLink })
-      : t("search-templates.no-results");
-    render(<NoResults><Raw html={msg} /></NoResults>, container);
+    render(<NoResults>{body}</NoResults>, container);
     if (!isImageType && opts.paginate !== false) {
       renderPagination(state.lastPage, state.currentPage, false);
     }

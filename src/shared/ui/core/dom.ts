@@ -1,4 +1,3 @@
-import { effect } from "../state/signal";
 import type {
   ElementNode,
   EventHandler,
@@ -237,7 +236,6 @@ function _patchChildren(
 
 const _roots = new WeakMap<Element, Instance[]>();
 
-/** Diff `node` into `container`, reusing whatever a previous render left there. */
 export const render = (node: VNode | VNode[], container: Element): void => {
   const next = _flatten(Array.isArray(node) ? node : [node]);
   const previous = _roots.get(container) ?? [];
@@ -249,11 +247,8 @@ export const clear = (container: Element): void => {
   container.replaceChildren();
 };
 
-/**
- * Render `view` into `container` and re-render whenever a signal it read
- * changes. Returns a dispose function.
- */
-export const mount = (view: () => VNode, container: Element): (() => void) =>
-  effect(() => {
-    render(view(), container);
-  });
+export const append = (node: VNode | VNode[], container: Element): void => {
+  for (const concrete of _flatten(Array.isArray(node) ? node : [node])) {
+    for (const created of _create(concrete).nodes) container.appendChild(created);
+  }
+};

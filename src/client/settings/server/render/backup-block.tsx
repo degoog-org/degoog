@@ -1,6 +1,5 @@
-import { raw } from "../../../../shared/ui/core/raw";
 import { Button } from "../../../../shared/ui/components/primitives/button";
-import { renderFileUpload } from "../../../utils/file-upload";
+import { FileUploadWidget } from "../../../utils/file-upload-widget";
 import { SectionDesc } from "./section-desc";
 import { SubHeading } from "./sub-heading";
 
@@ -17,14 +16,12 @@ export const BackupBlock = (): JSX.Element => (
       <Button variant="secondary" class="settings-backup-action" id="settings-backup-export">
         {t("settings-page.server.backup.export-button")}
       </Button>
-      {raw(
-        renderFileUpload({
-          inputId: "settings-backup-file",
-          buttonLabel: t("settings-page.server.backup.import-choose"),
-          dropLabel: t("settings-page.server.backup.import-drop"),
-          accept: "application/json,.json",
-        }),
-      )}
+      <FileUploadWidget
+        inputId="settings-backup-file"
+        buttonLabel={t("settings-page.server.backup.import-choose")}
+        dropLabel={t("settings-page.server.backup.import-drop")}
+        accept="application/json,.json"
+      />
       <Button
         variant="primary"
         class="settings-backup-action"

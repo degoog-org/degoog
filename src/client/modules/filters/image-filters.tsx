@@ -1,7 +1,6 @@
 import { state } from "../../state";
 import type { EngineTiming } from "../../types";
-import { clear, render } from "../../../shared/ui/core/dom";
-import { renderHtml } from "../../../shared/ui/core/html";
+import { append, clear, render } from "../../../shared/ui/core/dom";
 import { ImgFilterGroup } from "./img-filter-group";
 import { ImgFilterSuffix } from "./img-filter-suffix";
 import { ImgSidebarShell } from "./img-sidebar-shell";
@@ -213,10 +212,7 @@ const selectOption = (option: HTMLElement): void => {
       .querySelectorAll(".degoog-img-filter-sep, .degoog-img-filter-current")
       .forEach((el) => el.remove());
     if (value) {
-      head.insertAdjacentHTML(
-        "beforeend",
-        renderHtml(<ImgFilterSuffix label={labelFor(value)} />),
-      );
+      append(<ImgFilterSuffix label={labelFor(value)} />, head);
     }
   }
 

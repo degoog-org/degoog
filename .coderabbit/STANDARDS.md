@@ -43,7 +43,7 @@ Be blunt about this with generated PRs. Agents write tests in bulk and most of t
   - Components: `PascalCase`, in a `kebab-case.tsx` file named after them.
 - **Function Size:** Suggest splitting functions that exceed ~60 lines or try to handle parsing, validation, persistence, rendering, and logging all at once. A component that is long because it is mostly markup is not the same problem, so judge it on whether it mixes fetching or state with rendering, not on line count.
 - **Correct Placement:** Ensure changes respect module boundaries (e.g., HTTP concerns in `routes/`, shared logic in `utils/search.ts`, UI orchestration in `client/modules/`).
-- **The UI Runtime Is Shared:** `src/shared/ui` is imported by both the server and the browser, so not everything in it is safe everywhere. `core/html`, `core/raw`, `core/escape`, `core/types` and the plain components run in both. `core/dom` and `components/overlay/shell` touch `document` and are browser-only. The server imports deep paths and never the `components/index.ts` barrel, which is what keeps browser-only modules out of it. Reject a server file that imports the barrel, and reject a new `document` or `window` reference in a module the server already imports. A component reaching for `window.scopedT` belongs beside its feature, not in `src/shared/ui/components`.
+- **The UI Runtime Is Shared:** `src/shared/ui` is imported by both the server and the browser, so not everything in it is safe everywhere. `core/html`, `core/raw`, `core/escape`, `core/types` and the plain components run in both. `core/dom` and `components/overlay/shell` touch `document` and are browser-only. The server imports deep paths and never the `components/index.ts` barrel, which is what keeps browser-only modules out of it. `no-restricted-imports` enforces that for `src/server/**`. What lint cannot see is a new `document` or `window` reference added to a module the server already imports, so reject those on sight. A component reaching for `window.scopedT` belongs beside its feature, not in `src/shared/ui/components`.
 
 ## 3. Hono Route Standards
 
@@ -98,26 +98,29 @@ Markup lives in `.tsx` components, not in template literals. The runtime is hand
 
 ### What to Look For
 - **No HTML in Strings:** Reject new markup built by string concatenation or template literals in `.ts` files. Markup belongs in a component that returns `JSX.Element`.
-- **One Component Per File:** Every `.tsx` file declares exactly one component. Shared components live in `src/shared/ui/components/<group>/<name>.tsx`. Feature-specific ones sit beside the feature. Flag a second component added to an existing file.
+- **One Component Per File:** Every `.tsx` file declares exactly one component. Shared components live in `src/shared/ui/components/<group>/<name>.tsx`. Feature-specific ones sit beside the feature. `tests/unit/ui/one-component-per-file.test.ts` enforces this, so a second component in a file fails CI rather than needing a reviewer to spot it.
 - **Compose, Do Not Stringify:** A component must not take pre-rendered HTML from another component. A prop typed `html: string` whose producer is our own code is the defect. That producer should return `JSX.Element` or `Child` and be passed as children. Reject new `html={string}` props.
 - **Escaping Is the Renderer's Job:** The renderer escapes text children for you. Reject `escapeHtml(...)` followed by injection, and reject hand-built entities. That is where escaping bugs come from.
 - **Explicit Return Types:** Components return `JSX.Element`, or `JSX.Element | null` when they can render nothing. Helpers that accept arbitrary children use `Child` from `src/shared/ui/core/types.ts`.
 
 ### The Two Renderers
 One VNode tree, two outputs. Picking the wrong one is a review finding.
-- `renderHtml(node): string` for the server, for theme template substitution, and for the nojs layer. The server has no DOM, so this is correct there.
+- `renderHtml(node): string` for the server, for theme template substitution, and for the nojs layer. The server has no DOM, so this is correct there. It should not appear in `src/client` at all; there are currently zero uses and a new one is a finding.
 - `render(node, container)` for the browser. It does a keyed diff and reuses DOM nodes.
-- `mount(view, container)` to re-render when a signal the view read changes. Returns a dispose function. Check the caller uses it.
+- `append(node, container)` builds nodes and appends them after whatever is already there. Use it instead of rendering a component to a string for `insertAdjacentHTML`.
 - `clear(container)` empties a container and drops the renderer's cached tree for it. This is the replacement for `innerHTML = ""`.
 
+There is no reactive layer. Signals were removed once it turned out one file used them. If a change reintroduces `signal`, `computed` or `mount`, ask what the second and third consumers are before it lands.
+
 ### innerHTML
-Assigning `innerHTML` is allowed in exactly four cases. Anything else should be `render()` or `clear()`:
+Assigning `innerHTML` and calling `insertAdjacentHTML` are lint errors across `src`. Eleven files are allowlisted by name at the top of `eslint.config.js`, and the allowlist exists for exactly three reasons:
 1. Theme `renderTemplate()` output, which is the public theming contract.
 2. Server or plugin HTML that must execute its own `<script>` tags.
 3. Markdown already sanitised by DOMPurify.
-4. Reading `.innerHTML`, which is not an assignment.
 
-Flag any new `innerHTML` that does not name one of those four.
+Reading `.innerHTML` is not an assignment and is fine anywhere.
+
+CI catches a new file. It does not catch a new `innerHTML` inside an already-allowlisted file, so that is the case to read carefully. A PR that adds a file to the allowlist has to justify it against one of the three reasons above, and growing that list should be rare enough to be memorable.
 
 ### Escape Hatches
 `<Raw html={...}/>` and `raw(...)` inject a string verbatim. They earn their place for extension-supplied HTML, theme partials, sanitised markdown, and translation strings that carry markup. They are a defect when the string came from one of our own components. The `static` prop opts a subtree out of diffing and exists for DOM that extensions mutate. A new use of it needs a reason in the PR.
@@ -141,6 +144,7 @@ Type checking does not see markup, and the test suite barely does. Make the auth
 - **Secret Hygiene:** Flag PRs that log settings/admin/search API tokens or nonces. Ensure secret settings are masked in UI/metadata responses.
 - **Header Trust:** Do not allow trust of `X-Forwarded-*` headers unless explicit proxy trust settings are enabled.
 - **Error Safety:** Ensure error responses do not leak local paths, tokens, repo internals, or stack traces.
+- **Markup In Translations:** A translated string that carries a `{placeholder}` for a link or button goes through `<TransText text slots/>`, which escapes the prose and substitutes a VNode for the slot. Reject a component rendered to a string and passed as a translation parameter, and reject markup built inside a locale value.
 - **XSS Through the Escape Hatch:** `<Raw html={...}/>`, `raw(...)` and `innerHTML` are the only ways to bypass escaping, so they are where XSS gets in. For each one, trace the string back to its source. Extension and theme HTML is trusted by the install model. Markdown is fine only if DOMPurify ran. Anything derived from a query, a URL, an engine response, a repo field or a store listing is untrusted and must go through a component as a text child instead. A `Raw` whose input cannot be traced is a blocking finding, not a nitpick.
 - **Do Not Hand-Roll Escaping:** Reject new `escapeHtml` calls in rendering paths. The renderer escapes text children, and a manual escape followed by string injection is how the escaping gets skipped on the next edit.
 
@@ -166,7 +170,7 @@ Type checking does not see markup, and the test suite barely does. Make the auth
 - **Isolation:** Verify tests isolate runtime data using env vars/data paths.
 - **Mocks:** Ensure network/git mocks are used sparingly and assert the critical commands/options.
 - **Determinism:** Flag flaky tests. Inputs must be sorted, time controlled, and external search dependencies mocked or removed.
-- **Renderer, Not Appearance:** `tests/unit/ui/` covers the renderer itself: escaping, keyed reuse by node identity, handler rebinding, `static` subtrees, signal disposal. Changes to `src/shared/ui/core` or `state` need a test there. Do not ask for snapshot tests of component markup, they break on every harmless edit and prove nothing.
+- **Renderer, Not Appearance:** `tests/unit/ui/` covers the renderer itself: escaping, keyed reuse by node identity, handler rebinding, `static` subtrees, recovery from foreign DOM writes. Changes to `src/shared/ui/core` need a test there. Do not ask for snapshot tests of component markup, they break on every harmless edit and prove nothing.
 - **Markup Parity Over Snapshots:** When a PR moves or rewrites markup, the evidence is a rendered-output diff against the previous code, not a new committed test. Ask for the case count and the result. Those harnesses are throwaway and should not land in `tests/`.
 
 ## 12. Duplication Control

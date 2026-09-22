@@ -4,9 +4,9 @@ import {
   innerHtmlOf,
   installFakeDom,
 } from "../../helpers/fake-dom";
-import { clear, mount, render } from "../../../src/shared/ui/core/dom";
-import { signal } from "../../../src/shared/ui/state/signal";
+import { append, clear, render } from "../../../src/shared/ui/core/dom";
 import { Raw } from "../../../src/shared/ui/core/raw";
+import { renderHtml } from "../../../src/shared/ui/core/html";
 import type { VNode } from "../../../src/shared/ui/core/types";
 
 let restore: () => void;
@@ -171,23 +171,6 @@ describe("render diffing", () => {
     into(el, <div><Raw html="<i>changed</i>" /></div>);
     expect(innerHtmlOf(wrapper)).toBe("<i>changed</i>");
   });
-
-  test("mount re-renders when a signal changes", () => {
-    const el = host();
-    const count = signal(0);
-    const dispose = mount(
-      () => <span>{count.value}</span>,
-      el as unknown as Element,
-    );
-
-    expect(innerHtmlOf(el)).toBe("<span>0</span>");
-    count.value = 5;
-    expect(innerHtmlOf(el)).toBe("<span>5</span>");
-
-    dispose();
-    count.value = 9;
-    expect(innerHtmlOf(el)).toBe("<span>5</span>");
-  });
 });
 
 describe("render alongside direct DOM writes", () => {
@@ -210,5 +193,26 @@ describe("render alongside direct DOM writes", () => {
 
     into(el, <p>second</p>);
     expect(innerHtmlOf(el)).toBe("<p>second</p>");
+  });
+});
+
+describe("append", () => {
+  test("adds nodes after existing children instead of replacing them", () => {
+    const el = host();
+    into(el, <p>kept</p>);
+    append(<span>added</span>, el as unknown as Element);
+    expect(innerHtmlOf(el)).toBe("<p>kept</p><span>added</span>");
+  });
+
+  test("produces the markup renderHtml would have produced", () => {
+    const el = host();
+    const node = (
+      <div class="wrap" data-id="x">
+        <b>bold</b>
+        <Raw html="<i>raw</i>" />
+      </div>
+    );
+    append(node, el as unknown as Element);
+    expect(innerHtmlOf(el)).toBe(renderHtml(node));
   });
 });

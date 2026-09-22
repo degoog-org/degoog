@@ -4,6 +4,7 @@ export { Button, buttonClass } from "./primitives/button";
 export type { ButtonProps, ButtonVariant } from "./primitives/button";
 export { Badge, badgeClass } from "./primitives/badge";
 export type { BadgeProps } from "./primitives/badge";
+export { TransText } from "./primitives/trans-text";
 
 export { Toggle } from "./forms/toggle";
 export type { ToggleProps } from "./forms/toggle";

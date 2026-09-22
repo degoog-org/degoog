@@ -1,18 +1,11 @@
-import { renderHtml } from "../../shared/ui/core/html";
-import { FileUploadWidget, type FileUploadWidgetProps } from "./file-upload-widget";
 
 const DRAG_CLASS = "degoog-file--drag";
-
-export type FileUploadRenderOptions = FileUploadWidgetProps;
 
 export interface FileUploadHandle {
   input: HTMLInputElement;
   file: () => File | null;
   reset: () => void;
 }
-
-export const renderFileUpload = (opts: FileUploadRenderOptions): string =>
-  renderHtml(<FileUploadWidget {...opts} />);
 
 export const initFileUpload = (
   root: HTMLElement,

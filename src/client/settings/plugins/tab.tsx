@@ -1,12 +1,8 @@
-import { mount, render } from "../../../shared/ui/core/dom";
-import { signal } from "../../../shared/ui/state/signal";
+import { render } from "../../../shared/ui/core/dom";
 import { PluginCard } from "./plugin-card";
 import type { ExtensionMeta, AllExtensions } from "../../types";
 import { getBase } from "../../utils/base-url";
 import { initDragOrder } from "../../utils/drag-order";
-
-const _query = signal("");
-let _disposeCards: (() => void) | null = null;
 
 const _priority = (plugin: ExtensionMeta): number => {
   const v = plugin.settings["priority"];
@@ -35,6 +31,22 @@ const _matches = (plugin: ExtensionMeta, query: string): boolean =>
   plugin.displayName.toLowerCase().includes(query) ||
   (plugin.description ?? "").toLowerCase().includes(query);
 
+const _renderCards = (
+  cardsEl: HTMLElement,
+  all: ExtensionMeta[],
+  query: string,
+): void => {
+  const visible = query ? all.filter((plugin) => _matches(plugin, query)) : all;
+  render(
+    <>
+      {visible.map((plugin) => (
+        <PluginCard key={plugin.id} plugin={plugin} orderable={true} />
+      ))}
+    </>,
+    cardsEl,
+  );
+};
+
 export function initPluginsTab(allExtensions: AllExtensions): void {
   const container = document.getElementById("plugins-content");
   if (!container) return;
@@ -48,9 +60,12 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
           type="text"
           class="degoog-search-bar degoog-search-bar--square-advanced plugins-search-input"
           placeholder="Search plugins…"
-          value={_query.peek()}
+          value=""
           onInput={(event) => {
-            _query.value = (event.target as HTMLInputElement).value.trim().toLowerCase();
+            const cardsHost = container.querySelector<HTMLElement>(".ext-cards--orderable");
+            if (!cardsHost) return;
+            const value = (event.target as HTMLInputElement).value.trim().toLowerCase();
+            _renderCards(cardsHost, all, value);
           }}
         />
       </div>
@@ -70,10 +85,5 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
     onReorder: (list) => void _savePriorities(list),
   });
 
-  _disposeCards?.();
-  _disposeCards = mount(() => {
-    const query = _query.value;
-    const visible = query ? all.filter((plugin) => _matches(plugin, query)) : all;
-    return <>{visible.map((plugin) => <PluginCard key={plugin.id} plugin={plugin} orderable={true} />)}</>;
-  }, cardsEl);
+  _renderCards(cardsEl, all, "");
 }
