@@ -1,5 +1,5 @@
 import { CHEVRON_SVG } from "../../../shared/ui/components/layout/chevron";
-import { raw } from "../../../shared/ui/core/raw";
+import { raw } from "../../../shared/ui/tribute/rawdogit";
 import { UpdatesRow } from "./updates-row";
 import type { StoreItem } from "../../types/store-tab";
 

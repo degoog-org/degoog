@@ -1,7 +1,7 @@
 import tseslint from "typescript-eslint";
 
 const INNER_HTML_ALLOWED = [
-  "src/shared/ui/core/dom.ts",
+  "src/shared/ui/tribute/dom.ts",
   "src/shared/ui/components/overlay/shell.ts",
   "src/client/modules/media/media.tsx",
   "src/client/modules/modals/docs-modal/docs.tsx",
@@ -15,7 +15,7 @@ const INNER_HTML_ALLOWED = [
 ];
 
 const INNER_HTML_MESSAGE =
-  "Assigning innerHTML is banned. Build a component and use render() or clear() from shared/ui/core/dom. Theme templates, plugin HTML and sanitised markdown are the only exceptions, and they live in the allowlist in eslint.config.js.";
+  "Assigning innerHTML is banned. Build a component and use render() or clear() from shared/ui/tribute/dom. Theme templates, plugin HTML and sanitised markdown are the only exceptions, and they live in the allowlist in eslint.config.js.";
 
 export default tseslint.config(
   {
@@ -63,9 +63,9 @@ export default tseslint.config(
           patterns: [
             {
               regex:
-                "shared/ui(/index|/components(/index)?|/core/dom)?$|shared/ui/components/overlay/",
+                "shared/ui(/index|/components(/index)?|/tribute/dom)?$|shared/ui/components/overlay/",
               message:
-                "Server code must import deep component paths, never the shared/ui barrels. The barrels pull in core/dom and the overlay shell, which touch document and crash at startup.",
+                "Server code must import deep component paths, never the shared/ui barrels. The barrels pull in tribute/dom and the overlay shell, which touch document and crash at startup.",
             },
           ],
         },

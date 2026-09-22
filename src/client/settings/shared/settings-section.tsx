@@ -1,5 +1,5 @@
 import { Section } from "../../../shared/ui/components/layout/section";
-import type { Child } from "../../../shared/ui/core/types";
+import type { Child } from "../../../shared/ui/tribute/types";
 
 const t = window.scopedT("core");
 
@@ -32,7 +32,11 @@ export const SettingsSection = ({
       children
     ) : (
       <fieldset
-        class={fieldsetClass ? `settings-fieldset ${fieldsetClass}` : "settings-fieldset"}
+        class={
+          fieldsetClass
+            ? `settings-fieldset ${fieldsetClass}`
+            : "settings-fieldset"
+        }
       >
         {children}
       </fieldset>

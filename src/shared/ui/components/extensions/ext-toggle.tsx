@@ -1,4 +1,4 @@
-import type { EventHandler } from "../../core/types";
+import type { EventHandler } from "../../tribute/types";
 
 export interface ExtToggleProps {
   id: string;

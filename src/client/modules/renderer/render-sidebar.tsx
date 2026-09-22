@@ -2,8 +2,8 @@ import { EngineStatsPanel } from "./engine-stats-panel";
 import { RelatedSearches } from "./related-searches";
 import { state } from "../../state";
 import type { SearchResponse, SlotPanel } from "../../types";
-import { clear, render } from "../../../shared/ui/core/dom";
-import { raw } from "../../../shared/ui/core/raw";
+import { clear, render } from "../../../shared/ui/tribute/dom";
+import { raw } from "../../../shared/ui/tribute/rawdogit";
 import { SidebarAccordion } from "../../../shared/ui/components/layout/sidebar-accordion";
 import { retryEngine } from "../../utils/search-actions";
 import { paintOrigins } from "../../utils/search/engine-origins";
@@ -24,7 +24,10 @@ export const setupRetryLinks = (container: HTMLElement): void => {
         link.classList.add("retrying");
         link.textContent = t("search-templates.sidebar.retrying");
         try {
-          await retryEngine(engineName, Number.isFinite(page) ? page : undefined);
+          await retryEngine(
+            engineName,
+            Number.isFinite(page) ? page : undefined,
+          );
         } catch (err) {
           console.warn("[sidebar] engine retry failed", err);
         }
@@ -48,7 +51,9 @@ export const renderEngineStats = (
   if (!sidebar) return;
   const stats = EngineStatsPanel({ timings });
   const next = stats ? _detached(stats) : null;
-  const current = sidebar.querySelector<HTMLElement>(".engine-performance-panel");
+  const current = sidebar.querySelector<HTMLElement>(
+    ".engine-performance-panel",
+  );
   if (!next) {
     current?.remove();
     return;
@@ -107,7 +112,9 @@ export function renderSidebarSuggestions(
   if (!sidebar || !state.displaySearchSuggestions || terms.length === 0) return;
 
   sidebar.querySelector(".skeleton-sidebar")?.remove();
-  const existing = sidebar.querySelector<HTMLElement>(".related-searches-panel");
+  const existing = sidebar.querySelector<HTMLElement>(
+    ".related-searches-panel",
+  );
   const panel = _detached(<RelatedSearches terms={terms} />);
   if (!panel) return;
 
@@ -157,11 +164,11 @@ export function prependKnowledgePanels(panels: SlotPanel[]): void {
   if (!sidebar || !panels.length) return;
   const wrapper = document.createElement("div");
   render(
-    panels.map((p) =>
+    panels.map((p) => (
       <SidebarAccordion title={p.title ?? t("search-templates.sidebar.info")}>
         {raw(p.html)}
-      </SidebarAccordion>,
-    ),
+      </SidebarAccordion>
+    )),
     wrapper,
   );
   sidebar.prepend(...Array.from(wrapper.children));

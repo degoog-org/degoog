@@ -1,11 +1,14 @@
-import { renderHtml } from "../../shared/ui/core/html";
+import { renderHtml } from "../../shared/ui/tribute/html";
 import { HomeFooter } from "./home-footer";
 import { HomeFooterLink } from "./home-footer-link";
 import { ImageCard } from "./image-card";
 import { ImageGrid } from "./image-grid";
 import { ResultsMeta } from "./results-meta";
 import { Hono, type Context } from "hono";
-import { matchBangCommand, type BangMatch } from "../extensions/commands/registry";
+import {
+  matchBangCommand,
+  type BangMatch,
+} from "../extensions/commands/registry";
 import {
   getDefaultEngineConfig,
   getEngineSearchType,
@@ -204,7 +207,11 @@ const _resultsHeader = async (
 ): Promise<string> => {
   const template = await loadNojsPartial("search-header", t, locale);
   if (!template) return "";
-  let html = await addClassWhereClass(template, "logo-letter", "nojs-logo-letter");
+  let html = await addClassWhereClass(
+    template,
+    "logo-letter",
+    "nojs-logo-letter",
+  );
   html = await setAttributesByClass(html, "results-logo", {
     href: escapeAttribute(nojsHome(c)),
   });
@@ -214,7 +221,9 @@ const _resultsHeader = async (
     value: escapeAttribute(query.q),
     "aria-label": _searchLabel(t, locale),
   });
-  html = await setAttributesById(html, "results-search-btn", { type: "submit" });
+  html = await setAttributesById(html, "results-search-btn", {
+    type: "submit",
+  });
   const hidden = query.type
     ? `<input type="hidden" name="type" value="${escapeAttribute(query.type)}" />`
     : "";
@@ -541,7 +550,9 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
   const meta =
     outcome.results.length === 0
       ? renderHtml(
-          <ResultsMeta text={String(t("nojs.no-results", undefined, locale))} />,
+          <ResultsMeta
+            text={String(t("nojs.no-results", undefined, locale))}
+          />,
         )
       : renderHtml(
           <ResultsMeta
@@ -559,9 +570,7 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
         );
 
   const pageTotal =
-    outcome.results.length === 0
-      ? 1
-      : (outcome.totalPages ?? NOJS_PAGE_TOTAL);
+    outcome.results.length === 0 ? 1 : (outcome.totalPages ?? NOJS_PAGE_TOTAL);
 
   const slots = await renderNojsSlots(
     query.q.trim(),
@@ -576,7 +585,13 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
       header: await _resultsHeader(c, query, t, locale),
       tabs: await _renderTabRow(c, query, currentType, t, locale),
       meta,
-      list: await _renderResults(outcome.results, isImages, isVideos, t, locale),
+      list: await _renderResults(
+        outcome.results,
+        isImages,
+        isVideos,
+        t,
+        locale,
+      ),
       pagination: await _renderPagination(
         c,
         query,

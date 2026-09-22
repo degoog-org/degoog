@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { StoreProgressOverlay } from "./progress-overlay";
 import { getBase } from "../../utils/base-url";
 import {
@@ -134,31 +134,23 @@ function streamStoreOp(
 export function streamUpdateAll(
   container: HTMLElement,
 ): Promise<{ failed: number } | null> {
-  return streamStoreOp(
-    "/api/store/update-all/stream",
-    "item",
-    (e) => {
-      if (!e.repoUrl || !e.itemPath || !e.type) return;
-      setItemPhase(
-        container,
-        { repoUrl: e.repoUrl, itemPath: e.itemPath, type: e.type },
-        "Updating",
-        e.phase,
-        e.error,
-      );
-    },
-  );
+  return streamStoreOp("/api/store/update-all/stream", "item", (e) => {
+    if (!e.repoUrl || !e.itemPath || !e.type) return;
+    setItemPhase(
+      container,
+      { repoUrl: e.repoUrl, itemPath: e.itemPath, type: e.type },
+      "Updating",
+      e.phase,
+      e.error,
+    );
+  });
 }
 
 export function streamRefreshAll(
   container: HTMLElement,
 ): Promise<{ failed: number } | null> {
-  return streamStoreOp(
-    "/api/store/repos/refresh/stream",
-    "repo",
-    (e) => {
-      if (!e.url) return;
-      setRepoPhase(container, e.url, "Refreshing", e.phase, e.error);
-    },
-  );
+  return streamStoreOp("/api/store/repos/refresh/stream", "repo", (e) => {
+    if (!e.url) return;
+    setRepoPhase(container, e.url, "Refreshing", e.phase, e.error);
+  });
 }

@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { ExtGroup } from "../../../shared/ui/components/extensions/ext-group";
 import { BuiltInCard } from "./built-in-card";
 import { ThemeCard } from "./theme-card";

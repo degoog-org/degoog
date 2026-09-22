@@ -41,7 +41,7 @@ import { getClientShortcuts } from "../../extensions/shortcuts/registry";
 import { isPasswordRequired } from "../settings-auth";
 import { readSyncedDefaults } from "../../utils/synced-settings";
 import { buildSettingsNav, buildSettingsTabSelect } from "./settings-nav";
-import { renderHtml } from "../../../shared/ui/core/html";
+import { renderHtml } from "../../../shared/ui/tribute/html";
 import { ThemeTemplate } from "../../../shared/ui/components/layout/theme-template";
 import { ApiKeyLocked } from "./api-key-locked";
 import { ApiKeySection } from "./api-key-section";

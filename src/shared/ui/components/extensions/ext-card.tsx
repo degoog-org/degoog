@@ -1,4 +1,4 @@
-import type { Child } from "../../core/types";
+import type { Child } from "../../tribute/types";
 
 export const EXT_CARD_CLASS = "ext-card degoog-panel degoog-panel--ext-card";
 
@@ -22,7 +22,9 @@ export const ExtCard = ({
   <div class={EXT_CARD_CLASS} data-id={id} data-theme-id={themeId}>
     <div class="ext-card-main">
       <div class="ext-card-info">
-        {nameRow === undefined ? null : <div class="ext-card-name-row">{nameRow}</div>}
+        {nameRow === undefined ? null : (
+          <div class="ext-card-name-row">{nameRow}</div>
+        )}
         {info}
       </div>
       <div class="ext-card-actions">{actions}</div>

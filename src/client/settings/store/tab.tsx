@@ -1,6 +1,6 @@
 import { jsonHeaders, authHeaders } from "../../utils/request";
 import type { RepoInfo, StoreItem } from "../../types/store-tab";
-import { clear, render as renderNodes } from "../../../shared/ui/core/dom";
+import { clear, render as renderNodes } from "../../../shared/ui/tribute/dom";
 import { FilterOptions } from "./filter-options";
 import { RepoErrors } from "./repo-errors";
 import { StoreEmpty } from "./store-empty";
@@ -110,7 +110,8 @@ export async function initStoreTab(
       );
     }
 
-    const repoErrorsEl = repoSection?.querySelector<HTMLElement>(".store-repo-errors");
+    const repoErrorsEl =
+      repoSection?.querySelector<HTMLElement>(".store-repo-errors");
     if (repoErrorsEl) {
       const errored = repos.filter((r) => r.error);
       if (errored.length > 0) {
@@ -137,7 +138,13 @@ export async function initStoreTab(
       ".store-catalog-grid",
     );
 
-    const scopedItems = selectedRepoUrl ? items.filter((i) => normalizeRepoUrl(i.repoUrl) === normalizeRepoUrl(selectedRepoUrl ?? "")) : items;
+    const scopedItems = selectedRepoUrl
+      ? items.filter(
+          (i) =>
+            normalizeRepoUrl(i.repoUrl) ===
+            normalizeRepoUrl(selectedRepoUrl ?? ""),
+        )
+      : items;
 
     if (typeSelect) {
       const typeCounts = {
@@ -146,7 +153,8 @@ export async function initStoreTab(
         theme: scopedItems.filter((i) => i.type === "theme").length,
         engine: scopedItems.filter((i) => i.type === "engine").length,
         transport: scopedItems.filter((i) => i.type === "transport").length,
-        autocomplete: scopedItems.filter((i) => i.type === "autocomplete").length,
+        autocomplete: scopedItems.filter((i) => i.type === "autocomplete")
+          .length,
         shortcut: scopedItems.filter((i) => i.type === "shortcut").length,
       };
       renderNodes(
@@ -157,8 +165,16 @@ export async function initStoreTab(
             { id: "plugin", label: "Plugins", count: typeCounts.plugin },
             { id: "theme", label: "Themes", count: typeCounts.theme },
             { id: "engine", label: "Engines", count: typeCounts.engine },
-            { id: "transport", label: "Transports", count: typeCounts.transport },
-            { id: "autocomplete", label: "Autocomplete", count: typeCounts.autocomplete },
+            {
+              id: "transport",
+              label: "Transports",
+              count: typeCounts.transport,
+            },
+            {
+              id: "autocomplete",
+              label: "Autocomplete",
+              count: typeCounts.autocomplete,
+            },
             { id: "shortcut", label: "Shortcuts", count: typeCounts.shortcut },
           ]}
         />,
@@ -178,7 +194,9 @@ export async function initStoreTab(
         clear(subtypeSelect);
       } else {
         subtypeSelect.style.display = "";
-        const filteredForType = (scopedItems).filter((i) => i.type === typeFilter);
+        const filteredForType = scopedItems.filter(
+          (i) => i.type === typeFilter,
+        );
         renderNodes(
           <FilterOptions
             selected={subtypeFilter}
@@ -193,7 +211,10 @@ export async function initStoreTab(
                 count: filteredForType.filter(
                   (i) =>
                     (typeFilter === "plugin" && i.pluginType === id) ||
-                    (typeFilter === "engine" && (i.engineTypes ?? (i.engineType ? [i.engineType] : [])).includes(id)),
+                    (typeFilter === "engine" &&
+                      (
+                        i.engineTypes ?? (i.engineType ? [i.engineType] : [])
+                      ).includes(id)),
                 ).length,
               })),
             ]}
@@ -215,7 +236,11 @@ export async function initStoreTab(
           options={[
             { id: "all", label: "All", count: scopedItems.length },
             { id: "installed", label: "Installed", count: installed },
-            { id: "not-installed", label: "Not Installed", count: scopedItems.length - installed },
+            {
+              id: "not-installed",
+              label: "Not Installed",
+              count: scopedItems.length - installed,
+            },
           ]}
         />,
         statusSelect,
@@ -227,7 +252,14 @@ export async function initStoreTab(
     }
 
     if (grid) {
-      const filtered = filterItems(items, typeFilter, subtypeFilter, searchQuery, selectedRepoUrl, installedFilter);
+      const filtered = filterItems(
+        items,
+        typeFilter,
+        subtypeFilter,
+        searchQuery,
+        selectedRepoUrl,
+        installedFilter,
+      );
       renderNodes(
         <>
           {filtered.map((item) => (
@@ -275,22 +307,26 @@ export async function initStoreTab(
   clear(container);
   renderNodes(<StoreTabTemplate />, container);
 
-  container.querySelector<HTMLElement>(".store-catalog-grid")?.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement;
-    const installBtn = t.closest<HTMLButtonElement>(".store-btn-install");
-    const uninstallBtn = t.closest<HTMLButtonElement>(".store-btn-uninstall");
-    const updateBtn = t.closest<HTMLButtonElement>(".store-btn-update");
-    const deleteBtn = t.closest<HTMLButtonElement>(".store-btn-delete");
-    if (installBtn) void handleInstall(container, installBtn, getToken, loadItems, render);
-    if (uninstallBtn) void handleUninstall(uninstallBtn, getToken, loadItems, render);
-    if (updateBtn) void handleUpdate(container, updateBtn, getToken, loadItems, render);
-    if (deleteBtn) {
-      if (deleteBtn.dataset.untracked === "true")
-        void handleDeleteUntracked(deleteBtn, getToken, loadItems, render);
-      else
-        void handleUninstall(deleteBtn, getToken, loadItems, render);
-    }
-  });
+  container
+    .querySelector<HTMLElement>(".store-catalog-grid")
+    ?.addEventListener("click", (e) => {
+      const t = e.target as HTMLElement;
+      const installBtn = t.closest<HTMLButtonElement>(".store-btn-install");
+      const uninstallBtn = t.closest<HTMLButtonElement>(".store-btn-uninstall");
+      const updateBtn = t.closest<HTMLButtonElement>(".store-btn-update");
+      const deleteBtn = t.closest<HTMLButtonElement>(".store-btn-delete");
+      if (installBtn)
+        void handleInstall(container, installBtn, getToken, loadItems, render);
+      if (uninstallBtn)
+        void handleUninstall(uninstallBtn, getToken, loadItems, render);
+      if (updateBtn)
+        void handleUpdate(container, updateBtn, getToken, loadItems, render);
+      if (deleteBtn) {
+        if (deleteBtn.dataset.untracked === "true")
+          void handleDeleteUntracked(deleteBtn, getToken, loadItems, render);
+        else void handleUninstall(deleteBtn, getToken, loadItems, render);
+      }
+    });
 
   initLightbox(container);
 
@@ -382,7 +418,7 @@ export async function initStoreTab(
         method: "POST",
         headers: jsonHeaders(getToken),
         body: JSON.stringify({}),
-      }).catch(() => { });
+      }).catch(() => {});
       await loadRepos();
       await loadItems();
       await loadReposStatus();

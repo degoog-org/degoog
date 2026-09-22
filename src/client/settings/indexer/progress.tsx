@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { IndexerProgressBar } from "./progress-bar";
 export interface ProgressUi {
   set: (done: number, total: number) => void;
@@ -28,7 +28,9 @@ export const mountProgress = (host: HTMLElement): ProgressUi => {
     finish: (failed) => {
       if (!fill) return;
       fill.style.width = "100%";
-      fill.classList.add(failed ? "degoog-progress-fill--failed" : "degoog-progress-fill--done");
+      fill.classList.add(
+        failed ? "degoog-progress-fill--failed" : "degoog-progress-fill--done",
+      );
     },
   };
 };

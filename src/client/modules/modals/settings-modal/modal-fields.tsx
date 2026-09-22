@@ -9,7 +9,7 @@ import { RangeField } from "./range-field";
 import { FileField } from "./file-field";
 import { optionsListFor, wrapOptionsRow } from "./options-field";
 import { MultiselectField } from "./multiselect-field";
-import type { Child } from "../../../../shared/ui/core/types";
+import type { Child } from "../../../../shared/ui/tribute/types";
 import type { SettingField, ExtensionMeta } from "../../../types";
 
 const _depMeetsSavedValue = (
@@ -149,7 +149,11 @@ export const renderField = (
   }
 
   if (field.type === "urllist") {
-    return _wrapVisibleWhen(field, <UrlListField field={field} ext={ext} />, ext);
+    return _wrapVisibleWhen(
+      field,
+      <UrlListField field={field} ext={ext} />,
+      ext,
+    );
   }
 
   if (field.type === "list") {
@@ -195,7 +199,11 @@ export const renderField = (
         <label class="ext-field-toggle-row">
           <span class="ext-field-label">{field.label}</span>
           <label class="engine-toggle degoog-toggle-wrap degoog-toggle-wrap--transparent">
-            <input type="checkbox" id={`field-${field.key}`} checked={currentValue === "true"} />
+            <input
+              type="checkbox"
+              id={`field-${field.key}`}
+              checked={currentValue === "true"}
+            />
             <span class="toggle-slider degoog-toggle"></span>
           </label>
         </label>
@@ -244,11 +252,16 @@ export const renderField = (
     const validValue = known.includes(currentValue) ? currentValue : known[0];
     const control = (
       <div class="ext-field-select-wrap degoog-select-wrap">
-        <select id={`field-${field.key}`} class="ext-field-input ext-field-select degoog-input">
+        <select
+          id={`field-${field.key}`}
+          class="ext-field-input ext-field-select degoog-input"
+        >
           {known.map((v) => {
             const at = declared.indexOf(v);
-            const fallback = at >= 0 ? v.charAt(0).toUpperCase() + v.slice(1) : v;
-            const label = (at >= 0 ? field.optionLabels?.[at] : undefined) ?? fallback;
+            const fallback =
+              at >= 0 ? v.charAt(0).toUpperCase() + v.slice(1) : v;
+            const label =
+              (at >= 0 ? field.optionLabels?.[at] : undefined) ?? fallback;
             return (
               <option key={v} value={v} selected={validValue === v}>
                 {label}

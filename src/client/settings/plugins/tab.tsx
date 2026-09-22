@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { PluginCard } from "./plugin-card";
 import type { ExtensionMeta, AllExtensions } from "../../types";
 import { getBase } from "../../utils/base-url";
@@ -17,11 +17,14 @@ const _savePriorities = async (group: HTMLElement): Promise<void> => {
     Array.from(cards).map((card, i) => {
       const id = card.dataset.id;
       if (!id) return Promise.resolve();
-      return fetch(`${getBase()}/api/extensions/${encodeURIComponent(id)}/settings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priority: String(total - 1 - i) }),
-      });
+      return fetch(
+        `${getBase()}/api/extensions/${encodeURIComponent(id)}/settings`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ priority: String(total - 1 - i) }),
+        },
+      );
     }),
   );
   window.dispatchEvent(new CustomEvent("extensions-saved"));
@@ -51,7 +54,9 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
   const container = document.getElementById("plugins-content");
   if (!container) return;
 
-  const all = [...allExtensions.plugins].sort((a, b) => _priority(b) - _priority(a));
+  const all = [...allExtensions.plugins].sort(
+    (a, b) => _priority(b) - _priority(a),
+  );
 
   render(
     <>
@@ -62,9 +67,13 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
           placeholder="Search plugins…"
           value=""
           onInput={(event) => {
-            const cardsHost = container.querySelector<HTMLElement>(".ext-cards--orderable");
+            const cardsHost = container.querySelector<HTMLElement>(
+              ".ext-cards--orderable",
+            );
             if (!cardsHost) return;
-            const value = (event.target as HTMLInputElement).value.trim().toLowerCase();
+            const value = (event.target as HTMLInputElement).value
+              .trim()
+              .toLowerCase();
             _renderCards(cardsHost, all, value);
           }}
         />

@@ -1,5 +1,5 @@
-import { clear, render } from "../../../../shared/ui/core/dom";
-import { Raw } from "../../../../shared/ui/core/raw";
+import { clear, render } from "../../../../shared/ui/tribute/dom";
+import { RawDogIt } from "../../../../shared/ui/tribute/rawdogit";
 import { AdvancedSection } from "./advanced-section";
 import { TestConnection } from "./test-connection";
 import { renderField, syncConditionalFields } from "./modal-fields";
@@ -15,7 +15,7 @@ import { initOptionsFields, disposeOptionsFields } from "./options-field";
 import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
-import type { Child } from "../../../../shared/ui/core/types";
+import type { Child } from "../../../../shared/ui/tribute/types";
 import type { ExtensionMeta, SettingField } from "../../../types";
 import { openExtensionDocs } from "../docs-modal/docs";
 
@@ -41,7 +41,8 @@ function _ensureDocsButton(): HTMLButtonElement | null {
   if (docsBtn) return docsBtn;
   docsBtn = document.createElement("button");
   docsBtn.type = "button";
-  docsBtn.className = "btn btn--secondary degoog-btn degoog-btn--secondary ext-docs-btn";
+  docsBtn.className =
+    "btn btn--secondary degoog-btn degoog-btn--secondary ext-docs-btn";
   docsBtn.textContent = "Docs";
   docsBtn.style.display = "none";
   footerEl.insertBefore(docsBtn, footerEl.firstChild);
@@ -186,7 +187,10 @@ const _advancedFieldDiffersFromDefault = (
     if (raw === undefined) return false;
     const picked = Array.isArray(raw) ? raw : String(raw ?? "").split(",");
     const chosen = picked.map((v) => v.trim()).filter(Boolean);
-    const def = defaultStr.split(",").map((v) => v.trim()).filter(Boolean);
+    const def = defaultStr
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
     return chosen.slice().sort().join(",") !== def.slice().sort().join(",");
   }
 
@@ -357,7 +361,11 @@ export function openCustomModal(options: {
     clear(bodyEl);
     render(
       <>
-        {typeof options.body === "string" ? <Raw html={options.body} /> : options.body}
+        {typeof options.body === "string" ? (
+          <RawDogIt html={options.body} />
+        ) : (
+          options.body
+        )}
       </>,
       bodyEl,
     );

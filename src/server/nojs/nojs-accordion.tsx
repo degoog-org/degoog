@@ -3,7 +3,7 @@ import {
   SIDEBAR_BODY_CLASS,
   SIDEBAR_TOGGLE_CLASS,
 } from "../../shared/ui/components/layout/sidebar-accordion";
-import type { Child } from "../../shared/ui/core/types";
+import type { Child } from "../../shared/ui/tribute/types";
 
 export interface NojsAccordionProps {
   class: string;

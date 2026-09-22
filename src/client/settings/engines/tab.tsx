@@ -1,6 +1,6 @@
 import { TransText } from "../../../shared/ui/components/primitives/trans-text";
 import { StoreLinkButton } from "../shared/store-link-button";
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { Button } from "../../../shared/ui/components/primitives/button";
 import { Icon } from "../../../shared/ui/components/primitives/icon";
 import { ExtGroup } from "../../../shared/ui/components/extensions/ext-group";
@@ -95,18 +95,24 @@ export async function initEnginesTab(
   const rawGroups = _groupByType(allExtensions.engines);
   const savedOrder = await getTabOrder();
   const groups = _sortGroups(rawGroups, savedOrder);
-  const hasStoreEngines = allExtensions.engines.some((e) => e.source !== "builtin");
+  const hasStoreEngines = allExtensions.engines.some(
+    (e) => e.source !== "builtin",
+  );
 
-  const onToggle = (engine: ExtensionMeta) => (event: Event): void => {
-    enabledMap[engine.id] = (event.currentTarget as HTMLInputElement).checked;
-    void idbSet(SETTINGS_KEY, enabledMap);
-  };
+  const onToggle =
+    (engine: ExtensionMeta) =>
+    (event: Event): void => {
+      enabledMap[engine.id] = (event.currentTarget as HTMLInputElement).checked;
+      void idbSet(SETTINGS_KEY, enabledMap);
+    };
 
   const _saveDefaults = async (): Promise<void> => {
     const btn = document.getElementById("save-default-engines");
     try {
       const token = getStoredToken();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
       if (token) headers["x-settings-token"] = token;
       await fetch(`${getBase()}/api/settings/default-engines`, {
         method: "POST",
@@ -146,20 +152,34 @@ export async function initEnginesTab(
       {allowConfigure ? (
         <section class="settings-section ext-card degoog-panel degoog-panel--ext-card">
           <div class="setting-section-heading-wrapper">
-            <h2 class="settings-section-heading">{t("settings-page.extensions.tabs-heading")}</h2>
+            <h2 class="settings-section-heading">
+              {t("settings-page.extensions.tabs-heading")}
+            </h2>
             <div class="floating-section-icon">
               <Icon name="fa-solid fa-table-columns" />
             </div>
           </div>
           <p class="settings-desc">{t("settings-page.extensions.tabs-desc")}</p>
           <div class="settings-page-actions">
-            <Button variant="secondary" id="order-engine-tabs" onClick={_openOrderModal}>
+            <Button
+              variant="secondary"
+              id="order-engine-tabs"
+              onClick={_openOrderModal}
+            >
               {t("settings-page.extensions.order-tabs")}
             </Button>
-            <Button variant="secondary" id="save-default-engines" onClick={() => void _saveDefaults()}>
+            <Button
+              variant="secondary"
+              id="save-default-engines"
+              onClick={() => void _saveDefaults()}
+            >
               {t("settings-page.extensions.save-defaults")}
             </Button>
-            <Button variant="secondary" id="reset-default-engines" onClick={() => void _resetDefaults()}>
+            <Button
+              variant="secondary"
+              id="reset-default-engines"
+              onClick={() => void _resetDefaults()}
+            >
               {t("settings-page.extensions.reset-defaults")}
             </Button>
           </div>
@@ -167,7 +187,10 @@ export async function initEnginesTab(
       ) : null}
 
       {layers.length > 0 ? (
-        <CompatSection layers={layers} onOpen={(layer) => void openCompatModal(layer)} />
+        <CompatSection
+          layers={layers}
+          onOpen={(layer) => void openCompatModal(layer)}
+        />
       ) : null}
 
       {groups.map(({ label, engines }) => (
@@ -211,7 +234,10 @@ export async function initEnginesTab(
     .querySelector<HTMLButtonElement>("[data-switch-tab]")
     ?.addEventListener("click", (e) => {
       const tab = (e.currentTarget as HTMLButtonElement).dataset.switchTab;
-      if (tab) document.querySelector<HTMLButtonElement>(`[data-tab="${tab}"]`)?.click();
+      if (tab)
+        document
+          .querySelector<HTMLButtonElement>(`[data-tab="${tab}"]`)
+          ?.click();
     });
 
   if (_orderSavedHandler) {

@@ -1,4 +1,4 @@
-import { Raw } from "../../core/raw";
+import { RawDogIt } from "../../tribute/rawdogit";
 
 export const SLOT_PANEL_CLASS =
   "results-slot-panel degoog-panel degoog-panel--slot degoog-panel--stack-item";
@@ -15,11 +15,16 @@ export interface SlotPanelProps {
   grid?: number | null;
 }
 
-export const SlotPanel = ({ id, title, html, grid }: SlotPanelProps): JSX.Element => (
+export const SlotPanel = ({
+  id,
+  title,
+  html,
+  grid,
+}: SlotPanelProps): JSX.Element => (
   <div class={SLOT_PANEL_CLASS} data-slot={id} data-grid={grid ?? undefined}>
     {title ? <div class={SLOT_TITLE_CLASS}>{title}</div> : null}
     <div class={SLOT_BODY_CLASS}>
-      <Raw html={html} />
+      <RawDogIt html={html} />
     </div>
   </div>
 );

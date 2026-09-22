@@ -1,4 +1,4 @@
-import { render } from "../../../../shared/ui/core/dom";
+import { render } from "../../../../shared/ui/tribute/dom";
 import { ExtField } from "./ext-field";
 import { fieldDesc } from "./field-desc";
 import type { SettingField, ExtensionMeta } from "../../../types";
@@ -64,7 +64,11 @@ export const UrlListField = ({
           {t("settings-page.modal.field-add")}
         </button>
       </div>
-      <input type="hidden" id={`field-${field.key}`} class="ext-field-urllist-value" />
+      <input
+        type="hidden"
+        id={`field-${field.key}`}
+        class="ext-field-urllist-value"
+      />
       {fieldDesc(field.description)}
     </ExtField>
   );
@@ -97,8 +101,8 @@ export function initUrlList(container: HTMLElement): void {
       const parsed = JSON.parse(hiddenInput?.value || "[]") as unknown;
       return Array.isArray(parsed)
         ? (parsed as unknown[]).filter(
-          (u): u is string => typeof u === "string",
-        )
+            (u): u is string => typeof u === "string",
+          )
         : [];
     } catch {
       return [];

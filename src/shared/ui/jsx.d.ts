@@ -1,4 +1,4 @@
-import type { Child, VNode } from "./core/types";
+import type { Child, VNode } from "./tribute/types";
 import type { HtmlAttributes } from "./jsx-runtime";
 
 declare global {

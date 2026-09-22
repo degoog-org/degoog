@@ -4,10 +4,10 @@ import {
   innerHtmlOf,
   installFakeDom,
 } from "../../helpers/fake-dom";
-import { append, clear, render } from "../../../src/shared/ui/core/dom";
-import { Raw } from "../../../src/shared/ui/core/raw";
-import { renderHtml } from "../../../src/shared/ui/core/html";
-import type { VNode } from "../../../src/shared/ui/core/types";
+import { append, clear, render } from "../../../src/shared/ui/tribute/dom";
+import { RawDogIt } from "../../../src/shared/ui/tribute/rawdogit";
+import { renderHtml } from "../../../src/shared/ui/tribute/html";
+import type { VNode } from "../../../src/shared/ui/tribute/types";
 
 let restore: () => void;
 beforeAll(() => {
@@ -99,8 +99,22 @@ describe("render diffing", () => {
 
   test("shrinking an unkeyed list removes the leftovers", () => {
     const el = host();
-    into(el, <ul>{[1, 2, 3].map((n) => <li>{n}</li>)}</ul>);
-    into(el, <ul>{[1].map((n) => <li>{n}</li>)}</ul>);
+    into(
+      el,
+      <ul>
+        {[1, 2, 3].map((n) => (
+          <li>{n}</li>
+        ))}
+      </ul>,
+    );
+    into(
+      el,
+      <ul>
+        {[1].map((n) => (
+          <li>{n}</li>
+        ))}
+      </ul>,
+    );
     expect(innerHtmlOf(el.childNodes[0] as FakeElement)).toBe("<li>1</li>");
   });
 
@@ -159,16 +173,31 @@ describe("render diffing", () => {
     expect(innerHtmlOf(wrapper)).toContain("original");
   });
 
-  test("Raw html is injected and left alone while unchanged", () => {
+  test("RawDogIt html is injected and left alone while unchanged", () => {
     const el = host();
-    into(el, <div><Raw html="<b>plugin</b>" /></div>);
+    into(
+      el,
+      <div>
+        <RawDogIt html="<b>plugin</b>" />
+      </div>,
+    );
     const wrapper = el.childNodes[0] as FakeElement;
     const b = wrapper.childNodes[0];
 
-    into(el, <div><Raw html="<b>plugin</b>" /></div>);
+    into(
+      el,
+      <div>
+        <RawDogIt html="<b>plugin</b>" />
+      </div>,
+    );
     expect(wrapper.childNodes[0]).toBe(b);
 
-    into(el, <div><Raw html="<i>changed</i>" /></div>);
+    into(
+      el,
+      <div>
+        <RawDogIt html="<i>changed</i>" />
+      </div>,
+    );
     expect(innerHtmlOf(wrapper)).toBe("<i>changed</i>");
   });
 });
@@ -209,7 +238,7 @@ describe("append", () => {
     const node = (
       <div class="wrap" data-id="x">
         <b>bold</b>
-        <Raw html="<i>raw</i>" />
+        <RawDogIt html="<i>raw</i>" />
       </div>
     );
     append(node, el as unknown as Element);

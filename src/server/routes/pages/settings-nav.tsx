@@ -1,12 +1,12 @@
-import { renderHtml } from "../../../shared/ui/core/html";
+import { renderHtml } from "../../../shared/ui/tribute/html";
 import { SETTINGS_NAV } from "../../../shared/settings-tabs";
 import { SettingsNavButton } from "./settings-nav-button";
 import { SettingsNavOption } from "./settings-nav-option";
 
 export const buildSettingsNav = (): string =>
-  SETTINGS_NAV.map((item) => renderHtml(<SettingsNavButton item={item} />)).join(
-    "\n            ",
-  );
+  SETTINGS_NAV.map((item) =>
+    renderHtml(<SettingsNavButton item={item} />),
+  ).join("\n            ");
 
 export const buildSettingsTabSelect = (): string =>
   SETTINGS_NAV.filter((item) => !item.hiddenUntilEnabled)

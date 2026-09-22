@@ -1,6 +1,6 @@
 import { authHeaders } from "../../utils/request";
 import { getBase } from "../../utils/base-url";
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { RestartNoticeModal } from "./restart-notice-modal";
 import { fetchRestartState } from "../shared/restart-state";
 

@@ -1,4 +1,4 @@
-import { renderHtml } from "../../../../../shared/ui/core/html";
+import { renderHtml } from "../../../../../shared/ui/tribute/html";
 import { WikiThumbnail } from "./thumbnail";
 
 export const renderWikiThumbnail = (

@@ -1,6 +1,6 @@
 import { ExtField } from "./ext-field";
 import { parseTypeList } from "../../../../shared/search-types";
-import type { Child } from "../../../../shared/ui/core/types";
+import type { Child } from "../../../../shared/ui/tribute/types";
 import type { SettingField, ExtensionMeta } from "../../../types";
 
 const FIELD_CLASS = "ext-field-multiselect";
@@ -73,12 +73,14 @@ export const initMultiFields = (container: HTMLElement): void => {
         hidden.dispatchEvent(new Event("change", { bubbles: true }));
       };
 
-      fieldEl.querySelectorAll<HTMLElement>(`.${CHIP_CLASS}`).forEach((chip) => {
-        chip.addEventListener("click", () => {
-          const on = chip.classList.toggle(CHIP_ON_CLASS);
-          chip.setAttribute("aria-pressed", String(on));
-          sync();
+      fieldEl
+        .querySelectorAll<HTMLElement>(`.${CHIP_CLASS}`)
+        .forEach((chip) => {
+          chip.addEventListener("click", () => {
+            const on = chip.classList.toggle(CHIP_ON_CLASS);
+            chip.setAttribute("aria-pressed", String(on));
+            sync();
+          });
         });
-      });
     });
 };

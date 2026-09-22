@@ -1,11 +1,12 @@
 import { SlotPanelPosition } from "../../shared/search-types";
 import type { ScoredResult, SlotPanel } from "../types";
 import { runSlotPlugins } from "../utils/search";
-import { renderHtml } from "../../shared/ui/core/html";
+import { renderHtml } from "../../shared/ui/tribute/html";
 import { FullWidthSlotPanel } from "../../shared/ui/components/search/full-width-slot-panel";
-import { DEFAULT_SLOT_GRID, SlotPanel as SlotPanelView } from "../../shared/ui/components/search/slot-panel";
-
-
+import {
+  DEFAULT_SLOT_GRID,
+  SlotPanel as SlotPanelView,
+} from "../../shared/ui/components/search/slot-panel";
 
 export const SLOT_CONTAINER_IDS: Record<string, string> = {
   [SlotPanelPosition.FullWidthAboveResults]: "slot-full-width-above-results",
@@ -24,9 +25,7 @@ export interface NojsSlotRender {
 const _renderPanel = (panel: SlotPanel): string => {
   if (panel.position === SlotPanelPosition.AtAGlance) return panel.html;
   if (panel.position === SlotPanelPosition.FullWidthAboveResults) {
-    return renderHtml(
-      FullWidthSlotPanel({ id: panel.id, html: panel.html }),
-    );
+    return renderHtml(FullWidthSlotPanel({ id: panel.id, html: panel.html }));
   }
   return renderHtml(
     SlotPanelView({
@@ -60,7 +59,8 @@ export const renderNojsSlots = async (
     }
     const container = SLOT_CONTAINER_IDS[panel.position];
     if (!container) continue;
-    byContainer[container] = (byContainer[container] ?? "") + _renderPanel(panel);
+    byContainer[container] =
+      (byContainer[container] ?? "") + _renderPanel(panel);
   }
 
   return { byContainer, knowledgePanels };

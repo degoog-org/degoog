@@ -12,13 +12,13 @@ import { logger } from "../utils/logger";
 import { asString } from "../utils/plugin-settings";
 import { getInstanceSettings } from "../utils/server-settings";
 import { retryHref, type NojsQuery } from "./links";
-import { renderHtml } from "../../shared/ui/core/html";
-import { Raw } from "../../shared/ui/core/raw";
+import { renderHtml } from "../../shared/ui/tribute/html";
+import { RawDogIt } from "../../shared/ui/tribute/rawdogit";
 import { EngineOriginSlot } from "./engine-origin-slot";
 import { EngineStatReason } from "./engine-stat-reason";
 import { EngineStatRow } from "./engine-stat-row";
 import { NojsAccordion } from "./nojs-accordion";
-import type { Child } from "../../shared/ui/core/types";
+import type { Child } from "../../shared/ui/tribute/types";
 
 const ACCORDION_BASE_CLASS =
   "sidebar-panel sidebar-accordion degoog-panel degoog-panel--accordion degoog-panel--stack-item";
@@ -68,7 +68,11 @@ const _originSlot = (
       engineName={timing.name}
       engineId={timing.id}
       label={String(
-        t("search-templates.sidebar.engine-origin", { source: origin.label }, locale),
+        t(
+          "search-templates.sidebar.engine-origin",
+          { source: origin.label },
+          locale,
+        ),
       )}
     />
   );
@@ -85,7 +89,11 @@ const _failureText = (
   const base =
     mapped === key
       ? String(
-          t("search-templates.sidebar.failure-reasons.unknown", undefined, locale),
+          t(
+            "search-templates.sidebar.failure-reasons.unknown",
+            undefined,
+            locale,
+          ),
         )
       : mapped;
   return timing.httpStatus ? `${base} (${timing.httpStatus})` : base;
@@ -118,7 +126,7 @@ export const renderNojsKnowledgePanels = (
             String(t("search-templates.sidebar.info", undefined, locale))
           }
         >
-          <Raw html={panel.html} />
+          <RawDogIt html={panel.html} />
         </NojsAccordion>,
       ),
     )

@@ -1,5 +1,5 @@
 import type { IndexerStats } from "../../types/indexer";
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { ManageBody } from "./manage-body";
 import { ManageRow } from "./manage-row";
 import { tr } from "./i18n";
@@ -31,14 +31,26 @@ export const openManageModal = (
   statusEl.textContent = "";
   overlay.style.display = "";
 
-  const searchEl = bodyEl.querySelector<HTMLInputElement>("#indexer-manage-search");
-  const typeEl = bodyEl.querySelector<HTMLSelectElement>("#indexer-manage-type");
+  const searchEl = bodyEl.querySelector<HTMLInputElement>(
+    "#indexer-manage-search",
+  );
+  const typeEl = bodyEl.querySelector<HTMLSelectElement>(
+    "#indexer-manage-type",
+  );
   const tbody = bodyEl.querySelector<HTMLElement>("#indexer-manage-tbody");
   const emptyEl = bodyEl.querySelector<HTMLElement>("#indexer-manage-empty");
-  const pageInfo = bodyEl.querySelector<HTMLElement>("#indexer-manage-pageinfo");
-  const prevBtn = bodyEl.querySelector<HTMLButtonElement>("#indexer-manage-prev");
-  const nextBtn = bodyEl.querySelector<HTMLButtonElement>("#indexer-manage-next");
-  const selectAll = bodyEl.querySelector<HTMLInputElement>("#indexer-manage-selectall");
+  const pageInfo = bodyEl.querySelector<HTMLElement>(
+    "#indexer-manage-pageinfo",
+  );
+  const prevBtn = bodyEl.querySelector<HTMLButtonElement>(
+    "#indexer-manage-prev",
+  );
+  const nextBtn = bodyEl.querySelector<HTMLButtonElement>(
+    "#indexer-manage-next",
+  );
+  const selectAll = bodyEl.querySelector<HTMLInputElement>(
+    "#indexer-manage-selectall",
+  );
 
   const saveEl = freshButton("ext-modal-save");
   const closeBtn = freshButton("ext-modal-close");
@@ -150,9 +162,14 @@ export const openManageModal = (
 
   saveEl?.addEventListener("click", async () => {
     const items = Array.from(
-      tbody?.querySelectorAll<HTMLInputElement>(".indexer-manage-check:checked") ?? [],
+      tbody?.querySelectorAll<HTMLInputElement>(
+        ".indexer-manage-check:checked",
+      ) ?? [],
     )
-      .map((el) => ({ id: Number(el.value), engine_type: el.dataset.type ?? "" }))
+      .map((el) => ({
+        id: Number(el.value),
+        engine_type: el.dataset.type ?? "",
+      }))
       .filter((it) => Number.isInteger(it.id) && it.engine_type);
     if (items.length === 0) return;
     saveEl.disabled = true;

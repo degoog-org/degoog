@@ -1,2 +1,2 @@
-export { escapeAttribute } from "../../shared/ui/core/escape";
+export { escapeAttribute } from "../../shared/ui/tribute/escape";
 export { renderTemplateString } from "../../shared/template";

@@ -3,7 +3,7 @@ import {
   PANEL_CLASS,
   PANEL_TITLE_CLASS,
 } from "./command-panel-classes";
-import type { Child } from "../../shared/ui/core/types";
+import type { Child } from "../../shared/ui/tribute/types";
 
 export const CommandPanel = ({
   id,

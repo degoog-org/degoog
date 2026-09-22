@@ -1,5 +1,5 @@
 import { Button } from "../../../../shared/ui/components/primitives/button";
-import type { Props } from "../../../../shared/ui/core/types";
+import type { Props } from "../../../../shared/ui/tribute/types";
 import type { StoreItem } from "../../../types/store-tab";
 
 export const ItemCardActions = ({ item }: { item: StoreItem }): JSX.Element => {

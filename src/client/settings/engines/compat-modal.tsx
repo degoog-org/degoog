@@ -1,4 +1,4 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { attachFaviconFallback } from "../../utils/favicon";
 import { bindCompatClicks } from "./compat-clicks";
 import { openCustomModal } from "../../modules/modals/settings-modal/modal";
@@ -48,10 +48,15 @@ const _paint = (
   layer: string,
   ui: CompatListUi,
 ): void => {
-  const list = document.querySelector<HTMLElement>(`#${MODAL_BODY_ID} #compat-list`);
+  const list = document.querySelector<HTMLElement>(
+    `#${MODAL_BODY_ID} #compat-list`,
+  );
   if (!list) return;
   clear(list);
-  render(<CompatList items={compatFilter(items, query)} layer={layer} ui={ui} />, list);
+  render(
+    <CompatList items={compatFilter(items, query)} layer={layer} ui={ui} />,
+    list,
+  );
   list
     .querySelectorAll<HTMLImageElement>(".compat-favicon")
     .forEach(attachFaviconFallback);
@@ -123,7 +128,9 @@ const _depsOkay = async (
 
 let _session = 0;
 
-export const openCompatModal = async (layer: CompatLayerView): Promise<void> => {
+export const openCompatModal = async (
+  layer: CompatLayerView,
+): Promise<void> => {
   const session = ++_session;
   const live = (): boolean => session === _session;
   let items: CompatCatalogItem[] = [];
@@ -197,7 +204,9 @@ export const openCompatModal = async (layer: CompatLayerView): Promise<void> => 
     const target = event.target as HTMLElement;
     const install = target.closest<HTMLButtonElement>(".compat-btn-install");
     const update = target.closest<HTMLButtonElement>(".compat-btn-update");
-    const uninstall = target.closest<HTMLButtonElement>(".compat-btn-uninstall");
+    const uninstall = target.closest<HTMLButtonElement>(
+      ".compat-btn-uninstall",
+    );
     if (install?.dataset.code) void startInstall(install.dataset.code, install);
     if (update?.dataset.code)
       void runAction(CompatAction.Update, update.dataset.code, update);

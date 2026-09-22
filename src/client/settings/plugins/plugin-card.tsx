@@ -1,4 +1,4 @@
-import { raw } from "../../../shared/ui/core/raw";
+import { raw } from "../../../shared/ui/tribute/rawdogit";
 import { Badge } from "../../../shared/ui/components/primitives/badge";
 import { DragHandle } from "../../../shared/ui/components/extensions/drag-handle";
 import { ExtCard } from "../../../shared/ui/components/extensions/ext-card";
@@ -40,11 +40,17 @@ export const PluginCard = ({
       nameRow={[
         <ExposureBadge plugin={plugin} />,
         extCardRestartWarningNode(plugin),
-        <ExtCardName htmlFor={toggleId} class="plugin-toggle-label" name={plugin.displayName} />,
+        <ExtCardName
+          htmlFor={toggleId}
+          class="plugin-toggle-label"
+          name={plugin.displayName}
+        />,
         plugin.source === "builtin" ? <Badge>Built-in</Badge> : null,
       ]}
       info={[
-        plugin.description ? <ExtCardDesc html={raw(renderMdInline(plugin.description))} /> : null,
+        plugin.description ? (
+          <ExtCardDesc html={raw(renderMdInline(plugin.description))} />
+        ) : null,
         extCardVersionWarningNode(plugin),
       ]}
       actions={[
@@ -59,7 +65,9 @@ export const PluginCard = ({
             onChange={extToggleHandler(plugin.id, isEnabled, "plugin")}
           />
         ) : null,
-        orderable ? <DragHandle label={t("settings-page.extensions.drag-to-reorder")} /> : null,
+        orderable ? (
+          <DragHandle label={t("settings-page.extensions.drag-to-reorder")} />
+        ) : null,
       ]}
     />
   );

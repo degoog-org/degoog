@@ -1,4 +1,4 @@
-import type { Child } from "../../core/types";
+import type { Child } from "../../tribute/types";
 
 export interface ExtGroupProps {
   label: string;

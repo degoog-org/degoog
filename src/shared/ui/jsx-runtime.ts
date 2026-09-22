@@ -5,7 +5,7 @@ import type {
   FragmentNode,
   Props,
   VNode,
-} from "./core/types";
+} from "./tribute/types";
 
 export const FRAGMENT_TAG = "#frag";
 
@@ -72,7 +72,7 @@ export const jsx = (
 
 export const jsxs = jsx;
 
-export type { VNode, Props, Child, Component } from "./core/types";
+export type { VNode, Props, Child, Component } from "./tribute/types";
 
 type EventHandler = (event: Event) => void;
 

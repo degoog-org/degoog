@@ -1,5 +1,5 @@
-import { escapeHtml } from "../../../../shared/ui/core/escape";
-import { Raw } from "../../../../shared/ui/core/raw";
+import { escapeHtml } from "../../../../shared/ui/tribute/escape";
+import { RawDogIt } from "../../../../shared/ui/tribute/rawdogit";
 import { copy } from "./copy";
 import {
   CompatLayerId,
@@ -10,7 +10,9 @@ import {
 const _introHtml = (id: CompatLayerId, layer: string): string => {
   const link = `<a class="degoog-link" href="${COMPAT_LAYER_REPOS[id]}" target="_blank" rel="noopener noreferrer">${escapeHtml(copy(`compat-intro-link-${id}`, layer))}</a>`;
   const body = escapeHtml(copy(`compat-intro-${id}`, layer));
-  return body.includes("{link}") ? body.replace("{link}", link) : `${body} ${link}`;
+  return body.includes("{link}")
+    ? body.replace("{link}", link)
+    : `${body} ${link}`;
 };
 
 export const CompatShell = ({ id }: { id: CompatLayerId }): JSX.Element => {
@@ -18,7 +20,7 @@ export const CompatShell = ({ id }: { id: CompatLayerId }): JSX.Element => {
   return (
     <>
       <p class="compat-note-intro">
-        <Raw html={_introHtml(id, layer)} />
+        <RawDogIt html={_introHtml(id, layer)} />
       </p>
       <input
         type="text"
@@ -27,7 +29,11 @@ export const CompatShell = ({ id }: { id: CompatLayerId }): JSX.Element => {
         placeholder={copy("compat-search", layer)}
         autocomplete="off"
       />
-      <div class="ext-modal-status compat-status" id="compat-status" role="status"></div>
+      <div
+        class="ext-modal-status compat-status"
+        id="compat-status"
+        role="status"
+      ></div>
       <div id="compat-list"></div>
     </>
   );

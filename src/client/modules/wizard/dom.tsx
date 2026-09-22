@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { WizardShell } from "./wizard-shell";
 
 export type PopoverAnchor =
@@ -98,10 +98,7 @@ const applyAnchor = (pop: HTMLElement, anchor: PopoverAnchor): void => {
   pop.style[horizontal] = m;
 };
 
-export const setMaskRects = (
-  root: HTMLElement,
-  rect: DOMRect | null,
-): void => {
+export const setMaskRects = (root: HTMLElement, rect: DOMRect | null): void => {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const top = root.querySelector<HTMLElement>(".degoog-wizard__mask--top");

@@ -1,4 +1,4 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { ExportBody } from "./export-body";
 import { authHeaders } from "../../utils/request";
 import { getStoredToken } from "../../utils/settings-token";
@@ -22,7 +22,9 @@ const getEls = (): ExportEls | null => {
   const titleEl = document.getElementById("ext-modal-title");
   const bodyEl = document.getElementById("ext-modal-body");
   const statusEl = document.getElementById("ext-modal-status");
-  const saveEl = document.getElementById("ext-modal-save") as HTMLButtonElement | null;
+  const saveEl = document.getElementById(
+    "ext-modal-save",
+  ) as HTMLButtonElement | null;
   const closeBtn = document.getElementById("ext-modal-close");
   if (!overlay || !titleEl || !bodyEl || !statusEl || !saveEl) return null;
   return { overlay, titleEl, bodyEl, statusEl, saveEl, closeBtn };
@@ -108,7 +110,9 @@ export const openExportModal = (stats: IndexerStats | null): void => {
   els.saveEl.hidden = false;
 
   els.saveEl.onclick = () => {
-    const sel = els.bodyEl.querySelector<HTMLSelectElement>("#indexer-export-type");
+    const sel = els.bodyEl.querySelector<HTMLSelectElement>(
+      "#indexer-export-type",
+    );
     const type = sel?.value ?? types[0];
     if (!type) return;
     els.saveEl.onclick = null;

@@ -1,4 +1,4 @@
-import type { Child } from "../../core/types";
+import type { Child } from "../../tribute/types";
 
 export interface BadgeProps {
   modifier?: string;
@@ -13,7 +13,12 @@ export const badgeClass = (modifier?: string, extra?: string): string => {
   return extra ? `${extra} ${parts.join(" ")}` : parts.join(" ");
 };
 
-export const Badge = ({ modifier, class: extra, tooltip, children }: BadgeProps): JSX.Element => (
+export const Badge = ({
+  modifier,
+  class: extra,
+  tooltip,
+  children,
+}: BadgeProps): JSX.Element => (
   <span class={badgeClass(modifier, extra)} data-tooltip={tooltip}>
     {children}
   </span>

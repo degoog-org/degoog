@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { Icon } from "../../../shared/ui/components/primitives/icon";
 import { EngineTypeToggle } from "./engine-type-toggle";
 import { RestartReasonItem } from "./restart-reason-item";
@@ -14,11 +14,22 @@ import type {
 } from "../../types/settings-server";
 import { setIndexerNavVisible } from "../indexer/nav";
 import { initProxyTest } from "./proxy-test";
-import { bindToggle, el, setSelect, setToggle, setVal, syncToggleWrap } from "./fields";
+import {
+  bindToggle,
+  el,
+  setSelect,
+  setToggle,
+  setVal,
+  syncToggleWrap,
+} from "./fields";
 import { markOversized, oversizedMap } from "../shared/oversized";
 import { renderScoreRows, scoreRowTemplate } from "./domain-score";
 import { initHoneypot } from "./honeypot";
-import { bindSelectAutoSave, bindToggleAutoSave, injectFieldSaveBtns } from "./auto-save";
+import {
+  bindSelectAutoSave,
+  bindToggleAutoSave,
+  injectFieldSaveBtns,
+} from "./auto-save";
 import { API_KEY_COPY_ICON, ServerContent } from "./render";
 import { initBackupControls } from "./backup";
 import { flashError, flashSuccess } from "../shared/flash-msg";
@@ -58,12 +69,20 @@ async function _initStreamingTypeChecks(
 ): Promise<void> {
   const container = document.getElementById("settings-streaming-type-checks");
   if (!container) return;
-  const disabled = new Set(disabledTypes.split("\n").map((s) => s.trim()).filter(Boolean));
+  const disabled = new Set(
+    disabledTypes
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
   let types: string[];
   try {
     types = [...(await getAllSearchTypes())];
   } catch (err) {
-    console.warn("[settings] could not load search types for streaming controls", err);
+    console.warn(
+      "[settings] could not load search types for streaming controls",
+      err,
+    );
     return;
   }
 
@@ -83,9 +102,18 @@ async function _initStreamingTypeChecks(
     _saving = true;
     do {
       _saveAgain = false;
-      const checks = container.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
-      const nowDisabled = [...checks].filter((c) => !c.checked).map((c) => c.value).join("\n");
-      const ok = await saveField("streamingDisabledTypes", nowDisabled, getToken);
+      const checks = container.querySelectorAll<HTMLInputElement>(
+        "input[type=checkbox]",
+      );
+      const nowDisabled = [...checks]
+        .filter((c) => !c.checked)
+        .map((c) => c.value)
+        .join("\n");
+      const ok = await saveField(
+        "streamingDisabledTypes",
+        nowDisabled,
+        getToken,
+      );
       if (ok) {
         window.dispatchEvent(new Event("extensions-saved"));
         flashSuccess(t("settings-page.server.saved"));
@@ -135,7 +163,9 @@ async function _loadServerSettings(
       const field = el(id);
       const info = oversized[key];
       if (field instanceof HTMLTextAreaElement && info) {
-        markOversized(field, info, (vars) => t(`settings-page.server.oversized`, vars));
+        markOversized(field, info, (vars) =>
+          t(`settings-page.server.oversized`, vars),
+        );
         return;
       }
       setVal(id, value);
@@ -172,7 +202,11 @@ async function _loadServerSettings(
     setToggle("domain-block-ui-enabled", data.domainBlockUiEnabled);
 
     setToggle("domain-replace-enabled", data.domainReplaceEnabled);
-    setListVal("domain-replace-list", "domainReplaceList", data.domainReplaceList);
+    setListVal(
+      "domain-replace-list",
+      "domainReplaceList",
+      data.domainReplaceList,
+    );
     setToggle("domain-replace-ui-enabled", data.domainReplaceUiEnabled);
 
     setToggle("domain-score-enabled", data.domainScoreEnabled);
@@ -198,7 +232,8 @@ async function _loadServerSettings(
     setToggle("fourget-compat-enabled", data.fourgetCompatEnabled);
     setToggle("degoog-indexer-enabled", data.degoogIndexerEnabled);
     setIndexerNavVisible(
-      data.degoogIndexerEnabled === true || data.degoogIndexerEnabled === "true",
+      data.degoogIndexerEnabled === true ||
+        data.degoogIndexerEnabled === "true",
     );
   } catch (err) {
     console.warn("[settings] server settings load failed", err);
@@ -274,15 +309,28 @@ const _renderPresetPreview = (): void => {
   ) as HTMLSelectElement | null;
   const preview = document.getElementById("settings-server-preset-preview");
   const desc = document.getElementById("settings-server-preset-description");
-  const warningsBlock = document.getElementById("settings-server-preset-warnings");
-  const warningList = document.getElementById("settings-server-preset-warning-list");
-  const changeList = document.getElementById("settings-server-preset-change-list");
+  const warningsBlock = document.getElementById(
+    "settings-server-preset-warnings",
+  );
+  const warningList = document.getElementById(
+    "settings-server-preset-warning-list",
+  );
+  const changeList = document.getElementById(
+    "settings-server-preset-change-list",
+  );
   const status = document.getElementById("settings-server-preset-status");
   const apply = document.getElementById(
     "settings-server-preset-apply",
   ) as HTMLButtonElement | null;
   const preset = select ? _findPreset(select.value) : undefined;
-  if (!preset || !preview || !desc || !warningList || !changeList || !warningsBlock) {
+  if (
+    !preset ||
+    !preview ||
+    !desc ||
+    !warningList ||
+    !changeList ||
+    !warningsBlock
+  ) {
     if (preview) preview.hidden = true;
     return;
   }
@@ -290,7 +338,10 @@ const _renderPresetPreview = (): void => {
   preview.hidden = false;
   desc.textContent = t(preset.descriptionKey);
   if (status) status.textContent = "";
-  _renderListItems(warningList, preset.warnings.map((key) => t(key)));
+  _renderListItems(
+    warningList,
+    preset.warnings.map((key) => t(key)),
+  );
   warningsBlock.hidden = preset.warnings.length === 0;
 
   const changed = _presetChanges(preset.values).filter(
@@ -351,7 +402,8 @@ const _initPresetControls = (getToken: () => string | null): void => {
     if (status) status.textContent = t("settings-page.server.presets.applying");
     const ok = await saveBatch(preset.values, getToken);
     if (!ok) {
-      if (status) status.textContent = t("settings-page.server.presets.apply-failed");
+      if (status)
+        status.textContent = t("settings-page.server.presets.apply-failed");
       flashError(t("settings-page.server.save-failed-network"));
       apply.disabled = false;
       return;
@@ -389,7 +441,13 @@ const _initApiKeyControls = (
       const btn = document.getElementById("settings-api-key-reveal");
       if (btn)
         render(
-          <Icon name={_keyRevealed ? "fa-solid fa-eye-slash fa-lg" : "fa-solid fa-eye fa-lg"} />,
+          <Icon
+            name={
+              _keyRevealed
+                ? "fa-solid fa-eye-slash fa-lg"
+                : "fa-solid fa-eye fa-lg"
+            }
+          />,
           btn,
         );
       if (btn)

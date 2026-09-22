@@ -1,14 +1,10 @@
-import { render } from "../../../../shared/ui/core/dom";
+import { render } from "../../../../shared/ui/tribute/dom";
 import { initDragOrder } from "../../../utils/drag-order";
 import { initFileUpload } from "../../../utils/file-upload";
 import { ExtField } from "./ext-field";
 import { fieldDesc } from "./field-desc";
 import { ListFieldRow } from "./list-field-row";
-import {
-  HEX_RE,
-  normalizeHex,
-  uploadExtensionFile,
-} from "./field-widgets";
+import { HEX_RE, normalizeHex, uploadExtensionFile } from "./field-widgets";
 import {
   defaultListRow,
   parseListValue,
@@ -51,7 +47,11 @@ export const ListField = ({
           {field.addLabel || t("settings-page.modal.field-add")}
         </button>
       </div>
-      <input type="hidden" id={`field-${field.key}`} class="ext-field-list-value" />
+      <input
+        type="hidden"
+        id={`field-${field.key}`}
+        class="ext-field-list-value"
+      />
       {fieldDesc(field.description)}
     </ExtField>
   );
@@ -60,7 +60,9 @@ export const ListField = ({
 const _readSchema = (fieldEl: HTMLElement): SettingField[] => {
   try {
     const encoded = fieldEl.dataset.itemSchema || "";
-    const parsed = JSON.parse(encoded ? decodeURIComponent(encoded) : "[]") as unknown;
+    const parsed = JSON.parse(
+      encoded ? decodeURIComponent(encoded) : "[]",
+    ) as unknown;
     return Array.isArray(parsed) ? (parsed as SettingField[]) : [];
   } catch {
     return [];
@@ -72,17 +74,15 @@ const _collectRow = (
   itemSchema: SettingField[],
 ): ListRow => {
   const row: ListRow = {};
-  rowEl
-    .querySelectorAll<HTMLElement>(".ext-list-subfield")
-    .forEach((input) => {
-      const key = input.dataset.subkey;
-      if (!key) return;
-      if (input.dataset.subtype === "toggle") {
-        row[key] = (input as HTMLInputElement).checked ? "true" : "false";
-      } else {
-        row[key] = (input as HTMLInputElement | HTMLTextAreaElement).value.trim();
-      }
-    });
+  rowEl.querySelectorAll<HTMLElement>(".ext-list-subfield").forEach((input) => {
+    const key = input.dataset.subkey;
+    if (!key) return;
+    if (input.dataset.subtype === "toggle") {
+      row[key] = (input as HTMLInputElement).checked ? "true" : "false";
+    } else {
+      row[key] = (input as HTMLInputElement | HTMLTextAreaElement).value.trim();
+    }
+  });
   for (const sub of itemSchema) {
     if (!(sub.key in row)) row[sub.key] = "";
   }
@@ -101,7 +101,8 @@ const _bindHexSub = (rowEl: HTMLElement, onChange: () => void): void => {
     const color = sub.querySelector<HTMLInputElement>(".ext-list-hex-color");
     if (!text || !color) return;
     text.addEventListener("input", () => {
-      if (HEX_RE.test(text.value.trim())) color.value = normalizeHex(text.value);
+      if (HEX_RE.test(text.value.trim()))
+        color.value = normalizeHex(text.value);
     });
     color.addEventListener("input", () => {
       text.value = color.value;
@@ -111,14 +112,16 @@ const _bindHexSub = (rowEl: HTMLElement, onChange: () => void): void => {
 };
 
 const _bindRangeSub = (rowEl: HTMLElement): void => {
-  rowEl.querySelectorAll<HTMLInputElement>(".ext-list-range").forEach((range) => {
-    const out = range.parentElement?.querySelector<HTMLElement>(
-      ".ext-list-range-value",
-    );
-    range.addEventListener("input", () => {
-      if (out) out.textContent = range.value;
+  rowEl
+    .querySelectorAll<HTMLInputElement>(".ext-list-range")
+    .forEach((range) => {
+      const out = range.parentElement?.querySelector<HTMLElement>(
+        ".ext-list-range-value",
+      );
+      range.addEventListener("input", () => {
+        if (out) out.textContent = range.value;
+      });
     });
-  });
 };
 
 const _validateSubSize = (sub: HTMLElement, file: File): string | null => {
@@ -161,7 +164,9 @@ const _bindFileSub = (
         return;
       }
       setStatus(t("settings-page.modal.field-uploading"));
-      const path = await uploadExtensionFile(extId, key, file).catch(() => null);
+      const path = await uploadExtensionFile(extId, key, file).catch(
+        () => null,
+      );
       if (!path) {
         setStatus(t("settings-page.modal.field-upload-failed"));
         handle?.reset();
@@ -184,26 +189,25 @@ const _initOne = (fieldEl: HTMLElement, extId: string): void => {
   if (!rowsEl || !addBtn || !hidden) return;
 
   const sync = (): void => {
-    const rows = [
-      ...rowsEl.querySelectorAll<HTMLElement>(".ext-list-row"),
-    ].map((rowEl) => _collectRow(rowEl, itemSchema));
+    const rows = [...rowsEl.querySelectorAll<HTMLElement>(".ext-list-row")].map(
+      (rowEl) => _collectRow(rowEl, itemSchema),
+    );
     hidden.value = serializeRows(rows, itemSchema);
   };
 
   const updateSummary = (rowEl: HTMLElement): void => {
     const summary = rowEl.querySelector<HTMLElement>(".ext-list-row-summary");
     if (summary) {
-      summary.textContent = rowSummary(_collectRow(rowEl, itemSchema), itemSchema) || "…";
+      summary.textContent =
+        rowSummary(_collectRow(rowEl, itemSchema), itemSchema) || "…";
     }
   };
 
   const bindRow = (rowEl: HTMLElement): void => {
     const editor = rowEl.querySelector<HTMLElement>(".ext-list-row-editor");
-    rowEl
-      .querySelector(".ext-list-row-edit")
-      ?.addEventListener("click", () => {
-        if (editor) editor.hidden = !editor.hidden;
-      });
+    rowEl.querySelector(".ext-list-row-edit")?.addEventListener("click", () => {
+      if (editor) editor.hidden = !editor.hidden;
+    });
     rowEl
       .querySelector(".ext-list-row-remove")
       ?.addEventListener("click", () => {
@@ -214,10 +218,12 @@ const _initOne = (fieldEl: HTMLElement, extId: string): void => {
       updateSummary(rowEl);
       sync();
     };
-    rowEl.querySelectorAll<HTMLElement>(".ext-list-subfield").forEach((input) => {
-      input.addEventListener("input", rowChanged);
-      input.addEventListener("change", rowChanged);
-    });
+    rowEl
+      .querySelectorAll<HTMLElement>(".ext-list-subfield")
+      .forEach((input) => {
+        input.addEventListener("input", rowChanged);
+        input.addEventListener("change", rowChanged);
+      });
     _bindHexSub(rowEl, rowChanged);
     _bindRangeSub(rowEl);
     _bindFileSub(rowEl, extId, rowChanged);

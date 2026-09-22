@@ -1,4 +1,4 @@
-import type { Child, EventHandler } from "../../core/types";
+import type { Child, EventHandler } from "../../tribute/types";
 
 export type ButtonVariant = "primary" | "secondary" | "danger";
 
@@ -14,7 +14,10 @@ export interface ButtonProps {
   [attribute: string]: unknown;
 }
 
-export const buttonClass = (variant: ButtonVariant | undefined, extra?: string): string => {
+export const buttonClass = (
+  variant: ButtonVariant | undefined,
+  extra?: string,
+): string => {
   const base = variant
     ? `btn btn--${variant} degoog-btn degoog-btn--${variant}`
     : "degoog-btn";

@@ -1,4 +1,4 @@
-import { renderHtml } from "../../shared/ui/core/html";
+import { renderHtml } from "../../shared/ui/tribute/html";
 import { GateNote } from "./pages/gate-note";
 import { TakeoverResultItem } from "./pages/takeover-result";
 import { Context, Hono } from "hono";
@@ -124,8 +124,8 @@ const _buildSettingsGatePage = async (locale?: string): Promise<string> => {
   const t = await getCoreTranslator();
   const note = hasGeneratedDefaultSettingsPassword()
     ? _buildGateNote(
-      t("settings-page.gate.generated-password-note", undefined, locale),
-    )
+        t("settings-page.gate.generated-password-note", undefined, locale),
+      )
     : "";
   return html.replace("__SETTINGS_AUTH_DEFAULT_PASSWORD_NOTE__", note);
 };

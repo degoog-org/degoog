@@ -1,4 +1,4 @@
-import { render } from "../../shared/ui/core/dom";
+import { render } from "../../shared/ui/tribute/dom";
 import { LangError } from "./lang-error";
 import { LangOption } from "./lang-option";
 import { state } from "../state";
@@ -228,8 +228,7 @@ export function initOptionsDropdown(): void {
           void performSearch(state.currentQuery, state.currentType);
       });
     } catch {
-      if (langList)
-        render(<LangError />, langList);
+      if (langList) render(<LangError />, langList);
     }
   }
 

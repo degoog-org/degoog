@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { ShortcutCard } from "./shortcut-card";
 import { ShortcutsHeader } from "./shortcuts-header";
 import { getBase } from "../../utils/base-url";
@@ -26,7 +26,10 @@ let _customActions: ShortcutActionMeta[] = [];
 let _getToken: () => string | null = () => null;
 let _stopRecording: (() => void) | null = null;
 
-const _actions = (): ShortcutActionMeta[] => [...SHORTCUT_ACTIONS, ..._customActions];
+const _actions = (): ShortcutActionMeta[] => [
+  ...SHORTCUT_ACTIONS,
+  ..._customActions,
+];
 
 const _action = (id: string): ShortcutActionMeta | undefined =>
   _actions().find((a) => a.id === id);
@@ -110,7 +113,9 @@ const _record = (action: ShortcutActionMeta, btn: HTMLButtonElement): void => {
   document.addEventListener("keydown", onKey, true);
 };
 
-const _toggleHandler = (action: ShortcutActionMeta): ((event: Event) => void) => {
+const _toggleHandler = (
+  action: ShortcutActionMeta,
+): ((event: Event) => void) => {
   let reqToken = 0;
   let confirmed = !action.disabled;
   return (event: Event): void => {
@@ -186,7 +191,9 @@ export const initShortcutsTab = async (
     <>
       <ShortcutsHeader
         onAdd={() =>
-          void openAddShortcutModal(_getToken, () => initShortcutsTab(_getToken))
+          void openAddShortcutModal(_getToken, () =>
+            initShortcutsTab(_getToken),
+          )
         }
         onResetAll={() => {
           _overrides = {};

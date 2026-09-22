@@ -1,5 +1,5 @@
 import pkg from "../../../../package.json";
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { GeneralContent } from "./general-content";
 import { PublicSettingsTop } from "./public-settings-top";
 import { INSTANCE_DEFAULT_VALUE, PREF_TOGGLES } from "./toggles";
@@ -15,7 +15,9 @@ import { isUpdateAvailable } from "../../../shared/utils/version";
 const t = window.scopedT("core");
 
 async function getNewestRelease(): Promise<string> {
-  const tags = await fetch("https://api.github.com/repos/degoog-org/degoog/tags");
+  const tags = await fetch(
+    "https://api.github.com/repos/degoog-org/degoog/tags",
+  );
   if (tags) {
     const json = await tags.json();
     const value = json?.[0]?.name;
@@ -25,7 +27,9 @@ async function getNewestRelease(): Promise<string> {
 }
 
 export async function initAppearanceSettings(): Promise<void> {
-  const themeSelect = document.getElementById("theme-select") as HTMLSelectElement | null;
+  const themeSelect = document.getElementById(
+    "theme-select",
+  ) as HTMLSelectElement | null;
 
   if (themeSelect) {
     const saved = await idbGet<string>(THEME_KEY);
@@ -42,7 +46,9 @@ export async function initAppearanceSettings(): Promise<void> {
     });
   }
 
-  const originSelect = document.getElementById("engine-origin-select") as HTMLSelectElement | null;
+  const originSelect = document.getElementById(
+    "engine-origin-select",
+  ) as HTMLSelectElement | null;
 
   if (originSelect) {
     const saved = await idbGet<string>(ENGINE_ORIGIN_DISPLAY);
@@ -74,7 +80,9 @@ export const bindResetDefaults = (
   keys: readonly string[],
   rerender: () => Promise<void>,
 ): void => {
-  const resetBtn = document.getElementById("settings-sync-reset-defaults") as HTMLButtonElement | null;
+  const resetBtn = document.getElementById(
+    "settings-sync-reset-defaults",
+  ) as HTMLButtonElement | null;
   resetBtn?.addEventListener("click", async () => {
     const confirmed = await confirmModal({
       title: t("settings-page.sync.reset-button"),
@@ -94,7 +102,9 @@ export async function initPublicGeneral(): Promise<void> {
 }
 
 async function initSyncSetting(getToken: () => string | null): Promise<void> {
-  const btn = document.getElementById("settings-sync-save-defaults") as HTMLButtonElement | null;
+  const btn = document.getElementById(
+    "settings-sync-save-defaults",
+  ) as HTMLButtonElement | null;
   if (btn) {
     const label = btn.textContent;
     btn.addEventListener("click", async () => {
@@ -114,10 +124,18 @@ async function initSyncSetting(getToken: () => string | null): Promise<void> {
 }
 
 async function initVersionChecker(): Promise<void> {
-  const newestVersionEl = document.getElementById("settings-update-check-newestversion");
-  const lastCheckedEl = document.getElementById("settings-update-check-lastchecked");
-  const checkNowBtn = document.getElementById("settings-update-check-check") as HTMLButtonElement | null;
-  const newAvailableEl = document.getElementById("settings-update-check-newversionavailable");
+  const newestVersionEl = document.getElementById(
+    "settings-update-check-newestversion",
+  );
+  const lastCheckedEl = document.getElementById(
+    "settings-update-check-lastchecked",
+  );
+  const checkNowBtn = document.getElementById(
+    "settings-update-check-check",
+  ) as HTMLButtonElement | null;
+  const newAvailableEl = document.getElementById(
+    "settings-update-check-newversionavailable",
+  );
 
   let latestDate = new Date(0);
   const latest = localStorage.getItem("last-update-check");
@@ -132,13 +150,19 @@ async function initVersionChecker(): Promise<void> {
     localStorage.setItem("last-update-check-version", newCheck);
   }
 
-  if (lastCheckedEl) lastCheckedEl.textContent = latestDate.toLocaleDateString();
+  if (lastCheckedEl)
+    lastCheckedEl.textContent = latestDate.toLocaleDateString();
   const currentVersion = localStorage.getItem("last-update-check-version");
-  if (currentVersion && isUpdateAvailable(pkg.version, currentVersion) && newAvailableEl)
+  if (
+    currentVersion &&
+    isUpdateAvailable(pkg.version, currentVersion) &&
+    newAvailableEl
+  )
     newAvailableEl.removeAttribute("style");
 
   const latestVersion = localStorage.getItem("last-update-check-version");
-  if (latestVersion && newestVersionEl) newestVersionEl.textContent = latestVersion;
+  if (latestVersion && newestVersionEl)
+    newestVersionEl.textContent = latestVersion;
 
   checkNowBtn?.addEventListener("click", async () => {
     const newest = await getNewestRelease();
@@ -146,11 +170,15 @@ async function initVersionChecker(): Promise<void> {
     localStorage.setItem("last-update-check-version", newest);
     const newLatest = new Date();
     localStorage.setItem("last-update-check", newLatest.toUTCString());
-    if (lastCheckedEl) lastCheckedEl.textContent = newLatest.toLocaleDateString();
-    if (newest != "Unknown" && isUpdateAvailable(pkg.version, newest) && newAvailableEl)
+    if (lastCheckedEl)
+      lastCheckedEl.textContent = newLatest.toLocaleDateString();
+    if (
+      newest != "Unknown" &&
+      isUpdateAvailable(pkg.version, newest) &&
+      newAvailableEl
+    )
       newAvailableEl.removeAttribute("style");
-    else
-      newAvailableEl?.setAttribute("style","display:none");
+    else newAvailableEl?.setAttribute("style", "display:none");
   });
 }
 

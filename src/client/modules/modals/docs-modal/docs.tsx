@@ -1,10 +1,13 @@
-import { render } from "../../../../shared/ui/core/dom";
+import { render } from "../../../../shared/ui/tribute/dom";
 import { DocsEmpty } from "./docs-empty";
 import { DocsError } from "./docs-error";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
 import { getBase } from "../../../utils/base-url";
-import { mountModalShell, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
+import {
+  mountModalShell,
+  type MountedModal,
+} from "../../../../shared/ui/components/overlay/shell";
 
 const MODAL_ID = "ext-docs";
 
@@ -69,8 +72,7 @@ export async function openExtensionDocs(options: {
       else render(<DocsEmpty />, shell.body);
     }
   } catch {
-    if (shell)
-      render(<DocsError />, shell.body);
+    if (shell) render(<DocsError />, shell.body);
   }
 
   setTimeout(() => shell?.close.focus(), 0);

@@ -1,4 +1,4 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { getBase } from "../../utils/base-url";
 import { authHeaders, jsonHeaders } from "../../utils/request";
 
@@ -24,7 +24,10 @@ const _bindEditorKeys = (textarea: HTMLTextAreaElement): void => {
         textarea.value =
           value.slice(0, blockStart) + outdented + value.slice(blockEnd);
         textarea.selectionStart = Math.max(blockStart, start - 2);
-        textarea.selectionEnd = Math.max(textarea.selectionStart, end - removed);
+        textarea.selectionEnd = Math.max(
+          textarea.selectionStart,
+          end - removed,
+        );
       }
       return;
     }
@@ -44,10 +47,16 @@ const _bindEditorKeys = (textarea: HTMLTextAreaElement): void => {
   });
 };
 
-export const ShortcutEditorFields = ({ scaffold }: { scaffold: string }): JSX.Element => (
+export const ShortcutEditorFields = ({
+  scaffold,
+}: {
+  scaffold: string;
+}): JSX.Element => (
   <>
     <label class="ext-field">
-      <span class="ext-field-label">{t("settings-page.shortcuts.file-name")}</span>
+      <span class="ext-field-label">
+        {t("settings-page.shortcuts.file-name")}
+      </span>
       <input
         class="ext-field-input degoog-input"
         id="shortcut-file-name"
@@ -81,15 +90,20 @@ export const openAddShortcutModal = async (
   const titleEl = document.getElementById("ext-modal-title");
   const bodyEl = document.getElementById("ext-modal-body");
   const statusEl = document.getElementById("ext-modal-status");
-  const saveEl = document.getElementById("ext-modal-save") as HTMLButtonElement | null;
+  const saveEl = document.getElementById(
+    "ext-modal-save",
+  ) as HTMLButtonElement | null;
   const closeEl = document.getElementById("ext-modal-close");
   if (!overlay || !bodyEl || !saveEl) return;
   modal?.classList.add("ext-modal--wide", "shortcut-editor-modal");
-  const scaffoldRes = await fetch(`${getBase()}/api/settings/shortcuts/scaffold`, {
-    headers: authHeaders(getToken),
-  });
+  const scaffoldRes = await fetch(
+    `${getBase()}/api/settings/shortcuts/scaffold`,
+    {
+      headers: authHeaders(getToken),
+    },
+  );
   const scaffold = scaffoldRes.ok
-    ? ((await scaffoldRes.json()) as { source?: string }).source ?? ""
+    ? (((await scaffoldRes.json()) as { source?: string }).source ?? "")
     : "";
   if (titleEl) titleEl.textContent = t("settings-page.shortcuts.add");
   if (statusEl) statusEl.textContent = "";
@@ -98,8 +112,12 @@ export const openAddShortcutModal = async (
   clear(bodyEl);
   render(<ShortcutEditorFields scaffold={scaffold} />, bodyEl);
   overlay.style.display = "flex";
-  const sourceEl = document.getElementById("shortcut-source") as HTMLTextAreaElement | null;
-  const nameEl = document.getElementById("shortcut-file-name") as HTMLInputElement | null;
+  const sourceEl = document.getElementById(
+    "shortcut-source",
+  ) as HTMLTextAreaElement | null;
+  const nameEl = document.getElementById(
+    "shortcut-file-name",
+  ) as HTMLInputElement | null;
   if (sourceEl) _bindEditorKeys(sourceEl);
   sourceEl?.focus();
   const cleanup = (): void => {

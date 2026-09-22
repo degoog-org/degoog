@@ -1,4 +1,4 @@
-import { renderHtml } from "../../core/html";
+import { renderHtml } from "../../tribute/html";
 import { Modal, type ModalProps } from "./modal";
 
 export interface MountedModal {

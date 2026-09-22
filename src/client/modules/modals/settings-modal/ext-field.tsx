@@ -1,4 +1,4 @@
-import type { Child } from "../../../../shared/ui/core/types";
+import type { Child } from "../../../../shared/ui/tribute/types";
 
 export interface ExtFieldProps {
   fieldKey: string;
@@ -13,7 +13,12 @@ export const ExtField = ({
   extra,
   children,
 }: ExtFieldProps): JSX.Element => (
-  <div class="ext-field" data-key={fieldKey} data-type={type} {...(extra ?? {})}>
+  <div
+    class="ext-field"
+    data-key={fieldKey}
+    data-type={type}
+    {...(extra ?? {})}
+  >
     {children}
   </div>
 );

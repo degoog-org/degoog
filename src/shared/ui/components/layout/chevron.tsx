@@ -1,4 +1,4 @@
-import { raw } from "../../core/raw";
+import { raw } from "../../tribute/rawdogit";
 
 /**
  * Kept as raw markup so the serialised SVG stays byte-identical to the four

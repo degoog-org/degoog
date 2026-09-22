@@ -1,6 +1,6 @@
 import { ExtField } from "./ext-field";
 import { DEFAULT_HEX, HEX_RE, normalizeHex } from "./field-widgets";
-import type { Child } from "../../../../shared/ui/core/types";
+import type { Child } from "../../../../shared/ui/tribute/types";
 import type { SettingField } from "../../../types";
 
 export interface HexFieldProps {
@@ -9,8 +9,13 @@ export interface HexFieldProps {
   desc?: Child;
 }
 
-export const HexField = ({ field, value, desc }: HexFieldProps): JSX.Element => {
-  const hex = value && HEX_RE.test(value) ? value : field.default || DEFAULT_HEX;
+export const HexField = ({
+  field,
+  value,
+  desc,
+}: HexFieldProps): JSX.Element => {
+  const hex =
+    value && HEX_RE.test(value) ? value : field.default || DEFAULT_HEX;
   return (
     <ExtField fieldKey={field.key} type="hex">
       <label class="ext-field-label" for={`field-${field.key}`}>

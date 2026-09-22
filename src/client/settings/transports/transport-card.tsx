@@ -1,4 +1,4 @@
-import { raw } from "../../../shared/ui/core/raw";
+import { raw } from "../../../shared/ui/tribute/rawdogit";
 import { ExtCard } from "../../../shared/ui/components/extensions/ext-card";
 import { ExtCardDesc } from "../../../shared/ui/components/extensions/ext-card-desc";
 import { ExtCardName } from "../../../shared/ui/components/extensions/ext-card-name";
@@ -14,7 +14,11 @@ import { openModal } from "../../modules/modals/settings-modal/modal";
 import { renderMdInline } from "../../utils/md";
 import type { ExtensionMeta } from "../../types";
 
-export const TransportCard = ({ transport }: { transport: ExtensionMeta }): JSX.Element => {
+export const TransportCard = ({
+  transport,
+}: {
+  transport: ExtensionMeta;
+}): JSX.Element => {
   const isEnabled = transport.settings["disabled"] !== "true";
   const toggleId = `transport-toggle-${transport.id}`;
 

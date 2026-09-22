@@ -1,4 +1,4 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { LoadingDots } from "../../../shared/ui/components/feedback/loading-dots";
 import { MediaPreviewActions } from "./media-preview-actions";
 import { MediaPreviewInfo } from "./media-preview-info";
@@ -7,12 +7,20 @@ import { getBase } from "../../utils/base-url";
 import type { ScoredResult } from "../../types";
 import { cleanHostname } from "../../utils/dom";
 import { getEngines, isImageSearchType } from "../../utils/engines";
-import { buildSearchBody, buildSearchUrl, faviconHostname } from "../../utils/url";
+import {
+  buildSearchBody,
+  buildSearchUrl,
+  faviconHostname,
+} from "../../utils/url";
 import { attachFaviconFallback } from "../../utils/favicon";
 import { openLightbox, dropLbOverlay } from "./lightbox";
 import { searchAuthHeaders, appendSearchAuthParams } from "../../utils/request";
 import { renderTemplate } from "../../utils/template";
-import { openOverlay, closeOverlay, discardOverlay } from "../../utils/overlay-history";
+import {
+  openOverlay,
+  closeOverlay,
+  discardOverlay,
+} from "../../utils/overlay-history";
 
 const MORE_IMAGES_COUNT = 15;
 export const MEDIA_PREVIEW_OVERLAY = "media-preview";
@@ -26,10 +34,10 @@ export enum MediaPreviewCloseMode {
 let mediaObserver: IntersectionObserver | null = null;
 let appendMediaCardsRef:
   | ((
-    grid: HTMLElement,
-    results: ScoredResult[],
-    type: "image" | "video",
-  ) => void)
+      grid: HTMLElement,
+      results: ScoredResult[],
+      type: "image" | "video",
+    ) => void)
   | null = null;
 let currentMediaIdx = -1;
 let currentCardSelector = "";
@@ -110,20 +118,20 @@ export async function loadMoreMedia(type: string): Promise<void> {
       const engines = await getEngines();
       res = state.postMethodEnabled
         ? await fetch(`${getBase()}/api/search`, {
-          method: "POST",
-          body: JSON.stringify(
-            buildSearchBody(state.currentQuery, engines, type, nextPage),
-          ),
-          headers: {
-            "Content-Type": "application/json",
-            ...searchAuthHeaders(),
-          },
-        })
+            method: "POST",
+            body: JSON.stringify(
+              buildSearchBody(state.currentQuery, engines, type, nextPage),
+            ),
+            headers: {
+              "Content-Type": "application/json",
+              ...searchAuthHeaders(),
+            },
+          })
         : await fetch(
-          appendSearchAuthParams(
-            buildSearchUrl(state.currentQuery, engines, type, nextPage),
-          ),
-        );
+            appendSearchAuthParams(
+              buildSearchUrl(state.currentQuery, engines, type, nextPage),
+            ),
+          );
     }
 
     const raw = (await res.json()) as {
@@ -144,11 +152,7 @@ export async function loadMoreMedia(type: string): Promise<void> {
         isImage ? ".image-grid" : ".video-grid",
       );
       if (grid && appendMediaCardsRef) {
-        appendMediaCardsRef(
-          grid,
-          data.results,
-          isImage ? "image" : "video",
-        );
+        appendMediaCardsRef(grid, data.results, isImage ? "image" : "video");
       }
     }
   } finally {
@@ -166,7 +170,11 @@ export function toggleMediaPreview(
     .getElementById("media-preview-panel")
     ?.classList.contains("open");
 
-  if (isOpen && currentMediaIdx === idx && currentCardSelector === cardSelector) {
+  if (
+    isOpen &&
+    currentMediaIdx === idx &&
+    currentCardSelector === cardSelector
+  ) {
     closeMediaPreview();
     return;
   }
@@ -200,7 +208,10 @@ export function openMediaPreview(
   imgWrap?.querySelector(".media-preview-embed")?.remove();
 
   if (img) {
-    const fallbackSrc = previewSrc === item.thumbnail ? item.imageUrl || "" : item.thumbnail || "";
+    const fallbackSrc =
+      previewSrc === item.thumbnail
+        ? item.imageUrl || ""
+        : item.thumbnail || "";
     img.dataset.triedFallback = "";
     img.style.display = "";
     img.src = previewSrc || "";
@@ -210,7 +221,11 @@ export function openMediaPreview(
       if (src) openLightbox(src);
     };
     img.onerror = () => {
-      if (!img.dataset.triedFallback && fallbackSrc && fallbackSrc !== img.src) {
+      if (
+        !img.dataset.triedFallback &&
+        fallbackSrc &&
+        fallbackSrc !== img.src
+      ) {
         img.dataset.triedFallback = "1";
         img.src = fallbackSrc;
       } else {
@@ -346,7 +361,11 @@ const _renderMoreMedia = (excludeIdx: number, cardSelector: string): void => {
     thumb.src = r.thumbnail || r.imageUrl || "";
     thumb.alt = r.title || "";
     thumb.onerror = () => {
-      if (!thumb.dataset.triedFallback && r.imageUrl && r.imageUrl !== thumb.src) {
+      if (
+        !thumb.dataset.triedFallback &&
+        r.imageUrl &&
+        r.imageUrl !== thumb.src
+      ) {
         thumb.dataset.triedFallback = "1";
         thumb.src = r.imageUrl;
       } else {
@@ -457,7 +476,8 @@ export function navigateMediaPreview(direction: -1 | 1): void {
 let _mediaPanel: HTMLElement | null = null;
 
 const _mediaPanelEl = (): HTMLElement | null => {
-  if (!_mediaPanel) _mediaPanel = document.getElementById("media-preview-panel");
+  if (!_mediaPanel)
+    _mediaPanel = document.getElementById("media-preview-panel");
   return _mediaPanel;
 };
 

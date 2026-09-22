@@ -1,4 +1,4 @@
-import type { Child } from "../../../shared/ui/core/types";
+import type { Child } from "../../../shared/ui/tribute/types";
 
 export interface SidebarStatRowProps {
   statusClass: string;
@@ -19,7 +19,9 @@ export const SidebarStatRow = ({
   retryPage,
   retryLabel,
 }: SidebarStatRowProps): JSX.Element => (
-  <div class={statusClass ? `engine-stat-row ${statusClass}` : "engine-stat-row"}>
+  <div
+    class={statusClass ? `engine-stat-row ${statusClass}` : "engine-stat-row"}
+  >
     <div class="engine-stat-info">
       <div class="engine-stat-label degoog-text">
         {origin}
@@ -30,7 +32,11 @@ export const SidebarStatRow = ({
       </div>
     </div>
     {retryEngine ? (
-      <a class="engine-retry-link degoog-link" data-engine={retryEngine} data-page={retryPage}>
+      <a
+        class="engine-retry-link degoog-link"
+        data-engine={retryEngine}
+        data-page={retryPage}
+      >
         {retryLabel}
       </a>
     ) : null}

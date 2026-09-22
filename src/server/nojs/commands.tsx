@@ -1,5 +1,5 @@
-import { renderHtml } from "../../shared/ui/core/html";
-import { Raw } from "../../shared/ui/core/raw";
+import { renderHtml } from "../../shared/ui/tribute/html";
+import { RawDogIt } from "../../shared/ui/tribute/rawdogit";
 import { CommandNotice } from "./command-notice";
 import { CommandPanel } from "./command-panel";
 import type { BangMatch } from "../extensions/commands/registry";
@@ -19,7 +19,7 @@ export interface NojsCommandRender {
 const _panel = (id: string, title: string, body: string): string =>
   renderHtml(
     <CommandPanel id={id} title={title}>
-      <Raw html={body} />
+      <RawDogIt html={body} />
     </CommandPanel>,
   );
 
@@ -67,7 +67,8 @@ export const renderNojsCommand = async (
       : result.html;
     return {
       html: _panel(match.commandId, result.title ?? "", html),
-      totalPages: result.totalPages && result.totalPages > 0 ? result.totalPages : 1,
+      totalPages:
+        result.totalPages && result.totalPages > 0 ? result.totalPages : 1,
     };
   } catch (err) {
     logger.error("nojs", `command ${match.commandId} failed`, err);

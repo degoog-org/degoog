@@ -1,4 +1,4 @@
-import { clear } from "../../../shared/ui/core/dom";
+import { clear } from "../../../shared/ui/tribute/dom";
 
 const _scoreT = window.scopedT("core");
 

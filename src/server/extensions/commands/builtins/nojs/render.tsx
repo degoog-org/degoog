@@ -1,4 +1,4 @@
-import { renderHtml } from "../../../../../shared/ui/core/html";
+import { renderHtml } from "../../../../../shared/ui/tribute/html";
 import { NojsLink } from "./link";
 import { NojsPanel } from "./panel";
 

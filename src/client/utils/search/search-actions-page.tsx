@@ -1,9 +1,6 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
-import {
-  SkeletonImageGrid,
-  SkeletonResults,
-} from "../../animations/skeleton";
+import { SkeletonImageGrid, SkeletonResults } from "../../animations/skeleton";
 import { getEngines, isImageSearchType } from "../engines";
 import { state } from "../../state";
 import { buildSearchBody, buildSearchUrl } from "../url";
@@ -102,6 +99,9 @@ export async function goToPage(pageNum: number): Promise<void> {
   } catch (err) {
     console.error("[search] page failed", err);
     if (resultsList)
-      render(<NoResults>Search failed. Please try again.</NoResults>, resultsList);
+      render(
+        <NoResults>Search failed. Please try again.</NoResults>,
+        resultsList,
+      );
   }
 }

@@ -1,4 +1,4 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
 import { PaginationWrap } from "../../utils/pagination-wrap";
 import {
@@ -23,7 +23,13 @@ import {
   performStreamingSearch,
 } from "../../utils/streaming-search";
 import { renderTemplate } from "../../utils/template";
-import { closeMediaPreview, destroyMediaObserver, MediaPreviewCloseMode, setupMediaObserver, syncMediaPreviewPanel } from "../media/media";
+import {
+  closeMediaPreview,
+  destroyMediaObserver,
+  MediaPreviewCloseMode,
+  setupMediaObserver,
+  syncMediaPreviewPanel,
+} from "../media/media";
 import {
   buildResultContext,
   clearSlotPanels,
@@ -83,7 +89,10 @@ export async function performTabSearch(
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    render(isImageType ? <SkeletonImageGrid /> : <SkeletonResults />, resultsList);
+    render(
+      isImageType ? <SkeletonImageGrid /> : <SkeletonResults />,
+      resultsList,
+    );
   }
   const pagination = document.getElementById("pagination");
   if (pagination) clear(pagination);
@@ -97,7 +106,9 @@ export async function performTabSearch(
   clearSlotPanels();
   if (!isImageType) {
     void fetchSlotPanels(query).then((panels) => {
-      const kp = panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel);
+      const kp = panels.filter(
+        (p) => p.position === SlotPanelPosition.KnowledgePanel,
+      );
       if (kp.length > 0) prependKnowledgePanels(kp);
     });
     void fetchGlancePanels(query);
@@ -179,7 +190,10 @@ export async function performTabSearch(
     console.error("[tab-search] search failed", err);
     if (resultsMeta) resultsMeta.textContent = "";
     if (resultsList)
-      render(<NoResults>Search failed. Please try again.</NoResults>, resultsList);
+      render(
+        <NoResults>Search failed. Please try again.</NoResults>,
+        resultsList,
+      );
     return;
   }
 

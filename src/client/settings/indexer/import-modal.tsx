@@ -1,4 +1,4 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { ImportBody } from "./import-body";
 import { getBase } from "../../utils/base-url";
 import { authHeaders } from "../../utils/request";
@@ -66,7 +66,10 @@ const runImport = async (
 
   const startRes = await fetch(`${base}/api/indexer/import/start`, {
     method: "POST",
-    headers: { ...authHeaders(getStoredToken), "Content-Type": "application/json" },
+    headers: {
+      ...authHeaders(getStoredToken),
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ type }),
   });
   const start = (await startRes.json().catch(() => ({}))) as StartResponse;
@@ -86,7 +89,10 @@ const runImport = async (
   bar.label(tr("import-processing"));
   const doneRes = await fetch(`${base}/api/indexer/import/complete`, {
     method: "POST",
-    headers: { ...authHeaders(getStoredToken), "Content-Type": "application/json" },
+    headers: {
+      ...authHeaders(getStoredToken),
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ session: start.sessionId }),
   });
   const data = (await doneRes.json().catch(() => ({}))) as CompleteResponse;
@@ -105,8 +111,12 @@ export const openImportModal = async (onDone: () => void): Promise<void> => {
   const titleEl = document.getElementById("ext-modal-title");
   const bodyEl = document.getElementById("ext-modal-body");
   const statusEl = document.getElementById("ext-modal-status");
-  const staleSave = document.getElementById("ext-modal-save") as HTMLButtonElement | null;
-  const staleClose = document.getElementById("ext-modal-close") as HTMLButtonElement | null;
+  const staleSave = document.getElementById(
+    "ext-modal-save",
+  ) as HTMLButtonElement | null;
+  const staleClose = document.getElementById(
+    "ext-modal-close",
+  ) as HTMLButtonElement | null;
   if (!overlay || !titleEl || !bodyEl || !statusEl || !staleSave) return;
 
   const saveEl = freshBtn(staleSave);
@@ -129,8 +139,12 @@ export const openImportModal = async (onDone: () => void): Promise<void> => {
   saveEl.hidden = false;
   overlay.style.display = "";
 
-  const typeEl = bodyEl.querySelector<HTMLSelectElement>("#indexer-import-type");
-  const customTypeEl = bodyEl.querySelector<HTMLInputElement>("#indexer-import-custom-type");
+  const typeEl = bodyEl.querySelector<HTMLSelectElement>(
+    "#indexer-import-type",
+  );
+  const customTypeEl = bodyEl.querySelector<HTMLInputElement>(
+    "#indexer-import-custom-type",
+  );
 
   typeEl?.addEventListener("change", () => {
     if (!customTypeEl) return;
@@ -153,9 +167,16 @@ export const openImportModal = async (onDone: () => void): Promise<void> => {
   const onSave = async (): Promise<void> => {
     if (running) return;
     const sel = bodyEl.querySelector<HTMLSelectElement>("#indexer-import-type");
-    const customEl = bodyEl.querySelector<HTMLInputElement>("#indexer-import-custom-type");
-    const fileEl = bodyEl.querySelector<HTMLInputElement>("#indexer-import-file");
-    const type = sel?.value === IMPORT_CUSTOM_TYPE ? customEl?.value.trim() : sel?.value.trim();
+    const customEl = bodyEl.querySelector<HTMLInputElement>(
+      "#indexer-import-custom-type",
+    );
+    const fileEl = bodyEl.querySelector<HTMLInputElement>(
+      "#indexer-import-file",
+    );
+    const type =
+      sel?.value === IMPORT_CUSTOM_TYPE
+        ? customEl?.value.trim()
+        : sel?.value.trim();
     const file = fileEl?.files?.[0];
     if (!type || !file) {
       statusEl.textContent = tr("import-missing");

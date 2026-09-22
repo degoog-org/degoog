@@ -1,4 +1,4 @@
-import { clear, render } from "../../shared/ui/core/dom";
+import { clear, render } from "../../shared/ui/tribute/dom";
 import { AutocompleteItem } from "./autocomplete-item";
 import { state } from "../state";
 import { searchAuthHeaders } from "./request";

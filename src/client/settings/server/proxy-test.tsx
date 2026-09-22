@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { ProxyTestMessage } from "./proxy-test-message";
 import { getBase } from "../../utils/base-url";
 import { jsonHeaders } from "../../utils/request";
@@ -8,24 +8,26 @@ const t = window.scopedT("core");
 
 function renderResult(el: HTMLElement, data: ProxyTestResult): void {
   if (!data.enabled) {
-    el.className="proxy-test-result proxy-test-result--warn";
+    el.className = "proxy-test-result proxy-test-result--warn";
     el.textContent = t("settings-page.proxy-test.not-enabled");
     return;
   }
 
   if (!data.directIp && !data.proxyIp) {
-    el.className="proxy-test-result proxy-test-result--error";
+    el.className = "proxy-test-result proxy-test-result--error";
     el.textContent = t("settings-page.proxy-test.ip-unreachable");
     return;
   }
 
   if (!data.proxyIp) {
-    el.className="proxy-test-result proxy-test-result--error";
+    el.className = "proxy-test-result proxy-test-result--error";
     const dip = data.directIp ?? "";
     render(
       <ProxyTestMessage
         title={t("settings-page.proxy-test.unreachable-title")}
-        detail={t("settings-page.proxy-test.unreachable-detail", { directIp: dip })}
+        detail={t("settings-page.proxy-test.unreachable-detail", {
+          directIp: dip,
+        })}
         hint={t("settings-page.proxy-test.unreachable-hint")}
         breakAfterTitle={false}
       />,
@@ -35,13 +37,16 @@ function renderResult(el: HTMLElement, data: ProxyTestResult): void {
   }
 
   if (data.match) {
-    el.className="proxy-test-result proxy-test-result--warn";
+    el.className = "proxy-test-result proxy-test-result--warn";
     const dip = data.directIp ?? "";
     const pip = data.proxyIp ?? "";
     render(
       <ProxyTestMessage
         title={t("settings-page.proxy-test.match-title")}
-        detail={t("settings-page.proxy-test.match-detail", { directIp: dip, proxyIp: pip })}
+        detail={t("settings-page.proxy-test.match-detail", {
+          directIp: dip,
+          proxyIp: pip,
+        })}
         hint={t("settings-page.proxy-test.match-hint")}
         breakAfterTitle={true}
       />,
@@ -50,13 +55,16 @@ function renderResult(el: HTMLElement, data: ProxyTestResult): void {
     return;
   }
 
-  el.className="proxy-test-result proxy-test-result--ok";
+  el.className = "proxy-test-result proxy-test-result--ok";
   const dip = data.directIp ?? "";
   const pip = data.proxyIp ?? "";
   render(
     <ProxyTestMessage
       title={t("settings-page.proxy-test.ok-title")}
-      detail={t("settings-page.proxy-test.ok-detail", { directIp: dip, proxyIp: pip })}
+      detail={t("settings-page.proxy-test.ok-detail", {
+        directIp: dip,
+        proxyIp: pip,
+      })}
       breakAfterTitle={true}
     />,
     el,
@@ -78,8 +86,12 @@ export function initProxyTest(getToken: () => string | null): void {
     btn.textContent = labelTesting;
     resultEl.hidden = true;
 
-    const enabledEl = document.getElementById("settings-proxy-enabled") as HTMLInputElement | null;
-    const urlsEl = document.getElementById("settings-proxy-urls") as HTMLTextAreaElement | null;
+    const enabledEl = document.getElementById(
+      "settings-proxy-enabled",
+    ) as HTMLInputElement | null;
+    const urlsEl = document.getElementById(
+      "settings-proxy-urls",
+    ) as HTMLTextAreaElement | null;
 
     try {
       const res = await fetch(`${getBase()}/api/settings/proxy-test`, {
@@ -91,7 +103,7 @@ export function initProxyTest(getToken: () => string | null): void {
         }),
       });
       if (!res.ok) {
-        resultEl.className="proxy-test-result proxy-test-result--error";
+        resultEl.className = "proxy-test-result proxy-test-result--error";
         resultEl.textContent = t("settings-page.proxy-test.server-error", {
           status: String(res.status),
         });
@@ -102,7 +114,7 @@ export function initProxyTest(getToken: () => string | null): void {
       renderResult(resultEl, data);
       resultEl.hidden = false;
     } catch {
-      resultEl.className="proxy-test-result proxy-test-result--error";
+      resultEl.className = "proxy-test-result proxy-test-result--error";
       resultEl.textContent = t("settings-page.proxy-test.request-failed");
       resultEl.hidden = false;
     } finally {

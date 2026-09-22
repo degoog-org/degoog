@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { StreamingEnginePanel } from "./streaming-engine-panel";
 import { StreamingStatRow } from "./streaming-stat-row";
 import { state } from "../../state";
@@ -52,7 +52,11 @@ export function updateResults(
       const oldSnippet =
         existing.querySelector(".result-snippet")?.textContent?.trim() ?? "";
       const idxChanged = (existing.dataset.idx ?? "") !== (r.idx ?? "");
-      if (oldSources !== newSources || oldSnippet !== r.snippet.trim() || idxChanged) {
+      if (
+        oldSources !== newSources ||
+        oldSnippet !== r.snippet.trim() ||
+        idxChanged
+      ) {
         const updated = renderResultEl(r, i);
         if (updated) {
           container.replaceChild(updated, existing);
@@ -101,11 +105,14 @@ export function updateEngineTimings(
   if (!panel) {
     sidebar.querySelector(".skeleton-sidebar")?.remove();
     panel = document.createElement("div");
-    const openClass = window.innerWidth >= PANEL_LAYOUT_BREAKPOINT ? " open" : "";
+    const openClass =
+      window.innerWidth >= PANEL_LAYOUT_BREAKPOINT ? " open" : "";
     panel.className = `sidebar-panel sidebar-accordion streaming-engine-panel${openClass} degoog-panel degoog-panel--accordion degoog-panel--stack-item`;
     const panelEl = panel;
     render(
-      <StreamingEnginePanel onToggle={() => panelEl.classList.toggle("open")} />,
+      <StreamingEnginePanel
+        onToggle={() => panelEl.classList.toggle("open")}
+      />,
       panelEl,
     );
     const relatedPanel = sidebar.querySelector<HTMLElement>(

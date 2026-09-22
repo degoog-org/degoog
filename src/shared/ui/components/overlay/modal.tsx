@@ -1,5 +1,5 @@
-import { Raw } from "../../core/raw";
-import type { Child } from "../../core/types";
+import { RawDogIt } from "../../tribute/rawdogit";
+import type { Child } from "../../tribute/types";
 
 export interface ModalProps {
   /** Id prefix. Yields `<id>-overlay`, `<id>`, `<id>-title`, `<id>-body`, `<id>-close`. */
@@ -40,8 +40,12 @@ export const Modal = ({
         <h2 class="ext-modal-title" id={`${id}-title`}>
           {title ?? ""}
         </h2>
-        <button class="ext-modal-close degoog-icon-btn" id={`${id}-close`} type="button">
-          <Raw html={"&times;"} />
+        <button
+          class="ext-modal-close degoog-icon-btn"
+          id={`${id}-close`}
+          type="button"
+        >
+          <RawDogIt html={"&times;"} />
         </button>
       </div>
       <div
@@ -50,7 +54,9 @@ export const Modal = ({
       >
         {children}
       </div>
-      {footer === undefined ? null : <div class="ext-modal-footer">{footer}</div>}
+      {footer === undefined ? null : (
+        <div class="ext-modal-footer">{footer}</div>
+      )}
     </div>
   </div>
 );

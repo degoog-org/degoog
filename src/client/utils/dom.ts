@@ -3,7 +3,11 @@ import { state } from "../state";
 export const cleanUrl = (url: string): string => {
   try {
     const parsed = new URL(url);
-    return parsed.hostname + parsed.pathname + (state.hideUrlParams ? "" : parsed.search);
+    return (
+      parsed.hostname +
+      parsed.pathname +
+      (state.hideUrlParams ? "" : parsed.search)
+    );
   } catch {
     return url;
   }
@@ -17,7 +21,7 @@ export const cleanHostname = (url: string): string => {
   }
 };
 
-export { escapeHtml, escapeAttribute } from "../../shared/ui/core/escape";
+export { escapeHtml, escapeAttribute } from "../../shared/ui/tribute/escape";
 
 const ALLOWED_URL_SCHEMES = new Set([
   "http",

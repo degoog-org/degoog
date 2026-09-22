@@ -1,6 +1,6 @@
 import { state } from "../../state";
 import type { EngineTiming } from "../../types";
-import { append, clear, render } from "../../../shared/ui/core/dom";
+import { append, clear, render } from "../../../shared/ui/tribute/dom";
 import { ImgFilterGroup } from "./img-filter-group";
 import { ImgFilterSuffix } from "./img-filter-suffix";
 import { ImgSidebarShell } from "./img-sidebar-shell";
@@ -16,7 +16,11 @@ import {
   TOOLS_PIN_EVENT,
   TOOLS_TOGGLE_ID,
 } from "./ids";
-import { getRegistry, getEngines, isImageSearchType } from "../../utils/engines";
+import {
+  getRegistry,
+  getEngines,
+  isImageSearchType,
+} from "../../utils/engines";
 import { setupRetryLinks } from "../renderer/render-sidebar";
 import { EngineStatsPanel } from "../renderer/engine-stats-panel";
 import { paintOrigins } from "../../utils/search/engine-origins";
@@ -34,8 +38,7 @@ const VALUE_LABEL_KEY: Record<string, string> = {
   on: "strict",
 };
 
-const labelFor = (value: string): string =>
-  tf(VALUE_LABEL_KEY[value] ?? value);
+const labelFor = (value: string): string => tf(VALUE_LABEL_KEY[value] ?? value);
 
 const filters = (): Record<string, string> =>
   state.imageFilter as Record<string, string>;
@@ -85,9 +88,7 @@ const shellNode = (): JSX.Element => (
 const setOpen = (open: boolean): void => {
   document.getElementById(FILTER_BAR_ID)?.classList.toggle("open", open);
   document.getElementById(LAYOUT_ID)?.classList.toggle("filters-open", open);
-  document
-    .querySelector(`.${OVERLAY_CLASS}`)
-    ?.classList.toggle("open", open);
+  document.querySelector(`.${OVERLAY_CLASS}`)?.classList.toggle("open", open);
 };
 
 const toolsOpen = (): boolean =>

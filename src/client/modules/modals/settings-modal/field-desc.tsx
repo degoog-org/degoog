@@ -1,10 +1,10 @@
-import { Raw } from "../../../../shared/ui/core/raw";
+import { RawDogIt } from "../../../../shared/ui/tribute/rawdogit";
 import { renderMdInline } from "../../../utils/md";
-import type { Child } from "../../../../shared/ui/core/types";
+import type { Child } from "../../../../shared/ui/tribute/types";
 
 export const FieldDesc = ({ markdown }: { markdown: string }): JSX.Element => (
   <p class="ext-field-desc">
-    <Raw html={renderMdInline(markdown)} />
+    <RawDogIt html={renderMdInline(markdown)} />
   </p>
 );
 

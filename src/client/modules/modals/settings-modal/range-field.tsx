@@ -1,5 +1,5 @@
 import { ExtField } from "./ext-field";
-import type { Child } from "../../../../shared/ui/core/types";
+import type { Child } from "../../../../shared/ui/tribute/types";
 import type { SettingField } from "../../../types";
 
 export interface RangeFieldProps {
@@ -19,7 +19,10 @@ export const RangeField = ({
   const current = value !== "" ? value : (field.default ?? min);
   return (
     <ExtField fieldKey={field.key} type="range">
-      <label class="ext-field-label ext-field-range-label" for={`field-${field.key}`}>
+      <label
+        class="ext-field-label ext-field-range-label"
+        for={`field-${field.key}`}
+      >
         <span>{field.label}</span>
         <output class="ext-field-range-value">{current}</output>
       </label>

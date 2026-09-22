@@ -1,4 +1,4 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { ClearBody } from "./clear-body";
 import { getBase } from "../../utils/base-url";
 import { jsonHeaders } from "../../utils/request";
@@ -10,7 +10,9 @@ export const openClearModal = (onCleared: () => void): void => {
   const titleEl = document.getElementById("ext-modal-title");
   const bodyEl = document.getElementById("ext-modal-body");
   const statusEl = document.getElementById("ext-modal-status");
-  const saveEl = document.getElementById("ext-modal-save") as HTMLButtonElement | null;
+  const saveEl = document.getElementById(
+    "ext-modal-save",
+  ) as HTMLButtonElement | null;
   const closeBtn = document.getElementById("ext-modal-close");
   if (!overlay || !titleEl || !bodyEl || !statusEl || !saveEl) return;
 
@@ -30,7 +32,9 @@ export const openClearModal = (onCleared: () => void): void => {
   closeBtn?.addEventListener("click", close, { once: true });
 
   saveEl.addEventListener("click", async () => {
-    const input = bodyEl.querySelector<HTMLInputElement>("#indexer-clear-confirm");
+    const input = bodyEl.querySelector<HTMLInputElement>(
+      "#indexer-clear-confirm",
+    );
     if (input?.value.trim() !== "CLEAR") {
       statusEl.textContent = tr("clear-modal-desc");
       return;

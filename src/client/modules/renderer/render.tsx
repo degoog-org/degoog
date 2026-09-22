@@ -1,4 +1,4 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { TransText } from "../../../shared/ui/components/primitives/trans-text";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
 import { NoEnginesLink } from "../../utils/search/no-engines-link";
@@ -15,7 +15,11 @@ import { faviconHostname, faviconUrl } from "../../utils/url";
 import { isImageSearchType } from "../../utils/engines";
 import { getBase } from "../../utils/base-url";
 import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
-import { destroyMediaObserver, setupMediaObserver, syncMediaPreviewPanel } from "../media/media";
+import {
+  destroyMediaObserver,
+  setupMediaObserver,
+  syncMediaPreviewPanel,
+} from "../media/media";
 import { renderImageGrid } from "./render-media";
 
 import { clearSlotPanels as _clearSlots } from "./render-slots";
@@ -187,8 +191,10 @@ export function appendResults(
     results
       .map(
         (r, i) =>
-          renderTemplate("degoog-result", buildResultContext(r, startIndex + i)) ??
-          "",
+          renderTemplate(
+            "degoog-result",
+            buildResultContext(r, startIndex + i),
+          ) ?? "",
       )
       .join(""),
   );
@@ -230,9 +236,11 @@ export function renderPagination(
   }
 
   const inner =
-    totalPages === null
-      ? <PaginationNav activePage={activePage} hasNext={hasNext} />
-      : <Pagination totalPages={totalPages} activePage={activePage} />;
+    totalPages === null ? (
+      <PaginationNav activePage={activePage} hasNext={hasNext} />
+    ) : (
+      <Pagination totalPages={totalPages} activePage={activePage} />
+    );
   render(<PaginationWrap>{inner}</PaginationWrap>, container);
 
   container.querySelectorAll<HTMLElement>("[data-page]").forEach((el) => {

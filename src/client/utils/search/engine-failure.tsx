@@ -1,4 +1,4 @@
-import type { Child } from "../../../shared/ui/core/types";
+import type { Child } from "../../../shared/ui/tribute/types";
 import { EngineStatReason } from "./engine-stat-reason";
 import type { EngineTiming } from "../../types";
 

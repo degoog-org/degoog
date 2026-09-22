@@ -1,9 +1,9 @@
 export { Fragment, jsx, jsxs, normalizeChildren } from "./jsx-runtime";
 
-export { escapeAttribute, escapeHtml } from "./core/escape";
-export { renderHtml } from "./core/html";
-export { append, clear, render } from "./core/dom";
-export { Raw, raw } from "./core/raw";
+export { escapeAttribute, escapeHtml } from "./tribute/escape";
+export { renderHtml } from "./tribute/html";
+export { append, clear, render } from "./tribute/dom";
+export { RawDogIt, raw } from "./tribute/rawdogit";
 export type {
   Child,
   Component,
@@ -14,6 +14,6 @@ export type {
   RawNode,
   TextNode,
   VNode,
-} from "./core/types";
+} from "./tribute/types";
 
 export * from "./components";

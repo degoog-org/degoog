@@ -1,3 +1,7 @@
+/**
+ * This is not the greatest framework in the world, this is just a tribute.
+ */
+
 import type {
   ElementNode,
   EventHandler,
@@ -118,7 +122,8 @@ const _create = (vnode: Concrete): Instance => {
 const _reusable = (instance: Instance, next: Concrete): boolean => {
   const previous = instance.vnode;
   if (previous.k !== next.k) return false;
-  const previousKey = previous.k === "text" || previous.k === "raw" ? undefined : previous.key;
+  const previousKey =
+    previous.k === "text" || previous.k === "raw" ? undefined : previous.key;
   const nextKey = next.k === "text" || next.k === "raw" ? undefined : next.key;
   if (previousKey !== nextKey) return false;
   if (previous.k === "el" && next.k === "el") return previous.tag === next.tag;
@@ -153,7 +158,12 @@ const _patch = (instance: Instance, next: Concrete): Instance => {
     return instance;
   }
 
-  _applyProps(el, previousEl.props, nextEl.props, instance.handlers ?? new Map());
+  _applyProps(
+    el,
+    previousEl.props,
+    nextEl.props,
+    instance.handlers ?? new Map(),
+  );
   instance.children = _patchChildren(
     el,
     instance.children ?? [],
@@ -205,12 +215,14 @@ function _patchChildren(
   }
 
   const owned = new Set<Node>();
-  for (const instance of result) for (const node of instance.nodes) owned.add(node);
+  for (const instance of result)
+    for (const node of instance.nodes) owned.add(node);
 
   for (const instance of previous) {
     if (used.has(instance)) continue;
     for (const node of instance.nodes) {
-      if (!owned.has(node) && node.parentNode === parent) parent.removeChild(node);
+      if (!owned.has(node) && node.parentNode === parent)
+        parent.removeChild(node);
     }
   }
 
@@ -249,6 +261,7 @@ export const clear = (container: Element): void => {
 
 export const append = (node: VNode | VNode[], container: Element): void => {
   for (const concrete of _flatten(Array.isArray(node) ? node : [node])) {
-    for (const created of _create(concrete).nodes) container.appendChild(created);
+    for (const created of _create(concrete).nodes)
+      container.appendChild(created);
   }
 };

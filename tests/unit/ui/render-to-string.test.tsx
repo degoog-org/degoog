@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { renderHtml } from "../../../src/shared/ui/core/html";
-import { Raw } from "../../../src/shared/ui/core/raw";
+import { renderHtml } from "../../../src/shared/ui/tribute/html";
+import { RawDogIt } from "../../../src/shared/ui/tribute/rawdogit";
 
 describe("renderHtml", () => {
   test.each([
@@ -39,11 +39,15 @@ describe("renderHtml", () => {
     expect(renderHtml(<div title={value as undefined} />)).toBe("<div></div>");
   });
 
-  test("Raw passes trusted html through unescaped", () => {
-    expect(renderHtml(<Raw html={'<b class="x">&</b>'} />)).toBe('<b class="x">&</b>');
+  test("RawDogIt passes trusted html through unescaped", () => {
+    expect(renderHtml(<RawDogIt html={'<b class="x">&</b>'} />)).toBe(
+      '<b class="x">&</b>',
+    );
   });
 
   test("key and static are structural, never attributes", () => {
-    expect(renderHtml(<div key="a" static={true} id="x" />)).toBe('<div id="x"></div>');
+    expect(renderHtml(<div key="a" static={true} id="x" />)).toBe(
+      '<div id="x"></div>',
+    );
   });
 });

@@ -1,13 +1,13 @@
 import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
-import { render } from "../../../../shared/ui/core/dom";
+import { render } from "../../../../shared/ui/tribute/dom";
 import { OPTIONS_BTN_CLASS } from "./options-button";
 import { OptionsList, OPTIONS_LIST_CLASS } from "./options-list";
 import { OptionsListItem, OPTIONS_ITEM_CLASS } from "./options-list-item";
 import { OptionsRow, OPTIONS_STATUS_CLASS } from "./options-row";
 import { OptionsSelectOption } from "./options-select-option";
-import type { Child } from "../../../../shared/ui/core/types";
+import type { Child } from "../../../../shared/ui/tribute/types";
 import type { FieldOption, SettingField } from "../../../types";
 import { parseFieldOptionsResponse } from "./options-field-parse";
 
@@ -160,7 +160,9 @@ export const initOptionsFields = (
         status.hidden = text === "";
       };
 
-      const list = fieldEl?.querySelector<HTMLElement>(`.${OPTIONS_LIST_CLASS}`);
+      const list = fieldEl?.querySelector<HTMLElement>(
+        `.${OPTIONS_LIST_CLASS}`,
+      );
       const input = fieldEl?.querySelector<HTMLInputElement>("input");
       let loaded: FieldOption[] = [];
       if (fieldEl && list && input) {

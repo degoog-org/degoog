@@ -1,4 +1,4 @@
-import { clear, render } from "../../shared/ui/core/dom";
+import { clear, render } from "../../shared/ui/tribute/dom";
 import { TransText } from "../../shared/ui/components/primitives/trans-text";
 import { NoResults } from "../../shared/ui/components/feedback/no-results";
 import { NoEnginesLink } from "./search/no-engines-link";
@@ -147,7 +147,10 @@ export async function performStreamingSearch(
   if (resultsMeta) resultsMeta.textContent = "Searching...";
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    render(isImageType ? <SkeletonImageGrid /> : <SkeletonResults />, resultsList);
+    render(
+      isImageType ? <SkeletonImageGrid /> : <SkeletonResults />,
+      resultsList,
+    );
   }
   const pagination = document.getElementById("pagination");
   if (pagination) clear(pagination);
@@ -163,7 +166,9 @@ export async function performStreamingSearch(
     abortSlotPanels();
   } else {
     void fetchSlotPanels(query).then((panels) => {
-      const kp = panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel);
+      const kp = panels.filter(
+        (p) => p.position === SlotPanelPosition.KnowledgePanel,
+      );
       if (kp.length > 0) prependKnowledgePanels(kp);
     });
     void fetchGlancePanels(query);
@@ -216,7 +221,9 @@ export async function performStreamingSearch(
   source.addEventListener("engine-result", (e) => {
     const data = JSON.parse(e.data) as StreamEngineResult;
 
-    const existingIdx = engineTimings.findIndex((timing) => timing.name === data.engine);
+    const existingIdx = engineTimings.findIndex(
+      (timing) => timing.name === data.engine,
+    );
     if (existingIdx >= 0) {
       engineTimings[existingIdx] = data.timing;
     } else {
@@ -269,7 +276,9 @@ export async function performStreamingSearch(
 
   source.addEventListener("engine-retry", (e) => {
     const data = JSON.parse(e.data) as StreamEngineRetry;
-    const existingIdx = engineTimings.findIndex((timing) => timing.name === data.engine);
+    const existingIdx = engineTimings.findIndex(
+      (timing) => timing.name === data.engine,
+    );
     if (existingIdx >= 0) {
       engineTimings[existingIdx] = { ...data.timing, resultCount: -1 };
     } else {
@@ -327,21 +336,22 @@ export async function performStreamingSearch(
     }
 
     if (currentResults.length === 0 && resultsList) {
-      const body = engineTimings.length === 0 ? (
-        <TransText
-          text={t("search-templates.no-engines", { store: "{store}" })}
-          slots={{
-            store: (
-              <NoEnginesLink
-                href={`${getBase()}/settings/store`}
-                label={t("search-templates.no-engines-store")}
-              />
-            ),
-          }}
-        />
-      ) : (
-        t("search-templates.no-results")
-      );
+      const body =
+        engineTimings.length === 0 ? (
+          <TransText
+            text={t("search-templates.no-engines", { store: "{store}" })}
+            slots={{
+              store: (
+                <NoEnginesLink
+                  href={`${getBase()}/settings/store`}
+                  label={t("search-templates.no-engines-store")}
+                />
+              ),
+            }}
+          />
+        ) : (
+          t("search-templates.no-results")
+        );
       render(<NoResults>{body}</NoResults>, resultsList);
     }
 

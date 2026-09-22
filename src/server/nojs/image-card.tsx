@@ -1,4 +1,4 @@
-import { Raw } from "../../shared/ui/core/raw";
+import { RawDogIt } from "../../shared/ui/tribute/rawdogit";
 
 export const ImageCard = ({
   href,
@@ -8,6 +8,6 @@ export const ImageCard = ({
   html: string;
 }): JSX.Element => (
   <a class="image-card" href={href} rel="noopener noreferrer">
-    <Raw html={html} />
+    <RawDogIt html={html} />
   </a>
 );

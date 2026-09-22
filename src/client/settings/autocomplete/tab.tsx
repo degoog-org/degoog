@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { ExtGroup } from "../../../shared/ui/components/extensions/ext-group";
 import { AutocompleteCard } from "./autocomplete-card";
 import { EmptyState } from "./empty-state";

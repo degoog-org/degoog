@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { InfiniteSentinel } from "./infinite-sentinel";
 import { InfiniteSkeleton } from "./infinite-skeleton";
 import { SENTINEL_CLASS, SKELETON_CLASS } from "./infinite-scroll-classes";
@@ -70,7 +70,12 @@ const _clearSkeleton = (): void => {
 
 const _fetchPage = async (page: number): Promise<SearchResponse | null> => {
   const engines = await getEngines();
-  const url = buildSearchUrl(state.currentQuery, engines, state.currentType, page);
+  const url = buildSearchUrl(
+    state.currentQuery,
+    engines,
+    state.currentType,
+    page,
+  );
   const res = state.postMethodEnabled
     ? await fetch(`${getBase()}/api/search`, {
         method: "POST",
@@ -101,7 +106,11 @@ const _syncHistory = (): void => {
     page: 1,
     loaded: state.currentPage,
   };
-  history.replaceState(historyState, "", `${getBase()}/search?${params.toString()}`);
+  history.replaceState(
+    historyState,
+    "",
+    `${getBase()}/search?${params.toString()}`,
+  );
 };
 
 const _applyPage = async (
@@ -160,7 +169,9 @@ const _loadNext = async (): Promise<void> => {
   }
 };
 
-export const restoreInfinitePages = async (targetPage: number): Promise<void> => {
+export const restoreInfinitePages = async (
+  targetPage: number,
+): Promise<void> => {
   if (loading || targetPage <= state.currentPage) return;
   loading = true;
   try {

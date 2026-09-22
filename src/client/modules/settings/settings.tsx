@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/core/dom";
+import { render } from "../../../shared/ui/tribute/dom";
 import { AuthGate } from "./auth-gate";
 import { AuthMisconfigured } from "./auth-misconfigured";
 import { ErrorNotice } from "./error-notice";
@@ -234,15 +234,30 @@ async function _initSettings(): Promise<void> {
     const autocompleteEl = document.getElementById("autocomplete-content");
     const themesEl = document.getElementById("themes-content");
     if (enginesEl)
-      render(<ErrorNotice messageKey="settings-page.errors.load-extensions" />, enginesEl);
+      render(
+        <ErrorNotice messageKey="settings-page.errors.load-extensions" />,
+        enginesEl,
+      );
     if (pluginsEl)
-      render(<ErrorNotice messageKey="settings-page.errors.load-extensions" />, pluginsEl);
+      render(
+        <ErrorNotice messageKey="settings-page.errors.load-extensions" />,
+        pluginsEl,
+      );
     if (transportsEl)
-      render(<ErrorNotice messageKey="settings-page.errors.load-transports" />, transportsEl);
+      render(
+        <ErrorNotice messageKey="settings-page.errors.load-transports" />,
+        transportsEl,
+      );
     if (autocompleteEl)
-      render(<ErrorNotice messageKey="settings-page.errors.load-autocomplete" />, autocompleteEl);
+      render(
+        <ErrorNotice messageKey="settings-page.errors.load-autocomplete" />,
+        autocompleteEl,
+      );
     if (themesEl)
-      render(<ErrorNotice messageKey="settings-page.errors.load-themes" />, themesEl);
+      render(
+        <ErrorNotice messageKey="settings-page.errors.load-themes" />,
+        themesEl,
+      );
   }
 }
 
@@ -289,7 +304,10 @@ async function _initPublicSettings(): Promise<void> {
     await renderGeneralOnly();
     const enginesEl = document.getElementById("engines-content");
     if (enginesEl)
-      render(<ErrorNotice messageKey="settings-page.errors.load-engines" />, enginesEl);
+      render(
+        <ErrorNotice messageKey="settings-page.errors.load-engines" />,
+        enginesEl,
+      );
   }
 }
 

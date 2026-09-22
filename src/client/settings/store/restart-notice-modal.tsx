@@ -1,4 +1,4 @@
-import { Raw } from "../../../shared/ui/core/raw";
+import { RawDogIt } from "../../../shared/ui/tribute/rawdogit";
 import { Button } from "../../../shared/ui/components/primitives/button";
 import { formatReason } from "../shared/restart-state";
 
@@ -31,11 +31,13 @@ export const RestartNoticeModal = ({
         aria-label={t("settings-page.restart.later")}
         onClick={onClose}
       >
-        <Raw html={"&times;"} />
+        <RawDogIt html={"&times;"} />
       </button>
     </div>
     <div class="ext-modal-body">
-      <p class="store-restart-intro">{t("settings-page.restart.modal-intro")}</p>
+      <p class="store-restart-intro">
+        {t("settings-page.restart.modal-intro")}
+      </p>
       <ul class="store-restart-list">
         {reasons.map((reason) => (
           <li key={reason}>{`• ${formatReason(reason)}`}</li>

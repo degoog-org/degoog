@@ -2,7 +2,7 @@ import { Desc } from "../../../../shared/ui/components/forms/desc";
 import { Icon } from "../../../../shared/ui/components/primitives/icon";
 import { Badge } from "../../../../shared/ui/components/primitives/badge";
 import { SECTION_CLASS } from "./classes";
-import type { Child } from "../../../../shared/ui/core/types";
+import type { Child } from "../../../../shared/ui/tribute/types";
 
 const t = window.scopedT("core");
 

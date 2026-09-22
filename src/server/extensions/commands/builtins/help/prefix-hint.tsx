@@ -1,7 +1,7 @@
-import { Raw } from "../../../../../shared/ui/core/raw";
+import { RawDogIt } from "../../../../../shared/ui/tribute/rawdogit";
 
 export const HelpPrefixHint = ({ html }: { html: string }): JSX.Element => (
   <div class="help-hint">
-    <Raw html={html} />
+    <RawDogIt html={html} />
   </div>
 );

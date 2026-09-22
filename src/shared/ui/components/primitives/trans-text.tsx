@@ -1,4 +1,4 @@
-import type { Child } from "../../core/types";
+import type { Child } from "../../tribute/types";
 
 const PLACEHOLDER = /\{([a-zA-Z][\w-]*)\}/g;
 

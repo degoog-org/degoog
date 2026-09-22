@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { renderHtml } from "../../../src/shared/ui/core/html";
+import { renderHtml } from "../../../src/shared/ui/tribute/html";
 import { TransText } from "../../../src/shared/ui/components/primitives/trans-text";
 
 const Link = (): JSX.Element => <a href="/settings/store">Store</a>;
@@ -33,7 +33,9 @@ describe("TransText", () => {
 
   test("leaves a placeholder with no slot as literal text", () => {
     expect(
-      renderHtml(<TransText text="a {missing} b" slots={{ store: <Link /> }} />),
+      renderHtml(
+        <TransText text="a {missing} b" slots={{ store: <Link /> }} />,
+      ),
     ).toBe("a {missing} b");
   });
 });

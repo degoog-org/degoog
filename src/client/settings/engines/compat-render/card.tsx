@@ -5,7 +5,7 @@ import { CompatUpdateButton, type CompatListUi } from "./update-button";
 import { compatPackages } from "./grouping";
 import { copy, WEB_TYPE } from "./copy";
 import { typeLabel } from "../type-label";
-import type { Child } from "../../../../shared/ui/core/types";
+import type { Child } from "../../../../shared/ui/tribute/types";
 import type { CompatCatalogItem } from "../../../types/compat-catalog";
 
 const _metaRows = (item: CompatCatalogItem, layer: string): Child[] => {
@@ -49,7 +49,9 @@ const _metaRows = (item: CompatCatalogItem, layer: string): Child[] => {
     rows.push(
       <CompatMetaRow
         label={copy("compat-notes-label", layer)}
-        value={notes.map((note) => copy(`compat-note-${note}`, layer)).join(", ")}
+        value={notes
+          .map((note) => copy(`compat-note-${note}`, layer))
+          .join(", ")}
         hint={copy("compat-notes-hint", layer)}
         layer={layer}
       />,
@@ -93,7 +95,9 @@ export const CompatCard = ({
         </div>
       </div>
       {rows.length ? (
-        <div class="degoog-vstack degoog-vstack--sm degoog-vstack--meta">{rows}</div>
+        <div class="degoog-vstack degoog-vstack--sm degoog-vstack--meta">
+          {rows}
+        </div>
       ) : null}
       {item.installed ? (
         <Button

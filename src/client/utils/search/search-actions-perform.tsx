@@ -1,4 +1,4 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { LoadingDots } from "../../../shared/ui/components/feedback/loading-dots";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
 import { PaginationWrap } from "../pagination-wrap";
@@ -178,8 +178,7 @@ export async function performSearch(
           ? "Too many requests. Please slow down."
           : "Search failed. Please try again.";
       if (resultsMeta) resultsMeta.textContent = "";
-      if (resultsList)
-        render(<NoResults>{msg}</NoResults>, resultsList);
+      if (resultsList) render(<NoResults>{msg}</NoResults>, resultsList);
       return;
     }
     const data = (await res.json()) as SearchResponse;
@@ -196,7 +195,10 @@ export async function performSearch(
     console.error("[search] search failed", err);
     if (resultsMeta) resultsMeta.textContent = "";
     if (resultsList)
-      render(<NoResults>Search failed. Please try again.</NoResults>, resultsList);
+      render(
+        <NoResults>Search failed. Please try again.</NoResults>,
+        resultsList,
+      );
   }
 }
 
@@ -246,7 +248,10 @@ async function _performSearchWithBang(
     console.error("[search] bang search failed", err);
     if (resultsMeta) resultsMeta.textContent = "";
     if (resultsList)
-      render(<NoResults>Search failed. Please try again.</NoResults>, resultsList);
+      render(
+        <NoResults>Search failed. Please try again.</NoResults>,
+        resultsList,
+      );
   }
 }
 
@@ -275,8 +280,7 @@ async function _performBangCommand(
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl) clear(glanceEl);
   const resultsList = document.getElementById("results-list");
-  if (resultsList)
-    render(<LoadingDots />, resultsList);
+  if (resultsList) render(<LoadingDots />, resultsList);
   const pagination = document.getElementById("pagination");
   if (pagination) clear(pagination);
   const sidebar = document.getElementById("results-sidebar");

@@ -1,4 +1,4 @@
-import { Raw } from "../../core/raw";
+import { RawDogIt } from "../../tribute/rawdogit";
 
 /**
  * Wraps a theme's template file in the `<template id="degoog-*">` element that
@@ -13,6 +13,6 @@ export const ThemeTemplate = ({
   content: string;
 }): JSX.Element => (
   <template id={`degoog-${id}`}>
-    <Raw html={content} />
+    <RawDogIt html={content} />
   </template>
 );

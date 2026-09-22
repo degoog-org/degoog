@@ -1,4 +1,4 @@
-import { raw } from "../../../shared/ui/core/raw";
+import { raw } from "../../../shared/ui/tribute/rawdogit";
 import { Badge } from "../../../shared/ui/components/primitives/badge";
 import { Button } from "../../../shared/ui/components/primitives/button";
 import { ExtCard } from "../../../shared/ui/components/extensions/ext-card";
@@ -37,13 +37,19 @@ export const EngineCard = ({
       id={engine.id}
       nameRow={[
         extCardRestartWarningNode(engine),
-        <ExtCardName htmlFor={toggleId} class="engine-toggle-label" name={engine.displayName} />,
+        <ExtCardName
+          htmlFor={toggleId}
+          class="engine-toggle-label"
+          name={engine.displayName}
+        />,
         engine.compatibilityLayer ? (
           <Badge modifier="engine-type">{engine.compatibilityLayer}</Badge>
         ) : null,
       ]}
       info={[
-        engine.description ? <ExtCardDesc html={raw(renderMdInline(engine.description))} /> : null,
+        engine.description ? (
+          <ExtCardDesc html={raw(renderMdInline(engine.description))} />
+        ) : null,
         extraTypes.length ? (
           <div class="ext-card-extra-types">
             <span class="ext-card-extra-types-label">
@@ -59,7 +65,12 @@ export const EngineCard = ({
       actions={[
         allowConfigure ? extCardBadgeNode(engine) : null,
         allowConfigure && engine.configurable ? (
-          <Button variant="secondary" class="ext-card-configure" data-id={engine.id} onClick={onConfigure}>
+          <Button
+            variant="secondary"
+            class="ext-card-configure"
+            data-id={engine.id}
+            onClick={onConfigure}
+          >
             {t("settings-page.extensions.configure")}
           </Button>
         ) : null,

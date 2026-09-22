@@ -2,7 +2,7 @@ import { CommandGlance } from "./search/command-glance";
 import { appendSlotPanels } from "../modules/renderer/render-slots";
 import { state } from "../state";
 import { getBase } from "./base-url";
-import { clear, render } from "../../shared/ui/core/dom";
+import { clear, render } from "../../shared/ui/tribute/dom";
 import { SlotPanel as SlotPanelView } from "../../shared/ui/components/search/slot-panel";
 import { SlotPanelPosition, type ScoredResult, type SlotPanel } from "../types";
 import { isImageSearchType } from "./engines";
@@ -46,17 +46,15 @@ export const abortSlotPanels = (): void => {
   independentKnowledgePanels = [];
 };
 
-const _slotRequestBody = (
-  query: string,
-  results?: ScoredResult[],
-): string => {
+const _slotRequestBody = (query: string, results?: ScoredResult[]): string => {
   const base = { query: query.trim(), type: state.currentType };
-  return JSON.stringify(
-    results !== undefined ? { ...base, results } : base,
-  );
+  return JSON.stringify(results !== undefined ? { ...base, results } : base);
 };
 
-const _renderGlanceHtml = (panels: SlotPanel[], clearIfEmpty: boolean): void => {
+const _renderGlanceHtml = (
+  panels: SlotPanel[],
+  clearIfEmpty: boolean,
+): void => {
   const glanceEl = document.getElementById("at-a-glance");
   if (!glanceEl) return;
   const glancePanels = panels.filter(

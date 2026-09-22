@@ -1,4 +1,4 @@
-import { Raw } from "../../../../shared/ui/core/raw";
+import { RawDogIt } from "../../../../shared/ui/tribute/rawdogit";
 import { Badge } from "../../../../shared/ui/components/primitives/badge";
 import { ItemCardActions } from "./item-card-actions";
 import { ItemCardAuthor } from "./item-card-author";
@@ -6,7 +6,7 @@ import { ShortcutKeycaps } from "./shortcut-keycaps";
 import { engineTypeLabel, pluginTypeLabel } from "./labels";
 import { screenshotUrl } from "../lightbox";
 import { renderMdInline } from "../../../utils/md";
-import type { Props } from "../../../../shared/ui/core/types";
+import type { Props } from "../../../../shared/ui/tribute/types";
 import type { StoreItem } from "../../../types/store-tab";
 
 const t = window.scopedT("core");
@@ -21,8 +21,10 @@ const _typeLabel = (item: StoreItem): string => {
 };
 
 const _subLabel = (item: StoreItem): string => {
-  if (item.type === "plugin") return item.pluginType ? pluginTypeLabel(item.pluginType) : "";
-  if (item.type === "engine") return item.engineType ? engineTypeLabel(item.engineType) : "";
+  if (item.type === "plugin")
+    return item.pluginType ? pluginTypeLabel(item.pluginType) : "";
+  if (item.type === "engine")
+    return item.engineType ? engineTypeLabel(item.engineType) : "";
   return "";
 };
 
@@ -67,7 +69,9 @@ export const ItemCard = ({ item }: { item: StoreItem }): JSX.Element => {
         {hasScreenshots ? (
           <img src={firstUrl} alt="" class="store-card-thumb" loading="lazy" />
         ) : (
-          (keycaps ?? <div class="store-card-thumb store-card-thumb-placeholder"></div>)
+          (keycaps ?? (
+            <div class="store-card-thumb store-card-thumb-placeholder"></div>
+          ))
         )}
       </div>
       <div class="store-card-body">
@@ -80,7 +84,7 @@ export const ItemCard = ({ item }: { item: StoreItem }): JSX.Element => {
             {item.repoName}
           </div>
           <div class="store-card-desc">
-            <Raw html={renderMdInline(item.description || "")} />
+            <RawDogIt html={renderMdInline(item.description || "")} />
           </div>
           {item.requiresNewerVersion ? (
             <div class="store-card-version-warning">
@@ -102,10 +106,15 @@ export const ItemCard = ({ item }: { item: StoreItem }): JSX.Element => {
               {`v${item.version}`}
             </div>
             <div class="store-card-footer-meta">
-              <Badge modifier="store-type" class={`store-type-badge store-type-${item.type}`}>
+              <Badge
+                modifier="store-type"
+                class={`store-type-badge store-type-${item.type}`}
+              >
                 {_typeLabel(item)}
               </Badge>
-              {subLabel ? <Badge class="store-subtype-badge">{subLabel}</Badge> : null}
+              {subLabel ? (
+                <Badge class="store-subtype-badge">{subLabel}</Badge>
+              ) : null}
             </div>
           </div>
           <div class="store-card-actions">

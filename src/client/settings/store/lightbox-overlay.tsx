@@ -1,4 +1,4 @@
-import { raw } from "../../../shared/ui/core/raw";
+import { raw } from "../../../shared/ui/tribute/rawdogit";
 
 export const Lightbox = (): JSX.Element => (
   <div

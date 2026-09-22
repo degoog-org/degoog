@@ -1,4 +1,4 @@
-import { renderHtml } from "../../../shared/ui/core/html";
+import { renderHtml } from "../../../shared/ui/tribute/html";
 import { ThemeTemplate } from "../../../shared/ui/components/layout/theme-template";
 import { mkdir, readdir, readFile } from "fs/promises";
 import { join } from "path";

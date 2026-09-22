@@ -1,7 +1,10 @@
 import { SlotPanelPosition, type SlotPanel } from "../../types";
-import { append, clear } from "../../../shared/ui/core/dom";
+import { append, clear } from "../../../shared/ui/tribute/dom";
 import { FullWidthSlotPanel } from "../../../shared/ui/components/search/full-width-slot-panel";
-import { DEFAULT_SLOT_GRID, SlotPanel as SlotPanelView } from "../../../shared/ui/components/search/slot-panel";
+import {
+  DEFAULT_SLOT_GRID,
+  SlotPanel as SlotPanelView,
+} from "../../../shared/ui/components/search/slot-panel";
 
 const SLOT_IDS = [
   "slot-full-width-above-results",

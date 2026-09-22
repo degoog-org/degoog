@@ -1,4 +1,4 @@
-import { clear, render } from "../../../shared/ui/core/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { MediaGridShell } from "./media-grid-shell";
 import { state } from "../../state";
 import { cleanHostname, linkHref } from "../../utils/dom";
@@ -90,7 +90,6 @@ function _observeGridResize(grid: HTMLElement): void {
   _gridResizeObserver = new ResizeObserver(() => _scheduleColumnSync(grid));
   _gridResizeObserver.observe(grid);
 }
-
 
 export function syncImageGridColumns(): void {
   const grid = _imageGrid();

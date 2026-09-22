@@ -3,8 +3,12 @@ import {
   SkeletonResults,
   SkeletonSidebar,
 } from "../../animations/skeleton";
-import { clear, render } from "../../../shared/ui/core/dom";
-import { closeMediaPreview, MediaPreviewCloseMode, syncMediaPreviewPanel } from "../../modules/media/media";
+import { clear, render } from "../../../shared/ui/tribute/dom";
+import {
+  closeMediaPreview,
+  MediaPreviewCloseMode,
+  syncMediaPreviewPanel,
+} from "../../modules/media/media";
 import {
   clearSlotPanels,
   renderResults,
@@ -51,7 +55,8 @@ export const loadSidebarSuggestions = (
   const ac = new AbortController();
   sidebarSuggestionsController = ac;
   void fetchSidebarSuggestions(query, ac.signal).then((terms) => {
-    if (sidebarSuggestionsController !== ac || state.currentQuery !== query) return;
+    if (sidebarSuggestionsController !== ac || state.currentQuery !== query)
+      return;
     state.currentRelatedSearches = terms;
     renderSidebarSuggestions(terms, navigate);
   });
@@ -92,7 +97,9 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
     abortSlotPanels();
   } else {
     void fetchSlotPanels(query).then((panels) => {
-      const kp = panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel);
+      const kp = panels.filter(
+        (p) => p.position === SlotPanelPosition.KnowledgePanel,
+      );
       if (kp.length > 0) prependKnowledgePanels(kp);
     });
     void fetchGlancePanels(query);

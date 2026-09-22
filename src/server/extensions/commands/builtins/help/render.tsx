@@ -1,4 +1,4 @@
-import { renderHtml } from "../../../../../shared/ui/core/html";
+import { renderHtml } from "../../../../../shared/ui/tribute/html";
 import { HelpContainer, type HelpContainerProps } from "./container";
 import { HelpPanels } from "./panels";
 import { HelpPrefixHint } from "./prefix-hint";
@@ -8,7 +8,8 @@ import type { HelpRowCommand } from "./row";
 export const renderTabButtons = (
   categories: string[],
   groups: Record<string, HelpRowCommand[]>,
-): string => renderHtml(<HelpTabButtons categories={categories} groups={groups} />);
+): string =>
+  renderHtml(<HelpTabButtons categories={categories} groups={groups} />);
 
 export const renderPanels = (
   categories: string[],
