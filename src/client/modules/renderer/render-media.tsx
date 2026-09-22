@@ -23,12 +23,39 @@ const _getImageColumnCount = (grid: HTMLElement): number => {
   return COLUMN_STEPS.find((step) => width <= step.upTo)?.columns ?? COLUMN_MAX;
 };
 
-const _shortestColumn = (columns: HTMLElement[]): HTMLElement =>
-  columns.reduce((a, b) => {
-    if (a.offsetHeight < b.offsetHeight) return a;
-    if (b.offsetHeight < a.offsetHeight) return b;
-    return a.children.length <= b.children.length ? a : b;
-  });
+const _isDeadCard = (card: Element): boolean =>
+  (card as HTMLElement).style.display === "none";
+
+const _liveCount = (column: HTMLElement): number =>
+  Array.from(column.children).filter((child) => !_isDeadCard(child)).length;
+
+const _columnPacker = (
+  columns: HTMLElement[],
+): ((card: HTMLElement) => void) => {
+  const counts = columns.map(_liveCount);
+
+  return (card) => {
+    if (_isDeadCard(card)) {
+      columns[0].appendChild(card);
+      return;
+    }
+
+    let best = 0;
+    for (let i = 1; i < columns.length; i++) {
+      const height = columns[i].offsetHeight;
+      const bestHeight = columns[best].offsetHeight;
+      if (
+        height < bestHeight ||
+        (height === bestHeight && counts[i] < counts[best])
+      ) {
+        best = i;
+      }
+    }
+
+    counts[best] += 1;
+    columns[best].appendChild(card);
+  };
+};
 
 const _imageGrid = (): HTMLElement | null =>
   document.querySelector<HTMLElement>(".image-grid");
@@ -59,7 +86,8 @@ function _rebuildColumns(grid: HTMLElement, count: number): HTMLElement[] {
     grid.appendChild(col);
   }
 
-  cards.forEach((card) => _shortestColumn(columns).appendChild(card));
+  const place = _columnPacker(columns);
+  cards.forEach(place);
   return columns;
 }
 
@@ -134,6 +162,7 @@ export function appendMediaCards(
 
   if (type === "image") {
     const columns = _ensureImageColumns(grid);
+    const place = _columnPacker(columns);
 
     results.forEach((r, i) => {
       const idx = startIdx + i;
@@ -144,7 +173,7 @@ export function appendMediaCards(
       card.addEventListener("click", () => {
         toggleMediaPreview(state.currentResults[idx], idx, selector);
       });
-      _shortestColumn(columns).appendChild(card);
+      place(card);
     });
 
     _observeGridResize(grid);
