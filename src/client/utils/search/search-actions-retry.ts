@@ -1,9 +1,14 @@
-import type { ScoredResult, SearchResponse } from "../../types";
+import {
+  isImageSearchType,
+  type ScoredResult,
+  type SearchResponse,
+} from "../../../shared/search-types";
 import { getBase } from "../base-url";
 import { state } from "../../state";
-import { getEngines, isImageSearchType } from "../engines";
+import { getEngines } from "../engines";
 import { renderImgEngines } from "../../modules/filters/image-filters";
-import { renderSidebar, renderResults } from "../../modules/renderer/render";
+import { renderSidebar } from "../../modules/renderer/render-sidebar";
+import { renderResults } from "../../modules/renderer/render";
 import { performSearch } from "./search-actions-perform";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
 import { infiniteScrollOn } from "../streaming-config";

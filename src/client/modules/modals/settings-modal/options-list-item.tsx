@@ -1,4 +1,4 @@
-import type { FieldOption } from "../../../types";
+import type { FieldOption } from "../../../../shared/field-options";
 
 export const OPTIONS_ITEM_CLASS = "ext-field-options-item";
 

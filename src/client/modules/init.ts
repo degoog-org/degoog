@@ -14,7 +14,7 @@ import { state, defaultImageFilter } from "../state";
 import { initAutocomplete } from "../utils/autocomplete";
 import { idbGet } from "../utils/db";
 import { recordSettingsReturn, showHome } from "../utils/navigation";
-import { performSearch } from "../utils/search-actions";
+import { performSearch } from "../utils/search/search-actions-perform";
 import { applyUovaStorage } from "../utils/uovadipasqua";
 import { initTheme } from "../utils/theme";
 import { applyDefaults } from "../utils/sync";
@@ -36,7 +36,7 @@ import { initHomeWizard } from "./wizard/wizard";
 import { getBase } from "../utils/base-url";
 import { isSettingsPathname } from "../utils/settings-path";
 import type { ImageFilter } from "../types/search";
-import { isImageSearchType } from "../utils/engines";
+import { isImageSearchType } from "../../shared/search-types";
 import { readImgFilter } from "../utils/url";
 
 type DegoogHistoryState = {

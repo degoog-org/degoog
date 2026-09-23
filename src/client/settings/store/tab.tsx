@@ -21,15 +21,11 @@ import {
   handleUpdate,
   handleUpdateAll,
 } from "./handlers";
-import {
-  collectSubtypes,
-  engineTypeLabel,
-  filterItems,
-  normalizeRepoUrl,
-  pluginTypeLabel,
-  ItemCard,
-  RepoList,
-} from "./render";
+import { collectSubtypes, filterItems } from "./render/filters";
+import { ItemCard } from "./render/item-card";
+import { engineTypeLabel, pluginTypeLabel } from "./render/labels";
+import { RepoList } from "./render/repo-list";
+import { normalizeRepoUrl } from "./render/repo-url";
 
 export async function initStoreTab(
   container: HTMLElement,

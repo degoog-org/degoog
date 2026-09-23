@@ -1,4 +1,4 @@
-import type { IndexerStats } from "../../types/indexer";
+import type { IndexerStats } from "../../../shared/indexer";
 import { clear, render } from "../../../shared/ui/tribute/dom";
 import { ManageBody } from "./manage-body";
 import { ManageRow } from "./manage-row";

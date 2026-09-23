@@ -1,13 +1,15 @@
 import { clear, render } from "../../../shared/ui/tribute/dom";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
-import { SkeletonImageGrid, SkeletonResults } from "../../animations/skeleton";
-import { getEngines, isImageSearchType } from "../engines";
+import { SkeletonImageGrid } from "../../animations/skeleton/skeleton-image-grid";
+import { SkeletonResults } from "../../animations/skeleton/skeleton-results";
+import { getEngines } from "../engines";
+import { isImageSearchType, type SearchResponse } from "../../../shared/search-types";
 import { state } from "../../state";
 import { buildSearchBody, buildSearchUrl } from "../url";
 import { searchAuthHeaders, appendSearchAuthParams } from "../request";
 import { getBase } from "../base-url";
-import type { SearchResponse } from "../../types";
-import { clearSlotPanels, renderResults } from "../../modules/renderer/render";
+import { clearSlotPanels } from "../../modules/renderer/render-slots";
+import { renderResults } from "../../modules/renderer/render";
 import { teardownInfinite } from "../../modules/renderer/infinite-scroll";
 import {
   abortGlancePanels,

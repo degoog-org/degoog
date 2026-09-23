@@ -10,7 +10,8 @@ import { FileField } from "./file-field";
 import { optionsListFor, wrapOptionsRow } from "./options-field";
 import { MultiselectField } from "./multiselect-field";
 import type { Child } from "../../../../shared/ui/tribute/types";
-import type { SettingField, ExtensionMeta } from "../../../types";
+import type { ExtensionMeta } from "../../../types/extension";
+import type { SettingField } from "../../../../shared/setting-field";
 
 const _depMeetsSavedValue = (
   ext: ExtensionMeta,

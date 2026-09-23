@@ -56,14 +56,14 @@ beforeAll(async () => {
     window: { scopedT: stubT },
     document: { createElement: createEl },
   });
-  const render =
-    await import("../../src/client/settings/engines/compat-render");
-  compatGroups = render.compatGroups;
-  compatPackages = render.compatPackages;
+  const grouping = await import("../../src/client/settings/engines/compat-render/grouping");
+  const { CompatList } = await import("../../src/client/settings/engines/compat-render/list");
+  const { CompatShell } = await import("../../src/client/settings/engines/compat-render/shell");
+  compatGroups = grouping.compatGroups;
+  compatPackages = grouping.compatPackages;
   const { renderHtml } = await import("../../src/shared/ui/tribute/html");
-  compatListHtml = (items, layer) =>
-    renderHtml(render.CompatList({ items, layer }));
-  compatShellHtml = (id) => renderHtml(render.CompatShell({ id }));
+  compatListHtml = (items, layer) => renderHtml(CompatList({ items, layer }));
+  compatShellHtml = (id) => renderHtml(CompatShell({ id }));
 });
 
 afterAll(() => {

@@ -1,4 +1,4 @@
-import type { IndexerStats } from "../../types/indexer";
+import type { IndexerStats } from "../../../shared/indexer";
 import { openClearModal } from "./clear-modal";
 import { openExportModal } from "./export-modal";
 import { openImportModal } from "./import-modal";
@@ -6,8 +6,6 @@ import { openManageModal } from "./manage-modal";
 import { renderShell } from "./shell";
 import { fetchStats, renderStats } from "./stats";
 import { wireToggles } from "./toggles";
-
-export { setIndexerNavVisible } from "./nav";
 
 export const initIndexerTab = async (container: HTMLElement): Promise<void> => {
   renderShell(container);

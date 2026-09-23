@@ -3,7 +3,7 @@ import { Badge } from "../../../shared/ui/components/primitives/badge";
 import { Button } from "../../../shared/ui/components/primitives/button";
 import { Icon } from "../../../shared/ui/components/primitives/icon";
 import type { EventHandler, VNode } from "../../../shared/ui/tribute/types";
-import type { ExtensionMeta } from "../../types";
+import type { ExtensionMeta } from "../../types/extension";
 
 const t = window.scopedT("core");
 

@@ -1,4 +1,5 @@
 import { Hono, type Context } from "hono";
+import { readObjectBody } from "../utils/hono";
 import { canBalrogPass, gandalf } from "./settings-auth";
 import {
   installSearx,
@@ -33,10 +34,8 @@ const _refresh = async (code: string): Promise<void> => {
 };
 
 const _codeFrom = async (c: Context): Promise<string> => {
-  const body = (await c.req.json<{ code?: string }>().catch(() => ({}))) as {
-    code?: string;
-  };
-  return body.code?.trim() ?? "";
+  const body = await readObjectBody<{ code?: string }>(c);
+  return body?.code?.trim() ?? "";
 };
 
 router.get("/api/searx/engines", async (c) => {

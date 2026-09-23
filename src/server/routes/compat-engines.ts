@@ -1,4 +1,5 @@
 import { Hono, type Context } from "hono";
+import { readObjectBody } from "../utils/hono";
 import { canBalrogPass, gandalf } from "./settings-auth";
 import {
   compatLayer,
@@ -41,9 +42,8 @@ const _refresh = async (code: string): Promise<void> => {
 };
 
 const _codeFrom = async (c: Context): Promise<string> => {
-  const body: unknown = await c.req.json().catch(() => ({}));
-  if (typeof body !== "object" || body === null || !("code" in body)) return "";
-  return typeof body.code === "string" ? body.code.trim() : "";
+  const body = await readObjectBody<{ code?: unknown }>(c);
+  return typeof body?.code === "string" ? body.code.trim() : "";
 };
 
 const ACTIONS: Record<CompatAction, keyof CompatLayerDef> = {

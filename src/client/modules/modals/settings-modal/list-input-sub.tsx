@@ -1,5 +1,5 @@
 import { SubLabel } from "./list-sub-label";
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 const _inputTypeFor = (type: SettingField["type"]): string => {
   if (type === "url") return "url";

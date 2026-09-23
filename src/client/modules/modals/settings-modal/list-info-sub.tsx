@@ -1,7 +1,7 @@
 import { RawDogIt } from "../../../../shared/ui/tribute/rawdogit";
 import { SubLabel } from "./list-sub-label";
 import { renderMdInline } from "../../../utils/md";
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 export const ListInfoSub = ({ sub }: { sub: SettingField }): JSX.Element => {
   const hasValue = sub.default != null && sub.default !== "";

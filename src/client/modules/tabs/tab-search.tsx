@@ -1,19 +1,17 @@
 import { clear, render } from "../../../shared/ui/tribute/dom";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
 import { PaginationWrap } from "../../utils/pagination-wrap";
-import {
-  SkeletonImageGrid,
-  SkeletonResults,
-  SkeletonSidebar,
-} from "../../animations/skeleton";
+import { SkeletonImageGrid } from "../../animations/skeleton/skeleton-image-grid";
+import { SkeletonResults } from "../../animations/skeleton/skeleton-results";
+import { SkeletonSidebar } from "../../animations/skeleton/skeleton-sidebar";
 import { state } from "../../state";
 import {
-  SlotPanelPosition,
+  isImageSearchType,
   type ScoredResult,
   type SearchResponse,
-} from "../../types";
+  SlotPanelPosition,
+} from "../../../shared/search-types";
 import { hideAcDropdown } from "../../utils/autocomplete";
-import { isImageSearchType } from "../../utils/engines";
 import { setActiveTab } from "../../utils/navigation";
 import { fetchStreamingConfig } from "../../utils/streaming-config";
 import { Pagination } from "../../utils/pagination";
@@ -30,13 +28,9 @@ import {
   setupMediaObserver,
   syncMediaPreviewPanel,
 } from "../media/media";
-import {
-  buildResultContext,
-  clearSlotPanels,
-  renderResults,
-  renderSidebar,
-  prependKnowledgePanels,
-} from "../renderer/render";
+import { prependKnowledgePanels, renderSidebar } from "../renderer/render-sidebar";
+import { clearSlotPanels } from "../renderer/render-slots";
+import { buildResultContext, renderResults } from "../renderer/render";
 import { renderImgEngines } from "../filters/image-filters";
 import { getBase } from "../../utils/base-url";
 

@@ -1,7 +1,8 @@
 import { ExtField } from "./ext-field";
 import { parseTypeList } from "../../../../shared/search-types";
 import type { Child } from "../../../../shared/ui/tribute/types";
-import type { SettingField, ExtensionMeta } from "../../../types";
+import type { ExtensionMeta } from "../../../types/extension";
+import type { SettingField } from "../../../../shared/setting-field";
 
 const FIELD_CLASS = "ext-field-multiselect";
 const CHIP_CLASS = "ext-field-multiselect-chip";

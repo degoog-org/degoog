@@ -7,7 +7,7 @@ import { ListRangeSub } from "./list-range-sub";
 import { ListFileSub } from "./list-file-sub";
 import { ListInputSub } from "./list-input-sub";
 import { isListToggle, isListDisplay, type ListRow } from "./list-field-data";
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 export const ListSubField = ({
   sub,

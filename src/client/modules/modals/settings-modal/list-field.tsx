@@ -12,7 +12,8 @@ import {
   rowSummary,
   type ListRow,
 } from "./list-field-data";
-import type { SettingField, ExtensionMeta } from "../../../types";
+import type { ExtensionMeta } from "../../../types/extension";
+import type { SettingField } from "../../../../shared/setting-field";
 
 const t = window.scopedT("core");
 

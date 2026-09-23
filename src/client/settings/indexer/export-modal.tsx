@@ -2,7 +2,7 @@ import { clear, render } from "../../../shared/ui/tribute/dom";
 import { ExportBody } from "./export-body";
 import { authHeaders } from "../../utils/request";
 import { getStoredToken } from "../../utils/settings-token";
-import type { IndexerStats } from "../../types/indexer";
+import type { IndexerStats } from "../../../shared/indexer";
 import { canSaveStream, downloadIndexerExport } from "./download";
 import { orderTypes } from "./api";
 import { mountProgress } from "./progress";

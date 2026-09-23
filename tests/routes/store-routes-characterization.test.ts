@@ -145,6 +145,14 @@ describe("store mutation validation", () => {
     });
   });
 
+  test.each(endpoints)("%s treats a malformed body as an empty one", async (path) => {
+    const res = await post(path, "{ not json");
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: "Missing repoUrl, itemPath, or type",
+    });
+  });
+
   test.each(endpoints)("%s rejects an unknown type", async (path) => {
     const res = await post(path, {
       repoUrl: REPO_URL,
@@ -226,6 +234,18 @@ describe("store repo routes", () => {
     const res = await del("/api/store/repos", "{ not json");
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ error: "Missing url" });
+  });
+
+  test("a malformed add body is treated as an empty one", async () => {
+    const res = await post("/api/store/repos", "{ not json");
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Missing url" });
+  });
+
+  test("a malformed untracked delete body is treated as an empty one", async () => {
+    const res = await del("/api/store/untracked", "{ not json");
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Missing type or folderName" });
   });
 
   test("repo status reports an entry per configured repo", async () => {

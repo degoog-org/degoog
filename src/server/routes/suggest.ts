@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { readObjectBody } from "../utils/hono";
 import type { SuggestPostBody } from "../types/search";
 import { guardApiKey } from "../utils/security/api-key-guard";
 import { asBoolean, asString } from "../utils/settings/plugin-settings";
@@ -6,7 +7,6 @@ import { checkRateLimit } from "../utils/security/rate-limit";
 import { getClientIp } from "../utils/net/request";
 import { getSuggestionsFromProviders } from "../extensions/autocomplete/registry";
 import { getInstanceSettings } from "../utils/settings/server-settings";
-import { logger } from "../utils/logger";
 
 async function _applySuggestRateLimit(c: Parameters<typeof getClientIp>[0]) {
   const settings = await getInstanceSettings();
@@ -54,13 +54,8 @@ router.post("/api/suggest", async (c) => {
   if (limitRes) return limitRes;
   const authRes = await guardApiKey(c, "apiKeySuggestEnabled");
   if (authRes) return authRes;
-  let body: SuggestPostBody;
-  try {
-    body = await c.req.json<SuggestPostBody>();
-  } catch (err) {
-    logger.debug("suggest", "invalid JSON body", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<SuggestPostBody>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const query = body.query ?? "";
   if (!query.trim()) return c.json([]);
   return c.json(await getSuggestionsFromProviders(query));

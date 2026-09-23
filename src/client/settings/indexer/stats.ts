@@ -1,7 +1,7 @@
 import { getBase } from "../../utils/base-url";
 import { authHeaders } from "../../utils/request";
 import { getStoredToken } from "../../utils/settings-token";
-import type { IndexerStats } from "../../types/indexer";
+import type { IndexerStats } from "../../../shared/indexer";
 
 const formatBytes = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`;

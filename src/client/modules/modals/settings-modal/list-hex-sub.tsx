@@ -1,6 +1,6 @@
 import { SubLabel } from "./list-sub-label";
 import { HEX_RE, DEFAULT_HEX, normalizeHex } from "./field-widgets";
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 export const ListHexSub = ({
   sub,

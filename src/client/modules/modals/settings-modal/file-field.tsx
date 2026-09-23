@@ -2,7 +2,7 @@ import { ExtField } from "./ext-field";
 import { basenameOf } from "./field-widgets";
 import { FileUploadWidget } from "../../../utils/file-upload-widget";
 import type { Child } from "../../../../shared/ui/tribute/types";
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 const t = window.scopedT("core");
 

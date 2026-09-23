@@ -1,17 +1,17 @@
 import { authHeaders, jsonHeaders } from "../../utils/request";
 import { getBase } from "../../utils/base-url";
 import { getStoredToken } from "../../utils/settings-token";
-import type { CompatCatalogItem } from "../../types/compat-catalog";
+import {
+  CompatAction,
+  compatApiUrl,
+  type CompatCatalogItem,
+  CompatLayerId,
+} from "../../../shared/compat-layers";
 import {
   compatErrorText,
   compatFlagOn,
   parseCompatCatalogue,
 } from "./compat-parse";
-import {
-  CompatAction,
-  CompatLayerId,
-  compatApiUrl,
-} from "../../../shared/compat-layers";
 
 export { CompatAction, CompatLayerId };
 

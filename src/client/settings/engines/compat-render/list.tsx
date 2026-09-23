@@ -2,7 +2,7 @@ import { CompatCard } from "./card";
 import { compatGroups } from "./grouping";
 import { copy } from "./copy";
 import type { CompatListUi } from "./update-button";
-import type { CompatCatalogItem } from "../../../types/compat-catalog";
+import type { CompatCatalogItem } from "../../../../shared/compat-layers";
 
 export const CompatList = ({
   items,

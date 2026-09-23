@@ -11,7 +11,7 @@ import {
   extCardVersionWarningNode,
 } from "../shared/ext-card";
 import { extraTypeLabels } from "./engine-types";
-import type { ExtensionMeta } from "../../types";
+import type { ExtensionMeta } from "../../types/extension";
 import { renderMdInline } from "../../utils/md";
 
 const t = window.scopedT("core");

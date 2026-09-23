@@ -178,6 +178,7 @@ describe("socks proxy fetch", () => {
     expect(isSocksProxy("socks5://h:1")).toBe(true);
     expect(isSocksProxy("SOCKS4://h:1")).toBe(true);
     expect(isSocksProxy("socks5h://h:1")).toBe(true);
+    expect(isSocksProxy("socks4a://h:1")).toBe(true);
     expect(isSocksProxy("http://h:1")).toBe(false);
   });
 

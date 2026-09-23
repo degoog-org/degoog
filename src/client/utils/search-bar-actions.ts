@@ -1,7 +1,7 @@
 import { clear } from "../../shared/ui/tribute/dom";
-import { escapeHtml } from "./dom";
-import { performSearch } from "./search-actions";
-import type { SearchBarAction } from "../types";
+import { escapeHtml } from "../../shared/ui/tribute/escape";
+import { performSearch } from "./search/search-actions-perform";
+import type { SearchBarAction } from "../types/extension";
 import { getBase } from "./base-url";
 
 const SEARCH_BAR_ACTION_EVENT = "search-bar-action";

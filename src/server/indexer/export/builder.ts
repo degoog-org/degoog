@@ -38,6 +38,8 @@ export const buildSqliteExportFile = async (type: string): Promise<string> => {
     throw err;
   } finally {
     db.close();
+    _discard(`${tmpPath}-wal`);
+    _discard(`${tmpPath}-shm`);
   }
 
   return tmpPath;

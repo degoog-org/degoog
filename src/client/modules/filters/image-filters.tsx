@@ -1,5 +1,5 @@
 import { state } from "../../state";
-import type { EngineTiming } from "../../types";
+import { type EngineTiming, isImageSearchType } from "../../../shared/search-types";
 import { append, clear, render } from "../../../shared/ui/tribute/dom";
 import { ImgFilterGroup } from "./img-filter-group";
 import { ImgFilterSuffix } from "./img-filter-suffix";
@@ -16,11 +16,7 @@ import {
   TOOLS_PIN_EVENT,
   TOOLS_TOGGLE_ID,
 } from "./ids";
-import {
-  getRegistry,
-  getEngines,
-  isImageSearchType,
-} from "../../utils/engines";
+import { getEngines, getRegistry } from "../../utils/engines";
 import { setupRetryLinks } from "../renderer/render-sidebar";
 import { EngineStatsPanel } from "../renderer/engine-stats-panel";
 import { paintOrigins } from "../../utils/search/engine-origins";

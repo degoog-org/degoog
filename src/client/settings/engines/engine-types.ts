@@ -1,5 +1,5 @@
 import { typeLabel } from "./type-label";
-import type { ExtensionMeta } from "../../types";
+import type { ExtensionMeta } from "../../types/extension";
 
 export const engineTypes = (engine: ExtensionMeta): string[] => {
   if (engine.searchTypes?.length) return engine.searchTypes;

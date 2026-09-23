@@ -2,11 +2,9 @@ import { clear, render } from "../../shared/ui/tribute/dom";
 import { TransText } from "../../shared/ui/components/primitives/trans-text";
 import { NoResults } from "../../shared/ui/components/feedback/no-results";
 import { NoEnginesLink } from "./search/no-engines-link";
-import {
-  SkeletonImageGrid,
-  SkeletonResults,
-  SkeletonSidebar,
-} from "../animations/skeleton";
+import { SkeletonImageGrid } from "../animations/skeleton/skeleton-image-grid";
+import { SkeletonResults } from "../animations/skeleton/skeleton-results";
+import { SkeletonSidebar } from "../animations/skeleton/skeleton-sidebar";
 import { MAX_PAGE } from "../constants";
 import {
   closeMediaPreview,
@@ -16,23 +14,23 @@ import {
   syncMediaPreviewPanel,
 } from "../modules/media/media";
 import {
-  attachVideoPlayers,
-  clearSlotPanels,
-  renderPagination,
-  renderSidebar,
   prependKnowledgePanels,
-} from "../modules/renderer/render";
+  renderSidebar,
+} from "../modules/renderer/render-sidebar";
+import { clearSlotPanels } from "../modules/renderer/render-slots";
+import { attachVideoPlayers, renderPagination } from "../modules/renderer/render";
 import { renderImageGrid } from "../modules/renderer/render-media";
 import { renderImgEngines } from "../modules/filters/image-filters";
 import { state } from "../state";
 import {
-  EngineTiming,
-  ScoredResult,
-  SearchResponse,
+  type EngineTiming,
+  isImageSearchType,
+  type ScoredResult,
+  type SearchResponse,
   SlotPanelPosition,
-} from "../types";
+} from "../../shared/search-types";
 import { abortAcReq, hideAcDropdown } from "./autocomplete";
-import { getEngines, isImageSearchType } from "./engines";
+import { getEngines } from "./engines";
 import { setActiveTab } from "./navigation";
 import {
   abortGlancePanels,

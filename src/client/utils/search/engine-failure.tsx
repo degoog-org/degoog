@@ -1,6 +1,6 @@
 import type { Child } from "../../../shared/ui/tribute/types";
 import { EngineStatReason } from "./engine-stat-reason";
-import type { EngineTiming } from "../../types";
+import type { EngineTiming } from "../../../shared/search-types";
 
 const t = window.scopedT("themes/degoog");
 

@@ -4,9 +4,9 @@ import { MediaPreviewActions } from "./media-preview-actions";
 import { MediaPreviewInfo } from "./media-preview-info";
 import { state } from "../../state";
 import { getBase } from "../../utils/base-url";
-import type { ScoredResult } from "../../types";
+import { isImageSearchType, type ScoredResult } from "../../../shared/search-types";
 import { cleanHostname } from "../../utils/dom";
-import { getEngines, isImageSearchType } from "../../utils/engines";
+import { getEngines } from "../../utils/engines";
 import {
   buildSearchBody,
   buildSearchUrl,

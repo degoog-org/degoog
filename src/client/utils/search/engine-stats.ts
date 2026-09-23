@@ -1,4 +1,4 @@
-import type { EngineTiming, ScoredResult } from "../../types";
+import type { EngineTiming, ScoredResult } from "../../../shared/search-types";
 
 export type EngineTimingWithPage = EngineTiming & {
   failedPage?: number;

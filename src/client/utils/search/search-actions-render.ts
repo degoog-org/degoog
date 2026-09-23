@@ -1,8 +1,6 @@
-import {
-  SkeletonImageGrid,
-  SkeletonResults,
-  SkeletonSidebar,
-} from "../../animations/skeleton";
+import { SkeletonImageGrid } from "../../animations/skeleton/skeleton-image-grid";
+import { SkeletonResults } from "../../animations/skeleton/skeleton-results";
+import { SkeletonSidebar } from "../../animations/skeleton/skeleton-sidebar";
 import { clear, render } from "../../../shared/ui/tribute/dom";
 import {
   closeMediaPreview,
@@ -10,15 +8,19 @@ import {
   syncMediaPreviewPanel,
 } from "../../modules/media/media";
 import {
-  clearSlotPanels,
-  renderResults,
+  prependKnowledgePanels,
   renderSidebar,
   renderSidebarSuggestions,
-  prependKnowledgePanels,
-} from "../../modules/renderer/render";
+} from "../../modules/renderer/render-sidebar";
+import { clearSlotPanels } from "../../modules/renderer/render-slots";
+import { renderResults } from "../../modules/renderer/render";
 import { renderImgEngines } from "../../modules/filters/image-filters";
 import { state } from "../../state";
-import { SlotPanelPosition, type SearchResponse } from "../../types";
+import {
+  isImageSearchType,
+  type SearchResponse,
+  SlotPanelPosition,
+} from "../../../shared/search-types";
 import { abortAcReq, hideAcDropdown } from "../autocomplete";
 import { setActiveTab, showAllTabs } from "../navigation";
 import { declaredPages, setResultsMeta } from "../search-helpers";
@@ -34,7 +36,6 @@ import {
   fetchGlancePanels,
   fetchSlotPanels,
 } from "../search-utils";
-import { isImageSearchType } from "../engines";
 import { imgFilterRecord } from "../url";
 import { getBase } from "../base-url";
 import { fetchSidebarSuggestions } from "./sidebar-suggestions";

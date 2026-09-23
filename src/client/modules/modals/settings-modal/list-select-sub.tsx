@@ -1,5 +1,5 @@
 import { SubLabel } from "./list-sub-label";
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 export const ListSelectSub = ({
   sub,

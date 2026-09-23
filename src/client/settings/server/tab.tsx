@@ -30,7 +30,8 @@ import {
   bindToggleAutoSave,
   injectFieldSaveBtns,
 } from "./auto-save";
-import { API_KEY_COPY_ICON, ServerContent } from "./render";
+import { API_KEY_COPY_ICON } from "./render/api-key-section";
+import { ServerContent } from "./render/server-content";
 import { initBackupControls } from "./backup";
 import { flashError, flashSuccess } from "../shared/flash-msg";
 import { fetchRestartState } from "../shared/restart-state";

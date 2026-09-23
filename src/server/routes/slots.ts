@@ -6,7 +6,7 @@ import {
   type SlotPanel,
   SlotPanelPosition,
 } from "../../shared/search-types";
-import { getLocale } from "../utils/hono";
+import { getLocale, readObjectBody } from "../utils/hono";
 import { logger } from "../utils/logger";
 import { isDisabled } from "../utils/settings/plugin-settings";
 import { getClientIp } from "../utils/net/request";
@@ -22,13 +22,8 @@ const _requestedType = (raw: unknown): string =>
 router.post("/api/slots", async (c) => {
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
-  let body: { query?: string; type?: string; results?: ScoredResult[] };
-  try {
-    body = await c.req.json();
-  } catch (err) {
-    logger.debug("slots", "invalid JSON body", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ query?: string; type?: string; results?: ScoredResult[] }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
   if (!body.query || !body.query.trim()) return c.json({ panels: [] });
   const clientIp = getClientIp(c);
   const withResults = "results" in body;
@@ -51,13 +46,8 @@ router.post("/api/slots", async (c) => {
 router.post("/api/slots/glance", async (c) => {
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
-  let body: { query?: string; type?: string; results?: ScoredResult[] };
-  try {
-    body = await c.req.json();
-  } catch (err) {
-    logger.debug("slots", "invalid JSON body", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ query?: string; type?: string; results?: ScoredResult[] }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
   if (!body.query || !body.query.trim()) {
     return c.json({ error: "Missing query or results" }, 400);
   }

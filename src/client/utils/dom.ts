@@ -21,8 +21,6 @@ export const cleanHostname = (url: string): string => {
   }
 };
 
-export { escapeHtml, escapeAttribute } from "../../shared/ui/tribute/escape";
-
 const ALLOWED_URL_SCHEMES = new Set([
   "http",
   "https",

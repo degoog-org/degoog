@@ -1,4 +1,4 @@
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 export const ListRangeSub = ({
   sub,

@@ -8,7 +8,7 @@ import {
   registerImageGridPanelSync,
 } from "../media/media";
 import { renderTemplate } from "../../utils/template";
-import type { ScoredResult } from "../../types";
+import type { ScoredResult } from "../../../shared/search-types";
 
 const COLUMN_STEPS: ReadonlyArray<{ upTo: number; columns: number }> = [
   { upTo: 800, columns: 3 },

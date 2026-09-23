@@ -28,7 +28,7 @@ import {
 } from "../../utils/settings-token";
 import { initSettingsWizard } from "../wizard/wizard";
 import "../modals/settings-modal/modal";
-import type { AllExtensions } from "../../types";
+import type { AllExtensions } from "../../types/extension";
 import { navigateSettingsBack } from "../../utils/navigation";
 import {
   getActiveSettingsTab,

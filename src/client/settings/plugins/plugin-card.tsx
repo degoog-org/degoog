@@ -14,7 +14,7 @@ import {
 } from "../shared/ext-card";
 import { extToggleHandler } from "../shared/ext-toggle";
 import { openModal } from "../../modules/modals/settings-modal/modal";
-import type { ExtensionMeta } from "../../types";
+import type { ExtensionMeta } from "../../types/extension";
 import { renderMdInline } from "../../utils/md";
 
 const t = window.scopedT("core");

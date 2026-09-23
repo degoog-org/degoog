@@ -6,7 +6,7 @@ import { compatPackages } from "./grouping";
 import { copy, WEB_TYPE } from "./copy";
 import { typeLabel } from "../type-label";
 import type { Child } from "../../../../shared/ui/tribute/types";
-import type { CompatCatalogItem } from "../../../types/compat-catalog";
+import type { CompatCatalogItem } from "../../../../shared/compat-layers";
 
 const _metaRows = (item: CompatCatalogItem, layer: string): Child[] => {
   const rows: Child[] = [];

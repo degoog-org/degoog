@@ -2,7 +2,8 @@ import { idbGet } from "./db";
 import { SETTINGS_KEY } from "../constants";
 import { getBase } from "./base-url";
 import { onWindowEvent } from "./window-event";
-import type { EngineRecord, EngineRegistry } from "../types";
+import type { EngineRegistry } from "../types/extension";
+import type { EngineRecord } from "../types/state";
 
 let cachedRegistry: EngineRegistry | null = null;
 let inflightRegistry: Promise<EngineRegistry> | null = null;
@@ -78,7 +79,3 @@ export const getKnownSearchTypePrefixes = async (): Promise<Set<string>> => {
   return prefixes;
 };
 
-export {
-  resolveBuiltinSearchType,
-  isImageSearchType,
-} from "../../shared/search-types";

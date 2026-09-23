@@ -16,7 +16,8 @@ import { getBase } from "../../../utils/base-url";
 import { getStoredToken } from "../../settings/settings";
 import { jsonHeaders } from "../../../utils/request";
 import type { Child } from "../../../../shared/ui/tribute/types";
-import type { ExtensionMeta, SettingField } from "../../../types";
+import type { ExtensionMeta } from "../../../types/extension";
+import type { SettingField } from "../../../../shared/setting-field";
 import { openExtensionDocs } from "../docs-modal/docs";
 
 const t = window.scopedT("core");

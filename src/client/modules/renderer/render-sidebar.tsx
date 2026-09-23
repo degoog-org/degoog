@@ -1,11 +1,11 @@
 import { EngineStatsPanel } from "./engine-stats-panel";
 import { RelatedSearches } from "./related-searches";
 import { state } from "../../state";
-import type { SearchResponse, SlotPanel } from "../../types";
+import type { SearchResponse, SlotPanel } from "../../../shared/search-types";
 import { clear, render } from "../../../shared/ui/tribute/dom";
 import { raw } from "../../../shared/ui/tribute/rawdogit";
 import { SidebarAccordion } from "../../../shared/ui/components/layout/sidebar-accordion";
-import { retryEngine } from "../../utils/search-actions";
+import { retryEngine } from "../../utils/search/search-actions-retry";
 import { paintOrigins } from "../../utils/search/engine-origins";
 import type { EngineTimingWithPage } from "../../utils/search/engine-stats";
 

@@ -8,7 +8,8 @@ import { OptionsListItem, OPTIONS_ITEM_CLASS } from "./options-list-item";
 import { OptionsRow, OPTIONS_STATUS_CLASS } from "./options-row";
 import { OptionsSelectOption } from "./options-select-option";
 import type { Child } from "../../../../shared/ui/tribute/types";
-import type { FieldOption, SettingField } from "../../../types";
+import type { FieldOption } from "../../../../shared/field-options";
+import type { SettingField } from "../../../../shared/setting-field";
 import { parseFieldOptionsResponse } from "./options-field-parse";
 
 const t = window.scopedT("core");

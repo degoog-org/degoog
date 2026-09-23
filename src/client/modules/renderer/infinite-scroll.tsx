@@ -2,17 +2,22 @@ import { render } from "../../../shared/ui/tribute/dom";
 import { InfiniteSentinel } from "./infinite-sentinel";
 import { InfiniteSkeleton } from "./infinite-skeleton";
 import { SENTINEL_CLASS, SKELETON_CLASS } from "./infinite-scroll-classes";
-import { SkeletonMoreResults } from "../../animations/skeleton";
+import { SkeletonMoreResults } from "../../animations/skeleton/skeleton-more-results";
 import { state } from "../../state";
-import type { ScoredResult, SearchResponse } from "../../types";
+import {
+  isImageSearchType,
+  type ScoredResult,
+  type SearchResponse,
+} from "../../../shared/search-types";
 import { getBase } from "../../utils/base-url";
-import { getEngines, isImageSearchType } from "../../utils/engines";
+import { getEngines } from "../../utils/engines";
 import { appendSearchAuthParams, searchAuthHeaders } from "../../utils/request";
 import { declaredPages } from "../../utils/search-helpers";
 import { hasMorePages } from "../../utils/page-flow";
 import { buildSearchBody, buildSearchUrl } from "../../utils/url";
 import { mergeEngineTimings } from "../../utils/search/engine-stats";
-import { appendResults, renderEngineStats } from "./render";
+import { renderEngineStats } from "./render-sidebar";
+import { appendResults } from "./render";
 
 const PULL_RATIOS = [0, 0.2, 0.4, 0.6, 0.8, 1];
 const LOAD_ROOT_MARGIN = "0px 0px 320px";

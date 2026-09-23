@@ -1,6 +1,6 @@
 import { ExtField } from "./ext-field";
 import type { Child } from "../../../../shared/ui/tribute/types";
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 export interface RangeFieldProps {
   field: SettingField;

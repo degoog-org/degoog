@@ -216,6 +216,17 @@ describe("export stream lifecycle", () => {
     expect(ends).toBe(1);
   });
 
+  test("the built export leaves no wal or shm sidecars and stays readable", async () => {
+    await seed();
+    const path = await buildSqliteExportFile(TYPE);
+    expect(existsSync(`${path}-wal`)).toBe(false);
+    expect(existsSync(`${path}-shm`)).toBe(false);
+    const db = new Database(`file://${path}?immutable=1`, { readonly: true });
+    const { n } = db.prepare("SELECT COUNT(*) AS n FROM query_hits").get() as { n: number };
+    db.close();
+    expect(n).toBeGreaterThan(0);
+  });
+
   test("reading keeps a long download's hold alive", async () => {
     await seed();
     const adapter = getAdapter();
@@ -350,7 +361,7 @@ describe("indexer chunked transfer", () => {
     await flushQueue();
 
     const path = await buildSqliteExportFile(TYPE);
-    const src = new Database(path, { readonly: true });
+    const src = new Database(`file://${path}?immutable=1`, { readonly: true });
     const before = (
       src.prepare("SELECT pos_sum FROM query_hits ORDER BY pos_sum ASC").all() as {
         pos_sum: number;

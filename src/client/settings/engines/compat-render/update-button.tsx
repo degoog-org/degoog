@@ -1,5 +1,5 @@
 import { copy } from "./copy";
-import type { CompatCatalogItem } from "../../../types/compat-catalog";
+import type { CompatCatalogItem } from "../../../../shared/compat-layers";
 
 export const COMPAT_UPDATE_ICON = "fa-solid fa-arrows-rotate";
 export const COMPAT_UPDATE_ICON_BUSY = `${COMPAT_UPDATE_ICON} fa-spin`;

@@ -1,4 +1,5 @@
-import type { ImageFilter, ScoredResult, SearchResponse } from "./search";
+import type { ImageFilter } from "./search";
+import type { ScoredResult, SearchResponse } from "../../shared/search-types";
 
 export type EngineRecord = Record<string, boolean>;
 

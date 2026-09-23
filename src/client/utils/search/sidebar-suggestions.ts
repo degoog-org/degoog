@@ -3,8 +3,6 @@ import { searchAuthHeaders } from "../request";
 import { getBase } from "../base-url";
 import { normalizeSidebarSuggestions } from "./sidebar-suggestions-normalize";
 
-export { normalizeSidebarSuggestions } from "./sidebar-suggestions-normalize";
-
 export async function fetchSidebarSuggestions(
   query: string,
   signal?: AbortSignal,

@@ -1,4 +1,5 @@
 import { Hono, type Context } from "hono";
+import { readObjectBody } from "../utils/hono";
 import { statSync } from "fs";
 import { clearAll, sampleRows } from "../indexer/store/admin";
 import { countHits, deleteHits, listHits } from "../indexer/store/hits";
@@ -127,13 +128,8 @@ router.post("/api/indexer/rows/delete", async (c) => {
   const denied = await guardIndexer(c, "POST /api/indexer/rows/delete");
   if (denied) return denied;
 
-  let body: { items?: unknown };
-  try {
-    body = await c.req.json<{ items?: unknown }>();
-  } catch (err) {
-    logger.debug("indexer", "invalid JSON body on delete", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ items?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
   if (!Array.isArray(body.items)) return c.json({ error: "items must be an array" }, 400);
 
@@ -239,13 +235,8 @@ router.post("/api/indexer/export/start", async (c) => {
   const denied = await guardIndexer(c, "POST /api/indexer/export/start");
   if (denied) return denied;
 
-  let body: { type?: unknown };
-  try {
-    body = await c.req.json<{ type?: unknown }>();
-  } catch (err) {
-    logger.debug("indexer", "invalid JSON on export/start", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ type?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
   const type = typeof body.type === "string" ? body.type.trim() : "";
   if (!type) return c.json({ error: "type is required" }, 400);
@@ -307,12 +298,7 @@ router.post("/api/indexer/export/end", async (c) => {
   const denied = await guardIndexer(c, "POST /api/indexer/export/end");
   if (denied) return denied;
 
-  let body: { session?: unknown };
-  try {
-    body = await c.req.json<{ session?: unknown }>();
-  } catch {
-    body = {};
-  }
+  const body = (await readObjectBody<{ session?: unknown }>(c)) ?? {};
   const session = typeof body.session === "string" ? body.session : "";
   if (session) closeExportSession(session);
   return c.json({ ok: true });
@@ -322,13 +308,8 @@ router.post("/api/indexer/import/start", async (c) => {
   const denied = await guardIndexer(c, "POST /api/indexer/import/start");
   if (denied) return denied;
 
-  let body: { type?: unknown };
-  try {
-    body = await c.req.json<{ type?: unknown }>();
-  } catch (err) {
-    logger.debug("indexer", "invalid JSON on import/start", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ type?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
   const type = typeof body.type === "string" ? body.type.trim() : "";
   if (!type) return c.json({ error: "type is required" }, 400);
@@ -360,13 +341,8 @@ router.post("/api/indexer/import/complete", async (c) => {
   const denied = await guardIndexer(c, "POST /api/indexer/import/complete");
   if (denied) return denied;
 
-  let body: { session?: unknown };
-  try {
-    body = await c.req.json<{ session?: unknown }>();
-  } catch (err) {
-    logger.debug("indexer", "invalid JSON on import/complete", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ session?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
   const session = typeof body.session === "string" ? body.session : "";
   const s = session ? getImportSession(session) : undefined;
@@ -391,13 +367,8 @@ router.post("/api/indexer/clear", async (c) => {
   const denied = await guardIndexer(c, "POST /api/indexer/clear");
   if (denied) return denied;
 
-  let body: { confirm?: boolean };
-  try {
-    body = await c.req.json<{ confirm?: boolean }>();
-  } catch (err) {
-    logger.debug("indexer", "invalid JSON body on clear", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ confirm?: boolean }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
   if (body.confirm !== true) return c.json({ error: "Confirmation required" }, 400);
 
   try {

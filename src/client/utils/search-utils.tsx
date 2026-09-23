@@ -4,10 +4,14 @@ import { state } from "../state";
 import { getBase } from "./base-url";
 import { clear, render } from "../../shared/ui/tribute/dom";
 import { SlotPanel as SlotPanelView } from "../../shared/ui/components/search/slot-panel";
-import { SlotPanelPosition, type ScoredResult, type SlotPanel } from "../types";
-import { isImageSearchType } from "./engines";
+import {
+  isImageSearchType,
+  type ScoredResult,
+  type SlotPanel,
+  SlotPanelPosition,
+} from "../../shared/search-types";
 import { runScriptsInContainer } from "./search-helpers";
-import { SkeletonGlance } from "../animations/skeleton";
+import { SkeletonGlance } from "../animations/skeleton/skeleton-glance";
 
 let glanceAbortController: AbortController | null = null;
 let slotsAbortController: AbortController | null = null;

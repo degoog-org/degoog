@@ -1,6 +1,6 @@
 import { state } from "../../state";
 import { getBase } from "../../utils/base-url";
-import { performSearch } from "../../utils/search-actions";
+import { performSearch } from "../../utils/search/search-actions-perform";
 import { getEnabledSearchTypes } from "../../utils/engines";
 import { getBangMatchType } from "../../utils/navigation";
 import { performTabSearch } from "./tab-search";

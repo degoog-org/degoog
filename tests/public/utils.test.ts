@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { cleanUrl, cleanHostname } from "../../src/client/utils/dom";
+import { cleanHostname, cleanUrl } from "../../src/client/utils/dom";
 import { state } from "../../src/client/state";
 
 describe("public/utils", () => {

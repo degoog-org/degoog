@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { readObjectBody } from "../utils/hono";
 import {
   readServerSettings,
   writeServerSettings,
@@ -22,7 +23,7 @@ router.get("/api/server-settings", async (c) => {
 
 router.patch("/api/server-settings", settingsAuth(), async (c) => {
   try {
-    const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+    const body = (await readObjectBody<Record<string, unknown>>(c)) ?? {};
     const patch: { wizard?: boolean } = {};
     if (typeof body.wizard === "boolean") patch.wizard = body.wizard;
     const next = await writeServerSettings(patch);

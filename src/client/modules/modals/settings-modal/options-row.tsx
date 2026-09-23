@@ -1,6 +1,6 @@
 import { OptionsButton } from "./options-button";
 import type { Child } from "../../../../shared/ui/tribute/types";
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 export const OPTIONS_ROW_CLASS = "ext-field-options-row";
 export const OPTIONS_STATUS_CLASS = "ext-field-options-status";

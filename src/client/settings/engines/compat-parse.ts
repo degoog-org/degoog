@@ -1,7 +1,4 @@
-import type {
-  CompatCatalogItem,
-  CompatRuntimeNeed,
-} from "../../types/compat-catalog";
+import type { CompatCatalogItem, CompatRuntimeNeed } from "../../../shared/compat-layers";
 
 const _isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);

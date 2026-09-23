@@ -1,7 +1,7 @@
 import { tr } from "./i18n";
-import type { HitRow } from "../../types/indexer";
+import type { IndexerHitRow } from "../../../shared/indexer";
 
-export const ManageRow = ({ row }: { row: HitRow }): JSX.Element => (
+export const ManageRow = ({ row }: { row: IndexerHitRow }): JSX.Element => (
   <tr>
     <td>
       <label class="degoog-checkbox-wrap">

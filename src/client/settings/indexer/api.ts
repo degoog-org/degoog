@@ -1,7 +1,7 @@
 import { getBase } from "../../utils/base-url";
 import { authHeaders, jsonHeaders } from "../../utils/request";
 import { getStoredToken } from "../../utils/settings-token";
-import type { DeleteItem, RowsResponse } from "../../types/indexer";
+import type { DeleteItem, IndexerRowsResponse } from "../../../shared/indexer";
 
 export const MANAGE_PAGE_SIZE = 20;
 
@@ -13,7 +13,7 @@ export const fetchRows = async (
   q: string,
   page: number,
   type?: string,
-): Promise<RowsResponse | null> => {
+): Promise<IndexerRowsResponse | null> => {
   try {
     const params = new URLSearchParams({
       page: String(page),
@@ -25,7 +25,7 @@ export const fetchRows = async (
       headers: authHeaders(getStoredToken),
     });
     if (!res.ok) return null;
-    return (await res.json()) as RowsResponse;
+    return (await res.json()) as IndexerRowsResponse;
   } catch {
     return null;
   }

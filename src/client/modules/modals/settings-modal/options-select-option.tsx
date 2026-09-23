@@ -1,4 +1,4 @@
-import type { FieldOption } from "../../../types";
+import type { FieldOption } from "../../../../shared/field-options";
 
 export const OptionsSelectOption = ({
   option,

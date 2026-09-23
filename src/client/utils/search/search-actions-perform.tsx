@@ -8,22 +8,20 @@ import {
   destroyMediaObserver,
   MediaPreviewCloseMode,
 } from "../../modules/media/media";
-import { clearSlotPanels, renderResults } from "../../modules/renderer/render";
+import { clearSlotPanels } from "../../modules/renderer/render-slots";
+import { renderResults } from "../../modules/renderer/render";
 import { teardownInfinite } from "../../modules/renderer/infinite-scroll";
 import { renderImgEngines } from "../../modules/filters/image-filters";
 import { state } from "../../state";
+import type { Command } from "../../types/extension";
 import {
-  type Command,
+  isImageSearchType,
   type ScoredResult,
   type SearchResponse,
-} from "../../types";
+} from "../../../shared/search-types";
 import { abortAcReq, hideAcDropdown } from "../autocomplete";
 import { triggerUovadipasqua } from "../uovadipasqua";
-import {
-  getEngines,
-  getKnownSearchTypePrefixes,
-  isImageSearchType,
-} from "../engines";
+import { getEngines, getKnownSearchTypePrefixes } from "../engines";
 import { setActiveTab, setTabsForBang } from "../navigation";
 import { Pagination } from "../pagination";
 import {

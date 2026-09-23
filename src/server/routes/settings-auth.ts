@@ -1,4 +1,5 @@
 import { Hono, type Context } from "hono";
+import { readObjectBody } from "../utils/hono";
 import { randomBytes } from "node:crypto";
 import { getMiddleware } from "../extensions/middleware/registry";
 import { asString, getSettings } from "../utils/settings/plugin-settings";
@@ -304,11 +305,8 @@ router.post("/api/settings/auth", async (c) => {
     return c.json({ ok: false, error: "Use the login flow" }, 400);
   }
   if (!isPasswordRequired()) return c.json({ ok: true, token: null });
-  let body: { password?: string };
-  try {
-    body = await c.req.json<{ password?: string }>();
-  } catch (err) {
-    logger.debug("settings-auth", "invalid JSON body on auth", err);
+  const body = await readObjectBody<{ password?: string }>(c);
+  if (!body) {
     recordAuthFailure(ip);
     return c.json({ ok: false }, 400);
   }

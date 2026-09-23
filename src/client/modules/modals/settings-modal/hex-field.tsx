@@ -1,7 +1,7 @@
 import { ExtField } from "./ext-field";
 import { DEFAULT_HEX, HEX_RE, normalizeHex } from "./field-widgets";
 import type { Child } from "../../../../shared/ui/tribute/types";
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 export interface HexFieldProps {
   field: SettingField;

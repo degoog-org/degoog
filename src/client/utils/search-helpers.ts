@@ -1,4 +1,4 @@
-import type { Command } from "../types";
+import type { Command } from "../types/extension";
 
 export const declaredPages = (totalPages?: number): number | null =>
   totalPages && totalPages > 0 ? totalPages : null;

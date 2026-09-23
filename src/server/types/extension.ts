@@ -10,17 +10,6 @@ import {
 import type { FieldOptionsResult } from "../../shared/field-options";
 import type { SettingField } from "../../shared/setting-field";
 
-export type {
-  FieldOption,
-  FieldOptionsResult,
-  FieldOptionsSource,
-} from "../../shared/field-options";
-
-export type {
-  SettingFieldType,
-  SettingField,
-} from "../../shared/setting-field";
-
 export type TranslationVars = string | number | boolean;
 export type TranslationRecord = {
   [key: string]: TranslationVars | TranslationRecord;

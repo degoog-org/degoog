@@ -1,6 +1,6 @@
 import { render } from "../../../shared/ui/tribute/dom";
 import { PluginCard } from "./plugin-card";
-import type { ExtensionMeta, AllExtensions } from "../../types";
+import type { AllExtensions, ExtensionMeta } from "../../types/extension";
 import { getBase } from "../../utils/base-url";
 import { initDragOrder } from "../../utils/drag-order";
 

@@ -1,4 +1,4 @@
-import type { FieldOption, FieldOptionsResult } from "../../../types";
+import type { FieldOption, FieldOptionsResult } from "../../../../shared/field-options";
 
 const _isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);

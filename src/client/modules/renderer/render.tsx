@@ -4,17 +4,19 @@ import { NoResults } from "../../../shared/ui/components/feedback/no-results";
 import { NoEnginesLink } from "../../utils/search/no-engines-link";
 import { PaginationWrap } from "../../utils/pagination-wrap";
 import { state } from "../../state";
-import type { ScoredResult } from "../../types";
+import {
+  DEGOOG_ENGINE_NAME,
+  isImageSearchType,
+  type ScoredResult,
+} from "../../../shared/search-types";
 import { cleanUrl, linkHref } from "../../utils/dom";
 import { Pagination } from "../../utils/pagination";
 import { PaginationNav } from "../../utils/pagination-nav";
-import { goToPage } from "../../utils/search-actions";
+import { goToPage } from "../../utils/search/search-actions-page";
 import { renderTemplate } from "../../utils/template";
 import { attachFaviconFallback } from "../../utils/favicon";
 import { faviconHostname, faviconUrl } from "../../utils/url";
-import { isImageSearchType } from "../../utils/engines";
 import { getBase } from "../../utils/base-url";
-import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
 import {
   destroyMediaObserver,
   setupMediaObserver,
@@ -25,18 +27,6 @@ import { renderImageGrid } from "./render-media";
 import { clearSlotPanels as _clearSlots } from "./render-slots";
 
 const t = window.scopedT("themes/degoog");
-
-export {
-  renderEngineStats,
-  renderSidebar,
-  renderSidebarSuggestions,
-  prependKnowledgePanels,
-} from "./render-sidebar";
-export {
-  appendSlotPanels,
-  clearSlotPanels,
-  renderSlotPanels,
-} from "./render-slots";
 
 type ResultActionsFlags = {
   authenticated?: boolean;

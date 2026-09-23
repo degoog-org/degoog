@@ -2,8 +2,11 @@ import { render } from "../../../shared/ui/tribute/dom";
 import { StreamingEnginePanel } from "./streaming-engine-panel";
 import { StreamingStatRow } from "./streaming-stat-row";
 import { state } from "../../state";
-import type { EngineTiming, ScoredResult } from "../../types";
-import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
+import {
+  DEGOOG_ENGINE_NAME,
+  type EngineTiming,
+  type ScoredResult,
+} from "../../../shared/search-types";
 import { renderTemplate } from "../template";
 import { buildResultContext } from "../../modules/renderer/render";
 import { engineCount } from "./engine-failure";

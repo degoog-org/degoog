@@ -10,16 +10,15 @@ import {
   sendCompat,
   type CompatLayerView,
 } from "./compat-api";
+import { compatFilter, compatPackages } from "./compat-render/grouping";
+import { CompatList } from "./compat-render/list";
+import { CompatShell } from "./compat-render/shell";
 import {
-  compatFilter,
-  CompatList,
-  compatPackages,
-  CompatShell,
   COMPAT_UPDATE_ICON,
   COMPAT_UPDATE_ICON_BUSY,
   type CompatListUi,
-} from "./compat-render";
-import type { CompatCatalogItem } from "../../types/compat-catalog";
+} from "./compat-render/update-button";
+import type { CompatCatalogItem } from "../../../shared/compat-layers";
 
 const t = window.scopedT("core");
 

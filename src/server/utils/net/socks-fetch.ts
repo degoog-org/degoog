@@ -3,7 +3,7 @@ import type { Socket } from "node:net";
 import type { TransportFetchOptions } from "../../types/extension";
 import { fetchOverSocket } from "./raw-http";
 
-const SOCKS_PREFIX_RE = /^socks[45h]*:\/\//i;
+const SOCKS_PREFIX_RE = /^socks[45ah]*:\/\//i;
 const SOCKS_TIMEOUT_MS = 8_000;
 
 export function isSocksProxy(proxyUrl: string): boolean {

@@ -1,9 +1,7 @@
 import { WEB_TYPE } from "./copy";
 import { typeLabel } from "../type-label";
-import type {
-  CompatCatalogGroup,
-  CompatCatalogItem,
-} from "../../../types/compat-catalog";
+import type { CompatCatalogGroup } from "../../../types/compat-catalog";
+import type { CompatCatalogItem } from "../../../../shared/compat-layers";
 
 export const compatFilter = (
   items: CompatCatalogItem[],

@@ -1,4 +1,5 @@
 import { Hono, type Context } from "hono";
+import { readObjectBody } from "../utils/hono";
 import { existsSync } from "fs";
 import { resolve, relative } from "path";
 
@@ -128,7 +129,7 @@ router.get("/api/store/repos/status", settingsAuth(), async (c) => {
 });
 
 router.post("/api/store/repos", settingsAuth(), async (c) => {
-  const body = await c.req.json<{ url?: string }>();
+  const body = await readObjectBody<{ url?: string }>(c);
   const url = body?.url?.trim();
   if (!url) return c.json({ error: "Missing url" }, 400);
   try {
@@ -141,10 +142,8 @@ router.post("/api/store/repos", settingsAuth(), async (c) => {
 });
 
 router.delete("/api/store/repos", settingsAuth(), async (c) => {
-  const body = (await c.req.json<{ url?: string }>().catch(() => ({}))) as {
-    url?: string;
-  };
-  const url = body.url?.trim();
+  const body = await readObjectBody<{ url?: string }>(c);
+  const url = body?.url?.trim();
   if (!url) return c.json({ error: "Missing url" }, 400);
   try {
     await removeRepo(url);
@@ -157,10 +156,8 @@ router.delete("/api/store/repos", settingsAuth(), async (c) => {
 });
 
 router.post("/api/store/repos/refresh", settingsAuth(), async (c) => {
-  const body = (await c.req.json<{ url?: string }>().catch(() => ({}))) as {
-    url?: string;
-  };
-  const url = body.url?.trim();
+  const body = await readObjectBody<{ url?: string }>(c);
+  const url = body?.url?.trim();
   try {
     if (url) {
       await refreshRepo(url);
@@ -194,12 +191,8 @@ const itemAction =
     failure: string,
   ) =>
   async (c: Context) => {
-    const body = await c.req.json<{
-      repoUrl?: string;
-      itemPath?: string;
-      type?: string;
-    }>();
-    const { repoUrl, itemPath, type } = body ?? {};
+    const { repoUrl, itemPath, type } =
+      (await readObjectBody<{ repoUrl?: string; itemPath?: string; type?: string }>(c)) ?? {};
     if (!repoUrl?.trim() || !itemPath?.trim() || !type) {
       return c.json({ error: "Missing repoUrl, itemPath, or type" }, 400);
     }
@@ -247,11 +240,8 @@ router.get("/api/store/repos/refresh/stream", settingsAuth(), async (c) => {
 });
 
 router.delete("/api/store/untracked", settingsAuth(), async (c) => {
-  const body = (await c.req.json<{ type?: string; folderName?: string }>().catch(() => ({}))) as {
-    type?: string;
-    folderName?: string;
-  };
-  const { type, folderName } = body;
+  const { type, folderName } =
+    (await readObjectBody<{ type?: string; folderName?: string }>(c)) ?? {};
   if (!type || !folderName?.trim()) {
     return c.json({ error: "Missing type or folderName" }, 400);
   }

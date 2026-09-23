@@ -1,4 +1,4 @@
-import type { CompatCatalogItem } from "../../../types/compat-catalog";
+import type { CompatCatalogItem } from "../../../../shared/compat-layers";
 
 const _host = (site: string | undefined): string => {
   if (!site) return "";

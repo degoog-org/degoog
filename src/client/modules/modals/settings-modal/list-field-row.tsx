@@ -1,6 +1,6 @@
 import { ListSubField } from "./list-sub-field";
 import { rowSummary, type ListRow } from "./list-field-data";
-import type { SettingField } from "../../../types";
+import type { SettingField } from "../../../../shared/setting-field";
 
 const t = window.scopedT("core");
 

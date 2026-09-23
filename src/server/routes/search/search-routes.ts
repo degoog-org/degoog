@@ -1,4 +1,5 @@
 import type { Context, Hono } from "hono";
+import { readObjectBody } from "../../utils/hono";
 import type {
   RetryPostBody,
   SearchBody,
@@ -114,13 +115,8 @@ export function registerSearchRoutes(router: Hono): void {
       );
     }
 
-    let body: SearchBody;
-    try {
-      body = await c.req.json<SearchBody>();
-    } catch (err) {
-      logger.debug("search", "invalid JSON body", err);
-      return c.json({ error: "Invalid JSON" }, 400);
-    }
+    const body = await readObjectBody<SearchBody>(c);
+    if (!body) return c.json({ error: "Invalid JSON" }, 400);
     const query = body.query ?? "";
     if (!isValidQuery(query))
       return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
@@ -153,13 +149,8 @@ export function registerSearchRoutes(router: Hono): void {
     const authRes = await guardApiKey(c, "apiKeySearchEnabled");
     if (authRes) return authRes;
 
-    let body: RetryPostBody;
-    try {
-      body = await c.req.json<RetryPostBody>();
-    } catch (err) {
-      logger.debug("search", "invalid JSON body on retry", err);
-      return c.json({ error: "Invalid JSON" }, 400);
-    }
+    const body = await readObjectBody<RetryPostBody>(c);
+    if (!body) return c.json({ error: "Invalid JSON" }, 400);
     const query = body.query ?? "";
     const engineName = body.engine ?? "";
     if (!query || !engineName)

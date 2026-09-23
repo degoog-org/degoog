@@ -2,9 +2,9 @@ import { render } from "../../shared/ui/tribute/dom";
 import { LangError } from "./lang-error";
 import { LangOption } from "./lang-option";
 import { state } from "../state";
-import { performSearch } from "./search-actions";
+import { performSearch } from "./search/search-actions-perform";
 import { getBase } from "./base-url";
-import { isImageSearchType } from "./engines";
+import { isImageSearchType } from "../../shared/search-types";
 
 const TIME_ANY = "any";
 const TIME_LABELS: Record<string, string> = {

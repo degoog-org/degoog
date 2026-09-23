@@ -2,7 +2,7 @@ import type { SearchBody } from "../../server/types/search";
 import type { ImageFilter } from "../types/search";
 import { state } from "../state";
 import { getBase } from "./base-url";
-import { isImageSearchType } from "./engines";
+import { isImageSearchType } from "../../shared/search-types";
 
 export const imgFilterRecord = (f: ImageFilter): Record<string, string> => {
   const r: Record<string, string> = {};
