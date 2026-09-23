@@ -1,9 +1,7 @@
-import type { SearchResult } from "../../types";
+import { DEGOOG_ENGINE_NAME, type SearchResult } from "../../../shared/search-types";
 import type { UrlRow } from "../types/adapter";
 import { logger } from "../../utils/logger";
-import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
 
-export { DEGOOG_ENGINE_NAME };
 
 const PROTO_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 

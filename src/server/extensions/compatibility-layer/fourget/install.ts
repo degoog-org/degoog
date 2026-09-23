@@ -3,6 +3,7 @@ import { existsSync } from "fs";
 import { randomBytes } from "crypto";
 import { join, resolve } from "path";
 import { logger } from "../../../utils/logger";
+import { createMutex } from "../../../utils/cache/mutex";
 import type { CompatCatalogItem, CompatRuntimeNeed } from "../../../../shared/compat-layers";
 import {
   FOURGET_CATALOG,
@@ -32,13 +33,7 @@ const _allowedSource = (raw: string): boolean => {
   }
 };
 
-let _chain: Promise<unknown> = Promise.resolve();
-
-export const withFourGetLock = <T>(task: () => Promise<T>): Promise<T> => {
-  const next = _chain.then(task, task);
-  _chain = next.catch(() => undefined);
-  return next;
-};
+export const withFourGetLock = createMutex();
 
 const _scraperPath = (code: string): string =>
   join(resolve(scrapersDir()), `${code}.php`);

@@ -4,8 +4,8 @@ import {
   setInstanceSettings,
   updateInstanceSettings,
   type ServerSettingValue,
-} from "../../src/server/utils/server-settings";
-import { clearRateLimitState } from "../../src/server/utils/rate-limit";
+} from "../../src/server/utils/settings/server-settings";
+import { clearRateLimitState } from "../../src/server/utils/security/rate-limit";
 
 let savedSettings: Record<string, ServerSettingValue>;
 

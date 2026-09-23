@@ -5,9 +5,9 @@ import { join } from "node:path";
 import {
   clearServerSettingsCache,
   getInstanceSettings,
-} from "../../src/server/utils/server-settings";
+} from "../../src/server/utils/settings/server-settings";
 
-const QUEUE_MOD = "../../src/server/indexer/queue";
+const QUEUE_MOD = "../../src/server/indexer/queue/queue";
 
 const queueReal = { ...(await import(QUEUE_MOD)) };
 

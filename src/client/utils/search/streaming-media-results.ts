@@ -1,4 +1,4 @@
-import type { ScoredResult } from "../../../server/types";
+import type { ScoredResult } from "../../../shared/search-types";
 
 export function mergeStreamingMediaResults(
   _current: ScoredResult[],

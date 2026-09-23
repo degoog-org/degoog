@@ -1,12 +1,12 @@
 import postgres from "postgres";
+import type { IndexerHitRow } from "../../../../shared/indexer";
 import type {
   IndexerAdapter,
   UrlRow,
-  HitRow,
   TypeCounts,
   ExportRow,
 } from "../../types/adapter";
-import type { IndexRow } from "../../recorders";
+import type { IndexRow } from "../../recorders/default";
 import type { IndexerConfig } from "../../types/config";
 import { safeSlug } from "../../shared/safe-type";
 import { rankFields } from "../../shared/rank-fields";
@@ -373,12 +373,12 @@ export class PgAdapter implements IndexerAdapter {
     q: string | undefined,
     limit: number,
     offset: number,
-  ): Promise<HitRow[]> {
+  ): Promise<IndexerHitRow[]> {
     const schema = safeSlug(type);
     try {
       if (q?.trim()) {
         const term = `%${q.trim().toLowerCase()}%`;
-        return await this._sql<HitRow[]>`
+        return await this._sql<IndexerHitRow[]>`
           SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen,
                  (h.pos_sum::float / h.hit_count) AS score
           FROM ${this._sql(schema)}.query_hits h
@@ -390,7 +390,7 @@ export class PgAdapter implements IndexerAdapter {
           LIMIT ${limit} OFFSET ${offset}
         `;
       }
-      return await this._sql<HitRow[]>`
+      return await this._sql<IndexerHitRow[]>`
         SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen,
                (h.pos_sum::float / h.hit_count) AS score
         FROM ${this._sql(schema)}.query_hits h

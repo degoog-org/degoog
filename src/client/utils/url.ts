@@ -1,4 +1,4 @@
-import { SearchBody } from "../../server/types";
+import type { SearchBody } from "../../server/types/search";
 import type { ImageFilter } from "../types/search";
 import { state } from "../state";
 import { getBase } from "./base-url";

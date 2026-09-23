@@ -1,5 +1,5 @@
-import type { SettingField } from "../../../types";
-import type { SettingValue } from "../../../utils/plugin-settings";
+import type { SettingField } from "../../../../shared/setting-field";
+import type { SettingValue } from "../../../utils/settings/plugin-settings";
 
 export const SEARX_OPT_PREFIX = "searxOpt_";
 

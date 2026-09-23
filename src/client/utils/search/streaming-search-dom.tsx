@@ -4,7 +4,7 @@ import { StreamingStatRow } from "./streaming-stat-row";
 import { state } from "../../state";
 import type { EngineTiming, ScoredResult } from "../../types";
 import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
-import { renderTemplate } from "../../utils/template";
+import { renderTemplate } from "../template";
 import { buildResultContext } from "../../modules/renderer/render";
 import { engineCount } from "./engine-failure";
 import { originSlot, paintOrigins } from "./engine-origins";

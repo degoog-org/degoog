@@ -3,11 +3,11 @@ import { RawDogIt } from "../../shared/ui/tribute/rawdogit";
 import { CommandNotice } from "./command-notice";
 import { CommandPanel } from "./command-panel";
 import type { BangMatch } from "../extensions/commands/registry";
-import type { CommandContext, Translate } from "../types";
+import type { CommandContext, Translate } from "../types/extension";
 import { logger } from "../utils/logger";
-import { isDisabled } from "../utils/plugin-settings";
-import { buildSignedProxyUrl } from "../utils/proxy-sign";
-import { syncVortexSignal } from "../utils/translation-circuit";
+import { isDisabled } from "../utils/settings/plugin-settings";
+import { buildSignedProxyUrl } from "../utils/net/proxy-sign";
+import { syncVortexSignal } from "../utils/extension-support/translation-circuit";
 
 export type NojsCommandMatch = Extract<BangMatch, { type: "command" }>;
 

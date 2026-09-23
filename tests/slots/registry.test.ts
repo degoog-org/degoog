@@ -1,14 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { makeExtID } from "../../src/server/utils/extension-id";
+import { makeExtID } from "../../src/server/utils/extension-support/extension-id";
 import {
   getSlotPluginById,
   initSlotPlugins,
 } from "../../src/server/extensions/slots/registry";
-import {
-  SlotPanelPosition,
-  type ScoredResult,
-  type SlotPluginContext,
-} from "../../src/server/types";
+import type { SlotPluginContext } from "../../src/server/types/extension";
+import { type ScoredResult, SlotPanelPosition } from "../../src/shared/search-types";
 
 const AT_A_GLANCE_ID = makeExtID("at-a-glance", "slot");
 const WIKIPEDIA_ID = makeExtID("wikipedia", "slot");

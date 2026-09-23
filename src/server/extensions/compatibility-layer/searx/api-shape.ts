@@ -1,6 +1,10 @@
-import type { EngineTiming, ScoredResult, SearchResponse } from "../../../types";
-import { listEngines } from "../../engines/registry";
-import { THREAT_LEVEL } from "../../../utils/sentinel";
+import type {
+  EngineTiming,
+  ScoredResult,
+  SearchResponse,
+} from "../../../../shared/search-types";
+import { listEngines } from "../../engines/catalog";
+import { THREAT_LEVEL } from "../../../utils/security/sentinel";
 import { logger } from "../../../utils/logger";
 
 const NS = "searx-api";

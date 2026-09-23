@@ -84,9 +84,6 @@ export const searchListsFile = (): string =>
 export const indexerDir = (): string =>
   process.env.DEGOOG_INDEXER_DIR ?? join(_dataDir(), "indexer");
 
-export const indexerDbFile = (): string =>
-  process.env.DEGOOG_INDEXER_DB ?? join(indexerDir(), "index.db");
-
 export const indexerConfigFile = (): string =>
   process.env.DEGOOG_INDEXER_CONFIG_FILE ?? join(indexerDir(), "indexer-config.json");
 

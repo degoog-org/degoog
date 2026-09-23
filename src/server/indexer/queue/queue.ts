@@ -1,8 +1,8 @@
-import type { IndexRow } from "../recorders";
+import type { IndexRow } from "../recorders/default";
 import { getAdapter, bootAdapter } from "../db/factory";
 import { discoverTypes } from "../db/lifecycle";
 import { getIndexerConfig } from "../config/load";
-import { createMutex, type RunExclusive } from "../../utils/mutex";
+import { createMutex, type RunExclusive } from "../../utils/cache/mutex";
 import { logger } from "../../utils/logger";
 
 export const FLUSH_INTERVAL_MS = 3_000;

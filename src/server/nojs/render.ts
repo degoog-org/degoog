@@ -1,22 +1,24 @@
 import pkg from "../../../package.json";
 import { getActiveTheme, getActiveThemeDataAttrs } from "../extensions/themes/registry";
-import type { Translate } from "../types";
-import { getBasePath, getBaseUrl } from "../utils/base-url";
-import { mintToken } from "../utils/link-token";
+import type { Translate } from "../types/extension";
+import { mintToken } from "../utils/security/link-token";
 import { logger } from "../utils/logger";
-import { asString } from "../utils/plugin-settings";
-import { getInstanceSettings } from "../utils/server-settings";
-import { bootCircuitFromPath, syncVortexSignal, withBuffer } from "../utils/translation-circuit";
+import { asString } from "../utils/settings/plugin-settings";
+import { getInstanceSettings } from "../utils/settings/server-settings";
+import { syncVortexSignal, withBuffer } from "../utils/extension-support/translation-circuit";
 import { insertBeforeHeadEnd } from "./dom";
+import {
+  basePrefix,
+  customCssTag,
+  getCoreTranslator,
+  getDefaultThemeTranslator,
+  textDirection,
+  themeCssLink,
+} from "../render/theme-assets";
 import { isNojsCssCheckOn } from "./settings";
 import { loadNojsTemplate } from "./templates";
 
-const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
-const CORE_LOCALES_ROOT = "src";
-const BASE_URL = getBaseUrl();
-const BASE_PATH = getBasePath();
-const BASE_PREFIX =
-  BASE_PATH || (BASE_URL && !/^https?:\/\//i.test(BASE_URL) ? BASE_URL : "");
+const BASE_PREFIX = basePrefix();
 
 const _escapeRe = (value: string): string =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -35,36 +37,17 @@ export const prefixRootRelativeUrls = (
 ): string =>
   prefix ? html.replace(_rootRelativeUrl(prefix), `$1${prefix}/`) : html;
 
-const RTL_LANGS = ["ar", "he", "fa", "ur", "ps", "ckb"];
-
 const NOJS_STYLESHEET = `<link rel="stylesheet" href="/public/nojs.css?v=${pkg.version}">`;
 const FONTAWESOME_STYLESHEET = `<link rel="stylesheet" href="/public/icons/fontawesome/css/all.min.css?v=${pkg.version}">`;
-
-let nojsThemeTranslator: Translate | null = null;
-let nojsCoreTranslator: Translate | null = null;
 
 export const sub = (html: string, key: string, value: string): string =>
   html.replaceAll(key, () => value);
 
-const _getThemeTranslator = async (): Promise<Translate> => {
-  if (!nojsThemeTranslator) {
-    nojsThemeTranslator = await bootCircuitFromPath(DEFAULT_THEME_DIR);
-  }
-  return nojsThemeTranslator;
-};
-
-const _getCoreTranslator = async (): Promise<Translate> => {
-  if (!nojsCoreTranslator) {
-    nojsCoreTranslator = await bootCircuitFromPath(CORE_LOCALES_ROOT);
-  }
-  return nojsCoreTranslator;
-};
-
 export const getNojsTranslator = async (): Promise<Translate> => {
-  const baseT = await _getThemeTranslator();
+  const baseT = await getDefaultThemeTranslator();
   const theme = await getActiveTheme();
   const themeChain = theme?.t ? withBuffer(theme.t, baseT) : baseT;
-  return withBuffer(themeChain, await _getCoreTranslator());
+  return withBuffer(themeChain, await getCoreTranslator());
 };
 
 export const loadNojsPartial = async (
@@ -75,24 +58,6 @@ export const loadNojsPartial = async (
   const template = await loadNojsTemplate(name);
   if (template === null) return null;
   return syncVortexSignal(template, t, locale);
-};
-
-const _textDirection = (locale: string): "rtl" | "ltr" =>
-  RTL_LANGS.some((lang) => locale.toLowerCase().startsWith(lang))
-    ? "rtl"
-    : "ltr";
-
-const _themeCssLink = async (): Promise<string> => {
-  const theme = await getActiveTheme();
-  if (!theme?.manifest.css) return "";
-  return `<link rel="stylesheet" href="/theme/style.css?v=${pkg.version}&theme=${encodeURIComponent(theme.id)}">`;
-};
-
-const _customCssTag = async (): Promise<string> => {
-  const settings = await getInstanceSettings();
-  const css = asString(settings.customCss).trim();
-  if (!css) return "";
-  return `<style id="degoog-custom-css">${css.replace(/<\//g, "<\\/")}</style>`;
 };
 
 const _cssPingLink = async (): Promise<string> => {
@@ -124,9 +89,9 @@ export const applyNojsPlaceholders = async (
 ): Promise<string> => {
   let result = sub(html, "__LANG_ATTR__", locale || "en");
   result = sub(result, "__THEME_ATTRS__", await _themeAttrs());
-  result = sub(result, "__RTL_SUPPORT__", `dir="${_textDirection(locale)}"`);
-  result = sub(result, "__THEME_CSS__", await _themeCssLink());
-  result = sub(result, "__CUSTOM_CSS__", await _customCssTag());
+  result = sub(result, "__RTL_SUPPORT__", `dir="${textDirection(locale)}"`);
+  result = sub(result, "__THEME_CSS__", await themeCssLink());
+  result = sub(result, "__CUSTOM_CSS__", await customCssTag());
   result = sub(result, "__PLUGIN_ASSETS__", "");
   result = sub(result, "__THEME_TEMPLATES__", "");
   result = sub(result, "__APP_VERSION__", pkg.version);

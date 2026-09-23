@@ -3,6 +3,7 @@ import { existsSync } from "fs";
 import { randomBytes } from "crypto";
 import { join, resolve } from "path";
 import { logger } from "../../../utils/logger";
+import { createMutex } from "../../../utils/cache/mutex";
 import {
   SEARX_CATALOG,
   SEARX_SOURCE_BASE_URL,
@@ -23,13 +24,7 @@ const DOWNLOAD_TIMEOUT_MS = 20_000;
 const TRAITS_SUFFIX = ".traits.json";
 const SHORTEST_ALIAS = 4;
 
-let _queue: Promise<unknown> = Promise.resolve();
-
-export const withSearxLock = <T>(task: () => Promise<T>): Promise<T> => {
-  const run = _queue.then(task, task);
-  _queue = run.catch(() => undefined);
-  return run;
-};
+export const withSearxLock = createMutex();
 
 const _enginePath = (code: string): string => join(resolve(searxEnginesDir()), `${code}.py`);
 

@@ -1,7 +1,5 @@
 const HTCPCP_VERSION = "1.0";
 const TEAPOT_STATUS_TEXT = "I'm a teapot";
-const MEDIA_COFFEE = "message/coffeepot";
-const MEDIA_COFFEE_COMMAND = "application/coffee-pot-command";
 const MEDIA_TEA = "message/teapot";
 const TEXT_PLAIN = "text/plain; charset=UTF-8";
 const TEA_VARIETIES = ["darjeeling", "earl-grey", "peppermint"] as const;
@@ -12,11 +10,6 @@ const mediaTypeOf = (contentType: string | undefined): string =>
 
 export const isTeaMessage = (contentType: string | undefined): boolean =>
   mediaTypeOf(contentType) === MEDIA_TEA;
-
-export const isCoffeeMessage = (contentType: string | undefined): boolean => {
-  const media = mediaTypeOf(contentType);
-  return media === MEDIA_COFFEE || media === MEDIA_COFFEE_COMMAND;
-};
 
 export const isTeaVariety = (variety: string): boolean =>
   (TEA_VARIETIES as readonly string[]).includes(variety);

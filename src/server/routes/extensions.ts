@@ -1,48 +1,35 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { getEngineExtensionMeta } from "../extensions/engines/registry";
 import { canBalrogPass, gandalf } from "./settings-auth";
-import { getPluginExtensionMeta } from "../extensions/commands/registry";
-import { getCoreTranslator } from "./pages";
-import { getSlotExtensionMeta } from "../extensions/slots/registry";
-import { getInterceptorMeta } from "../extensions/interceptors/registry";
-import { getSearchBarActionExtensionMeta } from "../extensions/search-bar/registry";
-import { getSearchResultTabExtensionMeta } from "../extensions/search-result-tabs/registry";
-import { getThemeExtensionMeta } from "../extensions/themes/registry";
 import {
   getSettings,
   isDisabled,
   setSettings,
   mergeSecrets,
   type SettingValue,
-} from "../utils/plugin-settings";
-import { getPluginCssIds, getPluginCssById } from "../utils/plugin-assets";
-import {
-  getTransportExtensionMeta,
-  getTransport,
-} from "../extensions/transports/registry";
-import { getAutocompleteExtensionMeta } from "../extensions/autocomplete/registry";
-import { getShortcutExtensionMeta } from "../extensions/shortcuts/registry";
-import { outgoingFetch } from "../utils/outgoing";
+} from "../utils/settings/plugin-settings";
+import { getPluginCssIds, getPluginCssById } from "../utils/extension-support/plugin-assets";
+import { getTransport } from "../extensions/transports/registry";
+import { outgoingFetch } from "../utils/net/outgoing";
 import { readFile } from "fs/promises";
-import { extensionReadmeExists } from "../utils/extension-docs";
-import { getInstalledItems, reloadAfterAction } from "../extensions/store/item-ops";
-import { makeExtID, folderFromExtID } from "../utils/extension-id";
+import { extensionReadmeExists } from "../utils/extension-support/extension-docs";
+import { getInstalledItems } from "../extensions/store/item-lifecycle";
+import { reloadAfterAction } from "../extensions/store/item-specs";
+import { makeExtID, folderFromExtID } from "../utils/extension-support/extension-id";
 import { readObjectBody } from "../utils/hono";
 import { isVersionAtLeast, getAppVersion } from "../../shared/utils/version";
-import { savePluginUpload } from "../utils/plugin-uploads";
+import { savePluginUpload } from "../utils/extension-support/plugin-uploads";
 import { logger } from "../utils/logger";
 import {
   findExtensionMeta,
   findOptionsProvider,
+  getExtensionMetaGroups,
 } from "../extensions/resolve";
 import { syncExtSettings } from "../extensions/settings-sync";
-import {
-  ExtensionStoreType,
-  type ExtensionMeta,
-  type FieldOption,
-  type SettingField,
-} from "../types";
+import { type ExtensionMeta, ExtensionStoreType } from "../types/extension";
+import type { FieldOption } from "../../shared/field-options";
+import type { SettingField } from "../../shared/setting-field";
+import { settingsAuth } from "./_guards";
 
 const router = new Hono();
 
@@ -179,46 +166,14 @@ const groupKeyFor = (requested: string): ExtensionGroupKey | null => {
 
 
 router.get("/api/extensions", async (c) => {
-  const coreT = await getCoreTranslator();
-  const [
-    engines,
-    plugins,
-    slotMeta,
-    interceptorMeta,
-    searchBarMeta,
-    tabMeta,
-    themes,
-    transports,
-    autocomplete,
-    shortcuts,
-    installedItems,
-  ] = await Promise.all([
-    getEngineExtensionMeta(coreT),
-    getPluginExtensionMeta(coreT),
-    getSlotExtensionMeta(coreT),
-    getInterceptorMeta(),
-    getSearchBarActionExtensionMeta(),
-    getSearchResultTabExtensionMeta(),
-    getThemeExtensionMeta(),
-    getTransportExtensionMeta(),
-    getAutocompleteExtensionMeta(),
-    getShortcutExtensionMeta(),
+  const [groups, installedItems] = await Promise.all([
+    getExtensionMetaGroups(),
     getInstalledItems(),
   ]);
+  const { engines, plugins, slots, interceptors, searchBar, tabs, themes, transports, autocomplete, shortcuts } =
+    groups;
 
-  const allMetas = [
-    ...engines,
-    ...plugins,
-    ...slotMeta,
-    ...interceptorMeta,
-    ...searchBarMeta,
-    ...tabMeta,
-    ...themes,
-    ...transports,
-    ...autocomplete,
-    ...shortcuts,
-  ];
-  for (const meta of allMetas) {
+  for (const meta of Object.values(groups).flat()) {
     const inst = installedItems.find((i) => {
       const expected =
         i.type === ExtensionStoreType.Plugin
@@ -253,7 +208,7 @@ router.get("/api/extensions", async (c) => {
 
   const full = {
     engines: redact(engines),
-    plugins: redact([...plugins, ...slotMeta, ...interceptorMeta, ...searchBarMeta, ...tabMeta]),
+    plugins: redact([...plugins, ...slots, ...interceptors, ...searchBar, ...tabs]),
     themes: redact(themes),
     transports: redact(transports),
     autocomplete: redact(autocomplete),
@@ -273,10 +228,7 @@ router.get("/api/extensions", async (c) => {
   return c.json(full);
 });
 
-router.post("/api/extensions/:id/settings", async (c) => {
-  const token = canBalrogPass(c);
-  if (!(await gandalf(token)))
-    return c.json({ error: "You shall not pass!" }, 401);
+router.post("/api/extensions/:id/settings", settingsAuth(), async (c) => {
   const id = c.req.param("id");
   const body = await readObjectBody<Record<string, unknown>>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
@@ -348,10 +300,7 @@ router.post("/api/extensions/:id/settings", async (c) => {
   return c.json({ ok: true });
 });
 
-router.post("/api/extensions/:id/options/:key", async (c) => {
-  const token = canBalrogPass(c);
-  if (!(await gandalf(token)))
-    return c.json({ error: "You shall not pass!" }, 401);
+router.post("/api/extensions/:id/options/:key", settingsAuth(), async (c) => {
 
   const id = c.req.param("id");
   const key = c.req.param("key");
@@ -391,11 +340,8 @@ router.post("/api/extensions/:id/options/:key", async (c) => {
 router.post(
   "/api/extensions/:id/upload",
   bodyLimit({ maxSize: UPLOAD_BODY_LIMIT_BYTES }),
+  settingsAuth(),
   async (c) => {
-    const token = canBalrogPass(c);
-    if (!(await gandalf(token)))
-      return c.json({ error: "You shall not pass!" }, 401);
-
     const id = c.req.param("id");
     let form: FormData;
     try {
@@ -439,10 +385,7 @@ router.post(
   },
 );
 
-router.post("/api/extensions/transports/:name/test", async (c) => {
-  const token = canBalrogPass(c);
-  if (!(await gandalf(token)))
-    return c.json({ error: "You shall not pass!" }, 401);
+router.post("/api/extensions/transports/:name/test", settingsAuth(), async (c) => {
 
   const name = c.req.param("name");
   const transport = getTransport(name);
@@ -469,10 +412,7 @@ router.post("/api/extensions/transports/:name/test", async (c) => {
   }
 });
 
-router.get("/api/extensions/:id/readme", async (c) => {
-  const token = canBalrogPass(c);
-  if (!(await gandalf(token)))
-    return c.json({ error: "You shall not pass!" }, 401);
+router.get("/api/extensions/:id/readme", settingsAuth(), async (c) => {
 
   const id = c.req.param("id");
   const { exists, readmePath } = await extensionReadmeExists(id);

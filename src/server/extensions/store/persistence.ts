@@ -1,9 +1,9 @@
 import { mkdir, stat } from "fs/promises";
 import { join } from "path";
-import type { RepoInfo, ReposData } from "../../types";
-import { writeJsonAtomic } from "../../utils/atomic-json";
+import type { RepoInfo, ReposData } from "../../types/store";
+import { writeJsonAtomic } from "../../utils/storage/atomic-json";
 import { logger } from "../../utils/logger";
-import { readJsonOrQuarantine } from "../../utils/read-json";
+import { readJsonOrQuarantine } from "../../utils/storage/read-json";
 
 function getDataDir(): string {
   return process.env.DEGOOG_DATA_DIR ?? join(process.cwd(), "data");

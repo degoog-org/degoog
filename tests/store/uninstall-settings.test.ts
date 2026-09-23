@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { settingsIdsForInstalled } from "../../src/server/extensions/store/item-ops";
-import { ExtensionStoreType } from "../../src/server/types";
+import { settingsIdsForInstalled } from "../../src/server/extensions/store/item-specs";
+import { ExtensionStoreType } from "../../src/server/types/extension";
 
 const CASES: [ExtensionStoreType, string, string, string][] = [
   [ExtensionStoreType.Engine, "acme-foo", "acme-foo-engine", "engine-acme-foo"],

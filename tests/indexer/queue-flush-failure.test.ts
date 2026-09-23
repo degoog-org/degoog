@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
-import type { IndexRow } from "../../src/server/indexer/recorders";
+import type { IndexRow } from "../../src/server/indexer/recorders/default";
 
 const FACTORY_MOD = "../../src/server/indexer/db/factory";
 const CONFIG_MOD = "../../src/server/indexer/config/load";

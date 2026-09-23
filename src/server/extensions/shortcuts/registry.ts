@@ -1,11 +1,11 @@
 import { readFile, stat } from "fs/promises";
 import { dirname, join, resolve } from "path";
 import { shortcutsDir } from "../../utils/paths";
-import { makeExtID } from "../../utils/extension-id";
-import { asBoolean, getSettings } from "../../utils/plugin-settings";
+import { makeExtID } from "../../utils/extension-support/extension-id";
+import { asBoolean, getSettings } from "../../utils/settings/plugin-settings";
 import { buildExtensionMeta } from "../extension-meta";
 import { createRegistry } from "../registry-factory";
-import { ExtensionStoreType, type ExtensionMeta } from "../../types";
+import { type ExtensionMeta, ExtensionStoreType } from "../../types/extension";
 import type {
   ClientShortcut,
   ShortcutActionMeta,
@@ -83,16 +83,18 @@ export const reloadShortcutsRegistry = (bust = false): Promise<void> =>
   bust ? registry.reload() : registry.refresh();
 export const getShortcutExtensions = (): ShortcutExtension[] => registry.items();
 
+const _actionMeta = (shortcut: ShortcutExtension): ShortcutActionMeta => ({
+  id: shortcut.id ?? "",
+  kind: shortcut.kind ?? "single",
+  defaultBinding: shortcut.defaultBinding,
+  displayName: shortcut.name,
+  description: shortcut.description ?? "",
+  source: shortcut.source,
+  editable: shortcut.editable === true,
+});
+
 export const getShortcutActions = (): ShortcutActionMeta[] =>
-  getShortcutExtensions().map((shortcut) => ({
-    id: shortcut.id ?? "",
-    kind: shortcut.kind ?? "single",
-    defaultBinding: shortcut.defaultBinding,
-    displayName: shortcut.name,
-    description: shortcut.description ?? "",
-    source: shortcut.source,
-    editable: shortcut.editable === true,
-  }));
+  getShortcutExtensions().map(_actionMeta);
 
 export const getShortcutDisabledStates = async (): Promise<
   Record<string, boolean>
@@ -113,13 +115,7 @@ export const getClientShortcuts = async (): Promise<ClientShortcut[]> => {
     const settings = await getSettings(shortcut.id);
     if (asBoolean(settings.disabled)) continue;
     result.push({
-      id: shortcut.id,
-      kind: shortcut.kind ?? "single",
-      defaultBinding: shortcut.defaultBinding,
-      displayName: shortcut.name,
-      description: shortcut.description ?? "",
-      source: shortcut.source,
-      editable: shortcut.editable === true,
+      ..._actionMeta(shortcut),
       moduleUrl: `/api/shortcuts/modules/${encodeURIComponent(shortcut.id)}.js`,
     });
   }

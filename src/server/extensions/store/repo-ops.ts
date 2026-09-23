@@ -1,6 +1,6 @@
 import { readFile, rm, realpath } from "fs/promises";
 import { join, relative, isAbsolute } from "path";
-import type { RepoInfo, RepoPackageJson } from "../../types";
+import type { RepoInfo, RepoPackageJson } from "../../types/store";
 import type { StoreStreamPhase } from "../../../shared/store-stream";
 import { logger } from "../../utils/logger";
 import { runStoreExclusive } from "./store-lock";
@@ -11,7 +11,7 @@ import {
   writeReposData,
   getRepoByUrl,
 } from "./persistence";
-import { clearItemCachesForRepo } from "./item-ops";
+import { clearItemCachesForRepo } from "./item-metadata";
 
 const CLONE_TIMEOUT_MS = 60_000;
 const FETCH_TIMEOUT_MS = 15_000;

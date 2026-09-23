@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { updateInstanceSettings } from "../../src/server/utils/server-settings";
-import { syncBlocklist } from "../../src/server/utils/bot-trap";
+import { updateInstanceSettings } from "../../src/server/utils/settings/server-settings";
+import { syncBlocklist } from "../../src/server/utils/security/bot-trap";
 
 type Router = {
   request: (req: Request | string) => Response | Promise<Response>;

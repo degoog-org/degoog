@@ -1,0 +1,24 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`settingsIdsForInstalled each type maps to its canonical settings ids 1`] = `
+{
+  "autocomplete": [
+    "acme-demo-autocomplete",
+  ],
+  "engine": [
+    "acme-demo-engine",
+  ],
+  "plugin": [
+    "acme-demo-command",
+  ],
+  "shortcut": [
+    "acme-demo-shortcut",
+  ],
+  "theme": [
+    "acme-demo-theme",
+  ],
+  "transport": [
+    "acme-demo-transport",
+  ],
+}
+`;

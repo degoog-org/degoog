@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
-import { ExtensionStoreType, type ExtensionMeta } from "../../src/server/types";
+import { type ExtensionMeta, ExtensionStoreType } from "../../src/server/types/extension";
 
-const ENGINES_MOD = "../../src/server/extensions/engines/registry";
-const UPLOADS_MOD = "../../src/server/utils/plugin-uploads";
+const ENGINES_MOD = "../../src/server/extensions/engines/extension-meta";
+const UPLOADS_MOD = "../../src/server/utils/extension-support/plugin-uploads";
 
 const UPLOAD_ID = "fake-upload-engine";
 const UPLOAD_URL = `http://localhost/api/extensions/${UPLOAD_ID}/upload`;

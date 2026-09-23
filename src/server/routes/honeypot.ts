@@ -1,9 +1,9 @@
 import { Hono, type Context } from "hono";
 import { getTraps } from "../extensions/honeypot/registry";
-import { blockIp, honeypotOn } from "../utils/bot-trap";
-import { getClientIp } from "../utils/request";
+import { blockIp, honeypotOn } from "../utils/security/bot-trap";
+import { getClientIp } from "../utils/net/request";
 import { logger } from "../utils/logger";
-import { getPublicUrl } from "../utils/public-url";
+import { getPublicUrl } from "../utils/net/public-url";
 
 import "../extensions/honeypot/builtins/wp-trap";
 import "../extensions/honeypot/builtins/env-trap";

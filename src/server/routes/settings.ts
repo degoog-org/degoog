@@ -1,13 +1,13 @@
 import { mkdir, readFile, stat, unlink, writeFile } from "fs/promises";
 import { Hono } from "hono";
-import { outgoingFetch } from "../utils/outgoing";
+import { outgoingFetch } from "../utils/net/outgoing";
 import { defaultEnginesFile, shortcutsDir } from "../utils/paths";
-import { asBoolean, asString } from "../utils/plugin-settings";
-import { getRandomUserAgent } from "../utils/user-agents";
+import { asBoolean, asString } from "../utils/settings/plugin-settings";
+import { getRandomUserAgent } from "../utils/net/user-agents";
 import { DEFAULT_LANGUAGES } from "../utils/search";
-import { getServerKeyHex, regenerateServerKey } from "../utils/server-key";
-import { resolveBanHours, syncBlocklist } from "../utils/bot-trap";
-import { addEntry, listActive, removeEntry } from "../utils/blocklist";
+import { getServerKeyHex, regenerateServerKey } from "../utils/security/server-key";
+import { resolveBanHours, syncBlocklist } from "../utils/security/bot-trap";
+import { addEntry, listActive, removeEntry } from "../utils/filtering/blocklist";
 import { guardSettingsRoute, isPasswordRequired } from "./settings-auth";
 import { readObjectBody } from "../utils/hono";
 import { SHORTCUT_ACTIONS } from "../../shared/shortcuts";
@@ -16,26 +16,26 @@ import {
   getShortcutActions,
   getShortcutDisabledStates,
 } from "../extensions/shortcuts/registry";
-import { makeExtID, slugifyIdPart } from "../utils/extension-id";
+import { makeExtID, slugifyIdPart } from "../utils/extension-support/extension-id";
 import {
   readShortcutsSettings,
   writeShortcutsSettings,
   saveShortcutBindings,
-} from "../utils/shortcuts-settings";
+} from "../utils/settings/shortcuts-settings";
 import {
   getInstanceSettings,
   updateInstanceSettings,
   type ServerSettingValue,
-} from "../utils/server-settings";
-import { writeSyncedDefaults } from "../utils/synced-settings";
+} from "../utils/settings/server-settings";
+import { writeSyncedDefaults } from "../utils/settings/synced-settings";
 import { COMPAT_SETTING_KEYS } from "../extensions/compatibility-layer/registry";
-import { ExtensionStoreType } from "../types";
+import { ExtensionStoreType } from "../types/extension";
 import { ReloadMode, reloadSync } from "../extensions/store/reload-sync";
 import {
   SETTINGS_SCHEMA,
   coerceSetting,
   type SettingKey,
-} from "../utils/settings-schema";
+} from "../utils/settings/settings-schema";
 import {
   LIST_FIELDS,
   applySettingsBatch,
@@ -45,17 +45,18 @@ import {
   savedBody,
   writeListField,
   settingsLock,
-} from "../utils/settings-write";
+} from "../utils/settings/settings-write";
 import { readIndexerLists } from "../indexer/config/lists";
-import { readDomainLists, writeDomainList } from "../utils/domain-lists";
+import { readDomainLists, writeDomainList } from "../utils/filtering/domain-lists";
 import {
   MAX_INLINE_FIELD_CHARS,
   OVERSIZED_FIELDS_KEY,
   type OversizedFieldInfo,
 } from "../../shared/indexer";
 import { logger } from "../utils/logger";
-import { getRestartState } from "../utils/restart-state";
+import { getRestartState } from "../utils/extension-support/restart-state";
 import { requestRestart } from "../utils/server-lifecycle";
+import { settingsAuth } from "./_guards";
 
 const router = new Hono();
 
@@ -176,26 +177,20 @@ router.get("/api/settings/languages", async (c) => {
   return c.json({ languages: codes.length > 0 ? codes : DEFAULT_LANGUAGES });
 });
 
-router.get("/api/settings/general", async (c) => {
-  const denied = await guardSettingsRoute(c, "GET /api/settings/general");
-  if (denied) return denied;
+router.get("/api/settings/general", settingsAuth("GET /api/settings/general"), async (c) => {
   const settings = await getInstanceSettings();
   const indexerLists = await readIndexerLists();
   const domainLists = await readDomainLists();
   return c.json(trimBigFields({ ...settings, ...indexerLists, ...domainLists }));
 });
 
-router.post("/api/settings/general", async (c) => {
-  const denied = await guardSettingsRoute(c, "POST /api/settings/general");
-  if (denied) return denied;
+router.post("/api/settings/general", settingsAuth("POST /api/settings/general"), async (c) => {
   const body = await readObjectBody<Record<string, string>>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   return c.json(await applySettingsBatch(body));
 });
 
-router.post("/api/settings/field", async (c) => {
-  const denied = await guardSettingsRoute(c, "POST /api/settings/field");
-  if (denied) return denied;
+router.post("/api/settings/field", settingsAuth("POST /api/settings/field"), async (c) => {
   const body = await readObjectBody<{ key?: string; value?: string }>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const { key, value } = body;
@@ -220,12 +215,7 @@ router.post("/api/settings/field", async (c) => {
   return c.json(savedBody(reloaded, indexerUp));
 });
 
-router.post("/api/settings/domain-action", async (c) => {
-  const denied = await guardSettingsRoute(
-    c,
-    "POST /api/settings/domain-action",
-  );
-  if (denied) return denied;
+router.post("/api/settings/domain-action", settingsAuth("POST /api/settings/domain-action"), async (c) => {
 
   type DomainActionBody = { kind?: string; source?: string; target?: string; score?: number };
   const body = await readObjectBody<DomainActionBody>(c);
@@ -298,9 +288,7 @@ router.post("/api/settings/api-key/regenerate", async (c) => {
   return c.json({ key: getServerKeyHex() ?? "" });
 });
 
-router.post("/api/settings/proxy-test", async (c) => {
-  const denied = await guardSettingsRoute(c, "POST /api/settings/proxy-test");
-  if (denied) return denied;
+router.post("/api/settings/proxy-test", settingsAuth("POST /api/settings/proxy-test"), async (c) => {
 
   const body = await readObjectBody<{ proxyEnabled?: string; proxyUrls?: string }>(c);
 
@@ -351,21 +339,14 @@ router.post("/api/settings/proxy-test", async (c) => {
   });
 });
 
-router.get("/api/settings/honeypot/blocklist", async (c) => {
-  const denied = await guardSettingsRoute(
-    c,
-    "GET /api/settings/honeypot/blocklist",
-  );
-  if (denied) return denied;
+router.get("/api/settings/honeypot/blocklist", settingsAuth("GET /api/settings/honeypot/blocklist"), async (c) => {
   const settings = await getInstanceSettings();
   const banHours = resolveBanHours(settings.honeypotBanDuration);
   const entries = await listActive(banHours);
   return c.json({ entries, banHours });
 });
 
-router.post("/api/settings/honeypot/ban", async (c) => {
-  const denied = await guardSettingsRoute(c, "POST /api/settings/honeypot/ban");
-  if (denied) return denied;
+router.post("/api/settings/honeypot/ban", settingsAuth("POST /api/settings/honeypot/ban"), async (c) => {
   const body = await readObjectBody<{ ip?: string }>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const ip = (body.ip ?? "").trim();
@@ -374,12 +355,7 @@ router.post("/api/settings/honeypot/ban", async (c) => {
   return c.json({ ok: true });
 });
 
-router.post("/api/settings/honeypot/unban", async (c) => {
-  const denied = await guardSettingsRoute(
-    c,
-    "POST /api/settings/honeypot/unban",
-  );
-  if (denied) return denied;
+router.post("/api/settings/honeypot/unban", settingsAuth("POST /api/settings/honeypot/unban"), async (c) => {
   const body = await readObjectBody<{ ip?: string }>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const ip = (body.ip ?? "").trim();
@@ -401,9 +377,7 @@ router.get("/api/settings/tab-order", async (c) => {
   return c.json({ engineTabsOrder: Array.isArray(order) ? order : [] });
 });
 
-router.post("/api/settings/tab-order", async (c) => {
-  const denied = await guardSettingsRoute(c, "POST /api/settings/tab-order");
-  if (denied) return denied;
+router.post("/api/settings/tab-order", settingsAuth("POST /api/settings/tab-order"), async (c) => {
   const body = await readObjectBody<{ engineTabsOrder?: unknown }>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   if (
@@ -420,9 +394,7 @@ router.post("/api/settings/tab-order", async (c) => {
   return c.json({ ok: true });
 });
 
-router.get("/api/settings/shortcuts", async (c) => {
-  const denied = await guardSettingsRoute(c, "GET /api/settings/shortcuts");
-  if (denied) return denied;
+router.get("/api/settings/shortcuts", settingsAuth("GET /api/settings/shortcuts"), async (c) => {
   const settings = await readShortcutsSettings();
   const states = await getShortcutDisabledStates();
   const custom = getShortcutActions().map((action) => ({
@@ -432,9 +404,7 @@ router.get("/api/settings/shortcuts", async (c) => {
   return c.json({ shortcuts: settings.bindings, custom });
 });
 
-router.post("/api/settings/shortcuts", async (c) => {
-  const denied = await guardSettingsRoute(c, "POST /api/settings/shortcuts");
-  if (denied) return denied;
+router.post("/api/settings/shortcuts", settingsAuth("POST /api/settings/shortcuts"), async (c) => {
   const body = await readObjectBody<{ shortcuts?: unknown }>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const shortcuts = await saveShortcutBindings(body.shortcuts, [
@@ -447,9 +417,7 @@ router.post("/api/settings/shortcuts", async (c) => {
   return c.json({ ok: true });
 });
 
-router.post("/api/settings/sync", async (c) => {
-  const denied = await guardSettingsRoute(c, "POST /api/settings/sync");
-  if (denied) return denied;
+router.post("/api/settings/sync", settingsAuth("POST /api/settings/sync"), async (c) => {
   const body = await readObjectBody<{ settings?: unknown }>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   if (!body.settings || typeof body.settings !== "object" || Array.isArray(body.settings)) {
@@ -473,15 +441,11 @@ const SHORTCUT_SCAFFOLD = `export default {
 };
 `;
 
-router.get("/api/settings/shortcuts/scaffold", async (c) => {
-  const denied = await guardSettingsRoute(c, "GET /api/settings/shortcuts/scaffold");
-  if (denied) return denied;
+router.get("/api/settings/shortcuts/scaffold", settingsAuth("GET /api/settings/shortcuts/scaffold"), async (c) => {
   return c.json({ source: SHORTCUT_SCAFFOLD });
 });
 
-router.post("/api/settings/shortcuts/source", async (c) => {
-  const denied = await guardSettingsRoute(c, "POST /api/settings/shortcuts/source");
-  if (denied) return denied;
+router.post("/api/settings/shortcuts/source", settingsAuth("POST /api/settings/shortcuts/source"), async (c) => {
   const body = await readObjectBody<{ name?: unknown; source?: unknown }>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   if (typeof body.name !== "string" || typeof body.source !== "string") {
@@ -500,9 +464,7 @@ router.post("/api/settings/shortcuts/source", async (c) => {
   return c.json({ ok: true, id, overwrite });
 });
 
-router.delete("/api/settings/shortcuts/source/:id", async (c) => {
-  const denied = await guardSettingsRoute(c, "DELETE /api/settings/shortcuts/source/:id");
-  if (denied) return denied;
+router.delete("/api/settings/shortcuts/source/:id", settingsAuth("DELETE /api/settings/shortcuts/source/:id"), async (c) => {
   const id = c.req.param("id");
   if (!id) return c.json({ error: "Missing id" }, 400);
   const file = getEditableShortcutFile(id);
@@ -519,12 +481,7 @@ router.delete("/api/settings/shortcuts/source/:id", async (c) => {
   return c.json({ ok: true });
 });
 
-router.get("/api/settings/default-engines", async (c) => {
-  const denied = await guardSettingsRoute(
-    c,
-    "GET /api/settings/default-engines",
-  );
-  if (denied) return denied;
+router.get("/api/settings/default-engines", settingsAuth("GET /api/settings/default-engines"), async (c) => {
   try {
     const raw = await readFile(defaultEnginesFile(), "utf-8");
     return c.json(JSON.parse(raw));
@@ -534,27 +491,18 @@ router.get("/api/settings/default-engines", async (c) => {
   }
 });
 
-router.post("/api/settings/default-engines", async (c) => {
-  const denied = await guardSettingsRoute(
-    c,
-    "POST /api/settings/default-engines",
-  );
-  if (denied) return denied;
+router.post("/api/settings/default-engines", settingsAuth("POST /api/settings/default-engines"), async (c) => {
   const body = await readObjectBody<Record<string, boolean>>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   await writeFile(defaultEnginesFile(), JSON.stringify(body, null, 2), "utf-8");
   return c.json({ ok: true });
 });
 
-router.get("/api/settings/restart-state", async (c) => {
-  const denied = await guardSettingsRoute(c, "GET /api/settings/restart-state");
-  if (denied) return denied;
+router.get("/api/settings/restart-state", settingsAuth("GET /api/settings/restart-state"), async (c) => {
   return c.json(getRestartState());
 });
 
-router.post("/api/settings/restart", async (c) => {
-  const denied = await guardSettingsRoute(c, "POST /api/settings/restart");
-  if (denied) return denied;
+router.post("/api/settings/restart", settingsAuth("POST /api/settings/restart"), async (c) => {
   requestRestart("admin-triggered restart from general settings");
   return c.json({ ok: true });
 });

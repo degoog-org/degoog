@@ -7,11 +7,11 @@
 import { readdir, stat } from "fs/promises";
 import { dirname, join } from "path";
 import { pathToFileURL } from "url";
-import { registerDocsDir } from "../utils/extension-docs";
+import { registerDocsDir } from "../utils/extension-support/extension-docs";
 import { logger } from "../utils/logger";
-import { refreshModules } from "../utils/module-cache";
-import { createMutex } from "../utils/mutex";
-import { makeExtID, dedupeExtID, type ExtensionKind } from "../utils/extension-id";
+import { refreshModules } from "../utils/cache/module-cache";
+import { createMutex } from "../utils/cache/mutex";
+import { makeExtID, dedupeExtID, type ExtensionKind } from "../utils/extension-support/extension-id";
 export type RegistrySource = "plugin" | "builtin";
 
 let _pluginReloadGeneration = 0;

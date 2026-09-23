@@ -3,16 +3,16 @@ import {
   ExtensionStoreType,
   type SearchBarAction,
   type Translate,
-} from "../../types";
+} from "../../types/extension";
 import {
   asString,
   getSettings,
   isDisabled,
-} from "../../utils/plugin-settings";
-import { bootCircuitFromPath } from "../../utils/translation-circuit";
+} from "../../utils/settings/plugin-settings";
+import { bootCircuitFromPath } from "../../utils/extension-support/translation-circuit";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
-import { makeExtID } from "../../utils/extension-id";
+import { makeExtID } from "../../utils/extension-support/extension-id";
 import { buildExtensionMeta } from "../extension-meta";
 
 interface PluginActions {

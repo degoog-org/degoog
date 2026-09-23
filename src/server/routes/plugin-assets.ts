@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { join } from "path";
+import { commandBuiltinsDir } from "../extensions/commands/builtins-dir";
 import {
   pluginsDir as getPluginsDir,
   themesDir as getThemesDir,
@@ -8,9 +8,9 @@ import {
 import {
   getPluginNamespace,
   getScriptFolderSource,
-} from "../utils/plugin-assets";
-import { rewritePluginPaths, rewriteThemePaths } from "../utils/extension-id";
-import { TTL_MS } from "../utils/cache";
+} from "../utils/extension-support/plugin-assets";
+import { rewritePluginPaths, rewriteThemePaths } from "../utils/extension-support/extension-id";
+import { TTL_MS } from "../utils/cache/cache";
 
 const NO_CACHE = "no-cache";
 const STATIC_ASSET_CACHE = `public, max-age=${Math.floor(TTL_MS / 1000)}`;
@@ -38,14 +38,6 @@ const MIME_TYPES: Record<string, string> = {
 
 const pluginsDir = getPluginsDir();
 const themesDataDir = getThemesDir();
-const builtinsDir = join(
-  process.cwd(),
-  "src",
-  "server",
-  "extensions",
-  "commands",
-  "builtins",
-);
 
 const router = new Hono();
 
@@ -59,7 +51,7 @@ router.get("/plugins/:folder/*", async (c) => {
   const mime = MIME_TYPES[ext];
   if (!mime) return c.notFound();
   const source = getScriptFolderSource(folder);
-  const rootDir = source === "builtin" ? builtinsDir : pluginsDir;
+  const rootDir = source === "builtin" ? commandBuiltinsDir : pluginsDir;
   const filePath = resolveContained(rootDir, folder, rest);
   if (!filePath) return c.notFound();
   const file = Bun.file(filePath);

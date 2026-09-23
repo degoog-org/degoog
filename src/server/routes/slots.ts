@@ -1,22 +1,18 @@
 import { Hono } from "hono";
 import { getSlotPlugins } from "../extensions/slots/registry";
 import {
-  ScoredResult,
+  DEFAULT_SEARCH_TYPE,
+  type ScoredResult,
+  type SlotPanel,
   SlotPanelPosition,
-  SlotPanel,
-  SlotPluginContext,
-} from "../types";
-import { createCache, useCache } from "../utils/cache";
+} from "../../shared/search-types";
 import { getLocale } from "../utils/hono";
 import { logger } from "../utils/logger";
-import { outgoingFetch } from "../utils/outgoing";
-import { isDisabled } from "../utils/plugin-settings";
-import { buildSignedProxyUrl } from "../utils/proxy-sign";
-import { getClientIp } from "../utils/request";
-import { _applyRateLimit, runSlotPlugins, slotPosition } from "../utils/search";
-import { slotShowsOn } from "../utils/slot-types";
-import { DEFAULT_SEARCH_TYPE } from "../../shared/search-types";
-import { applyFilter, syncVortexSignal } from "../utils/translation-circuit";
+import { isDisabled } from "../utils/settings/plugin-settings";
+import { getClientIp } from "../utils/net/request";
+import { _applyRateLimit } from "../utils/search";
+import { runSlotPlugins, slotContext, slotPosition, toSlotPanel } from "../extensions/slots/run";
+import { slotShowsOn } from "../utils/extension-support/slot-types";
 
 const router = new Hono();
 
@@ -94,32 +90,19 @@ router.post("/api/slots/glance", async (c) => {
         pending = true;
         continue;
       }
-      const context: SlotPluginContext = {
-        clientIp: clientIp ?? undefined,
-        results: withResults ? body.results : undefined,
-        fetch: outgoingFetch as SlotPluginContext["fetch"],
-        signProxyUrl: buildSignedProxyUrl,
-        createCache,
-        useCache,
+      const context = slotContext(
+        clientIp ?? undefined,
+        withResults ? body.results : undefined,
         locale,
-      };
+      );
       const t0 = performance.now();
       const out = await plugin.execute(body.query!.trim(), context);
       logger.debug(
         "plugin",
         `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`,
       );
-      if (!out.html || !out.html.trim()) continue;
-      panels.push({
-        id: plugin.id,
-        title: out.title,
-        html: applyFilter(
-          plugin.t ? syncVortexSignal(out.html, plugin.t, locale) : out.html,
-          `slots/${plugin.id}`,
-        ),
-        position: plugin.position,
-        gridSize: plugin.gridSize,
-      });
+      const panel = toSlotPanel(plugin.id, plugin, out, locale, plugin.position);
+      if (panel) panels.push(panel);
     } catch (err) {
       logger.warn("plugin", `${plugin.id} slot failed`, err);
     }

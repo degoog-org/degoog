@@ -1,29 +1,31 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
+import type {
+  BangCommand,
+  CommandContext,
+  SlotPlugin,
+  SlotPluginContext,
+} from "../../src/server/types/extension";
+import type { SearchParams } from "../../src/server/types/search";
 import {
-  SlotPanelPosition,
-  type BangCommand,
-  type CommandContext,
   type EngineTiming,
   type ScoredResult,
-  type SearchParams,
   type SearchResponse,
-  type SlotPlugin,
-  type SlotPluginContext,
-} from "../../src/server/types";
+  SlotPanelPosition,
+} from "../../src/shared/search-types";
 import { readdir } from "fs/promises";
 import {
   loadNojsTemplate,
   NOJS_TEMPLATE_NAMES,
 } from "../../src/server/nojs/templates";
 import type { BangMatch } from "../../src/server/extensions/commands/registry";
-import { helpCommand } from "../../src/server/extensions/commands/builtins/help/index";
-import { ipCommand } from "../../src/server/extensions/commands/builtins/ip/index";
-import { speedtestCommand } from "../../src/server/extensions/commands/builtins/speedtest/index";
-import { uuidCommand } from "../../src/server/extensions/commands/builtins/uuid/index";
+import { helpCommand } from "../../src/server/extensions/commands/builtins/help";
+import { ipCommand } from "../../src/server/extensions/commands/builtins/ip";
+import { speedtestCommand } from "../../src/server/extensions/commands/builtins/speedtest";
+import { uuidCommand } from "../../src/server/extensions/commands/builtins/uuid";
 
-const SERVER_SETTINGS_MOD = "../../src/server/utils/server-settings";
-const SEARCH_HANDLERS_MOD = "../../src/server/routes/search/_search-handlers";
-const TAB_SEARCH_MOD = "../../src/server/routes/search/_tab-search-handler";
+const SERVER_SETTINGS_MOD = "../../src/server/utils/settings/server-settings";
+const SEARCH_HANDLERS_MOD = "../../src/server/search/handlers";
+const TAB_SEARCH_MOD = "../../src/server/search/tab-search";
 
 const serverSettingsReal = { ...(await import(SERVER_SETTINGS_MOD)) };
 const searchHandlersReal = { ...(await import(SEARCH_HANDLERS_MOD)) };
@@ -738,7 +740,7 @@ describe("nojs pagination", () => {
 });
 
 const SLOTS_MOD = "../../src/server/extensions/slots/registry";
-const PLUGIN_SETTINGS_MOD = "../../src/server/utils/plugin-settings";
+const PLUGIN_SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
 
 const slotsReal = { ...(await import(SLOTS_MOD)) };
 const pluginSettingsReal = { ...(await import(PLUGIN_SETTINGS_MOD)) };

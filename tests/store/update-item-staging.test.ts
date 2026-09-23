@@ -10,8 +10,8 @@ import {
 } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { updateItem } from "../../src/server/extensions/store/item-ops";
-import { ExtensionStoreType } from "../../src/server/types";
+import { updateItem } from "../../src/server/extensions/store/item-lifecycle";
+import { ExtensionStoreType } from "../../src/server/types/extension";
 
 const DIR_LINK_TYPE = process.platform === "win32" ? "junction" : "dir";
 

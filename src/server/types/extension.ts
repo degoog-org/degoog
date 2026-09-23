@@ -1,13 +1,12 @@
-import type { CreateCache, UseCache } from "../utils/cache";
-import type { SettingValue } from "../utils/plugin-settings";
-import type { ThreatLevel } from "../utils/sentinel";
-import type {
-  SearchResult,
-  ScoredResult,
-  TimeFilter,
-  EngineContext,
-} from "./search";
-import { SlotPanelPosition } from "../../shared/search-types";
+import type { CreateCache, UseCache } from "../utils/cache/cache";
+import type { SettingValue } from "../utils/settings/plugin-settings";
+import type { ThreatLevel } from "../utils/security/sentinel";
+import type { EngineContext, TimeFilter } from "./search";
+import {
+  type ScoredResult,
+  type SearchResult,
+  SlotPanelPosition,
+} from "../../shared/search-types";
 import type { FieldOptionsResult } from "../../shared/field-options";
 import type { SettingField } from "../../shared/setting-field";
 

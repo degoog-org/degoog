@@ -19,10 +19,6 @@ export const COMPAT_LAYER_REPOS: Readonly<Record<CompatLayerId, string>> =
     [CompatLayerId.Searx]: "https://github.com/searxng/searxng",
     [CompatLayerId.FourGet]: "https://git.lolcat.ca/lolcat/4get",
   });
-
-export const isCompatLayer = (raw: string): raw is CompatLayerId =>
-  (COMPAT_LAYER_IDS as readonly string[]).includes(raw);
-
 export interface CompatRuntimeNeed {
   module: string;
   package: string;

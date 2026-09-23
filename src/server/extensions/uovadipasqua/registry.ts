@@ -1,15 +1,15 @@
 import { stat } from "fs/promises";
 import { join } from "path";
 import type {
+  PluginRoute,
+  PluginRouteMethod,
   Uovadipasqua,
   UovadipasquaClientStorageBinding,
   UovadipasquaMatch,
-  PluginRoute,
-  PluginRouteMethod,
-} from "../../types";
+} from "../../types/extension";
 import { createRegistry } from "../registry-factory";
-import { getBasePath } from "../../utils/base-url";
-import { buildSignedProxyUrl } from "../../utils/proxy-sign";
+import { getBasePath } from "../../utils/net/base-url";
+import { buildSignedProxyUrl } from "../../utils/net/proxy-sign";
 import { logger } from "../../utils/logger";
 
 const builtinsDir = join(

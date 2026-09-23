@@ -10,12 +10,12 @@ import {
 import {
   getServerKeyHex,
   initServerKey,
-} from "../../src/server/utils/server-key";
+} from "../../src/server/utils/security/server-key";
 import {
   getInstanceSettings,
   updateInstanceSettings,
   type ServerSettingValue,
-} from "../../src/server/utils/server-settings";
+} from "../../src/server/utils/settings/server-settings";
 
 type Router = {
   request: (req: Request | string) => Response | Promise<Response>;
@@ -160,7 +160,7 @@ describe("guardApiKey - bearer token edge cases", () => {
 describe("guardApiKey - browser nonce path", () => {
   test("valid nonce via headers or query params passes when protection enabled", async () => {
     const { generateSearchNonce } = await import(
-      "../../src/server/utils/search-nonce"
+      "../../src/server/utils/security/search-nonce"
     );
     await _enable("apiKeySearchEnabled");
     const viaHeaders = generateSearchNonce();
@@ -186,7 +186,7 @@ describe("guardApiKey - browser nonce path", () => {
 
   test("tampered nonce signature → 401", async () => {
     const { generateSearchNonce } = await import(
-      "../../src/server/utils/search-nonce"
+      "../../src/server/utils/security/search-nonce"
     );
     await _enable("apiKeySearchEnabled");
     const { n } = generateSearchNonce();

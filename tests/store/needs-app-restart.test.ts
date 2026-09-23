@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { mkdtemp, writeFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { readNeedsAppRestart } from "../../src/server/extensions/store/item-ops";
+import { readNeedsAppRestart } from "../../src/server/extensions/store/item-metadata";
 
 const withTempExtensionDir = async (
   source: string,

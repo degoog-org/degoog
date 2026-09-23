@@ -1,10 +1,10 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { getServerKeyHex, initServerKey } from "../../src/server/utils/server-key";
+import { getServerKeyHex, initServerKey } from "../../src/server/utils/security/server-key";
 import {
   getInstanceSettings,
   updateInstanceSettings,
   type ServerSettingValue,
-} from "../../src/server/utils/server-settings";
+} from "../../src/server/utils/settings/server-settings";
 
 let searchRouter: {
   request: (req: Request | string) => Response | Promise<Response>;

@@ -1,12 +1,8 @@
-import {
-  engineFullSchema,
-  getActiveWebEngines,
-  getEngineMap,
-  getEngineSettingsView,
-  getEnginesForCustomType,
-} from "../extensions/engines/registry";
-import type { EngineConfig, ImageFilter, SearchEngine } from "../types";
-import { asString, getSettings, maskSecrets } from "../utils/plugin-settings";
+import { getActiveWebEngines, getEngineMap, getEngineSettingsView, getEnginesForCustomType } from "../extensions/engines/catalog";
+import { engineFullSchema } from "../extensions/engines/engine-settings";
+import type { SearchEngine } from "../types/extension";
+import type { EngineConfig, ImageFilter } from "../types/search";
+import { asString, getSettings, maskSecrets } from "../utils/settings/plugin-settings";
 
 export interface ActiveEngine {
   id: string;

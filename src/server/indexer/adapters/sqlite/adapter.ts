@@ -1,26 +1,25 @@
 import { Database, type Statement } from "bun:sqlite";
+import type { IndexerHitRow } from "../../../../shared/indexer";
 import { randomBytes } from "crypto";
 import { mkdirSync, readdirSync, statSync, unlinkSync } from "fs";
-import type { IndexRow } from "../../recorders";
+import type { IndexRow } from "../../recorders/default";
 import type { IndexerConfig } from "../../types/config";
-import type { IndexerAdapter, UrlRow, HitRow, TypeCounts, ExportRow } from "../../types/adapter";
+import type { IndexerAdapter, UrlRow, TypeCounts, ExportRow } from "../../types/adapter";
 import { safeSlug } from "../../shared/safe-type";
-import { rankFields } from "../../shared/rank-fields";
 import { indexerDir, indexerDbForType } from "../../../utils/paths";
 import { logger } from "../../../utils/logger";
 import { SQLITE_SCHEMA_DDL } from "./schema";
 import {
   UPSERT_URL,
   UPSERT_HIT,
-  IMPORT_URL,
-  IMPORT_HIT,
   EXACT_SQL,
   FUZZY_SQL,
   LIST_SELECT,
   LIST_ORDER_BY,
   SEARCH_WHERE,
-  EXPORT_SQL,
 } from "./statements";
+import { EXPORT_SELECT_SQL } from "../../shared/export-select";
+import { createRowImporter, urlParams } from "./import-rows";
 import { buildFtsQuery, escapeLike } from "./fts";
 import { FUZZY_CANDIDATE_CAP } from "../../shared/terms";
 import { pruneOrphans, runSqlitePrune } from "./prune";
@@ -225,20 +224,7 @@ export class SqliteAdapter implements IndexerAdapter {
     }
     const tx = db.transaction((batch: IndexRow[]) => {
       for (const row of batch) {
-        const urlIdRow = upsertUrl!.get({
-          $url_norm: row.url_norm,
-          $url: row.url,
-          $source_engine: row.source_engine,
-          $title: row.title,
-          $snippet: row.snippet,
-          $thumbnail: row.thumbnail,
-          $image_url: row.image_url,
-          $is_gif: row.is_gif,
-          $duration: row.duration,
-          $extras_json: row.extras_json,
-          $first_seen: now,
-          $last_seen: now,
-        }) as { id: number };
+        const urlIdRow = upsertUrl!.get(urlParams(row, now, now)) as { id: number };
         upsertHit!.run({
           $query_norm: row.query_norm,
           $engine_type: row.engine_type,
@@ -257,51 +243,7 @@ export class SqliteAdapter implements IndexerAdapter {
   }
 
   async importRows(type: string, rows: ExportRow[]): Promise<{ urls: number; hits: number }> {
-    const db = this._db(type);
-    const importUrl = db.prepare(IMPORT_URL);
-    const importHit = db.prepare(IMPORT_HIT);
-    let urlsInserted = 0;
-    let hitsInserted = 0;
-    const tx = db.transaction((batch: ExportRow[]) => {
-      for (const row of batch) {
-        const urlRow = importUrl.get({
-          $url_norm: row.url_norm,
-          $url: row.url,
-          $source_engine: row.source_engine,
-          $title: row.title,
-          $snippet: row.snippet,
-          $thumbnail: row.thumbnail,
-          $image_url: row.image_url,
-          $is_gif: row.is_gif,
-          $duration: row.duration,
-          $extras_json: row.extras_json,
-          $first_seen: row.first_seen,
-          $last_seen: row.last_seen,
-        }) as { id: number } | null;
-        if (urlRow) urlsInserted++;
-        const urlId = urlRow?.id ?? (
-          db.prepare("SELECT id FROM urls WHERE url_norm = ?").get(row.url_norm) as { id: number } | null
-        )?.id;
-        if (!urlId) continue;
-        const rank = rankFields(row);
-        const hitResult = importHit.run({
-          $query_norm: row.query_norm,
-          $engine_type: type,
-          $url_id: urlId,
-          $best_position: rank.best_position,
-          $pos_sum: rank.pos_sum,
-          $hit_count: rank.hit_count,
-          $sources_json: rank.sources_json,
-          $filters_json: rank.filters_json,
-          $meta_json: rank.meta_json,
-          $first_seen: row.first_seen,
-          $last_seen: row.last_seen,
-        });
-        if (hitResult.changes > 0) hitsInserted++;
-      }
-    });
-    tx(rows);
-    return { urls: urlsInserted, hits: hitsInserted };
+    return createRowImporter(this._db(type))(rows, type);
   }
 
   async queryExact(type: string, queryNorm: string, limit: number, offset = 0): Promise<UrlRow[]> {
@@ -375,7 +317,7 @@ export class SqliteAdapter implements IndexerAdapter {
     q: string | undefined,
     limit: number,
     offset: number,
-  ): Promise<HitRow[]> {
+  ): Promise<IndexerHitRow[]> {
     try {
       const db = this._db(type);
       const term = q?.trim();
@@ -389,7 +331,7 @@ export class SqliteAdapter implements IndexerAdapter {
           this._listSearchQs.set(type, stmt);
         }
         params.$term = `%${escapeLike(term.toLowerCase())}%`;
-        return (stmt.all(params) as HitRow[]).slice(offset);
+        return (stmt.all(params) as IndexerHitRow[]).slice(offset);
       }
       let stmt = this._listAllQs.get(type);
       if (!stmt) {
@@ -398,7 +340,7 @@ export class SqliteAdapter implements IndexerAdapter {
         );
         this._listAllQs.set(type, stmt);
       }
-      return (stmt.all(params) as HitRow[]).slice(offset);
+      return (stmt.all(params) as IndexerHitRow[]).slice(offset);
     } catch (err) {
       logger.warn("indexer", `listHitsForType failed for type=${type}`, err);
       return [];
@@ -438,7 +380,7 @@ export class SqliteAdapter implements IndexerAdapter {
       const db = this._db(type);
       let stmt = this._sampleQs.get(type);
       if (!stmt) {
-        stmt = db.prepare(`${EXPORT_SQL} ORDER BY h.last_seen DESC LIMIT ?`);
+        stmt = db.prepare(`${EXPORT_SELECT_SQL} ORDER BY h.last_seen DESC LIMIT ?`);
         this._sampleQs.set(type, stmt);
       }
       return stmt.all(limit) as ExportRow[];
@@ -451,7 +393,7 @@ export class SqliteAdapter implements IndexerAdapter {
   async *exportBatches(type: string, size: number): AsyncIterable<ExportRow[]> {
     let stmt: Statement;
     try {
-      stmt = this._db(type).prepare(EXPORT_SQL);
+      stmt = this._db(type).prepare(EXPORT_SELECT_SQL);
     } catch (err) {
       logger.warn("indexer", `exportBatches failed for type=${type}`, err);
       return;
@@ -502,10 +444,13 @@ export class SqliteAdapter implements IndexerAdapter {
     this._countAllQs.delete(key);
     this._countSearchQs.delete(key);
     this._sampleQs.delete(key);
-    try {
-      unlinkSync(indexerDbForType(key));
-    } catch (err) {
-      logger.warn("indexer", `clearType: could not delete db file for type=${key}`, err);
+    const dbFile = indexerDbForType(key);
+    for (const file of [dbFile, `${dbFile}-wal`, `${dbFile}-shm`]) {
+      try {
+        unlinkSync(file);
+      } catch (err) {
+        logger.debug("indexer", `clearType: could not delete ${file} for type=${key}`, err);
+      }
     }
   }
 

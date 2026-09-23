@@ -10,7 +10,8 @@ import {
 import { tmpdir } from "os";
 import { join } from "path";
 import { runCanonicalIdsMigration052028 } from "../../src/server/migrations/2026-05-canonical-ids-migration";
-import { ExtensionStoreType, type ReposData } from "../../src/server/types";
+import { ExtensionStoreType } from "../../src/server/types/extension";
+import type { ReposData } from "../../src/server/types/store";
 
 const reposFixture = (): ReposData => ({
   repos: [

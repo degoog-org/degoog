@@ -11,5 +11,3 @@ export const scrapersDir = (): string => join(fourgetRoot(), "scraper");
 export const sharedLibDir = (): string => join(fourgetRoot(), "lib");
 
 export const stagingRoot = (): string => join(fourgetRoot(), ".run");
-
-export const apiKeysDir = (): string => join(stagingRoot(), "data", "api_keys");

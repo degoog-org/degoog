@@ -10,19 +10,14 @@ process.env.DEGOOG_INDEXER_DIR = SHARED;
 process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
-import {
-  clearAll,
-  countHits,
-  deleteHits,
-  getStats,
-  listHits,
-  queryIndex,
-  recordResults,
-  wipeStatsCache,
-} from "../../src/server/indexer/store";
-import { flushQueue, prunePass } from "../../src/server/indexer/queue";
-import { setInstanceSettings } from "../../src/server/utils/server-settings";
-import type { SearchResult } from "../../src/server/types";
+import { clearAll } from "../../src/server/indexer/store/admin";
+import { countHits, deleteHits, listHits } from "../../src/server/indexer/store/hits";
+import { queryIndex } from "../../src/server/indexer/store/query";
+import { recordResults } from "../../src/server/indexer/store/record";
+import { getStats, wipeStatsCache } from "../../src/server/indexer/store/stats";
+import { flushQueue, prunePass } from "../../src/server/indexer/queue/queue";
+import { setInstanceSettings } from "../../src/server/utils/settings/server-settings";
+import type { SearchResult } from "../../src/shared/search-types";
 
 const TYPE = "web";
 

@@ -7,7 +7,7 @@ import {
 } from "../extensions/compatibility-layer/registry";
 import { CompatAction } from "../../shared/compat-layers";
 import { ReloadMode, reloadSync } from "../extensions/store/reload-sync";
-import { ExtensionStoreType } from "../types";
+import { ExtensionStoreType } from "../types/extension";
 import { scrubLog } from "../extensions/compatibility-layer/scrub-log";
 import { logger } from "../utils/logger";
 

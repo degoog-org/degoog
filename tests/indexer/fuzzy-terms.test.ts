@@ -13,10 +13,12 @@ process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 import { buildFtsQuery } from "../../src/server/indexer/adapters/sqlite/fts";
 import { FUZZY_SQL } from "../../src/server/indexer/adapters/sqlite/statements";
 import { FUZZY_CANDIDATE_CAP, splitTerms, termHit } from "../../src/server/indexer/shared/terms";
-import { clearAll, queryIndex, recordResults } from "../../src/server/indexer/store";
-import { flushQueue } from "../../src/server/indexer/queue";
-import { setInstanceSettings } from "../../src/server/utils/server-settings";
-import type { SearchResult } from "../../src/server/types";
+import { clearAll } from "../../src/server/indexer/store/admin";
+import { queryIndex } from "../../src/server/indexer/store/query";
+import { recordResults } from "../../src/server/indexer/store/record";
+import { flushQueue } from "../../src/server/indexer/queue/queue";
+import { setInstanceSettings } from "../../src/server/utils/settings/server-settings";
+import type { SearchResult } from "../../src/shared/search-types";
 
 const TYPE = "web";
 

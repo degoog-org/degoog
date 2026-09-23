@@ -2,7 +2,7 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import pkg from "../../../../package.json";
 import { getAllCommandTranslators } from "../../extensions/commands/registry";
-import { getAllEngineTranslators } from "../../extensions/engines/registry";
+import { getAllEngineTranslators } from "../../extensions/engines/loader";
 import { getAllMiddlewareTranslators } from "../../extensions/middleware/registry";
 import { getAllSearchBarTranslators } from "../../extensions/search-bar/registry";
 import { getAllTabTranslators } from "../../extensions/search-result-tabs/registry";
@@ -13,53 +13,54 @@ import {
   getThemeHtml,
   getThemeTemplatesHtml,
 } from "../../extensions/themes/registry";
-import { Translate } from "../../types";
+import type { Translate } from "../../types/extension";
 import {
   getAllPluginCss,
   getPluginScriptFolders,
   getPluginSettingsIds,
-} from "../../utils/plugin-assets";
-import { asBoolean, asString, isDisabled } from "../../utils/plugin-settings";
+} from "../../utils/extension-support/plugin-assets";
+import { asBoolean, asString, isDisabled } from "../../utils/settings/plugin-settings";
 import {
   DEFAULT_ENGINE_ORIGIN_DISPLAY,
   isOriginDisplay,
 } from "../../../shared/engine-origins";
 import {
   compileLexicons,
-  bootCircuitFromPath,
   syncVortexSignal,
   withBuffer,
-} from "../../utils/translation-circuit";
-import { mintToken } from "../../utils/link-token";
-import { cssCheckOn } from "../../utils/bot-trap";
+} from "../../utils/extension-support/translation-circuit";
+import { mintToken } from "../../utils/security/link-token";
+import { cssCheckOn } from "../../utils/security/bot-trap";
 import { logger } from "../../utils/logger";
-import { generateSearchNonce } from "../../utils/search-nonce";
-import { getBasePath, getBaseUrl } from "../../utils/base-url";
-import { getInstanceSettings } from "../../utils/server-settings";
-import { readShortcutsSettings } from "../../utils/shortcuts-settings";
+import { generateSearchNonce } from "../../utils/security/search-nonce";
+import { getInstanceSettings } from "../../utils/settings/server-settings";
+import { readShortcutsSettings } from "../../utils/settings/shortcuts-settings";
 import { getClientShortcuts } from "../../extensions/shortcuts/registry";
 import { isPasswordRequired } from "../settings-auth";
-import { readSyncedDefaults } from "../../utils/synced-settings";
+import { readSyncedDefaults } from "../../utils/settings/synced-settings";
 import { buildSettingsNav, buildSettingsTabSelect } from "./settings-nav";
 import { renderHtml } from "../../../shared/ui/tribute/html";
 import { ThemeTemplate } from "../../../shared/ui/components/layout/theme-template";
+import {
+  DEFAULT_THEME_DIR,
+  basePrefix,
+  customCssTag,
+  getCoreTranslator,
+  getDefaultThemeTranslator,
+  textDirection,
+  themeCssLink,
+} from "../../render/theme-assets";
 import { ApiKeyLocked } from "./api-key-locked";
 import { ApiKeySection } from "./api-key-section";
 
-export const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
-const CORE_LOCALES_ROOT = "src";
-const BASE_URL = getBaseUrl();
-const BASE_PATH = getBasePath();
-const BASE_PREFIX =
-  BASE_PATH || (BASE_URL && !/^https?:\/\//i.test(BASE_URL) ? BASE_URL : "");
+const BASE_PREFIX = basePrefix();
+
 
 interface DefaultThemeManifest {
   templates?: Record<string, string>;
 }
 
 let defaultManifestCache: DefaultThemeManifest | null = null;
-let defaultThemeTranslator: Translate | null = null;
-let coreTranslator: Translate | null = null;
 
 async function getDefaultManifest(): Promise<DefaultThemeManifest> {
   if (defaultManifestCache) return defaultManifestCache;
@@ -79,20 +80,6 @@ async function getDefaultTemplatesHtml(): Promise<string> {
   return parts.join("\n");
 }
 
-async function getDefaultThemeTranslator(): Promise<Translate> {
-  if (!defaultThemeTranslator) {
-    defaultThemeTranslator = await bootCircuitFromPath(DEFAULT_THEME_DIR);
-  }
-  return defaultThemeTranslator;
-}
-
-export async function getCoreTranslator(): Promise<Translate> {
-  if (!coreTranslator) {
-    coreTranslator = await bootCircuitFromPath(CORE_LOCALES_ROOT);
-  }
-  return coreTranslator;
-}
-
 export async function getTranslator(
   _locale?: string,
   themed = false,
@@ -103,27 +90,6 @@ export async function getTranslator(
   const coreT = await getCoreTranslator();
   return withBuffer(themeChain, coreT);
 }
-
-function getTextDirection(locale: string): "rtl" | "ltr" {
-  const RTL_LANGS = ["ar", "he", "fa", "ur", "ps", "ckb"];
-  const isRTL = RTL_LANGS.some((lang) => locale.toLowerCase().startsWith(lang));
-  return isRTL ? "rtl" : "ltr";
-}
-
-async function themeCssPlaceholder(): Promise<string> {
-  const theme = await getActiveTheme();
-  if (!theme?.manifest.css) return "";
-  const themeId = encodeURIComponent(theme.id);
-  return `<link rel="stylesheet" href="/theme/style.css?v=${pkg.version}&theme=${themeId}">`;
-}
-
-const customCssPlaceholder = async (): Promise<string> => {
-  const settings = await getInstanceSettings();
-  const css = asString(settings.customCss).trim();
-  if (!css) return "";
-  const safe = css.replace(/<\//g, "<\\/");
-  return `<style id="degoog-custom-css">${safe}</style>`;
-};
 
 async function pluginAssetsPlaceholder(): Promise<string> {
   const v = pkg.version;
@@ -186,11 +152,11 @@ export async function applyPagePlaceholders(
 
   let result = html
     .replace("__LANG_ATTR__", resolvedLocale)
-    .replace("__THEME_CSS__", await themeCssPlaceholder())
+    .replace("__THEME_CSS__", await themeCssLink())
     .replace("__THEME_ATTRS__", themeAttrs)
     .replace("__PLUGIN_ASSETS__", await pluginAssetsPlaceholder())
-    .replace("__CUSTOM_CSS__", await customCssPlaceholder())
-    .replace("__RTL_SUPPORT__", `dir=${getTextDirection(resolvedLocale)}`);
+    .replace("__CUSTOM_CSS__", await customCssTag())
+    .replace("__RTL_SUPPORT__", `dir=${textDirection(resolvedLocale)}`);
   const defaultTemplates = await getDefaultTemplatesHtml();
   const themeTemplates = await getThemeTemplatesHtml();
   const allTemplates = [defaultTemplates, themeTemplates]

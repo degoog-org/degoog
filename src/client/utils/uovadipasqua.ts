@@ -1,4 +1,4 @@
-import type { UovadipasquaClientStorageBinding } from "../../server/types";
+import type { UovadipasquaClientStorageBinding } from "../../server/types/extension";
 import { getBase } from "./base-url";
 
 interface UovadipasquaMatchPayload {

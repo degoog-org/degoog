@@ -1,14 +1,5 @@
 import type { EnginePagination } from "../../shared/search-types";
 
-export type {
-  SearchResult,
-  ScoredResult,
-  EngineTiming,
-  SlotPanel,
-  SearchResponse,
-  EnginePagination,
-} from "../../shared/search-types";
-export { SlotPanelPosition } from "../../shared/search-types";
 
 export enum ImgColor {
   ANY = "any",

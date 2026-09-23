@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { getBasePath } from "../utils/base-url";
+import { getBasePath } from "../utils/net/base-url";
 import { logger } from "../utils/logger";
 
 const BASE_PATH = getBasePath();
@@ -73,5 +73,3 @@ export const retryHref = (
 };
 
 export const fullAppHref = (): string => `${BASE_PATH}/` || "/";
-
-export const settingsHref = (): string => `${BASE_PATH}/settings`;

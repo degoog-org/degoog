@@ -1,0 +1,403 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`every mounted router exposes the routes it did before commands route list is unchanged 1`] = `
+[
+  "GET /api/command",
+  "GET /api/commands",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before compat-engines route list is unchanged 1`] = `
+[
+  "GET /api/compat/:layer/engines",
+  "POST /api/compat/:layer/install",
+  "POST /api/compat/:layer/uninstall",
+  "POST /api/compat/:layer/update",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before extensions route list is unchanged 1`] = `
+[
+  "GET /api/extensions",
+  "GET /api/extensions/:id/readme",
+  "GET /api/plugins/styles.css",
+  "POST /api/extensions/:id/options/:key",
+  "POST /api/extensions/:id/settings",
+  "POST /api/extensions/:id/upload",
+  "POST /api/extensions/transports/:name/test",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before health route list is unchanged 1`] = `
+[
+  "GET /api/whodis",
+  "GET /health",
+  "GET /healthz",
+  "GET /ready",
+  "GET /readyz",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before honeypot route list is unchanged 1`] = `
+[
+  "GET /.dockerenv",
+  "GET /.env",
+  "GET /.env.backup",
+  "GET /.env.example",
+  "GET /.env.local",
+  "GET /.env.prod",
+  "GET /.env.production",
+  "GET /.env.staging",
+  "GET /.git/HEAD",
+  "GET /.git/config",
+  "GET /.gitconfig",
+  "GET /.github/workflows/deploy.yml",
+  "GET /.github/workflows/main.yml",
+  "GET /.node-version",
+  "GET /.npmrc",
+  "GET /.nvmrc",
+  "GET /.travis.yml",
+  "GET /Dockerfile",
+  "GET /admin.php",
+  "GET /api/admin",
+  "GET /api/allengines",
+  "GET /api/config",
+  "GET /api/degoog-search",
+  "GET /api/searchengines",
+  "GET /api/supersearch",
+  "GET /api/v1/admin",
+  "GET /api/v1/users",
+  "GET /app.js",
+  "GET /backup.php",
+  "GET /config.php",
+  "GET /config/database.php",
+  "GET /docker-compose.prod.yml",
+  "GET /docker-compose.production.yml",
+  "GET /docker-compose.yaml",
+  "GET /docker-compose.yml",
+  "GET /index.js",
+  "GET /install.php",
+  "GET /main.js",
+  "GET /package-lock.json",
+  "GET /package.json",
+  "GET /phpMyAdmin",
+  "GET /phpmyadmin",
+  "GET /server.js",
+  "GET /setup.php",
+  "GET /shell.php",
+  "GET /sitemap.xml",
+  "GET /wp-admin",
+  "GET /wp-admin/",
+  "GET /wp-config.php",
+  "GET /wp-login",
+  "GET /wp-login.php",
+  "GET /xmlrpc.php",
+  "GET /yarn.lock",
+  "POST /.dockerenv",
+  "POST /.env",
+  "POST /.env.backup",
+  "POST /.env.example",
+  "POST /.env.local",
+  "POST /.env.prod",
+  "POST /.env.production",
+  "POST /.env.staging",
+  "POST /.git/HEAD",
+  "POST /.git/config",
+  "POST /.gitconfig",
+  "POST /.github/workflows/deploy.yml",
+  "POST /.github/workflows/main.yml",
+  "POST /.node-version",
+  "POST /.npmrc",
+  "POST /.nvmrc",
+  "POST /.travis.yml",
+  "POST /Dockerfile",
+  "POST /admin.php",
+  "POST /api/admin",
+  "POST /api/allengines",
+  "POST /api/config",
+  "POST /api/degoog-search",
+  "POST /api/searchengines",
+  "POST /api/supersearch",
+  "POST /api/v1/admin",
+  "POST /api/v1/users",
+  "POST /app.js",
+  "POST /backup.php",
+  "POST /config.php",
+  "POST /config/database.php",
+  "POST /docker-compose.prod.yml",
+  "POST /docker-compose.production.yml",
+  "POST /docker-compose.yaml",
+  "POST /docker-compose.yml",
+  "POST /index.js",
+  "POST /install.php",
+  "POST /main.js",
+  "POST /package-lock.json",
+  "POST /package.json",
+  "POST /phpMyAdmin",
+  "POST /phpmyadmin",
+  "POST /server.js",
+  "POST /setup.php",
+  "POST /shell.php",
+  "POST /wp-admin",
+  "POST /wp-admin/",
+  "POST /wp-config.php",
+  "POST /wp-login",
+  "POST /wp-login.php",
+  "POST /xmlrpc.php",
+  "POST /yarn.lock",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before indexer route list is unchanged 1`] = `
+[
+  "GET /api/indexer/export",
+  "GET /api/indexer/export/chunk",
+  "GET /api/indexer/rows",
+  "GET /api/indexer/sample",
+  "GET /api/indexer/stats",
+  "GET /api/indexer/types",
+  "POST /api/indexer/clear",
+  "POST /api/indexer/export/end",
+  "POST /api/indexer/export/start",
+  "POST /api/indexer/import",
+  "POST /api/indexer/import/chunk",
+  "POST /api/indexer/import/complete",
+  "POST /api/indexer/import/start",
+  "POST /api/indexer/rows/delete",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before pages route list is unchanged 1`] = `
+[
+  "GET /",
+  "GET /admin",
+  "GET /admin/",
+  "GET /admin/:tab",
+  "GET /api/engines",
+  "GET /opensearch.xml",
+  "GET /robots-takeover",
+  "GET /search",
+  "GET /settings",
+  "GET /settings/",
+  "GET /settings/:tab",
+  "GET /style/v/:token",
+  "POST /api/cache/clear",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before plugin-assets route list is unchanged 1`] = `
+[
+  "GET /plugins/:folder/*",
+  "GET /themes/:folder/*",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before plugin-routes route list is unchanged 1`] = `
+[
+  "ALL /api/plugin/:pluginId/*",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before proxy route list is unchanged 1`] = `
+[
+  "GET /api/proxy/favicon",
+  "GET /api/proxy/image",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before rate-limit route list is unchanged 1`] = `
+[
+  "GET /api/rate-limit/test",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before search route list is unchanged 1`] = `
+[
+  "GET /api/lucky",
+  "GET /api/search",
+  "GET /api/search-tabs",
+  "GET /api/search/retry",
+  "GET /api/tab-search",
+  "POST /api/search",
+  "POST /api/search/retry",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before search-bar route list is unchanged 1`] = `
+[
+  "GET /api/search-bar/actions",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before searx-engines route list is unchanged 1`] = `
+[
+  "GET /api/searx/engines",
+  "POST /api/searx/install",
+  "POST /api/searx/uninstall",
+  "POST /api/searx/update",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before settings route list is unchanged 1`] = `
+[
+  "DELETE /api/settings/shortcuts/source/:id",
+  "GET /api/settings/api-key",
+  "GET /api/settings/appearance",
+  "GET /api/settings/default-engines",
+  "GET /api/settings/general",
+  "GET /api/settings/honeypot/blocklist",
+  "GET /api/settings/languages",
+  "GET /api/settings/restart-state",
+  "GET /api/settings/shortcuts",
+  "GET /api/settings/shortcuts/scaffold",
+  "GET /api/settings/streaming",
+  "GET /api/settings/tab-order",
+  "POST /api/settings/api-key/regenerate",
+  "POST /api/settings/default-engines",
+  "POST /api/settings/domain-action",
+  "POST /api/settings/field",
+  "POST /api/settings/general",
+  "POST /api/settings/honeypot/ban",
+  "POST /api/settings/honeypot/unban",
+  "POST /api/settings/proxy-test",
+  "POST /api/settings/restart",
+  "POST /api/settings/shortcuts",
+  "POST /api/settings/shortcuts/source",
+  "POST /api/settings/sync",
+  "POST /api/settings/tab-order",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before settings-auth route list is unchanged 1`] = `
+[
+  "GET /api/settings/auth",
+  "GET /api/settings/auth/callback",
+  "POST /api/settings/auth",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before settings-backup route list is unchanged 1`] = `
+[
+  "GET /api/settings/export",
+  "POST /api/settings/import",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before setup route list is unchanged 1`] = `
+[
+  "GET /api/server-settings",
+  "PATCH /api/server-settings",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before shortcuts route list is unchanged 1`] = `
+[
+  "GET /api/shortcuts/modules/:file",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before slots route list is unchanged 1`] = `
+[
+  "POST /api/slots",
+  "POST /api/slots/glance",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before store route list is unchanged 1`] = `
+[
+  "DELETE /api/store/repos",
+  "DELETE /api/store/untracked",
+  "GET /api/store/installed",
+  "GET /api/store/items",
+  "GET /api/store/items/:repoSlug",
+  "GET /api/store/repos",
+  "GET /api/store/repos/:repoSlug/asset",
+  "GET /api/store/repos/refresh/stream",
+  "GET /api/store/repos/status",
+  "GET /api/store/screenshots/:repoSlug/:type/:item/:filename",
+  "GET /api/store/update-all/stream",
+  "POST /api/store/install",
+  "POST /api/store/repos",
+  "POST /api/store/repos/refresh",
+  "POST /api/store/uninstall",
+  "POST /api/store/update",
+  "POST /api/store/update-all",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before suggest route list is unchanged 1`] = `
+[
+  "GET /api/suggest",
+  "GET /api/suggest/opensearch",
+  "POST /api/suggest",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before sw route list is unchanged 1`] = `
+[
+  "GET /sw.js",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before teapot route list is unchanged 1`] = `
+[
+  "ALL /*",
+  "BREW /teapot",
+  "BREW /teapot/:variety",
+  "GET /teapot",
+  "HEAD /teapot",
+  "OPTIONS /teapot",
+  "POST /teapot",
+  "POST /teapot/:variety",
+  "PROPFIND /teapot",
+  "PROPFIND /teapot/:variety",
+  "WHEN /teapot",
+  "WHEN /teapot/:variety",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before themes route list is unchanged 1`] = `
+[
+  "GET /api/themes",
+  "GET /theme/style.css",
+  "POST /api/theme/active",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before uovadipasqua route list is unchanged 1`] = `
+[
+  "ALL /api/uovadipasqua/:id/*",
+  "GET /api/uovadipasqua/client-storage",
+  "GET /api/uovadipasqua/match",
+  "GET /uovadipasqua/:id/:asset",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before nojs route list is unchanged 1`] = `
+[
+  "GET /nojs",
+  "GET /nojs/search",
+  "POST /nojs/search",
+]
+`;
+
+exports[`route shape invariants the mounted surface totals stay put 1`] = `
+{
+  "totalHandlers": 294,
+  "unique": 247,
+}
+`;
+
+exports[`the admin path is operator-defined, not hardcoded DEGOOG_SETTINGS_PATH moves the admin routes 1`] = `
+[
+  "GET /not-the-default-admin-path",
+  "GET /not-the-default-admin-path/",
+  "GET /not-the-default-admin-path/:tab",
+]
+`;
+
+exports[`every mounted router exposes the routes it did before search/stream route list is unchanged 1`] = `
+[
+  "GET /api/search/stream",
+]
+`;

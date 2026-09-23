@@ -1,7 +1,7 @@
 import type { Context } from "hono";
-import { DEGOOG_ENGINE_NAME } from "../../shared/search-types";
-import type { ScoredResult, Translate } from "../types";
-import { getBasePath } from "../utils/base-url";
+import { DEGOOG_ENGINE_NAME, type ScoredResult } from "../../shared/search-types";
+import type { Translate } from "../types/extension";
+import { getBasePath } from "../utils/net/base-url";
 import { DEFAULT_LANGUAGES } from "../utils/search";
 import { logger } from "../utils/logger";
 import { searchHref, type NojsQuery } from "./links";

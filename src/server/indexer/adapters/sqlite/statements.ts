@@ -1,5 +1,3 @@
-import { EXPORT_SELECT_SQL } from "../../shared/export-select";
-
 export const UPSERT_URL = `
   INSERT INTO urls (
     url_norm, url, source_engine, title, snippet,
@@ -128,5 +126,3 @@ export const SEARCH_WHERE = `
      OR u.url LIKE $term ESCAPE '\\'
      OR u.title LIKE $term ESCAPE '\\'
 `;
-
-export const EXPORT_SQL = EXPORT_SELECT_SQL;

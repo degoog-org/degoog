@@ -1,4 +1,4 @@
-import type { SearchResult } from "../../types";
+import type { SearchResult } from "../../../shared/search-types";
 import type { IndexerConfig } from "../types/config";
 import { logger } from "../../utils/logger";
 

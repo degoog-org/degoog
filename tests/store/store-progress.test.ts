@@ -108,7 +108,7 @@ describe("store progress streaming auth (CSRF)", () => {
     process.env.DEGOOG_DATA_DIR = tmp;
     process.env.DEGOOG_SETTINGS_PASSWORDS = "testpw";
     storeRouter = (await import("../../src/server/routes/store")).default;
-    const tokens = await import("../../src/server/utils/settings-tokens");
+    const tokens = await import("../../src/server/utils/settings/settings-tokens");
     tokenStore = tokens.tokenStore;
     validToken = tokens.generateSettingsToken();
     tokenStore.set(validToken, Date.now() + tokens.TOKEN_TTL_MS);

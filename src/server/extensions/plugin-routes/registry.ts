@@ -1,10 +1,10 @@
 import { readdir, stat } from "fs/promises";
 import { join } from "path";
 import { pathToFileURL } from "url";
-import type { PluginRoute } from "../../types";
+import type { PluginRoute } from "../../types/extension";
 import { logger } from "../../utils/logger";
 import { pluginsDir } from "../../utils/paths";
-import { bootCircuitFromPath } from "../../utils/translation-circuit";
+import { bootCircuitFromPath } from "../../utils/extension-support/translation-circuit";
 import { getPluginRegistryReloadGeneration } from "../registry-factory";
 
 interface RouteEntry {
@@ -117,11 +117,6 @@ export function resolvePluginFolderId(requestedId: string): string {
   if (_entries.some((e) => e.pluginId === requestedId)) return requestedId;
   const legacy = _entries.find((e) => e.pluginId.endsWith(`-${requestedId}`));
   return legacy?.pluginId ?? requestedId;
-}
-
-export function getPluginRoutes(pluginId: string): PluginRoute[] {
-  const resolved = resolvePluginFolderId(pluginId);
-  return [...(_entries.find((e) => e.pluginId === resolved)?.routes ?? [])];
 }
 
 export function findPluginRoute(

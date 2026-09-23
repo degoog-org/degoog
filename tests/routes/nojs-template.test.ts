@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { renderTemplateString } from "../../src/server/nojs/template";
+import { renderTemplateString } from "../../src/shared/template/index";
 import {
   addClassById,
   addClassWhereClass,

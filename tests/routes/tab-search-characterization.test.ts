@@ -1,14 +1,11 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
-import type {
-  SearchEngine,
-  SearchResult,
-  SearchResultTab,
-} from "../../src/server/types";
+import type { SearchEngine, SearchResultTab } from "../../src/server/types/extension";
+import type { SearchResult } from "../../src/shared/search-types";
 
-const ENGINES_MOD = "../../src/server/extensions/engines/registry";
-const SETTINGS_MOD = "../../src/server/utils/plugin-settings";
+const ENGINES_MOD = "../../src/server/extensions/engines/catalog";
+const SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
 const TABS_MOD = "../../src/server/extensions/search-result-tabs/registry";
-const SERVER_SETTINGS_MOD = "../../src/server/utils/server-settings";
+const SERVER_SETTINGS_MOD = "../../src/server/utils/settings/server-settings";
 
 const enginesReal = { ...(await import(ENGINES_MOD)) };
 const settingsReal = { ...(await import(SETTINGS_MOD)) };

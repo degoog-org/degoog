@@ -1,5 +1,5 @@
-import type { Uovadipasqua } from "../../../types";
-import { outgoingFetch } from "../../../utils/outgoing";
+import type { Uovadipasqua } from "../../../types/extension";
+import { outgoingFetch } from "../../../utils/net/outgoing";
 
 const CHUCK_API = "https://api.chucknorris.io/jokes/random";
 

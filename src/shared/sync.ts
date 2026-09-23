@@ -31,9 +31,6 @@ export const GENERAL_SYNC_KEYS = [
 export const ENGINE_SYNC_KEYS = [ENGINES_KEY] as const;
 
 export const SYNC_KEYS = [...GENERAL_SYNC_KEYS, ...ENGINE_SYNC_KEYS] as const;
-
-export type SyncKey = (typeof SYNC_KEYS)[number];
-
 const THEME_VALUES = ["system", "light", "dark"] as const;
 
 const isThemeValue = (v: unknown): boolean =>

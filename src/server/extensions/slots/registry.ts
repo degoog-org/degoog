@@ -1,14 +1,14 @@
-import { join } from "path";
+import { commandBuiltinsDir } from "../commands/builtins-dir";
 import {
+  type ExtensionMeta,
   ExtensionStoreType,
-  SlotPanelPosition,
   SLOT_POSITION_SETTING_KEY,
   SLOT_SEARCH_TYPES_KEY,
-  type ExtensionMeta,
-  type SettingField,
   type SlotPlugin,
   type Translate,
-} from "../../types";
+} from "../../types/extension";
+import { parseTypeList, SlotPanelPosition } from "../../../shared/search-types";
+import type { SettingField } from "../../../shared/setting-field";
 import { logger } from "../../utils/logger";
 import { pluginsDir } from "../../utils/paths";
 import {
@@ -16,29 +16,18 @@ import {
   loadPluginAssets,
   lockinNameSpace,
   lockinSettingsId,
-} from "../../utils/plugin-assets";
-import { extensionReadmeExists } from "../../utils/extension-docs";
-import { getSettings, isDisabled, maskSecrets } from "../../utils/plugin-settings";
-import { bootCircuitFromPath } from "../../utils/translation-circuit";
+} from "../../utils/extension-support/plugin-assets";
+import { extensionReadmeExists } from "../../utils/extension-support/extension-docs";
+import { getSettings, isDisabled, maskSecrets } from "../../utils/settings/plugin-settings";
+import { bootCircuitFromPath } from "../../utils/extension-support/translation-circuit";
 import { createRegistry } from "../registry-factory";
 import { getInterceptors } from "../interceptors/registry";
 import { isPluginManifest } from "../plugin-manifest";
+import { getInstalledSearchTypes, manifestEngineSchema } from "../engines/catalog";
+import { baseSlotTypes } from "../../utils/extension-support/slot-types";
 import {
-  getInstalledSearchTypes,
-  manifestEngineSchema,
-} from "../engines/registry";
-import { baseSlotTypes } from "../../utils/slot-types";
-import { parseTypeList } from "../../../shared/search-types";
-import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
-
-const builtinsDir = join(
-  process.cwd(),
-  "src",
-  "server",
-  "extensions",
-  "commands",
-  "builtins",
-);
+  isExtensionRestartFlagVisible,
+} from "../../utils/extension-support/restart-state";
 
 function isSlotPlugin(val: unknown): val is SlotPlugin {
   if (typeof val !== "object" || val === null) return false;
@@ -67,7 +56,7 @@ function isSlotPlugin(val: unknown): val is SlotPlugin {
 const slotSourceMap = new Map<string, "builtin" | "plugin">();
 
 const registry = createRegistry<SlotPlugin>({
-  dirs: () => [{ dir: builtinsDir, source: "builtin" }, { dir: pluginsDir() }],
+  dirs: () => [{ dir: commandBuiltinsDir, source: "builtin" }, { dir: pluginsDir() }],
   match: (mod) => {
     const s =
       mod.slot ??

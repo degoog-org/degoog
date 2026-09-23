@@ -10,8 +10,9 @@ process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
 import router from "../../src/server/routes/indexer";
-import { clearAll, getStats } from "../../src/server/indexer/store";
-import { setInstanceSettings } from "../../src/server/utils/server-settings";
+import { clearAll } from "../../src/server/indexer/store/admin";
+import { getStats } from "../../src/server/indexer/store/stats";
+import { setInstanceSettings } from "../../src/server/utils/settings/server-settings";
 
 const get = (path: string): Promise<Response> =>
   Promise.resolve(router.request(`http://localhost${path}`));

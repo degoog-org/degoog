@@ -1,11 +1,11 @@
-import { ExtensionStoreType } from "../../types";
+import { ExtensionStoreType } from "../../types/extension";
 import {
   INVALIDATE_SCOPE,
   isOwnEvent,
   onInvalidate,
   publishInvalidate,
   type InvalidatePayload,
-} from "../../utils/cache-valkey";
+} from "../../utils/cache/cache-valkey";
 import { logger } from "../../utils/logger";
 import { bumpPluginRegistryReload } from "../registry-factory";
 import { STORE_TYPE_SPECS } from "./store-types";

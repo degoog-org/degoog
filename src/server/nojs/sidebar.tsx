@@ -5,12 +5,16 @@ import {
   isOriginDisplay,
   type EngineOrigin,
 } from "../../shared/engine-origins";
-import { DEGOOG_ENGINE_NAME } from "../../shared/search-types";
-import { listEngines } from "../extensions/engines/registry";
-import type { EngineTiming, SlotPanel, Translate } from "../types";
+import {
+  DEGOOG_ENGINE_NAME,
+  type EngineTiming,
+  type SlotPanel,
+} from "../../shared/search-types";
+import { listEngines } from "../extensions/engines/catalog";
+import type { Translate } from "../types/extension";
 import { logger } from "../utils/logger";
-import { asString } from "../utils/plugin-settings";
-import { getInstanceSettings } from "../utils/server-settings";
+import { asString } from "../utils/settings/plugin-settings";
+import { getInstanceSettings } from "../utils/settings/server-settings";
 import { retryHref, type NojsQuery } from "./links";
 import { renderHtml } from "../../shared/ui/tribute/html";
 import { RawDogIt } from "../../shared/ui/tribute/rawdogit";

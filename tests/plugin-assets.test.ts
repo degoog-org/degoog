@@ -7,8 +7,8 @@ import {
   getScriptFolderSource,
   buildRouteUrl,
   initPlugin,
-} from "../src/server/utils/plugin-assets";
-import type { PluginContext } from "../src/server/types";
+} from "../src/server/utils/extension-support/plugin-assets";
+import type { PluginContext } from "../src/server/types/extension";
 
 describe("plugin-assets", () => {
   test("addPluginCss and getAllPluginCss", () => {

@@ -9,7 +9,7 @@ import {
 describe("commands registry", () => {
   beforeAll(async () => {
     const { initEngines } =
-      await import("../../src/server/extensions/engines/registry");
+      await import("../../src/server/extensions/engines/loader");
     const origPlugins = process.env.DEGOOG_PLUGINS_DIR;
     const origEngines = process.env.DEGOOG_ENGINES_DIR;
     process.env.DEGOOG_PLUGINS_DIR = "/nonexistent-plugins-dir";

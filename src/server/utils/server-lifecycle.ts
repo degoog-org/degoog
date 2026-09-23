@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from "fs";
 import type { Subprocess, Server } from "bun";
 import { logger } from "./logger";
-import { closeAllDbs } from "../indexer/db";
-import { stopQueue } from "../indexer/queue";
-import { clearRestartPending } from "./restart-state";
+import { closeAllDbs } from "../indexer/db/lifecycle";
+import { stopQueue } from "../indexer/queue/queue";
+import { clearRestartPending } from "./extension-support/restart-state";
 import { envTruthy } from "../routes/settings-auth";
 
 const RESTART_EXIT_DELAY_MS = 250;

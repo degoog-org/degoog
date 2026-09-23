@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { getServerKeyHex, initServerKey } from "../../src/server/utils/server-key";
-import { clear as clearServerCache } from "../../src/server/utils/cache";
+import { getServerKeyHex, initServerKey } from "../../src/server/utils/security/server-key";
+import { clear as clearServerCache } from "../../src/server/utils/cache/cache";
 
 let suggestRouter: {
   request: (req: Request | string) => Response | Promise<Response>;

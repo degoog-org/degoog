@@ -9,33 +9,26 @@ import {
   matchBangCommand,
   type BangMatch,
 } from "../extensions/commands/registry";
-import {
-  getDefaultEngineConfig,
-  getEngineSearchType,
-} from "../extensions/engines/registry";
+import { getDefaultEngineConfig, getEngineSearchType } from "../extensions/engines/catalog";
 import { build404 } from "../routes/pages";
-import { handleRetry, handleSearch } from "../routes/search/_search-handlers";
-import { handleTabSearch } from "../routes/search/_tab-search-handler";
-import { parsePage } from "../routes/search/_parsers";
+import { handleRetry, handleSearch } from "../search/handlers";
+import { handleTabSearch } from "../search/tab-search";
+import { sanePage } from "../search/page-counter";
 import {
+  type EngineTiming,
   isImageSearchType,
   resolveBuiltinSearchType,
+  type ScoredResult,
 } from "../../shared/search-types";
-import type {
-  EngineTiming,
-  ScoredResult,
-  SearchParams,
-  SearchType,
-  TimeFilter,
-  Translate,
-} from "../types";
+import type { Translate } from "../types/extension";
+import type { SearchParams, SearchType, TimeFilter } from "../types/search";
 import { getLocale } from "../utils/hono";
 import { logger } from "../utils/logger";
-import { hasPinged, strike } from "../utils/link-token";
-import { asBoolean, asString } from "../utils/plugin-settings";
-import { getClientIp } from "../utils/request";
+import { hasPinged, strike } from "../utils/security/link-token";
+import { asBoolean, asString } from "../utils/settings/plugin-settings";
+import { getClientIp } from "../utils/net/request";
 import { _applyRateLimit, isValidQuery } from "../utils/search";
-import { getInstanceSettings } from "../utils/server-settings";
+import { getInstanceSettings } from "../utils/settings/server-settings";
 import {
   buildMediaContext,
   buildPaginationContext,
@@ -72,7 +65,8 @@ import { renderNojsCommand } from "./commands";
 import { isNojsCssCheckOn, isNojsEnabled } from "./settings";
 import { renderNojsKnowledgePanels, renderNojsSidebar } from "./sidebar";
 import { renderNojsSlots, SLOT_CONTAINER_IDS } from "./slots";
-import { escapeAttribute, renderTemplateString } from "./template";
+import { renderTemplateString } from "../../shared/template/index";
+import { escapeAttribute } from "../../shared/ui/tribute/escape";
 import {
   ENGINE_TYPE_PREFIX,
   WEB_TAB_ID,
@@ -124,7 +118,7 @@ const _readQuery = async (
       query: {
         q: c.req.query("q") ?? "",
         type: c.req.query("type") || "",
-        page: parsePage(c.req.query("page")),
+        page: sanePage(c.req.query("page")),
         time: c.req.query("time") || "any",
         lang: c.req.query("lang") || "",
         dateFrom: c.req.query("dateFrom") || "",
@@ -148,7 +142,7 @@ const _readQuery = async (
     query: {
       q: field("q"),
       type: field("type"),
-      page: parsePage(field("page")),
+      page: sanePage(field("page")),
       time: field("time") || "any",
       lang: field("lang"),
       dateFrom: field("dateFrom"),

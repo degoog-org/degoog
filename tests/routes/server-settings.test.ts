@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import setupRouter from "../../src/server/routes/setup";
-import { clearServerSettingsCache } from "../../src/server/utils/server-settings";
+import { clearServerSettingsCache } from "../../src/server/utils/settings/server-settings";
 
 let tempDir: string;
 let savedDataDir: string | undefined;

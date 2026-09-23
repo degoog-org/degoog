@@ -1,6 +1,9 @@
-import { SlotPanelPosition } from "../../shared/search-types";
-import type { ScoredResult, SlotPanel } from "../types";
-import { runSlotPlugins } from "../utils/search";
+import {
+  type ScoredResult,
+  type SlotPanel,
+  SlotPanelPosition,
+} from "../../shared/search-types";
+import { runSlotPlugins } from "../extensions/slots/run";
 import { renderHtml } from "../../shared/ui/tribute/html";
 import { FullWidthSlotPanel } from "../../shared/ui/components/search/full-width-slot-panel";
 import {

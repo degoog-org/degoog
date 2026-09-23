@@ -4,12 +4,12 @@ import {
   renderNojsRedirectPanel,
 } from "./render";
 import {
-  TranslateFunction,
   type BangCommand,
   type CommandContext,
   type CommandResult,
-} from "../../../../types";
-import { getBasePath, getBaseUrl } from "../../../../utils/base-url";
+  TranslateFunction,
+} from "../../../../types/extension";
+import { getBasePath, getBaseUrl } from "../../../../utils/net/base-url";
 import { isNojsEnabled } from "../../../../nojs/settings";
 import { NOJS_SEGMENT } from "../../../../nojs/links";
 

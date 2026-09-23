@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { clearServerSettingsCache } from "../../src/server/utils/server-settings";
+import { clearServerSettingsCache } from "../../src/server/utils/settings/server-settings";
 
 const SAVED_ENV_KEYS = [
   "DEGOOG_DATA_DIR",

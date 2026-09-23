@@ -4,10 +4,10 @@ import {
   onInvalidate,
   publishInvalidate,
   type InvalidatePayload,
-} from "../utils/cache-valkey";
+} from "../utils/cache/cache-valkey";
 import { logger } from "../utils/logger";
-import { getSettings, type SettingValue } from "../utils/plugin-settings";
-import { reconfigureManifestEngines } from "./engines/registry";
+import { getSettings, type SettingValue } from "../utils/settings/plugin-settings";
+import { reconfigureManifestEngines } from "./engines/catalog";
 import { resolveExtension } from "./resolve";
 
 type ExtSettings = Record<string, SettingValue>;

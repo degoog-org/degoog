@@ -1,4 +1,4 @@
-import type { Uovadipasqua } from "../../../types";
+import type { Uovadipasqua } from "../../../types/extension";
 
 export const uovadipasqua: Uovadipasqua = {
   id: "fccview",

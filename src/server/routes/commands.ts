@@ -3,15 +3,15 @@ import {
   getCommandsApiResponse,
   matchBangCommand,
 } from "../extensions/commands/registry";
-import { getEngineSearchType } from "../extensions/engines/registry";
+import { getEngineSearchType } from "../extensions/engines/catalog";
 import { searchSingleEngine } from "../search";
-import type { SearchType, TimeFilter } from "../types";
+import type { SearchType, TimeFilter } from "../types/search";
 import { getLocale } from "../utils/hono";
 import { logger } from "../utils/logger";
-import { isDisabled } from "../utils/plugin-settings";
-import { buildSignedProxyUrl } from "../utils/proxy-sign";
-import { getClientIp } from "../utils/request";
-import { applyFilter, syncVortexSignal } from "../utils/translation-circuit";
+import { isDisabled } from "../utils/settings/plugin-settings";
+import { buildSignedProxyUrl } from "../utils/net/proxy-sign";
+import { getClientIp } from "../utils/net/request";
+import { applyFilter, syncVortexSignal } from "../utils/extension-support/translation-circuit";
 
 const router = new Hono();
 

@@ -1,7 +1,7 @@
 import { type Context, Hono } from "hono";
 
 import { getThemeHtml } from "../extensions/themes/registry";
-import { getBasePath } from "../utils/base-url";
+import { getBasePath } from "../utils/net/base-url";
 import { getLocale } from "../utils/hono";
 import { _applyRateLimit } from "../utils/search";
 import { buildLayoutPage, buildThemedLayoutPage } from "./pages/render";

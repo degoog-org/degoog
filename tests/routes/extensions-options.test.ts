@@ -1,16 +1,17 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import {
-  ExtensionStoreType,
-  SlotPanelPosition,
   type ExtensionMeta,
+  ExtensionStoreType,
   type SearchEngine,
   type SearchResultTab,
   type SlotPlugin,
-} from "../../src/server/types";
-import type { SettingValue } from "../../src/server/utils/plugin-settings";
+} from "../../src/server/types/extension";
+import { SlotPanelPosition } from "../../src/shared/search-types";
+import type { SettingValue } from "../../src/server/utils/settings/plugin-settings";
 
-const ENGINES_MOD = "../../src/server/extensions/engines/registry";
-const SETTINGS_MOD = "../../src/server/utils/plugin-settings";
+const ENGINES_MOD = "../../src/server/extensions/engines/catalog";
+const ENGINE_META_MOD = "../../src/server/extensions/engines/extension-meta";
+const SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
 const TABS_MOD = "../../src/server/extensions/search-result-tabs/registry";
 const SLOTS_MOD = "../../src/server/extensions/slots/registry";
 
@@ -109,6 +110,7 @@ const fakeSlot = {
 } as SlotPlugin;
 
 const enginesReal = { ...(await import(ENGINES_MOD)) };
+const engineMetaReal = { ...(await import(ENGINE_META_MOD)) };
 const settingsReal = { ...(await import(SETTINGS_MOD)) };
 const tabsReal = { ...(await import(TABS_MOD)) };
 const slotsReal = { ...(await import(SLOTS_MOD)) };
@@ -142,9 +144,13 @@ describe("POST /api/extensions/:id/options/:key", () => {
 
     mock.module(ENGINES_MOD, () => ({
       ...enginesReal,
-      getEngineExtensionMeta: async () => [metaFor(EXT_ID), metaFor(BARE_ID)],
       getEngineMap: () => ({ [EXT_ID]: fakeEngine }),
     }));
+    mock.module(ENGINE_META_MOD, () => ({
+      ...engineMetaReal,
+      getEngineExtensionMeta: async () => [metaFor(EXT_ID), metaFor(BARE_ID)],
+    }));
+
     mock.module(TABS_MOD, () => ({
       ...tabsReal,
       getSearchResultTabExtensionMeta: async () => [metaFor(TAB_ID)],
@@ -167,6 +173,7 @@ describe("POST /api/extensions/:id/options/:key", () => {
 
   afterAll(() => {
     mock.module(ENGINES_MOD, () => enginesReal);
+    mock.module(ENGINE_META_MOD, () => engineMetaReal);
     mock.module(TABS_MOD, () => tabsReal);
     mock.module(SLOTS_MOD, () => slotsReal);
     mock.module(SETTINGS_MOD, () => settingsReal);

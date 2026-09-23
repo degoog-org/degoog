@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 
-import { cssCheckOn, isBlocked } from "../utils/bot-trap";
-import { hasPinged, strike } from "../utils/link-token";
-import { getClientIp } from "../utils/request";
+import { cssCheckOn, isBlocked } from "../utils/security/bot-trap";
+import { hasPinged, strike } from "../utils/security/link-token";
+import { getClientIp } from "../utils/net/request";
 import { getLocale } from "../utils/hono";
 import commands from "./commands";
 import health from "./health";
@@ -19,7 +19,7 @@ import proxy from "./proxy";
 import rateLimit from "./rate-limit";
 import search from "./search";
 import searchBar from "./search-bar";
-import searchStream from "./search-stream";
+import searchStream from "./search/stream";
 import searxEngines from "./searx-engines";
 import compatEngines from "./compat-engines";
 import setup from "./setup";

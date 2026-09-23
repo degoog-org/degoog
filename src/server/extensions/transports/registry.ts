@@ -1,16 +1,22 @@
-import { Transport, ExtensionMeta, ExtensionStoreType } from "../../types";
+import {
+  type ExtensionMeta,
+  ExtensionStoreType,
+  type Transport,
+} from "../../types/extension";
 import { FetchTransport } from "./builtins/fetch";
 import { CurlTransport } from "./builtins/curl";
 import { CurlImpersonateTransport } from "./builtins/curl-impersonate";
 import { AutoTransport } from "./builtins/auto";
-import { getSettings } from "../../utils/plugin-settings";
+import { getSettings } from "../../utils/settings/plugin-settings";
 import { transportsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
-import { registerExtensionFolder } from "../../utils/extension-docs";
+import { registerExtensionFolder } from "../../utils/extension-support/extension-docs";
 import { buildExtensionMeta } from "../extension-meta";
 import { mountTransportWs } from "./ws-registry";
 import { getTransportWsSession } from "./ws-session";
-import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
+import {
+  isExtensionRestartFlagVisible,
+} from "../../utils/extension-support/restart-state";
 
 const _builtins: Transport[] = [
   new FetchTransport(),
@@ -91,14 +97,6 @@ export const transportPicks = async (): Promise<TransportPicks> => {
     names: enabled.map((t) => t.name),
     labels: enabled.map((t) => t.displayName ?? t.name),
   };
-};
-
-export const getAvailableTransportNames = async (): Promise<string[]> => {
-  const results: string[] = [];
-  for (const t of _all()) {
-    if (await t.available()) results.push(t.name);
-  }
-  return results;
 };
 
 export function getFallbackTransport(): Transport {

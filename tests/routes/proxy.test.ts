@@ -5,7 +5,7 @@ let proxyRouter: {
 };
 
 beforeAll(async () => {
-  const { initServerKey } = await import("../../src/server/utils/server-key");
+  const { initServerKey } = await import("../../src/server/utils/security/server-key");
   await initServerKey();
   const mod = await import("../../src/server/routes/proxy");
   proxyRouter = mod.default;
@@ -26,7 +26,7 @@ describe("routes/proxy", () => {
 
   test("signed URL to a private IP is blocked", async () => {
     const { buildSignedProxyUrl } = await import(
-      "../../src/server/utils/proxy-sign"
+      "../../src/server/utils/net/proxy-sign"
     );
     const signed = buildSignedProxyUrl("http://127.0.0.1:8080/x.png");
     const res = await proxyRouter.request(`http://localhost${signed}`);

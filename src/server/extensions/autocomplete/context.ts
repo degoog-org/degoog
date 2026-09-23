@@ -1,9 +1,9 @@
-import type { AutocompleteContext } from "../../types";
-import { asBoolean, asString, getSettings } from "../../utils/plugin-settings";
-import { outgoingFetch, parseOutgoingTransport } from "../../utils/outgoing";
-import { createCache, useCache } from "../../utils/cache";
-import { getRandomUserAgent } from "../../utils/user-agents";
-import { getInstanceSettings } from "../../utils/server-settings";
+import type { AutocompleteContext } from "../../types/extension";
+import { asBoolean, asString, getSettings } from "../../utils/settings/plugin-settings";
+import { outgoingFetch, parseOutgoingTransport } from "../../utils/net/outgoing";
+import { createCache, useCache } from "../../utils/cache/cache";
+import { getRandomUserAgent } from "../../utils/net/user-agents";
+import { getInstanceSettings } from "../../utils/settings/server-settings";
 
 const _resolveLang = (
   globalSettings: Record<string, string | string[] | boolean>,

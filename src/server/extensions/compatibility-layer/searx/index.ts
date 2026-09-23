@@ -1,25 +1,29 @@
 import { readdir } from "fs/promises";
 import { basename, join, resolve } from "path";
-import type {
-  EngineContext,
-  SearchResult,
-  SearchEngine,
-  SettingField,
-  TimeFilter,
-} from "../../../types";
-import type { EngineFilters } from "../../../../shared/engine-filters";
-import { makeExtID } from "../../../utils/extension-id";
+import type { SearchEngine } from "../../../types/extension";
+import type { EngineContext, TimeFilter } from "../../../types/search";
+import type { SearchResult } from "../../../../shared/search-types";
+import type { SettingField } from "../../../../shared/setting-field";
+import { CompatLayerId } from "../../../../shared/compat-layers";
+import type { CompatEntry } from "../registry";
+import { makeExtID } from "../../../utils/extension-support/extension-id";
 import { logger } from "../../../utils/logger";
-import { getRandomUserAgent } from "../../../utils/user-agents";
-import { useCache } from "../../../utils/cache";
 import {
   asBoolean,
   getSettings,
   mergeDefaults,
   type SettingValue,
-} from "../../../utils/plugin-settings";
-import { getInstanceSettings } from "../../../utils/server-settings";
-import { runPython, type RpcFetchReply, type RpcHandlers } from "./rpc";
+} from "../../../utils/settings/plugin-settings";
+import { getInstanceSettings } from "../../../utils/settings/server-settings";
+import { runBridge, type RpcHandlers, type RunnerSpec } from "../rpc";
+import { browserHeaders, cacheHandler, isWebUrl, toReply, withCookies } from "../engine-bridge";
+import {
+  resolveSafeSearch,
+  SafeSearch,
+  SAFE_SEARCH_KEY,
+  safeSearchField,
+  TIME_FILTER_RANGE,
+} from "../safe-search";
 import { scrubLog } from "../scrub-log";
 import { catalogEntry, isSupportFile, isSupportedEngine, SEARX_EXTRA_ENGINES_ENV } from "./catalog";
 import {
@@ -29,19 +33,6 @@ import {
 } from "./engine-config";
 import { LIB_PACKAGES, missingPythonLibs } from "./python-deps";
 import { searxEnginesDir } from "./paths";
-
-export interface SearxCompatEntry {
-  id: string;
-  displayName: string;
-  searchTypes: string[];
-  description?: string;
-  site?: string;
-  instance: SearchEngine;
-  disabledByDefault?: boolean;
-  source?: "plugin" | "builtin";
-  compatibilityLayer?: "searx";
-  filters?: EngineFilters;
-}
 
 interface DiscoverPayload {
   path: string;
@@ -91,29 +82,13 @@ interface ResponsePayload {
 
 const runnerPath = join(import.meta.dir, "runner.py");
 
-const DEFAULT_ACCEPT_LANGUAGE = "en-US,en;q=0.9";
 const CACHE_NAMESPACE = "searx-compat";
-const CACHE_TTL_MS = 60 * 60 * 1000;
 const NS = "searx-compat";
-
-export const SAFE_SEARCH_KEY = "safeSearch";
-
-export enum SafeSearch {
-  Off = "off",
-  Moderate = "moderate",
-  Strict = "strict",
-}
 
 const SAFE_SEARCH_LEVELS: Record<SafeSearch, number> = {
   [SafeSearch.Off]: 0,
   [SafeSearch.Moderate]: 1,
   [SafeSearch.Strict]: 2,
-};
-
-const NSFW_TO_SAFE: Record<string, SafeSearch> = {
-  on: SafeSearch.Strict,
-  moderate: SafeSearch.Moderate,
-  off: SafeSearch.Off,
 };
 
 const GUARDED_TYPES = ["images", "videos"];
@@ -127,81 +102,26 @@ const SEARX_TIME_RANGES = [
   { range: "year", within: 366 * DAY_MS },
 ] as const;
 
-const TIME_FILTER_MAP: Partial<Record<TimeFilter, string>> = {
-  hour: "day",
-  day: "day",
-  week: "week",
-  month: "month",
-  year: "year",
-};
+const _pythonSpec = (): RunnerSpec => ({
+  bin: process.env.DEGOOG_PYTHON_BIN ?? "python3",
+  args: [],
+  label: "SearX",
+});
 
 const _runPython = <T>(payload: Record<string, unknown>, handlers: RpcHandlers = {}): Promise<T> =>
-  runPython<T>(runnerPath, payload, handlers);
+  runBridge<T>(_pythonSpec(), runnerPath, payload, handlers);
 
 const _safeId = (name: string): string => makeExtID(`searx-${name}`, "engine");
 
-const _cookieHeader = (cookies: Record<string, string> | undefined): string =>
-  Object.entries(cookies ?? {})
-    .filter(([k, v]) => k.trim() && String(v).trim())
-    .map(([k, v]) => `${k.trim()}=${String(v).trim()}`)
-    .join("; ");
-
-const _headersObject = (headers: Headers): Record<string, string> => {
-  const out: Record<string, string> = {};
-  headers.forEach((value, key) => {
-    out[key] = value;
-  });
-  return out;
-};
-
-const _browserHeaders = (context?: EngineContext): Record<string, string> => ({
-  "User-Agent": context?.userAgent?.() ?? getRandomUserAgent(),
-  "Accept-Language": context?.buildAcceptLanguage?.() ?? DEFAULT_ACCEPT_LANGUAGE,
-});
-
-const _setCookies = (headers: Headers): Record<string, string> => {
-  const out: Record<string, string> = {};
-  const raw = typeof headers.getSetCookie === "function" ? headers.getSetCookie() : [];
-  for (const line of raw) {
-    const [pair] = line.split(";");
-    const eq = pair?.indexOf("=") ?? -1;
-    if (eq <= 0) continue;
-    out[pair.slice(0, eq).trim()] = pair.slice(eq + 1).trim();
-  }
-  return out;
-};
-
-const _isWebUrl = (raw: string): boolean => {
-  try {
-    const { protocol } = new URL(raw);
-    return protocol === "http:" || protocol === "https:";
-  } catch {
-    return false;
-  }
-};
-
-const _toReply = async (resp: Response, fallbackUrl: string): Promise<RpcFetchReply> => ({
-  url: resp.url || fallbackUrl,
-  status: resp.status,
-  headers: _headersObject(resp.headers),
-  cookies: _setCookies(resp.headers),
-  text: await resp.text(),
-});
-
 const _bridge = (engineId: string, context?: EngineContext): RpcHandlers => {
   const fetcher = (context?.fetch ?? fetch) as typeof fetch;
-  const store = useCache<string>(`${CACHE_NAMESPACE}:${engineId}`, CACHE_TTL_MS);
   return {
     onFetch: async (req) => {
-      if (!_isWebUrl(req.url)) {
+      if (!isWebUrl(req.url)) {
         logger.warn(NS, `${engineId} blocked non-http request ${scrubLog(req.url)}`);
         throw new Error("only http(s) requests are allowed");
       }
-      const headers = { ..._browserHeaders(context), ...req.headers };
-      const cookie = _cookieHeader(req.cookies);
-      if (cookie && !Object.keys(headers).some((k) => k.toLowerCase() === "cookie")) {
-        headers.Cookie = cookie;
-      }
+      const headers = withCookies({ ...browserHeaders(context), ...req.headers }, req.cookies);
       logger.debug(NS, `${engineId} side request ${scrubLog(req.method)} ${scrubLog(req.url)}`);
       const resp = await fetcher(req.url, {
         headers,
@@ -209,25 +129,18 @@ const _bridge = (engineId: string, context?: EngineContext): RpcHandlers => {
         ...(req.method !== "GET" ? { method: req.method } : {}),
         ...(req.data ? { body: req.data } : {}),
       });
-      if (resp.url && !_isWebUrl(resp.url)) {
+      if (resp.url && !isWebUrl(resp.url)) {
         logger.warn(NS, `${engineId} blocked non-http redirect target ${scrubLog(resp.url)}`);
         throw new Error("only http(s) responses are allowed");
       }
-      return _toReply(resp, req.url);
+      return toReply(resp, req.url);
     },
-    onCache: async (req) => {
-      if (req.op === "set") {
-        await store.set(req.key, req.value ?? "", req.ttl ? req.ttl * 1000 : undefined);
-        return null;
-      }
-      return store.get(req.key);
-    },
+    onCache: cacheHandler(CACHE_NAMESPACE, engineId),
   };
 };
 
 const _safesearch = (engineSafe: SafeSearch, context?: EngineContext): number => {
-  const nsfw = context?.imageFilter?.nsfw;
-  const resolved = (nsfw && NSFW_TO_SAFE[nsfw]) ?? engineSafe;
+  const resolved = resolveSafeSearch(engineSafe, context);
   return SAFE_SEARCH_LEVELS[resolved] ?? SAFE_SEARCH_LEVELS[SafeSearch.Off];
 };
 
@@ -248,7 +161,7 @@ const _timeRange = (
   if (timeFilter === "custom") {
     return _rangeFromDates(context?.dateFrom, context?.dateTo);
   }
-  return TIME_FILTER_MAP[timeFilter] ?? null;
+  return TIME_FILTER_RANGE[timeFilter] ?? null;
 };
 
 const _defaultSafe = (types: string[]): SafeSearch =>
@@ -268,14 +181,7 @@ class SearxCompatEngine implements SearchEngine {
     this.bangShortcut = spec.bangShortcut;
     this.safeSearch = _defaultSafe(spec.types);
     this.settingsSchema = [
-      {
-        key: SAFE_SEARCH_KEY,
-        label: "Safe Search",
-        type: "select",
-        options: Object.values(SafeSearch),
-        default: this.safeSearch,
-        description: "Filter explicit content from this engine's results.",
-      },
+      safeSearchField(this.safeSearch),
       ...optionFields(spec.config),
     ];
   }
@@ -311,7 +217,7 @@ class SearxCompatEngine implements SearchEngine {
         timeFilter: timeRange,
         locale: context?.lang ?? "all",
         safesearch,
-        headers: _browserHeaders(context),
+        headers: browserHeaders(context),
         overrides: this.overrides,
       },
       bridge,
@@ -319,11 +225,7 @@ class SearxCompatEngine implements SearchEngine {
     if (!req.url || !/^https?:\/\//i.test(req.url)) {
       throw new Error(`${this.name} needs an instance URL configured before it can search`);
     }
-    const headers = { ...(req.headers ?? {}) };
-    const cookie = _cookieHeader(req.cookies);
-    if (cookie && !Object.keys(headers).some((k) => k.toLowerCase() === "cookie")) {
-      headers.Cookie = cookie;
-    }
+    const headers = withCookies({ ...(req.headers ?? {}) }, req.cookies);
     const init: RequestInit = {
       headers,
       redirect: "follow",
@@ -332,7 +234,7 @@ class SearxCompatEngine implements SearchEngine {
     };
     const resp = await (fetcher as typeof fetch)(req.url, init);
     context?.sentinel?.({ ok: resp.ok, status: resp.status }, this.name);
-    const text = await resp.text();
+    const response = await toReply(resp, req.url);
     const parsed = await _runPython<ResponsePayload>(
       {
         action: "response",
@@ -344,16 +246,10 @@ class SearxCompatEngine implements SearchEngine {
         timeFilter: timeRange,
         locale: context?.lang ?? "all",
         safesearch,
-        headers: _browserHeaders(context),
+        headers: browserHeaders(context),
         overrides: this.overrides,
         request: { ...req, url: req.url, headers },
-        response: {
-          url: resp.url || req.url,
-          status: resp.status,
-          headers: _headersObject(resp.headers),
-          cookies: _setCookies(resp.headers),
-          text,
-        },
+        response,
       },
       bridge,
     );
@@ -374,7 +270,7 @@ const _pythonHint = async (): Promise<void> => {
 export const isSearxCompatOn = async (): Promise<boolean> =>
   asBoolean((await getInstanceSettings()).searxCompatEnabled);
 
-export const loadSearxCompatibilityEngines = async (): Promise<SearxCompatEntry[]> => {
+export const loadSearxCompatibilityEngines = async (): Promise<CompatEntry[]> => {
   if (!(await isSearxCompatOn())) {
     logger.debug(NS, "SearX compatibility layer is off, skipping engine discovery");
     return [];
@@ -408,7 +304,7 @@ export const loadSearxCompatibilityEngines = async (): Promise<SearxCompatEntry[
     logger.warn(NS, `SearX discovery failed: ${message}`);
     return [];
   }
-  const entries: SearxCompatEntry[] = [];
+  const entries: CompatEntry[] = [];
   const offline: string[] = [];
   const unlisted: string[] = [];
   const broken: string[] = [];
@@ -450,7 +346,7 @@ export const loadSearxCompatibilityEngines = async (): Promise<SearxCompatEntry[
       site: catalogEntry(rawId)?.site,
       instance,
       source: "plugin",
-      compatibilityLayer: "searx",
+      compatibilityLayer: CompatLayerId.Searx,
     });
   }
   logger.info(NS, `SearX compatibility layer imported - ${entries.length} engine(s) available`);

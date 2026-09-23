@@ -2,10 +2,10 @@ import { Hono } from "hono";
 import {
   readServerSettings,
   writeServerSettings,
-} from "../utils/server-settings";
+} from "../utils/settings/server-settings";
 import { logger } from "../utils/logger";
 import { isPublicInstance } from "../utils/public-instance";
-import { canBalrogPass, gandalf } from "./settings-auth";
+import { settingsAuth } from "./_guards";
 
 const router = new Hono();
 
@@ -20,9 +20,7 @@ router.get("/api/server-settings", async (c) => {
   }
 });
 
-router.patch("/api/server-settings", async (c) => {
-  if (!(await gandalf(canBalrogPass(c))))
-    return c.json({ error: "You shall not pass!" }, 401);
+router.patch("/api/server-settings", settingsAuth(), async (c) => {
   try {
     const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
     const patch: { wizard?: boolean } = {};

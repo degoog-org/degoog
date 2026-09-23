@@ -12,7 +12,7 @@ import router from "../../src/server/routes/settings";
 import {
   clearRestartPending,
   markRestartPending,
-} from "../../src/server/utils/restart-state";
+} from "../../src/server/utils/extension-support/restart-state";
 
 let savedDangerouslyNoPassword: string | undefined;
 

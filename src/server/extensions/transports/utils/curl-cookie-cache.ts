@@ -1,4 +1,4 @@
-import type { AsyncTtlCache } from "../../../utils/cache";
+import type { AsyncTtlCache } from "../../../utils/cache/cache";
 import { logger } from "../../../utils/logger";
 
 const NS = "transport:cookie-cache";

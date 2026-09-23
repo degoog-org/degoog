@@ -9,7 +9,7 @@ import {
   themesDir,
   transportsDir,
 } from "../utils/paths";
-import { folderNameForItem, makeExtID, type ExtensionKind } from "../utils/extension-id";
+import { folderNameForItem, makeExtID, type ExtensionKind } from "../utils/extension-support/extension-id";
 import {
   getReposPath,
   getStoreDir,
@@ -21,12 +21,9 @@ import {
   readServerSettings,
   writeServerSettings,
   type ServerSettingValue,
-} from "../utils/server-settings";
-import {
-  ExtensionStoreType,
-  type RepoPackageJson,
-  type ReposData,
-} from "../types";
+} from "../utils/settings/server-settings";
+import { ExtensionStoreType } from "../types/extension";
+import type { RepoPackageJson, ReposData } from "../types/store";
 
 export const MIGRATION_VERSION = 52028 as const;
 const SCHEMA_KEY = "__schemaVersion";

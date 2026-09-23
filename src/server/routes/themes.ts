@@ -5,8 +5,8 @@ import {
   getActiveThemeId,
   setActiveTheme,
 } from "../extensions/themes/registry";
-import { canBalrogPass, gandalf } from "./settings-auth";
 import { logger } from "../utils/logger";
+import { settingsAuth } from "./_guards";
 
 const router = new Hono();
 
@@ -24,10 +24,7 @@ router.get("/api/themes", async (c) => {
   });
 });
 
-router.post("/api/theme/active", async (c) => {
-  const token = canBalrogPass(c);
-  if (!(await gandalf(token)))
-    return c.json({ error: "You shall not pass!" }, 401);
+router.post("/api/theme/active", settingsAuth(), async (c) => {
   let body: { id: string | null };
   try {
     body = await c.req.json<{ id: string | null }>();

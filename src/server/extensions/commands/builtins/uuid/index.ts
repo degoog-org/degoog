@@ -1,10 +1,10 @@
 import { renderUuidList } from "./render";
 import {
-  TranslateFunction,
   type BangCommand,
   type CommandContext,
   type CommandResult,
-} from "../../../../types";
+  TranslateFunction,
+} from "../../../../types/extension";
 
 const DEFAULT_UUID_COUNT = 10;
 const MAX_UUID_COUNT = 100;

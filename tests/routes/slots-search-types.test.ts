@@ -1,12 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from "bun:test";
-import {
-  SLOT_SEARCH_TYPES_KEY,
-  SlotPanelPosition,
-  type SlotPlugin,
-} from "../../src/server/types";
-import type { SettingValue } from "../../src/server/utils/plugin-settings";
+import { SLOT_SEARCH_TYPES_KEY, type SlotPlugin } from "../../src/server/types/extension";
+import { SlotPanelPosition } from "../../src/shared/search-types";
+import type { SettingValue } from "../../src/server/utils/settings/plugin-settings";
 
-const SETTINGS_MOD = "../../src/server/utils/plugin-settings";
+const SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
 const SLOTS_MOD = "../../src/server/extensions/slots/registry";
 
 const settingsReal = { ...(await import(SETTINGS_MOD)) };

@@ -1,11 +1,11 @@
 import { Hono, type Context } from "hono";
 import { randomBytes } from "node:crypto";
 import { getMiddleware } from "../extensions/middleware/registry";
-import { asString, getSettings } from "../utils/plugin-settings";
+import { asString, getSettings } from "../utils/settings/plugin-settings";
 import { getAdminPath, isPublicInstance } from "../utils/public-instance";
 import { logger } from "../utils/logger";
-import { getBasePath } from "../utils/base-url";
-import { getClientIp, isHttpsRequest } from "../utils/request";
+import { getBasePath } from "../utils/net/base-url";
+import { getClientIp, isHttpsRequest } from "../utils/net/request";
 import {
   TOKEN_TTL_MS,
   checkAuthRate,
@@ -13,7 +13,7 @@ import {
   passwordMatches,
   recordAuthFailure,
   tokenStore,
-} from "../utils/settings-tokens";
+} from "../utils/settings/settings-tokens";
 
 const router = new Hono();
 

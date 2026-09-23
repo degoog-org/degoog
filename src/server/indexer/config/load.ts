@@ -1,5 +1,5 @@
-import { asBoolean, asString } from "../../utils/plugin-settings";
-import { getInstanceSettings } from "../../utils/server-settings";
+import { asBoolean, asString } from "../../utils/settings/plugin-settings";
+import { getInstanceSettings } from "../../utils/settings/server-settings";
 import { readIndexerLists } from "./lists";
 import type { IndexerConfig } from "../types/config";
 

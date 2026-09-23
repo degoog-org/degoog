@@ -12,8 +12,8 @@ import router from "../../src/server/routes/settings";
 import {
   clearServerSettingsCache,
   setInstanceSettings,
-} from "../../src/server/utils/server-settings";
-import { clearShortcutsSettingsCache } from "../../src/server/utils/shortcuts-settings";
+} from "../../src/server/utils/settings/server-settings";
+import { clearShortcutsSettingsCache } from "../../src/server/utils/settings/shortcuts-settings";
 
 let savedDangerouslyNoPassword: string | undefined;
 

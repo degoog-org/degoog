@@ -10,6 +10,7 @@ import {
 } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
+import { pathToFileURL } from "url";
 import { randomBytes } from "crypto";
 import type { ExportRow } from "../types/adapter";
 import { getAdapter } from "../db/factory";
@@ -104,7 +105,7 @@ const isSqliteFile = (path: string): boolean => {
 };
 
 const importSqlite = async (path: string, type: string): Promise<ImportResult> => {
-  const sourceDb = new Database(path, { readonly: true });
+  const sourceDb = new Database(`${pathToFileURL(path).href}?immutable=1`, { readonly: true });
   const batch = makeBatchWriter(type);
   let read = 0;
   try {

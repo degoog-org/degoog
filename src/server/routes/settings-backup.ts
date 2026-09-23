@@ -1,23 +1,22 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { guardSettingsRoute } from "./settings-auth";
 import {
   applySettingsBatch,
   type SettingsSaveResult,
-} from "../utils/settings-write";
-import { applyInstance } from "../utils/settings-backup-instance";
+} from "../utils/settings/settings-write";
+import { applyInstance } from "../utils/settings/settings-backup-instance";
 import {
   restoreExtensions,
   type ExtensionsRestoreResult,
-} from "../utils/settings-backup-extensions";
-import { applyAliases } from "../utils/settings-backup-aliases";
-import { applySources } from "../utils/settings-backup-shortcuts";
+} from "../utils/settings/settings-backup-extensions";
+import { applyAliases } from "../utils/settings/settings-backup-aliases";
+import { applySources } from "../utils/settings/settings-backup-shortcuts";
 import {
   buildBackup,
   isEmptyBackup,
   parseBackup,
   type BackupContents,
-} from "../utils/settings-backup-format";
+} from "../utils/settings/settings-backup-format";
 import { logger } from "../utils/logger";
 import {
   BackupError,
@@ -25,6 +24,7 @@ import {
   MAX_SETTINGS_BACKUP_BYTES,
   weigh,
 } from "../../shared/settings-backup";
+import { settingsAuth } from "./_guards";
 
 const router = new Hono();
 
@@ -46,9 +46,7 @@ const _filename = (): string =>
 const _tooLarge = (bytes: number): boolean =>
   bytes > MAX_SETTINGS_BACKUP_BYTES;
 
-router.get("/api/settings/export", async (c) => {
-  const denied = await guardSettingsRoute(c, "GET /api/settings/export");
-  if (denied) return denied;
+router.get("/api/settings/export", settingsAuth("GET /api/settings/export"), async (c) => {
 
   const body = JSON.stringify(await buildBackup(), null, 2);
   const bytes = weigh(body);
@@ -120,9 +118,8 @@ router.post(
     onError: (c) =>
       c.json({ error: "Backup too large", code: BackupError.TooLarge }, 413),
   }),
+  settingsAuth("POST /api/settings/import"),
   async (c) => {
-    const denied = await guardSettingsRoute(c, "POST /api/settings/import");
-    if (denied) return denied;
 
     const raw = await c.req.text();
     if (_tooLarge(weigh(raw)))

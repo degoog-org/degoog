@@ -3,14 +3,11 @@ import { GateNote } from "./pages/gate-note";
 import { TakeoverResultItem } from "./pages/takeover-result";
 import { Context, Hono } from "hono";
 import { SETTINGS_TABS } from "../../shared/settings-tabs";
-import {
-  getDefaultEngineConfig,
-  listEngines,
-} from "../extensions/engines/registry";
+import { getDefaultEngineConfig, listEngines } from "../extensions/engines/catalog";
 import { getThemeHtml } from "../extensions/themes/registry";
-import * as cache from "../utils/cache";
+import * as cache from "../utils/cache/cache";
 import { getLocale } from "../utils/hono";
-import { asBoolean } from "../utils/plugin-settings";
+import { asBoolean } from "../utils/settings/plugin-settings";
 import { getAdminPath, isPublicInstance } from "../utils/public-instance";
 import {
   canBalrogPass,
@@ -19,25 +16,23 @@ import {
   shouldServeSettingsGate,
   gandalf,
 } from "./settings-auth";
-import { ping, verifyToken } from "../utils/link-token";
-import { getClientIp } from "../utils/request";
-import { getBasePath, getBaseUrl } from "../utils/base-url";
-import { getPublicUrl } from "../utils/public-url";
+import { ping, verifyToken } from "../utils/security/link-token";
+import { getClientIp } from "../utils/net/request";
+import { getBasePath, getBaseUrl } from "../utils/net/base-url";
+import { getPublicUrl } from "../utils/net/public-url";
 import { FAKE_RESULTS } from "../../shared/fake-results";
-import { getInstanceSettings } from "../utils/server-settings";
+import { getInstanceSettings } from "../utils/settings/server-settings";
+import { DEFAULT_THEME_DIR, getCoreTranslator } from "../render/theme-assets";
 import {
-  DEFAULT_THEME_DIR,
   applyPagePlaceholders,
   buildLayoutPage,
   buildPage,
   buildThemedLayoutPage,
-  getCoreTranslator,
   getLayout,
   getTranslator,
   isFullDocument,
 } from "./pages/render";
 
-export { getCoreTranslator };
 
 const BASE_URL = getBaseUrl();
 const BASE_PATH = getBasePath();

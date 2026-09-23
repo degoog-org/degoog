@@ -2,12 +2,9 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { mkdtemp, mkdir, writeFile, rm } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
-import {
-  initEngines,
-  listEngines,
-  honorsImageFilters,
-} from "../../src/server/extensions/engines/registry";
-import type { ImageFilter } from "../../src/server/types";
+import { honorsImageFilters, listEngines } from "../../src/server/extensions/engines/catalog";
+import { initEngines } from "../../src/server/extensions/engines/loader";
+import type { ImageFilter } from "../../src/server/types/search";
 
 const writeEngine = async (
   root: string,

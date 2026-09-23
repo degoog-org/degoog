@@ -8,12 +8,10 @@ process.env.DEGOOG_INDEXER_DIR = SHARED;
 process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
-import {
-  clearTypeCache,
-  initEngines,
-  getActiveWebEngines,
-} from "../../src/server/extensions/engines/registry";
-import { setInstanceSettings } from "../../src/server/utils/server-settings";
+import { getActiveWebEngines } from "../../src/server/extensions/engines/catalog";
+import { initEngines } from "../../src/server/extensions/engines/loader";
+import { clearTypeCache } from "../../src/server/extensions/engines/search-types";
+import { setInstanceSettings } from "../../src/server/utils/settings/server-settings";
 
 const DEGOOG = "degoog-engine";
 const hasDegoog = (list: { id: string }[]): boolean =>

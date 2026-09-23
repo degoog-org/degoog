@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, test, expect } from "bun:test";
 import { Hono } from "hono";
-import { trimSlash } from "../../src/server/utils/trailing-slash";
-import { buildPublicUrl, getPublicUrl } from "../../src/server/utils/public-url";
+import { trimSlash } from "../../src/server/utils/net/trailing-slash";
+import { buildPublicUrl, getPublicUrl } from "../../src/server/utils/net/public-url";
 
 const REQ = { url: "http://localhost:4444/opensearch.xml" };
 

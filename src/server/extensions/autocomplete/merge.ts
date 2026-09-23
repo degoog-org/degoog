@@ -1,4 +1,4 @@
-import type { AutocompleteSuggestion, RichSuggestion } from "../../types";
+import type { AutocompleteSuggestion, RichSuggestion } from "../../types/extension";
 
 export interface NormSuggestion {
   text: string;

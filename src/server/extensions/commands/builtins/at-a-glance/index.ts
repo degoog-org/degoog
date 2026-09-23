@@ -1,26 +1,25 @@
 import { renderGlanceBox } from "./render";
 import * as cheerio from "cheerio";
 import {
-  SlotPanelPosition,
-  TranslateFunction,
   type PluginContext,
-  type SettingField,
-  type ScoredResult,
   type SlotPlugin,
-} from "../../../../types";
+  TranslateFunction,
+} from "../../../../types/extension";
+import { type ScoredResult, SlotPanelPosition } from "../../../../../shared/search-types";
+import type { SettingField } from "../../../../../shared/setting-field";
 import {
   asString,
   getSettings,
   isDisabled,
-} from "../../../../utils/plugin-settings";
-import { useCache, type AsyncTtlCache } from "../../../../utils/cache";
+} from "../../../../utils/settings/plugin-settings";
+import { useCache, type AsyncTtlCache } from "../../../../utils/cache/cache";
 import {
   looksLikeProse,
   stripSnippetPrefix,
 } from "../../../../utils/text";
-import { getRandomUserAgent } from "../../../../utils/user-agents";
+import { getRandomUserAgent } from "../../../../utils/net/user-agents";
 import { logger } from "../../../../utils/logger";
-import { isSafeHost } from "../../../../utils/ssrf";
+import { isSafeHost } from "../../../../utils/security/ssrf";
 
 const WIKIPEDIA_SETTINGS_ID = "wikipedia-slot";
 const WIKIPEDIA_HOSTNAME = "wikipedia.org";

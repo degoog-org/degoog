@@ -5,11 +5,11 @@ import { join } from "node:path";
 import {
   readSyncedDefaults,
   writeSyncedDefaults,
-} from "../../src/server/utils/synced-settings";
+} from "../../src/server/utils/settings/synced-settings";
 import {
   clearServerSettingsCache,
   updateInstanceSettings,
-} from "../../src/server/utils/server-settings";
+} from "../../src/server/utils/settings/server-settings";
 
 let tempDir: string;
 let savedDataDir: string | undefined;

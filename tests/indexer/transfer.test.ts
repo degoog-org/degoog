@@ -10,15 +10,12 @@ process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
 import { Database } from "bun:sqlite";
-import {
-  clearAll,
-  getStats,
-  queryIndex,
-  recordResults,
-  wipeStatsCache,
-} from "../../src/server/indexer/store";
-import { flushQueue } from "../../src/server/indexer/queue";
-import { setInstanceSettings } from "../../src/server/utils/server-settings";
+import { clearAll } from "../../src/server/indexer/store/admin";
+import { queryIndex } from "../../src/server/indexer/store/query";
+import { recordResults } from "../../src/server/indexer/store/record";
+import { getStats, wipeStatsCache } from "../../src/server/indexer/store/stats";
+import { flushQueue } from "../../src/server/indexer/queue/queue";
+import { setInstanceSettings } from "../../src/server/utils/settings/server-settings";
 import { buildSqliteExportFile, exportStream } from "../../src/server/indexer/export/builder";
 import { getAdapter } from "../../src/server/indexer/db/factory";
 import { indexerDbForType } from "../../src/server/utils/paths";
@@ -33,7 +30,7 @@ import {
   finishImportSession,
   removeImportSession,
 } from "../../src/server/indexer/transfer/sessions";
-import type { SearchResult } from "../../src/server/types";
+import type { SearchResult } from "../../src/shared/search-types";
 
 const TYPE = "web";
 

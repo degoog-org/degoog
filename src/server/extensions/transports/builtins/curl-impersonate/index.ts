@@ -3,8 +3,8 @@ import type {
   Transport,
   TransportContext,
   TransportFetchOptions,
-} from "../../../../types";
-import type { AsyncTtlCache } from "../../../../utils/cache";
+} from "../../../../types/extension";
+import type { AsyncTtlCache } from "../../../../utils/cache/cache";
 import { logger } from "../../../../utils/logger";
 import {
   appendCurlCookieStdoutDelimiters,

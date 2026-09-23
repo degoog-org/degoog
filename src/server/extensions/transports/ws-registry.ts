@@ -1,4 +1,4 @@
-import type { TransportWsHandlers } from "../../types";
+import type { TransportWsHandlers } from "../../types/extension";
 import { getTransportWsSession } from "./ws-session";
 
 const _handlers = new Map<string, TransportWsHandlers>();

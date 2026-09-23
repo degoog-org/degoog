@@ -1,11 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from "bun:test";
-import {
-  SlotPanelPosition,
-  type SlotPlugin,
-  type SlotPluginContext,
-} from "../../src/server/types";
+import type { SlotPlugin, SlotPluginContext } from "../../src/server/types/extension";
+import { SlotPanelPosition } from "../../src/shared/search-types";
 
-const SETTINGS_MOD = "../../src/server/utils/plugin-settings";
+const SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
 const SLOTS_MOD = "../../src/server/extensions/slots/registry";
 
 const settingsReal = { ...(await import(SETTINGS_MOD)) };
@@ -31,7 +28,7 @@ const PLAIN_SLOT = "plain-slot";
 const OPTED_IN_SLOT = "opted-in-slot";
 const SLOTS = [makeSlot(PLAIN_SLOT), makeSlot(OPTED_IN_SLOT, true)];
 
-let runSlotPlugins: typeof import("../../src/server/utils/search").runSlotPlugins;
+let runSlotPlugins: typeof import("../../src/server/extensions/slots/run").runSlotPlugins;
 
 beforeAll(async () => {
   mock.module(SETTINGS_MOD, () => ({
@@ -43,7 +40,7 @@ beforeAll(async () => {
     ...slotsReal,
     getSlotPlugins: () => SLOTS,
   }));
-  runSlotPlugins = (await import("../../src/server/utils/search")).runSlotPlugins;
+  runSlotPlugins = (await import("../../src/server/extensions/slots/run")).runSlotPlugins;
 });
 
 afterAll(() => {

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { initServerKey } from "../../src/server/utils/server-key";
+import { initServerKey } from "../../src/server/utils/security/server-key";
 
 type Router = {
   request: (req: Request | string) => Response | Promise<Response>;

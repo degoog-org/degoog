@@ -3,9 +3,9 @@ import { Hono } from "hono";
 import { build404 } from "../../src/server/routes/pages";
 import { getLocale } from "../../src/server/utils/hono";
 
-const SERVER_SETTINGS_MOD = "../../src/server/utils/server-settings";
-const BOT_TRAP_MOD = "../../src/server/utils/bot-trap";
-const REQUEST_MOD = "../../src/server/utils/request";
+const SERVER_SETTINGS_MOD = "../../src/server/utils/settings/server-settings";
+const BOT_TRAP_MOD = "../../src/server/utils/security/bot-trap";
+const REQUEST_MOD = "../../src/server/utils/net/request";
 
 const serverSettingsReal = { ...(await import(SERVER_SETTINGS_MOD)) };
 const botTrapReal = { ...(await import(BOT_TRAP_MOD)) };

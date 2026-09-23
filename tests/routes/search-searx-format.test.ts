@@ -3,9 +3,9 @@ import {
   getInstanceSettings,
   updateInstanceSettings,
   type ServerSettingValue,
-} from "../../src/server/utils/server-settings";
+} from "../../src/server/utils/settings/server-settings";
 
-const HANDLERS_MOD = "../../src/server/routes/search/_search-handlers";
+const HANDLERS_MOD = "../../src/server/search/handlers";
 
 const FAKE_RESULT = {
   title: "Rust lifetimes",

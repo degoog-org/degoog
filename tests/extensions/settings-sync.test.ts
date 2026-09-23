@@ -2,11 +2,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from "b
 import {
   INVALIDATE_SCOPE,
   type InvalidatePayload,
-} from "../../src/server/utils/cache-valkey";
-import type { SettingValue } from "../../src/server/utils/plugin-settings";
+} from "../../src/server/utils/cache/cache-valkey";
+import type { SettingValue } from "../../src/server/utils/settings/plugin-settings";
 
 const RESOLVE_MOD = "../../src/server/extensions/resolve";
-const SETTINGS_MOD = "../../src/server/utils/plugin-settings";
+const SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
 
 const resolveReal = { ...(await import(RESOLVE_MOD)) };
 const settingsReal = { ...(await import(SETTINGS_MOD)) };

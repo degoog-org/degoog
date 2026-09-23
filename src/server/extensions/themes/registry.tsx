@@ -5,15 +5,15 @@ import { join } from "path";
 import {
   type ExtensionMeta,
   ExtensionStoreType,
-  type SettingField,
-  Translate,
-} from "../../types";
+  type Translate,
+} from "../../types/extension";
+import type { SettingField } from "../../../shared/setting-field";
 import { logger } from "../../utils/logger";
 import {
   asString,
   getSettings,
   setSettings,
-} from "../../utils/plugin-settings";
+} from "../../utils/settings/plugin-settings";
 
 const THEME_SETTINGS_ID = "theme";
 
@@ -48,10 +48,10 @@ export interface LoadedTheme {
 }
 
 import { themesDir } from "../../utils/paths";
-import { bootCircuitFromPath } from "../../utils/translation-circuit";
-import { refreshModules } from "../../utils/module-cache";
+import { bootCircuitFromPath } from "../../utils/extension-support/translation-circuit";
+import { refreshModules } from "../../utils/cache/module-cache";
 import { buildExtensionMeta } from "../extension-meta";
-import { makeExtID, rewriteThemePaths } from "../../utils/extension-id";
+import { makeExtID, rewriteThemePaths } from "../../utils/extension-support/extension-id";
 
 let themes: LoadedTheme[] = [];
 
@@ -268,13 +268,6 @@ export async function getThemeTemplatesHtml(): Promise<string> {
     }
   }
   return parts.join("\n");
-}
-
-export async function recompileTheme(id: string): Promise<void> {
-  const theme = themes.find((t) => t.id === id);
-  if (theme) {
-    theme.compiledCss = await compileThemeCss(theme);
-  }
 }
 
 export async function reloadThemes(_bust = true): Promise<void> {

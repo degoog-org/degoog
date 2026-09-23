@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { findPluginRoute, resolvePluginFolderId } from "../extensions/plugin-routes/registry";
 import { logger } from "../utils/logger";
-import { getPluginSettingsIds } from "../utils/plugin-assets";
-import { isDisabled } from "../utils/plugin-settings";
+import { getPluginSettingsIds } from "../utils/extension-support/plugin-assets";
+import { isDisabled } from "../utils/settings/plugin-settings";
 
 const router = new Hono();
 

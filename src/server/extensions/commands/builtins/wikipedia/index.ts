@@ -1,14 +1,14 @@
 import { renderWikiThumbnail } from "./render";
 import {
-  SlotPanelPosition,
-  TranslateFunction,
   type PluginContext,
-  type SettingField,
   type SlotPlugin,
   type SlotPluginContext,
-} from "../../../../types";
-import type { AsyncTtlCache } from "../../../../utils/cache";
-import { getSettings } from "../../../../utils/plugin-settings";
+  TranslateFunction,
+} from "../../../../types/extension";
+import { SlotPanelPosition } from "../../../../../shared/search-types";
+import type { SettingField } from "../../../../../shared/setting-field";
+import type { AsyncTtlCache } from "../../../../utils/cache/cache";
+import { getSettings } from "../../../../utils/settings/plugin-settings";
 import { logger } from "../../../../utils/logger";
 const WIKI_NAMESPACE = "ext:wikipedia:page";
 const WIKI_TTL_MS = 60 * 60 * 1000;

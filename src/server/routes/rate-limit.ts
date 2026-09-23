@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { getClientIp } from "../utils/request";
-import { checkRateLimit } from "../utils/rate-limit";
-import { getInstanceSettings } from "../utils/server-settings";
+import { getClientIp } from "../utils/net/request";
+import { checkRateLimit } from "../utils/security/rate-limit";
+import { getInstanceSettings } from "../utils/settings/server-settings";
 
 const router = new Hono();
 

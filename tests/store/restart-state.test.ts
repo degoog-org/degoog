@@ -1,9 +1,9 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import {
-  markRestartPending,
-  getRestartState,
   clearRestartPending,
-} from "../../src/server/utils/restart-state";
+  getRestartState,
+  markRestartPending,
+} from "../../src/server/utils/extension-support/restart-state";
 
 describe("restart-state", () => {
   beforeEach(() => {
