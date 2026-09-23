@@ -18,8 +18,6 @@ declare global {
 
 const t = window.scopedT("themes/degoog");
 
-const PAINTED_FLAG = "true";
-
 interface OriginLookup {
   byId: Map<string, EngineOrigin>;
   byName: Map<string, EngineOrigin>;
@@ -126,7 +124,6 @@ const _paintOne = (
   });
   slot.title = label;
   slot.setAttribute("aria-label", label);
-  slot.dataset.painted = PAINTED_FLAG;
   slot.replaceChildren(artwork);
 };
 
@@ -141,7 +138,7 @@ const _originFor = (
 
 export const paintOrigins = async (root: HTMLElement): Promise<void> => {
   const slots = Array.from(
-    root.querySelectorAll<HTMLElement>(".engine-origin:not([data-painted])"),
+    root.querySelectorAll<HTMLElement>(".engine-origin:empty"),
   );
   if (slots.length === 0) return;
   const mode = await _displayMode();
