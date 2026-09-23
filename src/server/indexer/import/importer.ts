@@ -1,4 +1,4 @@
-import { Database } from "bun:sqlite";
+import { Database, constants } from "bun:sqlite";
 import {
   writeFileSync,
   unlinkSync,
@@ -10,7 +10,6 @@ import {
 } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { pathToFileURL } from "url";
 import { randomBytes } from "crypto";
 import type { ExportRow } from "../types/adapter";
 import { getAdapter } from "../db/factory";
@@ -105,10 +104,12 @@ const isSqliteFile = (path: string): boolean => {
 };
 
 const importSqlite = async (path: string, type: string): Promise<ImportResult> => {
-  const sourceDb = new Database(`${pathToFileURL(path).href}?immutable=1`, { readonly: true });
+  const sourceDb = new Database(path, { readwrite: true, create: false });
   const batch = makeBatchWriter(type);
   let read = 0;
   try {
+    sourceDb.fileControl(constants.SQLITE_FCNTL_PERSIST_WAL, 0);
+    sourceDb.exec("PRAGMA journal_mode = DELETE");
     for (const row of sourceDb
       .prepare(buildSelectSql(sourceDb))
       .iterate() as Iterable<ExportRow>) {

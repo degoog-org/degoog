@@ -60,7 +60,7 @@ const PUBLIC_MUTATIONS = new Set([
   "POST /nojs/search",
 ]);
 
-const ENV_SHAPED_MODULES = new Set(["pages"]);
+const FRESH_MODULES = new Set(["health", "pages"]);
 const BUST = "?auth-matrix";
 const REQUEST_TIMEOUT_MS = 5000;
 
@@ -111,7 +111,7 @@ beforeAll(async () => {
   process.env.DEGOOG_PUBLIC_INSTANCE = "true";
 
   for (const name of MODULES) {
-    const spec = ENV_SHAPED_MODULES.has(name)
+    const spec = FRESH_MODULES.has(name)
       ? `../../src/server/routes/${name}${BUST}`
       : `../../src/server/routes/${name}`;
     routers.set(name, (await import(spec)).default);
@@ -120,6 +120,7 @@ beforeAll(async () => {
 
   const { clearServerSettingsCache: clearCache, getInstanceSettings, updateInstanceSettings: update } =
     await import("../../src/server/utils/settings/server-settings");
+  clearCache();
   const priorSettings = await getInstanceSettings();
   restoreNojs = priorSettings.nojsEnabled as ServerSettingValue | undefined;
   await update({ nojsEnabled: false });

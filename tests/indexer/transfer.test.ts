@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { existsSync, mkdirSync, statSync } from "fs";
+import { existsSync, mkdirSync, rmSync, statSync } from "fs";
 import { tmpdir } from "os";
 import { dirname, join } from "path";
 
@@ -221,7 +221,7 @@ describe("export stream lifecycle", () => {
     const path = await buildSqliteExportFile(TYPE);
     expect(existsSync(`${path}-wal`)).toBe(false);
     expect(existsSync(`${path}-shm`)).toBe(false);
-    const db = new Database(`file://${path}?immutable=1`, { readonly: true });
+    const db = new Database(path, { readonly: true });
     const { n } = db.prepare("SELECT COUNT(*) AS n FROM query_hits").get() as { n: number };
     db.close();
     expect(n).toBeGreaterThan(0);
@@ -355,13 +355,36 @@ describe("indexer chunked transfer", () => {
     removeImportSession(id);
   });
 
+  test("an old wal-flagged export without its sidecars still imports", async () => {
+    await clearAll();
+    await recordResults("walcheck", TYPE, [mk(20), mk(21)]);
+    await flushQueue();
+
+    const path = await buildSqliteExportFile(TYPE);
+    const legacy = new Database(path);
+    legacy.exec("PRAGMA journal_mode = WAL");
+    legacy.close(true);
+    rmSync(`${path}-wal`, { force: true });
+    rmSync(`${path}-shm`, { force: true });
+
+    await clearAll();
+    await importFromFile(path, TYPE);
+    expect(existsSync(`${path}-wal`)).toBe(false);
+    expect(existsSync(`${path}-shm`)).toBe(false);
+
+    const dst = new Database(join(SHARED, `index-${TYPE}.db`), { readonly: true });
+    const { n } = dst.prepare("SELECT COUNT(*) AS n FROM query_hits").get() as { n: number };
+    dst.close();
+    expect(n).toBe(2);
+  });
+
   test("import preserves real ranking instead of flattening to 9999", async () => {
     await clearAll();
     await recordResults("rankcheck", TYPE, [mk(10), mk(11), mk(12)]);
     await flushQueue();
 
     const path = await buildSqliteExportFile(TYPE);
-    const src = new Database(`file://${path}?immutable=1`, { readonly: true });
+    const src = new Database(path, { readonly: true });
     const before = (
       src.prepare("SELECT pos_sum FROM query_hits ORDER BY pos_sum ASC").all() as {
         pos_sum: number;
@@ -375,6 +398,8 @@ describe("indexer chunked transfer", () => {
     await appendImportChunk(id, bytes.buffer);
     const finished = await finishImportSession(id);
     await importFromFile(finished as string, TYPE);
+    expect(existsSync(`${finished}-wal`)).toBe(false);
+    expect(existsSync(`${finished}-shm`)).toBe(false);
     removeImportSession(id);
 
     const dst = new Database(join(SHARED, `index-${TYPE}.db`), { readonly: true });

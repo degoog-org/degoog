@@ -1,4 +1,4 @@
-import { Database } from "bun:sqlite";
+import { Database, constants } from "bun:sqlite";
 import { unlinkSync, mkdirSync } from "fs";
 import { join } from "path";
 import { randomBytes } from "crypto";
@@ -19,6 +19,7 @@ export const buildSqliteExportFile = async (type: string): Promise<string> => {
 
   const db = new Database(tmpPath, { create: true });
   try {
+    db.fileControl(constants.SQLITE_FCNTL_PERSIST_WAL, 0);
     db.exec("PRAGMA journal_mode = WAL");
     for (const sql of EXPORT_SCHEMA_DDL) db.exec(sql);
 
@@ -28,6 +29,7 @@ export const buildSqliteExportFile = async (type: string): Promise<string> => {
       importRows(batch);
     }
     db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+    db.exec("PRAGMA journal_mode = DELETE");
   } catch (err) {
     logger.error("indexer", `export-builder failed for type=${type}`, err);
     try {
@@ -38,8 +40,6 @@ export const buildSqliteExportFile = async (type: string): Promise<string> => {
     throw err;
   } finally {
     db.close();
-    _discard(`${tmpPath}-wal`);
-    _discard(`${tmpPath}-shm`);
   }
 
   return tmpPath;
