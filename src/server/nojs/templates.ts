@@ -188,7 +188,7 @@ export const loadNojsTemplate = async (
   if (hit !== undefined) return hit;
 
   const html = await _resolve(name);
-  const template = html === null ? null : sanitizeTemplate(html);
+  const template = html === null ? null : await sanitizeTemplate(html);
   resolved.set(name, template);
   return template;
 };

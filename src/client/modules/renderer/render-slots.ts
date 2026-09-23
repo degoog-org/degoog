@@ -1,4 +1,10 @@
 import { SlotPanelPosition, type SlotPanel } from "../../types";
+import { append, clear } from "../../../shared/ui/tribute/dom";
+import { FullWidthSlotPanel } from "../../../shared/ui/components/search/full-width-slot-panel";
+import {
+  DEFAULT_SLOT_GRID,
+  SlotPanel as SlotPanelView,
+} from "../../../shared/ui/components/search/slot-panel";
 
 const SLOT_IDS = [
   "slot-full-width-above-results",
@@ -11,10 +17,10 @@ const SLOT_IDS = [
 export function clearSlotPanels(): void {
   for (const id of SLOT_IDS) {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = "";
+    if (el) clear(el);
   }
   const glanceEl = document.getElementById("at-a-glance");
-  if (glanceEl) glanceEl.innerHTML = "";
+  if (glanceEl) clear(glanceEl);
 }
 
 function _renderSlotPanelsInto(panels: SlotPanel[], clearFirst: boolean): void {
@@ -41,30 +47,17 @@ function _renderSlotPanelsInto(panels: SlotPanel[], clearFirst: boolean): void {
     if (panel.position === SlotPanelPosition.AtAGlance) {
       container.innerHTML = panel.html;
     } else if (panel.position === SlotPanelPosition.FullWidthAboveResults) {
-      const block = document.createElement("div");
-      block.className = "results-slot-panel-full-width";
-      if (panel.id) block.dataset.slot = panel.id;
-      block.innerHTML = panel.html;
-      container.appendChild(block);
+      append(FullWidthSlotPanel({ id: panel.id, html: panel.html }), container);
     } else {
-      const block = document.createElement("div");
-      block.className =
-        "results-slot-panel degoog-panel degoog-panel--slot degoog-panel--stack-item";
-      if (panel.id) block.dataset.slot = panel.id;
-      const grid = panel.gridSize ?? 4;
-      block.dataset.grid = String(grid);
-      if (panel.title) {
-        const titleEl = document.createElement("div");
-        titleEl.className = "results-slot-panel-title degoog-panel--slot-title";
-        titleEl.textContent = panel.title;
-        block.appendChild(titleEl);
-      }
-      const body = document.createElement("div");
-      body.className =
-        "results-slot-panel-body degoog-panel--slot-body degoog-panel--slot-body-padded";
-      body.innerHTML = panel.html;
-      block.appendChild(body);
-      container.appendChild(block);
+      append(
+        SlotPanelView({
+          id: panel.id,
+          title: panel.title,
+          html: panel.html,
+          grid: panel.gridSize ?? DEFAULT_SLOT_GRID,
+        }),
+        container,
+      );
     }
   }
 }

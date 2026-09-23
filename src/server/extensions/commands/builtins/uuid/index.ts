@@ -1,3 +1,4 @@
+import { renderUuidList } from "./render";
 import {
   TranslateFunction,
   type BangCommand,
@@ -32,20 +33,9 @@ export const uuidCommand: BangCommand = {
       )
       : DEFAULT_UUID_COUNT;
     const uuids = Array.from({ length: count }, () => crypto.randomUUID());
-    const copyLabel = this.t!("uuid.copy");
-    const copyButton = (u: string): string =>
-      context?.nojs
-        ? ""
-        : `<button type="button" class="uuid-copy" data-uuid="${u}">${copyLabel}</button>`;
-    const rows = uuids
-      .map(
-        (u) =>
-          `<div class="uuid-row"><code class="uuid-value">${u}</code>${copyButton(u)}</div>`,
-      )
-      .join("");
     return {
       title: this.t!("uuid.title"),
-      html: `<div class="command-result command-uuid">${rows}</div>`,
+      html: renderUuidList(uuids, context?.nojs ? undefined : this.t!("uuid.copy")),
     };
   },
 };

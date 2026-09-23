@@ -1,0 +1,261 @@
+import { clear, render } from "../../../shared/ui/tribute/dom";
+import { NoResults } from "../../../shared/ui/components/feedback/no-results";
+import { PaginationWrap } from "../../utils/pagination-wrap";
+import {
+  SkeletonImageGrid,
+  SkeletonResults,
+  SkeletonSidebar,
+} from "../../animations/skeleton";
+import { state } from "../../state";
+import {
+  SlotPanelPosition,
+  type ScoredResult,
+  type SearchResponse,
+} from "../../types";
+import { hideAcDropdown } from "../../utils/autocomplete";
+import { isImageSearchType } from "../../utils/engines";
+import { setActiveTab } from "../../utils/navigation";
+import { fetchStreamingConfig } from "../../utils/streaming-config";
+import { Pagination } from "../../utils/pagination";
+import { fetchGlancePanels, fetchSlotPanels } from "../../utils/search-utils";
+import {
+  abortStreamingSearch,
+  performStreamingSearch,
+} from "../../utils/streaming-search";
+import { renderTemplate } from "../../utils/template";
+import {
+  closeMediaPreview,
+  destroyMediaObserver,
+  MediaPreviewCloseMode,
+  setupMediaObserver,
+  syncMediaPreviewPanel,
+} from "../media/media";
+import {
+  buildResultContext,
+  clearSlotPanels,
+  renderResults,
+  renderSidebar,
+  prependKnowledgePanels,
+} from "../renderer/render";
+import { renderImgEngines } from "../filters/image-filters";
+import { getBase } from "../../utils/base-url";
+
+export async function performTabSearch(
+  query: string,
+  tabId: string,
+  page = 1,
+): Promise<void> {
+  if (!query.trim()) return;
+
+  const tabType = `tab:${tabId}`;
+  const isImageType = isImageSearchType(tabType);
+
+  void import("../filters/image-filters").then(({ syncImgFilters }) =>
+    syncImgFilters(tabType),
+  );
+
+  const isInit = state.isInitialLoad;
+  state.isInitialLoad = false;
+
+  if (
+    tabId.startsWith("engine:") &&
+    page === 1 &&
+    (await fetchStreamingConfig())
+  ) {
+    const engineType = tabId.replace("engine:", "");
+    abortStreamingSearch();
+    return performStreamingSearch(
+      query,
+      engineType,
+      (q) => void performTabSearch(q, tabId),
+    );
+  }
+
+  state.currentQuery = query;
+  state.currentType = `tab:${tabId}`;
+  state.currentPage = page;
+  destroyMediaObserver();
+
+  setActiveTab(`tab:${tabId}`);
+  closeMediaPreview(MediaPreviewCloseMode.Reset);
+  hideAcDropdown(document.getElementById("ac-dropdown-home"));
+  hideAcDropdown(document.getElementById("ac-dropdown-results"));
+
+  const resultsInput = document.getElementById(
+    "results-search-input",
+  ) as HTMLInputElement | null;
+  if (resultsInput) resultsInput.value = query;
+  const resultsMeta = document.getElementById("results-meta");
+  if (resultsMeta) resultsMeta.textContent = "Searching...";
+  const resultsList = document.getElementById("results-list");
+  if (resultsList) {
+    render(
+      isImageType ? <SkeletonImageGrid /> : <SkeletonResults />,
+      resultsList,
+    );
+  }
+  const pagination = document.getElementById("pagination");
+  if (pagination) clear(pagination);
+  const sidebar = document.getElementById("results-sidebar");
+  if (sidebar) {
+    if (isImageType) clear(sidebar);
+    else render(<SkeletonSidebar />, sidebar);
+  }
+  const glanceEl = document.getElementById("at-a-glance");
+  if (glanceEl) clear(glanceEl);
+  clearSlotPanels();
+  if (!isImageType) {
+    void fetchSlotPanels(query).then((panels) => {
+      const kp = panels.filter(
+        (p) => p.position === SlotPanelPosition.KnowledgePanel,
+      );
+      if (kp.length > 0) prependKnowledgePanels(kp);
+    });
+    void fetchGlancePanels(query);
+  }
+  document.title = `${query} - degoog`;
+
+  const layout = document.getElementById("results-layout");
+  if (layout) {
+    if (isImageType) layout.classList.add("media-mode");
+    else layout.classList.remove("media-mode");
+  }
+  syncMediaPreviewPanel(isImageType);
+
+  const urlParams = new URLSearchParams({ q: query, type: `tab:${tabId}` });
+  if (page > 1) urlParams.set("page", String(page));
+  const tabHistoryState = { degoog: true, query, type: `tab:${tabId}`, page };
+  if (state.postMethodEnabled) {
+    if (isInit) {
+      history.replaceState(tabHistoryState, "", `${getBase()}/search`);
+    } else {
+      history.pushState(tabHistoryState, "", `${getBase()}/search`);
+    }
+  } else {
+    const getUrl = `${getBase()}/search?${urlParams.toString()}`;
+    if (isInit) {
+      history.replaceState(tabHistoryState, "", getUrl);
+    } else {
+      history.pushState(tabHistoryState, "", getUrl);
+    }
+  }
+
+  try {
+    const params = new URLSearchParams({
+      tab: tabId,
+      q: query,
+      page: String(page),
+    });
+    const res = await fetch(`${getBase()}/api/tab-search?${params.toString()}`);
+    const data = (await res.json()) as {
+      results: ScoredResult[];
+      totalPages?: number;
+      page?: number;
+      engineTimings?: SearchResponse["engineTimings"];
+      totalTime?: number;
+    };
+
+    state.currentResults = data.results || [];
+    const timings = data.engineTimings ?? [];
+    const totalTime = data.totalTime ?? 0;
+    if (resultsMeta)
+      resultsMeta.textContent =
+        totalTime > 0
+          ? `${data.results?.length ?? 0} results (${(totalTime / 1000).toFixed(2)}s)`
+          : `${data.results?.length ?? 0} results`;
+
+    const currentData: SearchResponse = {
+      results: state.currentResults,
+      query,
+      totalTime,
+      type: `tab:${tabId}`,
+      engineTimings: timings,
+      relatedSearches: [],
+    };
+    state.currentData = currentData;
+
+    if (isImageType) {
+      renderImgEngines(timings);
+      renderResults(data.results || []);
+      setupMediaObserver("images");
+      return;
+    }
+
+    _renderTabResults(data.results || [], resultsList);
+
+    if (data.totalPages && data.totalPages > 1 && pagination && !isImageType) {
+      _renderTabPagination(pagination, data.totalPages, page, query, tabId);
+    }
+  } catch (err) {
+    console.error("[tab-search] search failed", err);
+    if (resultsMeta) resultsMeta.textContent = "";
+    if (resultsList)
+      render(
+        <NoResults>Search failed. Please try again.</NoResults>,
+        resultsList,
+      );
+    return;
+  }
+
+  const currentData = state.currentData;
+  if (!currentData || isImageType) return;
+
+  void (async () => {
+    const panels = await fetchSlotPanels(query, state.currentResults);
+    const kpPanels = panels.filter(
+      (p) => p.position === SlotPanelPosition.KnowledgePanel,
+    );
+    try {
+      renderSidebar(
+        currentData,
+        (q) => void performTabSearch(q, tabId),
+        kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
+      );
+    } catch (err) {
+      console.warn("[tab-search] sidebar render failed", err);
+    }
+  })();
+}
+
+function _renderTabResults(
+  results: ScoredResult[],
+  container: HTMLElement | null,
+): void {
+  if (!container) return;
+  if (results.length === 0) {
+    render(<NoResults>No results found.</NoResults>, container);
+    return;
+  }
+
+  container.innerHTML = results
+    .map((r) => {
+      const ctx = buildResultContext(r);
+      ctx.link_target = "_blank";
+      return renderTemplate("degoog-result", ctx) ?? "";
+    })
+    .join("");
+}
+
+function _renderTabPagination(
+  container: HTMLElement,
+  totalPages: number,
+  activePage: number,
+  query: string,
+  tabId: string,
+): void {
+  render(
+    <PaginationWrap>
+      <Pagination totalPages={totalPages} activePage={activePage} />
+    </PaginationWrap>,
+    container,
+  );
+  container.querySelectorAll<HTMLElement>("[data-page]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      const pageNum = parseInt(el.dataset.page ?? "0", 10);
+      if (pageNum >= 1 && pageNum <= totalPages) {
+        void performTabSearch(query, tabId, pageNum);
+      }
+    });
+  });
+}

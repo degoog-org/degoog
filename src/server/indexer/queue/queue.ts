@@ -35,13 +35,35 @@ export const enqueue = (rows: IndexRow[]): void => {
   }
 };
 
+export const MAX_PENDING_PER_TYPE = 10_000;
+
+const _requeue = (type: string, rows: IndexRow[]): number => {
+  const bucket = _pending.get(type) ?? [];
+  const merged = [...rows, ...bucket];
+  const overflow = merged.length - MAX_PENDING_PER_TYPE;
+  if (overflow > 0) {
+    logger.error(
+      "indexer",
+      `dropping ${overflow} unwritten rows for type=${type}, the retry buffer is full at ${MAX_PENDING_PER_TYPE}`,
+    );
+  }
+  const kept = merged.slice(Math.max(0, overflow));
+  _pending.set(type, kept);
+  return kept.length;
+};
+
 const flushType = (type: string, rows: IndexRow[]): Promise<void> =>
   mutexFor(type)(async () => {
     try {
       const cfg = await getIndexerConfig();
       await getAdapter().writeBatch(type, rows, Date.now(), cfg.rankingWindow);
     } catch (err) {
-      logger.warn("indexer", `flush failed for type=${type}`, err);
+      const kept = _requeue(type, rows);
+      logger.warn(
+        "indexer",
+        `flush failed for type=${type}, ${kept} rows held for the next flush`,
+        err,
+      );
     }
   });
 

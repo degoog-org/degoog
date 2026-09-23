@@ -28,6 +28,7 @@ The contract that community authors code against is wider than it looks:
 - Reserved settings keys: `disabled`, `outgoingTransport`, `searchTypeOverride`, `slotPosition`, `slotSearchTypes`, `priority`, `score`, `theme`, `shortcuts`.
 - Slot position strings, `data-slot`, the `degoog-*` template keys and the DOM IDs that shortcuts and themes query from the browser.
 - `/api/plugin/<folder>/` and the injected `__PLUGIN_ID__`.
+- Entry file names. Every loader resolves `index.js`, `index.ts`, `index.mjs` and `index.cjs`, and nothing else. Rename an entry to `index.tsx` and the extension stops loading with nothing in the logs to say why. If an entry needs JSX, the JSX goes in a sibling file and the entry imports it.
 
 Rename any of those and a community extension stops loading, or worse, loads with everything the user configured now orphaned. Nobody reads the changelog before pulling `latest`.
 
@@ -110,6 +111,7 @@ Treat all of this as good defaults. What I ask for in the message you are answer
 - Constants over magic strings. `UPPER_SNAKE_CASE` for the global ones.
 - Log when you catch. Use the project logger and sanitise what goes into it. Raw `console.*` in server code only before the logger exists.
 - Small files and real modules. If you cannot hold the file in your head, split it while you are in there.
+- Markup lives in `.tsx` components, one per file, never in a template literal. The JSX runtime is ours and sits in `src/shared/ui`. It is not React and there are no hooks. `renderHtml` gives you a string for the server and the nojs layer, `render` diffs into the DOM, `append` adds to what is already there, `clear` empties a container. `innerHTML` is for theme templates, plugin HTML that has to run its own scripts, and sanitised markdown. Nothing else.
 - New abstractions earn their place. Two similar things are not a pattern.
 - I am a front end lead and I will notice. No borders, no blur, no transparency unless the surrounding design already does it. Reuse the existing `degoog-*` classes and SCSS variables so themes and light mode keep working. Never edit generated CSS.
 - Keep it quirky. The auth check is `gandalf()` and it refuses you with "You shall not pass!". Engines have a `sentinel`. There are easter eggs in `uovadipasqua`. Understandable first, funny second, but a codebase that reads like a tax return is one nobody opens on a Sunday.

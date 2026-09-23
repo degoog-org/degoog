@@ -1,3 +1,4 @@
+import { renderGlanceBox } from "./render";
 import * as cheerio from "cheerio";
 import {
   SlotPanelPosition,
@@ -14,7 +15,6 @@ import {
 } from "../../../../utils/plugin-settings";
 import { useCache, type AsyncTtlCache } from "../../../../utils/cache";
 import {
-  escapeHtml,
   looksLikeProse,
   stripSnippetPrefix,
 } from "../../../../utils/text";
@@ -360,12 +360,12 @@ const atAGlanceSlot: SlotPlugin = {
     );
 
     return {
-      html:
-        '<div class="glance-box degoog-panel degoog-panel--slot degoog-panel--slot-body-padded degoog-vstack">' +
-        `<div class="glance-snippet degoog-text degoog-text--md">${escapeHtml(snippet)}</div>` +
-        `<a class="glance-link degoog-link" href="${escapeHtml(best.url)}" target="_blank">${escapeHtml(best.title)}</a>` +
-        `<div class="glance-sources degoog-text degoog-text--sm degoog-text--secondary degoog-text--spaced">${escapeHtml(foundOn)}</div>` +
-        "</div>",
+      html: renderGlanceBox({
+        snippet,
+        url: best.url,
+        title: best.title,
+        foundOn: String(foundOn),
+      }),
     };
   },
 };

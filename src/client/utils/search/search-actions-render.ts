@@ -1,9 +1,14 @@
 import {
-  skeletonImageGrid,
-  skeletonResults,
-  skeletonSidebar,
+  SkeletonImageGrid,
+  SkeletonResults,
+  SkeletonSidebar,
 } from "../../animations/skeleton";
-import { closeMediaPreview, MediaPreviewCloseMode, syncMediaPreviewPanel } from "../../modules/media/media";
+import { clear, render } from "../../../shared/ui/tribute/dom";
+import {
+  closeMediaPreview,
+  MediaPreviewCloseMode,
+  syncMediaPreviewPanel,
+} from "../../modules/media/media";
 import {
   clearSlotPanels,
   renderResults,
@@ -50,7 +55,8 @@ export const loadSidebarSuggestions = (
   const ac = new AbortController();
   sidebarSuggestionsController = ac;
   void fetchSidebarSuggestions(query, ac.signal).then((terms) => {
-    if (sidebarSuggestionsController !== ac || state.currentQuery !== query) return;
+    if (sidebarSuggestionsController !== ac || state.currentQuery !== query)
+      return;
     state.currentRelatedSearches = terms;
     renderSidebarSuggestions(terms, navigate);
   });
@@ -91,23 +97,26 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
     abortSlotPanels();
   } else {
     void fetchSlotPanels(query).then((panels) => {
-      const kp = panels.filter((p) => p.position === SlotPanelPosition.KnowledgePanel);
+      const kp = panels.filter(
+        (p) => p.position === SlotPanelPosition.KnowledgePanel,
+      );
       if (kp.length > 0) prependKnowledgePanels(kp);
     });
     void fetchGlancePanels(query);
   }
   const glanceEl = document.getElementById("at-a-glance");
-  if (glanceEl) glanceEl.innerHTML = "";
+  if (glanceEl) clear(glanceEl);
   const resultsList = document.getElementById("results-list");
   if (resultsList) {
-    resultsList.innerHTML = isImageType
-      ? skeletonImageGrid()
-      : skeletonResults();
+    render(isImageType ? SkeletonImageGrid() : SkeletonResults(), resultsList);
   }
   const pagination = document.getElementById("pagination");
-  if (pagination) pagination.innerHTML = "";
+  if (pagination) clear(pagination);
   const sidebar = document.getElementById("results-sidebar");
-  if (sidebar) sidebar.innerHTML = isImageType ? "" : skeletonSidebar();
+  if (sidebar) {
+    if (isImageType) clear(sidebar);
+    else render(SkeletonSidebar(), sidebar);
+  }
   document.title = `${query} - degoog`;
 };
 
@@ -166,9 +175,9 @@ export const renderSearchResponse = (
   const isImageType = isImageSearchType(type);
 
   if (isImageType) {
-    if (glanceEl) glanceEl.innerHTML = "";
+    if (glanceEl) clear(glanceEl);
     renderImgEngines(data.engineTimings ?? []);
-    if (sidebar) sidebar.innerHTML = "";
+    if (sidebar) clear(sidebar);
   } else {
     if (opts.fetchGlance) void fetchGlancePanels(query, data.results);
     void fetchSlotPanels(query, data.results).then((panels) => {

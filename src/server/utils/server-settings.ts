@@ -1,8 +1,8 @@
-import { readFile } from "fs/promises";
 import { randomBytes } from "crypto";
 import { logger } from "./logger";
 import { serverSettingsFile } from "./paths";
 import { writeJsonAtomic } from "./atomic-json";
+import { readJsonOrQuarantine } from "./read-json";
 import {
   INVALIDATE_SCOPE,
   onInvalidate,
@@ -43,42 +43,12 @@ const _persist = async (settings: ServerSettings): Promise<void> => {
 
 export const readServerSettings = async (): Promise<ServerSettings> => {
   if (_cache) return _cache;
-  try {
-    const raw = await readFile(serverSettingsFile(), "utf-8");
-    const parsed = JSON.parse(raw) as Partial<ServerSettings>;
-    const merged: ServerSettings = {
-      wizard: parsed.wizard === true,
-      instanceId:
-        typeof parsed.instanceId === "string" && parsed.instanceId.trim()
-          ? parsed.instanceId
-          : _defaults().instanceId,
-      settings:
-        parsed.settings &&
-        typeof parsed.settings === "object" &&
-        !Array.isArray(parsed.settings)
-          ? (parsed.settings as Record<string, ServerSettingValue>)
-          : {},
-    };
-    if (!parsed.instanceId) {
-      await _persist(merged).catch((err) =>
-        logger.error(
-          "server-settings",
-          "failed to persist generated instanceId",
-          err,
-        ),
-      );
-    }
-    _cache = merged;
-    return merged;
-  } catch (err) {
-    const code = (err as NodeJS.ErrnoException).code;
-    if (code !== "ENOENT") {
-      logger.error(
-        "server-settings",
-        "failed to read server-settings.json",
-        err,
-      );
-    }
+  const parsed = await readJsonOrQuarantine<Partial<ServerSettings>>(
+    "server-settings",
+    serverSettingsFile(),
+  );
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
     const fresh = _defaults();
     await _persist(fresh).catch((e) =>
       logger.error(
@@ -90,6 +60,31 @@ export const readServerSettings = async (): Promise<ServerSettings> => {
     _cache = fresh;
     return fresh;
   }
+
+  const merged: ServerSettings = {
+    wizard: parsed.wizard === true,
+    instanceId:
+      typeof parsed.instanceId === "string" && parsed.instanceId.trim()
+        ? parsed.instanceId
+        : _defaults().instanceId,
+    settings:
+      parsed.settings &&
+      typeof parsed.settings === "object" &&
+      !Array.isArray(parsed.settings)
+        ? (parsed.settings as Record<string, ServerSettingValue>)
+        : {},
+  };
+  if (!parsed.instanceId) {
+    await _persist(merged).catch((err) =>
+      logger.error(
+        "server-settings",
+        "failed to persist generated instanceId",
+        err,
+      ),
+    );
+  }
+  _cache = merged;
+  return merged;
 };
 
 export const writeServerSettings = async (

@@ -3,7 +3,11 @@ import { state } from "../state";
 export const cleanUrl = (url: string): string => {
   try {
     const parsed = new URL(url);
-    return parsed.hostname + parsed.pathname + (state.hideUrlParams ? "" : parsed.search);
+    return (
+      parsed.hostname +
+      parsed.pathname +
+      (state.hideUrlParams ? "" : parsed.search)
+    );
   } catch {
     return url;
   }
@@ -17,15 +21,7 @@ export const cleanHostname = (url: string): string => {
   }
 };
 
-export const escapeHtml = (str: string | null | undefined): string => {
-  if (!str) return "";
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-};
-
-export const escapeAttribute = (str: string | null | undefined): string =>
-  escapeHtml(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+export { escapeHtml, escapeAttribute } from "../../shared/ui/tribute/escape";
 
 const ALLOWED_URL_SCHEMES = new Set([
   "http",

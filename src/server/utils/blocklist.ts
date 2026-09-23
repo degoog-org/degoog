@@ -1,7 +1,8 @@
-import { readFile, writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import { dirname } from "path";
 import { blocklistFile } from "./paths";
 import { logger } from "./logger";
+import { readJsonOrQuarantine } from "./read-json";
 
 export type BlockEntry = { ip: string; time: string };
 
@@ -12,8 +13,11 @@ let _cache: BlockEntry[] | null = null;
 const load = async (): Promise<BlockEntry[]> => {
   if (_cache !== null) return _cache;
   try {
-    const raw = await readFile(blocklistFile(), "utf-8");
-    _cache = JSON.parse(raw) as BlockEntry[];
+    const parsed = await readJsonOrQuarantine<BlockEntry[]>(
+      "blocklist",
+      blocklistFile(),
+    );
+    _cache = Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     logger.debug("blocklist", "blocklist file read failed", err);
     _cache = [];

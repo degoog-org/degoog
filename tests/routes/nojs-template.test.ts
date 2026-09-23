@@ -87,56 +87,56 @@ describe("nojs renderTemplateString", () => {
 });
 
 describe("nojs shell filling", () => {
-  test("rewrites elements by id and by class", () => {
+  test("rewrites elements by id and by class", async () => {
     const dollars = "$& $` $' $1 $$";
     const cases: [string, string][] = [
       [
-        fillById('<div id="a"></div>', "a", "<p>x</p>"),
+        await fillById('<div id="a"></div>', "a", "<p>x</p>"),
         '<div id="a"><p>x</p></div>',
       ],
       [
-        fillById('<div id="a"><div id="b">old</div></div>', "a", "new"),
+        await fillById('<div id="a"><div id="b">old</div></div>', "a", "new"),
         '<div id="a">new</div>',
       ],
       [
-        fillById('<div id="a" class="c"></div>', "a", "x"),
+        await fillById('<div id="a" class="c"></div>', "a", "x"),
         '<div id="a" class="c">x</div>',
       ],
-      [fillById('<div id="a"></div>', "nope", "x"), '<div id="a"></div>'],
+      [await fillById('<div id="a"></div>', "nope", "x"), '<div id="a"></div>'],
       [
-        fillById('<div id="a"></div>', "a", dollars),
+        await fillById('<div id="a"></div>', "a", dollars),
         `<div id="a">${dollars}</div>`,
       ],
       [
-        replaceElementById('<main><div id="a">x</div></main>', "a", "<b>y</b>"),
+        await replaceElementById('<main><div id="a">x</div></main>', "a", "<b>y</b>"),
         "<main><b>y</b></main>",
       ],
       [
-        removeElementById('<div><button id="go">x</button></div>', "go"),
+        await removeElementById('<div><button id="go">x</button></div>', "go"),
         "<div></div>",
       ],
       [
-        wrapElementById('<div id="a">x</div>', "a", "<form>", "</form>"),
+        await wrapElementById('<div id="a">x</div>', "a", "<form>", "</form>"),
         '<form><div id="a">x</div></form>',
       ],
       [
-        appendToId('<div id="a"><p>1</p></div>', "a", "<p>2</p>"),
+        await appendToId('<div id="a"><p>1</p></div>', "a", "<p>2</p>"),
         '<div id="a"><p>1</p><p>2</p></div>',
       ],
-      [addClassById('<div id="a"></div>', "a", "m"), '<div id="a" class="m"></div>'],
+      [await addClassById('<div id="a"></div>', "a", "m"), '<div id="a" class="m"></div>'],
       [
-        addClassById('<div id="a" class="x y"></div>', "a", "m"),
+        await addClassById('<div id="a" class="x y"></div>', "a", "m"),
         '<div id="a" class="x y m"></div>',
       ],
       [
-        setAttributesById('<input id="q" type="text" />', "q", {
+        await setAttributesById('<input id="q" type="text" />', "q", {
           name: "q",
           value: "hello",
         }),
-        '<input id="q" type="text" name="q" value="hello">',
+        '<input id="q" type="text" name="q" value="hello" />',
       ],
       [
-        setAttributesById(
+        await setAttributesById(
           '<form id="f" action="/search" method="get"></form>',
           "f",
           { action: "/nojs/search", method: "post" },
@@ -144,15 +144,15 @@ describe("nojs shell filling", () => {
         '<form id="f" action="/nojs/search" method="post"></form>',
       ],
       [
-        setAttributesByClass(
+        await setAttributesByClass(
           '<a href="/" class="results-logo">d</a>',
           "results-logo",
           { href: "/nojs" },
         ),
-        '<a class="results-logo" href="/nojs">d</a>',
+        '<a href="/nojs" class="results-logo">d</a>',
       ],
       [
-        addClassWhereClass(
+        await addClassWhereClass(
           '<span class="logo-d logo-letter">d</span><span class="other">x</span>',
           "logo-letter",
           "nojs-logo-letter",
@@ -160,7 +160,7 @@ describe("nojs shell filling", () => {
         '<span class="logo-d logo-letter nojs-logo-letter">d</span><span class="other">x</span>',
       ],
       [
-        addClassWhereClass(
+        await addClassWhereClass(
           '<span class="logo-letter nojs-logo-letter">d</span>',
           "logo-letter",
           "nojs-logo-letter",
@@ -168,7 +168,7 @@ describe("nojs shell filling", () => {
         '<span class="logo-letter nojs-logo-letter">d</span>',
       ],
       [
-        insertBeforeHeadEnd("<head><title>x</title></head>", "<link>"),
+        await insertBeforeHeadEnd("<head><title>x</title></head>", "<link>"),
         "<head><title>x</title><link></head>",
       ],
     ];
@@ -179,33 +179,33 @@ describe("nojs shell filling", () => {
 });
 
 describe("nojs template sanitising", () => {
-  test("strips scripts, preloads and inline handlers but keeps ordinary markup", () => {
+  test("strips scripts, preloads and inline handlers but keeps ordinary markup", async () => {
     const ordinary = '<div class="a" data-tooltip="on the house">x</div>';
     const cases: [string, string][] = [
       [
-        sanitizeTemplate('<p>a</p><script>var t = "</p>";</script><p>b</p>'),
+        await sanitizeTemplate('<p>a</p><script>var t = "</p>";</script><p>b</p>'),
         "<p>a</p><p>b</p>",
       ],
       [
-        sanitizeTemplate(
+        await sanitizeTemplate(
           '<body><script type="module" src="/app.js"></script></body>',
         ),
         "<body></body>",
       ],
       [
-        sanitizeTemplate(
+        await sanitizeTemplate(
           `<i onmouseenter="this.classList.add('x')" onmouseleave='y()' class="i"></i>`,
         ),
         '<i class="i"></i>',
       ],
-      [sanitizeTemplate("<img src=x onerror=alert(1) />"), "<img src=x />"],
+      [await sanitizeTemplate("<img src=x onerror=alert(1) />"), "<img src=x />"],
       [
-        sanitizeTemplate(
+        await sanitizeTemplate(
           '<link rel="modulepreload" href="/public/app.js" /><title>x</title>',
         ),
         "<title>x</title>",
       ],
-      [sanitizeTemplate(ordinary), ordinary],
+      [await sanitizeTemplate(ordinary), ordinary],
     ];
     for (const [actual, expected] of cases) {
       expect(actual).toBe(expected);

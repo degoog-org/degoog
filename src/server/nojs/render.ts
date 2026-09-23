@@ -151,7 +151,7 @@ export const buildNojsDocument = async (
 
   let html = sub(layout, "__PAGE_CONTENT__", content);
   html = sub(html, "__BODY_CLASS__", `class="${bodyClass}"`);
-  html = insertBeforeHeadEnd(
+  html = await insertBeforeHeadEnd(
     html,
     `${NOJS_STYLESHEET}\n    ${FONTAWESOME_STYLESHEET}\n    ${await _cssPingLink()}\n  `,
   );

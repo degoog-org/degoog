@@ -5,14 +5,18 @@ import {
   type CompatCatalogItem,
 } from "../../src/shared/compat-layers";
 
-let compatGroups: (items: CompatCatalogItem[]) => { key: string; items: CompatCatalogItem[] }[];
+let compatGroups: (
+  items: CompatCatalogItem[],
+) => { key: string; items: CompatCatalogItem[] }[];
 let compatPackages: (item: CompatCatalogItem) => string[];
 let compatListHtml: (items: CompatCatalogItem[], layer: string) => string;
 let compatShellHtml: (id: CompatLayerId) => string;
 
 let priorGlobals: Record<string, PropertyDescriptor | undefined> = {};
 
-const makeItem = (over: Partial<CompatCatalogItem> = {}): CompatCatalogItem => ({
+const makeItem = (
+  over: Partial<CompatCatalogItem> = {},
+): CompatCatalogItem => ({
   code: "mojeek",
   name: "Mojeek",
   types: ["web"],
@@ -52,11 +56,14 @@ beforeAll(async () => {
     window: { scopedT: stubT },
     document: { createElement: createEl },
   });
-  const render = await import("../../src/client/settings/engines/compat-render");
+  const render =
+    await import("../../src/client/settings/engines/compat-render");
   compatGroups = render.compatGroups;
   compatPackages = render.compatPackages;
-  compatListHtml = render.compatListHtml;
-  compatShellHtml = render.compatShellHtml;
+  const { renderHtml } = await import("../../src/shared/ui/tribute/html");
+  compatListHtml = (items, layer) =>
+    renderHtml(render.CompatList({ items, layer }));
+  compatShellHtml = (id) => renderHtml(render.CompatShell({ id }));
 });
 
 afterAll(() => {
@@ -105,7 +112,9 @@ describe("compatibility layer catalogue rendering", () => {
   test("modal shell explains the layer and links to its repo", () => {
     const searx = compatShellHtml(CompatLayerId.Searx);
     expect(searx).toContain("compat-note-intro");
-    expect(searx).toContain(`href="${COMPAT_LAYER_REPOS[CompatLayerId.Searx]}"`);
+    expect(searx).toContain(
+      `href="${COMPAT_LAYER_REPOS[CompatLayerId.Searx]}"`,
+    );
     expect(searx).toContain("is SearXNG");
     expect(searx).not.toContain("{link}");
   });
@@ -122,15 +131,20 @@ describe("compatibility layer catalogue rendering", () => {
 
 describe("the compatibility layer modal body", () => {
   test("only the newest layer handles a click on the shared modal body", async () => {
-    const { bindCompatClicks } = await import(
-      "../../src/client/settings/engines/compat-clicks"
-    );
+    const { bindCompatClicks } =
+      await import("../../src/client/settings/engines/compat-clicks");
     const handlers: ((event: MouseEvent) => void)[] = [];
     const body = {
-      addEventListener: (_type: "click", handler: (event: MouseEvent) => void) => {
+      addEventListener: (
+        _type: "click",
+        handler: (event: MouseEvent) => void,
+      ) => {
         handlers.push(handler);
       },
-      removeEventListener: (_type: "click", handler: (event: MouseEvent) => void) => {
+      removeEventListener: (
+        _type: "click",
+        handler: (event: MouseEvent) => void,
+      ) => {
         const at = handlers.indexOf(handler);
         if (at !== -1) handlers.splice(at, 1);
       },
