@@ -23,6 +23,7 @@ RUN apk add --no-cache git ca-certificates su-exec curl bash python3 py3-lxml py
 COPY --from=install /app/node_modules ./node_modules
 COPY --from=build /app/src ./src
 COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/tsconfig.json ./tsconfig.json
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
