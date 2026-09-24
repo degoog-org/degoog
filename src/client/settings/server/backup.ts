@@ -1,7 +1,7 @@
-import { getBase } from "../../utils/base-url";
-import { authHeaders, jsonHeaders } from "../../utils/request";
+import { getBase } from "../../utils/net/base-url";
+import { authHeaders, jsonHeaders } from "../../utils/net/request";
 import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
-import { initFileUpload } from "../../utils/file-upload";
+import { initFileUpload } from "../../utils/file-upload/file-upload";
 import { flashError, flashSuccess } from "../shared/flash-msg";
 import {
   BackupError,

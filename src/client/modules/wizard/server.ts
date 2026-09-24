@@ -1,4 +1,4 @@
-import { getBase } from "../../utils/base-url";
+import { getBase } from "../../utils/net/base-url";
 import { getStoredToken } from "../settings/settings";
 
 const SERVER_SETTINGS_URL = "/api/server-settings";

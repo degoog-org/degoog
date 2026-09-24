@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { staysHere } from "../../../src/client/utils/plain-click";
+import { staysHere } from "../../../src/client/utils/dom/plain-click";
 
 type ClickShape = {
   metaKey?: boolean;

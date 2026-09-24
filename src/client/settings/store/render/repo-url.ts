@@ -1,4 +1,4 @@
-import { getBase } from "../../../utils/base-url";
+import { getBase } from "../../../utils/net/base-url";
 import type { RepoInfo } from "../../../types/store-tab";
 
 export const OFFICIAL_REPO_URL =

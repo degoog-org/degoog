@@ -3,24 +3,24 @@ import { LoadingDots } from "../../../shared/ui/components/feedback/loading-dots
 import { MediaPreviewActions } from "./media-preview-actions";
 import { MediaPreviewInfo } from "./media-preview-info";
 import { state } from "../../state";
-import { getBase } from "../../utils/base-url";
+import { getBase } from "../../utils/net/base-url";
 import { isImageSearchType, type ScoredResult } from "../../../shared/search-types";
-import { cleanHostname } from "../../utils/dom";
-import { getEngines } from "../../utils/engines";
+import { cleanHostname } from "../../utils/dom/dom";
+import { getEngines } from "../../utils/search/engines";
 import {
   buildSearchBody,
   buildSearchUrl,
   faviconHostname,
-} from "../../utils/url";
-import { attachFaviconFallback } from "../../utils/favicon";
+} from "../../utils/net/url";
+import { attachFaviconFallback } from "../../utils/dom/favicon";
 import { openLightbox, dropLbOverlay } from "./lightbox";
-import { searchAuthHeaders, appendSearchAuthParams } from "../../utils/request";
-import { renderTemplate } from "../../utils/template";
+import { searchAuthHeaders, appendSearchAuthParams } from "../../utils/net/request";
+import { renderTemplate } from "../../utils/dom/template";
 import {
   openOverlay,
   closeOverlay,
   discardOverlay,
-} from "../../utils/overlay-history";
+} from "../../utils/navigation/overlay-history";
 
 const MORE_IMAGES_COUNT = 15;
 export const MEDIA_PREVIEW_OVERLAY = "media-preview";

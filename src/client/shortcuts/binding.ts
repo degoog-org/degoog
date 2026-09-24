@@ -1,5 +1,5 @@
 import type { ShortcutBinding, ShortcutKind } from "../../shared/shortcuts";
-import { eventKey, type Shortcut } from "../utils/keyboard-shortcuts";
+import { eventKey, type Shortcut } from "./keyboard-shortcuts";
 
 const PURE_MODIFIERS = new Set(["Control", "Alt", "Shift", "Meta"]);
 

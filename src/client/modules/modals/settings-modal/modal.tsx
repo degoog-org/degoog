@@ -1,20 +1,20 @@
 import { clear, render } from "../../../../shared/ui/tribute/dom";
 import { RawDogIt } from "../../../../shared/ui/tribute/rawdogit";
-import { AdvancedSection } from "./advanced-section";
-import { TestConnection } from "./test-connection";
+import { AdvancedSection } from "./fields/advanced-section";
+import { TestConnection } from "./fields/test-connection";
 import { renderField, syncConditionalFields } from "./modal-fields";
-import { initUrlList } from "./url-list-field";
-import { initListFields } from "./list-field";
-import { initMultiFields } from "./multiselect-field";
+import { initUrlList } from "./fields/url-list-field";
+import { initListFields } from "./list-field/list-field";
+import { initMultiFields } from "./fields/multiselect-field";
 import {
   initHexFields,
   initRangeFields,
   initFileFields,
-} from "./field-widgets";
-import { initOptionsFields, disposeOptionsFields } from "./options-field";
-import { getBase } from "../../../utils/base-url";
+} from "./fields/field-widgets";
+import { initOptionsFields, disposeOptionsFields } from "./options-field/options-field";
+import { getBase } from "../../../utils/net/base-url";
 import { getStoredToken } from "../../settings/settings";
-import { jsonHeaders } from "../../../utils/request";
+import { jsonHeaders } from "../../../utils/net/request";
 import type { Child } from "../../../../shared/ui/tribute/types";
 import type { ExtensionMeta } from "../../../types/extension";
 import type { SettingField } from "../../../../shared/setting-field";

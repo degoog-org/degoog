@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { hasMorePages } from "../../../src/client/utils/page-flow";
+import { hasMorePages } from "../../../src/client/utils/pagination/page-flow";
 
 describe("client/hasMorePages", () => {
   test("keeps probing while no engine declared a total", () => {

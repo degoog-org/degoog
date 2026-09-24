@@ -1,6 +1,6 @@
 import { clear, render } from "../../../shared/ui/tribute/dom";
-import { getBase } from "../../utils/base-url";
-import { authHeaders, jsonHeaders } from "../../utils/request";
+import { getBase } from "../../utils/net/base-url";
+import { authHeaders, jsonHeaders } from "../../utils/net/request";
 
 const t = window.scopedT("core");
 

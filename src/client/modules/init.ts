@@ -11,33 +11,33 @@ import {
   SHOW_RESULT_DATES,
 } from "../constants";
 import { state, defaultImageFilter } from "../state";
-import { initAutocomplete } from "../utils/autocomplete";
-import { idbGet } from "../utils/db";
-import { recordSettingsReturn, showHome } from "../utils/navigation";
-import { performSearch } from "../utils/search/search-actions-perform";
-import { applyUovaStorage } from "../utils/uovadipasqua";
-import { initTheme } from "../utils/theme";
-import { applyDefaults } from "../utils/sync";
-import { initOptionsDropdown } from "../utils/time-filter";
+import { initAutocomplete } from "../utils/autocomplete/autocomplete";
+import { idbGet } from "../utils/storage/db";
+import { recordSettingsReturn, showHome } from "../utils/navigation/navigation";
+import { performSearch } from "../utils/search/actions/search-actions-perform";
+import { applyUovaStorage } from "../utils/app/uovadipasqua";
+import { initTheme } from "../utils/app/theme";
+import { applyDefaults } from "../utils/storage/sync";
+import { initOptionsDropdown } from "../utils/options-dropdown/time-filter";
 import { initImgFilters } from "./filters/image-filters";
 import { initMediaPreview } from "./media/media-preview";
-import { onOverlayPop } from "../utils/overlay-history";
+import { onOverlayPop } from "../utils/navigation/overlay-history";
 import { performTabSearch } from "./tabs/tab-search";
 import { initTabs } from "./tabs/tabs";
 
-import { copyTextToClipboard } from "../utils/clipboard";
-import { initInstallPrompt } from "../utils/install-prompt";
-import { initKeyboardShortcuts } from "../utils/keyboard-shortcuts";
+import { copyTextToClipboard } from "../utils/dom/clipboard";
+import { initInstallPrompt } from "../utils/app/install-prompt";
+import { initKeyboardShortcuts } from "../shortcuts/keyboard-shortcuts";
 import { initShortcuts } from "../shortcuts/init";
-import { initSearchBarActions } from "../utils/search-bar-actions";
+import { initSearchBarActions } from "../utils/search/search-bar-actions";
 import { renderPageTemplates } from "./renderer/render-page";
 import { initResultActions } from "./result-actions";
 import { initHomeWizard } from "./wizard/wizard";
-import { getBase } from "../utils/base-url";
-import { isSettingsPathname } from "../utils/settings-path";
+import { getBase } from "../utils/net/base-url";
+import { isSettingsPathname } from "../utils/settings/settings-path";
 import type { ImageFilter } from "../types/search";
 import { isImageSearchType } from "../../shared/search-types";
-import { readImgFilter } from "../utils/url";
+import { readImgFilter } from "../utils/net/url";
 
 type DegoogHistoryState = {
   degoog: boolean;

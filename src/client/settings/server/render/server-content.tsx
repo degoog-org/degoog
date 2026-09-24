@@ -1,16 +1,16 @@
-import { ApiKeySection } from "./api-key-section";
-import { CacheSection } from "./cache-section";
-import { CompatSection } from "./compat-section";
-import { ConfigSection } from "./config-section";
-import { CustomCssSection } from "./custom-css-section";
-import { DomainSection } from "./domain-section";
-import { HoneypotSection } from "./honeypot-section";
-import { IndexerSection } from "./indexer-section";
-import { NojsSection } from "./nojs-section";
-import { ProxySection } from "./proxy-section";
-import { RateLimitSection } from "./rate-limit-section";
-import { RestartSection } from "./restart-section";
-import { SearchOptionsSection } from "./search-options-section";
+import { ApiKeySection } from "./sections/api-key-section";
+import { CacheSection } from "./sections/cache-section";
+import { CompatSection } from "./sections/compat-section";
+import { ConfigSection } from "./sections/config-section";
+import { CustomCssSection } from "./sections/custom-css-section";
+import { DomainSection } from "./sections/domain-section";
+import { HoneypotSection } from "./sections/honeypot-section";
+import { IndexerSection } from "./sections/indexer-section";
+import { NojsSection } from "./sections/nojs-section";
+import { ProxySection } from "./sections/proxy-section";
+import { RateLimitSection } from "./sections/rate-limit-section";
+import { RestartSection } from "./sections/restart-section";
+import { SearchOptionsSection } from "./sections/search-options-section";
 
 export const ServerContent = (): JSX.Element => (
   <>

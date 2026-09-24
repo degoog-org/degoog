@@ -1,5 +1,5 @@
 import { Button } from "../../../../shared/ui/components/primitives/button";
-import { FileUploadWidget } from "../../../utils/file-upload-widget";
+import { FileUploadWidget } from "../../../utils/file-upload/file-upload-widget";
 import { SectionDesc } from "./section-desc";
 import { SubHeading } from "./sub-heading";
 

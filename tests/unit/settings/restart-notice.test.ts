@@ -33,12 +33,12 @@ const jsonOnce = (body: unknown, status = 200): (() => Promise<Response>) =>
 
 const loadNotice = async () => {
   stubWindow();
-  return import("../../../src/client/settings/store/restart-notice");
+  return import("../../../src/client/settings/store/overlays/restart-notice");
 };
 
 const loadFresh = async (tag: string) => {
   stubWindow();
-  return import(`../../../src/client/settings/store/restart-notice?${tag}`);
+  return import(`../../../src/client/settings/store/overlays/restart-notice?${tag}`);
 };
 
 describe("restart notice state check", () => {

@@ -1,6 +1,6 @@
 import { clear, render } from "../../../shared/ui/tribute/dom";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
-import { PaginationWrap } from "../../utils/pagination-wrap";
+import { PaginationWrap } from "../../utils/pagination/pagination-wrap";
 import { SkeletonImageGrid } from "../../animations/skeleton/skeleton-image-grid";
 import { SkeletonResults } from "../../animations/skeleton/skeleton-results";
 import { SkeletonSidebar } from "../../animations/skeleton/skeleton-sidebar";
@@ -11,16 +11,16 @@ import {
   type SearchResponse,
   SlotPanelPosition,
 } from "../../../shared/search-types";
-import { hideAcDropdown } from "../../utils/autocomplete";
-import { setActiveTab } from "../../utils/navigation";
-import { fetchStreamingConfig } from "../../utils/streaming-config";
-import { Pagination } from "../../utils/pagination";
-import { fetchGlancePanels, fetchSlotPanels } from "../../utils/search-utils";
+import { hideAcDropdown } from "../../utils/autocomplete/autocomplete";
+import { setActiveTab } from "../../utils/navigation/navigation";
+import { fetchStreamingConfig } from "../../utils/search/streaming/streaming-config";
+import { Pagination } from "../../utils/pagination/pagination";
+import { fetchGlancePanels, fetchSlotPanels } from "../../utils/search/search-utils";
 import {
   abortStreamingSearch,
   performStreamingSearch,
-} from "../../utils/streaming-search";
-import { renderTemplate } from "../../utils/template";
+} from "../../utils/search/streaming/streaming-search";
+import { renderTemplate } from "../../utils/dom/template";
 import {
   closeMediaPreview,
   destroyMediaObserver,
@@ -28,11 +28,11 @@ import {
   setupMediaObserver,
   syncMediaPreviewPanel,
 } from "../media/media";
-import { prependKnowledgePanels, renderSidebar } from "../renderer/render-sidebar";
+import { prependKnowledgePanels, renderSidebar } from "../renderer/sidebar/render-sidebar";
 import { clearSlotPanels } from "../renderer/render-slots";
 import { buildResultContext, renderResults } from "../renderer/render";
 import { renderImgEngines } from "../filters/image-filters";
-import { getBase } from "../../utils/base-url";
+import { getBase } from "../../utils/net/base-url";
 
 export async function performTabSearch(
   query: string,

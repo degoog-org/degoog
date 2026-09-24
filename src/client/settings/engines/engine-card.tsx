@@ -12,7 +12,7 @@ import {
 } from "../shared/ext-card";
 import { extraTypeLabels } from "./engine-types";
 import type { ExtensionMeta } from "../../types/extension";
-import { renderMdInline } from "../../utils/md";
+import { renderMdInline } from "../../utils/dom/md";
 
 const t = window.scopedT("core");
 

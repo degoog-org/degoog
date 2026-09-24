@@ -3,7 +3,7 @@ import {
   agreedPageTotal,
   makePageCounter,
 } from "../../../src/server/search/page-counter";
-import { declaredPages } from "../../../src/client/utils/search-helpers";
+import { declaredPages } from "../../../src/client/utils/search/search-helpers";
 import { MAX_PAGE } from "../../../src/client/constants";
 
 describe("search/makePageCounter", () => {

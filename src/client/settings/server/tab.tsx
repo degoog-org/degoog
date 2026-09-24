@@ -2,12 +2,12 @@ import { render } from "../../../shared/ui/tribute/dom";
 import { Icon } from "../../../shared/ui/components/primitives/icon";
 import { EngineTypeToggle } from "./engine-type-toggle";
 import { RestartReasonItem } from "./restart-reason-item";
-import { copyTextToClipboard } from "../../utils/clipboard";
-import { getBase } from "../../utils/base-url";
-import { getAllSearchTypes } from "../../utils/engines";
-import { authHeaders } from "../../utils/request";
+import { copyTextToClipboard } from "../../utils/dom/clipboard";
+import { getBase } from "../../utils/net/base-url";
+import { getAllSearchTypes } from "../../utils/search/engines";
+import { authHeaders } from "../../utils/net/request";
 import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
-import { saveBatch, saveField } from "../../utils/settings-api";
+import { saveBatch, saveField } from "../../utils/settings/settings-api";
 import type {
   ButtonStateHandler,
   ServerSettingsData,
@@ -30,7 +30,7 @@ import {
   bindToggleAutoSave,
   injectFieldSaveBtns,
 } from "./auto-save";
-import { API_KEY_COPY_ICON } from "./render/api-key-section";
+import { API_KEY_COPY_ICON } from "./render/sections/api-key-section";
 import { ServerContent } from "./render/server-content";
 import { initBackupControls } from "./backup";
 import { flashError, flashSuccess } from "../shared/flash-msg";

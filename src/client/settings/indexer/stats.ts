@@ -1,6 +1,6 @@
-import { getBase } from "../../utils/base-url";
-import { authHeaders } from "../../utils/request";
-import { getStoredToken } from "../../utils/settings-token";
+import { getBase } from "../../utils/net/base-url";
+import { authHeaders } from "../../utils/net/request";
+import { getStoredToken } from "../../utils/settings/settings-token";
 import type { IndexerStats } from "../../../shared/indexer";
 
 const formatBytes = (bytes: number): string => {

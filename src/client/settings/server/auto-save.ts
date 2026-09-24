@@ -1,4 +1,4 @@
-import { saveField, saveBatch } from "../../utils/settings-api";
+import { saveField, saveBatch } from "../../utils/settings/settings-api";
 import { bindFieldSaveBtn, createFieldSaveBtn } from "../shared/field-save";
 import { flashError, flashSuccess } from "../shared/flash-msg";
 import { setIndexerNavVisible } from "../indexer/nav";

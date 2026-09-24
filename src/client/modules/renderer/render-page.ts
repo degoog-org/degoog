@@ -1,4 +1,4 @@
-import { renderTemplate } from "../../utils/template";
+import { renderTemplate } from "../../utils/dom/template";
 
 const PAGE_SLOTS: [string, string][] = [
   ["degoog-home-header", "header"],

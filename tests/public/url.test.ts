@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { buildSearchUrl, faviconUrl } from "../../src/client/utils/url";
+import { buildSearchUrl, faviconUrl } from "../../src/client/utils/net/url";
 import { state } from "../../src/client/state";
 
 const withBase = (base: string, fn: () => void): void => {

@@ -56,9 +56,9 @@ beforeAll(async () => {
     window: { scopedT: stubT },
     document: { createElement: createEl },
   });
-  const grouping = await import("../../src/client/settings/engines/compat-render/grouping");
-  const { CompatList } = await import("../../src/client/settings/engines/compat-render/list");
-  const { CompatShell } = await import("../../src/client/settings/engines/compat-render/shell");
+  const grouping = await import("../../src/client/settings/engines/compat/render/grouping");
+  const { CompatList } = await import("../../src/client/settings/engines/compat/render/list");
+  const { CompatShell } = await import("../../src/client/settings/engines/compat/render/shell");
   compatGroups = grouping.compatGroups;
   compatPackages = grouping.compatPackages;
   const { renderHtml } = await import("../../src/shared/ui/tribute/html");
@@ -132,7 +132,7 @@ describe("compatibility layer catalogue rendering", () => {
 describe("the compatibility layer modal body", () => {
   test("only the newest layer handles a click on the shared modal body", async () => {
     const { bindCompatClicks } =
-      await import("../../src/client/settings/engines/compat-clicks");
+      await import("../../src/client/settings/engines/compat/compat-clicks");
     const handlers: ((event: MouseEvent) => void)[] = [];
     const body = {
       addEventListener: (

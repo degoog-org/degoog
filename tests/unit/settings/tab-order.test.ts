@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { applyTabOrder } from "../../../src/client/utils/tab-order";
+import { applyTabOrder } from "../../../src/client/utils/settings/tab-order";
 
 describe("client/applyTabOrder", () => {
   test("keeps incoming order when nothing is saved", () => {

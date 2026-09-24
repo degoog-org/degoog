@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { normalizeSidebarSuggestions } from "../../src/client/utils/search/sidebar-suggestions-normalize";
+import { normalizeSidebarSuggestions } from "../../src/client/utils/search/sidebar/sidebar-suggestions-normalize";
 
 describe("sidebar suggestions", () => {
   test("normalizes autocomplete provider results for People also search for", () => {

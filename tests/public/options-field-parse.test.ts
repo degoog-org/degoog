@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseFieldOptionsResponse } from "../../src/client/modules/modals/settings-modal/options-field-parse";
+import { parseFieldOptionsResponse } from "../../src/client/modules/modals/settings-modal/options-field/options-field-parse";
 
 describe("parseFieldOptionsResponse", () => {
   test("accepts an object with an options array and optional strings", () => {

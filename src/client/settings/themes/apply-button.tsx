@@ -1,5 +1,5 @@
 import { Button } from "../../../shared/ui/components/primitives/button";
-import { getBase } from "../../utils/base-url";
+import { getBase } from "../../utils/net/base-url";
 
 const themeT = window.scopedT("themes/degoog");
 

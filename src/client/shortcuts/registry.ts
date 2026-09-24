@@ -1,4 +1,4 @@
-import { registerShortcut } from "../utils/keyboard-shortcuts";
+import { registerShortcut } from "./keyboard-shortcuts";
 import type { ShortcutBinding } from "../../shared/shortcuts";
 import { toShortcut } from "./binding";
 import { focusSearch } from "./actions/focus";

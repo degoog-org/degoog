@@ -1,4 +1,4 @@
-import { getConfigStatus } from "../../utils/dom";
+import { getConfigStatus } from "../../utils/dom/dom";
 import { Badge } from "../../../shared/ui/components/primitives/badge";
 import { Button } from "../../../shared/ui/components/primitives/button";
 import { Icon } from "../../../shared/ui/components/primitives/icon";

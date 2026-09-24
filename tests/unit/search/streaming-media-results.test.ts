@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import type { ScoredResult } from "../../../src/shared/search-types";
-import { mergeStreamingMediaResults } from "../../../src/client/utils/search/streaming-media-results";
+import { mergeStreamingMediaResults } from "../../../src/client/utils/search/streaming/streaming-media-results";
 
 const image = (url: string, score: number, source = "engine"): ScoredResult => ({
   title: url,

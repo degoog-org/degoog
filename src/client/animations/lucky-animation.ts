@@ -1,4 +1,4 @@
-import { performLucky } from "../utils/search/search-actions-lucky";
+import { performLucky } from "../utils/search/actions/search-actions-lucky";
 
 export function initLuckyAnimation(): void {
   const btn = document.getElementById("btn-lucky");

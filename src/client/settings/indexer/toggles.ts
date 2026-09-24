@@ -1,7 +1,7 @@
-import { getBase } from "../../utils/base-url";
-import { authHeaders } from "../../utils/request";
-import { getStoredToken } from "../../utils/settings-token";
-import { saveField } from "../../utils/settings-api";
+import { getBase } from "../../utils/net/base-url";
+import { authHeaders } from "../../utils/net/request";
+import { getStoredToken } from "../../utils/settings/settings-token";
+import { saveField } from "../../utils/settings/settings-api";
 import { bindFieldSaveBtn, createFieldSaveBtn } from "../shared/field-save";
 import { setIndexerNavVisible } from "./nav";
 import { markOversized, oversizedMap } from "../shared/oversized";

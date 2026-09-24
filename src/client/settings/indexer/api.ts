@@ -1,6 +1,6 @@
-import { getBase } from "../../utils/base-url";
-import { authHeaders, jsonHeaders } from "../../utils/request";
-import { getStoredToken } from "../../utils/settings-token";
+import { getBase } from "../../utils/net/base-url";
+import { authHeaders, jsonHeaders } from "../../utils/net/request";
+import { getStoredToken } from "../../utils/settings/settings-token";
 import type { DeleteItem, IndexerRowsResponse } from "../../../shared/indexer";
 
 export const MANAGE_PAGE_SIZE = 20;

@@ -1,9 +1,9 @@
 import { render } from "../../../shared/ui/tribute/dom";
 import { ShortcutCard } from "./shortcut-card";
 import { ShortcutsHeader } from "./shortcuts-header";
-import { getBase } from "../../utils/base-url";
-import { authHeaders, jsonHeaders } from "../../utils/request";
-import { saveShortcuts } from "../../utils/settings-api";
+import { getBase } from "../../utils/net/base-url";
+import { authHeaders, jsonHeaders } from "../../utils/net/request";
+import { saveShortcuts } from "../../utils/settings/settings-api";
 import { flashError, flashSuccess } from "../shared/flash-msg";
 import { openAddShortcutModal } from "./add-modal";
 import {

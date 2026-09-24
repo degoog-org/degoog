@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { FakeElement, installFakeDom } from "../../helpers/fake-dom";
 import { render } from "../../../src/shared/ui/tribute/dom";
-import { EngineOriginSlot } from "../../../src/client/utils/search/engine-origin-slot";
+import { EngineOriginSlot } from "../../../src/client/utils/search/engine-stats/engine-origin-slot";
 import type { EngineTiming } from "../../../src/shared/search-types";
 
 let restore: () => void;
@@ -84,7 +84,7 @@ describe("engine origin icons survive re-renders", () => {
   test("the engine stats panel keys its rows so an icon follows its engine", async () => {
     const { state } = await import("../../../src/client/state");
     const { EngineStatsPanel } = await import(
-      "../../../src/client/modules/renderer/engine-stats-panel"
+      "../../../src/client/modules/renderer/sidebar/engine-stats-panel"
     );
     const saved = state.displayEnginePerformance;
     state.displayEnginePerformance = true;

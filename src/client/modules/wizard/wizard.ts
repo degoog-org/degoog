@@ -1,4 +1,4 @@
-import { getBase } from "../../utils/base-url";
+import { getBase } from "../../utils/net/base-url";
 import { fetchWizardDisabled, fetchWizardDone, markServerDone, patchServerWizard } from "./server";
 import { HOME_STEPS, SETTINGS_STEPS } from "./steps";
 import { isTourActive, runTour } from "./tour";

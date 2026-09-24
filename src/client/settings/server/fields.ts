@@ -1,4 +1,4 @@
-import { getInputElement } from "../../utils/dom";
+import { getInputElement } from "../../utils/dom/dom";
 import type { BoolSetting } from "../../types/settings-server";
 
 export const el = (id: string) => getInputElement(`settings-${id}`);

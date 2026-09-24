@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { linkHref } from "../../../src/client/utils/dom";
+import { linkHref } from "../../../src/client/utils/dom/dom";
 
 describe("client/linkHref scheme allowlist", () => {
   const cases: [string | null | undefined, string][] = [

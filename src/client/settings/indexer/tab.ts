@@ -1,9 +1,9 @@
 import type { IndexerStats } from "../../../shared/indexer";
-import { openClearModal } from "./clear-modal";
-import { openExportModal } from "./export-modal";
-import { openImportModal } from "./import-modal";
-import { openManageModal } from "./manage-modal";
-import { renderShell } from "./shell";
+import { openClearModal } from "./modals/clear-modal";
+import { openExportModal } from "./modals/export-modal";
+import { openImportModal } from "./modals/import-modal";
+import { openManageModal } from "./modals/manage-modal";
+import { renderShell } from "./shell/shell";
 import { fetchStats, renderStats } from "./stats";
 import { wireToggles } from "./toggles";
 

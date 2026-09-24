@@ -1,9 +1,9 @@
-import { AppearanceSection } from "./appearance-section";
-import { InstallSection } from "./install-section";
-import { SearchOptionsSection } from "./search-options-section";
-import { SyncSection } from "./sync-section";
-import { UpdateSection } from "./update-section";
-import { WizardSection } from "./wizard-section";
+import { AppearanceSection } from "./sections/appearance-section";
+import { InstallSection } from "./sections/install-section";
+import { SearchOptionsSection } from "./sections/search-options-section";
+import { SyncSection } from "./sections/sync-section";
+import { UpdateSection } from "./sections/update-section";
+import { WizardSection } from "./sections/wizard-section";
 
 export const GeneralContent = (): JSX.Element => (
   <>

@@ -1,0 +1,97 @@
+import {
+  isImageSearchType,
+  type ScoredResult,
+  type SearchResponse,
+} from "../../../../shared/search-types";
+import { getBase } from "../../net/base-url";
+import { state } from "../../../state";
+import { getEngines } from "../engines";
+import { renderImgEngines } from "../../../modules/filters/image-filters";
+import { renderSidebar } from "../../../modules/renderer/sidebar/render-sidebar";
+import { renderResults } from "../../../modules/renderer/render";
+import { performSearch } from "./search-actions-perform";
+import { searchAuthHeaders, appendSearchAuthParams } from "../../net/request";
+import { infiniteScrollOn } from "../streaming/streaming-config";
+import { mergeEngineTimings, mergeScoredResults } from "../engine-stats/engine-stats";
+
+export async function retryEngine(
+  engineName: string,
+  page = state.currentPage,
+): Promise<void> {
+  if (!state.currentQuery || !state.currentData) return;
+
+  const engines = await getEngines();
+  const params = new URLSearchParams({
+    q: state.currentQuery,
+    engine: engineName,
+  });
+  for (const [key, val] of Object.entries(engines)) {
+    params.set(key, String(val));
+  }
+  if (state.currentType && state.currentType !== "web") {
+    params.set("type", state.currentType);
+  }
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+  if (state.currentTimeFilter && state.currentTimeFilter !== "any") {
+    params.set("time", state.currentTimeFilter);
+  }
+
+  try {
+    const res = state.postMethodEnabled
+      ? await fetch(`${getBase()}/api/search/retry`, {
+          method: "POST",
+          body: JSON.stringify({
+            query: state.currentQuery,
+            engine: engineName,
+            engines: Object.entries(engines)
+              .filter(([, v]) => v)
+              .map(([k]) => k),
+            type: state.currentType !== "web" ? state.currentType : undefined,
+            page: page > 1 ? page : undefined,
+            time:
+              state.currentTimeFilter !== "any"
+                ? state.currentTimeFilter
+                : undefined,
+          }),
+          headers: { "Content-Type": "application/json", ...searchAuthHeaders() },
+        })
+      : await fetch(appendSearchAuthParams(`${getBase()}/api/search/retry?${params.toString()}`));
+    const data = (await res.json()) as SearchResponse & {
+      results: ScoredResult[];
+      timing?: SearchResponse["engineTimings"][number];
+    };
+
+    const infinite = infiniteScrollOn() && !isImageSearchType(state.currentType);
+    if (state.currentData) {
+      state.currentData.engineTimings = infinite && data.timing
+        ? mergeEngineTimings(state.currentData.engineTimings, [data.timing], page)
+        : data.engineTimings;
+    }
+
+    if (data.results && (data.results.length > state.currentResults.length || infinite)) {
+      state.currentResults = infinite
+        ? mergeScoredResults(state.currentResults, data.results)
+        : data.results;
+      if (state.currentData) {
+        state.currentData.results = state.currentResults;
+      }
+
+      const resultsMeta = document.getElementById("results-meta");
+      if (resultsMeta)
+        resultsMeta.textContent = `About ${state.currentResults.length} results (${((state.currentData?.totalTime ?? 0) / 1000).toFixed(2)} seconds)`;
+
+      renderResults(state.currentResults, { paginate: !infinite });
+    }
+
+    const isMediaType = isImageSearchType(state.currentType);
+    if (isMediaType && state.currentData) {
+      renderImgEngines(state.currentData.engineTimings ?? []);
+    } else if (state.currentData) {
+      renderSidebar(state.currentData, (q) => void performSearch(q));
+    }
+  } catch (err) {
+    console.warn("[search] engine retry failed", err);
+  }
+}

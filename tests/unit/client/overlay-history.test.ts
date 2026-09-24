@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { popNamesToClose } from "../../../src/client/utils/overlay-history";
+import { popNamesToClose } from "../../../src/client/utils/navigation/overlay-history";
 
 describe("overlay history pop resolution", () => {
   test("closes every overlay above the landed real page entry", () => {
@@ -57,7 +57,7 @@ describe("overlay history navigation", () => {
   test("a pop caused by closing an overlay is consumed, not re-searched", async () => {
     const { nav } = stubHistory();
     const mod = await import(
-      `../../../src/client/utils/overlay-history?nav=${Date.now()}`
+      `../../../src/client/utils/navigation/overlay-history?nav=${Date.now()}`
     );
 
     let closed = false;
@@ -74,7 +74,7 @@ describe("overlay history navigation", () => {
   test("a genuine back with no overlays open falls through to search restore", async () => {
     stubHistory();
     const mod = await import(
-      `../../../src/client/utils/overlay-history?fall=${Date.now()}`
+      `../../../src/client/utils/navigation/overlay-history?fall=${Date.now()}`
     );
 
     expect(mod.onOverlayPop(pop(SEARCH_STATE))).toBe(false);
@@ -83,7 +83,7 @@ describe("overlay history navigation", () => {
   test("back from the lightbox closes only the lightbox", async () => {
     stubHistory();
     const mod = await import(
-      `../../../src/client/utils/overlay-history?nest=${Date.now()}`
+      `../../../src/client/utils/navigation/overlay-history?nest=${Date.now()}`
     );
 
     const shut: string[] = [];
@@ -99,7 +99,7 @@ describe("overlay history navigation", () => {
   test("closing the preview also shuts the lightbox stacked above it", async () => {
     const { nav } = stubHistory();
     const mod = await import(
-      `../../../src/client/utils/overlay-history?both=${Date.now()}`
+      `../../../src/client/utils/navigation/overlay-history?both=${Date.now()}`
     );
 
     const shut: string[] = [];

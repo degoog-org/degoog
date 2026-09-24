@@ -1,7 +1,7 @@
 import { clear, render } from "../../../shared/ui/tribute/dom";
 import { Icon } from "../../../shared/ui/components/primitives/icon";
-import { getBase } from "../../utils/base-url";
-import { authHeaders } from "../../utils/request";
+import { getBase } from "../../utils/net/base-url";
+import { authHeaders } from "../../utils/net/request";
 
 const t = window.scopedT("core");
 
