@@ -108,10 +108,6 @@ export const initEngines = async (bust = false): Promise<void> => {
   _compatEntries = await loadCompatEngines();
 };
 
-export const reloadEngines = async (bust = true): Promise<void> => {
-  await initEngines(bust);
-};
-
 export const getAllEngineTranslators = (): {
   namespace: string;
   translator: Translate;

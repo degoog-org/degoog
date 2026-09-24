@@ -1,7 +1,7 @@
 import { runIntercepts } from "../utils/extension-support/run-interceptors";
 import type { SearchType, TimeFilter } from "../types/search";
 
-export interface ResolvedSearch {
+interface ResolvedSearch {
   query: string;
   type: SearchType;
   lang: string;

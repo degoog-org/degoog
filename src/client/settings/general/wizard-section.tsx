@@ -4,8 +4,11 @@ import { restartWizard } from "../../modules/wizard/wizard";
 
 const t = window.scopedT("core");
 
+export const WIZARD_SECTION_ID = "settings-wizard-section";
+
 export const WizardSection = (): JSX.Element => (
   <SettingsSection
+    id={WIZARD_SECTION_ID}
     icon="fa-solid fa-route"
     headingKey="settings-page.wizard.restart-heading"
     descKey="settings-page.wizard.restart-desc"

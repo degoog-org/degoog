@@ -20,7 +20,7 @@ export const SLOT_CONTAINER_IDS: Record<string, string> = {
   [SlotPanelPosition.AtAGlance]: "at-a-glance",
 };
 
-export interface NojsSlotRender {
+interface NojsSlotRender {
   byContainer: Record<string, string>;
   knowledgePanels: SlotPanel[];
 }

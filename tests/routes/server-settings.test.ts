@@ -11,6 +11,7 @@ let savedSettingsFile: string | undefined;
 let savedPublic: string | undefined;
 let savedPasswords: string | undefined;
 let savedDanger: string | undefined;
+let savedWizard: string | undefined;
 
 const restoreEnv = (name: string, value: string | undefined): void => {
   if (value === undefined) delete process.env[name];
@@ -23,12 +24,14 @@ beforeEach(() => {
   savedPublic = process.env.DEGOOG_PUBLIC_INSTANCE;
   savedPasswords = process.env.DEGOOG_SETTINGS_PASSWORDS;
   savedDanger = process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD;
+  savedWizard = process.env.DEGOOG_WIZARD;
 
   tempDir = mkdtempSync(join(tmpdir(), "degoog-server-settings-"));
   process.env.DEGOOG_DATA_DIR = tempDir;
   process.env.DEGOOG_SERVER_SETTINGS_FILE = join(tempDir, "server-settings.json");
   delete process.env.DEGOOG_PUBLIC_INSTANCE;
   delete process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD;
+  delete process.env.DEGOOG_WIZARD;
   clearServerSettingsCache();
 });
 
@@ -40,9 +43,26 @@ afterEach(() => {
   restoreEnv("DEGOOG_PUBLIC_INSTANCE", savedPublic);
   restoreEnv("DEGOOG_SETTINGS_PASSWORDS", savedPasswords);
   restoreEnv("DEGOOG_DANGEROUSLY_NO_PASSWORD", savedDanger);
+  restoreEnv("DEGOOG_WIZARD", savedWizard);
 });
 
 describe("routes/server-settings", () => {
+  test.each(["false", "FALSE"])("DEGOOG_WIZARD=%s disables the wizard entirely", async (value) => {
+    process.env.DEGOOG_WIZARD = value;
+    process.env.DEGOOG_SETTINGS_PASSWORDS = "secret";
+
+    const res = await setupRouter.request("http://localhost/api/server-settings");
+    expect(await res.json()).toEqual({ wizard: true, disabled: true });
+  });
+
+  test.each(["true", "0", ""])("DEGOOG_WIZARD=%s leaves the persisted state in charge", async (value) => {
+    process.env.DEGOOG_WIZARD = value;
+    process.env.DEGOOG_SETTINGS_PASSWORDS = "secret";
+
+    const res = await setupRouter.request("http://localhost/api/server-settings");
+    expect(await res.json()).toEqual({ wizard: false });
+  });
+
   test("first-run wizard still runs on password-protected instances", async () => {
     process.env.DEGOOG_SETTINGS_PASSWORDS = "secret";
 

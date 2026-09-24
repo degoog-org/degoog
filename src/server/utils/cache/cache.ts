@@ -50,12 +50,12 @@ export const CACHE_SCOPE = {
   ALL: "all",
 } as const;
 
-export type CacheScope = (typeof CACHE_SCOPE)[keyof typeof CACHE_SCOPE];
+type CacheScope = (typeof CACHE_SCOPE)[keyof typeof CACHE_SCOPE];
 
 export const isCacheScope = (v: unknown): v is CacheScope =>
   typeof v === "string" && (Object.values(CACHE_SCOPE) as string[]).includes(v);
 
-export type TtlCache<T> = {
+type TtlCache<T> = {
   get(key: string): T | null;
   set(key: string, value: T, ttlMs?: number): void;
   clear(): void;

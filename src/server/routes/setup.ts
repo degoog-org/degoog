@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { readObjectBody } from "../utils/hono";
 import {
+  isWizardDisabled,
   readServerSettings,
   writeServerSettings,
 } from "../utils/settings/server-settings";
@@ -12,6 +13,7 @@ const router = new Hono();
 
 router.get("/api/server-settings", async (c) => {
   try {
+    if (isWizardDisabled()) return c.json({ wizard: true, disabled: true });
     if (isPublicInstance()) return c.json({ wizard: true });
     const s = await readServerSettings();
     return c.json({ wizard: s.wizard });

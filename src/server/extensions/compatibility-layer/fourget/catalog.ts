@@ -171,7 +171,7 @@ export const FOURGET_CATALOG: readonly FourGetCatalogEntry[] = Object.freeze([
 
 const SCRAPER_CODE = /^[a-z0-9_-]+$/i;
 
-export const isSaneScraperCode = (code: string): boolean => SCRAPER_CODE.test(code);
+const isSaneScraperCode = (code: string): boolean => SCRAPER_CODE.test(code);
 
 const _extraCodes = (): string[] =>
   (process.env.DEGOOG_FOURGET_EXTRA_SCRAPERS ?? "")

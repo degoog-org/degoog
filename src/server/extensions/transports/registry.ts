@@ -89,7 +89,7 @@ const _enabledTransports = async (): Promise<Transport[]> => {
   return results;
 };
 
-export type TransportPicks = { names: string[]; labels: string[] };
+type TransportPicks = { names: string[]; labels: string[] };
 
 export const transportPicks = async (): Promise<TransportPicks> => {
   const enabled = await _enabledTransports();
@@ -99,7 +99,7 @@ export const transportPicks = async (): Promise<TransportPicks> => {
   };
 };
 
-export function getFallbackTransport(): Transport {
+function getFallbackTransport(): Transport {
   return _builtins[0];
 }
 
@@ -133,8 +133,4 @@ export async function getTransportExtensionMeta(): Promise<ExtensionMeta[]> {
 
 export async function initTransports(bust = false): Promise<void> {
   await (bust ? registry.reload() : registry.init());
-}
-
-export async function reloadTransports(bust = true): Promise<void> {
-  await initTransports(bust);
 }

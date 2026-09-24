@@ -48,7 +48,7 @@ export async function listScreenshots(dir: string): Promise<string[]> {
   }
 }
 
-export async function copyItemDir(
+async function copyItemDir(
   srcDir: string,
   destDir: string,
   exclude: string[],
@@ -73,7 +73,7 @@ export async function copyItemDir(
   }
 }
 
-export const STORE_METADATA = ["author.json", "screenshots"];
+const STORE_METADATA = ["author.json", "screenshots"];
 
 export async function stageItemDir(
   srcDir: string,

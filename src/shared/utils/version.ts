@@ -24,7 +24,7 @@ const _parseDev = (v: string): number | null => {
   return Number.isFinite(n) ? n : 0;
 };
 
-export const compareVersions = (a: string, b: string): number => {
+const compareVersions = (a: string, b: string): number => {
   const bSemver = _parseSemver(b);
   const base = _parseSemver(a).map((x, i) => x - bSemver[i]);
   const diff = base.find((d) => d !== 0);

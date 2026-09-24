@@ -7,7 +7,7 @@ const _isMissing = (err: unknown): boolean =>
 const _stamp = (): string =>
   new Date().toISOString().replace(/[:.]/g, "-");
 
-export const quarantineFile = async (
+const quarantineFile = async (
   namespace: string,
   path: string,
   err: unknown,

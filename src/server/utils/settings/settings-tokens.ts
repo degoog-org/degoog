@@ -32,7 +32,7 @@ const _persistNow = async (): Promise<void> => {
   }
 };
 
-export const schedulePersist = (): void => {
+const schedulePersist = (): void => {
   if (_persistTimer) return;
   _persistTimer = setTimeout(() => {
     _persistTimer = null;

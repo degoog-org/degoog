@@ -1,6 +1,6 @@
 import type { Child } from "../../shared/ui/tribute/types";
 
-export interface EngineStatRowProps {
+interface EngineStatRowProps {
   failed: boolean;
   originSlot: Child;
   name: string;

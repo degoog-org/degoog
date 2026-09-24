@@ -9,9 +9,9 @@ import { isDisabled } from "../utils/settings/plugin-settings";
 import { buildSignedProxyUrl } from "../utils/net/proxy-sign";
 import { syncVortexSignal } from "../utils/extension-support/translation-circuit";
 
-export type NojsCommandMatch = Extract<BangMatch, { type: "command" }>;
+type NojsCommandMatch = Extract<BangMatch, { type: "command" }>;
 
-export interface NojsCommandRender {
+interface NojsCommandRender {
   html: string;
   totalPages: number;
 }

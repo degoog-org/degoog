@@ -5,7 +5,7 @@ import { logger } from "../../utils/logger";
 import { withTimeout } from "../../utils/net/with-timeout";
 import { resolvePgConfig } from "./pg-config";
 
-export const BOOT_TIMEOUT_MS = 30_000;
+const BOOT_TIMEOUT_MS = 30_000;
 
 let _adapter: IndexerAdapter | null = null;
 

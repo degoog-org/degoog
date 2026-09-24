@@ -13,7 +13,7 @@ import type {
   ShortcutKind,
 } from "../../../shared/shortcuts";
 
-export interface ShortcutExtension {
+interface ShortcutExtension {
   id?: string;
   name: string;
   description?: string;
@@ -81,7 +81,7 @@ const registry = createRegistry<ShortcutExtension>({
 export const initShortcutsRegistry = registry.init;
 export const reloadShortcutsRegistry = (bust = false): Promise<void> =>
   bust ? registry.reload() : registry.refresh();
-export const getShortcutExtensions = (): ShortcutExtension[] => registry.items();
+const getShortcutExtensions = (): ShortcutExtension[] => registry.items();
 
 const _actionMeta = (shortcut: ShortcutExtension): ShortcutActionMeta => ({
   id: shortcut.id ?? "",

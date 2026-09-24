@@ -17,7 +17,7 @@ export const registerServerHandle = (server: Server<unknown>): void => {
 export const isDockerRuntime = (): boolean =>
   envTruthy("DEGOOG_DOCKER") || existsSync("/.dockerenv");
 
-export const isLXCRuntime = (): boolean => {
+const isLXCRuntime = (): boolean => {
   try {
     return readFileSync("/run/systemd/container", "utf8").trim() === "lxc";
   } catch {

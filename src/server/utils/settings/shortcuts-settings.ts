@@ -5,7 +5,7 @@ import {
   type ShortcutActionMeta,
 } from "../../../shared/shortcuts";
 
-export interface ShortcutsSettings {
+interface ShortcutsSettings {
   bindings: Record<string, ShortcutBinding>;
 }
 

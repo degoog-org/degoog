@@ -207,6 +207,34 @@ describe("GET /api/search/stream event sequence", () => {
     expect(results.every((e) => e.data.retry === false)).toBe(true);
   });
 
+  test("an empty engine finishing last still sends signed thumbnails", async () => {
+    const withThumb: EngineEntry = {
+      id: "thumb-engine",
+      instance: {
+        name: "Thumb",
+        executeSearch: async () => [
+          { ...makeResult("Thumb", 1), thumbnail: "https://img.test/t.png" },
+        ],
+      },
+    };
+    const lateEmpty: EngineEntry = {
+      id: "late-engine",
+      instance: {
+        name: "Late",
+        executeSearch: async () => {
+          await Bun.sleep(20);
+          return [];
+        },
+      },
+    };
+    harness({ engines: [withThumb, lateEmpty] });
+    const events = await readEvents(await call(uniqueQuery("late-empty")));
+    const late = events.find((e) => e.event === "engine-result" && e.data.engine === "Late");
+    const [only] = late?.data.results as ScoredResult[];
+
+    expect(only.thumbnail).toStartWith("/api/proxy/image?url=");
+  });
+
   test("done reports timings, page total and the indexed urls", async () => {
     harness({
       engines: [makeEngine("Alpha", 1, 6), makeEngine("Beta", 1, 3)],

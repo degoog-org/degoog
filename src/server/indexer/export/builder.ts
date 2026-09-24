@@ -8,7 +8,7 @@ import { EXPORT_SCHEMA_DDL } from "./schema";
 import { logger } from "../../utils/logger";
 import { indexerTmpDir } from "../../utils/paths";
 
-export const EXPORT_BATCH_SIZE = 1000;
+const EXPORT_BATCH_SIZE = 1000;
 
 export const buildSqliteExportFile = async (type: string): Promise<string> => {
   const adapter = getAdapter();
@@ -53,7 +53,7 @@ const _discard = (path: string): void => {
   }
 };
 
-export interface StreamOpts {
+interface StreamOpts {
   size: number;
   removeAfter: boolean;
   onRead?: () => void;

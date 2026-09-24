@@ -89,9 +89,9 @@ type PluginLike = {
 
 const _initedPlugins = new WeakSet<object>();
 
-export const PLUGIN_API_PREFIX = "/api/plugin";
+const PLUGIN_API_PREFIX = "/api/plugin";
 
-export const buildApiBase = (pluginId: string): string =>
+const buildApiBase = (pluginId: string): string =>
   `${PLUGIN_API_PREFIX}/${pluginId}`;
 
 export const buildRouteUrl = (pluginId: string, path = ""): string => {

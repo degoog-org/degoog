@@ -98,7 +98,7 @@ export async function initSlotPlugins(): Promise<void> {
   await registry.init();
 }
 
-export function getSlotSource(slotId: string): "builtin" | "plugin" {
+function getSlotSource(slotId: string): "builtin" | "plugin" {
   return slotSourceMap.get(slotId) ?? "plugin";
 }
 

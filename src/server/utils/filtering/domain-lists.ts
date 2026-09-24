@@ -2,7 +2,7 @@ import { searchListsFile } from "../paths";
 import { createListStore } from "../storage/list-store";
 import { SEARCH_LIST_FIELDS } from "../../../shared/settings-lists";
 
-export type DomainListKey = (typeof SEARCH_LIST_FIELDS)[number];
+type DomainListKey = (typeof SEARCH_LIST_FIELDS)[number];
 const store = createListStore<DomainListKey>({
   keys: SEARCH_LIST_FIELDS,
   file: searchListsFile,

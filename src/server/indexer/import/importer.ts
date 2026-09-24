@@ -47,7 +47,7 @@ const buildSelectSql = (db: Database): string => {
   `;
 };
 
-export interface ImportResult {
+interface ImportResult {
   urls: number;
   hits: number;
 }

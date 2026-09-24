@@ -247,7 +247,7 @@ async function _updateItem(
   await reloadAfterAction(type);
 }
 
-export interface UpdateItemProgress {
+interface UpdateItemProgress {
   repoUrl: string;
   itemPath: string;
   name: string;

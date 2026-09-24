@@ -1,5 +1,5 @@
 import { mkdir, readFile, stat, unlink, writeFile } from "fs/promises";
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { outgoingFetch } from "../utils/net/outgoing";
 import { defaultEnginesFile, shortcutsDir } from "../utils/paths";
 import { asBoolean, asString } from "../utils/settings/plugin-settings";
@@ -80,30 +80,45 @@ const _appendBlock = (existing: string, source: string): string => {
   return lines.join("\n");
 };
 
-const _appendReplace = (
-  existing: string,
-  source: string,
-  target: string,
-): string => {
-  const next = _splitLines(existing).filter((l) => {
-    const [src] = l.split("->").map((s) => s.trim());
-    return src !== source;
-  });
-  next.push(`${source} -> ${target}`);
+const _upsertKeyed = (existing: string, source: string, sep: string, line: string): string => {
+  const next = _splitLines(existing).filter((l) => l.split(sep)[0].trim() !== source);
+  next.push(line);
   return next.join("\n");
 };
 
-const _upsertScore = (
-  existing: string,
-  source: string,
-  score: number,
-): string => {
-  const next = _splitLines(existing).filter((l) => {
-    const [src] = l.split("|").map((s) => s.trim());
-    return src !== source;
-  });
-  next.push(`${source}|${score}`);
-  return next.join("\n");
+type DomainActionBody = { kind?: string; source?: string; target?: string; score?: number };
+
+const DOMAIN_ACTIONS: Record<
+  string,
+  {
+    flag: string;
+    list: Parameters<typeof writeDomainList>[0];
+    edit: (existing: string, source: string, body: DomainActionBody) => string | { error: string };
+  }
+> = {
+  block: {
+    flag: "domainBlockUiEnabled",
+    list: "domainBlockList",
+    edit: (existing, source) => _appendBlock(existing, source),
+  },
+  replace: {
+    flag: "domainReplaceUiEnabled",
+    list: "domainReplaceList",
+    edit: (existing, source, body) => {
+      const target = _normalizeHostname(body.target ?? "");
+      if (!target) return { error: "Missing target" };
+      return _upsertKeyed(existing, source, "->", `${source} -> ${target}`);
+    },
+  },
+  score: {
+    flag: "domainScoreUiEnabled",
+    list: "domainScoreList",
+    edit: (existing, source, body) => {
+      const score = Number(body.score);
+      if (!Number.isFinite(score)) return { error: "Invalid score" };
+      return _upsertKeyed(existing, source, "|", `${source}|${Math.trunc(score)}`);
+    },
+  },
 };
 
 const IP_CHECK_URL = "https://api.ipify.org?format=json";
@@ -216,52 +231,22 @@ router.post("/api/settings/field", settingsAuth("POST /api/settings/field"), asy
 });
 
 router.post("/api/settings/domain-action", settingsAuth("POST /api/settings/domain-action"), async (c) => {
-
-  type DomainActionBody = { kind?: string; source?: string; target?: string; score?: number };
   const body = await readObjectBody<DomainActionBody>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
-  const kind = body.kind;
   const source = _normalizeHostname(body.source ?? "");
   if (!source) return c.json({ error: "Missing source" }, 400);
 
+  const kind = body.kind ?? "";
+  if (!Object.hasOwn(DOMAIN_ACTIONS, kind)) return c.json({ error: "Invalid kind" }, 400);
+  const action = DOMAIN_ACTIONS[kind];
+
   const existing = await getInstanceSettings();
-  const lists = await readDomainLists();
+  if (!asBoolean(existing[action.flag])) return c.json({ error: "Forbidden" }, 403);
 
-  if (kind === "block") {
-    if (!asBoolean(existing.domainBlockUiEnabled)) {
-      return c.json({ error: "Forbidden" }, 403);
-    }
-    await writeDomainList(
-      "domainBlockList",
-      _appendBlock(lists.domainBlockList, source),
-    );
-  } else if (kind === "replace") {
-    if (!asBoolean(existing.domainReplaceUiEnabled)) {
-      return c.json({ error: "Forbidden" }, 403);
-    }
-    const target = _normalizeHostname(body.target ?? "");
-    if (!target) return c.json({ error: "Missing target" }, 400);
-    await writeDomainList(
-      "domainReplaceList",
-      _appendReplace(lists.domainReplaceList, source, target),
-    );
-  } else if (kind === "score") {
-    if (!asBoolean(existing.domainScoreUiEnabled)) {
-      return c.json({ error: "Forbidden" }, 403);
-    }
-    const score = Number(body.score);
-    if (!Number.isFinite(score)) {
-      return c.json({ error: "Invalid score" }, 400);
-    }
-    await writeDomainList(
-      "domainScoreList",
-      _upsertScore(lists.domainScoreList, source, Math.trunc(score)),
-    );
-  } else {
-    return c.json({ error: "Invalid kind" }, 400);
-  }
-
+  const next = action.edit((await readDomainLists())[action.list], source, body);
+  if (typeof next !== "string") return c.json(next, 400);
+  await writeDomainList(action.list, next);
   return c.json({ ok: true });
 });
 
@@ -346,23 +331,26 @@ router.get("/api/settings/honeypot/blocklist", settingsAuth("GET /api/settings/h
   return c.json({ entries, banHours });
 });
 
-router.post("/api/settings/honeypot/ban", settingsAuth("POST /api/settings/honeypot/ban"), async (c) => {
+const _blocklistEdit = (edit: (ip: string) => Promise<void>) => async (c: Context) => {
   const body = await readObjectBody<{ ip?: string }>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
   const ip = (body.ip ?? "").trim();
   if (!ip) return c.json({ error: "Missing ip" }, 400);
-  await addEntry(ip);
+  await edit(ip);
   return c.json({ ok: true });
-});
+};
 
-router.post("/api/settings/honeypot/unban", settingsAuth("POST /api/settings/honeypot/unban"), async (c) => {
-  const body = await readObjectBody<{ ip?: string }>(c);
-  if (!body) return c.json({ error: "Invalid JSON" }, 400);
-  const ip = (body.ip ?? "").trim();
-  if (!ip) return c.json({ error: "Missing ip" }, 400);
-  await removeEntry(ip);
-  return c.json({ ok: true });
-});
+router.post(
+  "/api/settings/honeypot/ban",
+  settingsAuth("POST /api/settings/honeypot/ban"),
+  _blocklistEdit((ip) => addEntry(ip)),
+);
+
+router.post(
+  "/api/settings/honeypot/unban",
+  settingsAuth("POST /api/settings/honeypot/unban"),
+  _blocklistEdit((ip) => removeEntry(ip)),
+);
 
 router.get("/api/settings/appearance", async (c) => {
   const settings = await getInstanceSettings();

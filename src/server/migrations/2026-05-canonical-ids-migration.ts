@@ -25,7 +25,7 @@ import {
 import { ExtensionStoreType } from "../types/extension";
 import type { RepoPackageJson, ReposData } from "../types/store";
 
-export const MIGRATION_VERSION = 52028 as const;
+const MIGRATION_VERSION = 52028 as const;
 const SCHEMA_KEY = "__schemaVersion";
 
 const TAG = "migration";

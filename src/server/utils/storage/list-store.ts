@@ -13,7 +13,7 @@ import {
   publishInvalidate,
 } from "../cache/cache-valkey";
 
-export interface ListStore<K extends string> {
+interface ListStore<K extends string> {
   readLists: () => Promise<Record<K, string>>;
   writeList: (key: K, value: string) => Promise<void>;
   isListKey: (key: string) => key is K;

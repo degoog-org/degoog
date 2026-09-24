@@ -2,11 +2,11 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import type { ShortcutBinding, ShortcutKind } from "../../../shared/shortcuts";
 
-export const ENGINE_TYPE_STRING_RE = /export\s+const\s+type\s*=\s*["']([^"']+)["']/;
-export const ENGINE_TYPE_ARRAY_RE = /export\s+const\s+type\s*=\s*\[([^\]]+)\]/;
-export const engineTypesCache = new Map<string, string[] | null>();
+const ENGINE_TYPE_STRING_RE = /export\s+const\s+type\s*=\s*["']([^"']+)["']/;
+const ENGINE_TYPE_ARRAY_RE = /export\s+const\s+type\s*=\s*\[([^\]]+)\]/;
+const engineTypesCache = new Map<string, string[] | null>();
 
-export const parseEngineTypesFromSource = (src: string): string[] | null => {
+const parseEngineTypesFromSource = (src: string): string[] | null => {
   const strMatch = ENGINE_TYPE_STRING_RE.exec(src);
   if (strMatch) return [strMatch[1].trim()];
   const arrMatch = ENGINE_TYPE_ARRAY_RE.exec(src);
@@ -21,10 +21,10 @@ export const parseEngineTypesFromSource = (src: string): string[] | null => {
 export const catalogPrimaryType = (types: string[]): string =>
   types.length > 0 ? types[0] : "web";
 
-export const NEEDS_APP_RESTART_RE = /\bneedsAppRestart\s*[:=]\s*true\b/;
-export const needsAppRestartCache = new Map<string, boolean>();
+const NEEDS_APP_RESTART_RE = /\bneedsAppRestart\s*[:=]\s*true\b/;
+const needsAppRestartCache = new Map<string, boolean>();
 
-export const stripComments = (src: string): string =>
+const stripComments = (src: string): string =>
   src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
 
 export const readNeedsAppRestart = async (dir: string): Promise<boolean> => {
@@ -43,12 +43,12 @@ export const readNeedsAppRestart = async (dir: string): Promise<boolean> => {
   return result;
 };
 
-export const SHORTCUT_KIND_RE = /\bkind\s*:\s*["'](single|numeric)["']/;
-export const SHORTCUT_BINDING_RE = /defaultBinding\s*:\s*\{([^}]*)\}/;
-export const SHORTCUT_KEY_RE = /["']?\bkey\b["']?\s*:\s*["']([^"']+)["']/;
-export const shortcutMetaCache = new Map<string, ShortcutCatalogMeta | null>();
+const SHORTCUT_KIND_RE = /\bkind\s*:\s*["'](single|numeric)["']/;
+const SHORTCUT_BINDING_RE = /defaultBinding\s*:\s*\{([^}]*)\}/;
+const SHORTCUT_KEY_RE = /["']?\bkey\b["']?\s*:\s*["']([^"']+)["']/;
+const shortcutMetaCache = new Map<string, ShortcutCatalogMeta | null>();
 
-export type ShortcutCatalogMeta = {
+type ShortcutCatalogMeta = {
   binding: ShortcutBinding;
   kind: ShortcutKind;
 };

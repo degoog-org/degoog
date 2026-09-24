@@ -239,7 +239,3 @@ export async function getAutocompleteExtensionMeta(): Promise<ExtensionMeta[]> {
 export async function initAutocomplete(bust = false): Promise<void> {
   await (bust ? pluginRegistry.reload() : pluginRegistry.init());
 }
-
-export async function reloadAutocomplete(bust = true): Promise<void> {
-  await initAutocomplete(bust);
-}

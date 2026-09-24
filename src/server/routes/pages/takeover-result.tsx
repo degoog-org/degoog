@@ -1,4 +1,4 @@
-export interface TakeoverResult {
+interface TakeoverResult {
   url: string;
   title: string;
   snippet: string;

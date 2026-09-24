@@ -8,6 +8,7 @@ import { agreedPageTotal } from "../../search/page-counter";
 import {
   DEGOOG_ENGINE_NAME,
   type EngineTiming,
+  type ScoredResult,
   type SearchResult,
 } from "../../../shared/search-types";
 import { logger } from "../../utils/logger";
@@ -94,6 +95,11 @@ router.get("/api/search/stream", async (c) => {
         }
       }
 
+      const merged = async (): Promise<ScoredResult[]> =>
+        signResultThumbnails(
+          tagIndexRelation(await applyDomainRules(scoreResults(allRawResults))),
+        );
+
       const enginePromises = rawActiveEngines.map(
         async ({ instance, score, id }) => {
           const engineName = instance.name;
@@ -131,9 +137,7 @@ router.get("/api/search/stream", async (c) => {
               _send("engine-result", {
                 engine: engineName,
                 timing,
-                results: signResultThumbnails(
-                  tagIndexRelation(await applyDomainRules(scoreResults(allRawResults))),
-                ),
+                results: await merged(),
                 retry: isRetry,
                 attempt,
               });
@@ -156,9 +160,7 @@ router.get("/api/search/stream", async (c) => {
           _send("engine-result", {
             engine: engineName,
             timing: lastTiming,
-            results: tagIndexRelation(
-              await applyDomainRules(scoreResults(allRawResults)),
-            ),
+            results: await merged(),
             retry: false,
             attempt: 0,
           });

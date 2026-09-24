@@ -12,7 +12,7 @@ export interface SearchResult {
 
 export const DEGOOG_ENGINE_NAME = "Degoog";
 
-export type IndexRelation = "recalled" | "indexing";
+type IndexRelation = "recalled" | "indexing";
 
 export interface ScoredResult extends SearchResult {
   score: number;
@@ -65,7 +65,7 @@ export interface SearchResponse {
 }
 
 export const DEFAULT_SEARCH_TYPE = "web";
-export const IMAGE_SEARCH_TYPE = "images";
+const IMAGE_SEARCH_TYPE = "images";
 
 const TAB_ENGINE_PREFIX = "tab:engine:";
 const ENGINE_PREFIX = "engine:";

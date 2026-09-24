@@ -159,7 +159,7 @@ const _rollback = async (
   }
 };
 
-export type AfterBatch = () => Promise<void>;
+type AfterBatch = () => Promise<void>;
 
 export const applySettingsBatch = async (
   body: Record<string, string>,

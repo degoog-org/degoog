@@ -10,14 +10,14 @@ import { agreedPageTotal, makePageCounter } from "./page-counter";
 
 const FALLBACK_TAB_PAGES = 10;
 
-export type TabSearchParams = {
+type TabSearchParams = {
   tabId: string;
   query: string;
   page: number;
   clientIp: string | undefined;
 };
 
-export type TabSearchResult = {
+type TabSearchResult = {
   results: ScoredResult[];
   totalPages: number;
   page: number;

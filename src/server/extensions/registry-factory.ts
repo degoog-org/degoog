@@ -28,7 +28,7 @@ export const getPluginRegistryReloadGeneration = (): number =>
  * { dir: pluginsDir() }
  * { dir: builtinsDir, source: "builtin" }
  */
-export interface RegistryDir {
+interface RegistryDir {
   dir: string;
   source?: RegistrySource;
 }
@@ -36,7 +36,7 @@ export interface RegistryDir {
 /**
  * Metadata passed to `onLoad` after an extension is successfully extracted and validated.
  */
-export interface RegistryLoadMeta {
+interface RegistryLoadMeta {
   /** Absolute path to the extension's folder (or file for flat-file extensions). */
   entryPath: string;
   /** Folder or base filename, used as the extension's natural ID. */
@@ -80,7 +80,7 @@ export interface RegistryLoadMeta {
  *   debugTag: "slots",
  * });
  */
-export interface RegistryOptions<T> {
+interface RegistryOptions<T> {
   /**
    * One or more directories to scan. Can be a static array or a function
    * evaluated on each `init()` call (use a function when the path depends

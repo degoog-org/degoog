@@ -1,8 +1,8 @@
 import { logger } from "../../utils/logger";
 
-export const PG_DEFAULT_PORT = 5432;
-export const PG_DEFAULT_DATABASE = "degoog";
-export const PG_DEFAULT_USER = "degoog";
+const PG_DEFAULT_PORT = 5432;
+const PG_DEFAULT_DATABASE = "degoog";
+const PG_DEFAULT_USER = "degoog";
 
 export type PgSslMode = "require" | "verify-full" | boolean;
 
@@ -15,7 +15,7 @@ export interface PgConnectionConfig {
   ssl?: PgSslMode;
 }
 
-export type PgResolved =
+type PgResolved =
   | { mode: "url"; url: string }
   | { mode: "config"; config: PgConnectionConfig }
   | { mode: "sqlite" };

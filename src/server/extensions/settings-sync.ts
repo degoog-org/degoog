@@ -14,7 +14,7 @@ type ExtSettings = Record<string, SettingValue>;
 
 const NS = "settings-sync";
 
-export const applyExtSettings = (id: string, settings: ExtSettings): void => {
+const applyExtSettings = (id: string, settings: ExtSettings): void => {
   const resolved = resolveExtension(id);
   if (!resolved.engine?.pluginManifest) resolved.engine?.configure?.(settings);
   resolved.command?.configure?.(settings);

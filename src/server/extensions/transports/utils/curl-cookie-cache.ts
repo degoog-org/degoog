@@ -6,7 +6,7 @@ const NS = "transport:cookie-cache";
 export const COOKIE_JAR_HEADER =
   "# Netscape HTTP Cookie File\n# Stored by Degoog transport cache\n\n";
 
-export interface CurlStdoutParts {
+interface CurlStdoutParts {
   bodyText: string;
   status: number;
   cookieJarText: string | null;

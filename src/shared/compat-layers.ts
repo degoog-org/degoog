@@ -3,11 +3,6 @@ export enum CompatLayerId {
   FourGet = "4get",
 }
 
-export const COMPAT_LAYER_IDS: readonly CompatLayerId[] = Object.freeze([
-  CompatLayerId.Searx,
-  CompatLayerId.FourGet,
-]);
-
 export const COMPAT_LAYER_LABELS: Readonly<Record<CompatLayerId, string>> =
   Object.freeze({
     [CompatLayerId.Searx]: "SearX",
@@ -49,7 +44,7 @@ export enum CompatAction {
   Uninstall = "uninstall",
 }
 
-export const COMPAT_API_BASE = "/api/compat";
+const COMPAT_API_BASE = "/api/compat";
 
 export const compatApiUrl = (layer: CompatLayerId, path: string): string =>
   `${COMPAT_API_BASE}/${encodeURIComponent(layer)}/${path}`;

@@ -38,7 +38,7 @@ const _safeName = (filename: string): string => {
   return `${stem}-${stamp}${ext}`;
 };
 
-export interface SavedUpload {
+interface SavedUpload {
   path: string;
   name: string;
 }

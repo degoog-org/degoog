@@ -582,6 +582,13 @@ describe("nojs retry links", () => {
     { name: "Fake", id: "fake-engine", time: 40, resultCount: 3 },
   ];
 
+  test("plugin tab results list their engines without retry links", async () => {
+    harness({ settings: enabled(), results: [makeResult()], engineTimings: timings });
+    const html = await text("/nojs/search?q=hello&type=tab%3Atorrents");
+    expect(html).toContain("Fake");
+    expect(html).not.toContain("engine-retry-link");
+  });
+
   test("renders a retry link with the real page classes", async () => {
     harness({ settings: enabled(), results: [makeResult()], engineTimings: timings });
     const html = await text("/nojs/search?q=hello");

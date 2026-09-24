@@ -82,7 +82,7 @@ export const matchField = (
 /**
  * Imports raw language banks dynamically from local json files.
  */
-export const loadBanks = async (path: string): Promise<TranslationRecord> => {
+const loadBanks = async (path: string): Promise<TranslationRecord> => {
   const dir = join(path, "locales");
   const files = await readdir(dir).catch(() => {
     logger.translation(
@@ -153,7 +153,7 @@ const hydrateVars = (
 /**
  * Boots up the active translation circuit hook and returns a translator function.
  */
-export const bootCircuit = (
+const bootCircuit = (
   translations: TranslationRecord,
   defaultLocale = "en",
 ): Translate => {

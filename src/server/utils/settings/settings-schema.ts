@@ -3,9 +3,9 @@ import {
   ENGINE_ORIGIN_DISPLAY_VALUES,
 } from "../../../shared/engine-origins";
 
-export type SettingKind = "string" | "boolean" | "number" | "lines";
+type SettingKind = "string" | "boolean" | "number" | "lines";
 
-export interface SettingDef {
+interface SettingDef {
   kind: SettingKind;
   default: string | boolean;
   values?: readonly string[];

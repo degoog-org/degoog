@@ -3,7 +3,7 @@ import { asString, type SettingValue } from "../settings/plugin-settings";
 import { getInstanceSettings } from "../settings/server-settings";
 import { addEntry, checkBlocked, resetCache } from "../filtering/blocklist";
 
-export const DEFAULT_BAN_HOURS = 72;
+const DEFAULT_BAN_HOURS = 72;
 
 export const resolveBanHours = (raw: SettingValue | undefined): number => {
   const n = parseInt(asString(raw ?? ""), 10);

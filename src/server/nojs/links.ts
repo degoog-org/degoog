@@ -35,7 +35,7 @@ const _warnStrippedPrefix = (path: string, mounted: string): void => {
   );
 };
 
-export const nojsPrefix = (c: Context): string => {
+const nojsPrefix = (c: Context): string => {
   const mounted = `${BASE_PATH}${NOJS_SEGMENT}`;
   const path = c.req.path;
   if (path === mounted || path.startsWith(`${mounted}/`)) return mounted;

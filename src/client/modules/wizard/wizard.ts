@@ -1,5 +1,5 @@
 import { getBase } from "../../utils/base-url";
-import { fetchWizardDone, markServerDone, patchServerWizard } from "./server";
+import { fetchWizardDisabled, fetchWizardDone, markServerDone, patchServerWizard } from "./server";
 import { HOME_STEPS, SETTINGS_STEPS } from "./steps";
 import { isTourActive, runTour } from "./tour";
 
@@ -36,7 +36,7 @@ export const initHomeWizard = async (): Promise<void> => {
 };
 
 export const restartWizard = async (): Promise<void> => {
-  if (isTourActive()) return;
+  if (isTourActive() || (await fetchWizardDisabled())) return;
   sessionStorage.setItem(MANUAL_RESTART_KEY, "true");
   sessionStorage.setItem(SETTINGS_PENDING_KEY, "true");
   localStorage.removeItem(HOME_DONE_KEY);

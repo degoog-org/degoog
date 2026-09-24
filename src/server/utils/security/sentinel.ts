@@ -46,7 +46,7 @@ export const isSentinelBreach = (e: unknown): e is SentinelBreach =>
     (e as { name?: string }).name === ENGINE_ERROR_NAME &&
     typeof (e as { status?: unknown }).status === "string");
 
-export const evaluateThreat = (httpStatus: number): ThreatLevel => {
+const evaluateThreat = (httpStatus: number): ThreatLevel => {
   if (httpStatus === 429) return THREAT_LEVEL.RATE_LIMITED;
   if (httpStatus === 403) return THREAT_LEVEL.BLOCKED;
   if (httpStatus >= 500) return THREAT_LEVEL.NETWORK;

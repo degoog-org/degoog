@@ -1,11 +1,11 @@
 import type { SettingField } from "../../../../shared/setting-field";
 import type { SettingValue } from "../../../utils/settings/plugin-settings";
 
-export const SEARX_OPT_PREFIX = "searxOpt_";
+const SEARX_OPT_PREFIX = "searxOpt_";
 
-export const SEARX_DEFAULT_OPTION_LABEL = "Engine default";
+const SEARX_DEFAULT_OPTION_LABEL = "Engine default";
 
-export enum SearxConfigKind {
+enum SearxConfigKind {
   Text = "text",
   Number = "number",
   Bool = "bool",

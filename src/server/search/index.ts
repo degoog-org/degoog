@@ -207,7 +207,7 @@ export const mergeNewResults = (
   return _sortedFromMap(urlMap);
 };
 
-export const resolveEngine = (engineName: string): SearchEngine | null => {
+const resolveEngine = (engineName: string): SearchEngine | null => {
   const engineMap = getEngineMap();
   if (engineMap[engineName]) return engineMap[engineName];
   for (const engine of Object.values(engineMap)) {
@@ -236,7 +236,7 @@ const _asBool = (v: string | undefined): boolean => {
   return normalized === "true" || normalized === "1" || normalized === "yes";
 };
 
-export interface EngineContextOptions {
+interface EngineContextOptions {
   lang?: string;
   dateFrom?: string;
   dateTo?: string;

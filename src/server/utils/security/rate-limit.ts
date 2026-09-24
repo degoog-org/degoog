@@ -8,7 +8,7 @@ const WINDOW_MAX_SEC = 3600;
 const MAX_REQUESTS_MIN = 1;
 const MAX_REQUESTS_MAX = 1000;
 
-export type RateLimitOptions = Record<string, string | undefined>;
+type RateLimitOptions = Record<string, string | undefined>;
 
 const _parseNum = (
   value: string | undefined,

@@ -39,7 +39,7 @@ export interface ThemeManifest {
   templates?: Record<string, string>;
 }
 
-export interface LoadedTheme {
+interface LoadedTheme {
   id: string;
   manifest: ThemeManifest;
   dir: string;

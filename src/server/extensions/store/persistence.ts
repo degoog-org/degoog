@@ -23,7 +23,7 @@ export function normalizeRepoUrl(url: string): string {
   return trimmed + (trimmed.includes("?") || trimmed.includes("#") ? "" : ".git");
 }
 
-export async function ensureReposStructure(): Promise<void> {
+async function ensureReposStructure(): Promise<void> {
   const storeDir = getStoreDir();
   await mkdir(storeDir, { recursive: true });
   const reposPath = getReposPath();

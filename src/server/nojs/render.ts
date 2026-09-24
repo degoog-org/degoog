@@ -82,7 +82,7 @@ const _themeAttrs = async (): Promise<string> => {
   return mode ? ` data-theme="${mode}"${extra}` : extra;
 };
 
-export const applyNojsPlaceholders = async (
+const applyNojsPlaceholders = async (
   html: string,
   t: Translate,
   locale: string,

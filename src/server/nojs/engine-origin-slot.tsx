@@ -1,6 +1,6 @@
 import { EngineOriginDisplay, type EngineOrigin } from "../../shared/engine-origins";
 
-export interface EngineOriginSlotProps {
+interface EngineOriginSlotProps {
   origin: EngineOrigin;
   mode: EngineOriginDisplay;
   engineName: string;

@@ -1,10 +1,10 @@
-export const MIN_PREFIX_LEN = 3;
+const MIN_PREFIX_LEN = 3;
 export const FUZZY_CANDIDATE_CAP = 10000;
 const PUNCTUATION = /[^a-z0-9-]/g;
 const EDGE_DASHES = /^-+|-+$/g;
 const ALPHANUMERIC = /[a-z0-9]/;
 
-export interface IndexTerm {
+interface IndexTerm {
   raw: string;
   token: string;
   word: RegExp;

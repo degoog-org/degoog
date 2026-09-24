@@ -10,11 +10,14 @@ import {
 } from "../cache/cache-valkey";
 import type { SettingValue } from "./plugin-settings";
 
-export const WIZARD_ENV_VAR = "DEGOOG_WIZARD";
+const WIZARD_ENV_VAR = "DEGOOG_WIZARD";
+
+export const isWizardDisabled = (): boolean =>
+  String(process.env[WIZARD_ENV_VAR] ?? "").toLowerCase() === "false";
 
 export type ServerSettingValue = SettingValue;
 
-export interface ServerSettings {
+interface ServerSettings {
   wizard: boolean;
   instanceId: string;
   settings: Record<string, ServerSettingValue>;

@@ -14,7 +14,7 @@ export const SHOW_RESULT_DATES = "show_result_dates";
 export const ENGINE_ORIGIN_DISPLAY = "engine_origin_display";
 export const TAB_ORDER_SAVED = "tab-order-saved";
 
-export const GENERAL_SYNC_KEYS = [
+const GENERAL_SYNC_KEYS = [
   THEME_KEY,
   OPEN_IN_NEW_TAB_KEY,
   DISPLAY_ENGINE_PERFORMANCE,

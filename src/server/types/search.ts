@@ -109,7 +109,7 @@ export type TimeFilter =
   | "custom";
 export type EngineConfig = Record<string, boolean>;
 
-export type EngineFetch = (
+type EngineFetch = (
   url: string,
   options?: {
     headers?: Record<string, string>;

@@ -196,9 +196,9 @@ describe("POST /api/settings/domain-action hostname handling", () => {
     expect(await res.json()).toEqual({ error: "Missing source" });
   });
 
-  test("an unknown kind is refused", async () => {
+  test.each(["explode", "toString", "__proto__"])("an unknown kind %s is refused", async (kind) => {
     const res = await post("/api/settings/domain-action", {
-      kind: "explode",
+      kind,
       source: "example.com",
     });
     expect(res.status).toBe(400);
@@ -273,6 +273,24 @@ describe("POST /api/settings/domain-action respects each ui toggle", () => {
     const res = await post("/api/settings/domain-action", body);
     expect(res.status).toBe(403);
     expect(await res.json()).toEqual({ error: "Forbidden" });
+  });
+
+  test.each([
+    ["domainBlockUiEnabled", { kind: "block", source: "a.com" }],
+    ["domainReplaceUiEnabled", { kind: "replace", source: "a.com", target: "b.com" }],
+    ["domainScoreUiEnabled", { kind: "score", source: "a.com", score: 1 }],
+  ])("only %s unlocks its own kind", async (flag, body) => {
+    await settings.setInstanceSettings({ [flag]: true });
+    settings.clearServerSettingsCache();
+
+    const kinds = ["block", "replace", "score"];
+    const statuses = await Promise.all(
+      kinds.map(async (kind) =>
+        (await post("/api/settings/domain-action", { ...body, kind, target: "b.com", score: 1 }))
+          .status,
+      ),
+    );
+    expect(statuses).toEqual(kinds.map((k) => (k === body.kind ? 200 : 403)));
   });
 });
 

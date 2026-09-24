@@ -20,7 +20,7 @@ import type { PgConnectionConfig } from "../../db/pg-config";
 const IMPORT_BATCH_SIZE = 500;
 const POOL_OPTIONS = { max: 10, idle_timeout: 30, connect_timeout: 10 };
 
-export type PgConnectionInput = string | PgConnectionConfig;
+type PgConnectionInput = string | PgConnectionConfig;
 
 export class PgAdapter implements IndexerAdapter {
   private readonly _sql: ReturnType<typeof postgres>;

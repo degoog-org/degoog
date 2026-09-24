@@ -18,7 +18,7 @@ const ALLOWED_URL_SCHEMES = new Set([
   "tel",
 ]);
 
-export const safeHref = (url: string | null | undefined): string => {
+const safeHref = (url: string | null | undefined): string => {
   if (!url) return "";
   const normalized = url.replace(/[\t\n\r]/g, "").replace(/^[\x00-\x20]+/, "");
   const scheme = normalized.match(/^([a-z][a-z0-9+.-]*):/i);
@@ -26,7 +26,7 @@ export const safeHref = (url: string | null | undefined): string => {
   return ALLOWED_URL_SCHEMES.has(scheme[1].toLowerCase()) ? normalized : "";
 };
 
-export const citeUrl = (url: string): string => {
+const citeUrl = (url: string): string => {
   try {
     const parsed = new URL(url);
     return parsed.hostname + parsed.pathname + parsed.search;
@@ -108,7 +108,7 @@ export interface NojsTab {
   name: string;
 }
 
-export const hostLabel = (url: string): string => {
+const hostLabel = (url: string): string => {
   try {
     return new URL(url).hostname;
   } catch {

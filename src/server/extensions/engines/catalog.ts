@@ -76,7 +76,7 @@ export const manifestEngineSchema = (manifestId: string): SettingField[] => {
   return out;
 };
 
-export const isEngineEnabled = (
+const isEngineEnabled = (
   id: string,
   config: EngineConfig,
   indexerOn: boolean,

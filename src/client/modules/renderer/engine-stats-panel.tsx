@@ -36,6 +36,7 @@ export const EngineStatsPanel = ({
           : "";
         return (
           <SidebarStatRow
+            key={et.id ?? et.name}
             statusClass={!isDegoog && failed ? "engine-failed" : ""}
             origin={originSlot(et.name, et.id)}
             name={et.name}

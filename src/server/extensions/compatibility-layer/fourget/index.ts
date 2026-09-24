@@ -329,7 +329,7 @@ class FourGetCompatEngine implements SearchEngine {
   }
 }
 
-export const isFourGetCompatOn = async (): Promise<boolean> =>
+const isFourGetCompatOn = async (): Promise<boolean> =>
   asBoolean((await getInstanceSettings()).fourgetCompatEnabled);
 
 const _displayName = (code: string): string => catalogEntry(code)?.name ?? code;

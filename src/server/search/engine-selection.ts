@@ -25,7 +25,7 @@ export const selectActiveEngines = async (
   );
 };
 
-export const readEngineScore = async (id: string): Promise<number> => {
+const readEngineScore = async (id: string): Promise<number> => {
   const stored = await getSettings(id);
   const parsed = parseFloat(asString(stored["score"]));
   const score = Number.isFinite(parsed) ? parsed : 1;

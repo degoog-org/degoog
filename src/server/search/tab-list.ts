@@ -3,7 +3,7 @@ import { getSearchResultTabs } from "../extensions/search-result-tabs/registry";
 import { isDisabled } from "../utils/settings/plugin-settings";
 import { logger } from "../utils/logger";
 
-export interface SearchTabEntry {
+interface SearchTabEntry {
   id: string;
   name: string;
   icon: string | null;

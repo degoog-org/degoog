@@ -21,7 +21,7 @@ import { engineHost } from "./engine-hosts";
 
 const NS = "engine-origins";
 
-export type OriginMap = ReadonlyMap<string, EngineOrigin>;
+type OriginMap = ReadonlyMap<string, EngineOrigin>;
 
 const _asset = (path: string): string => `${getBasePath()}${path}`;
 

@@ -127,7 +127,7 @@ export async function reloadCommands(bust = false): Promise<void> {
   await (bust ? registry.reload() : registry.refresh());
 }
 
-export function getCommandSource(id: string): "builtin" | "plugin" {
+function getCommandSource(id: string): "builtin" | "plugin" {
   return commandSourceMap.get(id) ?? "plugin";
 }
 
@@ -145,7 +145,7 @@ export function getAllCommandTranslators(): {
     .map((c) => ({ namespace: `commands/${c.id}`, translator: c.instance.t! }));
 }
 
-export function getCommandMap(): Map<
+function getCommandMap(): Map<
   string,
   { instance: BangCommand; id: string }
 > {
@@ -165,7 +165,7 @@ export function getCommandMap(): Map<
   return map;
 }
 
-export type CommandRegistryEntry = {
+type CommandRegistryEntry = {
   id?: string;
   trigger: string;
   name: string;
@@ -237,7 +237,7 @@ export async function getFilteredCommandRegistry(): Promise<
   return full.filter((c) => configuredTriggers.has(c.trigger));
 }
 
-export type CommandApiEntry = CommandRegistryEntry & {
+type CommandApiEntry = CommandRegistryEntry & {
   naturalLanguage: boolean;
 };
 

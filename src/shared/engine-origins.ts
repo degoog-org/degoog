@@ -18,7 +18,7 @@ export const ENGINE_ORIGIN_DISPLAY_VALUES: readonly string[] = Object.freeze(
 
 export const DEFAULT_ENGINE_ORIGIN_DISPLAY = EngineOriginDisplay.Favicon;
 
-export const ORIGIN_ICON_DIR = "/public/images/origins";
+const ORIGIN_ICON_DIR = "/public/images/origins";
 
 export const CORE_ORIGIN_ICON = "/public/images/degoog-logo.svg";
 export const STORE_ORIGIN_GLYPH = "fa-store";

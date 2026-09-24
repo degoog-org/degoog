@@ -5,8 +5,8 @@ import { getIndexerConfig } from "../config/load";
 import { createMutex, type RunExclusive } from "../../utils/cache/mutex";
 import { logger } from "../../utils/logger";
 
-export const FLUSH_INTERVAL_MS = 3_000;
-export const PRUNE_INTERVAL_MS = 5 * 60_000;
+const FLUSH_INTERVAL_MS = 3_000;
+const PRUNE_INTERVAL_MS = 5 * 60_000;
 
 const _pending = new Map<string, IndexRow[]>();
 const _mutexes = new Map<string, RunExclusive>();
@@ -15,7 +15,7 @@ let _flushTimer: ReturnType<typeof setInterval> | null = null;
 let _pruneTimer: ReturnType<typeof setInterval> | null = null;
 let _starting: Promise<void> | null = null;
 
-export const mutexFor = (type: string): RunExclusive => {
+const mutexFor = (type: string): RunExclusive => {
   let m = _mutexes.get(type);
   if (!m) {
     m = createMutex();

@@ -7,7 +7,7 @@ import { getBasePath, getBaseUrl } from "../utils/net/base-url";
 import type { Translate } from "../types/extension";
 
 export const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
-export const CORE_LOCALES_ROOT = "src";
+const CORE_LOCALES_ROOT = "src";
 
 export const basePrefix = (): string => {
   const basePath = getBasePath();

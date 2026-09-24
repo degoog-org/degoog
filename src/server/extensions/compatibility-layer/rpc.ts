@@ -3,7 +3,7 @@ import { logger } from "../../utils/logger";
 const RUNNER_TIMEOUT_MS = 60_000;
 const RUNNER_KILL_SIGNAL = "SIGKILL";
 
-export const RPC_KIND = {
+const RPC_KIND = {
   FETCH: "fetch",
   CACHE: "cache",
 } as const;
@@ -25,7 +25,7 @@ export interface RpcFetchReply {
   text: string;
 }
 
-export interface RpcCacheRequest {
+interface RpcCacheRequest {
   op: "get" | "set";
   key: string;
   value?: string;

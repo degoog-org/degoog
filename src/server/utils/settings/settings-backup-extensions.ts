@@ -21,7 +21,7 @@ import { isRecord } from "../../../shared/settings-backup";
 const TAG = "settings-backup";
 const MARKER_PREFIX = "__";
 
-export type BackupExtensionItem = {
+type BackupExtensionItem = {
   repoUrl: string;
   type: ExtensionStoreType;
   itemPath: string;

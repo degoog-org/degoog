@@ -42,7 +42,7 @@ import type {
 const TRANSPORT_SUFFIX = "-transport";
 const AUTOCOMPLETE_SUFFIX = "-autocomplete";
 
-export interface ResolvedExtension {
+interface ResolvedExtension {
   engine: SearchEngine | null;
   command: BangCommand | null;
   slot: SlotPlugin | null;

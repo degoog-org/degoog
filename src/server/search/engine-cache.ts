@@ -74,7 +74,7 @@ export const readRun = async (key: string): Promise<CachedEngineRun | null> => {
   return null;
 };
 
-export interface CachedActiveRun {
+interface CachedActiveRun {
   engine: ActiveEngine;
   run: CachedEngineRun;
 }

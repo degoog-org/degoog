@@ -11,7 +11,7 @@ export const baseSlotTypes = (slot: SlotPlugin): string[] => {
   return declared.length > 0 ? declared : [DEFAULT_SEARCH_TYPE];
 };
 
-export const slotTypes = async (
+const slotTypes = async (
   slot: SlotPlugin,
   settingsId: string,
 ): Promise<string[]> => {

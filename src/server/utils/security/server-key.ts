@@ -2,7 +2,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { getInstanceSettings, updateInstanceSettings } from "../settings/server-settings";
 import { logger } from "../logger";
 
-export const API_SECRET_FIELD = "apiSecretKey";
+const API_SECRET_FIELD = "apiSecretKey";
 const KEY_HEX_LEN = 64;
 
 let _key: Buffer | null = null;

@@ -39,7 +39,7 @@ export type BackupContents = {
   shortcutSources: ShortcutSource[];
 };
 
-export type SettingsBackup = BackupContents & {
+type SettingsBackup = BackupContents & {
   kind: typeof BACKUP_KIND;
   version: number;
   exportedAt: string;

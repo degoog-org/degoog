@@ -47,8 +47,8 @@ export interface CompatLayerDef extends CompatLayerInfo {
   lock: <T>(task: () => Promise<T>) => Promise<T>;
 }
 
-export const SEARX_SETTING_KEY = "searxCompatEnabled";
-export const FOURGET_SETTING_KEY = "fourgetCompatEnabled";
+const SEARX_SETTING_KEY = "searxCompatEnabled";
+const FOURGET_SETTING_KEY = "fourgetCompatEnabled";
 
 const _searxItems = async (): Promise<CompatCatalogItem[]> =>
   (await listSearxItems()).map((item) => ({

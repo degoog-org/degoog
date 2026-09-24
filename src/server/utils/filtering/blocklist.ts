@@ -4,7 +4,7 @@ import { blocklistFile } from "../paths";
 import { logger } from "../logger";
 import { readJsonOrQuarantine } from "../storage/read-json";
 
-export type BlockEntry = { ip: string; time: string };
+type BlockEntry = { ip: string; time: string };
 
 const HOURS_TO_MS = 3_600_000;
 

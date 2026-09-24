@@ -8,7 +8,7 @@ import { getAdapter } from "../db/factory";
 
 const SESSION_TTL_MS = 30 * 60_000;
 
-export interface ExportSession {
+interface ExportSession {
   path: string;
   size: number;
   cleanup: boolean;
@@ -17,7 +17,7 @@ export interface ExportSession {
   expires: number;
 }
 
-export interface NewExport {
+interface NewExport {
   path: string;
   size: number;
   cleanup: boolean;
@@ -25,7 +25,7 @@ export interface NewExport {
   hold: string;
 }
 
-export interface ImportSession {
+interface ImportSession {
   path: string;
   sink: FileSink;
   type: string;

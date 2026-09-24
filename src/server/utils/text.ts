@@ -114,7 +114,7 @@ export const isPublishDate = (iso: string): boolean => {
   return when <= Date.now() + FUTURE_GRACE_MS;
 };
 
-export interface SnippetDate {
+interface SnippetDate {
   iso: string;
   rest: string;
 }

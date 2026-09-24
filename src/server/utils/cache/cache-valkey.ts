@@ -12,7 +12,7 @@ export const INVALIDATE_SCOPE = {
   EXTENSION_SETTINGS: "extension-settings",
 } as const;
 
-export type InvalidateScope =
+type InvalidateScope =
   (typeof INVALIDATE_SCOPE)[keyof typeof INVALIDATE_SCOPE];
 
 export interface InvalidatePayload {

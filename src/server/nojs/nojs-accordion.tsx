@@ -5,7 +5,7 @@ import {
 } from "../../shared/ui/components/layout/sidebar-accordion";
 import type { Child } from "../../shared/ui/tribute/types";
 
-export interface NojsAccordionProps {
+interface NojsAccordionProps {
   class: string;
   title: string;
   slot?: string;
