@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect, spyOn } from "bun:test";
 import {
   browserHeaders,
   cacheHandler,
@@ -65,6 +65,21 @@ describe("compat engine bridge", () => {
     expect(await onCache({ op: "get", key: "k" })).toBe("v");
     const other = cacheHandler("engine-bridge-test", `other-${Date.now()}`)!;
     expect(await other({ op: "get", key: "k" })).toBeNull();
+  });
+
+  test("the requested ttl applies unless the handler pins its own", async () => {
+    const honours = cacheHandler("engine-bridge-test", `ttl-${Date.now()}`)!;
+    const pinned = cacheHandler("engine-bridge-test", `pinned-${Date.now()}`, 60 * 60 * 1000)!;
+    await honours({ op: "set", key: "k", value: "v", ttl: 1 });
+    await pinned({ op: "set", key: "k", value: "v", ttl: 1 });
+    const later = Date.now() + 5_000;
+    const clock = spyOn(Date, "now").mockReturnValue(later);
+    try {
+      expect(await honours({ op: "get", key: "k" })).toBeNull();
+      expect(await pinned({ op: "get", key: "k" })).toBe("v");
+    } finally {
+      clock.mockRestore();
+    }
   });
 });
 

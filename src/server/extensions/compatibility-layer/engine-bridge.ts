@@ -65,11 +65,16 @@ export const toReply = async (resp: Response, fallbackUrl: string): Promise<RpcF
   text: await resp.text(),
 });
 
-export const cacheHandler = (namespace: string, engineId: string): RpcHandlers["onCache"] => {
-  const store = useCache<string>(`${namespace}:${engineId}`, CACHE_TTL_MS);
+export const cacheHandler = (
+  namespace: string,
+  engineId: string,
+  fixedTtlMs?: number,
+): RpcHandlers["onCache"] => {
+  const store = useCache<string>(`${namespace}:${engineId}`, fixedTtlMs ?? CACHE_TTL_MS);
   return async (req) => {
     if (req.op === "set") {
-      await store.set(req.key, req.value ?? "", req.ttl ? req.ttl * 1000 : undefined);
+      const ttlMs = fixedTtlMs ?? (req.ttl ? req.ttl * 1000 : undefined);
+      await store.set(req.key, req.value ?? "", ttlMs);
       return null;
     }
     return store.get(req.key);

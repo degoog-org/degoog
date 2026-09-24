@@ -7,7 +7,7 @@ import type { SettingField } from "../../../../shared/setting-field";
 import { makeExtID } from "../../../utils/extension-support/extension-id";
 import { logger } from "../../../utils/logger";
 import { getRandomUserAgent } from "../../../utils/net/user-agents";
-import { useCache } from "../../../utils/cache/cache";
+import { TTL_MS, useCache } from "../../../utils/cache/cache";
 import {
   asBoolean,
   getSettings,
@@ -37,7 +37,6 @@ import { phpBinary, phpStatus } from "./php-runtime";
 
 const NS = "4get-compat";
 const CACHE_NAMESPACE = "fourget-compat";
-const NPT_TTL_MS = 15 * 60 * 1000;
 const TYPE_OVERRIDE_KEY = "searchTypeOverride";
 const API_KEY_SETTING = "apiKey";
 const DAY_SECONDS = 24 * 60 * 60;
@@ -176,7 +175,7 @@ const _bridge = (engineId: string, engineName: string, context?: EngineContext):
       }
       return toReply(resp, req.url);
     },
-    onCache: cacheHandler(CACHE_NAMESPACE, engineId),
+    onCache: cacheHandler(CACHE_NAMESPACE, engineId, TTL_MS),
   };
 };
 
@@ -258,7 +257,7 @@ class FourGetCompatEngine implements SearchEngine {
   }
 
   private tokens(type: string) {
-    return useCache<string>(`${CACHE_NAMESPACE}:npt:${this.spec.engineId}:${type}`, NPT_TTL_MS);
+    return useCache<string>(`${CACHE_NAMESPACE}:npt:${this.spec.engineId}:${type}`, TTL_MS);
   }
 
   private tokenKey(
