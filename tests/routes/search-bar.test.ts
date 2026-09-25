@@ -12,7 +12,7 @@ beforeAll(async () => {
   await initSearchBarActions();
   if (orig !== undefined) process.env.DEGOOG_PLUGINS_DIR = orig;
   else delete process.env.DEGOOG_PLUGINS_DIR;
-  const mod = await import("../../src/server/routes/search-bar");
+  const mod = await import("../../src/server/routes/search/search-bar");
   searchBarRouter = mod.default;
 });
 
@@ -23,7 +23,6 @@ describe("routes/search-bar", () => {
     );
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toHaveProperty("actions");
     expect(Array.isArray(body.actions)).toBe(true);
   });
 });

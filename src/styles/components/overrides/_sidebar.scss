@@ -66,6 +66,43 @@
   font-size: $font-size-small;
   color: var(--text-primary);
   margin-bottom: $space-1;
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.engine-origin {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.engine-origin-icon,
+.engine-origin-glyph {
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+
+  .engine-stat-row:hover & {
+    opacity: 1;
+  }
+}
+
+.engine-origin-icon {
+  width: 1rem;
+  height: 1rem;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+.engine-origin-glyph {
+  width: 1rem;
+  font-size: $font-size-small;
+  text-align: center;
+  color: var(--text-secondary);
 }
 
 .engine-stat-bar-wrap {

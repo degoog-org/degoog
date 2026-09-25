@@ -1,21 +1,23 @@
 import {
-  ExtensionStoreType,
   type ExtensionMeta,
+  ExtensionStoreType,
   type SearchResultTab,
   type Translate,
-} from "../../types";
+} from "../../types/extension";
 import {
   initPlugin,
   loadPluginAssets,
   lockinNameSpace,
   lockinSettingsId,
-} from "../../utils/plugin-assets";
-import { getSettings, isDisabled } from "../../utils/plugin-settings";
-import { bootCircuitFromPath } from "../../utils/translation-circuit";
+} from "../../utils/extension-support/plugin-assets";
+import { getSettings, isDisabled } from "../../utils/settings/plugin-settings";
+import { bootCircuitFromPath } from "../../utils/extension-support/translation-circuit";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 import { buildExtensionMeta } from "../extension-meta";
-import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
+import {
+  isExtensionRestartFlagVisible,
+} from "../../utils/extension-support/restart-state";
 
 function isSearchResultTab(val: unknown): val is SearchResultTab {
   if (typeof val !== "object" || val === null) return false;

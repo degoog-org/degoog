@@ -2,12 +2,9 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { mkdtemp, mkdir, writeFile, rm } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
-import {
-  initEngines,
-  listEngines,
-  honorsImageFilters,
-} from "../../src/server/extensions/engines/registry";
-import type { ImageFilter } from "../../src/server/types";
+import { honorsImageFilters, listEngines } from "../../src/server/extensions/engines/catalog";
+import { initEngines } from "../../src/server/extensions/engines/loader";
+import type { ImageFilter } from "../../src/server/types/search";
 
 const writeEngine = async (
   root: string,
@@ -51,17 +48,12 @@ export default class { name = "NoFilters"; async executeSearch() { return []; } 
     await rm(dir, { recursive: true, force: true });
   });
 
-  test("exposes declared filters and drops empty groups", async () => {
+  test("exposes declared filters, drops empty groups and leaves undeclared engines bare", async () => {
     const engines = await listEngines();
-    const withFilters = engines.find((e) => e.displayName === "WithFilters");
-    expect(withFilters?.filters).toEqual({
+    expect(engines.find((e) => e.displayName === "WithFilters")?.filters).toEqual({
       color: ["red", "transparent"],
       nsfw: ["moderate"],
     });
-  });
-
-  test("engine without a filters export exposes no filters", async () => {
-    const engines = await listEngines();
     const noFilters = engines.find((e) => e.displayName === "NoFilters");
     expect(noFilters).toBeDefined();
     expect(noFilters?.filters).toBeUndefined();

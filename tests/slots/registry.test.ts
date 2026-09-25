@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { makeExtID } from "../../src/server/utils/extension-id";
+import { makeExtID } from "../../src/server/utils/extension-support/extension-id";
 import {
   getSlotPluginById,
-  getSlotPlugins,
   initSlotPlugins,
 } from "../../src/server/extensions/slots/registry";
-import { SlotPanelPosition } from "../../src/server/types";
+import type { SlotPluginContext } from "../../src/server/types/extension";
+import { type ScoredResult, SlotPanelPosition } from "../../src/shared/search-types";
 
 const AT_A_GLANCE_ID = makeExtID("at-a-glance", "slot");
 const WIKIPEDIA_ID = makeExtID("wikipedia", "slot");
@@ -29,39 +29,48 @@ describe("slots registry", () => {
     globalThis.fetch = origFetch;
   });
 
-  test("getSlotPlugins returns array", () => {
-    const plugins = getSlotPlugins();
-    expect(Array.isArray(plugins)).toBe(true);
-  });
-
   test("getSlotPluginById returns null for unknown id", () => {
     expect(getSlotPluginById("unknown-slot")).toBeNull();
   });
 
-  test("built-in at-a-glance slot has position at-a-glance and waitForResults", () => {
+  test("built-in slots declare their panel position", () => {
+    const glance = getSlotPluginById(AT_A_GLANCE_ID);
+    expect(glance).not.toBeNull();
+    expect(glance!.position).toBe(SlotPanelPosition.AtAGlance);
+    expect(glance!.waitForResults).toBe(true);
+    expect(getSlotPluginById(WIKIPEDIA_ID)!.position).toBe(
+      SlotPanelPosition.KnowledgePanel,
+    );
+  });
+
+  test("built-in wikipedia slot skips short queries and uncached pages", async () => {
+    const slot = getSlotPluginById(WIKIPEDIA_ID);
+    expect(slot).not.toBeNull();
+    expect(await slot!.trigger("x")).toBe(false);
+    expect((await slot!.execute("__nonexistent_query_xyz__")).html).toBe("");
+  });
+
+  test("built-in at-a-glance slot translates its strings with the request locale", async () => {
     const slot = getSlotPluginById(AT_A_GLANCE_ID);
     expect(slot).not.toBeNull();
-    expect(slot!.position).toBe(SlotPanelPosition.AtAGlance);
-    expect(slot!.waitForResults).toBe(true);
-  });
+    const results = [
+      {
+        title: "Example Domain",
+        url: "https://example.com/",
+        snippet:
+          "This domain is for use in illustrative examples in documents and can be used without permission.",
+        score: 1,
+        sources: ["Google CSE"],
+      },
+    ] as unknown as ScoredResult[];
+    const withLocale = (locale: string) =>
+      ({ results, locale }) as unknown as SlotPluginContext;
 
-  test("built-in wikipedia slot has position knowledge-panel", () => {
-    const slot = getSlotPluginById(WIKIPEDIA_ID);
-    expect(slot).not.toBeNull();
-    expect(slot!.position).toBe(SlotPanelPosition.KnowledgePanel);
-  });
+    const de = await slot!.execute("example domain", withLocale("de-DE"));
+    expect(de.html).toContain("Gefunden auf: Google CSE");
+    expect(de.html).not.toContain("Found on");
 
-  test("built-in wikipedia slot trigger returns false for very short queries", async () => {
-    const slot = getSlotPluginById(WIKIPEDIA_ID);
-    expect(slot).not.toBeNull();
-    const result = await slot!.trigger("x");
-    expect(result).toBe(false);
-  });
-
-  test("built-in wikipedia slot execute returns empty html when no page cached", async () => {
-    const slot = getSlotPluginById(WIKIPEDIA_ID);
-    expect(slot).not.toBeNull();
-    const result = await slot!.execute("__nonexistent_query_xyz__");
-    expect(result.html).toBe("");
+    const en = await slot!.execute("example domain", withLocale("en-US"));
+    expect(en.html).toContain("Found on: Google CSE");
   });
 });

@@ -11,7 +11,7 @@ const _originalThemesDir = process.env.DEGOOG_THEMES_DIR;
 const _originalSettingsFile = process.env.DEGOOG_PLUGIN_SETTINGS_FILE;
 
 type Registry = typeof import("../../src/server/extensions/themes/registry");
-type Valkey = typeof import("../../src/server/utils/cache-valkey");
+type Valkey = typeof import("../../src/server/utils/cache/cache-valkey");
 
 let registry: Registry;
 let valkey: Valkey;
@@ -33,7 +33,7 @@ beforeAll(async () => {
   await addTheme("alpha");
   await addTheme("beta");
   registry = await import("../../src/server/extensions/themes/registry");
-  valkey = await import("../../src/server/utils/cache-valkey");
+  valkey = await import("../../src/server/utils/cache/cache-valkey");
 });
 
 beforeEach(async () => {

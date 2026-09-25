@@ -1,0 +1,60 @@
+<!-- @fccview here, yes I added an inline negative letter spacing to make that stupid font fit better in the header, sue me. -->
+
+<a href="/" class="results-logo" style="letter-spacing: -4px">
+  <span class="logo-d logo-letter"> 𝚍</span>
+  <span class="logo-e logo-letter"> 𝚎</span>
+  <span class="logo-g1 logo-letter"> 𝚐</span>
+  <span class="logo-o1 logo-letter"> 𝚘</span>
+  <span class="logo-o2 logo-letter"> 𝚘</span>
+  <span class="logo-g2 logo-letter"> 𝚐</span>
+</a>
+<div
+  class="results-search-bar degoog-search-bar degoog-search-bar--results"
+  id="results-search-bar"
+>
+  <svg
+    class="search-icon"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#9aa0a6"
+    stroke-width="2"
+  >
+    <circle cx="11" cy="11" r="8" />
+    <path d="M21 21l-4.35-4.35" />
+  </svg>
+  <input
+    type="text"
+    class="search-input"
+    id="results-search-input"
+    autocomplete="off"
+  />
+  <div class="ac-dropdown" id="ac-dropdown-results"></div>
+  <div id="search-bar-actions-results" class="search-bar-actions"></div>
+  <button
+    class="degoog-icon-btn"
+    style="display: none"
+    id="results-search-clear-btn"
+  >
+    <i class="fa-solid fa-times fa-lg" style="color: var(--brand-blue)"></i>
+  </button>
+  <button class="search-submit-btn degoog-icon-btn" id="results-search-btn">
+    <i
+      class="fa-solid fa-arrow-right fa-lg"
+      style="color: var(--brand-blue)"
+    ></i>
+  </button>
+</div>
+<a
+  href="/settings"
+  class="header-link settings-gear degoog-icon-btn degoog-icon-btn--padded degoog-icon-btn--results-gear"
+  id="nav-settings-results"
+  title="Settings"
+>
+  <i
+    class="fa-solid fa-gear fa-xl"
+    onmouseenter="this.classList.add('fa-spin')"
+    onmouseleave="this.classList.remove('fa-spin')"
+  ></i>
+</a>

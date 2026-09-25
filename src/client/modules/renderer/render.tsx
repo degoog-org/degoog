@@ -1,0 +1,243 @@
+import { clear, render } from "../../../shared/ui/tribute/dom";
+import { TransText } from "../../../shared/ui/components/primitives/trans-text";
+import { NoResults } from "../../../shared/ui/components/feedback/no-results";
+import { NoEnginesLink } from "../../utils/search/engine-stats/no-engines-link";
+import { PaginationWrap } from "../../utils/pagination/pagination-wrap";
+import { state } from "../../state";
+import {
+  DEGOOG_ENGINE_NAME,
+  isImageSearchType,
+  type ScoredResult,
+} from "../../../shared/search-types";
+import { cleanUrl } from "../../utils/dom/dom";
+import { linkHref, faviconHostname } from "../../../shared/utils/url";
+import { Pagination } from "../../utils/pagination/pagination";
+import { PaginationNav } from "../../utils/pagination/pagination-nav";
+import { goToPage } from "../../utils/search/actions/search-actions-page";
+import { renderTemplate } from "../../utils/dom/template";
+import { attachFaviconFallback } from "../../utils/dom/favicon";
+import { faviconUrl } from "../../utils/net/url";
+import { getBase } from "../../utils/net/base-url";
+import { syncMediaPreviewPanel } from "../media/media";
+import { destroyMediaObserver, setupMediaObserver } from "../media/media-scroll";
+import { renderImageGrid } from "./media/render-media";
+
+import { clearSlotPanels as _clearSlots } from "./render-slots";
+
+const t = window.scopedT("themes/degoog");
+
+type ResultActionsFlags = {
+  authenticated?: boolean;
+  blockUi?: boolean;
+  replaceUi?: boolean;
+  scoreUi?: boolean;
+};
+
+const _resultActionsFlags = (): ResultActionsFlags =>
+  (window as unknown as { __DEGOOG_RESULT_ACTIONS__?: ResultActionsFlags })
+    .__DEGOOG_RESULT_ACTIONS__ ?? {};
+
+export const buildResultContext = (
+  r: ScoredResult,
+  index = 0,
+): Record<string, unknown> => {
+  const flags = _resultActionsFlags();
+  const showBlock = !!(flags.authenticated && flags.blockUi);
+  const showReplace = !!(flags.authenticated && flags.replaceUi);
+  const showScore = !!(flags.authenticated && flags.scoreUi);
+  const isRecalled = r.idx === "recalled";
+  const fromIndexTip = t("search-templates.result.from-index");
+  const sources = (r.sources ?? []).map((name) => ({
+    name,
+    tooltip: isRecalled && name === DEGOOG_ENGINE_NAME ? fromIndexTip : "",
+  }));
+  return {
+    index,
+    title: r.title,
+    url: linkHref(r.url),
+    cite_url: cleanUrl(r.url),
+    snippet: r.snippet,
+    published_at: _dateLabel(r.publishedAt),
+    favicon_url: faviconUrl(r.url),
+    favicon_host: faviconHostname(r.url),
+    thumbnail_url: r.thumbnail || "",
+    sources,
+    duration: r.duration || "",
+    is_video: state.currentType === "videos" || !!r.duration,
+    link_target: state.openInNewTab ? "_blank" : "_self",
+    link_rel: state.openInNewTab ? "noopener" : "",
+    insecure: !!r.insecure,
+    show_actions: showBlock || showReplace || showScore,
+    action_block: showBlock,
+    action_replace: showReplace,
+    action_score: showScore,
+  };
+};
+
+const _dateLabel = (iso?: string): string => {
+  if (!iso || !state.showResultDates) return "";
+  const when = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(when.getTime())) return "";
+  try {
+    return new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    }).format(when);
+  } catch (err) {
+    console.debug("[render] could not format result date", err);
+    return iso;
+  }
+};
+
+const _hydrateFavicons = (container: HTMLElement): void => {
+  container
+    .querySelectorAll<HTMLImageElement>("img.result-favicon")
+    .forEach((img) => attachFaviconFallback(img));
+};
+
+export function renderResults(
+  results: ScoredResult[],
+  opts: { paginate?: boolean } = {},
+): void {
+  const container = document.getElementById("results-list");
+  const layout = document.getElementById("results-layout");
+  if (!container || !layout) return;
+
+  const isImageType = isImageSearchType(state.currentType);
+
+  if (isImageType) {
+    layout.classList.add("media-mode");
+  } else {
+    layout.classList.remove("media-mode");
+  }
+  syncMediaPreviewPanel(isImageType);
+
+  if (results.length === 0) {
+    const noEngines = state.currentData?.engineTimings.length === 0;
+    const body = noEngines ? (
+      <TransText
+        text={t("search-templates.no-engines", { store: "{store}" })}
+        slots={{
+          store: (
+            <NoEnginesLink
+              href={`${getBase()}/settings/store`}
+              label={t("search-templates.no-engines-store")}
+            />
+          ),
+        }}
+      />
+    ) : (
+      t("search-templates.no-results")
+    );
+    render(<NoResults>{body}</NoResults>, container);
+    if (!isImageType && opts.paginate !== false) {
+      renderPagination(state.lastPage, state.currentPage, false);
+    }
+    return;
+  }
+
+  if (isImageType) {
+    renderImageGrid(results, container);
+    setupMediaObserver("images");
+    _clearSlots();
+    const pagination = document.getElementById("pagination");
+    if (pagination) clear(pagination);
+    return;
+  }
+
+  destroyMediaObserver();
+
+  container.innerHTML = results
+    .map(
+      (r, i) => renderTemplate("degoog-result", buildResultContext(r, i)) ?? "",
+    )
+    .join("");
+
+  _hydrateFavicons(container);
+  attachVideoPlayers(container);
+
+  if (opts.paginate !== false) {
+    renderPagination(state.lastPage, state.currentPage, results.length > 0);
+  } else {
+    const pagination = document.getElementById("pagination");
+    if (pagination) clear(pagination);
+  }
+  window.dispatchEvent(new CustomEvent("degoog-results-ready"));
+}
+
+export function appendResults(
+  results: ScoredResult[],
+  startIndex: number,
+): void {
+  const container = document.getElementById("results-list");
+  if (!container || results.length === 0) return;
+
+  container.insertAdjacentHTML(
+    "beforeend",
+    results
+      .map(
+        (r, i) =>
+          renderTemplate(
+            "degoog-result",
+            buildResultContext(r, startIndex + i),
+          ) ?? "",
+      )
+      .join(""),
+  );
+
+  _hydrateFavicons(container);
+  attachVideoPlayers(container);
+  window.dispatchEvent(new CustomEvent("degoog-results-ready"));
+}
+
+export const attachVideoPlayers = (container: HTMLElement): void => {
+  container
+    .querySelectorAll<HTMLElement>(
+      ".degoog-result--thumb--video:not([data-player-ready])",
+    )
+    .forEach((thumb) => {
+      const url = thumb.dataset.url;
+      if (!url) return;
+      thumb.dataset.playerReady = "1";
+      thumb.addEventListener("click", () => {
+        window.open(url, "_blank", "noopener");
+      });
+    });
+};
+
+export function renderPagination(
+  totalPages: number | null,
+  activePage: number,
+  hasNext = true,
+): void {
+  const container = document.getElementById("pagination");
+  if (!container) return;
+  if (totalPages !== null && totalPages < 1) {
+    clear(container);
+    return;
+  }
+  if (totalPages === 1) {
+    clear(container);
+    return;
+  }
+
+  const inner =
+    totalPages === null ? (
+      <PaginationNav activePage={activePage} hasNext={hasNext} />
+    ) : (
+      <Pagination totalPages={totalPages} activePage={activePage} />
+    );
+  render(<PaginationWrap>{inner}</PaginationWrap>, container);
+
+  container.querySelectorAll<HTMLElement>("[data-page]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      const pageNum = parseInt(el.dataset.page ?? "0", 10);
+      if (pageNum < 1) return;
+      if (totalPages !== null && pageNum > totalPages) return;
+      void goToPage(pageNum);
+    });
+  });
+}

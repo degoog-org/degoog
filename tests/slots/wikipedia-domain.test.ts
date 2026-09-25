@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { toWikiDomain } from "../../src/server/extensions/commands/builtins/wikipedia/index";
+import { toWikiDomain } from "../../src/server/extensions/commands/builtins/wikipedia";
 
 describe("wikipedia toWikiDomain", () => {
   test("defaults to en.wikipedia.org when empty or missing", () => {

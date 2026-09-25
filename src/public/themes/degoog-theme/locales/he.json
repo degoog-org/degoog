@@ -91,6 +91,7 @@
     "no-engines": "אין מנועי חיפוש מותקנים. {store} לעיון והתקנה.",
     "no-engines-store": "עבור לחנות",
     "sidebar": {
+      "engine-origin": "מסופק על ידי {source}",
       "engine-performance": "ביצועי מנועים",
       "people-also-search": "אנשים מחפשים גם",
       "info": "מידע",

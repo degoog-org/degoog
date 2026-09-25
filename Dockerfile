@@ -14,6 +14,8 @@ RUN bun run build
 FROM base AS release
 COPY scripts/install-curl-impersonate.sh /app/
 RUN apk add --no-cache git ca-certificates su-exec curl bash python3 py3-lxml py3-babel py3-dateutil \
+  php84 php84-sodium php84-mbstring php84-openssl \
+  && ln -sf /usr/bin/php84 /usr/bin/php \
   && chmod +x /app/install-curl-impersonate.sh \
   && /app/install-curl-impersonate.sh \
   && rm /app/install-curl-impersonate.sh
@@ -21,6 +23,7 @@ RUN apk add --no-cache git ca-certificates su-exec curl bash python3 py3-lxml py
 COPY --from=install /app/node_modules ./node_modules
 COPY --from=build /app/src ./src
 COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/tsconfig.json ./tsconfig.json
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

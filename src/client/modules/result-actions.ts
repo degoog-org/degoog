@@ -1,6 +1,6 @@
-import { cleanUrl } from "../utils/dom";
-import { getBase } from "../utils/base-url";
-import { attachFaviconFallback } from "../utils/favicon";
+import { cleanUrl } from "../utils/dom/dom";
+import { getBase } from "../utils/net/base-url";
+import { attachFaviconFallback } from "../utils/dom/favicon";
 import { resolveTarget } from "../../shared/domain-target";
 import { confirmModal } from "./modals/confirm-modal/confirm";
 import { promptModal } from "./modals/prompt-modal/prompt";

@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { installItem } from "../../src/server/extensions/store/item-ops";
-import { ExtensionStoreType } from "../../src/server/types";
+import { installItem } from "../../src/server/extensions/store/item-lifecycle";
+import { ExtensionStoreType } from "../../src/server/types/extension";
 
 const repoUrl = "https://example.com/acme/repo.git";
 let tempDir: string | null = null;

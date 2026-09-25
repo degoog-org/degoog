@@ -91,6 +91,7 @@
     "no-engines": "Nessun motore di ricerca installato. {store} per sfogliarne e installarne alcuni.",
     "no-engines-store": "Vai allo Store",
     "sidebar": {
+      "engine-origin": "Fornito da {source}",
       "engine-performance": "Prestazioni dei motori",
       "people-also-search": "Le persone cercano anche",
       "info": "Info",

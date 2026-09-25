@@ -4,18 +4,28 @@ import { join } from "path";
 import { randomBytes } from "crypto";
 import { logger } from "../../utils/logger";
 import { indexerTmpDir } from "../../utils/paths";
+import { getAdapter } from "../db/factory";
 
 const SESSION_TTL_MS = 30 * 60_000;
 
-export interface ExportSession {
+interface ExportSession {
   path: string;
   size: number;
   cleanup: boolean;
   type: string;
+  hold: string;
   expires: number;
 }
 
-export interface ImportSession {
+interface NewExport {
+  path: string;
+  size: number;
+  cleanup: boolean;
+  type: string;
+  hold: string;
+}
+
+interface ImportSession {
   path: string;
   sink: FileSink;
   type: string;
@@ -42,11 +52,23 @@ const bin = (path: string): void => {
   }
 };
 
+const endExport = (s: ExportSession): void => {
+  if (s.cleanup) {
+    bin(s.path);
+    return;
+  }
+  try {
+    getAdapter().freeExport(s.hold);
+  } catch (err) {
+    logger.warn("indexer", `could not release the export hold on type=${s.type}`, err);
+  }
+};
+
 const sweep = (): void => {
   const now = Date.now();
   for (const [id, s] of _exports) {
     if (s.expires < now) {
-      if (s.cleanup) bin(s.path);
+      endExport(s);
       _exports.delete(id);
     }
   }
@@ -59,16 +81,18 @@ const sweep = (): void => {
   }
 };
 
-export const openExportSession = (
-  path: string,
-  size: number,
-  cleanup: boolean,
-  type: string,
-): string => {
+export const openExportSession = (spec: NewExport): string => {
   sweep();
   const id = newId();
-  _exports.set(id, { path, size, cleanup, type, expires: Date.now() + SESSION_TTL_MS });
+  _exports.set(id, { ...spec, expires: Date.now() + SESSION_TTL_MS });
   return id;
+};
+
+export const touchExport = (id: string): void => {
+  const s = _exports.get(id);
+  if (!s) return;
+  s.expires = Date.now() + SESSION_TTL_MS;
+  if (s.hold) getAdapter().touchHold(s.hold);
 };
 
 export const getExportSession = (id: string): ExportSession | undefined =>
@@ -77,7 +101,7 @@ export const getExportSession = (id: string): ExportSession | undefined =>
 export const closeExportSession = (id: string): void => {
   const s = _exports.get(id);
   if (!s) return;
-  if (s.cleanup) bin(s.path);
+  endExport(s);
   _exports.delete(id);
   logger.debug("indexer", `export session closed id=${id.slice(0, 8)}`);
 };

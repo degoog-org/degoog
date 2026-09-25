@@ -1,13 +1,6 @@
 import type { EngineFilters } from "../../shared/engine-filters";
+import type { EngineOrigin } from "../../shared/engine-origins";
 import type { SettingField } from "../../shared/setting-field";
-
-export type {
-  FieldOption,
-  FieldOptionsResult,
-  FieldOptionsSource,
-} from "../../shared/field-options";
-
-export type { SettingFieldType, SettingField } from "../../shared/setting-field";
 
 export interface ExtensionMeta {
   id: string;
@@ -64,6 +57,7 @@ export interface EngineRegistry {
     searchTypes: string[];
     disabledByDefault?: boolean;
     filters?: EngineFilters;
+    origin?: EngineOrigin;
   }>;
   defaults?: Record<string, boolean>;
 }

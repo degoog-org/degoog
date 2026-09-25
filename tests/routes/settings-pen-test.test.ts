@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { initServerKey } from "../../src/server/utils/server-key";
+import { initServerKey } from "../../src/server/utils/security/server-key";
 
 type Router = {
   request: (req: Request | string) => Response | Promise<Response>;
@@ -8,7 +8,7 @@ type Router = {
 const CORRECT_PASSWORD = "pentest-secret-pw-77x";
 
 const importPagesRouter = (): Promise<{ default: Router }> =>
-  import(`../../src/server/routes/pages?pen-test=${Date.now()}`);
+  import(`../../src/server/routes/pages/pages?pen-test=${Date.now()}`);
 
 let pagesRouter: Router;
 let authRouter: Router;
@@ -37,8 +37,8 @@ beforeAll(async () => {
 
   const [pagesMod, authMod, settingsMod] = await Promise.all([
     importPagesRouter(),
-    import("../../src/server/routes/settings-auth"),
-    import("../../src/server/routes/settings"),
+    import("../../src/server/routes/settings/settings-auth"),
+    import("../../src/server/routes/settings/settings"),
   ]);
 
   pagesRouter = pagesMod.default;
@@ -104,13 +104,6 @@ describe("public instance - generated password", () => {
     expect(html).toContain("settings-auth");
   });
 
-  test("GET /admin/:tab returns 200 and shows the generated-password auth gate", async () => {
-    const res = await pagesRouter.request("http://localhost/admin/general");
-    expect(res.status).toBe(200);
-    const html = await res.text();
-    expect(html).toContain("settings-auth");
-  });
-
   test("public settings HTML has no reference to the admin path", async () => {
     const res = await pagesRouter.request("http://localhost/settings");
     const html = await res.text();
@@ -144,22 +137,23 @@ describe("public instance - dangerously no password", () => {
     expect(res.status).toBe(404);
   });
 
-  test("GET /admin/:tab returns 404", async () => {
-    const res = await pagesRouter.request("http://localhost/admin/general");
-    expect(res.status).toBe(404);
+  test("GET /admin answers with the same 404 as a missing page", async () => {
+    const admin = await pagesRouter.request("http://localhost/admin");
+    const missing = await pagesRouter.request("http://localhost/definitely-not-a-page");
+    expect(admin.status).toBe(missing.status);
+    expect(admin.headers.get("content-type")).toBe(missing.headers.get("content-type"));
+  });
+
+  test("GET /api/settings/auth does not claim the admin area is open", async () => {
+    const res = await authRouter.request("http://localhost/api/settings/auth");
+    const body = (await res.json()) as { required: boolean; valid: boolean };
+    expect(body).toEqual({ required: true, valid: false });
   });
 });
 
 describe("public instance - password set", () => {
   beforeAll(() => {
     process.env.DEGOOG_SETTINGS_PASSWORDS = CORRECT_PASSWORD;
-  });
-
-  test("GET /admin returns 200 and shows the auth gate", async () => {
-    const res = await pagesRouter.request("http://localhost/admin");
-    expect(res.status).toBe(200);
-    const html = await res.text();
-    expect(html).toContain("settings-auth");
   });
 
   test("POST /api/settings/auth with wrong password returns 401", async () => {
@@ -177,6 +171,40 @@ describe("public instance - password set", () => {
     const blocked = await authPost("badpass", ip);
     expect(blocked.status).toBe(429);
     expect(blocked.headers.get("Retry-After")).not.toBeNull();
+  });
+
+  test("parallel guesses cannot slip past the brute force cap", async () => {
+    const ip = "10.3.1.42";
+    const results = await Promise.all(
+      Array.from({ length: 40 }, () => authPost("badpass", ip)),
+    );
+    const refused = results.filter((r) => r.status === 401).length;
+    expect(refused).toBeLessThanOrEqual(10);
+    expect(results.filter((r) => r.status === 429).length).toBe(40 - refused);
+  });
+
+  test("a successful login does not count towards the brute force cap", async () => {
+    const ip = "10.3.2.7";
+    for (let i = 0; i < 12; i++) {
+      expect((await authPost(CORRECT_PASSWORD, ip)).status).toBe(200);
+    }
+  });
+
+  test("a stale x-settings-token header falls back to a valid cookie", async () => {
+    const authRes = await authPost(CORRECT_PASSWORD, "10.8.0.1");
+    const { token } = (await authRes.json()) as { ok: boolean; token: string };
+    const res = await settingsRouter.request(
+      new Request("http://localhost/api/settings/general", {
+        headers: { "x-settings-token": "expired-token", cookie: `settings-token=${token}` },
+      }),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  test("GET /api/settings/auth does not reveal how the password was configured", async () => {
+    const res = await authRouter.request("http://localhost/api/settings/auth");
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body).toEqual({ required: true, valid: false });
   });
 
   test("POST /api/settings/auth with correct password returns token and sets secure cookie", async () => {
@@ -242,5 +270,43 @@ describe("public instance - password set", () => {
       }),
     );
     expect(res.status).toBe(401);
+  });
+});
+
+describe("private instance with a custom settings path", () => {
+  let hiddenPages: Router;
+
+  beforeAll(async () => {
+    delete process.env.DEGOOG_PUBLIC_INSTANCE;
+    process.env.DEGOOG_SETTINGS_PATH = "hidden-admin";
+    hiddenPages = (
+      await import(`../../src/server/routes/pages/pages?custom-path=${Date.now()}`)
+    ).default;
+  });
+
+  afterAll(() => {
+    process.env.DEGOOG_PUBLIC_INSTANCE = "true";
+    delete process.env.DEGOOG_SETTINGS_PATH;
+  });
+
+  test("/settings serves the public settings page without revealing the custom path", async () => {
+    const res = await hiddenPages.request("http://localhost/settings");
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("__DEGOOG_PUBLIC_INSTANCE__ = true");
+    expect(html).not.toContain("hidden-admin");
+  });
+
+  test("/settings tabs fall back to the public settings page", async () => {
+    for (const path of ["/settings/general", "/settings/nope"]) {
+      const res = await hiddenPages.request(`http://localhost${path}`);
+      expect(res.status).toBe(302);
+      expect(res.headers.get("location")).toBe("/settings");
+    }
+  });
+
+  test("the custom path still serves settings", async () => {
+    const res = await hiddenPages.request("http://localhost/hidden-admin");
+    expect(res.status).toBe(200);
   });
 });

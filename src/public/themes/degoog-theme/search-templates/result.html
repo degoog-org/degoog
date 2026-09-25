@@ -111,7 +111,7 @@
         rel="{{ link_rel }}"
         >{{ title }}</a
       >
-      <p class="result-snippet degoog-result--snippet">{{ snippet }}</p>
+      <p class="result-snippet degoog-result--snippet">{{#if published_at}}<span class="result-date degoog-result--date">{{ published_at }}</span>{{/if published_at}}{{ snippet }}</p>
       <div class="result-engines degoog-result--engines">
         {{#each sources}}
         {{#if tooltip}}

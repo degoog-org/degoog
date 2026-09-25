@@ -1,0 +1,7 @@
+{
+  "uuid": {
+    "title": "Erzeugte UUIDs",
+    "description": "Zufällige UUIDs (v4) erzeugen (Standard: 10 oder eine Anzahl angeben)",
+    "copy": "Kopieren"
+  }
+}

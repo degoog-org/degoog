@@ -91,6 +91,7 @@
     "no-engines": "No search engines installed. {store} to browse and install some.",
     "no-engines-store": "Go to the Store",
     "sidebar": {
+      "engine-origin": "Provided by {source}",
       "engine-performance": "Engine Performance",
       "people-also-search": "People also search for",
       "info": "Info",
@@ -137,5 +138,16 @@
       "page": "Page {page}",
       "end": "No more results."
     }
+  },
+  "nojs": {
+    "search-label": "Search query",
+    "pagination-label": "Result pages",
+    "results-meta": "{count} results in {time} ms",
+    "no-results": "No results found.",
+    "rate-limited": "Too many requests. Please wait a moment and try again.",
+    "full-app": "Full version",
+    "command-unsupported": "This extension was not set up to work in the no-JS environment. Please contact the extension developer to ask if integration is possible or planned.",
+    "command-disabled": "This command is turned off on this instance.",
+    "command-failed": "This command could not be completed. Please try again."
   }
 }

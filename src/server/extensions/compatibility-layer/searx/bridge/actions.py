@@ -68,6 +68,18 @@ def build_request(payload):
     }
 
 
+def _published(value):
+    if value is None:
+        return None
+    formatter = getattr(value, "strftime", None)
+    if callable(formatter):
+        return formatter("%Y-%m-%d")
+    raw = str(value).strip()
+    if len(raw) >= 10 and raw[4] == "-" and raw[7] == "-":
+        return raw[:10]
+    return None
+
+
 def _one_result(item, source):
     if not isinstance(item, dict):
         return None
@@ -89,6 +101,9 @@ def _one_result(item, source):
     length = item.get("length") or item.get("duration")
     if length:
         out["duration"] = str(length)
+    published = _published(item.get("publishedDate") or item.get("publishedAt"))
+    if published:
+        out["publishedAt"] = published
     return out
 
 

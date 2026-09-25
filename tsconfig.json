@@ -10,8 +10,19 @@
     "outDir": "./dist",
     "rootDir": ".",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "types": ["bun"]
+    "types": ["bun"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "@degoog/ui",
+    "paths": {
+      "@degoog/ui/*": ["./src/shared/ui/*"]
+    }
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "tests/**/*.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "tests/**/*.d.ts"
+  ],
   "exclude": ["node_modules", "src/server/public"]
 }

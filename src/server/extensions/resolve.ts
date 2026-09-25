@@ -1,5 +1,6 @@
-import { getCoreTranslator } from "../routes/pages";
-import { getEngineExtensionMeta, getEngineMap } from "./engines/registry";
+import { getCoreTranslator } from "../render/theme-assets";
+import { getEngineByManifestId, getEngineMap } from "./engines/catalog";
+import { getEngineExtensionMeta } from "./engines/extension-meta";
 import {
   getPluginExtensionMeta,
   getCommandInstanceById,
@@ -36,12 +37,12 @@ import type {
   SearchResultTab,
   SlotPlugin,
   Transport,
-} from "../types";
+} from "../types/extension";
 
 const TRANSPORT_SUFFIX = "-transport";
 const AUTOCOMPLETE_SUFFIX = "-autocomplete";
 
-export interface ResolvedExtension {
+interface ResolvedExtension {
   engine: SearchEngine | null;
   command: BangCommand | null;
   slot: SlotPlugin | null;
@@ -58,9 +59,20 @@ type OptionsHost = {
   pluginManifest?: { getFieldOptions?: GetFieldOptions };
 };
 
-export const getAllExtensionMeta = async (): Promise<ExtensionMeta[]> => {
+export const getExtensionMetaGroups = async () => {
   const coreT = await getCoreTranslator();
-  const groups = await Promise.all([
+  const [
+    engines,
+    plugins,
+    slots,
+    interceptors,
+    searchBar,
+    tabs,
+    themes,
+    transports,
+    autocomplete,
+    shortcuts,
+  ] = await Promise.all([
     getEngineExtensionMeta(coreT),
     getPluginExtensionMeta(coreT),
     getSlotExtensionMeta(coreT),
@@ -72,8 +84,11 @@ export const getAllExtensionMeta = async (): Promise<ExtensionMeta[]> => {
     getAutocompleteExtensionMeta(),
     getShortcutExtensionMeta(),
   ]);
-  return groups.flat();
+  return { engines, plugins, slots, interceptors, searchBar, tabs, themes, transports, autocomplete, shortcuts };
 };
+
+const getAllExtensionMeta = async (): Promise<ExtensionMeta[]> =>
+  Object.values(await getExtensionMetaGroups()).flat();
 
 export const findExtensionMeta = async (
   id: string,
@@ -92,7 +107,7 @@ const findTabBySettingsId = (id: string): SearchResultTab | null => {
 };
 
 export const resolveExtension = (id: string): ResolvedExtension => ({
-  engine: getEngineMap()[id] ?? null,
+  engine: getEngineMap()[id] ?? getEngineByManifestId(id),
   command: getCommandInstanceById(id) ?? null,
   slot: findSlotBySettingsId(id),
   interceptor: getInterceptorBySettingsId(id),

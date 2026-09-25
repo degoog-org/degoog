@@ -1,12 +1,12 @@
-import type { RequestMiddleware, Translate } from "../../types";
+import type { RequestMiddleware, Translate } from "../../types/extension";
 import {
   initPlugin,
   loadPluginAssets,
   lockinNameSpace,
   lockinSettingsId,
-} from "../../utils/plugin-assets";
-import { isDisabled } from "../../utils/plugin-settings";
-import { bootCircuitFromPath } from "../../utils/translation-circuit";
+} from "../../utils/extension-support/plugin-assets";
+import { isDisabled } from "../../utils/settings/plugin-settings";
+import { bootCircuitFromPath } from "../../utils/extension-support/translation-circuit";
 import { pluginsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
 

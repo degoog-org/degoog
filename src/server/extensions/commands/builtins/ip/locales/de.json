@@ -1,0 +1,20 @@
+{
+  "ip": {
+    "title": "IP-Abfrage",
+    "description": "Informationen zu einer IP-Adresse abfragen",
+    "title-result": "IP-Info: {ip}",
+    "detecting": "Ermittle deine IP...",
+    "detect-failed": "IP konnte nicht ermittelt werden.",
+    "detect-failed-hint": "Deine öffentliche IP konnte nicht ermittelt werden. Versuche <strong>!ip 8.8.8.8</strong>",
+    "lookup-failed": "Abfrage fehlgeschlagen: {message}",
+    "fetch-failed": "IP-Daten konnten nicht abgerufen werden. Bitte versuche es erneut.",
+    "label-ip": "IP",
+    "label-city": "Stadt",
+    "label-region": "Region",
+    "label-country": "Land",
+    "label-isp": "Provider",
+    "label-org": "Organisation",
+    "label-latlon": "Breite/Länge",
+    "na": "k. A."
+  }
+}

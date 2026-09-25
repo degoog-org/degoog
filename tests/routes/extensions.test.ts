@@ -5,7 +5,7 @@ let extensionsRouter: {
 };
 
 beforeAll(async () => {
-  const mod = await import("../../src/server/routes/extensions");
+  const mod = await import("../../src/server/routes/extensions/extensions");
   extensionsRouter = mod.default;
 });
 

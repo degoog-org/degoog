@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 
-export interface HoneypotTrap {
+interface HoneypotTrap {
   id: string;
   paths: string[];
   respond: (c: Context) => Response | Promise<Response>;

@@ -10,12 +10,12 @@ import {
 import {
   getServerKeyHex,
   initServerKey,
-} from "../../src/server/utils/server-key";
+} from "../../src/server/utils/security/server-key";
 import {
   getInstanceSettings,
   updateInstanceSettings,
   type ServerSettingValue,
-} from "../../src/server/utils/server-settings";
+} from "../../src/server/utils/settings/server-settings";
 
 type Router = {
   request: (req: Request | string) => Response | Promise<Response>;
@@ -29,7 +29,7 @@ let _savedSettings: Record<string, ServerSettingValue> = {};
 beforeAll(async () => {
   await initServerKey();
   const [suggestMod, searchMod] = await Promise.all([
-    import("../../src/server/routes/suggest"),
+    import("../../src/server/routes/search/suggest"),
     import("../../src/server/routes/search"),
   ]);
   suggestRouter = suggestMod.default;
@@ -89,81 +89,23 @@ const _post = (
     }),
   );
 
-describe("guardApiKey - suggest endpoints", () => {
-  const SUGGEST_ENDPOINTS = [
-    {
-      label: "GET /api/suggest",
-      fn: (h: Record<string, string>) =>
-        _get(suggestRouter, "/api/suggest?q=x", h),
-    },
-  ];
-
-  describe("protection disabled - all pass through", () => {
-    for (const { label, fn } of SUGGEST_ENDPOINTS) {
-      test(label, async () => {
-        const res = await fn({});
-        expect(res.status).not.toBe(401);
-      });
-    }
+describe("guardApiKey - guarded endpoints", () => {
+  test("GET /api/suggest is open, then guarded, then unlocked by the key", async () => {
+    expect((await _get(suggestRouter, "/api/suggest?q=x")).status).not.toBe(401);
+    await _enable("apiKeySuggestEnabled");
+    expect((await _get(suggestRouter, "/api/suggest?q=x")).status).toBe(401);
+    expect(
+      (await _get(suggestRouter, "/api/suggest?q=x", _bearer())).status,
+    ).not.toBe(401);
   });
 
-  describe("protection enabled - no auth → 401", () => {
-    for (const { label, fn } of SUGGEST_ENDPOINTS) {
-      test(label, async () => {
-        await _enable("apiKeySuggestEnabled");
-        const res = await fn({});
-        expect(res.status).toBe(401);
-      });
-    }
-  });
-
-  describe("protection enabled - valid bearer → passes", () => {
-    for (const { label, fn } of SUGGEST_ENDPOINTS) {
-      test(label, async () => {
-        await _enable("apiKeySuggestEnabled");
-        const res = await fn(_bearer());
-        expect(res.status).not.toBe(401);
-      });
-    }
-  });
-
-});
-
-describe("guardApiKey - search endpoints", () => {
-  const SEARCH_ENDPOINTS = [
-    {
-      label: "GET /api/search",
-      fn: (h: Record<string, string>) => _get(searchRouter, "/api/search", h),
-    },
-  ];
-
-  describe("protection disabled - all pass through", () => {
-    for (const { label, fn } of SEARCH_ENDPOINTS) {
-      test(label, async () => {
-        const res = await fn({});
-        expect(res.status).not.toBe(401);
-      });
-    }
-  });
-
-  describe("protection enabled - no auth → 401", () => {
-    for (const { label, fn } of SEARCH_ENDPOINTS) {
-      test(label, async () => {
-        await _enable("apiKeySearchEnabled");
-        const res = await fn({});
-        expect(res.status).toBe(401);
-      });
-    }
-  });
-
-  describe("protection enabled - valid bearer → passes", () => {
-    for (const { label, fn } of SEARCH_ENDPOINTS) {
-      test(label, async () => {
-        await _enable("apiKeySearchEnabled");
-        const res = await fn(_bearer());
-        expect(res.status).not.toBe(401);
-      });
-    }
+  test("GET /api/search is open, then guarded, then unlocked by the key", async () => {
+    expect((await _get(searchRouter, "/api/search")).status).not.toBe(401);
+    await _enable("apiKeySearchEnabled");
+    expect((await _get(searchRouter, "/api/search")).status).toBe(401);
+    expect(
+      (await _get(searchRouter, "/api/search", _bearer())).status,
+    ).not.toBe(401);
   });
 });
 
@@ -175,69 +117,37 @@ describe("guardApiKey - bearer token edge cases", () => {
     return _get(suggestRouter, "/api/suggest?q=x", headers);
   };
 
-  test("wrong short token → 401", async () => {
-    expect((await hit("Bearer wrongtoken")).status).toBe(401);
-  });
-
-  test("64-char hex but wrong value → 401", async () => {
-    const fake = "a".repeat(64);
-    expect((await hit(`Bearer ${fake}`)).status).toBe(401);
-  });
-
-  test("63-char hex (off by one short) → 401", async () => {
-    const fake = "a".repeat(63);
-    expect((await hit(`Bearer ${fake}`)).status).toBe(401);
-  });
-
-  test("65-char hex (off by one long) → 401", async () => {
-    const fake = "a".repeat(65);
-    expect((await hit(`Bearer ${fake}`)).status).toBe(401);
-  });
-
-  test("64-char non-hex chars → 401", async () => {
-    expect((await hit(`Bearer ${"z".repeat(64)}`)).status).toBe(401);
-  });
-
-  test("empty bearer value → 401", async () => {
-    expect((await hit("Bearer ")).status).toBe(401);
-  });
-
-  test("Bearer keyword only, no token → 401", async () => {
-    expect((await hit("Bearer")).status).toBe(401);
-  });
-
-  test("very long token (10k chars) → 401", async () => {
-    expect((await hit(`Bearer ${"a".repeat(10000)}`)).status).toBe(401);
-  });
-
-  test("token with embedded whitespace → 401 (regex stops at first space)", async () => {
+  test("only a well formed bearer of the real key is accepted", async () => {
     const key = getServerKeyHex()!;
-    expect(
-      (await hit(`Bearer ${key.slice(0, 32)} ${key.slice(32)}`)).status,
-    ).toBe(401);
+    const cases: [string, string, boolean][] = [
+      ["wrong short token", "Bearer wrongtoken", true],
+      ["64-char hex but wrong value", `Bearer ${"a".repeat(64)}`, true],
+      ["63-char hex off by one short", `Bearer ${"a".repeat(63)}`, true],
+      ["65-char hex off by one long", `Bearer ${"a".repeat(65)}`, true],
+      ["64-char non-hex chars", `Bearer ${"z".repeat(64)}`, true],
+      ["empty bearer value", "Bearer ", true],
+      ["Bearer keyword only", "Bearer", true],
+      ["very long token", `Bearer ${"a".repeat(10000)}`, true],
+      [
+        "embedded whitespace",
+        `Bearer ${key.slice(0, 32)} ${key.slice(32)}`,
+        true,
+      ],
+      ["unrelated Basic scheme", "Basic dXNlcjpwYXNz", true],
+      ["uppercase BEARER keyword", `BEARER ${key}`, false],
+      ["lowercase bearer keyword", `bearer ${key}`, false],
+      ["extra whitespace padding", `Bearer  ${key}`, false],
+    ];
+    for (const [label, header, rejected] of cases) {
+      const status = (await hit(header)).status;
+      if (rejected) expect([label, status]).toEqual([label, 401]);
+      else expect([label, status === 401]).toEqual([label, false]);
+    }
   });
 
-  test("BEARER uppercase keyword → still accepted (regex is /i)", async () => {
+  test("lowercase authorization header name is still checked", async () => {
     const key = getServerKeyHex()!;
-    expect((await hit(`BEARER ${key}`)).status).not.toBe(401);
-  });
-
-  test("bearer lowercase keyword → still accepted (regex is /i)", async () => {
-    const key = getServerKeyHex()!;
-    expect((await hit(`bearer ${key}`)).status).not.toBe(401);
-  });
-
-  test("valid key with leading whitespace padding → 401", async () => {
-    const key = getServerKeyHex()!;
-    expect((await hit(`Bearer  ${key}`)).status).not.toBe(401);
-  });
-
-  test("completely unrelated auth scheme (Basic) → 401", async () => {
-    expect((await hit("Basic dXNlcjpwYXNz")).status).toBe(401);
-  });
-
-  test("lowercase authorization header name → still checked", async () => {
-    const key = getServerKeyHex()!;
+    await _enable("apiKeySuggestEnabled");
     const res = await suggestRouter.request(
       new Request("http://localhost/api/suggest?q=x", {
         headers: { authorization: `Bearer ${key}` },
@@ -248,35 +158,35 @@ describe("guardApiKey - bearer token edge cases", () => {
 });
 
 describe("guardApiKey - browser nonce path", () => {
-  test("valid nonce via headers passes when protection enabled", async () => {
+  test("valid nonce via headers or query params passes when protection enabled", async () => {
     const { generateSearchNonce } = await import(
-      "../../src/server/utils/search-nonce"
+      "../../src/server/utils/security/search-nonce"
     );
     await _enable("apiKeySearchEnabled");
-    const { n, s } = generateSearchNonce();
-    const res = await _get(searchRouter, "/api/search", {
-      "x-search-nonce": n,
-      "x-search-sig": s,
-    });
-    expect(res.status).not.toBe(401);
-  });
+    const viaHeaders = generateSearchNonce();
+    expect(
+      (
+        await _get(searchRouter, "/api/search", {
+          "x-search-nonce": viaHeaders.n,
+          "x-search-sig": viaHeaders.s,
+        })
+      ).status,
+    ).not.toBe(401);
 
-  test("valid nonce via query params passes when protection enabled", async () => {
-    const { generateSearchNonce } = await import(
-      "../../src/server/utils/search-nonce"
-    );
-    await _enable("apiKeySearchEnabled");
-    const { n, s } = generateSearchNonce();
-    const res = await _get(
-      searchRouter,
-      `/api/search?searchNonce=${n}&searchSig=${s}`,
-    );
-    expect(res.status).not.toBe(401);
+    const viaQuery = generateSearchNonce();
+    expect(
+      (
+        await _get(
+          searchRouter,
+          `/api/search?searchNonce=${viaQuery.n}&searchSig=${viaQuery.s}`,
+        )
+      ).status,
+    ).not.toBe(401);
   });
 
   test("tampered nonce signature → 401", async () => {
     const { generateSearchNonce } = await import(
-      "../../src/server/utils/search-nonce"
+      "../../src/server/utils/security/search-nonce"
     );
     await _enable("apiKeySearchEnabled");
     const { n } = generateSearchNonce();
@@ -300,16 +210,14 @@ describe("guardApiKey - POST body attacks when protection disabled", () => {
     expect(res.status).toBe(400);
   });
 
-  test("missing query field → returns empty array, not error", async () => {
-    const res = await _post(suggestRouter, "/api/suggest", "{}");
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual([]);
-  });
+  test("a missing or empty query returns an empty array, not an error", async () => {
+    const posted = await _post(suggestRouter, "/api/suggest", "{}");
+    expect(posted.status).toBe(200);
+    expect(await posted.json()).toEqual([]);
 
-  test("empty query string → returns empty array", async () => {
-    const res = await _get(suggestRouter, "/api/suggest?q=");
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual([]);
+    const empty = await _get(suggestRouter, "/api/suggest?q=");
+    expect(empty.status).toBe(200);
+    expect(await empty.json()).toEqual([]);
   });
 
   test("extremely long query → handled without crashing", async () => {
@@ -323,48 +231,34 @@ describe("guardApiKey - POST body attacks when protection disabled", () => {
 });
 
 describe("guardApiKey - suggest and search use independent keys", () => {
-  test("suggest protected, search open - suggest blocked, search passes", async () => {
+  test("each endpoint answers to its own toggle", async () => {
     await updateInstanceSettings({
       apiKeySuggestEnabled: true,
       apiKeySearchEnabled: false,
     });
-    const suggestRes = await _get(suggestRouter, "/api/suggest?q=x");
-    const searchRes = await _get(searchRouter, "/api/search");
-    expect(suggestRes.status).toBe(401);
-    expect(searchRes.status).not.toBe(401);
-  });
+    expect((await _get(suggestRouter, "/api/suggest?q=x")).status).toBe(401);
+    expect((await _get(searchRouter, "/api/search")).status).not.toBe(401);
 
-  test("search protected, suggest open - search blocked, suggest passes", async () => {
     await updateInstanceSettings({
       apiKeySuggestEnabled: false,
       apiKeySearchEnabled: true,
     });
-    const suggestRes = await _get(suggestRouter, "/api/suggest?q=x");
-    const searchRes = await _get(searchRouter, "/api/search");
-    expect(suggestRes.status).not.toBe(401);
-    expect(searchRes.status).toBe(401);
+    expect((await _get(suggestRouter, "/api/suggest?q=x")).status).not.toBe(401);
+    expect((await _get(searchRouter, "/api/search")).status).toBe(401);
   });
 
-  test("both protected - both blocked without auth", async () => {
+  test("both protected - both blocked, and the same key unlocks both", async () => {
     await updateInstanceSettings({
       apiKeySuggestEnabled: true,
       apiKeySearchEnabled: true,
     });
-    const suggestRes = await _get(suggestRouter, "/api/suggest?q=x");
-    const searchRes = await _get(searchRouter, "/api/search");
-    expect(suggestRes.status).toBe(401);
-    expect(searchRes.status).toBe(401);
-  });
+    expect((await _get(suggestRouter, "/api/suggest?q=x")).status).toBe(401);
+    expect((await _get(searchRouter, "/api/search")).status).toBe(401);
 
-  test("both protected - same key unlocks both", async () => {
-    await updateInstanceSettings({
-      apiKeySuggestEnabled: true,
-      apiKeySearchEnabled: true,
-    });
     const h = _bearer();
-    const suggestRes = await _get(suggestRouter, "/api/suggest?q=x", h);
-    const searchRes = await _get(searchRouter, "/api/search", h);
-    expect(suggestRes.status).not.toBe(401);
-    expect(searchRes.status).not.toBe(401);
+    expect(
+      (await _get(suggestRouter, "/api/suggest?q=x", h)).status,
+    ).not.toBe(401);
+    expect((await _get(searchRouter, "/api/search", h)).status).not.toBe(401);
   });
 });

@@ -1,0 +1,61 @@
+<details{{#if tools_open}} open{{/if tools_open}}>
+  <summary id="results-tabs">
+    {{#each tabs}}
+    <a class="results-tab degoog-tab {{ active_class }}" href="{{ href }}">{{ name }}</a>
+    {{/each tabs}}
+    <div class="tools-wrap" id="tools-bar">
+      <span class="tools-toggle" id="tools-toggle">
+        <i class="fa-solid fa-swatchbook fa-lg"></i>
+        <span class="tools-toggle-label">{{t:search-templates.tabs.filter}}</span>
+      </span>
+    </div>
+  </summary>
+  <form
+    class="tools-panel"
+    id="tools-panel"
+    action="{{ search_action }}"
+    method="{{ method }}"
+  >
+    <input type="hidden" name="q" value="{{ query }}" />
+    {{#if type}}<input type="hidden" name="type" value="{{ type }}" />{{/if type}}
+    <div class="tools-field">
+      <label class="tools-field-label" for="nojs-time">{{t:search-templates.tabs.time}}</label>
+      <select id="nojs-time" name="time" class="degoog-input degoog-input--sm">
+        {{#each time_options}}
+        <option value="{{ value }}"{{#if selected}} selected{{/if selected}}>{{ label }}</option>
+        {{/each time_options}}
+      </select>
+    </div>
+    {{#if languages}}
+    <div class="tools-field">
+      <label class="tools-field-label" for="nojs-lang">{{t:search-templates.tabs.language}}</label>
+      <select id="nojs-lang" name="lang" class="degoog-input degoog-input--sm">
+        {{#each languages}}
+        <option value="{{ value }}"{{#if selected}} selected{{/if selected}}>{{ label }}</option>
+        {{/each languages}}
+      </select>
+    </div>
+    {{/if languages}}
+    <div class="tools-field tools-custom-date">
+      <label class="tools-field-label" for="nojs-date-from">{{t:search-templates.tabs.custom}}</label>
+      <input
+        type="date"
+        id="nojs-date-from"
+        name="dateFrom"
+        value="{{ date_from }}"
+        class="tools-date-input degoog-input degoog-input--sm degoog-input--tools degoog-input--tools-date"
+      />
+      <span class="tools-date-sep">{{t:search-templates.tabs.date-to}}</span>
+      <input
+        type="date"
+        id="nojs-date-to"
+        name="dateTo"
+        value="{{ date_to }}"
+        class="tools-date-input degoog-input degoog-input--sm degoog-input--tools degoog-input--tools-date"
+      />
+    </div>
+    <button type="submit" class="tools-date-apply">
+      {{t:search-templates.tabs.apply}}
+    </button>
+  </form>
+</details>

@@ -1,16 +1,22 @@
-import { Transport, ExtensionMeta, ExtensionStoreType } from "../../types";
+import {
+  type ExtensionMeta,
+  ExtensionStoreType,
+  type Transport,
+} from "../../types/extension";
 import { FetchTransport } from "./builtins/fetch";
 import { CurlTransport } from "./builtins/curl";
 import { CurlImpersonateTransport } from "./builtins/curl-impersonate";
 import { AutoTransport } from "./builtins/auto";
-import { getSettings } from "../../utils/plugin-settings";
+import { getSettings } from "../../utils/settings/plugin-settings";
 import { transportsDir } from "../../utils/paths";
 import { createRegistry } from "../registry-factory";
-import { registerExtensionFolder } from "../../utils/extension-docs";
+import { registerExtensionFolder } from "../../utils/extension-support/extension-docs";
 import { buildExtensionMeta } from "../extension-meta";
 import { mountTransportWs } from "./ws-registry";
 import { getTransportWsSession } from "./ws-session";
-import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
+import {
+  isExtensionRestartFlagVisible,
+} from "../../utils/extension-support/restart-state";
 
 const _builtins: Transport[] = [
   new FetchTransport(),
@@ -83,7 +89,7 @@ const _enabledTransports = async (): Promise<Transport[]> => {
   return results;
 };
 
-export type TransportPicks = { names: string[]; labels: string[] };
+type TransportPicks = { names: string[]; labels: string[] };
 
 export const transportPicks = async (): Promise<TransportPicks> => {
   const enabled = await _enabledTransports();
@@ -93,15 +99,7 @@ export const transportPicks = async (): Promise<TransportPicks> => {
   };
 };
 
-export const getAvailableTransportNames = async (): Promise<string[]> => {
-  const results: string[] = [];
-  for (const t of _all()) {
-    if (await t.available()) results.push(t.name);
-  }
-  return results;
-};
-
-export function getFallbackTransport(): Transport {
+function getFallbackTransport(): Transport {
   return _builtins[0];
 }
 
@@ -135,8 +133,4 @@ export async function getTransportExtensionMeta(): Promise<ExtensionMeta[]> {
 
 export async function initTransports(bust = false): Promise<void> {
   await (bust ? registry.reload() : registry.init());
-}
-
-export async function reloadTransports(bust = true): Promise<void> {
-  await initTransports(bust);
 }

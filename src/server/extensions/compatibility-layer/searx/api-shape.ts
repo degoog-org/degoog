@@ -1,14 +1,18 @@
-import type { EngineTiming, ScoredResult, SearchResponse } from "../../../types";
-import { listEngines } from "../../engines/registry";
-import { THREAT_LEVEL } from "../../../utils/sentinel";
+import type {
+  EngineTiming,
+  ScoredResult,
+  SearchResponse,
+} from "../../../../shared/search-types";
+import { listEngines } from "../../engines/catalog";
+import { THREAT_LEVEL } from "../../../utils/security/sentinel";
 import { logger } from "../../../utils/logger";
 
 const NS = "searx-api";
 
 export const SEARX_FORMAT_PARAM = "format";
-export const SEARX_FORMAT_VALUE = "json";
+const SEARX_FORMAT_VALUE = "json";
 
-export const SEARX_CATEGORY = {
+const SEARX_CATEGORY = {
   GENERAL: "general",
   IMAGES: "images",
   VIDEOS: "videos",
@@ -20,7 +24,7 @@ export const SEARX_CATEGORY = {
   IT: "it",
 } as const;
 
-export const SEARX_TEMPLATE = {
+const SEARX_TEMPLATE = {
   DEFAULT: "default.html",
   IMAGES: "images.html",
   VIDEOS: "videos.html",
@@ -54,7 +58,7 @@ const ERROR_TEXT: Record<string, string> = {
 
 const UNKNOWN_ERROR_TEXT = "Unexpected crash";
 
-export interface SearxResult {
+interface SearxResult {
   url: string;
   title: string;
   content: string;
@@ -76,7 +80,7 @@ export interface SearxResult {
   metadata: string;
 }
 
-export interface SearxDocument {
+interface SearxDocument {
   query: string;
   results: SearxResult[];
   answers: string[];
@@ -158,7 +162,7 @@ const toSearxResult = (
   score: r.score,
   positions: [index + 1],
   parsed_url: parseUrl(r.url),
-  publishedDate: null,
+  publishedDate: r.publishedAt ? `${r.publishedAt}T00:00:00+00:00` : null,
   img_src: r.imageUrl ?? "",
   thumbnail: r.thumbnail ?? "",
   iframe_src: "",

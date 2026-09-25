@@ -8,12 +8,12 @@ mkdirSync(SHARED, { recursive: true });
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 process.env.DEGOOG_PLUGIN_SETTINGS_FILE = join(SHARED, "plugin-settings.json");
 
-import router from "../../src/server/routes/settings";
+import router from "../../src/server/routes/settings/settings";
 import {
   clearServerSettingsCache,
   setInstanceSettings,
-} from "../../src/server/utils/server-settings";
-import { clearShortcutsSettingsCache } from "../../src/server/utils/shortcuts-settings";
+} from "../../src/server/utils/settings/server-settings";
+import { clearShortcutsSettingsCache } from "../../src/server/utils/settings/shortcuts-settings";
 
 let savedDangerouslyNoPassword: string | undefined;
 

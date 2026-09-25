@@ -1,26 +1,14 @@
-import type { CreateCache, UseCache } from "../utils/cache";
-import type { SettingValue } from "../utils/plugin-settings";
-import type { ThreatLevel } from "../utils/sentinel";
-import type {
-  SearchResult,
-  ScoredResult,
-  TimeFilter,
-  EngineContext,
-} from "./search";
-import { SlotPanelPosition } from "../../shared/search-types";
+import type { CreateCache, UseCache } from "../utils/cache/cache";
+import type { SettingValue } from "../utils/settings/plugin-settings";
+import type { ThreatLevel } from "../utils/security/sentinel";
+import type { EngineContext, TimeFilter } from "./search";
+import {
+  type ScoredResult,
+  type SearchResult,
+  SlotPanelPosition,
+} from "../../shared/search-types";
 import type { FieldOptionsResult } from "../../shared/field-options";
 import type { SettingField } from "../../shared/setting-field";
-
-export type {
-  FieldOption,
-  FieldOptionsResult,
-  FieldOptionsSource,
-} from "../../shared/field-options";
-
-export type {
-  SettingFieldType,
-  SettingField,
-} from "../../shared/setting-field";
 
 export type TranslationVars = string | number | boolean;
 export type TranslationRecord = {
@@ -114,6 +102,7 @@ export interface SearchEngine {
   bangShortcut?: string;
   needsAppRestart?: boolean;
   settingsSchema?: SettingField[];
+  pluginManifest?: PluginManifest;
   configure?(settings: Record<string, SettingValue>): void;
   getFieldOptions?: GetFieldOptions;
   executeSearch(
@@ -167,6 +156,8 @@ export interface SlotPluginContext {
   /** @deprecated Use `useCache` (async, namespaced, Valkey-backed when enabled). */
   createCache: CreateCache;
   useCache: UseCache;
+  locale?: string;
+  nojs?: boolean;
 }
 
 export interface SlotPlugin {
@@ -182,6 +173,7 @@ export interface SlotPlugin {
   priority?: number;
   trigger: (query: string) => boolean | Promise<boolean>;
   waitForResults?: boolean;
+  supportsNojs?: boolean;
   gridSize?: 1 | 2 | 3 | 4;
   execute(
     query: string,
@@ -206,6 +198,7 @@ export interface CommandContext {
   clientIp?: string;
   page?: number;
   signProxyUrl?: (url: string) => string;
+  nojs?: boolean;
 }
 
 export interface BangCommand {
@@ -220,6 +213,8 @@ export interface BangCommand {
   configure?(settings: Record<string, SettingValue>): void;
   getFieldOptions?: GetFieldOptions;
   isConfigured?(): Promise<boolean>;
+  hideWhenUnconfigured?: boolean;
+  supportsNojs?: boolean;
   init?(context: PluginContext): void | Promise<void>;
   execute(args: string, context?: CommandContext): Promise<CommandResult>;
   t?: Translate;

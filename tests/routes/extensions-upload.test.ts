@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
-import { ExtensionStoreType, type ExtensionMeta } from "../../src/server/types";
+import { type ExtensionMeta, ExtensionStoreType } from "../../src/server/types/extension";
 
-const ENGINES_MOD = "../../src/server/extensions/engines/registry";
-const UPLOADS_MOD = "../../src/server/utils/plugin-uploads";
+const ENGINES_MOD = "../../src/server/extensions/engines/extension-meta";
+const UPLOADS_MOD = "../../src/server/utils/extension-support/plugin-uploads";
 
 const UPLOAD_ID = "fake-upload-engine";
 const UPLOAD_URL = `http://localhost/api/extensions/${UPLOAD_ID}/upload`;
@@ -89,7 +89,7 @@ describe("POST /api/extensions/:id/upload", () => {
       }),
     }));
 
-    router = (await import("../../src/server/routes/extensions")).default;
+    router = (await import("../../src/server/routes/extensions/extensions")).default;
   });
 
   afterAll(() => {
@@ -123,21 +123,17 @@ describe("POST /api/extensions/:id/upload", () => {
     expect(await res.json()).toEqual({ error: "Invalid upload" });
   });
 
-  test("rejects a missing key", async () => {
-    const form = new FormData();
-    form.set("file", png(2));
-    const res = await upload(form);
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: "Missing file or key" });
-  });
-
-  test("rejects a file field that is not a file", async () => {
-    const form = new FormData();
-    form.set("key", "logo");
-    form.set("file", "not-a-file");
-    const res = await upload(form);
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: "Missing file or key" });
+  test("rejects a missing key or a file field that is not a file", async () => {
+    const noKey = new FormData();
+    noKey.set("file", png(2));
+    const notAFile = new FormData();
+    notAFile.set("key", "logo");
+    notAFile.set("file", "not-a-file");
+    for (const form of [noKey, notAFile]) {
+      const res = await upload(form);
+      expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({ error: "Missing file or key" });
+    }
   });
 
   test("rejects an unknown extension", async () => {
@@ -151,37 +147,31 @@ describe("POST /api/extensions/:id/upload", () => {
     expect(await res.json()).toEqual({ error: "Extension not found" });
   });
 
-  test("rejects an unknown file field", async () => {
-    const res = await upload(fileForm("colour", png(2)));
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: "Unknown file field" });
-  });
-
-  test("rejects a file the field does not accept", async () => {
-    const gif = new File([bytes(2)], "logo.gif", { type: "image/gif" });
-    const res = await upload(fileForm("logo", gif));
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: "File type not allowed" });
-  });
-
-  test("rejects a file above the configured maximum", async () => {
-    const res = await upload(fileForm("logo", png(3)));
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: "File exceeds 2 KB" });
-  });
-
-  test("rejects a file below the configured minimum", async () => {
-    const tiny = new File([new Uint8Array(16)], "logo.png", { type: "image/png" });
-    const res = await upload(fileForm("logo", tiny));
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: "File smaller than 1 KB" });
-  });
-
-  test("falls back to a hard maximum when the field has no limit", async () => {
-    const big = new File([bytes(6 * 1024)], "huge.png", { type: "image/png" });
-    const res = await upload(fileForm("anything", big));
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: "File exceeds 5120 KB" });
+  test("rejects a file the field will not take", async () => {
+    const cases: [string, File, string][] = [
+      ["colour", png(2), "Unknown file field"],
+      [
+        "logo",
+        new File([bytes(2)], "logo.gif", { type: "image/gif" }),
+        "File type not allowed",
+      ],
+      ["logo", png(3), "File exceeds 2 KB"],
+      [
+        "logo",
+        new File([new Uint8Array(16)], "logo.png", { type: "image/png" }),
+        "File smaller than 1 KB",
+      ],
+      [
+        "anything",
+        new File([bytes(6 * 1024)], "huge.png", { type: "image/png" }),
+        "File exceeds 5120 KB",
+      ],
+    ];
+    for (const [key, file, error] of cases) {
+      const res = await upload(fileForm(key, file));
+      expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({ error });
+    }
   });
 
   test("stores an accepted file", async () => {

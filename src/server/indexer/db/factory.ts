@@ -1,10 +1,11 @@
 import type { IndexerAdapter } from "../types/adapter";
-import { SqliteAdapter, PgAdapter } from "../adapters";
+import { PgAdapter } from "../adapters/postgres/adapter";
+import { SqliteAdapter } from "../adapters/sqlite/adapter";
 import { logger } from "../../utils/logger";
-import { withTimeout } from "../../utils/with-timeout";
+import { withTimeout } from "../../utils/net/with-timeout";
 import { resolvePgConfig } from "./pg-config";
 
-export const BOOT_TIMEOUT_MS = 30_000;
+const BOOT_TIMEOUT_MS = 30_000;
 
 let _adapter: IndexerAdapter | null = null;
 

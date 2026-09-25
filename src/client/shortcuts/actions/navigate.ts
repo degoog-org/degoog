@@ -1,5 +1,5 @@
-import { getBase } from "../../utils/base-url";
-import { showHome } from "../../utils/navigation";
+import { getBase } from "../../utils/net/base-url";
+import { showHome } from "../../utils/navigation/navigation";
 
 export const goHome = (): void => showHome();
 

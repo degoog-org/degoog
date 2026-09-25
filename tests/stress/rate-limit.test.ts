@@ -4,8 +4,8 @@ import {
   setInstanceSettings,
   updateInstanceSettings,
   type ServerSettingValue,
-} from "../../src/server/utils/server-settings";
-import { clearRateLimitState } from "../../src/server/utils/rate-limit";
+} from "../../src/server/utils/settings/server-settings";
+import { clearRateLimitState } from "../../src/server/utils/security/rate-limit";
 
 let savedSettings: Record<string, ServerSettingValue>;
 
@@ -21,7 +21,7 @@ describe("routes/rate-limit", () => {
 
   test("GET /api/rate-limit/test when rate limit disabled returns 200 with rateLimitEnabled false", async () => {
     await updateInstanceSettings({ rateLimitEnabled: "false" });
-    const { default: router } = await import("../../src/server/routes/rate-limit");
+    const { default: router } = await import("../../src/server/routes/security/rate-limit");
     const res = await router.request(
       "http://localhost/api/rate-limit/test",
     );

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { mkdirSync, statSync } from "fs";
+import { existsSync, mkdirSync, rmSync, statSync } from "fs";
 import { tmpdir } from "os";
 import { dirname, join } from "path";
 
@@ -10,16 +10,15 @@ process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
 import { Database } from "bun:sqlite";
-import {
-  clearAll,
-  getStats,
-  queryIndex,
-  recordResults,
-  wipeStatsCache,
-} from "../../src/server/indexer/store";
-import { flushQueue } from "../../src/server/indexer/queue";
-import { setInstanceSettings } from "../../src/server/utils/server-settings";
-import { buildSqliteExportFile } from "../../src/server/indexer/export/builder";
+import { clearAll } from "../../src/server/indexer/store/admin";
+import { queryIndex } from "../../src/server/indexer/store/query";
+import { recordResults } from "../../src/server/indexer/store/record";
+import { getStats, wipeStatsCache } from "../../src/server/indexer/store/stats";
+import { flushQueue } from "../../src/server/indexer/queue/queue";
+import { setInstanceSettings } from "../../src/server/utils/settings/server-settings";
+import { buildSqliteExportFile, exportStream } from "../../src/server/indexer/export/builder";
+import { getAdapter } from "../../src/server/indexer/db/factory";
+import { indexerDbForType } from "../../src/server/utils/paths";
 import { importFromFile } from "../../src/server/indexer/import/importer";
 import {
   openExportSession,
@@ -31,7 +30,7 @@ import {
   finishImportSession,
   removeImportSession,
 } from "../../src/server/indexer/transfer/sessions";
-import type { SearchResult } from "../../src/server/types";
+import type { SearchResult } from "../../src/shared/search-types";
 
 const TYPE = "web";
 
@@ -54,26 +53,264 @@ const seed = async (): Promise<void> => {
   await flushQueue();
 };
 
+const openLive = (): string =>
+  openExportSession({
+    path: indexerDbForType(TYPE),
+    size: 1,
+    cleanup: false,
+    type: TYPE,
+    hold: getAdapter().holdExport(TYPE),
+  });
+
+describe("export holds the wal fold-back", () => {
+  const walPath = join(SHARED, `index-${TYPE}.db-wal`);
+  const walSize = (): number => {
+    try {
+      return statSync(walPath).size;
+    } catch {
+      return 0;
+    }
+  };
+
+  test("writes during an export are not folded into the file being sent", async () => {
+    await seed();
+    const adapter = getAdapter();
+
+    const sessionId = openLive();
+    expect(walSize()).toBe(0);
+
+    await recordResults("holdcheck", TYPE, [mk(50), mk(51)]);
+    await flushQueue();
+    expect(walSize()).toBeGreaterThan(0);
+
+    await adapter.checkpoint(TYPE);
+    expect(walSize()).toBeGreaterThan(0);
+
+    closeExportSession(sessionId);
+    expect(walSize()).toBe(0);
+  });
+
+  test("overlapping exports keep the hold until the last one ends", async () => {
+    await seed();
+    const adapter = getAdapter();
+
+    const first = openLive();
+    const second = openLive();
+    await recordResults("holdcheck2", TYPE, [mk(60)]);
+    await flushQueue();
+    expect(walSize()).toBeGreaterThan(0);
+
+    closeExportSession(first);
+    await adapter.checkpoint(TYPE);
+    expect(walSize()).toBeGreaterThan(0);
+
+    closeExportSession(second);
+    expect(walSize()).toBe(0);
+  });
+
+  test("a hold taken before the db opens still freezes it", async () => {
+    await seed();
+    const adapter = getAdapter();
+    await adapter.checkpoint(TYPE);
+    await adapter.close();
+
+    const hold = adapter.holdExport(TYPE);
+    await recordResults("lateopen", TYPE, [mk(80)]);
+    await flushQueue();
+    await adapter.checkpoint(TYPE);
+    expect(walSize()).toBeGreaterThan(0);
+
+    adapter.freeExport(hold);
+    expect(walSize()).toBe(0);
+  });
+
+  test("a stale hold is dropped and does not take a live one with it", async () => {
+    await seed();
+    const adapter = getAdapter();
+    await recordResults("stale", TYPE, [mk(90)]);
+    await flushQueue();
+
+    const stale = adapter.holdExport(TYPE);
+    const holds = (adapter as unknown as {
+      _holds: { _holds: Map<string, { type: string; since: number }> };
+    })._holds._holds;
+    const entry = holds.get(stale);
+    expect(entry).toBeDefined();
+    if (entry) entry.since = Date.now() - 31 * 60_000;
+
+    const live = adapter.holdExport(TYPE);
+    expect(holds.has(stale)).toBe(false);
+
+    await recordResults("stale2", TYPE, [mk(91)]);
+    await flushQueue();
+    expect(walSize()).toBeGreaterThan(0);
+
+    adapter.freeExport(stale);
+    await adapter.checkpoint(TYPE);
+    expect(walSize()).toBeGreaterThan(0);
+
+    adapter.freeExport(live);
+    expect(walSize()).toBe(0);
+  });
+
+  test("clearing a type drops its holds", async () => {
+    await seed();
+    const adapter = getAdapter();
+    const hold = adapter.holdExport(TYPE);
+    await adapter.clearType(TYPE);
+
+    await recordResults("afterclear", TYPE, [mk(95)]);
+    await flushQueue();
+    await adapter.checkpoint(TYPE);
+    expect(walSize()).toBe(0);
+
+    adapter.freeExport(hold);
+  });
+
+  test("a temp file export does not touch the hold", async () => {
+    await seed();
+    const adapter = getAdapter();
+    await recordResults("holdcheck3", TYPE, [mk(70)]);
+    await flushQueue();
+
+    const built = await buildSqliteExportFile(TYPE);
+    const sessionId = openExportSession({ path: built, size: statSync(built).size, cleanup: true, type: TYPE, hold: "" });
+    await adapter.checkpoint(TYPE);
+    expect(walSize()).toBe(0);
+
+    closeExportSession(sessionId);
+  });
+});
+
+const walSizeOf = (type: string): number => {
+  try {
+    return statSync(join(SHARED, `index-${type}.db-wal`)).size;
+  } catch {
+    return 0;
+  }
+};
+
+describe("export stream lifecycle", () => {
+  const drain = async (stream: ReadableStream<Uint8Array>): Promise<number> => {
+    const reader = stream.getReader();
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return total;
+      total += value.byteLength;
+    }
+  };
+
+  test("onEnd fires once when the body is read to the end", async () => {
+    await seed();
+    const path = await buildSqliteExportFile(TYPE);
+    const size = statSync(path).size;
+    let ends = 0;
+
+    const stream = exportStream(path, {
+      size,
+      removeAfter: false,
+      onEnd: () => { ends += 1; },
+    });
+    expect(await drain(stream)).toBe(size);
+    expect(ends).toBe(1);
+  });
+
+  test("the built export leaves no wal or shm sidecars and stays readable", async () => {
+    await seed();
+    const path = await buildSqliteExportFile(TYPE);
+    expect(existsSync(`${path}-wal`)).toBe(false);
+    expect(existsSync(`${path}-shm`)).toBe(false);
+    const db = new Database(path, { readonly: true });
+    const { n } = db.prepare("SELECT COUNT(*) AS n FROM query_hits").get() as { n: number };
+    db.close();
+    expect(n).toBeGreaterThan(0);
+  });
+
+  test("reading keeps a long download's hold alive", async () => {
+    await seed();
+    const adapter = getAdapter();
+    const hold = adapter.holdExport(TYPE);
+    const holds = (adapter as unknown as {
+      _holds: { _holds: Map<string, { type: string; since: number }> };
+    })._holds._holds;
+
+    const entry = holds.get(hold);
+    if (entry) entry.since = Date.now() - 31 * 60_000;
+
+    const path = await buildSqliteExportFile(TYPE);
+    const stream = exportStream(path, {
+      size: statSync(path).size,
+      removeAfter: true,
+      onRead: () => adapter.touchHold(hold),
+    });
+    const reader = stream.getReader();
+    await reader.read();
+    await reader.cancel("enough");
+
+    await recordResults("longdownload", TYPE, [mk(99)]);
+    await flushQueue();
+    await adapter.checkpoint(TYPE);
+    expect(holds.has(hold)).toBe(true);
+    expect(walSizeOf(TYPE)).toBeGreaterThan(0);
+
+    adapter.freeExport(hold);
+  });
+
+  test("onEnd fires once when the reader cancels early", async () => {
+    await seed();
+    const path = await buildSqliteExportFile(TYPE);
+    let ends = 0;
+
+    const stream = exportStream(path, {
+      size: statSync(path).size,
+      removeAfter: true,
+      onEnd: () => { ends += 1; },
+    });
+    const reader = stream.getReader();
+    await reader.read();
+    await reader.cancel("done here");
+    expect(ends).toBe(1);
+    expect(existsSync(path)).toBe(false);
+  });
+});
+
+describe("export streaming", () => {
+  test("rows arrive in batches instead of one huge array", async () => {
+    await setInstanceSettings({
+      degoogIndexerEnabled: "true",
+      degoogIndexerMaxPerSearch: "300",
+      degoogIndexerFuzzyEnabled: "false",
+      degoogIndexerQueryLimit: "30",
+    });
+    await clearAll();
+    await recordResults(
+      "batching",
+      TYPE,
+      Array.from({ length: 250 }, (_, i) => mk(1000 + i)),
+    );
+    await flushQueue();
+
+    const sizes: number[] = [];
+    for await (const batch of getAdapter().exportBatches(TYPE, 100)) {
+      sizes.push(batch.length);
+    }
+
+    expect(sizes.length).toBeGreaterThan(1);
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(100);
+    expect(sizes.reduce((a, b) => a + b, 0)).toBe(250);
+  });
+});
+
 describe("indexer chunked transfer", () => {
   beforeAll(seed);
 
-  test("export session slices reassemble to the full file", async () => {
+  test("an export session exposes the file size and is gone once closed", async () => {
     const path = await buildSqliteExportFile(TYPE);
     const size = statSync(path).size;
-    const sessionId = openExportSession(path, size, true, TYPE);
+    const sessionId = openExportSession({ path, size, cleanup: true, type: TYPE, hold: "" });
 
-    const s = getExportSession(sessionId);
-    expect(s?.size).toBe(size);
-
-    const chunkBytes = 4096;
-    const parts: Uint8Array[] = [];
-    for (let pos = 0; pos < size; pos += chunkBytes) {
-      const end = Math.min(size, pos + chunkBytes);
-      const slice = await Bun.file(path).slice(pos, end).arrayBuffer();
-      parts.push(new Uint8Array(slice));
-    }
-    const total = parts.reduce((sum, p) => sum + p.byteLength, 0);
-    expect(total).toBe(size);
+    expect(getExportSession(sessionId)?.size).toBe(size);
 
     closeExportSession(sessionId);
     expect(getExportSession(sessionId)).toBeUndefined();
@@ -113,10 +350,32 @@ describe("indexer chunked transfer", () => {
     const { id } = openImportSession(TYPE);
     const s = getImportSession(id);
 
-    expect(s?.path.startsWith(join(SHARED, "tmp"))).toBe(true);
     expect(dirname(s?.path ?? "")).toBe(join(SHARED, "tmp"));
 
     removeImportSession(id);
+  });
+
+  test("an old wal-flagged export without its sidecars still imports", async () => {
+    await clearAll();
+    await recordResults("walcheck", TYPE, [mk(20), mk(21)]);
+    await flushQueue();
+
+    const path = await buildSqliteExportFile(TYPE);
+    const legacy = new Database(path);
+    legacy.exec("PRAGMA journal_mode = WAL");
+    legacy.close(true);
+    rmSync(`${path}-wal`, { force: true });
+    rmSync(`${path}-shm`, { force: true });
+
+    await clearAll();
+    await importFromFile(path, TYPE);
+    expect(existsSync(`${path}-wal`)).toBe(false);
+    expect(existsSync(`${path}-shm`)).toBe(false);
+
+    const dst = new Database(join(SHARED, `index-${TYPE}.db`), { readonly: true });
+    const { n } = dst.prepare("SELECT COUNT(*) AS n FROM query_hits").get() as { n: number };
+    dst.close();
+    expect(n).toBe(2);
   });
 
   test("import preserves real ranking instead of flattening to 9999", async () => {
@@ -139,6 +398,8 @@ describe("indexer chunked transfer", () => {
     await appendImportChunk(id, bytes.buffer);
     const finished = await finishImportSession(id);
     await importFromFile(finished as string, TYPE);
+    expect(existsSync(`${finished}-wal`)).toBe(false);
+    expect(existsSync(`${finished}-shm`)).toBe(false);
     removeImportSession(id);
 
     const dst = new Database(join(SHARED, `index-${TYPE}.db`), { readonly: true });

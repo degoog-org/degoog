@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { mkdtemp, writeFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { readNeedsAppRestart } from "../../src/server/extensions/store/item-ops";
+import { readNeedsAppRestart } from "../../src/server/extensions/store/item-metadata";
 
 const withTempExtensionDir = async (
   source: string,
@@ -17,42 +17,29 @@ const withTempExtensionDir = async (
   }
 };
 
+const CASES: [string, string, boolean][] = [
+  [
+    "a flat exported const",
+    `export const needsAppRestart = true;\nexport const name = "acme";\n`,
+    true,
+  ],
+  [
+    "the flag as an object property",
+    `export default { name: "acme", needsAppRestart: true };\n`,
+    true,
+  ],
+  ["an absent flag", `export const name = "acme";\n`, false],
+  ["an explicitly false flag", `export const needsAppRestart = false;\n`, false],
+];
+
 describe("readNeedsAppRestart", () => {
-  test("detects a flat exported const", async () => {
-    await withTempExtensionDir(
-      `export const needsAppRestart = true;\nexport const name = "acme";\n`,
-      async (dir) => {
-        expect(await readNeedsAppRestart(dir)).toBe(true);
-      },
-    );
-  });
-
-  test("detects the flag as an object property", async () => {
-    await withTempExtensionDir(
-      `export default { name: "acme", needsAppRestart: true };\n`,
-      async (dir) => {
-        expect(await readNeedsAppRestart(dir)).toBe(true);
-      },
-    );
-  });
-
-  test("returns false when the flag is absent", async () => {
-    await withTempExtensionDir(
-      `export const name = "acme";\n`,
-      async (dir) => {
-        expect(await readNeedsAppRestart(dir)).toBe(false);
-      },
-    );
-  });
-
-  test("returns false when the flag is explicitly false", async () => {
-    await withTempExtensionDir(
-      `export const needsAppRestart = false;\n`,
-      async (dir) => {
-        expect(await readNeedsAppRestart(dir)).toBe(false);
-      },
-    );
-  });
+  for (const [label, source, expected] of CASES) {
+    test(`reads ${label}`, async () => {
+      await withTempExtensionDir(source, async (dir) => {
+        expect(await readNeedsAppRestart(dir)).toBe(expected);
+      });
+    });
+  }
 
   test("returns false for a directory with no index file", async () => {
     const dir = await mkdtemp(join(tmpdir(), "degoog-needs-restart-empty-"));

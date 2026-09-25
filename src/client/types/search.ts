@@ -1,6 +1,3 @@
-export type { SearchResult, ScoredResult, EngineTiming, SlotPanel, SearchResponse } from "../../shared/search-types";
-export { SlotPanelPosition } from "../../shared/search-types";
-
 export interface ImageFilter {
   color?: string;
   size?: string;

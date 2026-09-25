@@ -57,70 +57,31 @@ export interface ReposData {
   installed: InstalledItem[];
 }
 
+export interface RepoPackageItem {
+  path: string;
+  name: string;
+  description?: string;
+  version?: string;
+  type?: string;
+  dependencies?: string[];
+  minDegoogVersion?: string;
+}
+
 export interface RepoPackageJson {
   name?: string;
   description?: string;
   author?: string;
-  plugins?: Array<{
-    path: string;
-    name: string;
-    description?: string;
-    version?: string;
-    type?: string;
-    dependencies?: string[];
-    minDegoogVersion?: string;
-  }>;
-  themes?: Array<{
-    path: string;
-    name: string;
-    description?: string;
-    version?: string;
-    dependencies?: string[];
-    minDegoogVersion?: string;
-  }>;
-  engines?: Array<{
-    path: string;
-    name: string;
-    description?: string;
-    version?: string;
-    type?: string;
-    dependencies?: string[];
-    minDegoogVersion?: string;
-  }>;
-  transports?: Array<{
-    path: string;
-    name: string;
-    description?: string;
-    version?: string;
-    dependencies?: string[];
-    minDegoogVersion?: string;
-  }>;
+  plugins?: RepoPackageItem[];
+  themes?: RepoPackageItem[];
+  engines?: RepoPackageItem[];
+  transports?: RepoPackageItem[];
   "repo-image"?: string;
-  autocomplete?: Array<{
-    path: string;
-    name: string;
-    description?: string;
-    version?: string;
-    dependencies?: string[];
-    minDegoogVersion?: string;
-  }>;
-  shortcuts?: Array<{
-    path: string;
-    name: string;
-    description?: string;
-    version?: string;
-    dependencies?: string[];
-    minDegoogVersion?: string;
-  }>;
+  autocomplete?: RepoPackageItem[];
+  shortcuts?: RepoPackageItem[];
 }
 
 export interface AuthorJson {
   name: string;
   url?: string;
   avatar?: string;
-}
-
-export interface RepoStatus {
-  url: string;
-  behind: number;
 }

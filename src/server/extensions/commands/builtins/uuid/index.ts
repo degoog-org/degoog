@@ -1,8 +1,10 @@
+import { renderUuidList } from "./render";
 import {
-  TranslateFunction,
   type BangCommand,
+  type CommandContext,
   type CommandResult,
-} from "../../../../types";
+  TranslateFunction,
+} from "../../../../types/extension";
 
 const DEFAULT_UUID_COUNT = 10;
 const MAX_UUID_COUNT = 100;
@@ -15,10 +17,14 @@ export const uuidCommand: BangCommand = {
   },
   trigger: "uuid",
   naturalLanguagePhrases: ["uuid", "generate uuid", "generate uuids"],
+  supportsNojs: true,
 
   t: TranslateFunction,
 
-  async execute(args: string): Promise<CommandResult> {
+  async execute(
+    args: string,
+    context?: CommandContext,
+  ): Promise<CommandResult> {
     const raw = args.trim();
     const count = raw
       ? Math.min(
@@ -27,16 +33,9 @@ export const uuidCommand: BangCommand = {
       )
       : DEFAULT_UUID_COUNT;
     const uuids = Array.from({ length: count }, () => crypto.randomUUID());
-    const copyLabel = this.t!("uuid.copy");
-    const rows = uuids
-      .map(
-        (u) =>
-          `<div class="uuid-row"><code class="uuid-value">${u}</code><button type="button" class="uuid-copy" data-uuid="${u}">${copyLabel}</button></div>`,
-      )
-      .join("");
     return {
       title: this.t!("uuid.title"),
-      html: `<div class="command-result command-uuid">${rows}</div>`,
+      html: renderUuidList(uuids, context?.nojs ? undefined : this.t!("uuid.copy")),
     };
   },
 };

@@ -1,17 +1,12 @@
-import { DEGOOG_ENGINE_NAME } from "../../shared/search-types";
-import type {
-  EngineTiming,
-  ImageFilter,
-  SearchType,
-  TimeFilter,
-} from "../types";
+import { DEGOOG_ENGINE_NAME, type EngineTiming } from "../../shared/search-types";
+import type { ImageFilter, SearchType, TimeFilter } from "../types/search";
 import {
   CachedEngineRun,
   SHORT_TTL_MS,
   TTL_MS,
   engineErrored,
   engineRunCache,
-} from "../utils/cache";
+} from "../utils/cache/cache";
 import { logger } from "../utils/logger";
 import { engineFingerprint, type ActiveEngine } from "./engine-selection";
 
@@ -79,7 +74,7 @@ export const readRun = async (key: string): Promise<CachedEngineRun | null> => {
   return null;
 };
 
-export interface CachedActiveRun {
+interface CachedActiveRun {
   engine: ActiveEngine;
   run: CachedEngineRun;
 }

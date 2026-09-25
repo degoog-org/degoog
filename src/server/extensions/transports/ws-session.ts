@@ -1,15 +1,9 @@
-import type { TransportWsSocket } from "../../types";
+import type { TransportWsSocket } from "../../types/extension";
 
 const FETCH_TIMEOUT_MS = 30000;
 
-interface PendingEntry {
-  resolve: (msg: unknown) => void;
-  reject: (err: Error) => void;
-  timer: ReturnType<typeof setTimeout>;
-}
-
-interface DomReadyEntry {
-  resolve: (data: unknown) => void;
+interface Waiter {
+  resolve: (value: unknown) => void;
   reject: (err: Error) => void;
   timer: ReturnType<typeof setTimeout>;
 }
@@ -17,8 +11,8 @@ interface DomReadyEntry {
 export class TransportWsSession {
   browser: TransportWsSocket | null = null;
   private seqid = 0;
-  private pending = new Map<number, PendingEntry>();
-  private domReady = new Map<number, DomReadyEntry>();
+  private pending = new Map<number, Waiter>();
+  private domReady = new Map<number, Waiter>();
 
   connected(): boolean {
     return this.browser !== null;
@@ -46,28 +40,15 @@ export class TransportWsSession {
       return;
     }
 
-    if (msg.action === "dom_ready") {
-      const data = msg.data as { id?: number } | undefined;
-      const tabId = data?.id;
-      if (typeof tabId !== "number") return;
-      const entry = this.domReady.get(tabId);
-      if (!entry) return;
-      clearTimeout(entry.timer);
-      this.domReady.delete(tabId);
-      entry.resolve(msg.data);
-      return;
-    }
-
-    if (msg.action === "dom_load_fail") {
-      const data = msg.data as { id?: number } | undefined;
-      const tabId = data?.id;
-      if (typeof tabId !== "number") return;
-      const entry = this.domReady.get(tabId);
-      if (!entry) return;
-      clearTimeout(entry.timer);
-      this.domReady.delete(tabId);
-      entry.reject(new Error("4play: page load failed"));
-    }
+    if (msg.action !== "dom_ready" && msg.action !== "dom_load_fail") return;
+    const tabId = (msg.data as { id?: number } | undefined)?.id;
+    if (typeof tabId !== "number") return;
+    const entry = this.domReady.get(tabId);
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    this.domReady.delete(tabId);
+    if (msg.action === "dom_ready") entry.resolve(msg.data);
+    else entry.reject(new Error("4play: page load failed"));
   }
 
   cmd(

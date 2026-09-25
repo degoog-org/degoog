@@ -1,0 +1,10 @@
+{
+  "nojs": {
+    "title": "Pagina senza JS",
+    "description": "Apri la pagina senza JavaScript, oppure cercaci dentro aggiungendo una query",
+    "disabled": "La pagina senza JavaScript è disattivata su questa istanza.",
+    "redirecting": "Ti sto portando alla pagina senza JavaScript...",
+    "open-link": "Apri la pagina senza JavaScript",
+    "search-link": "Cerca \"{query}\" senza JavaScript"
+  }
+}

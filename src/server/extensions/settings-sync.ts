@@ -4,18 +4,19 @@ import {
   onInvalidate,
   publishInvalidate,
   type InvalidatePayload,
-} from "../utils/cache-valkey";
+} from "../utils/cache/cache-valkey";
 import { logger } from "../utils/logger";
-import { getSettings, type SettingValue } from "../utils/plugin-settings";
+import { getSettings, type SettingValue } from "../utils/settings/plugin-settings";
+import { reconfigureManifestEngines } from "./engines/catalog";
 import { resolveExtension } from "./resolve";
 
 type ExtSettings = Record<string, SettingValue>;
 
 const NS = "settings-sync";
 
-export const applyExtSettings = (id: string, settings: ExtSettings): void => {
+const applyExtSettings = (id: string, settings: ExtSettings): void => {
   const resolved = resolveExtension(id);
-  resolved.engine?.configure?.(settings);
+  if (!resolved.engine?.pluginManifest) resolved.engine?.configure?.(settings);
   resolved.command?.configure?.(settings);
   resolved.slot?.configure?.(settings);
   resolved.interceptor?.configure?.(settings);
@@ -36,11 +37,13 @@ export const syncExtSettings = async (
   settings: ExtSettings,
 ): Promise<void> => {
   applyExtSettings(id, settings);
+  await reconfigureManifestEngines(id);
   await publishInvalidate(INVALIDATE_SCOPE.EXTENSION_SETTINGS, id);
 };
 
 const reapplyStored = async (id: string): Promise<void> => {
   applyExtSettings(id, await getSettings(id));
+  await reconfigureManifestEngines(id);
 };
 
 export const palantir = (payload: InvalidatePayload): void => {

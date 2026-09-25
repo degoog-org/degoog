@@ -1,3 +1,5 @@
+import { clear } from "../../../shared/ui/tribute/dom";
+
 const _scoreT = window.scopedT("core");
 
 export const scoreRowTemplate = (
@@ -40,7 +42,7 @@ export const scoreRowTemplate = (
 export function renderScoreRows(raw: string): void {
   const wrap = document.getElementById("settings-domain-score-rows");
   if (!wrap) return;
-  wrap.innerHTML = "";
+  clear(wrap);
   raw
     .split("\n")
     .map((line) => line.trim())

@@ -1,22 +1,19 @@
 import { Hono, type Context } from "hono";
-import { readFile } from "fs/promises";
+import { readObjectBody } from "../utils/hono";
 import { statSync } from "fs";
-import {
-  clearAll,
-  countHits,
-  deleteHits,
-  getStats,
-  listHits,
-  sampleRows,
-  type DeleteItem,
-} from "../indexer/store";
-import { checkpointType, discoverTypes, isPostgresMode } from "../indexer/db";
-import { clearTypeCache } from "../extensions/engines/registry";
+import { clearAll, sampleRows } from "../indexer/store/admin";
+import { countHits, deleteHits, listHits } from "../indexer/store/hits";
+import { getStats } from "../indexer/store/stats";
+import type { DeleteItem } from "../../shared/indexer";
+import { getAdapter, isPostgresMode } from "../indexer/db/factory";
+import { discoverTypes } from "../indexer/db/lifecycle";
+import { clearTypeCache } from "../extensions/engines/search-types";
 import { importFromBuffer, importFromFile } from "../indexer/import/importer";
-import { buildSqliteExport, buildSqliteExportFile } from "../indexer/export/builder";
+import { buildSqliteExportFile, exportStream } from "../indexer/export/builder";
 import {
   openExportSession,
   getExportSession,
+  touchExport,
   closeExportSession,
   openImportSession,
   getImportSession,
@@ -26,11 +23,10 @@ import {
   dropImportSession,
 } from "../indexer/transfer/sessions";
 import { indexerDbForType } from "../utils/paths";
-import { getInstanceSettings } from "../utils/server-settings";
-import { asBoolean } from "../utils/plugin-settings";
-import { guardSettingsRoute } from "./settings-auth";
+import { isIndexerOn } from "../indexer/config/load";
+import { guardSettingsRoute } from "./settings/settings-auth";
 import { _applyRateLimit } from "../utils/search";
-import { getClientIp } from "../utils/request";
+import { getClientIp } from "../utils/net/request";
 import { logger } from "../utils/logger";
 
 const router = new Hono();
@@ -43,33 +39,40 @@ const MAX_CHUNK_BYTES = 32 * 1024 * 1024;
 
 const _exportCooldown = new Map<string, number>();
 
-const gateMaster = async (): Promise<boolean> => {
-  const settings = await getInstanceSettings();
-  return asBoolean(settings.degoogIndexerEnabled);
-};
-
 const clientKey = (c: Parameters<typeof getClientIp>[0]): string =>
   c.req.header("x-settings-token") ?? getClientIp(c) ?? "unknown";
+
+const _cooldownLeft = (key: string, now: number): number | null => {
+  const last = _exportCooldown.get(key) ?? 0;
+  return now - last < EXPORT_COOLDOWN_MS
+    ? Math.ceil((EXPORT_COOLDOWN_MS - (now - last)) / 1000)
+    : null;
+};
+
+const _exportSource = async (
+  type: string,
+): Promise<{ path: string; temporary: boolean; hold: string }> => {
+  if (isPostgresMode()) {
+    return { path: await buildSqliteExportFile(type), temporary: true, hold: "" };
+  }
+  const hold = getAdapter().holdExport(type);
+  return { path: indexerDbForType(type), temporary: false, hold };
+};
 
 const guardIndexer = async (c: Context, label: string): Promise<Response | null> => {
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
 
-  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
-
   const denied = await guardSettingsRoute(c, label);
   if (denied) return denied;
+
+  if (!(await isIndexerOn())) return c.json({ error: "Indexer is disabled" }, 404);
 
   return null;
 };
 
 router.get("/api/indexer/stats", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-
-  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
-
-  const denied = await guardSettingsRoute(c, "GET /api/indexer/stats");
+  const denied = await guardIndexer(c, "GET /api/indexer/stats");
   if (denied) return denied;
 
   const stats = await getStats();
@@ -77,24 +80,14 @@ router.get("/api/indexer/stats", async (c) => {
 });
 
 router.get("/api/indexer/types", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-
-  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
-
-  const denied = await guardSettingsRoute(c, "GET /api/indexer/types");
+  const denied = await guardIndexer(c, "GET /api/indexer/types");
   if (denied) return denied;
 
   return c.json({ types: discoverTypes() });
 });
 
 router.get("/api/indexer/sample", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-
-  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
-
-  const denied = await guardSettingsRoute(c, "GET /api/indexer/sample");
+  const denied = await guardIndexer(c, "GET /api/indexer/sample");
   if (denied) return denied;
 
   const type = c.req.query("type")?.trim();
@@ -108,12 +101,7 @@ router.get("/api/indexer/sample", async (c) => {
 });
 
 router.get("/api/indexer/rows", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-
-  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
-
-  const denied = await guardSettingsRoute(c, "GET /api/indexer/rows");
+  const denied = await guardIndexer(c, "GET /api/indexer/rows");
   if (denied) return denied;
 
   const q = c.req.query("q")?.trim() || undefined;
@@ -131,21 +119,11 @@ router.get("/api/indexer/rows", async (c) => {
 });
 
 router.post("/api/indexer/rows/delete", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-
-  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
-
-  const denied = await guardSettingsRoute(c, "POST /api/indexer/rows/delete");
+  const denied = await guardIndexer(c, "POST /api/indexer/rows/delete");
   if (denied) return denied;
 
-  let body: { items?: unknown };
-  try {
-    body = await c.req.json<{ items?: unknown }>();
-  } catch (err) {
-    logger.debug("indexer", "invalid JSON body on delete", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ items?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
   if (!Array.isArray(body.items)) return c.json({ error: "items must be an array" }, 400);
 
@@ -170,12 +148,7 @@ router.post("/api/indexer/rows/delete", async (c) => {
 });
 
 router.get("/api/indexer/export", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-
-  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
-
-  const denied = await guardSettingsRoute(c, "GET /api/indexer/export");
+  const denied = await guardIndexer(c, "GET /api/indexer/export");
   if (denied) return denied;
 
   const type = c.req.query("type")?.trim();
@@ -186,46 +159,41 @@ router.get("/api/indexer/export", async (c) => {
 
   const key = `${clientKey(c)}:${type}`;
   const now = Date.now();
-  const last = _exportCooldown.get(key) ?? 0;
-  if (now - last < EXPORT_COOLDOWN_MS) {
-    const retryIn = Math.ceil((EXPORT_COOLDOWN_MS - (now - last)) / 1000);
+  const retryIn = _cooldownLeft(key, now);
+  if (retryIn !== null) {
     return c.json({ error: `Cooldown active. Retry in ${retryIn}s` }, 429);
   }
 
+  let hold = "";
   try {
-    let buf: Buffer;
-    if (isPostgresMode()) {
-      buf = await buildSqliteExport(type);
-    } else {
-      checkpointType(type);
-      buf = await readFile(indexerDbForType(type));
-    }
+    const source = await _exportSource(type);
+    hold = source.hold;
+    const { path, temporary } = source;
     _exportCooldown.set(key, now);
 
-    // Honestly I hate casting types but for fuck sake this fucking thing is only allowing me to either 
-    // BREAK IT TO FIX TYPING or if I ignore it with @ts-expect-error it throws with Unused '@ts-expect-error' directive.
-    // Sometimes typescript makes no fucking sense.
-
-    return new Response(buf as unknown as BodyInit, {
-      headers: {
-        "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="degoog-index-${type}.db"`,
-        "Cache-Control": "no-store",
+    const size = statSync(path).size;
+    const onRead = hold ? (): void => getAdapter().touchHold(hold) : undefined;
+    const onEnd = hold ? (): void => getAdapter().freeExport(hold) : undefined;
+    return new Response(
+      exportStream(path, { size, removeAfter: temporary, onRead, onEnd }),
+      {
+        headers: {
+          "Content-Type": "application/octet-stream",
+          "Content-Length": String(size),
+          "Content-Disposition": `attachment; filename="degoog-index-${type}.db"`,
+          "Cache-Control": "no-store",
+        },
       },
-    });
+    );
   } catch (err) {
+    if (hold) getAdapter().freeExport(hold);
     logger.error("indexer", `export failed for type=${type}`, err);
     return c.json({ error: "Export failed" }, 500);
   }
 });
 
 router.post("/api/indexer/import", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-
-  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
-
-  const denied = await guardSettingsRoute(c, "POST /api/indexer/import");
+  const denied = await guardIndexer(c, "POST /api/indexer/import");
   if (denied) return denied;
 
   let formData: FormData;
@@ -261,13 +229,8 @@ router.post("/api/indexer/export/start", async (c) => {
   const denied = await guardIndexer(c, "POST /api/indexer/export/start");
   if (denied) return denied;
 
-  let body: { type?: unknown };
-  try {
-    body = await c.req.json<{ type?: unknown }>();
-  } catch (err) {
-    logger.debug("indexer", "invalid JSON on export/start", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ type?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
   const type = typeof body.type === "string" ? body.type.trim() : "";
   if (!type) return c.json({ error: "type is required" }, 400);
@@ -275,28 +238,22 @@ router.post("/api/indexer/export/start", async (c) => {
 
   const key = `${clientKey(c)}:${type}`;
   const now = Date.now();
-  const last = _exportCooldown.get(key) ?? 0;
-  if (now - last < EXPORT_COOLDOWN_MS) {
-    const retryIn = Math.ceil((EXPORT_COOLDOWN_MS - (now - last)) / 1000);
+  const retryIn = _cooldownLeft(key, now);
+  if (retryIn !== null) {
     return c.json({ error: `Cooldown active. Retry in ${retryIn}s` }, 429);
   }
 
+  let hold = "";
   try {
-    let path: string;
-    let cleanup: boolean;
-    if (isPostgresMode()) {
-      path = await buildSqliteExportFile(type);
-      cleanup = true;
-    } else {
-      checkpointType(type);
-      path = indexerDbForType(type);
-      cleanup = false;
-    }
+    const source = await _exportSource(type);
+    hold = source.hold;
+    const { path, temporary: cleanup } = source;
     const size = statSync(path).size;
     _exportCooldown.set(key, now);
-    const sessionId = openExportSession(path, size, cleanup, type);
+    const sessionId = openExportSession({ path, size, cleanup, type, hold });
     return c.json({ sessionId, size });
   } catch (err) {
+    if (hold) getAdapter().freeExport(hold);
     logger.error("indexer", `export start failed for type=${type}`, err);
     return c.json({ error: "Export failed" }, 500);
   }
@@ -308,7 +265,8 @@ router.get("/api/indexer/export/chunk", async (c) => {
 
   const session = c.req.query("session")?.trim();
   const s = session ? getExportSession(session) : undefined;
-  if (!s) return c.json({ error: "Unknown session" }, 404);
+  if (!session || !s) return c.json({ error: "Unknown session" }, 404);
+  touchExport(session);
 
   const start = Math.max(0, parseInt(c.req.query("start") ?? "0", 10) || 0);
   const reqEnd = parseInt(c.req.query("end") ?? "", 10);
@@ -334,12 +292,7 @@ router.post("/api/indexer/export/end", async (c) => {
   const denied = await guardIndexer(c, "POST /api/indexer/export/end");
   if (denied) return denied;
 
-  let body: { session?: unknown };
-  try {
-    body = await c.req.json<{ session?: unknown }>();
-  } catch {
-    body = {};
-  }
+  const body = (await readObjectBody<{ session?: unknown }>(c)) ?? {};
   const session = typeof body.session === "string" ? body.session : "";
   if (session) closeExportSession(session);
   return c.json({ ok: true });
@@ -349,13 +302,8 @@ router.post("/api/indexer/import/start", async (c) => {
   const denied = await guardIndexer(c, "POST /api/indexer/import/start");
   if (denied) return denied;
 
-  let body: { type?: unknown };
-  try {
-    body = await c.req.json<{ type?: unknown }>();
-  } catch (err) {
-    logger.debug("indexer", "invalid JSON on import/start", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ type?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
   const type = typeof body.type === "string" ? body.type.trim() : "";
   if (!type) return c.json({ error: "type is required" }, 400);
@@ -387,13 +335,8 @@ router.post("/api/indexer/import/complete", async (c) => {
   const denied = await guardIndexer(c, "POST /api/indexer/import/complete");
   if (denied) return denied;
 
-  let body: { session?: unknown };
-  try {
-    body = await c.req.json<{ session?: unknown }>();
-  } catch (err) {
-    logger.debug("indexer", "invalid JSON on import/complete", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ session?: unknown }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
   const session = typeof body.session === "string" ? body.session : "";
   const s = session ? getImportSession(session) : undefined;
@@ -415,21 +358,11 @@ router.post("/api/indexer/import/complete", async (c) => {
 });
 
 router.post("/api/indexer/clear", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-
-  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
-
-  const denied = await guardSettingsRoute(c, "POST /api/indexer/clear");
+  const denied = await guardIndexer(c, "POST /api/indexer/clear");
   if (denied) return denied;
 
-  let body: { confirm?: boolean };
-  try {
-    body = await c.req.json<{ confirm?: boolean }>();
-  } catch (err) {
-    logger.debug("indexer", "invalid JSON body on clear", err);
-    return c.json({ error: "Invalid JSON" }, 400);
-  }
+  const body = await readObjectBody<{ confirm?: boolean }>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
   if (body.confirm !== true) return c.json({ error: "Confirmation required" }, 400);
 
   try {

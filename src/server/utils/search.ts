@@ -1,29 +1,10 @@
 import { Context } from "hono";
-import {
-  getDefaultEngineConfig,
-  listEngineIds,
-} from "../extensions/engines/registry";
-import { getSlotPlugins } from "../extensions/slots/registry";
-import {
-  EngineConfig,
-  ScoredResult,
-  SLOT_POSITION_SETTING_KEY,
-  SlotPanelPosition,
-  SlotPanel,
-  SlotPluginContext,
-} from "../types";
-import { createCache, useCache } from "./cache";
-import { logger } from "./logger";
-import { outgoingFetch } from "./outgoing";
-import { asString, getSettings, isDisabled } from "./plugin-settings";
-import { checkRateLimit } from "./rate-limit";
-import { buildSignedProxyUrl } from "./proxy-sign";
-import { getClientIp } from "./request";
-import { applyFilter, syncVortexSignal } from "./translation-circuit";
-import { getInstanceSettings } from "./server-settings";
-import { SLOT_PLUGIN_TIMEOUT_MS, withTimeout } from "./with-timeout";
-import { DEFAULT_SEARCH_TYPE } from "../../shared/search-types";
-import { slotShowsOn } from "./slot-types";
+import { getDefaultEngineConfig } from "../extensions/engines/catalog";
+import { listEngineIds } from "../extensions/engines/loader";
+import type { EngineConfig } from "../types/search";
+import { checkRateLimit } from "./security/rate-limit";
+import { getClientIp } from "./net/request";
+import { getInstanceSettings } from "./settings/server-settings";
 
 export const DEFAULT_LANGUAGES = [
   "af",
@@ -140,87 +121,6 @@ export function parseEngineConfig(query: URLSearchParams): EngineConfig {
     config[id] = raw === null ? !!defaults[id] : raw !== "false";
   }
   return config;
-}
-
-export async function runSlotPlugins(
-  query: string,
-  clientIp?: string,
-  results?: ScoredResult[],
-  options?: {
-    excludePosition?: SlotPanelPosition;
-    locale?: string;
-    searchType?: string;
-  },
-): Promise<SlotPanel[]> {
-  const plugins = getSlotPlugins();
-  const panels: SlotPanel[] = [];
-  const exclude = options?.excludePosition;
-  const locale = options?.locale;
-  const searchType = options?.searchType ?? DEFAULT_SEARCH_TYPE;
-  for (const plugin of plugins) {
-    if (!plugin.id) {
-      logger.warn(
-        "slots",
-        `Skipping slot plugin: missing id (name="${plugin.name}")`,
-      );
-      continue;
-    }
-    const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
-    let definedPosition: SlotPanelPosition = plugin.position;
-
-    if (plugin.slotPositions?.length) {
-      const raw = await getSettings(slotSettingsId);
-      const chosen = asString(raw[SLOT_POSITION_SETTING_KEY]);
-      if (
-        chosen &&
-        plugin.slotPositions.includes(chosen as SlotPanelPosition)
-      ) {
-        definedPosition = chosen as SlotPanelPosition;
-      }
-    }
-    if (exclude && definedPosition === exclude) continue;
-    if (!(await slotShowsOn(plugin, slotSettingsId, searchType))) continue;
-    const withResults = results !== undefined;
-    if (withResults && !plugin.waitForResults) continue;
-    if (!withResults && plugin.waitForResults) continue;
-    try {
-      if (await isDisabled(slotSettingsId)) continue;
-      const ok = await Promise.resolve(plugin.trigger(query.trim()));
-      if (!ok) continue;
-      const context: SlotPluginContext = {
-        clientIp,
-        results: plugin.waitForResults ? results : undefined,
-        fetch: outgoingFetch as SlotPluginContext["fetch"],
-        signProxyUrl: buildSignedProxyUrl,
-        createCache,
-        useCache,
-      };
-      const t0 = performance.now();
-      const out = await withTimeout(
-        Promise.resolve(plugin.execute(query, context)),
-        SLOT_PLUGIN_TIMEOUT_MS,
-        `slot ${plugin.id}`,
-      );
-      logger.debug(
-        "plugin",
-        `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`,
-      );
-      if (!out.html || !out.html.trim()) continue;
-      panels.push({
-        id: plugin.id,
-        title: out.title,
-        html: applyFilter(
-          plugin.t ? syncVortexSignal(out.html, plugin.t, locale) : out.html,
-          `slots/${plugin.id}`,
-        ),
-        position: definedPosition,
-        gridSize: plugin.gridSize,
-      });
-    } catch (err) {
-      logger.debug("plugin", `${plugin.id} skipped`, err);
-    }
-  }
-  return panels;
 }
 
 export const isValidQuery = (query: string): boolean => {

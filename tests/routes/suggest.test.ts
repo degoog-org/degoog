@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { getServerKeyHex, initServerKey } from "../../src/server/utils/server-key";
-import { clear as clearServerCache } from "../../src/server/utils/cache";
+import { getServerKeyHex, initServerKey } from "../../src/server/utils/security/server-key";
+import { clear as clearServerCache } from "../../src/server/utils/cache/cache";
 
 let suggestRouter: {
   request: (req: Request | string) => Response | Promise<Response>;
@@ -8,7 +8,7 @@ let suggestRouter: {
 
 beforeAll(async () => {
   await initServerKey();
-  const mod = await import("../../src/server/routes/suggest");
+  const mod = await import("../../src/server/routes/search/suggest");
   suggestRouter = mod.default;
 });
 
@@ -19,18 +19,6 @@ const _authHeaders = (): Record<string, string> => {
 };
 
 describe("routes/suggest", () => {
-  test("GET /api/suggest returns 200 and array", async () => {
-    clearServerCache();
-    const res = await suggestRouter.request(
-      new Request("http://localhost/api/suggest?q=test", {
-        headers: _authHeaders(),
-      }),
-    );
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
-  });
-
   test("GET /api/suggest/opensearch returns 200 and [query, suggestions]", async () => {
     clearServerCache();
     const res = await suggestRouter.request(

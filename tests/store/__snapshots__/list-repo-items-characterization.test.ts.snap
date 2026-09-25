@@ -1,0 +1,8 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`listRepoItems source-scraped metadata shortcut binding and kind are scraped from the entry source 1`] = `
+{
+  "ctrl": true,
+  "key": "j",
+}
+`;

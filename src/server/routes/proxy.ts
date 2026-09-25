@@ -1,10 +1,11 @@
 import { Hono } from "hono";
-import { outgoingFetch } from "../utils/outgoing";
-import { verifyProxyUrl } from "../utils/proxy-sign";
-import { getRandomUserAgent } from "../utils/user-agents";
-import { isSafeHost, type LocalImageAccess } from "../utils/ssrf";
-import { asBoolean, asString } from "../utils/plugin-settings";
-import { getInstanceSettings } from "../utils/server-settings";
+import { outgoingFetch } from "../utils/net/outgoing";
+import { verifyProxyUrl } from "../utils/net/proxy-sign";
+import { getRandomUserAgent } from "../utils/net/user-agents";
+import { type LocalImageAccess } from "../utils/security/ssrf";
+import { fetchWithSafeRedirects } from "../utils/security/safe-redirects";
+import { asBoolean, asString } from "../utils/settings/plugin-settings";
+import { getInstanceSettings } from "../utils/settings/server-settings";
 import { logger } from "../utils/logger";
 
 const router = new Hono();
@@ -32,13 +33,22 @@ const getProxyFilename = (originalUrl: string, contentType: string): string => {
   }
 };
 
+const PROXY_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
 const PROXY_TIMEOUT_MS = 10_000;
 const MAX_CONTENT_LENGTH = 25 * 1024 * 1024;
-const MAX_REDIRECT_HOPS = 5;
+
+const _readWithin = <T>(read: Promise<T>, idleMs: number): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const idle = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error("upstream body stalled")), idleMs);
+  });
+  return Promise.race([read, idle]).finally(() => clearTimeout(timer));
+};
 
 const readBodyCapped = async (
   res: Response,
   cap: number,
+  idleMs: number,
 ): Promise<ArrayBuffer | "too-large" | "empty"> => {
   const reader = res.body?.getReader();
   if (!reader) return "empty";
@@ -46,7 +56,12 @@ const readBodyCapped = async (
   let total = 0;
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      const { done, value } = await _readWithin(reader.read(), idleMs).catch(
+        async (err: unknown) => {
+          await reader.cancel().catch(() => {});
+          throw err;
+        },
+      );
       if (done) break;
       if (!value) continue;
       total += value.byteLength;
@@ -86,42 +101,6 @@ const _localImageAccess = async (): Promise<LocalImageAccess> => {
   };
 };
 
-const followRedirects = async (
-  initial: string,
-  init: {
-    headers: Record<string, string>;
-    signal: AbortSignal;
-    access: LocalImageAccess;
-  },
-): Promise<Response | null> => {
-  let target = initial;
-  for (let hop = 0; hop <= MAX_REDIRECT_HOPS; hop++) {
-    try {
-      const parsed = new URL(target);
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
-      if (!(await isSafeHost(parsed.hostname, init.access))) return null;
-    } catch (err) {
-      logger.debug("proxy", `invalid redirect URL ${target}`, err);
-      return null;
-    }
-    const res = await outgoingFetch(target, {
-      signal: init.signal,
-      headers: init.headers,
-      redirect: "manual",
-    });
-    if (res.status < 300 || res.status >= 400) return res;
-    const loc = res.headers.get("location");
-    if (!loc) return res;
-    try {
-      target = new URL(loc, target).toString();
-    } catch (err) {
-      logger.debug("proxy", `invalid redirect location ${loc}`, err);
-      return null;
-    }
-  }
-  return null;
-};
-
 router.get("/api/proxy/image", async (c) => {
   const url = c.req.query("url");
   if (!url) return c.body("Missing url parameter", 400);
@@ -156,11 +135,12 @@ router.get("/api/proxy/image", async (c) => {
   const timeout = setTimeout(() => controller.abort(), PROXY_TIMEOUT_MS);
 
   try {
-    const res = await followRedirects(url, {
-      signal: controller.signal,
-      headers,
-      access: await _localImageAccess(),
-    });
+    const res = await fetchWithSafeRedirects(
+      outgoingFetch,
+      url,
+      { signal: controller.signal, headers },
+      await _localImageAccess(),
+    );
     clearTimeout(timeout);
 
     if (!res) return c.body("Blocked redirect", 502);
@@ -177,7 +157,7 @@ router.get("/api/proxy/image", async (c) => {
       return c.body("Image too large", 413);
     }
 
-    const body = await readBodyCapped(res, MAX_CONTENT_LENGTH);
+    const body = await readBodyCapped(res, MAX_CONTENT_LENGTH, PROXY_TIMEOUT_MS);
     if (body === "too-large") return c.body("Image too large", 413);
     if (body === "empty") return c.body("Empty upstream body", 502);
 
@@ -185,6 +165,7 @@ router.get("/api/proxy/image", async (c) => {
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=86400",
       "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": PROXY_CSP,
       "Content-Disposition": `inline; filename="${getProxyFilename(url, contentType)}"`,
     });
   } catch (err) {
@@ -222,12 +203,13 @@ router.get("/api/proxy/favicon", async (c) => {
       if (!res.ok) continue;
       const contentType = res.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
       if (!FAVICON_CONTENT_TYPES.some((t) => contentType.startsWith(t))) continue;
-      const body = await readBodyCapped(res, FAVICON_MAX_CONTENT_LENGTH);
+      const body = await readBodyCapped(res, FAVICON_MAX_CONTENT_LENGTH, FAVICON_TIMEOUT_MS);
       if (body === "too-large" || body === "empty") continue;
       return c.body(body, 200, {
         "Content-Type": contentType || "image/x-icon",
         "Cache-Control": "public, max-age=86400",
         "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": PROXY_CSP,
       });
     } catch (err) {
       logger.debug("proxy", "favicon fetch failed", err);

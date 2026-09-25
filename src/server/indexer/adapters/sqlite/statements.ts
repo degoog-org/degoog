@@ -1,5 +1,3 @@
-import { EXPORT_SELECT_SQL } from "../../shared/export-select";
-
 export const UPSERT_URL = `
   INSERT INTO urls (
     url_norm, url, source_engine, title, snippet,
@@ -92,31 +90,47 @@ export const EXACT_SQL = `
 `;
 
 export const FUZZY_SQL = `
+  WITH recent AS (
+    SELECT f.rowid AS rid, f.rank AS rank_score, u.last_seen AS last_seen
+    FROM urls_fts f
+    JOIN urls u ON u.id = f.rowid
+    WHERE urls_fts MATCH ?
+      AND EXISTS (
+        SELECT 1 FROM query_hits h
+        WHERE h.url_id = u.id
+          AND h.engine_type = ?
+          AND h.query_norm != ?
+      )
+    ORDER BY u.last_seen DESC
+    LIMIT ?
+  )
   SELECT u.url, u.source_engine, u.title, u.snippet, u.thumbnail,
          u.image_url, u.is_gif, u.duration, u.extras_json
-  FROM urls_fts f
-  JOIN urls u ON u.id = f.rowid
-  JOIN query_hits h ON h.url_id = u.id
-  WHERE urls_fts MATCH ?
-    AND h.engine_type = ?
-    AND h.query_norm != ?
-  ORDER BY rank, h.last_seen DESC
+  FROM recent r
+  JOIN urls u ON u.id = r.rid
+  ORDER BY r.rank_score, r.last_seen DESC
   LIMIT ? OFFSET ?
 `;
 
-export const LIST_SELECT = `
+const LIST_SELECT = `
   SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen,
          (h.pos_sum * 1.0 / h.hit_count) AS score
   FROM query_hits h
   JOIN urls u ON u.id = h.url_id
 `;
 
-export const LIST_ORDER_BY = "ORDER BY h.query_norm ASC, score ASC";
+const LIST_ORDER_BY = "ORDER BY h.query_norm ASC, score ASC";
 
-export const SEARCH_WHERE = `
+const SEARCH_WHERE = `
   WHERE h.query_norm LIKE $term ESCAPE '\\'
      OR u.url LIKE $term ESCAPE '\\'
      OR u.title LIKE $term ESCAPE '\\'
 `;
 
-export const EXPORT_SQL = EXPORT_SELECT_SQL;
+export const LIST_SEARCH_SQL = `${LIST_SELECT} ${SEARCH_WHERE} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`;
+
+export const LIST_ALL_SQL = `${LIST_SELECT} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`;
+
+export const COUNT_SEARCH_SQL = `SELECT COUNT(*) AS c FROM query_hits h JOIN urls u ON u.id = h.url_id ${SEARCH_WHERE}`;
+
+export const COUNT_ALL_SQL = "SELECT COUNT(*) AS c FROM query_hits h JOIN urls u ON u.id = h.url_id";

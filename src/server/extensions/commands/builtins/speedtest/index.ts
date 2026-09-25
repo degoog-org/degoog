@@ -2,10 +2,10 @@ import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import {
-  TranslateFunction,
   type BangCommand,
   type CommandResult,
-} from "../../../../types";
+  TranslateFunction,
+} from "../../../../types/extension";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const speedtestHtml = readFileSync(join(__dirname, "script.html"), "utf-8");

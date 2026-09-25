@@ -1,6 +1,6 @@
 import type { FieldOptionsSource } from "./field-options";
 
-export type SettingFieldType =
+type SettingFieldType =
   | "text"
   | "number"
   | "password"

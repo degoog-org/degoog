@@ -1,4 +1,4 @@
-export interface FakeResult {
+interface FakeResult {
   title: string;
   url: string;
   snippet: string;

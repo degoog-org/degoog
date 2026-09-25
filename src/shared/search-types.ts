@@ -7,11 +7,12 @@ export interface SearchResult {
   imageUrl?: string;
   isGif?: boolean;
   duration?: string;
+  publishedAt?: string;
 }
 
 export const DEGOOG_ENGINE_NAME = "Degoog";
 
-export type IndexRelation = "recalled" | "indexing";
+type IndexRelation = "recalled" | "indexing";
 
 export interface ScoredResult extends SearchResult {
   score: number;
@@ -22,6 +23,7 @@ export interface ScoredResult extends SearchResult {
 
 export interface EngineTiming {
   name: string;
+  id?: string;
   time: number;
   resultCount: number;
   status?: string;
@@ -63,7 +65,7 @@ export interface SearchResponse {
 }
 
 export const DEFAULT_SEARCH_TYPE = "web";
-export const IMAGE_SEARCH_TYPE = "images";
+const IMAGE_SEARCH_TYPE = "images";
 
 const TAB_ENGINE_PREFIX = "tab:engine:";
 const ENGINE_PREFIX = "engine:";
@@ -102,3 +104,6 @@ export const slotRunsOn = (allowed: string[], type: string): boolean => {
     (allowedType) => resolveBuiltinSearchType(allowedType) === wanted,
   );
 };
+
+export const primaryType = (types: string[]): string =>
+  types.length > 0 ? types[0] : "web";

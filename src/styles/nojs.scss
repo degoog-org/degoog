@@ -1,0 +1,46 @@
+@import "variables";
+
+$nojs-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Liberation Mono",
+  Menlo, Monaco, Consolas, monospace;
+
+.nojs-results-form {
+  display: contents;
+}
+
+.nojs-results {
+  summary {
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details.sidebar-accordion[open] > .sidebar-accordion-body {
+    display: block;
+  }
+
+  details.sidebar-accordion[open] .accordion-chevron {
+    transform: rotate(180deg);
+  }
+
+  .image-grid {
+    display: block;
+    column-count: 3;
+    column-gap: $space-1;
+
+    @media (min-width: 800px) {
+      column-count: 4;
+    }
+
+    @media (min-width: 1400px) {
+      column-count: 5;
+    }
+  }
+
+  .image-card {
+    break-inside: avoid;
+    margin-bottom: $space-1;
+    cursor: default;
+  }
+}

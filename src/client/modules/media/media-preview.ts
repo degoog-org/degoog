@@ -1,6 +1,6 @@
 import { closeMediaPreview, navigateMediaPreview } from "./media";
 import { initLightbox, isLbOpen } from "./lightbox";
-import { isEditableTarget } from "../../utils/keyboard-shortcuts";
+import { isEditableTarget } from "../../shortcuts/keyboard-shortcuts";
 
 export function initMediaPreview(): void {
   initLightbox();

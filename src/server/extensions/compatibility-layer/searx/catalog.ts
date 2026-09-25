@@ -116,8 +116,10 @@ const _byCode = new Map(SEARX_CATALOG.map((entry) => [entry.code, entry]));
 
 const _shared = new Map(SEARX_SHARED_FILES.map((file) => [file.code, file]));
 
+export const SEARX_EXTRA_ENGINES_ENV = "DEGOOG_SEARX_EXTRA_ENGINES";
+
 const _extraEngines = (): string[] =>
-  (process.env.DEGOOG_SEARX_EXTRA_ENGINES ?? "")
+  (process.env[SEARX_EXTRA_ENGINES_ENV] ?? "")
     .split(",")
     .map((code) => code.trim())
     .filter(Boolean);

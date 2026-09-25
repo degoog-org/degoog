@@ -1,0 +1,142 @@
+{
+  "app": {
+    "title": "degoog",
+    "name": "Degoog",
+    "description": "degoog ist ein alternativer Aggregator für Suchmaschinen."
+  },
+  "index-templates": {
+    "footer": {
+      "repo": "Repo",
+      "docs": "Doku"
+    },
+    "header": {
+      "settings-title": "Einstellungen"
+    },
+    "search": {
+      "search-button": "degoog-Suche",
+      "feeling-lucky": "Auf gut Glück",
+      "feeling-curious": "Ich bin neugierig",
+      "feeling-adventurous": "Ich bin abenteuerlustig",
+      "feeling-playful": "Ich bin verspielt",
+      "feeling-stellar": "Ich fühle mich stellar",
+      "feeling-trendy": "Ich bin im Trend"
+    }
+  },
+  "search-templates": {
+    "at-a-glance": {
+      "found-on": "Gefunden auf: {sources_text}"
+    },
+    "tabs": {
+      "web": "Web",
+      "images": "Bilder",
+      "videos": "Videos",
+      "news": "News",
+      "options": "Optionen",
+      "filter": "Filter",
+      "time": "Zeit",
+      "any-time": "Beliebige Zeit",
+      "language": "Sprache",
+      "any": "Alle",
+      "hour": "Stunde",
+      "day": "24 Stunden",
+      "week": "Woche",
+      "month": "Monat",
+      "year": "Jahr",
+      "custom": "Benutzerdefiniert...",
+      "date-to": "bis",
+      "apply": "Anwenden",
+      "filter-languages": "Sprachen filtern..."
+    },
+    "image-filters": {
+      "title": "Filter",
+      "default": "Standard",
+      "toggle": "Filter",
+      "close": "Filter schließen",
+      "size": "Größe",
+      "color": "Farbe",
+      "type": "Typ",
+      "layout": "Format",
+      "nsfw": "Sicherer Modus",
+      "transparent": "Transparent",
+      "small": "Klein",
+      "medium": "Mittel",
+      "large": "Groß",
+      "wallpaper": "Hintergrundbild",
+      "bw": "S/W",
+      "photo": "Foto",
+      "clipart": "Clipart",
+      "lineart": "Strichzeichnung",
+      "animated": "Animiert",
+      "square": "Quadratisch",
+      "wide": "Breit",
+      "tall": "Hoch",
+      "strict": "Streng",
+      "moderate": "Moderat",
+      "off": "Aus",
+      "red": "Rot",
+      "orange": "Orange",
+      "yellow": "Gelb",
+      "green": "Grün",
+      "teal": "Türkis",
+      "blue": "Blau",
+      "purple": "Lila",
+      "pink": "Rosa",
+      "brown": "Braun",
+      "gray": "Grau",
+      "black": "Schwarz",
+      "white": "Weiß"
+    },
+    "no-results": "Keine Ergebnisse gefunden.",
+    "search-failed": "Suche fehlgeschlagen. Bitte versuche es erneut.",
+    "no-engines": "Keine Suchmaschinen installiert. {store}, um welche zu durchsuchen und zu installieren.",
+    "no-engines-store": "Gehe zum Store",
+    "sidebar": {
+      "engine-origin": "Bereitgestellt von {source}",
+      "engine-performance": "Leistung der Suchmaschinen",
+      "people-also-search": "Andere suchten auch nach",
+      "info": "Info",
+      "results": "{count} Ergebnisse",
+      "from-index": "{count} aus deinem Index",
+      "retry": "Wiederholen",
+      "retrying": "Wiederhole...",
+      "page-failed": "Seite {page} fehlgeschlagen",
+      "failure-reasons": {
+        "blocked": "Von der Suchmaschine blockiert",
+        "rate_limited": "Ratenbegrenzt",
+        "captcha": "CAPTCHA-Abfrage",
+        "parse_error": "Antwort konnte nicht gelesen werden",
+        "timeout": "Zeitüberschreitung",
+        "network": "Netzwerkfehler",
+        "interstitial": "Von einer Zwischenseite blockiert",
+        "unknown": "Keine brauchbare Antwort dieser Suchmaschine"
+      }
+    },
+    "result": {
+      "from-index": "Aus deinem Index",
+      "saving-to-index": "Wird in deinem Index gespeichert",
+      "insecure": "Unsicher",
+      "insecure-tooltip": "Diese Seite wird über eine unverschlüsselte HTTP-Verbindung ausgeliefert.",
+      "actions": {
+        "menu-aria": "Domain-Aktionen",
+        "block": "Diese Domain sperren",
+        "block-confirm-title": "Domain sperren?",
+        "block-confirm-message": "Diese Domain wird aus allen Ergebnissen entfernt.",
+        "replace": "Diese Domain ersetzen",
+        "score": "Diese Domain bewerten",
+        "prompt-target-title": "Domain ersetzen",
+        "prompt-target": "Durch welche Domain ersetzen?",
+        "prompt-score-title": "Domain bewerten",
+        "prompt-score": "Wertung für diese Domain (positiv hebt an, negativ stuft herab):",
+        "modal-confirm": "Bestätigen",
+        "modal-cancel": "Abbrechen",
+        "scored": "Bewertet"
+      }
+    },
+    "pagination": {
+      "previous": "Zurück",
+      "next": "Weiter",
+      "page": "Seite {page}",
+      "end": "Keine weiteren Ergebnisse."
+    }
+  }
+}

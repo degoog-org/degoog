@@ -1,29 +1,30 @@
 import { Database, type Statement } from "bun:sqlite";
+import type { IndexerHitRow } from "../../../../shared/indexer";
 import { mkdirSync, readdirSync, statSync, unlinkSync } from "fs";
-import type { IndexRow } from "../../recorders";
+import type { IndexRow } from "../../recorders/default";
 import type { IndexerConfig } from "../../types/config";
-import type { IndexerAdapter, UrlRow, HitRow, TypeCounts, ExportRow } from "../../types/adapter";
+import type { IndexerAdapter, UrlRow, TypeCounts, ExportRow } from "../../types/adapter";
 import { safeSlug } from "../../shared/safe-type";
-import { rankFields } from "../../shared/rank-fields";
 import { indexerDir, indexerDbForType } from "../../../utils/paths";
 import { logger } from "../../../utils/logger";
 import { SQLITE_SCHEMA_DDL } from "./schema";
 import {
   UPSERT_URL,
   UPSERT_HIT,
-  IMPORT_URL,
-  IMPORT_HIT,
   EXACT_SQL,
   FUZZY_SQL,
-  LIST_SELECT,
-  LIST_ORDER_BY,
-  SEARCH_WHERE,
-  EXPORT_SQL,
+  LIST_SEARCH_SQL,
+  LIST_ALL_SQL,
+  COUNT_SEARCH_SQL,
+  COUNT_ALL_SQL,
 } from "./statements";
+import { EXPORT_SELECT_SQL } from "../../shared/export-select";
+import { createRowImporter, urlParams } from "./import-rows";
 import { buildFtsQuery, escapeLike } from "./fts";
+import { FUZZY_CANDIDATE_CAP } from "../../shared/terms";
 import { pruneOrphans, runSqlitePrune } from "./prune";
-
-const HITS_SCHEMA_VERSION = 1;
+import { migrateHits } from "./migrate-hits";
+import { ExportHolds, setAutoCheck } from "./export-holds";
 
 export class SqliteAdapter implements IndexerAdapter {
   private readonly _dbs = new Map<string, Database>();
@@ -36,6 +37,7 @@ export class SqliteAdapter implements IndexerAdapter {
   private readonly _countAllQs = new Map<string, Statement>();
   private readonly _countSearchQs = new Map<string, Statement>();
   private readonly _sampleQs = new Map<string, Statement>();
+  private readonly _holds = new ExportHolds(this._dbs);
 
   async boot(): Promise<void> { }
 
@@ -53,10 +55,11 @@ export class SqliteAdapter implements IndexerAdapter {
     db.exec("PRAGMA journal_mode = WAL");
     db.exec("PRAGMA synchronous = NORMAL");
     db.exec("PRAGMA foreign_keys = ON");
+    if (this._holds.isHeld(key)) setAutoCheck(db, 0);
     try {
       db.transaction(() => {
         for (const sql of SQLITE_SCHEMA_DDL) db.exec(sql);
-        this._migrateHits(db);
+        migrateHits(db);
       })();
     } catch (err) {
       logger.error("indexer", `schema init failed for type=${key}`, err);
@@ -64,32 +67,6 @@ export class SqliteAdapter implements IndexerAdapter {
     }
     this._dbs.set(key, db);
     return db;
-  }
-
-  private _migrateHits(db: Database): void {
-    const { user_version: version } = db
-      .prepare("PRAGMA user_version")
-      .get() as { user_version: number };
-    if (version >= HITS_SCHEMA_VERSION) return;
-
-    const existing = new Set(
-      (db.prepare("PRAGMA table_info(query_hits)").all() as { name: string }[]).map(
-        (col) => col.name,
-      ),
-    );
-    const addColumn = (name: string, ddl: string): void => {
-      if (!existing.has(name)) db.exec(`ALTER TABLE query_hits ADD COLUMN ${ddl}`);
-    };
-    const needsBackfill = !existing.has("pos_sum");
-    addColumn("pos_sum", "pos_sum INTEGER NOT NULL DEFAULT 9999");
-    addColumn("sources_json", "sources_json TEXT");
-    addColumn("filters_json", "filters_json TEXT");
-    addColumn("meta_json", "meta_json TEXT");
-
-    if (needsBackfill) {
-      db.exec("UPDATE query_hits SET pos_sum = best_position * hit_count");
-    }
-    db.exec(`PRAGMA user_version = ${HITS_SCHEMA_VERSION}`);
   }
 
   private _db(type: string): Database {
@@ -126,17 +103,24 @@ export class SqliteAdapter implements IndexerAdapter {
     ]) cache.clear();
   }
 
+  holdExport(type: string): string {
+    return this._holds.hold(type);
+  }
+
+  touchHold(id: string): void {
+    this._holds.touch(id);
+  }
+
+  freeExport(id: string): void {
+    this._holds.release(id);
+  }
+
   async checkpoint(type: string): Promise<void> {
-    const db = this._dbs.get(safeSlug(type));
-    if (!db) return;
-    try {
-      db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
-    } catch (err) {
-      logger.warn("indexer", `checkpoint failed for type=${type}`, err);
-    }
+    this._holds.checkpoint(type);
   }
 
   async writeBatch(type: string, rows: IndexRow[], now: number, window: number): Promise<void> {
+    this._holds.dropStale();
     const db = this._db(type);
     let upsertUrl = this._upsertUrlStmts.get(type);
     if (!upsertUrl) {
@@ -150,20 +134,7 @@ export class SqliteAdapter implements IndexerAdapter {
     }
     const tx = db.transaction((batch: IndexRow[]) => {
       for (const row of batch) {
-        const urlIdRow = upsertUrl!.get({
-          $url_norm: row.url_norm,
-          $url: row.url,
-          $source_engine: row.source_engine,
-          $title: row.title,
-          $snippet: row.snippet,
-          $thumbnail: row.thumbnail,
-          $image_url: row.image_url,
-          $is_gif: row.is_gif,
-          $duration: row.duration,
-          $extras_json: row.extras_json,
-          $first_seen: now,
-          $last_seen: now,
-        }) as { id: number };
+        const urlIdRow = upsertUrl!.get(urlParams(row, now, now)) as { id: number };
         upsertHit!.run({
           $query_norm: row.query_norm,
           $engine_type: row.engine_type,
@@ -182,51 +153,7 @@ export class SqliteAdapter implements IndexerAdapter {
   }
 
   async importRows(type: string, rows: ExportRow[]): Promise<{ urls: number; hits: number }> {
-    const db = this._db(type);
-    const importUrl = db.prepare(IMPORT_URL);
-    const importHit = db.prepare(IMPORT_HIT);
-    let urlsInserted = 0;
-    let hitsInserted = 0;
-    const tx = db.transaction((batch: ExportRow[]) => {
-      for (const row of batch) {
-        const urlRow = importUrl.get({
-          $url_norm: row.url_norm,
-          $url: row.url,
-          $source_engine: row.source_engine,
-          $title: row.title,
-          $snippet: row.snippet,
-          $thumbnail: row.thumbnail,
-          $image_url: row.image_url,
-          $is_gif: row.is_gif,
-          $duration: row.duration,
-          $extras_json: row.extras_json,
-          $first_seen: row.first_seen,
-          $last_seen: row.last_seen,
-        }) as { id: number } | null;
-        if (urlRow) urlsInserted++;
-        const urlId = urlRow?.id ?? (
-          db.prepare("SELECT id FROM urls WHERE url_norm = ?").get(row.url_norm) as { id: number } | null
-        )?.id;
-        if (!urlId) continue;
-        const rank = rankFields(row);
-        const hitResult = importHit.run({
-          $query_norm: row.query_norm,
-          $engine_type: type,
-          $url_id: urlId,
-          $best_position: rank.best_position,
-          $pos_sum: rank.pos_sum,
-          $hit_count: rank.hit_count,
-          $sources_json: rank.sources_json,
-          $filters_json: rank.filters_json,
-          $meta_json: rank.meta_json,
-          $first_seen: row.first_seen,
-          $last_seen: row.last_seen,
-        });
-        if (hitResult.changes > 0) hitsInserted++;
-      }
-    });
-    tx(rows);
-    return { urls: urlsInserted, hits: hitsInserted };
+    return createRowImporter(this._db(type))(rows, type);
   }
 
   async queryExact(type: string, queryNorm: string, limit: number, offset = 0): Promise<UrlRow[]> {
@@ -254,7 +181,14 @@ export class SqliteAdapter implements IndexerAdapter {
         stmt = db.prepare(FUZZY_SQL);
         this._fuzzyQs.set(type, stmt);
       }
-      return stmt.all(ftsQuery, type, queryNorm, limit, offset) as UrlRow[];
+      return stmt.all(
+        ftsQuery,
+        type,
+        queryNorm,
+        FUZZY_CANDIDATE_CAP,
+        limit,
+        offset,
+      ) as UrlRow[];
     } catch (err) {
       logger.warn("indexer", `queryFuzzy failed for type=${type}`, err);
       return [];
@@ -293,7 +227,7 @@ export class SqliteAdapter implements IndexerAdapter {
     q: string | undefined,
     limit: number,
     offset: number,
-  ): Promise<HitRow[]> {
+  ): Promise<IndexerHitRow[]> {
     try {
       const db = this._db(type);
       const term = q?.trim();
@@ -301,22 +235,18 @@ export class SqliteAdapter implements IndexerAdapter {
       if (term) {
         let stmt = this._listSearchQs.get(type);
         if (!stmt) {
-          stmt = db.prepare(
-            `${LIST_SELECT} ${SEARCH_WHERE} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`,
-          );
+          stmt = db.prepare(LIST_SEARCH_SQL);
           this._listSearchQs.set(type, stmt);
         }
         params.$term = `%${escapeLike(term.toLowerCase())}%`;
-        return (stmt.all(params) as HitRow[]).slice(offset);
+        return (stmt.all(params) as IndexerHitRow[]).slice(offset);
       }
       let stmt = this._listAllQs.get(type);
       if (!stmt) {
-        stmt = db.prepare(
-          `${LIST_SELECT} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`,
-        );
+        stmt = db.prepare(LIST_ALL_SQL);
         this._listAllQs.set(type, stmt);
       }
-      return (stmt.all(params) as HitRow[]).slice(offset);
+      return (stmt.all(params) as IndexerHitRow[]).slice(offset);
     } catch (err) {
       logger.warn("indexer", `listHitsForType failed for type=${type}`, err);
       return [];
@@ -330,18 +260,14 @@ export class SqliteAdapter implements IndexerAdapter {
       if (term) {
         let stmt = this._countSearchQs.get(type);
         if (!stmt) {
-          stmt = db.prepare(
-            `SELECT COUNT(*) AS c FROM query_hits h JOIN urls u ON u.id = h.url_id ${SEARCH_WHERE}`,
-          );
+          stmt = db.prepare(COUNT_SEARCH_SQL);
           this._countSearchQs.set(type, stmt);
         }
         return (stmt.get({ $term: `%${escapeLike(term.toLowerCase())}%` }) as { c: number }).c;
       }
       let stmt = this._countAllQs.get(type);
       if (!stmt) {
-        stmt = db.prepare(
-          "SELECT COUNT(*) AS c FROM query_hits h JOIN urls u ON u.id = h.url_id",
-        );
+        stmt = db.prepare(COUNT_ALL_SQL);
         this._countAllQs.set(type, stmt);
       }
       return (stmt.get() as { c: number }).c;
@@ -356,7 +282,7 @@ export class SqliteAdapter implements IndexerAdapter {
       const db = this._db(type);
       let stmt = this._sampleQs.get(type);
       if (!stmt) {
-        stmt = db.prepare(`${EXPORT_SQL} ORDER BY h.last_seen DESC LIMIT ?`);
+        stmt = db.prepare(`${EXPORT_SELECT_SQL} ORDER BY h.last_seen DESC LIMIT ?`);
         this._sampleQs.set(type, stmt);
       }
       return stmt.all(limit) as ExportRow[];
@@ -366,13 +292,25 @@ export class SqliteAdapter implements IndexerAdapter {
     }
   }
 
-  async exportRows(type: string): Promise<ExportRow[]> {
+  async *exportBatches(type: string, size: number): AsyncIterable<ExportRow[]> {
+    let stmt: Statement;
     try {
-      const db = this._db(type);
-      return db.prepare(EXPORT_SQL).all() as ExportRow[];
+      stmt = this._db(type).prepare(EXPORT_SELECT_SQL);
     } catch (err) {
-      logger.warn("indexer", `exportRows failed for type=${type}`, err);
-      return [];
+      logger.warn("indexer", `exportBatches failed for type=${type}`, err);
+      return;
+    }
+    let batch: ExportRow[] = [];
+    try {
+      for (const row of stmt.iterate() as Iterable<ExportRow>) {
+        batch.push(row);
+        if (batch.length < size) continue;
+        yield batch;
+        batch = [];
+      }
+      if (batch.length > 0) yield batch;
+    } finally {
+      stmt.finalize();
     }
   }
 
@@ -389,6 +327,7 @@ export class SqliteAdapter implements IndexerAdapter {
 
   async clearType(type: string): Promise<void> {
     const key = safeSlug(type);
+    this._holds.dropType(key);
     const db = this._db(key);
     db.exec("DELETE FROM query_hits");
     db.exec("DELETE FROM urls");
@@ -405,10 +344,13 @@ export class SqliteAdapter implements IndexerAdapter {
     this._countAllQs.delete(key);
     this._countSearchQs.delete(key);
     this._sampleQs.delete(key);
-    try {
-      unlinkSync(indexerDbForType(key));
-    } catch (err) {
-      logger.warn("indexer", `clearType: could not delete db file for type=${key}`, err);
+    const dbFile = indexerDbForType(key);
+    for (const file of [dbFile, `${dbFile}-wal`, `${dbFile}-shm`]) {
+      try {
+        unlinkSync(file);
+      } catch (err) {
+        logger.debug("indexer", `clearType: could not delete ${file} for type=${key}`, err);
+      }
     }
   }
 

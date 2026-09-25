@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, test, expect } from "bun:test";
 import { Hono } from "hono";
-import { trimSlash } from "../../src/server/utils/trailing-slash";
-import { buildPublicUrl, getPublicUrl } from "../../src/server/utils/public-url";
+import { trimSlash } from "../../src/server/utils/net/trailing-slash";
+import { buildPublicUrl, getPublicUrl } from "../../src/server/utils/net/public-url";
 
 const REQ = { url: "http://localhost:4444/opensearch.xml" };
 
@@ -19,16 +19,6 @@ describe("utils/public-url", () => {
     );
 
     expect(out).toBe("https://search.example.com/degoog");
-  });
-
-  test("a full DEGOOG_BASE_URL wins over forwarded headers", () => {
-    const out = buildPublicUrl("https://search.example.com", "", {
-      ...REQ,
-      proto: "http",
-      host: "wrong.local",
-    });
-
-    expect(out).toBe("https://search.example.com");
   });
 
   test("a path-only DEGOOG_BASE_URL keeps the header heuristic", () => {

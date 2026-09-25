@@ -1,4 +1,4 @@
-import { createMutex } from "../../utils/mutex";
+import { createMutex } from "../../utils/cache/mutex";
 
 /**
  * Single store-wide lock shared by every git and filesystem mutation in the

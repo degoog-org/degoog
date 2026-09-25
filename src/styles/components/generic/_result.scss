@@ -119,6 +119,16 @@
     }
   }
 
+  &--date {
+    color: var(--text-cite);
+    white-space: nowrap;
+
+    &::after {
+      content: " · ";
+      color: var(--text-snippet);
+    }
+  }
+
   &--snippet {
     font-size: $font-size-base;
     color: var(--text-snippet);

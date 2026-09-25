@@ -1,0 +1,25 @@
+const ROUTE_MODULE_PATHS: Record<string, string> = {
+  commands: "extensions/commands",
+  "compat-engines": "extensions/compat-engines",
+  extensions: "extensions/extensions",
+  honeypot: "security/honeypot",
+  pages: "pages/pages",
+  "plugin-assets": "extensions/plugin-assets",
+  "plugin-routes": "extensions/plugin-routes",
+  "rate-limit": "security/rate-limit",
+  "search-bar": "search/search-bar",
+  "searx-engines": "extensions/searx-engines",
+  settings: "settings/settings",
+  "settings-auth": "settings/settings-auth",
+  "settings-backup": "settings/settings-backup",
+  setup: "settings/setup",
+  shortcuts: "extensions/shortcuts",
+  slots: "search/slots",
+  store: "extensions/store",
+  suggest: "search/suggest",
+  teapot: "easter-eggs/teapot",
+  themes: "extensions/themes",
+  uovadipasqua: "easter-eggs/uovadipasqua",
+};
+
+export const routeModulePath = (name: string): string => ROUTE_MODULE_PATHS[name] ?? name;

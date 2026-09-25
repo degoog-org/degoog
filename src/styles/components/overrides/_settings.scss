@@ -268,6 +268,9 @@ html:has(.settings-page-body) {
 }
 
 .settings-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
   padding-top: $space-4;
 }
 
@@ -275,6 +278,24 @@ html:has(.settings-page-body) {
   font-size: $font-size-small;
   color: var(--text-secondary);
   margin: 0 0 $space-4;
+}
+
+.settings-server-restart-pending {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  margin: 0 0 $space-4;
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+
+  &[hidden] {
+    display: none;
+  }
+
+  .store-restart-intro,
+  .store-restart-list {
+    color: inherit;
+  }
 }
 
 .settings-server-presets {
@@ -314,6 +335,55 @@ html:has(.settings-page-body) {
   color: var(--text-primary);
   font-size: $font-size-small;
   font-weight: 500;
+}
+
+.settings-server-block + .settings-server-block {
+  margin-top: $space-6;
+}
+
+.settings-subheading {
+  font-size: $font-size-md;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 $space-2;
+}
+
+.settings-backup-note {
+  font-style: italic;
+}
+
+.settings-backup-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-3;
+
+  .degoog-file {
+    flex: 1 1 14rem;
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  .degoog-file-trigger i {
+    display: none;
+  }
+
+  .degoog-file-name {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .degoog-file-name:not([hidden]) ~ .degoog-file-drop-hint {
+    display: none;
+  }
+}
+
+.settings-backup-action {
+  flex: 0 0 auto;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
 }
 
 .settings-server-preset-list {
@@ -541,6 +611,13 @@ html:has(.settings-page-body) {
       background: var(--bg-light);
     }
   }
+}
+
+.settings-engine-origin-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  padding: $space-2 0;
 }
 
 .settings-rl-grid {

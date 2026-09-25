@@ -1,11 +1,11 @@
 import { fetch as bunFetch } from "bun";
-import { isSocksProxy, fetchViaSocks } from "../../../../utils/socks-fetch";
-import { fetchViaHttpProxy } from "../../../../utils/http-proxy-fetch";
+import { isSocksProxy, fetchViaSocks } from "../../../../utils/net/socks-fetch";
+import { fetchViaHttpProxy } from "../../../../utils/net/http-proxy-fetch";
 import type {
   Transport,
-  TransportFetchOptions,
   TransportContext,
-} from "../../../../types";
+  TransportFetchOptions,
+} from "../../../../types/extension";
 
 export class FetchTransport implements Transport {
   name = "fetch";

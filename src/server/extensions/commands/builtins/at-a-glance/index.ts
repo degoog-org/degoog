@@ -1,27 +1,26 @@
+import { renderGlanceBox } from "./render";
 import * as cheerio from "cheerio";
 import {
-  SlotPanelPosition,
-  TranslateFunction,
   type PluginContext,
-  type SettingField,
-  type ScoredResult,
   type SlotPlugin,
-} from "../../../../types";
+  TranslateFunction,
+} from "../../../../types/extension";
+import { type ScoredResult, SlotPanelPosition } from "../../../../../shared/search-types";
+import type { SettingField } from "../../../../../shared/setting-field";
 import {
   asString,
   getSettings,
   isDisabled,
-} from "../../../../utils/plugin-settings";
-import { useCache, type AsyncTtlCache } from "../../../../utils/cache";
+} from "../../../../utils/settings/plugin-settings";
+import { useCache, type AsyncTtlCache } from "../../../../utils/cache/cache";
 import {
-  escapeHtml,
   looksLikeProse,
   stripSnippetPrefix,
 } from "../../../../utils/text";
-import { getRandomUserAgent } from "../../../../utils/user-agents";
+import { getRandomUserAgent } from "../../../../utils/net/user-agents";
 import { logger } from "../../../../utils/logger";
+import { fetchWithSafeRedirects } from "../../../../utils/security/safe-redirects";
 
-const SETTINGS_ID = "slot-at-a-glance";
 const WIKIPEDIA_SETTINGS_ID = "wikipedia-slot";
 const WIKIPEDIA_HOSTNAME = "wikipedia.org";
 
@@ -66,7 +65,7 @@ const _pickBestResult = (
   if (candidates.length === 0) return null;
   return candidates.reduce((best, r) =>
     _scoreSnippet(r.snippet, queryTerms) >
-    _scoreSnippet(best.snippet, queryTerms)
+      _scoreSnippet(best.snippet, queryTerms)
       ? r
       : best,
   );
@@ -155,6 +154,31 @@ const _extractCacheKey = (
   return `${url}\x1e${excerptMode}\x1e${maxLength}\x1e${maxParagraphs}\x1e${termsKey}`;
 };
 
+const EXTRACT_MAX_BYTES = 5 * 1024 * 1024;
+
+const _readHtmlCapped = async (res: Response): Promise<string> => {
+  const reader = res.body?.getReader();
+  if (!reader) return "";
+  const decoder = new TextDecoder();
+  let html = "";
+  let total = 0;
+  try {
+    while (total < EXTRACT_MAX_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+      const room = EXTRACT_MAX_BYTES - total;
+      const chunk = value.byteLength > room ? value.subarray(0, room) : value;
+      total += chunk.byteLength;
+      html += decoder.decode(chunk, { stream: true });
+    }
+    if (total >= EXTRACT_MAX_BYTES) await reader.cancel().catch(() => {});
+  } finally {
+    reader.releaseLock?.();
+  }
+  return html + decoder.decode();
+};
+
 const _fetchExtract = async (
   url: string,
   queryTerms: string[],
@@ -177,15 +201,15 @@ const _fetchExtract = async (
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetchFn(url, {
+    const res = await fetchWithSafeRedirects(fetchFn, url, {
       signal: controller.signal,
       headers: { "User-Agent": getRandomUserAgent(), Accept: "text/html" },
     });
     clearTimeout(timer);
-    if (!res.ok) return null;
+    if (!res?.ok) return null;
     const ct = res.headers.get("content-type") ?? "";
     if (!ct.includes("text/html")) return null;
-    const html = await res.text();
+    const html = await _readHtmlCapped(res);
     const extracted = _extractFromHtml(
       html,
       queryTerms,
@@ -202,8 +226,8 @@ const _fetchExtract = async (
   }
 };
 
-const _loadSettings = async () => {
-  const stored = await getSettings(SETTINGS_ID);
+const _loadSettings = async (settingsId: string) => {
+  const stored = await getSettings(settingsId);
   const rawLength = parseInt(asString(stored["snippetLength"]), 10);
   const rawTimeout = parseFloat(asString(stored["fetchTimeoutSeconds"]) || "3");
   const rawParagraphs = parseInt(asString(stored["paragraphs"]) || "1", 10);
@@ -228,13 +252,19 @@ const _loadSettings = async () => {
 
 const atAGlanceSlot: SlotPlugin = {
   id: "at-a-glance",
-  settingsId: SETTINGS_ID,
   name: "At a Glance",
   get description(): string {
     return this.t!("at-a-glance.description");
   },
   position: SlotPanelPosition.AtAGlance,
+  slotPositions: [
+    SlotPanelPosition.AtAGlance,
+    SlotPanelPosition.AboveSidebar,
+    SlotPanelPosition.BelowSidebar,
+    SlotPanelPosition.BelowResults,
+  ],
   waitForResults: true,
+  supportsNojs: true,
   isClientExposed: false,
 
   t: TranslateFunction,
@@ -295,12 +325,15 @@ const atAGlanceSlot: SlotPlugin = {
     },
   ] as SettingField[],
 
-  async execute(query: string, context): Promise<{ html: string }> {
+  async execute(
+    query: string,
+    context,
+  ): Promise<{ title?: string; html: string }> {
     const results = context?.results ?? [];
     if (results.length === 0) return { html: "" };
 
     const [settings, wikipediaDisabled] = await Promise.all([
-      _loadSettings(),
+      _loadSettings(this.settingsId ?? ""),
       isDisabled(WIKIPEDIA_SETTINGS_ID),
     ]);
 
@@ -331,17 +364,19 @@ const atAGlanceSlot: SlotPlugin = {
       snippet = `${snippet.slice(0, settings.maxLength)}…`;
     }
 
-    const foundOn = this.t!("at-a-glance.found-on", {
-      sources_text: best.sources.join(", "),
-    });
+    const foundOn = this.t!(
+      "at-a-glance.found-on",
+      { sources_text: best.sources.join(", ") },
+      context?.locale,
+    );
 
     return {
-      html:
-        '<div class="glance-box degoog-panel degoog-panel--slot degoog-panel--slot-body-padded degoog-vstack">' +
-        `<div class="glance-snippet degoog-text degoog-text--md">${escapeHtml(snippet)}</div>` +
-        `<a class="glance-link degoog-link" href="${escapeHtml(best.url)}" target="_blank">${escapeHtml(best.title)}</a>` +
-        `<div class="glance-sources degoog-text degoog-text--sm degoog-text--secondary degoog-text--spaced">${escapeHtml(foundOn)}</div>` +
-        "</div>",
+      html: renderGlanceBox({
+        snippet,
+        url: best.url,
+        title: best.title,
+        foundOn: String(foundOn),
+      }),
     };
   },
 };

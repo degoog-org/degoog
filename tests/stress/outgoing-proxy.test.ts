@@ -4,8 +4,8 @@ import {
   setInstanceSettings,
   updateInstanceSettings,
   type ServerSettingValue,
-} from "../../src/server/utils/server-settings";
-import { outgoingFetch } from "../../src/server/utils/outgoing";
+} from "../../src/server/utils/settings/server-settings";
+import { outgoingFetch } from "../../src/server/utils/net/outgoing";
 import net from "node:net";
 
 function createConnectProxy(): { server: net.Server; port: number; hits: string[]; close: () => void } {

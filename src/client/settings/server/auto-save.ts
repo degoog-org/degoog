@@ -1,10 +1,12 @@
-import { saveField, saveBatch } from "../../utils/settings-api";
+import { saveField, saveBatch } from "../../utils/settings/settings-api";
 import { bindFieldSaveBtn, createFieldSaveBtn } from "../shared/field-save";
 import { flashError, flashSuccess } from "../shared/flash-msg";
 import { setIndexerNavVisible } from "../indexer/nav";
 import { OVERSIZED_CLASS } from "../shared/oversized";
 import { boolStr, el } from "./fields";
 import { serializeScoreRows } from "./domain-score";
+
+const COMPAT_TOGGLES = ["searx-compat-enabled", "fourget-compat-enabled"];
 
 const TOGGLE_KEYS = [
   "proxy-enabled",
@@ -25,10 +27,15 @@ const TOGGLE_KEYS = [
   "api-key-suggest-enabled",
   "honeypot-enabled",
   "honeypot-css-check",
+  "nojs-enabled",
+  "nojs-css-check",
   "degoog-indexer-enabled",
   "searx-compat-enabled",
   "searx-api-enabled",
+  "fourget-compat-enabled",
 ] as const;
+
+const SELECT_IDS = ["engine-origin-display"] as const;
 
 const RL_SEARCH_KEYS = [
   "rateLimitBurstWindow",
@@ -70,7 +77,7 @@ export const bindToggleAutoSave = (getToken: () => string | null): void => {
         }
         flashSuccess(window.scopedT("core")("settings-page.server.saved"));
         _syncVisibilityToggle(id, input.checked);
-        if (id === "degoog-indexer-enabled" || id === "searx-compat-enabled") {
+        if (COMPAT_TOGGLES.includes(id) || id === "degoog-indexer-enabled") {
           window.dispatchEvent(new Event("extensions-saved"));
         }
       } catch (err) {
@@ -78,6 +85,36 @@ export const bindToggleAutoSave = (getToken: () => string | null): void => {
         input.checked = !prev;
         _syncVisibilityToggle(id, input.checked);
         flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
+      }
+    });
+  }
+};
+
+export const bindSelectAutoSave = (getToken: () => string | null): void => {
+  for (const id of SELECT_IDS) {
+    const select = document.getElementById(`settings-${id}`) as HTMLSelectElement | null;
+    if (!select) continue;
+    const key = _toCamel(id);
+    let previous = select.value;
+    select.addEventListener("change", async () => {
+      const chosen = select.value;
+      select.disabled = true;
+      try {
+        const ok = await saveField(key, chosen, getToken);
+        if (!ok) {
+          console.error("[auto-save] select save failed", { key });
+          select.value = previous;
+          flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
+          return;
+        }
+        previous = chosen;
+        flashSuccess(window.scopedT("core")("settings-page.server.saved"));
+      } catch (err) {
+        console.error("[auto-save] select save error", { key, err });
+        select.value = previous;
+        flashError(window.scopedT("core")("settings-page.server.save-failed-network"));
+      } finally {
+        select.disabled = false;
       }
     });
   }

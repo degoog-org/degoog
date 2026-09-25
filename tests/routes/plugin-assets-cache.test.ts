@@ -16,7 +16,7 @@ beforeAll(async () => {
   await writeFile(join(themeDir, "images", "bg.png"), "fake-png-bytes");
   await writeFile(join(themeDir, "extra.css"), "body { color: red; }");
 
-  const mod = await import("../../src/server/routes/plugin-assets");
+  const mod = await import("../../src/server/routes/extensions/plugin-assets");
   pluginAssetsRouter = mod.default;
 });
 

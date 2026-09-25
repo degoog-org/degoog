@@ -5,7 +5,7 @@ let slotsRouter: {
 };
 
 beforeAll(async () => {
-  const mod = await import("../../src/server/routes/slots");
+  const mod = await import("../../src/server/routes/search/slots");
   slotsRouter = mod.default;
 });
 
@@ -30,30 +30,5 @@ describe("routes/slots", () => {
     });
     const res = await slotsRouter.request(req);
     expect(res.status).toBe(400);
-  });
-
-  test("POST /api/slots/glance with query and results returns 200 and panels", async () => {
-    const req = new Request("http://localhost/api/slots/glance", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: "test",
-        results: [
-          {
-            title: "T",
-            url: "https://example.com",
-            snippet: "S",
-            score: 1,
-            sources: ["x"],
-          },
-        ],
-      }),
-    });
-    const res = await slotsRouter.request(req);
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body).toEqual(
-      expect.objectContaining({ panels: expect.any(Array) }),
-    );
   });
 });

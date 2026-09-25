@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 
-const ENGINES_MOD = "../../src/server/extensions/engines/registry";
-const SETTINGS_MOD = "../../src/server/utils/plugin-settings";
+const ENGINES_MOD = "../../src/server/extensions/engines/catalog";
+const SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
 const TABS_MOD = "../../src/server/extensions/search-result-tabs/registry";
 
 const enginesReal = { ...(await import(ENGINES_MOD)) };

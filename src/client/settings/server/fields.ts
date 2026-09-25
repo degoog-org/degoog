@@ -1,4 +1,4 @@
-import { getInputElement } from "../../utils/dom";
+import { getInputElement } from "../../utils/dom/dom";
 import type { BoolSetting } from "../../types/settings-server";
 
 export const el = (id: string) => getInputElement(`settings-${id}`);
@@ -27,6 +27,13 @@ export function setToggle(id: string, state?: BoolSetting): void {
     checkbox.checked = state === true || state === "true";
     checkbox.dispatchEvent(new Event("change"));
   }
+}
+
+export function setSelect(id: string, value?: string): void {
+  const select = document.getElementById(`settings-${id}`);
+  if (!(select instanceof HTMLSelectElement) || value === undefined) return;
+  const known = [...select.options].some((option) => option.value === value);
+  if (known) select.value = value;
 }
 
 export function setVal(id: string, value?: string): void {

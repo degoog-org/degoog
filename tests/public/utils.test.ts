@@ -1,5 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { cleanUrl, cleanHostname } from "../../src/client/utils/dom";
+import { cleanUrl } from "../../src/client/utils/dom/dom";
+import { cleanHostname } from "../../src/shared/utils/url";
 import { state } from "../../src/client/state";
 
 describe("public/utils", () => {
@@ -18,15 +19,9 @@ describe("public/utils", () => {
     }
   });
 
-  test("cleanUrl returns url as-is for invalid url", () => {
-    expect(cleanUrl("not-a-url")).toBe("not-a-url");
-  });
-
-  test("cleanHostname returns hostname", () => {
+  test("cleanHostname returns the hostname and leaves invalid urls alone", () => {
     expect(cleanHostname("https://sub.example.com/path")).toBe("sub.example.com");
-  });
-
-  test("cleanHostname returns url as-is for invalid url", () => {
     expect(cleanHostname("xxx")).toBe("xxx");
+    expect(cleanUrl("not-a-url")).toBe("not-a-url");
   });
 });

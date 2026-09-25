@@ -16,7 +16,7 @@ import {
   getShortcutModuleSource,
   initShortcutsRegistry,
 } from "../../src/server/extensions/shortcuts/registry";
-import shortcutsRouter from "../../src/server/routes/shortcuts";
+import shortcutsRouter from "../../src/server/routes/extensions/shortcuts";
 
 describe("shortcuts registry", () => {
   beforeAll(async () => {
@@ -26,6 +26,15 @@ describe("shortcuts registry", () => {
   name: "Focus first",
   description: "Focuses the first result.",
   defaultBinding: { key: "j", alt: true },
+  run() {}
+};`,
+    );
+    writeFileSync(
+      join(dir, "jump-to.js"),
+      `export default {
+  name: "Jump to",
+  kind: "numeric",
+  defaultBinding: { key: "g" },
   run() {}
 };`,
     );
@@ -54,7 +63,22 @@ describe("shortcuts registry", () => {
   test("exposes client module urls", async () => {
     const client = await getClientShortcuts();
     expect(client.length).toBeGreaterThan(0);
-    expect(client[0].moduleUrl).toBe("/api/shortcuts/modules/focus-first-shortcut.js");
+    expect(client).toContainEqual({
+      id: "focus-first-shortcut",
+      kind: "single",
+      defaultBinding: { key: "j", alt: true },
+      displayName: "Focus first",
+      description: "Focuses the first result.",
+      source: "plugin",
+      editable: true,
+      moduleUrl: "/api/shortcuts/modules/focus-first-shortcut.js",
+    });
+    expect(client).toContainEqual(
+      expect.objectContaining({ id: "jump-to-shortcut", kind: "numeric", description: "" }),
+    );
+    expect(getShortcutActions()).toContainEqual(
+      expect.objectContaining({ id: "jump-to-shortcut", kind: "numeric" }),
+    );
     const source = await getShortcutModuleSource("focus-first-shortcut");
     expect(source).toContain("Focus first");
   });

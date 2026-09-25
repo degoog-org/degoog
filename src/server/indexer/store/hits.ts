@@ -1,5 +1,4 @@
-import type { DeleteItem } from "../../../shared/indexer";
-import type { HitRow } from "../types/adapter";
+import type { DeleteItem, IndexerHitRow } from "../../../shared/indexer";
 import { getAdapter } from "../db/factory";
 import { discoverTypes } from "../db/lifecycle";
 import { wipeStatsCache } from "./stats";
@@ -10,7 +9,7 @@ export const listHits = async (opts: {
   type?: string;
   limit: number;
   offset: number;
-}): Promise<HitRow[]> => {
+}): Promise<IndexerHitRow[]> => {
   const adapter = getAdapter();
   const types = opts.type ? [opts.type] : discoverTypes();
 

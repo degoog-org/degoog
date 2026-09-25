@@ -1,4 +1,4 @@
-import { getBase } from "../../utils/base-url";
+import { getBase } from "../../utils/net/base-url";
 
 const CHUNK_BYTES = 8 * 1024 * 1024;
 
@@ -28,12 +28,16 @@ const saveBlob = (parts: BlobPart[], filename: string): void => {
   URL.revokeObjectURL(href);
 };
 
-const openWriter = async (filename: string): Promise<ChunkWriter | null> => {
-  const picker = (
-    window as unknown as { showSaveFilePicker?: (opts: unknown) => Promise<unknown> }
-  ).showSaveFilePicker;
+const _picker = (): ((opts: unknown) => Promise<unknown>) | undefined =>
+  (window as unknown as { showSaveFilePicker?: (opts: unknown) => Promise<unknown> })
+    .showSaveFilePicker;
 
-  if (typeof picker === "function") {
+export const canSaveStream = (): boolean => typeof _picker() === "function";
+
+const openWriter = async (filename: string): Promise<ChunkWriter | null> => {
+  const picker = _picker();
+
+  if (picker) {
     try {
       const handle = (await picker({ suggestedName: filename })) as {
         createWritable: () => Promise<{
