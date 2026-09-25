@@ -1,6 +1,6 @@
 import { render } from "../../../shared/ui/tribute/dom";
 import { ExtGroup } from "../../../shared/ui/components/extensions/ext-group";
-import type { ExtensionMeta, AllExtensions } from "../../types";
+import type { AllExtensions, ExtensionMeta } from "../../types/extension";
 import { TransportCard } from "./transport-card";
 
 const t = window.scopedT("core");

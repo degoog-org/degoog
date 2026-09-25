@@ -1,15 +1,15 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { helpCommand } from "../../src/server/extensions/commands/builtins/help/index";
-import { ipCommand } from "../../src/server/extensions/commands/builtins/ip/index";
-import { speedtestCommand } from "../../src/server/extensions/commands/builtins/speedtest/index";
-import { uuidCommand } from "../../src/server/extensions/commands/builtins/uuid/index";
+import { helpCommand } from "../../src/server/extensions/commands/builtins/help";
+import { ipCommand } from "../../src/server/extensions/commands/builtins/ip";
+import { speedtestCommand } from "../../src/server/extensions/commands/builtins/speedtest";
+import { uuidCommand } from "../../src/server/extensions/commands/builtins/uuid";
 
 describe("commands builtins", () => {
   beforeAll(async () => {
     const { initPlugins } =
       await import("../../src/server/extensions/commands/registry");
     const { initEngines } =
-      await import("../../src/server/extensions/engines/registry");
+      await import("../../src/server/extensions/engines/loader");
     const orig = process.env.DEGOOG_PLUGINS_DIR;
     process.env.DEGOOG_PLUGINS_DIR = "/nonexistent";
     process.env.DEGOOG_ENGINES_DIR = "/nonexistent";

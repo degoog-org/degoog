@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { getNaturalLanguageBangQuery } from "../../src/client/utils/search-helpers";
-import type { Command } from "../../src/client/types";
+import { getNaturalLanguageBangQuery } from "../../src/client/utils/search/search-helpers";
+import type { Command } from "../../src/client/types/extension";
 
 const makeCmd = (trigger: string, opts: Partial<Command> = {}): Command => ({
   id: trigger,

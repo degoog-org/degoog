@@ -1,10 +1,10 @@
 import { state } from "../../state";
-import { getBase } from "../../utils/base-url";
-import { performSearch } from "../../utils/search-actions";
-import { getEnabledSearchTypes } from "../../utils/engines";
-import { getBangMatchType } from "../../utils/navigation";
+import { getBase } from "../../utils/net/base-url";
+import { performSearch } from "../../utils/search/actions/search-actions-perform";
+import { getEnabledSearchTypes } from "../../utils/search/engines";
+import { getBangMatchType } from "../../utils/navigation/navigation";
 import { performTabSearch } from "./tab-search";
-import { getTabOrder, applyTabOrder } from "../../utils/tab-order";
+import { getTabOrder, applyTabOrder } from "../../utils/settings/tab-order";
 import { TAB_ORDER_SAVED } from "../../constants";
 
 interface TabInfo {

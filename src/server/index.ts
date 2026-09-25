@@ -3,12 +3,12 @@ import { serveStatic, upgradeWebSocket, websocket } from "hono/bun";
 import { lstatSync, unlinkSync } from "fs";
 import net from "net";
 import pkg from "../../package.json";
-import { getBasePath } from "./utils/base-url";
-import { trimSlash } from "./utils/trailing-slash";
+import { getBasePath } from "./utils/net/base-url";
+import { trimSlash } from "./utils/net/trailing-slash";
 import { getLocale } from "./utils/hono";
 import { initPlugins } from "./extensions/commands/registry";
 import { initUovadipasquas } from "./extensions/uovadipasqua/registry";
-import { initEngines } from "./extensions/engines/registry";
+import { initEngines } from "./extensions/engines/loader";
 import { initMiddlewareRegistry } from "./extensions/middleware/registry";
 import { initPluginRoutes } from "./extensions/plugin-routes/registry";
 import { initSearchBarActions } from "./extensions/search-bar/registry";
@@ -21,20 +21,28 @@ import { initInterceptors } from "./extensions/interceptors/registry";
 import { initShortcutsRegistry } from "./extensions/shortcuts/registry";
 import globalRouter from "./routes";
 import { markReady } from "./routes/health";
-import { build404 } from "./routes/pages";
-import { initServerKey } from "./utils/server-key";
-import { logSettingsPasswordStatus } from "./routes/settings-auth";
-import { initValkey } from "./utils/cache-valkey";
+import { build404 } from "./routes/pages/pages";
+import { initServerKey } from "./utils/security/server-key";
+import { logSettingsPasswordStatus } from "./routes/settings/settings-auth";
+import { initValkey } from "./utils/cache/cache-valkey";
 import { openBifrost } from "./extensions/store/reload-sync";
 import { openPalantir } from "./extensions/settings-sync";
-import { getInstanceId, getInstanceSettings } from "./utils/server-settings";
-import { asBoolean } from "./utils/plugin-settings";
+import { getInstanceId, getInstanceSettings } from "./utils/settings/server-settings";
+import { asBoolean } from "./utils/settings/plugin-settings";
 import { runMigrations } from "./migrations";
-import { closeAllDbs } from "./indexer/db";
-import { startQueue, stopQueue } from "./indexer/queue";
+import { closeAllDbs } from "./indexer/db/lifecycle";
+import { startQueue, stopQueue } from "./indexer/queue/queue";
 import { logger } from "./utils/logger";
 import { registerServerHandle } from "./utils/server-lifecycle";
 import { getTransportWsHandlers } from "./extensions/transports/ws-registry";
+import {
+  ANSI_BLUE,
+  ANSI_GRAY,
+  ANSI_GREEN,
+  ANSI_RED,
+  ANSI_RESET,
+  ANSI_YELLOW,
+} from "./utils/ansi";
 
 const BASE_PATH = getBasePath();
 
@@ -45,6 +53,7 @@ app.use(trimSlash());
 const NOJS_CSP =
   "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'";
 const NOJS_HEADER_PREFIX = `${BASE_PATH}/nojs`;
+const BASELINE_CSP = "object-src 'none'; base-uri 'none'; frame-ancestors 'self'";
 
 app.use("*", async (c, next) => {
   await next();
@@ -54,6 +63,8 @@ app.use("*", async (c, next) => {
   const path = c.req.path;
   if (path === NOJS_HEADER_PREFIX || path.startsWith(`${NOJS_HEADER_PREFIX}/`)) {
     c.res.headers.set("Content-Security-Policy", NOJS_CSP);
+  } else if (!c.res.headers.has("Content-Security-Policy")) {
+    c.res.headers.set("Content-Security-Policy", BASELINE_CSP);
   }
 });
 
@@ -123,15 +134,6 @@ const bindPort = async (serve: () => void): Promise<void> => {
     }
   }
 };
-
-const _noColor = !!process.env.NO_COLOR;
-const _ansi = (code: string): string => (_noColor ? "" : code);
-const ANSI_BLUE = _ansi("\x1b[38;2;66;133;244m");
-const ANSI_RED = _ansi("\x1b[38;2;234;67;53m");
-const ANSI_YELLOW = _ansi("\x1b[38;2;251;188;5m");
-const ANSI_GREEN = _ansi("\x1b[38;2;52;168;83m");
-const ANSI_RESET = _ansi("\x1b[0m");
-const ANSI_GRAY = _ansi("\x1b[90m");
 
 console.log(
   `

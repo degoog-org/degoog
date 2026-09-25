@@ -1,9 +1,9 @@
 import { mkdir, stat } from "fs/promises";
 import { join } from "path";
-import type { RepoInfo, ReposData } from "../../types";
-import { writeJsonAtomic } from "../../utils/atomic-json";
+import type { RepoInfo, ReposData } from "../../types/store";
+import { writeJsonAtomic } from "../../utils/storage/atomic-json";
 import { logger } from "../../utils/logger";
-import { readJsonOrQuarantine } from "../../utils/read-json";
+import { readJsonOrQuarantine } from "../../utils/storage/read-json";
 
 function getDataDir(): string {
   return process.env.DEGOOG_DATA_DIR ?? join(process.cwd(), "data");
@@ -23,7 +23,7 @@ export function normalizeRepoUrl(url: string): string {
   return trimmed + (trimmed.includes("?") || trimmed.includes("#") ? "" : ".git");
 }
 
-export async function ensureReposStructure(): Promise<void> {
+async function ensureReposStructure(): Promise<void> {
   const storeDir = getStoreDir();
   await mkdir(storeDir, { recursive: true });
   const reposPath = getReposPath();

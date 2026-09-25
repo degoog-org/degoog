@@ -2,7 +2,7 @@ import type {
   Transport,
   TransportContext,
   TransportFetchOptions,
-} from "../../../../types";
+} from "../../../../types/extension";
 import { logger } from "../../../../utils/logger";
 import { CurlTransport } from "../curl";
 import { FetchTransport } from "../fetch";

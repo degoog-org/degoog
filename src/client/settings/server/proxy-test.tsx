@@ -1,7 +1,7 @@
 import { render } from "../../../shared/ui/tribute/dom";
 import { ProxyTestMessage } from "./proxy-test-message";
-import { getBase } from "../../utils/base-url";
-import { jsonHeaders } from "../../utils/request";
+import { getBase } from "../../utils/net/base-url";
+import { jsonHeaders } from "../../utils/net/request";
 import type { ProxyTestResult } from "../../types/settings-proxy";
 
 const t = window.scopedT("core");

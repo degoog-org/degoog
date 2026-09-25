@@ -2,7 +2,7 @@ import type { ExportRow } from "../types/adapter";
 
 const SENTINEL_POSITION = 9999;
 
-export interface RankFields {
+interface RankFields {
   best_position: number;
   pos_sum: number;
   hit_count: number;

@@ -2,21 +2,21 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import backupRouter from "../../src/server/routes/settings-backup";
+import backupRouter from "../../src/server/routes/settings/settings-backup";
 import {
   clearServerSettingsCache,
   getInstanceSettings,
   updateInstanceSettings,
-} from "../../src/server/utils/server-settings";
+} from "../../src/server/utils/settings/server-settings";
 import {
   readDomainLists,
   writeDomainList,
-} from "../../src/server/utils/domain-lists";
-import { clearPluginSettingsCache } from "../../src/server/utils/plugin-settings";
+} from "../../src/server/utils/filtering/domain-lists";
+import { clearPluginSettingsCache } from "../../src/server/utils/settings/plugin-settings";
 import {
   clearShortcutsSettingsCache,
   readShortcutsSettings,
-} from "../../src/server/utils/shortcuts-settings";
+} from "../../src/server/utils/settings/shortcuts-settings";
 import { MAX_SETTINGS_BACKUP_BYTES } from "../../src/shared/settings-backup";
 
 type ExportBody = {

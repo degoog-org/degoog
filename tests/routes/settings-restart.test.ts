@@ -8,11 +8,11 @@ mkdirSync(SHARED, { recursive: true });
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 process.env.DEGOOG_PLUGIN_SETTINGS_FILE = join(SHARED, "plugin-settings.json");
 
-import router from "../../src/server/routes/settings";
+import router from "../../src/server/routes/settings/settings";
 import {
   clearRestartPending,
   markRestartPending,
-} from "../../src/server/utils/restart-state";
+} from "../../src/server/utils/extension-support/restart-state";
 
 let savedDangerouslyNoPassword: string | undefined;
 

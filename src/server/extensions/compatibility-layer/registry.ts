@@ -1,4 +1,4 @@
-import type { SearchEngine } from "../../types";
+import type { SearchEngine } from "../../types/extension";
 import type { EngineFilters } from "../../../shared/engine-filters";
 import {
   COMPAT_LAYER_LABELS,
@@ -6,8 +6,8 @@ import {
   type CompatCatalogItem,
   type CompatLayerInfo,
 } from "../../../shared/compat-layers";
-import { getInstanceSettings } from "../../utils/server-settings";
-import { asBoolean } from "../../utils/plugin-settings";
+import { getInstanceSettings } from "../../utils/settings/server-settings";
+import { asBoolean } from "../../utils/settings/plugin-settings";
 import {
   installSearx,
   listSearxItems,
@@ -47,8 +47,8 @@ export interface CompatLayerDef extends CompatLayerInfo {
   lock: <T>(task: () => Promise<T>) => Promise<T>;
 }
 
-export const SEARX_SETTING_KEY = "searxCompatEnabled";
-export const FOURGET_SETTING_KEY = "fourgetCompatEnabled";
+const SEARX_SETTING_KEY = "searxCompatEnabled";
+const FOURGET_SETTING_KEY = "fourgetCompatEnabled";
 
 const _searxItems = async (): Promise<CompatCatalogItem[]> =>
   (await listSearxItems()).map((item) => ({
@@ -72,7 +72,7 @@ export const COMPAT_LAYERS: readonly CompatLayerDef[] = Object.freeze([
     id: CompatLayerId.Searx,
     label: COMPAT_LAYER_LABELS[CompatLayerId.Searx],
     settingKey: SEARX_SETTING_KEY,
-    loadEngines: loadSearxCompatibilityEngines as () => Promise<CompatEntry[]>,
+    loadEngines: loadSearxCompatibilityEngines,
     listItems: _searxItems,
     install: installSearx,
     update: updateSearx,
@@ -83,7 +83,7 @@ export const COMPAT_LAYERS: readonly CompatLayerDef[] = Object.freeze([
     id: CompatLayerId.FourGet,
     label: COMPAT_LAYER_LABELS[CompatLayerId.FourGet],
     settingKey: FOURGET_SETTING_KEY,
-    loadEngines: loadFourGetEngines as () => Promise<CompatEntry[]>,
+    loadEngines: loadFourGetEngines,
     listItems: listFourGetItems,
     install: installFourGet,
     update: updateFourGet,
@@ -102,13 +102,6 @@ export const COMPAT_SETTING_KEYS: readonly string[] = Object.freeze(
 export const isLayerOn = async (layer: CompatLayerDef): Promise<boolean> => {
   const settings = await getInstanceSettings();
   return asBoolean(settings[layer.settingKey as keyof typeof settings]);
-};
-
-export const enabledLayers = async (): Promise<CompatLayerDef[]> => {
-  const settings = await getInstanceSettings();
-  return COMPAT_LAYERS.filter((layer) =>
-    asBoolean(settings[layer.settingKey as keyof typeof settings]),
-  );
 };
 
 export const loadCompatEngines = async (): Promise<CompatEntry[]> => {

@@ -1,4 +1,5 @@
-import { ExtensionStoreType, type RepoInfo } from "../../types";
+import { ExtensionStoreType } from "../../types/extension";
+import type { RepoInfo } from "../../types/store";
 import {
   COMPAT_LAYER_LABELS,
   type CompatLayerId,
@@ -12,15 +13,15 @@ import {
   type EngineOrigin,
 } from "../../../shared/engine-origins";
 import { normalizeRepoUrl, readReposData } from "../store/persistence";
-import { folderFromExtID } from "../../utils/extension-id";
-import { getBasePath } from "../../utils/base-url";
-import { buildSignedProxyUrl } from "../../utils/proxy-sign";
+import { folderFromExtID } from "../../utils/extension-support/extension-id";
+import { getBasePath } from "../../utils/net/base-url";
+import { buildSignedProxyUrl } from "../../utils/net/proxy-sign";
 import { logger } from "../../utils/logger";
 import { engineHost } from "./engine-hosts";
 
 const NS = "engine-origins";
 
-export type OriginMap = ReadonlyMap<string, EngineOrigin>;
+type OriginMap = ReadonlyMap<string, EngineOrigin>;
 
 const _asset = (path: string): string => `${getBasePath()}${path}`;
 

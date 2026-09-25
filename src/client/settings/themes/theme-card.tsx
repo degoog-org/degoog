@@ -9,7 +9,7 @@ import {
 } from "../shared/ext-card";
 import { ApplyButton } from "./apply-button";
 import { openModal } from "../../modules/modals/settings-modal/modal";
-import type { ExtensionMeta } from "../../types";
+import type { ExtensionMeta } from "../../types/extension";
 
 const t = window.scopedT("core");
 

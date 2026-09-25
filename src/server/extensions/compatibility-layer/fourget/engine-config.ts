@@ -1,18 +1,18 @@
-import type { SettingField } from "../../../types";
-import type { SettingValue } from "../../../utils/plugin-settings";
+import type { SettingField } from "../../../../shared/setting-field";
+import type { SettingValue } from "../../../utils/settings/plugin-settings";
 
 export const FOURGET_OPT_PREFIX = "fourgetOpt_";
 
-export const NSFW_FILTER = "nsfw";
+const NSFW_FILTER = "nsfw";
 
 const DATE_MARKERS = ["_DATE", "_SEARCH"];
 
-export interface FourGetFilter {
+interface FourGetFilter {
   display?: string;
   option?: Record<string, string> | string;
 }
 
-export type FourGetPageFilters = Record<string, FourGetFilter>;
+type FourGetPageFilters = Record<string, FourGetFilter>;
 
 export type FourGetFilters = Record<string, FourGetPageFilters>;
 

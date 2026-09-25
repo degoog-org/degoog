@@ -1,4 +1,4 @@
-import type { AppState } from "./types";
+import type { AppState } from "./types/state";
 import type { ImageFilter } from "./types/search";
 
 export const defaultImageFilter = (): ImageFilter => ({});

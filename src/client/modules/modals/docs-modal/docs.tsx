@@ -2,8 +2,8 @@ import { render } from "../../../../shared/ui/tribute/dom";
 import { DocsEmpty } from "./docs-empty";
 import { DocsError } from "./docs-error";
 import { getStoredToken } from "../../settings/settings";
-import { jsonHeaders } from "../../../utils/request";
-import { getBase } from "../../../utils/base-url";
+import { jsonHeaders } from "../../../utils/net/request";
+import { getBase } from "../../../utils/net/base-url";
 import {
   mountModalShell,
   type MountedModal,

@@ -5,13 +5,13 @@ const INNER_HTML_ALLOWED = [
   "src/shared/ui/components/overlay/shell.ts",
   "src/client/modules/media/media.tsx",
   "src/client/modules/modals/docs-modal/docs.tsx",
-  "src/client/modules/renderer/render-media.tsx",
+  "src/client/modules/renderer/media/render-media.tsx",
   "src/client/modules/renderer/render-page.ts",
   "src/client/modules/renderer/render-slots.ts",
   "src/client/modules/renderer/render.tsx",
   "src/client/modules/tabs/tab-search.tsx",
-  "src/client/utils/search/search-actions-perform.tsx",
-  "src/client/utils/search/streaming-search-dom.tsx",
+  "src/client/utils/search/actions/search-actions-perform.tsx",
+  "src/client/utils/search/streaming/streaming-search-dom.tsx",
 ];
 
 const INNER_HTML_MESSAGE =

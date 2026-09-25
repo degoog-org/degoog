@@ -1,6 +1,6 @@
 import { readFile } from "fs/promises";
 import { engineHostsFile } from "../../utils/paths";
-import { writeJsonAtomic } from "../../utils/atomic-json";
+import { writeJsonAtomic } from "../../utils/storage/atomic-json";
 import { logger } from "../../utils/logger";
 
 const NS = "engine-hosts";

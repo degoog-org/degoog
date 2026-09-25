@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mergeEngineTimings, mergeScoredResults } from "../../src/client/utils/search/engine-stats";
+import { mergeEngineTimings, mergeScoredResults } from "../../src/client/utils/search/engine-stats/engine-stats";
 
 describe("engine stats", () => {
   test("adds successful page counts per engine", () => {

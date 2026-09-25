@@ -1,4 +1,4 @@
-import { SlotPanelPosition, type SlotPanel } from "../../types";
+import { type SlotPanel, SlotPanelPosition } from "../../../shared/search-types";
 import { append, clear } from "../../../shared/ui/tribute/dom";
 import { FullWidthSlotPanel } from "../../../shared/ui/components/search/full-width-slot-panel";
 import {

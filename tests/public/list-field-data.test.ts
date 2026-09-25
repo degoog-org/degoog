@@ -4,8 +4,8 @@ import {
   serializeRows,
   defaultListRow,
   rowSummary,
-} from "../../src/client/modules/modals/settings-modal/list-field-data";
-import type { SettingField } from "../../src/client/types";
+} from "../../src/client/modules/modals/settings-modal/list-field/list-field-data";
+import type { SettingField } from "../../src/shared/setting-field";
 
 const itemSchema: SettingField[] = [
   { key: "name", label: "Name", type: "text" },

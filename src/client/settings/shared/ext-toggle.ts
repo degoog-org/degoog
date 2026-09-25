@@ -1,4 +1,4 @@
-import { getBase } from "../../utils/base-url";
+import { getBase } from "../../utils/net/base-url";
 import { flashError, flashSuccess } from "./flash-msg";
 
 const t = window.scopedT("core");

@@ -6,7 +6,7 @@ const PROBE_TTL_MS = 60_000;
 const MIN_PHP_MAJOR = 8;
 const MIN_PHP_MINOR = 1;
 
-export enum PhpExt {
+enum PhpExt {
   Sodium = "sodium",
   Mbstring = "mbstring",
   Zlib = "zlib",
@@ -24,7 +24,7 @@ const PROBE_SNIPPET =
   'echo json_encode(["version"=>PHP_VERSION,"major"=>PHP_MAJOR_VERSION,' +
   '"minor"=>PHP_MINOR_VERSION,"ext"=>array_map("strtolower",get_loaded_extensions())]);';
 
-export interface PhpStatus {
+interface PhpStatus {
   ok: boolean;
   version: string | null;
   missingExts: PhpExt[];

@@ -1,20 +1,23 @@
-import type { QueryInterceptor, ExtensionMeta, SettingField } from "../../types";
+import type { ExtensionMeta, QueryInterceptor } from "../../types/extension";
+import type { SettingField } from "../../../shared/setting-field";
 import { pluginsDir } from "../../utils/paths";
 import {
   initPlugin,
   loadPluginAssets,
   lockinNameSpace,
   lockinSettingsId,
-} from "../../utils/plugin-assets";
+} from "../../utils/extension-support/plugin-assets";
 import {
   getSettings,
   isDisabled,
   asString,
-} from "../../utils/plugin-settings";
+} from "../../utils/settings/plugin-settings";
 import { createRegistry } from "../registry-factory";
 import { buildExtensionMeta } from "../extension-meta";
 import { isPluginManifest } from "../plugin-manifest";
-import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
+import {
+  isExtensionRestartFlagVisible,
+} from "../../utils/extension-support/restart-state";
 
 const SETTINGS_PREFIX = "interceptor-";
 

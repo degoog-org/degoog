@@ -1,13 +1,13 @@
-import { jsonHeaders, authHeaders } from "../../utils/request";
+import { jsonHeaders, authHeaders } from "../../utils/net/request";
 import type { RepoInfo, StoreItem } from "../../types/store-tab";
 import { clear, render as renderNodes } from "../../../shared/ui/tribute/dom";
-import { FilterOptions } from "./filter-options";
-import { RepoErrors } from "./repo-errors";
-import { StoreEmpty } from "./store-empty";
-import { UpdatesPanel } from "./updates-panel";
-import { getBase } from "../../utils/base-url";
-import { initLightbox } from "./lightbox";
-import { maybeShowRestartNotice } from "./restart-notice";
+import { FilterOptions } from "./sections/filter-options";
+import { RepoErrors } from "./sections/repo-errors";
+import { StoreEmpty } from "./sections/store-empty";
+import { UpdatesPanel } from "./updates/updates-panel";
+import { getBase } from "../../utils/net/base-url";
+import { initLightbox } from "./overlays/lightbox";
+import { maybeShowRestartNotice } from "./overlays/restart-notice";
 import { StoreTabTemplate } from "./template";
 import {
   confirmRemoveRepo,
@@ -21,15 +21,11 @@ import {
   handleUpdate,
   handleUpdateAll,
 } from "./handlers";
-import {
-  collectSubtypes,
-  engineTypeLabel,
-  filterItems,
-  normalizeRepoUrl,
-  pluginTypeLabel,
-  ItemCard,
-  RepoList,
-} from "./render";
+import { collectSubtypes, filterItems } from "./render/filters";
+import { ItemCard } from "./render/item-card";
+import { engineTypeLabel, pluginTypeLabel } from "./render/labels";
+import { RepoList } from "./render/repo-list";
+import { normalizeRepoUrl } from "./render/repo-url";
 
 export async function initStoreTab(
   container: HTMLElement,

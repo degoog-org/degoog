@@ -1,12 +1,12 @@
-import type { AutocompleteSuggestion, RichSuggestion } from "../../types";
+import type { AutocompleteSuggestion, RichSuggestion } from "../../types/extension";
 
-export interface NormSuggestion {
+interface NormSuggestion {
   text: string;
   source: string;
   rich?: RichSuggestion;
 }
 
-export interface ProviderSuggestions {
+interface ProviderSuggestions {
   results: AutocompleteSuggestion[];
   name: string;
 }
@@ -36,19 +36,17 @@ const _decodeHtmlEntities = (value: string): string =>
     },
   );
 
-const _normalizeText = (value: string): string => _decodeHtmlEntities(value);
-
 const _normalizeRich = (rich: RichSuggestion): RichSuggestion => ({
   ...rich,
   description:
     typeof rich.description === "string"
-      ? _normalizeText(rich.description)
+      ? _decodeHtmlEntities(rich.description)
       : rich.description,
   thumbnail:
     typeof rich.thumbnail === "string"
-      ? _normalizeText(rich.thumbnail)
+      ? _decodeHtmlEntities(rich.thumbnail)
       : rich.thumbnail,
-  type: typeof rich.type === "string" ? _normalizeText(rich.type) : rich.type,
+  type: typeof rich.type === "string" ? _decodeHtmlEntities(rich.type) : rich.type,
 });
 
 export const mergeSuggestions = (
@@ -66,7 +64,7 @@ export const mergeSuggestions = (
   for (const { results, name } of providers) {
     const plain: NormSuggestion[] = [];
     for (const s of results) {
-      const text = _normalizeText(typeof s === "string" ? s : s.text);
+      const text = _decodeHtmlEntities(typeof s === "string" ? s : s.text);
       const rich =
         typeof s === "object" && s.rich ? _normalizeRich(s.rich) : undefined;
 

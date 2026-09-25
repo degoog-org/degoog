@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { clearServerSettingsCache } from "../../src/server/utils/server-settings";
+import { clearServerSettingsCache } from "../../src/server/utils/settings/server-settings";
 
 const SYNC_MOD = "../../src/server/extensions/store/reload-sync";
 
@@ -49,7 +49,7 @@ describe("POST /api/settings/field compatibility layer reload", () => {
       },
     }));
 
-    router = (await import("../../src/server/routes/settings")).default;
+    router = (await import("../../src/server/routes/settings/settings")).default;
   });
 
   afterAll(() => {

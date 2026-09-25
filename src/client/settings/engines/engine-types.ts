@@ -1,13 +1,11 @@
 import { typeLabel } from "./type-label";
-import type { ExtensionMeta } from "../../types";
+import type { ExtensionMeta } from "../../types/extension";
+import { primaryType } from "../../../shared/search-types";
 
 export const engineTypes = (engine: ExtensionMeta): string[] => {
   if (engine.searchTypes?.length) return engine.searchTypes;
   return [engine.primaryType ?? "web"];
 };
-
-export const primaryType = (types: string[]): string =>
-  types.length > 0 ? types[0] : "web";
 
 export const extraTypeLabels = (engine: ExtensionMeta): string[] => {
   const types = engineTypes(engine);

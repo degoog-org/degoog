@@ -1,4 +1,4 @@
-import type { TimeFilter } from "../../../types";
+import type { TimeFilter } from "../../../types/search";
 
 export interface NptScope {
   query: string;

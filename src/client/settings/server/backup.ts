@@ -1,11 +1,12 @@
-import { getBase } from "../../utils/base-url";
-import { authHeaders, jsonHeaders } from "../../utils/request";
+import { getBase } from "../../utils/net/base-url";
+import { authHeaders, jsonHeaders } from "../../utils/net/request";
 import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
-import { initFileUpload } from "../../utils/file-upload";
+import { initFileUpload } from "../../utils/file-upload/file-upload";
 import { flashError, flashSuccess } from "../shared/flash-msg";
 import {
   BackupError,
   MAX_SETTINGS_BACKUP_BYTES,
+  backupFilename,
 } from "../../../shared/settings-backup";
 
 const t = window.scopedT("core");
@@ -67,9 +68,6 @@ const _fail = (messageKey: string): void => {
   flashError(t(messageKey));
 };
 
-const _fallbackFilename = (): string =>
-  `degoog-settings-${new Date().toISOString().slice(0, 10)}.json`;
-
 const _filenameFrom = (disposition: string | null, fallback: string): string => {
   const encoded = disposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
   if (encoded) {
@@ -118,7 +116,7 @@ const _bindExport = (getToken: () => string | null): void => {
       const blob = await res.blob();
       const filename = _filenameFrom(
         res.headers.get("Content-Disposition"),
-        _fallbackFilename(),
+        backupFilename(),
       );
       _saveBlob(
         blob.type ? blob : new Blob([blob], { type: JSON_TYPE }),

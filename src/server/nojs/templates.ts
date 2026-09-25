@@ -5,11 +5,11 @@ import {
   getThemeGeneration,
   type ThemeManifest,
 } from "../extensions/themes/registry";
-import { rewriteThemePaths } from "../utils/extension-id";
+import { rewriteThemePaths } from "../utils/extension-support/extension-id";
 import { logger } from "../utils/logger";
+import { DEFAULT_THEME_DIR } from "../render/theme-assets";
 import { sanitizeTemplate } from "./dom";
 
-const DEFAULT_THEME_DIR = "src/public/themes/degoog-theme";
 const DEFAULT_NOJS_DIR = `${DEFAULT_THEME_DIR}/nojs`;
 const NOJS_DIR_NAME = "nojs";
 const SAFE_NAME_RE = /^[\w-]+$/;

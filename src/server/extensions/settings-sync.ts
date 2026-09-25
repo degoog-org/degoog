@@ -4,17 +4,17 @@ import {
   onInvalidate,
   publishInvalidate,
   type InvalidatePayload,
-} from "../utils/cache-valkey";
+} from "../utils/cache/cache-valkey";
 import { logger } from "../utils/logger";
-import { getSettings, type SettingValue } from "../utils/plugin-settings";
-import { reconfigureManifestEngines } from "./engines/registry";
+import { getSettings, type SettingValue } from "../utils/settings/plugin-settings";
+import { reconfigureManifestEngines } from "./engines/catalog";
 import { resolveExtension } from "./resolve";
 
 type ExtSettings = Record<string, SettingValue>;
 
 const NS = "settings-sync";
 
-export const applyExtSettings = (id: string, settings: ExtSettings): void => {
+const applyExtSettings = (id: string, settings: ExtSettings): void => {
   const resolved = resolveExtension(id);
   if (!resolved.engine?.pluginManifest) resolved.engine?.configure?.(settings);
   resolved.command?.configure?.(settings);

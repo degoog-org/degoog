@@ -14,7 +14,7 @@ export const SHOW_RESULT_DATES = "show_result_dates";
 export const ENGINE_ORIGIN_DISPLAY = "engine_origin_display";
 export const TAB_ORDER_SAVED = "tab-order-saved";
 
-export const GENERAL_SYNC_KEYS = [
+const GENERAL_SYNC_KEYS = [
   THEME_KEY,
   OPEN_IN_NEW_TAB_KEY,
   DISPLAY_ENGINE_PERFORMANCE,
@@ -31,9 +31,6 @@ export const GENERAL_SYNC_KEYS = [
 export const ENGINE_SYNC_KEYS = [ENGINES_KEY] as const;
 
 export const SYNC_KEYS = [...GENERAL_SYNC_KEYS, ...ENGINE_SYNC_KEYS] as const;
-
-export type SyncKey = (typeof SYNC_KEYS)[number];
-
 const THEME_VALUES = ["system", "light", "dark"] as const;
 
 const isThemeValue = (v: unknown): boolean =>

@@ -1,4 +1,4 @@
-import type { SearchResult } from "../../types";
+import type { SearchResult } from "../../../shared/search-types";
 import { normalizeUrl, urlIsGif } from "../../search/url-normalize";
 
 export interface IndexRow {
@@ -18,16 +18,6 @@ export interface IndexRow {
   sources_json: string | null;
   filters_json: string | null;
   meta_json: string | null;
-}
-
-export interface Recorder {
-  toRows: (
-    queryNorm: string,
-    engineType: string,
-    results: SearchResult[],
-    filtersJson: string | null,
-    positions?: number[],
-  ) => IndexRow[];
 }
 
 const sourcesOf = (r: SearchResult): string => {
@@ -60,32 +50,36 @@ const extractExtras = (r: SearchResult): string | null => {
   return Object.keys(extras).length > 0 ? JSON.stringify(extras) : null;
 };
 
-export const DEFAULT_RECORDER: Recorder = {
-  toRows: (queryNorm, engineType, results, filtersJson, positions) => {
-    const rows: IndexRow[] = [];
-    for (let i = 0; i < results.length; i++) {
-      const r = results[i];
-      if (!r.url || !r.title) continue;
-      rows.push({
-        query_norm: queryNorm,
-        engine_type: engineType,
-        url: r.url,
-        url_norm: normalizeUrl(r.url),
-        source_engine: r.source,
-        title: r.title,
-        snippet: r.snippet ?? "",
-        thumbnail: r.thumbnail ?? null,
-        image_url: r.imageUrl ?? null,
-        is_gif:
-          r.isGif === true || urlIsGif(r.imageUrl) ? 1 : r.isGif === false ? 0 : null,
-        duration: r.duration ?? null,
-        extras_json: extractExtras(r),
-        position: positions?.[i] ?? i,
-        sources_json: sourcesOf(r),
-        filters_json: filtersJson,
-        meta_json: null,
-      });
-    }
-    return rows;
-  },
+export const toIndexRows = (
+  queryNorm: string,
+  engineType: string,
+  results: SearchResult[],
+  filtersJson: string | null,
+  positions?: number[],
+): IndexRow[] => {
+  const rows: IndexRow[] = [];
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    if (!r.url || !r.title) continue;
+    rows.push({
+      query_norm: queryNorm,
+      engine_type: engineType,
+      url: r.url,
+      url_norm: normalizeUrl(r.url),
+      source_engine: r.source,
+      title: r.title,
+      snippet: r.snippet ?? "",
+      thumbnail: r.thumbnail ?? null,
+      image_url: r.imageUrl ?? null,
+      is_gif:
+        r.isGif === true || urlIsGif(r.imageUrl) ? 1 : r.isGif === false ? 0 : null,
+      duration: r.duration ?? null,
+      extras_json: extractExtras(r),
+      position: positions?.[i] ?? i,
+      sources_json: sourcesOf(r),
+      filters_json: filtersJson,
+      meta_json: null,
+    });
+  }
+  return rows;
 };

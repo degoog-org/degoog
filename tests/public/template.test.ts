@@ -1,5 +1,5 @@
 import { describe, test, expect, afterAll } from "bun:test";
-import { renderTemplate } from "../../src/client/utils/template";
+import { renderTemplate } from "../../src/client/utils/dom/template";
 
 const savedDocument = (globalThis as { document?: unknown }).document;
 

@@ -1,14 +1,14 @@
 import type { RepoInfo } from "../../types/store-tab";
-import { jsonHeaders } from "../../utils/request";
+import { jsonHeaders } from "../../utils/net/request";
 import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
-import { getBase } from "../../utils/base-url";
+import { getBase } from "../../utils/net/base-url";
 import {
   setItemPhase,
   setRepoPhase,
   streamRefreshAll,
   streamUpdateAll,
-} from "./progress";
-import { maybeShowRestartNotice } from "./restart-notice";
+} from "./overlays/progress";
+import { maybeShowRestartNotice } from "./overlays/restart-notice";
 
 export function showError(el: HTMLElement | null, msg: string): void {
   if (!el) return;

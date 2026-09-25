@@ -1,10 +1,3 @@
-export const escapeHtml = (value: string): string =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 
 export const stripHtml = (text: string): string =>
   text
@@ -121,7 +114,7 @@ export const isPublishDate = (iso: string): boolean => {
   return when <= Date.now() + FUTURE_GRACE_MS;
 };
 
-export interface SnippetDate {
+interface SnippetDate {
   iso: string;
   rest: string;
 }

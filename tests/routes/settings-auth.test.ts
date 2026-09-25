@@ -4,7 +4,7 @@ import {
   hasGeneratedDefaultSettingsPassword,
   isDangerouslyNoPassword,
   isPasswordRequired,
-} from "../../src/server/routes/settings-auth";
+} from "../../src/server/routes/settings/settings-auth";
 
 const ctx = (url: string, headers: Record<string, string> = {}) => {
   const req = new Request(url, { headers });

@@ -1,29 +1,35 @@
 import { readdir } from "fs/promises";
 import { basename, join, resolve } from "path";
-import type {
-  EngineContext,
-  SearchEngine,
-  SearchResult,
-  SettingField,
-  TimeFilter,
-} from "../../../types";
-import { makeExtID } from "../../../utils/extension-id";
+import type { SearchEngine } from "../../../types/extension";
+import type { EngineContext, TimeFilter } from "../../../types/search";
+import type { SearchResult } from "../../../../shared/search-types";
+import type { SettingField } from "../../../../shared/setting-field";
+import { makeExtID } from "../../../utils/extension-support/extension-id";
 import { logger } from "../../../utils/logger";
-import { getRandomUserAgent } from "../../../utils/user-agents";
-import { useCache } from "../../../utils/cache";
+import { getRandomUserAgent } from "../../../utils/net/user-agents";
+import { TTL_MS, useCache } from "../../../utils/cache/cache";
 import {
   asBoolean,
   getSettings,
   mergeDefaults,
   type SettingValue,
-} from "../../../utils/plugin-settings";
-import { getInstanceSettings } from "../../../utils/server-settings";
+} from "../../../utils/settings/plugin-settings";
+import { getInstanceSettings } from "../../../utils/settings/server-settings";
 import { CompatLayerId } from "../../../../shared/compat-layers";
-import { runBridge, type RpcFetchReply, type RpcHandlers, type RunnerSpec } from "../rpc";
+import type { CompatEntry } from "../registry";
+import { runBridge, type RpcHandlers, type RunnerSpec } from "../rpc";
+import { browserHeaders, cacheHandler, isWebUrl, toReply, withCookies } from "../engine-bridge";
+import {
+  resolveSafeSearch,
+  SafeSearch,
+  SAFE_SEARCH_KEY,
+  safeSearchField,
+  TIME_FILTER_RANGE,
+} from "../safe-search";
 import { scrubLog } from "../scrub-log";
 import { catalogEntry, isKnownScraper, isSharedFile } from "./catalog";
 import { optionFields, overridesFrom, type FourGetFilters } from "./engine-config";
-import { followEngineFetch, isHttpRedirect, isWebUrl } from "./follow";
+import { followEngineFetch, isHttpRedirect } from "./follow";
 import { nptKey } from "./npt-key";
 import { FOURGET_PAGES, mapPages, type FourGetPage } from "./pages";
 import { scrapersDir, sharedLibDir, stagingRoot } from "./paths";
@@ -31,31 +37,14 @@ import { phpBinary, phpStatus } from "./php-runtime";
 
 const NS = "4get-compat";
 const CACHE_NAMESPACE = "fourget-compat";
-const CACHE_TTL_MS = 60 * 60 * 1000;
-const NPT_TTL_MS = 15 * 60 * 1000;
-const DEFAULT_ACCEPT_LANGUAGE = "en-US,en;q=0.9";
 const TYPE_OVERRIDE_KEY = "searchTypeOverride";
 const API_KEY_SETTING = "apiKey";
 const DAY_SECONDS = 24 * 60 * 60;
-
-export const SAFE_SEARCH_KEY = "safeSearch";
-
-export enum SafeSearch {
-  Off = "off",
-  Moderate = "moderate",
-  Strict = "strict",
-}
 
 const SAFE_TO_NSFW: Record<SafeSearch, string> = {
   [SafeSearch.Off]: "yes",
   [SafeSearch.Moderate]: "maybe",
   [SafeSearch.Strict]: "no",
-};
-
-const NSFW_TO_SAFE: Record<string, SafeSearch> = {
-  on: SafeSearch.Strict,
-  moderate: SafeSearch.Moderate,
-  off: SafeSearch.Off,
 };
 
 const GUARDED_METHODS = ["image", "video"];
@@ -68,26 +57,7 @@ const TIME_WINDOWS: Partial<Record<TimeFilter, number>> = {
   year: 366 * DAY_SECONDS,
 };
 
-const TIME_TO_RANGE: Partial<Record<TimeFilter, string>> = {
-  hour: "day",
-  day: "day",
-  week: "week",
-  month: "month",
-  year: "year",
-};
-
 const runnerPath = join(import.meta.dir, "runner.php");
-
-export interface FourGetCompatEntry {
-  id: string;
-  displayName: string;
-  searchTypes: string[];
-  description?: string;
-  site?: string;
-  instance: SearchEngine;
-  source?: "plugin" | "builtin";
-  compatibilityLayer?: CompatLayerId;
-}
 
 interface DiscoverEntry {
   code: string;
@@ -179,59 +149,15 @@ const _basePayload = async (): Promise<Record<string, unknown>> => {
   };
 };
 
-const _headersObject = (headers: Headers): Record<string, string> => {
-  const out: Record<string, string> = {};
-  headers.forEach((value, key) => {
-    out[key] = value;
-  });
-  return out;
-};
-
-const _setCookies = (headers: Headers): Record<string, string> => {
-  const out: Record<string, string> = {};
-  const raw = typeof headers.getSetCookie === "function" ? headers.getSetCookie() : [];
-  for (const line of raw) {
-    const [pair] = line.split(";");
-    const eq = pair?.indexOf("=") ?? -1;
-    if (eq <= 0) continue;
-    out[pair.slice(0, eq).trim()] = pair.slice(eq + 1).trim();
-  }
-  return out;
-};
-
-const _cookieHeader = (cookies: Record<string, string> | undefined): string =>
-  Object.entries(cookies ?? {})
-    .filter(([key, value]) => key.trim() && String(value).trim())
-    .map(([key, value]) => `${key.trim()}=${String(value).trim()}`)
-    .join("; ");
-
-const _browserHeaders = (context?: EngineContext): Record<string, string> => ({
-  "User-Agent": context?.userAgent?.() ?? getRandomUserAgent(),
-  "Accept-Language": context?.buildAcceptLanguage?.() ?? DEFAULT_ACCEPT_LANGUAGE,
-});
-
-const _toReply = async (resp: Response, fallbackUrl: string): Promise<RpcFetchReply> => ({
-  url: resp.url || fallbackUrl,
-  status: resp.status,
-  headers: _headersObject(resp.headers),
-  cookies: _setCookies(resp.headers),
-  text: await resp.text(),
-});
-
 const _bridge = (engineId: string, engineName: string, context?: EngineContext): RpcHandlers => {
   const fetcher = (context?.fetch ?? fetch) as typeof fetch;
-  const store = useCache<string>(`${CACHE_NAMESPACE}:${engineId}`, CACHE_TTL_MS);
   return {
     onFetch: async (req) => {
       if (!isWebUrl(req.url)) {
         logger.warn(NS, `${engineId} blocked non-http request ${scrubLog(req.url)}`);
         throw new Error("only http(s) requests are allowed");
       }
-      const headers = { ..._browserHeaders(context), ...req.headers };
-      const cookie = _cookieHeader(req.cookies);
-      if (cookie && !Object.keys(headers).some((key) => key.toLowerCase() === "cookie")) {
-        headers.Cookie = cookie;
-      }
+      const headers = withCookies({ ...browserHeaders(context), ...req.headers }, req.cookies);
       logger.debug(NS, `${engineId} request ${scrubLog(req.method)} ${scrubLog(req.url)}`);
       const resp = await followEngineFetch(fetcher, {
         url: req.url,
@@ -247,15 +173,9 @@ const _bridge = (engineId: string, engineName: string, context?: EngineContext):
       if (!isHttpRedirect(resp.status)) {
         context?.sentinel?.({ ok: resp.ok, status: resp.status }, engineName);
       }
-      return _toReply(resp, req.url);
+      return toReply(resp, req.url);
     },
-    onCache: async (req) => {
-      if (req.op === "set") {
-        await store.set(req.key, req.value ?? "", req.ttl ? req.ttl * 1000 : undefined);
-        return null;
-      }
-      return store.get(req.key);
-    },
+    onCache: cacheHandler(CACHE_NAMESPACE, engineId, TTL_MS),
   };
 };
 
@@ -291,14 +211,7 @@ class FourGetCompatEngine implements SearchEngine {
     this.bangShortcut = spec.code;
     this.safeSearch = _defaultSafe(spec.pages);
     this.settingsSchema = [
-      {
-        key: SAFE_SEARCH_KEY,
-        label: "Safe Search",
-        type: "select",
-        options: Object.values(SafeSearch),
-        default: this.safeSearch,
-        description: "Filter explicit content from this engine's results.",
-      },
+      safeSearchField(this.safeSearch),
       ...(catalogEntry(spec.code)?.needsApiKey ? [_apiKeyField(spec.displayName)] : []),
       ...optionFields(spec.filters),
     ];
@@ -320,8 +233,7 @@ class FourGetCompatEngine implements SearchEngine {
   }
 
   private nsfw(context?: EngineContext): string {
-    const filter = context?.imageFilter?.nsfw;
-    const resolved = (filter && NSFW_TO_SAFE[filter]) ?? this.safeSearch;
+    const resolved = resolveSafeSearch(this.safeSearch, context);
     return SAFE_TO_NSFW[resolved] ?? SAFE_TO_NSFW[SafeSearch.Off];
   }
 
@@ -338,14 +250,14 @@ class FourGetCompatEngine implements SearchEngine {
     }
     const window = TIME_WINDOWS[timeFilter];
     return {
-      timeRange: TIME_TO_RANGE[timeFilter] ?? null,
+      timeRange: TIME_FILTER_RANGE[timeFilter] ?? null,
       dateFrom: window ? Math.floor(Date.now() / 1000) - window : null,
       dateTo: null,
     };
   }
 
   private tokens(type: string) {
-    return useCache<string>(`${CACHE_NAMESPACE}:npt:${this.spec.engineId}:${type}`, NPT_TTL_MS);
+    return useCache<string>(`${CACHE_NAMESPACE}:npt:${this.spec.engineId}:${type}`, TTL_MS);
   }
 
   private tokenKey(
@@ -416,12 +328,12 @@ class FourGetCompatEngine implements SearchEngine {
   }
 }
 
-export const isFourGetCompatOn = async (): Promise<boolean> =>
+const isFourGetCompatOn = async (): Promise<boolean> =>
   asBoolean((await getInstanceSettings()).fourgetCompatEnabled);
 
 const _displayName = (code: string): string => catalogEntry(code)?.name ?? code;
 
-export const loadFourGetEngines = async (): Promise<FourGetCompatEntry[]> => {
+export const loadFourGetEngines = async (): Promise<CompatEntry[]> => {
   if (!(await isFourGetCompatOn())) {
     logger.debug(NS, "4get compatibility layer is off, skipping scraper discovery");
     return [];
@@ -453,7 +365,7 @@ export const loadFourGetEngines = async (): Promise<FourGetCompatEntry[]> => {
     return [];
   }
 
-  const entries: FourGetCompatEntry[] = [];
+  const entries: CompatEntry[] = [];
   const broken: string[] = [];
   for (const meta of discovered) {
     if (meta.error) {

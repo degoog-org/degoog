@@ -1,29 +1,32 @@
 import {
-  type AutocompleteProvider,
   type AutocompleteContext,
+  type AutocompleteProvider,
   type ExtensionMeta,
   ExtensionStoreType,
-  type SettingField,
-} from "../../types";
+  type RichSuggestion,
+} from "../../types/extension";
+import type { SettingField } from "../../../shared/setting-field";
 import {
   asBoolean,
   asString,
   getSettings,
   maskSecrets,
   mergeDefaults,
-} from "../../utils/plugin-settings";
+} from "../../utils/settings/plugin-settings";
 import { autocompleteDir } from "../../utils/paths";
-import { autocompleteCache } from "../../utils/cache";
+import { autocompleteCache } from "../../utils/cache/cache";
 import { transportPicks } from "../transports/registry";
 import { createRegistry } from "../registry-factory";
-import { makeExtID } from "../../utils/extension-id";
+import { makeExtID } from "../../utils/extension-support/extension-id";
 import { logger } from "../../utils/logger";
-import { signSuggestionThumbnails } from "../../utils/proxy-sign";
+import { signSuggestionThumbnails } from "../../utils/net/proxy-sign";
 import { buildProviderContext } from "./context";
 import { mergeSuggestions } from "./merge";
-import { AUTOCOMPLETE_TIMEOUT_MS, withTimeout } from "../../utils/with-timeout";
-import { extensionReadmeExists } from "../../utils/extension-docs";
-import { isExtensionRestartFlagVisible } from "../../utils/restart-state";
+import { AUTOCOMPLETE_TIMEOUT_MS, withTimeout } from "../../utils/net/with-timeout";
+import { extensionReadmeExists } from "../../utils/extension-support/extension-docs";
+import {
+  isExtensionRestartFlagVisible,
+} from "../../utils/extension-support/restart-state";
 
 interface PluginEntry {
   id: string;
@@ -95,17 +98,6 @@ function _all(): {
   return pluginRegistry.items();
 }
 
-export async function getEnabledAutocompleteProviders(): Promise<
-  AutocompleteProvider[]
-> {
-  const providers: AutocompleteProvider[] = [];
-  for (const p of _all()) {
-    const stored = await getSettings(p.id);
-    if (!asBoolean(stored.disabled)) providers.push(p.instance);
-  }
-  return providers;
-}
-
 export function getAutocompleteProviderById(
   id: string,
 ): AutocompleteProvider | undefined {
@@ -116,7 +108,7 @@ export async function getSuggestionsFromProviders(query: string): Promise<
   {
     text: string;
     source: string;
-    rich?: import("../../types").RichSuggestion;
+    rich?: RichSuggestion;
   }[]
 > {
   const cacheKey = `ac:${query}`;
@@ -246,8 +238,4 @@ export async function getAutocompleteExtensionMeta(): Promise<ExtensionMeta[]> {
 
 export async function initAutocomplete(bust = false): Promise<void> {
   await (bust ? pluginRegistry.reload() : pluginRegistry.init());
-}
-
-export async function reloadAutocomplete(bust = true): Promise<void> {
-  await initAutocomplete(bust);
 }

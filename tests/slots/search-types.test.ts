@@ -2,10 +2,11 @@ import { describe, expect, test } from "bun:test";
 import {
   DEFAULT_SEARCH_TYPE,
   parseTypeList,
+  SlotPanelPosition,
   slotRunsOn,
 } from "../../src/shared/search-types";
-import { baseSlotTypes } from "../../src/server/utils/slot-types";
-import { SlotPanelPosition, type SlotPlugin } from "../../src/server/types";
+import { baseSlotTypes } from "../../src/server/utils/extension-support/slot-types";
+import type { SlotPlugin } from "../../src/server/types/extension";
 
 const makeSlot = (searchTypes?: string[]): SlotPlugin => ({
   name: "test",

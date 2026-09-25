@@ -2,7 +2,7 @@ import { render } from "../../../shared/ui/tribute/dom";
 import { ExtGroup } from "../../../shared/ui/components/extensions/ext-group";
 import { AutocompleteCard } from "./autocomplete-card";
 import { EmptyState } from "./empty-state";
-import type { AllExtensions } from "../../types";
+import type { AllExtensions } from "../../types/extension";
 
 const t = window.scopedT("core");
 

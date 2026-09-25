@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { updateInstanceSettings } from "../../src/server/utils/server-settings";
-import { syncBlocklist } from "../../src/server/utils/bot-trap";
+import { updateInstanceSettings } from "../../src/server/utils/settings/server-settings";
+import { syncBlocklist } from "../../src/server/utils/security/bot-trap";
 
 type Router = {
   request: (req: Request | string) => Response | Promise<Response>;
@@ -12,7 +12,7 @@ let savedEnabled: string | undefined;
 beforeAll(async () => {
   savedEnabled = process.env.DEGOOG_PUBLIC_INSTANCE;
   delete process.env.DEGOOG_SETTINGS_PASSWORDS;
-  const mod = await import("../../src/server/routes/honeypot");
+  const mod = await import("../../src/server/routes/security/honeypot");
   router = mod.default;
 });
 

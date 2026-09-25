@@ -12,7 +12,7 @@ beforeAll(async () => {
   await initPlugins();
   if (orig !== undefined) process.env.DEGOOG_PLUGINS_DIR = orig;
   else delete process.env.DEGOOG_PLUGINS_DIR;
-  const mod = await import("../../src/server/routes/commands");
+  const mod = await import("../../src/server/routes/extensions/commands");
   commandsRouter = mod.default;
 });
 

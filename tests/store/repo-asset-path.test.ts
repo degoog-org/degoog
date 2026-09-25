@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import {
   resolveRepoAssetPath,
   resolveScreenshotPath,
-} from "../../src/server/extensions/store";
+} from "../../src/server/extensions/store/asset-paths";
 
 const REJECTED: [string, string, string][] = [
   ["a repoSlug that tries to escape the store dir", "../../../etc", "ssl/certs/ca.svg"],

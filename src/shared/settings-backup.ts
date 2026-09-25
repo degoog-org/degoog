@@ -23,5 +23,5 @@ export enum BackupStage {
 export const weigh = (text: string): number =>
   new TextEncoder().encode(text).byteLength;
 
-export const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+export const backupFilename = (): string =>
+  `degoog-settings-${new Date().toISOString().slice(0, 10)}.json`;

@@ -2,7 +2,7 @@ import { render } from "../../../shared/ui/tribute/dom";
 import { ExtGroup } from "../../../shared/ui/components/extensions/ext-group";
 import { BuiltInCard } from "./built-in-card";
 import { ThemeCard } from "./theme-card";
-import type { ExtensionMeta } from "../../types";
+import type { ExtensionMeta } from "../../types/extension";
 
 const t = window.scopedT("core");
 

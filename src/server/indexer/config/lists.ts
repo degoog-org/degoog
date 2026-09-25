@@ -1,10 +1,8 @@
 import { indexerConfigFile } from "../../utils/paths";
-import { createListStore } from "../../utils/list-store";
+import { createListStore } from "../../utils/storage/list-store";
 import { OVERSIZED_TEXT_FIELDS } from "../../../shared/indexer";
 
-export type IndexerListKey = (typeof OVERSIZED_TEXT_FIELDS)[number];
-export type IndexerLists = Record<IndexerListKey, string>;
-
+type IndexerListKey = (typeof OVERSIZED_TEXT_FIELDS)[number];
 const store = createListStore<IndexerListKey>({
   keys: OVERSIZED_TEXT_FIELDS,
   file: indexerConfigFile,

@@ -4,8 +4,8 @@ import { ItemCardActions } from "./item-card-actions";
 import { ItemCardAuthor } from "./item-card-author";
 import { ShortcutKeycaps } from "./shortcut-keycaps";
 import { engineTypeLabel, pluginTypeLabel } from "./labels";
-import { screenshotUrl } from "../lightbox";
-import { renderMdInline } from "../../../utils/md";
+import { screenshotUrl } from "../overlays/lightbox";
+import { renderMdInline } from "../../../utils/dom/md";
 import type { Props } from "../../../../shared/ui/tribute/types";
 import type { StoreItem } from "../../../types/store-tab";
 

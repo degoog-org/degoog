@@ -5,7 +5,7 @@ let slotsRouter: {
 };
 
 beforeAll(async () => {
-  const mod = await import("../../src/server/routes/slots");
+  const mod = await import("../../src/server/routes/search/slots");
   slotsRouter = mod.default;
 });
 

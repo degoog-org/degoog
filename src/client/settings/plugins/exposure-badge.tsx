@@ -1,6 +1,6 @@
 import { Badge } from "../../../shared/ui/components/primitives/badge";
 import { Icon } from "../../../shared/ui/components/primitives/icon";
-import type { ExtensionMeta } from "../../types";
+import type { ExtensionMeta } from "../../types/extension";
 
 const t = window.scopedT("core");
 

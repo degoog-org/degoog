@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, writeFile, rm } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
 import { createRegistry } from "../../src/server/extensions/registry-factory";
-import { getExtensionReadmePath } from "../../src/server/utils/extension-docs";
+import { getExtensionReadmePath } from "../../src/server/utils/extension-support/extension-docs";
 
 interface Widget {
   id: string;

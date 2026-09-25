@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { clearServerSettingsCache } from "../../src/server/utils/server-settings";
+import { clearServerSettingsCache } from "../../src/server/utils/settings/server-settings";
 
 const SAVED_ENV_KEYS = [
   "DEGOOG_DATA_DIR",
@@ -62,7 +62,7 @@ beforeAll(async () => {
   writeFileSync(join(tempDir, "fourget", "scraper", "wiby.php"), "<?php\nclass wiby{}\n");
 
   enable(true, false);
-  router = (await import("../../src/server/routes/compat-engines")).default;
+  router = (await import("../../src/server/routes/extensions/compat-engines")).default;
 });
 
 afterAll(() => {

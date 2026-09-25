@@ -1,8 +1,8 @@
-import { listSearchTabs } from "../routes/search/_tab-list";
+import { listSearchTabs } from "../search/tab-list";
 import type { NojsTab } from "./context";
 
 export const WEB_TAB_ID = "web";
-export const TAB_TYPE_PREFIX = "tab:";
+const TAB_TYPE_PREFIX = "tab:";
 export const ENGINE_TYPE_PREFIX = "engine:";
 
 export const nojsTabType = (tabId: string): string =>

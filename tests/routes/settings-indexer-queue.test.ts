@@ -5,9 +5,9 @@ import { join } from "node:path";
 import {
   clearServerSettingsCache,
   getInstanceSettings,
-} from "../../src/server/utils/server-settings";
+} from "../../src/server/utils/settings/server-settings";
 
-const QUEUE_MOD = "../../src/server/indexer/queue";
+const QUEUE_MOD = "../../src/server/indexer/queue/queue";
 
 const queueReal = { ...(await import(QUEUE_MOD)) };
 
@@ -53,7 +53,7 @@ describe("POST /api/settings/field indexer queue", () => {
       stopQueue: async () => {},
     }));
 
-    router = (await import("../../src/server/routes/settings")).default;
+    router = (await import("../../src/server/routes/settings/settings")).default;
   });
 
   afterAll(() => {

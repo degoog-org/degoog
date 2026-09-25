@@ -1,4 +1,5 @@
-import type { IndexRow } from "../recorders";
+import type { IndexRow } from "../recorders/default";
+import type { IndexerHitRow } from "../../../shared/indexer";
 import type { IndexerConfig } from "./config";
 
 export interface ExportRow {
@@ -37,17 +38,6 @@ export interface UrlRow {
   extras_json: string | null;
 }
 
-export interface HitRow {
-  id: number;
-  query_norm: string;
-  engine_type: string;
-  url: string;
-  title: string;
-  snippet: string;
-  last_seen: number;
-  score: number;
-}
-
 export interface TypeCounts {
   hits: number;
   urls: number;
@@ -73,7 +63,7 @@ export interface IndexerAdapter {
   getTypeCounts(type: string): Promise<TypeCounts>;
   totalDbSize(types: string[]): Promise<number>;
 
-  listHitsForType(type: string, q: string | undefined, limit: number, offset: number): Promise<HitRow[]>;
+  listHitsForType(type: string, q: string | undefined, limit: number, offset: number): Promise<IndexerHitRow[]>;
   countHitsForType(type: string, q: string | undefined): Promise<number>;
   sampleRows(type: string, limit: number): Promise<ExportRow[]>;
   exportBatches(type: string, size: number): AsyncIterable<ExportRow[]>;

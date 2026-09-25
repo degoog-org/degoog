@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
-import { shouldIndex } from "../../src/server/indexer/filters";
+import { shouldIndex } from "../../src/server/indexer/filters/filters";
 import type { IndexerConfig } from "../../src/server/indexer/types/config";
-import type { SearchResult } from "../../src/server/types";
+import type { SearchResult } from "../../src/shared/search-types";
 
 const baseCfg: IndexerConfig = {
   rankingWindow: 0,

@@ -1,4 +1,4 @@
-import type { PluginManifest } from "../types";
+import type { PluginManifest } from "../types/extension";
 
 export const isPluginManifest = (val: unknown): val is PluginManifest =>
   typeof val === "object" &&

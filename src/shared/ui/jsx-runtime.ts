@@ -72,8 +72,6 @@ export const jsx = (
 
 export const jsxs = jsx;
 
-export type { VNode, Props, Child, Component } from "./tribute/types";
-
 type EventHandler = (event: Event) => void;
 
 type Attr<T> = T | null | undefined;

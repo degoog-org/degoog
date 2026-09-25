@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from "fs";
 import type { Subprocess, Server } from "bun";
 import { logger } from "./logger";
-import { closeAllDbs } from "../indexer/db";
-import { stopQueue } from "../indexer/queue";
-import { clearRestartPending } from "./restart-state";
-import { envTruthy } from "../routes/settings-auth";
+import { closeAllDbs } from "../indexer/db/lifecycle";
+import { stopQueue } from "../indexer/queue/queue";
+import { clearRestartPending } from "./extension-support/restart-state";
+import { envTruthy } from "../routes/settings/settings-auth";
 
 const RESTART_EXIT_DELAY_MS = 250;
 
@@ -17,7 +17,7 @@ export const registerServerHandle = (server: Server<unknown>): void => {
 export const isDockerRuntime = (): boolean =>
   envTruthy("DEGOOG_DOCKER") || existsSync("/.dockerenv");
 
-export const isLXCRuntime = (): boolean => {
+const isLXCRuntime = (): boolean => {
   try {
     return readFileSync("/run/systemd/container", "utf8").trim() === "lxc";
   } catch {

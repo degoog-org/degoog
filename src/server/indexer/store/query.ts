@@ -1,4 +1,4 @@
-import type { SearchResult } from "../../types";
+import type { SearchResult } from "../../../shared/search-types";
 import type { UrlRow } from "../types/adapter";
 import { getAdapter } from "../db/factory";
 import { getIndexerConfig } from "../config/load";

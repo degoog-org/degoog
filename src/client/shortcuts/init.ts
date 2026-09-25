@@ -1,7 +1,7 @@
 import { SHORTCUT_ACTIONS, type ClientShortcut, type ShortcutsConfig } from "../../shared/shortcuts";
 import { hasBinding, toShortcut } from "./binding";
 import { applyShortcut } from "./registry";
-import { registerShortcut } from "../utils/keyboard-shortcuts";
+import { registerShortcut } from "./keyboard-shortcuts";
 
 declare global {
   interface Window {

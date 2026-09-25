@@ -1,11 +1,11 @@
 import {
-  TranslateFunction,
   type BangCommand,
   type CommandContext,
   type CommandResult,
   type PluginContext,
-} from "../../../../types";
-import { getCustomEngineTypes } from "../../../engines/registry";
+  TranslateFunction,
+} from "../../../../types/extension";
+import { getCustomEngineTypes } from "../../../engines/catalog";
 import { getFilteredCommandRegistry } from "../../registry";
 import {
   renderEngineTypeCode,

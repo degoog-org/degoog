@@ -1,22 +1,17 @@
-import type { EngineContext, SearchResult } from "../../../../types";
+import type { EngineContext } from "../../../../types/search";
 import {
   DEGOOG_ENGINE_NAME,
-  getKnownTypes,
-  queryIndex,
-} from "../../../../indexer/store";
-import { asBoolean } from "../../../../utils/plugin-settings";
-import { getInstanceSettings } from "../../../../utils/server-settings";
+  type SearchResult,
+} from "../../../../../shared/search-types";
+import { getKnownTypes } from "../../../../indexer/store/admin";
+import { queryIndex } from "../../../../indexer/store/query";
+import { isIndexerOn } from "../../../../indexer/config/load";
 
 export const DEGOOG_ENGINE_ID = "degoog-engine";
 
-const isIndexerOn = async (): Promise<boolean> => {
-  const settings = await getInstanceSettings();
-  return asBoolean(settings.degoogIndexerEnabled);
-};
-
 export const type = async (): Promise<string[]> => {
   if (!(await isIndexerOn())) return [];
-  const { getInstalledSearchTypes } = await import("../../registry");
+  const { getInstalledSearchTypes } = await import("../../catalog");
   const installed = await getInstalledSearchTypes(DEGOOG_ENGINE_ID);
   const installedByLower = new Map(installed.map((t) => [t.toLowerCase(), t]));
   const matched = new Set<string>();

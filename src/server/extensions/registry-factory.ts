@@ -7,11 +7,11 @@
 import { readdir, stat } from "fs/promises";
 import { dirname, join } from "path";
 import { pathToFileURL } from "url";
-import { registerDocsDir } from "../utils/extension-docs";
+import { registerDocsDir } from "../utils/extension-support/extension-docs";
 import { logger } from "../utils/logger";
-import { refreshModules } from "../utils/module-cache";
-import { createMutex } from "../utils/mutex";
-import { makeExtID, dedupeExtID, type ExtensionKind } from "../utils/extension-id";
+import { refreshModules } from "../utils/cache/module-cache";
+import { createMutex } from "../utils/cache/mutex";
+import { makeExtID, dedupeExtID, type ExtensionKind } from "../utils/extension-support/extension-id";
 export type RegistrySource = "plugin" | "builtin";
 
 let _pluginReloadGeneration = 0;
@@ -28,7 +28,7 @@ export const getPluginRegistryReloadGeneration = (): number =>
  * { dir: pluginsDir() }
  * { dir: builtinsDir, source: "builtin" }
  */
-export interface RegistryDir {
+interface RegistryDir {
   dir: string;
   source?: RegistrySource;
 }
@@ -36,7 +36,7 @@ export interface RegistryDir {
 /**
  * Metadata passed to `onLoad` after an extension is successfully extracted and validated.
  */
-export interface RegistryLoadMeta {
+interface RegistryLoadMeta {
   /** Absolute path to the extension's folder (or file for flat-file extensions). */
   entryPath: string;
   /** Folder or base filename, used as the extension's natural ID. */
@@ -80,7 +80,7 @@ export interface RegistryLoadMeta {
  *   debugTag: "slots",
  * });
  */
-export interface RegistryOptions<T> {
+interface RegistryOptions<T> {
   /**
    * One or more directories to scan. Can be a static array or a function
    * evaluated on each `init()` call (use a function when the path depends
@@ -120,7 +120,7 @@ export interface RegistryOptions<T> {
   debugTag: string;
 }
 
-const INDEX_FILES = ["index.js", "index.ts", "index.mjs", "index.cjs"];
+export const INDEX_FILES = ["index.js", "index.ts", "index.mjs", "index.cjs"];
 const FLAT_FILE_EXT = /\.(js|ts|mjs|cjs)$/;
 
 async function resolveEntryPath(

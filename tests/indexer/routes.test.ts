@@ -10,8 +10,9 @@ process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
 import router from "../../src/server/routes/indexer";
-import { clearAll, getStats } from "../../src/server/indexer/store";
-import { setInstanceSettings } from "../../src/server/utils/server-settings";
+import { clearAll } from "../../src/server/indexer/store/admin";
+import { getStats } from "../../src/server/indexer/store/stats";
+import { setInstanceSettings } from "../../src/server/utils/settings/server-settings";
 
 const get = (path: string): Promise<Response> =>
   Promise.resolve(router.request(`http://localhost${path}`));
@@ -50,10 +51,10 @@ describe("indexer routes", () => {
     else delete process.env.DEGOOG_PUBLIC_INSTANCE;
   });
 
-  test("stats returns 404 when indexer disabled", async () => {
+  test("stats answers 401 before revealing the indexer is disabled", async () => {
     await setInstanceSettings({ degoogIndexerEnabled: "false" });
     const res = await get("/api/indexer/stats");
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(401);
   });
 
   test("removed federation routes no longer exist", async () => {
@@ -72,10 +73,10 @@ describe("indexer routes", () => {
     expect(del.status).toBe(401);
   });
 
-  test("clear requires the indexer to be enabled", async () => {
+  test("clear answers 401 before revealing the indexer is disabled", async () => {
     await setInstanceSettings({ degoogIndexerEnabled: "false" });
     const res = await post("/api/indexer/clear", { confirm: true });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(401);
   });
 
   test("export requires admin auth on a public instance", async () => {

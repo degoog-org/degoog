@@ -1,6 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { buildExtensionMeta } from "../../src/server/extensions/extension-meta";
-import { ExtensionStoreType, type SettingField } from "../../src/server/types";
+import { ExtensionStoreType } from "../../src/server/types/extension";
+import type { SettingField } from "../../src/shared/setting-field";
 
 describe("buildExtensionMeta", () => {
   const schema: SettingField[] = [

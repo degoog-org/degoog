@@ -11,8 +11,8 @@ import {
 } from "../shared/ext-card";
 import { extToggleHandler } from "../shared/ext-toggle";
 import { openModal } from "../../modules/modals/settings-modal/modal";
-import { renderMdInline } from "../../utils/md";
-import type { ExtensionMeta } from "../../types";
+import { renderMdInline } from "../../utils/dom/md";
+import type { ExtensionMeta } from "../../types/extension";
 
 export const TransportCard = ({
   transport,

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { existsSync, mkdirSync, statSync } from "fs";
+import { existsSync, mkdirSync, rmSync, statSync } from "fs";
 import { tmpdir } from "os";
 import { dirname, join } from "path";
 
@@ -10,15 +10,12 @@ process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 
 import { Database } from "bun:sqlite";
-import {
-  clearAll,
-  getStats,
-  queryIndex,
-  recordResults,
-  wipeStatsCache,
-} from "../../src/server/indexer/store";
-import { flushQueue } from "../../src/server/indexer/queue";
-import { setInstanceSettings } from "../../src/server/utils/server-settings";
+import { clearAll } from "../../src/server/indexer/store/admin";
+import { queryIndex } from "../../src/server/indexer/store/query";
+import { recordResults } from "../../src/server/indexer/store/record";
+import { getStats, wipeStatsCache } from "../../src/server/indexer/store/stats";
+import { flushQueue } from "../../src/server/indexer/queue/queue";
+import { setInstanceSettings } from "../../src/server/utils/settings/server-settings";
 import { buildSqliteExportFile, exportStream } from "../../src/server/indexer/export/builder";
 import { getAdapter } from "../../src/server/indexer/db/factory";
 import { indexerDbForType } from "../../src/server/utils/paths";
@@ -33,7 +30,7 @@ import {
   finishImportSession,
   removeImportSession,
 } from "../../src/server/indexer/transfer/sessions";
-import type { SearchResult } from "../../src/server/types";
+import type { SearchResult } from "../../src/shared/search-types";
 
 const TYPE = "web";
 
@@ -135,8 +132,8 @@ describe("export holds the wal fold-back", () => {
 
     const stale = adapter.holdExport(TYPE);
     const holds = (adapter as unknown as {
-      _holds: Map<string, { type: string; since: number }>;
-    })._holds;
+      _holds: { _holds: Map<string, { type: string; since: number }> };
+    })._holds._holds;
     const entry = holds.get(stale);
     expect(entry).toBeDefined();
     if (entry) entry.since = Date.now() - 31 * 60_000;
@@ -219,13 +216,24 @@ describe("export stream lifecycle", () => {
     expect(ends).toBe(1);
   });
 
+  test("the built export leaves no wal or shm sidecars and stays readable", async () => {
+    await seed();
+    const path = await buildSqliteExportFile(TYPE);
+    expect(existsSync(`${path}-wal`)).toBe(false);
+    expect(existsSync(`${path}-shm`)).toBe(false);
+    const db = new Database(path, { readonly: true });
+    const { n } = db.prepare("SELECT COUNT(*) AS n FROM query_hits").get() as { n: number };
+    db.close();
+    expect(n).toBeGreaterThan(0);
+  });
+
   test("reading keeps a long download's hold alive", async () => {
     await seed();
     const adapter = getAdapter();
     const hold = adapter.holdExport(TYPE);
     const holds = (adapter as unknown as {
-      _holds: Map<string, { type: string; since: number }>;
-    })._holds;
+      _holds: { _holds: Map<string, { type: string; since: number }> };
+    })._holds._holds;
 
     const entry = holds.get(hold);
     if (entry) entry.since = Date.now() - 31 * 60_000;
@@ -347,6 +355,29 @@ describe("indexer chunked transfer", () => {
     removeImportSession(id);
   });
 
+  test("an old wal-flagged export without its sidecars still imports", async () => {
+    await clearAll();
+    await recordResults("walcheck", TYPE, [mk(20), mk(21)]);
+    await flushQueue();
+
+    const path = await buildSqliteExportFile(TYPE);
+    const legacy = new Database(path);
+    legacy.exec("PRAGMA journal_mode = WAL");
+    legacy.close(true);
+    rmSync(`${path}-wal`, { force: true });
+    rmSync(`${path}-shm`, { force: true });
+
+    await clearAll();
+    await importFromFile(path, TYPE);
+    expect(existsSync(`${path}-wal`)).toBe(false);
+    expect(existsSync(`${path}-shm`)).toBe(false);
+
+    const dst = new Database(join(SHARED, `index-${TYPE}.db`), { readonly: true });
+    const { n } = dst.prepare("SELECT COUNT(*) AS n FROM query_hits").get() as { n: number };
+    dst.close();
+    expect(n).toBe(2);
+  });
+
   test("import preserves real ranking instead of flattening to 9999", async () => {
     await clearAll();
     await recordResults("rankcheck", TYPE, [mk(10), mk(11), mk(12)]);
@@ -367,6 +398,8 @@ describe("indexer chunked transfer", () => {
     await appendImportChunk(id, bytes.buffer);
     const finished = await finishImportSession(id);
     await importFromFile(finished as string, TYPE);
+    expect(existsSync(`${finished}-wal`)).toBe(false);
+    expect(existsSync(`${finished}-shm`)).toBe(false);
     removeImportSession(id);
 
     const dst = new Database(join(SHARED, `index-${TYPE}.db`), { readonly: true });

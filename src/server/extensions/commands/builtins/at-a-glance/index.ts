@@ -1,26 +1,25 @@
 import { renderGlanceBox } from "./render";
 import * as cheerio from "cheerio";
 import {
-  SlotPanelPosition,
-  TranslateFunction,
   type PluginContext,
-  type SettingField,
-  type ScoredResult,
   type SlotPlugin,
-} from "../../../../types";
+  TranslateFunction,
+} from "../../../../types/extension";
+import { type ScoredResult, SlotPanelPosition } from "../../../../../shared/search-types";
+import type { SettingField } from "../../../../../shared/setting-field";
 import {
   asString,
   getSettings,
   isDisabled,
-} from "../../../../utils/plugin-settings";
-import { useCache, type AsyncTtlCache } from "../../../../utils/cache";
+} from "../../../../utils/settings/plugin-settings";
+import { useCache, type AsyncTtlCache } from "../../../../utils/cache/cache";
 import {
   looksLikeProse,
   stripSnippetPrefix,
 } from "../../../../utils/text";
-import { getRandomUserAgent } from "../../../../utils/user-agents";
+import { getRandomUserAgent } from "../../../../utils/net/user-agents";
 import { logger } from "../../../../utils/logger";
-import { isSafeHost } from "../../../../utils/ssrf";
+import { fetchWithSafeRedirects } from "../../../../utils/security/safe-redirects";
 
 const WIKIPEDIA_SETTINGS_ID = "wikipedia-slot";
 const WIKIPEDIA_HOSTNAME = "wikipedia.org";
@@ -155,15 +154,29 @@ const _extractCacheKey = (
   return `${url}\x1e${excerptMode}\x1e${maxLength}\x1e${maxParagraphs}\x1e${termsKey}`;
 };
 
-const _isFetchableUrl = async (url: string): Promise<boolean> => {
-  let parsed: URL;
+const EXTRACT_MAX_BYTES = 5 * 1024 * 1024;
+
+const _readHtmlCapped = async (res: Response): Promise<string> => {
+  const reader = res.body?.getReader();
+  if (!reader) return "";
+  const decoder = new TextDecoder();
+  let html = "";
+  let total = 0;
   try {
-    parsed = new URL(url);
-  } catch {
-    return false;
+    while (total < EXTRACT_MAX_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+      const room = EXTRACT_MAX_BYTES - total;
+      const chunk = value.byteLength > room ? value.subarray(0, room) : value;
+      total += chunk.byteLength;
+      html += decoder.decode(chunk, { stream: true });
+    }
+    if (total >= EXTRACT_MAX_BYTES) await reader.cancel().catch(() => {});
+  } finally {
+    reader.releaseLock?.();
   }
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
-  return await isSafeHost(parsed.hostname);
+  return html + decoder.decode();
 };
 
 const _fetchExtract = async (
@@ -185,20 +198,18 @@ const _fetchExtract = async (
   const cached = await _extractCache.get(cacheKey);
   if (cached !== null) return cached;
 
-  if (!(await _isFetchableUrl(url))) return null;
-
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetchFn(url, {
+    const res = await fetchWithSafeRedirects(fetchFn, url, {
       signal: controller.signal,
       headers: { "User-Agent": getRandomUserAgent(), Accept: "text/html" },
     });
     clearTimeout(timer);
-    if (!res.ok) return null;
+    if (!res?.ok) return null;
     const ct = res.headers.get("content-type") ?? "";
     if (!ct.includes("text/html")) return null;
-    const html = await res.text();
+    const html = await _readHtmlCapped(res);
     const extracted = _extractFromHtml(
       html,
       queryTerms,

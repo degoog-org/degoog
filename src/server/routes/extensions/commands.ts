@@ -1,0 +1,110 @@
+import { Hono } from "hono";
+import {
+  getCommandsApiResponse,
+  matchBangCommand,
+} from "../../extensions/commands/registry";
+import { getEngineSearchType } from "../../extensions/engines/catalog";
+import { searchSingleEngine } from "../../search";
+import type { SearchType, TimeFilter } from "../../types/search";
+import { getLocale } from "../../utils/hono";
+import { logger } from "../../utils/logger";
+import { isDisabled } from "../../utils/settings/plugin-settings";
+import { buildSignedProxyUrl } from "../../utils/net/proxy-sign";
+import { getClientIp } from "../../utils/net/request";
+import { applyFilter, syncVortexSignal } from "../../utils/extension-support/translation-circuit";
+
+const router = new Hono();
+
+router.get("/api/commands", async (c) => {
+  return c.json(await getCommandsApiResponse());
+});
+
+router.get("/api/command", async (c) => {
+  const q = c.req.query("q");
+  if (!q) return c.json({ error: "Missing query parameter 'q'" }, 400);
+
+  const match = matchBangCommand(q);
+  if (!match) return c.json({ error: "Unknown command" }, 404);
+
+  if (match.type === "command") {
+    if (await isDisabled(match.commandId)) {
+      return c.json({ error: "This plugin is disabled" }, 403);
+    }
+  }
+
+  const page = Math.max(
+    1,
+    Math.min(10, Math.floor(Number(c.req.query("page"))) || 1),
+  );
+  const timeFilter = (c.req.query("time") || "any") as TimeFilter;
+
+  if (match.type === "engine") {
+    if (!match.query.trim())
+      return c.json(
+        { error: "Missing search query after engine shortcut" },
+        400,
+      );
+    const requestedType = c.req.query("type")?.trim() || undefined;
+    const resolvedType =
+      (await getEngineSearchType(match.engineId, requestedType)) ?? "web";
+    const { results, timing, pages } = await searchSingleEngine(
+      match.engineId,
+      match.query,
+      page,
+      timeFilter,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      resolvedType as SearchType,
+    );
+    return c.json({
+      type: "engine",
+      engineId: match.engineId,
+      primaryType: resolvedType,
+      results: results.map((r, i) => ({
+        ...r,
+        score: Math.max(10 - i, 1),
+        sources: [r.source],
+      })),
+      query: match.query,
+      totalTime: timing.time,
+      engineTimings: [timing],
+      relatedSearches: [],
+      totalPages: pages,
+    });
+  }
+
+  const clientIp = getClientIp(c);
+
+  const t0 = performance.now();
+
+  const language = getLocale(c);
+
+  const result = await match.command.execute(match.args, {
+    clientIp,
+    page,
+    signProxyUrl: buildSignedProxyUrl,
+  });
+  logger.debug(
+    "plugin",
+    `${match.command.trigger} executed in ${Math.round(performance.now() - t0)}ms`,
+  );
+  return c.json({
+    type: "command",
+    trigger: match.command.trigger,
+    title: result.title,
+    html: applyFilter(
+      match.command.t
+        ? syncVortexSignal(result.html, match.command.t, language)
+        : result.html,
+      `commands/${match.commandId}`,
+    ),
+    action: result.action,
+    page,
+    totalPages: result.totalPages ?? 1,
+  });
+});
+
+export default router;

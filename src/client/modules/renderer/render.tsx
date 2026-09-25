@@ -1,42 +1,30 @@
 import { clear, render } from "../../../shared/ui/tribute/dom";
 import { TransText } from "../../../shared/ui/components/primitives/trans-text";
 import { NoResults } from "../../../shared/ui/components/feedback/no-results";
-import { NoEnginesLink } from "../../utils/search/no-engines-link";
-import { PaginationWrap } from "../../utils/pagination-wrap";
+import { NoEnginesLink } from "../../utils/search/engine-stats/no-engines-link";
+import { PaginationWrap } from "../../utils/pagination/pagination-wrap";
 import { state } from "../../state";
-import type { ScoredResult } from "../../types";
-import { cleanUrl, linkHref } from "../../utils/dom";
-import { Pagination } from "../../utils/pagination";
-import { PaginationNav } from "../../utils/pagination-nav";
-import { goToPage } from "../../utils/search-actions";
-import { renderTemplate } from "../../utils/template";
-import { attachFaviconFallback } from "../../utils/favicon";
-import { faviconHostname, faviconUrl } from "../../utils/url";
-import { isImageSearchType } from "../../utils/engines";
-import { getBase } from "../../utils/base-url";
-import { DEGOOG_ENGINE_NAME } from "../../../shared/search-types";
 import {
-  destroyMediaObserver,
-  setupMediaObserver,
-  syncMediaPreviewPanel,
-} from "../media/media";
-import { renderImageGrid } from "./render-media";
+  DEGOOG_ENGINE_NAME,
+  isImageSearchType,
+  type ScoredResult,
+} from "../../../shared/search-types";
+import { cleanUrl } from "../../utils/dom/dom";
+import { linkHref, faviconHostname } from "../../../shared/utils/url";
+import { Pagination } from "../../utils/pagination/pagination";
+import { PaginationNav } from "../../utils/pagination/pagination-nav";
+import { goToPage } from "../../utils/search/actions/search-actions-page";
+import { renderTemplate } from "../../utils/dom/template";
+import { attachFaviconFallback } from "../../utils/dom/favicon";
+import { faviconUrl } from "../../utils/net/url";
+import { getBase } from "../../utils/net/base-url";
+import { syncMediaPreviewPanel } from "../media/media";
+import { destroyMediaObserver, setupMediaObserver } from "../media/media-scroll";
+import { renderImageGrid } from "./media/render-media";
 
 import { clearSlotPanels as _clearSlots } from "./render-slots";
 
 const t = window.scopedT("themes/degoog");
-
-export {
-  renderEngineStats,
-  renderSidebar,
-  renderSidebarSuggestions,
-  prependKnowledgePanels,
-} from "./render-sidebar";
-export {
-  appendSlotPanels,
-  clearSlotPanels,
-  renderSlotPanels,
-} from "./render-slots";
 
 type ResultActionsFlags = {
   authenticated?: boolean;

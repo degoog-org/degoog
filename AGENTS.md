@@ -8,9 +8,11 @@ There is no company behind this and no support desk. When something breaks there
 
 This file covers what we value. Branching and pull requests live in `CONTRIBUTING.md`, coding standards live in `.coderabbit/STANDARDS.md`, and the user and developer documentation lives at https://degoog-org.github.io/docs.
 
-## The core stays small
+## Ethos
 
-Degoog exists because searxng exists and I wanted a lighter, more modular take on it. That only holds if the core resists growing.
+First and foremost the most important things you need to take into consideration when working on the degoog core are PRIVACY and SECURITY. Whenever working on any feature you must make sure it's adhering to the various privacy best practice the project uses. Make sure nothing you build introduce leaks to client ips, SSRF, CSRF or risks of DoS.
+
+Once you have that in mind, remembert that Degoog exists because searxng exists and I wanted a lighter, more modular take on it. That only holds if the core resists growing.
 
 Before you add a feature to core, ask whether it could be an extension. Bang commands, result panels, engines, outgoing request strategies, keyboard bindings and whole HTTP routes are already extension types. If your idea fits one, it belongs in a store repo rather than `src/server`.
 

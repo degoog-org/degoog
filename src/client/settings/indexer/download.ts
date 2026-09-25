@@ -1,4 +1,4 @@
-import { getBase } from "../../utils/base-url";
+import { getBase } from "../../utils/net/base-url";
 
 const CHUNK_BYTES = 8 * 1024 * 1024;
 

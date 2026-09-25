@@ -3,5 +3,3 @@ export const SEARCH_LIST_FIELDS = [
   "domainReplaceList",
   "domainScoreList",
 ] as const;
-
-export type SearchListField = (typeof SEARCH_LIST_FIELDS)[number];

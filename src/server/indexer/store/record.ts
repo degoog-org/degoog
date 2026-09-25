@@ -1,8 +1,14 @@
-import type { ImageFilter, SearchParams, SearchResult, ScoredResult } from "../../types";
+import type { ImageFilter, SearchParams } from "../../types/search";
+import {
+  DEGOOG_ENGINE_NAME,
+  type ScoredResult,
+  type SearchResult,
+} from "../../../shared/search-types";
 import { getIndexerConfig } from "../config/load";
 import { shouldIndex } from "../filters/filters";
 import { enqueue } from "../queue/queue";
-import { DEGOOG_ENGINE_NAME, normalizeQuery } from "./mapper";
+import { toIndexRows } from "../recorders/default";
+import { normalizeQuery } from "./mapper";
 
 export type FilterContext = Pick<
   SearchParams,
@@ -69,9 +75,7 @@ const enqueueIndexable = async (
   selected: Indexable,
   filtersJson: string | null,
 ): Promise<void> => {
-  const { recorderFor } = await import("../recorders");
-  const recorder = recorderFor(engineType);
-  const rows = recorder.toRows(
+  const rows = toIndexRows(
     queryNorm,
     engineType,
     selected.items,

@@ -1,14 +1,16 @@
 import pkg from "../../../../package.json";
 import { render } from "../../../shared/ui/tribute/dom";
 import { GeneralContent } from "./general-content";
+import { WIZARD_SECTION_ID } from "./sections/wizard-section";
+import { fetchWizardDisabled } from "../../modules/wizard/server";
 import { PublicSettingsTop } from "./public-settings-top";
 import { INSTANCE_DEFAULT_VALUE, PREF_TOGGLES } from "./toggles";
 import { ENGINE_ORIGIN_DISPLAY, THEME_KEY } from "../../constants";
-import { idbDel, idbGet, idbSet } from "../../utils/db";
+import { idbDel, idbGet, idbSet } from "../../utils/storage/db";
 import { ENGINE_ORIGIN_DISPLAY_VALUES } from "../../../shared/engine-origins";
-import { resetDefaults, saveDefaults } from "../../utils/sync";
+import { resetDefaults, saveDefaults } from "../../utils/storage/sync";
 import { SYNC_KEYS } from "../../../shared/sync";
-import { applyTheme } from "../../utils/theme";
+import { applyTheme } from "../../utils/app/theme";
 import { confirmModal } from "../../modules/modals/confirm-modal/confirm";
 import { isUpdateAvailable } from "../../../shared/utils/version";
 
@@ -187,6 +189,7 @@ export async function initGeneralTab(
 ): Promise<void> {
   const container = document.getElementById("general-content");
   if (container) render(<GeneralContent />, container);
+  if (await fetchWizardDisabled()) document.getElementById(WIZARD_SECTION_ID)?.remove();
 
   await initAppearanceSettings();
   await initSyncSetting(getToken);

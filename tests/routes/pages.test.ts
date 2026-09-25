@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { initServerKey } from "../../src/server/utils/server-key";
+import { initServerKey } from "../../src/server/utils/security/server-key";
 
 let pagesRouter: {
   request: (req: Request | string) => Response | Promise<Response>;
@@ -17,7 +17,7 @@ beforeAll(async () => {
 
   await initServerKey();
   const mod = await import(
-    `../../src/server/routes/pages?pages-test=${Date.now()}`
+    `../../src/server/routes/pages/pages?pages-test=${Date.now()}`
   );
   pagesRouter = mod.default;
 });

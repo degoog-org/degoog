@@ -1,3 +1,5 @@
+import { isWebUrl } from "../engine-bridge";
+
 const MAX_REDIRECTS = 5;
 const STRIP_CROSS_ORIGIN = new Set(["cookie", "authorization"]);
 const STRIP_ON_REWRITE = new Set([
@@ -10,15 +12,6 @@ const STRIP_ON_REWRITE = new Set([
 
 export const isHttpRedirect = (status: number): boolean =>
   status >= 300 && status < 400;
-
-export const isWebUrl = (raw: string): boolean => {
-  try {
-    const { protocol } = new URL(raw);
-    return protocol === "http:" || protocol === "https:";
-  } catch {
-    return false;
-  }
-};
 
 const _origin = (raw: string): string | null => {
   try {

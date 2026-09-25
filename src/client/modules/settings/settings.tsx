@@ -2,10 +2,10 @@ import { render } from "../../../shared/ui/tribute/dom";
 import { AuthGate } from "./auth-gate";
 import { AuthMisconfigured } from "./auth-misconfigured";
 import { ErrorNotice } from "./error-notice";
-import { initTheme } from "../../utils/theme";
-import { applyDefaults } from "../../utils/sync";
-import { getBase } from "../../utils/base-url";
-import { initInstallPrompt } from "../../utils/install-prompt";
+import { initTheme } from "../../utils/app/theme";
+import { applyDefaults } from "../../utils/storage/sync";
+import { getBase } from "../../utils/net/base-url";
+import { initInstallPrompt } from "../../utils/app/install-prompt";
 import {
   initGeneralTab,
   initPublicGeneral,
@@ -25,15 +25,15 @@ import { initGlobalSearch } from "../../settings/shared/settings-search";
 import {
   getStoredToken as _getStoredToken,
   SETTINGS_TOKEN_KEY,
-} from "../../utils/settings-token";
+} from "../../utils/settings/settings-token";
 import { initSettingsWizard } from "../wizard/wizard";
 import "../modals/settings-modal/modal";
-import type { AllExtensions } from "../../types";
-import { navigateSettingsBack } from "../../utils/navigation";
+import type { AllExtensions } from "../../types/extension";
+import { navigateSettingsBack } from "../../utils/navigation/navigation";
 import {
   getActiveSettingsTab,
   getSettingsRoot,
-} from "../../utils/settings-path";
+} from "../../utils/settings/settings-path";
 
 declare global {
   interface Window {

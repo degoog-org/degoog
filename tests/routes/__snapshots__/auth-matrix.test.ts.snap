@@ -1,0 +1,268 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`what an unauthenticated caller gets from every route commands unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/command -> 400",
+  "GET /api/commands -> 200",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route compat-engines unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/compat/:layer/engines -> 401",
+  "POST /api/compat/:layer/install -> 401",
+  "POST /api/compat/:layer/uninstall -> 401",
+  "POST /api/compat/:layer/update -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route extensions unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/extensions -> 200",
+  "GET /api/extensions/:id/readme -> 401",
+  "GET /api/plugins/styles.css -> 200",
+  "POST /api/extensions/:id/options/:key -> 401",
+  "POST /api/extensions/:id/settings -> 401",
+  "POST /api/extensions/:id/upload -> 401",
+  "POST /api/extensions/transports/:name/test -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route health unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/whodis -> 200",
+  "GET /health -> 200",
+  "GET /healthz -> 200",
+  "GET /ready -> 503",
+  "GET /readyz -> 503",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route indexer unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/indexer/export -> 401",
+  "GET /api/indexer/export/chunk -> 401",
+  "GET /api/indexer/rows -> 401",
+  "GET /api/indexer/sample -> 401",
+  "GET /api/indexer/stats -> 401",
+  "GET /api/indexer/types -> 401",
+  "POST /api/indexer/clear -> 401",
+  "POST /api/indexer/export/end -> 401",
+  "POST /api/indexer/export/start -> 401",
+  "POST /api/indexer/import -> 401",
+  "POST /api/indexer/import/chunk -> 401",
+  "POST /api/indexer/import/complete -> 401",
+  "POST /api/indexer/import/start -> 401",
+  "POST /api/indexer/rows/delete -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route pages unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET / -> 200",
+  "GET /admin -> 200",
+  "GET /admin/ -> 301",
+  "GET /admin/:tab -> 302",
+  "GET /api/engines -> 200",
+  "GET /opensearch.xml -> 200",
+  "GET /robots-takeover -> 200",
+  "GET /search -> 200",
+  "GET /settings -> 200",
+  "GET /settings/ -> 301",
+  "GET /settings/:tab -> 302",
+  "GET /style/v/:token -> 200",
+  "POST /api/cache/clear -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route plugin-assets unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /plugins/:folder/* -> 404",
+  "GET /themes/:folder/* -> 404",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route plugin-routes unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "ALL /api/plugin/:pluginId/* -> 404",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route proxy unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/proxy/favicon -> 400",
+  "GET /api/proxy/image -> 400",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route rate-limit unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/rate-limit/test -> 404",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route search unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/lucky -> 400",
+  "GET /api/search -> 400",
+  "GET /api/search-tabs -> 200",
+  "GET /api/search/retry -> 400",
+  "GET /api/tab-search -> 400",
+  "POST /api/search -> 400",
+  "POST /api/search/retry -> 400",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route search-bar unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/search-bar/actions -> 200",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route search/stream unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/search/stream -> 400",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route searx-engines unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/searx/engines -> 401",
+  "POST /api/searx/install -> 401",
+  "POST /api/searx/uninstall -> 401",
+  "POST /api/searx/update -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route settings unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "DELETE /api/settings/shortcuts/source/:id -> 401",
+  "GET /api/settings/api-key -> 401",
+  "GET /api/settings/appearance -> 200",
+  "GET /api/settings/default-engines -> 401",
+  "GET /api/settings/general -> 401",
+  "GET /api/settings/honeypot/blocklist -> 401",
+  "GET /api/settings/languages -> 200",
+  "GET /api/settings/restart-state -> 401",
+  "GET /api/settings/shortcuts -> 401",
+  "GET /api/settings/shortcuts/scaffold -> 401",
+  "GET /api/settings/streaming -> 200",
+  "GET /api/settings/tab-order -> 200",
+  "POST /api/settings/api-key/regenerate -> 401",
+  "POST /api/settings/default-engines -> 401",
+  "POST /api/settings/domain-action -> 401",
+  "POST /api/settings/field -> 401",
+  "POST /api/settings/general -> 401",
+  "POST /api/settings/honeypot/ban -> 401",
+  "POST /api/settings/honeypot/unban -> 401",
+  "POST /api/settings/proxy-test -> 401",
+  "POST /api/settings/restart -> 401",
+  "POST /api/settings/shortcuts -> 401",
+  "POST /api/settings/shortcuts/source -> 401",
+  "POST /api/settings/sync -> 401",
+  "POST /api/settings/tab-order -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route settings-auth unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/settings/auth -> 200",
+  "GET /api/settings/auth/callback -> 302",
+  "POST /api/settings/auth -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route settings-backup unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/settings/export -> 401",
+  "POST /api/settings/import -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route setup unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/server-settings -> 200",
+  "PATCH /api/server-settings -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route shortcuts unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/shortcuts/modules/:file -> 404",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route slots unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "POST /api/slots -> 200",
+  "POST /api/slots/glance -> 400",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route store unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "DELETE /api/store/repos -> 401",
+  "DELETE /api/store/untracked -> 401",
+  "GET /api/store/installed -> 401",
+  "GET /api/store/items -> 401",
+  "GET /api/store/items/:repoSlug -> 401",
+  "GET /api/store/repos -> 401",
+  "GET /api/store/repos/:repoSlug/asset -> 401",
+  "GET /api/store/repos/refresh/stream -> 401",
+  "GET /api/store/repos/status -> 401",
+  "GET /api/store/screenshots/:repoSlug/:type/:item/:filename -> 401",
+  "GET /api/store/update-all/stream -> 401",
+  "POST /api/store/install -> 401",
+  "POST /api/store/repos -> 401",
+  "POST /api/store/repos/refresh -> 401",
+  "POST /api/store/uninstall -> 401",
+  "POST /api/store/update -> 401",
+  "POST /api/store/update-all -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route suggest unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/suggest -> 200",
+  "GET /api/suggest/opensearch -> 200",
+  "POST /api/suggest -> 200",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route sw unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /sw.js -> 200",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route themes unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/themes -> 200",
+  "GET /theme/style.css -> 404",
+  "POST /api/theme/active -> 401",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route uovadipasqua unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "ALL /api/uovadipasqua/:id/* -> 404",
+  "GET /api/uovadipasqua/client-storage -> 200",
+  "GET /api/uovadipasqua/match -> 200",
+  "GET /uovadipasqua/:id/:asset -> 404",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route nojs unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /nojs -> 404",
+  "GET /nojs/search -> 404",
+  "POST /nojs/search -> 404",
+]
+`;
+
+exports[`gate invariants that no snapshot update may waive plugin-owned catch-all routes are probed by GET only and carry no mutation guarantee 1`] = `
+[
+  "plugin-routes: /api/plugin/:pluginId/*",
+  "uovadipasqua: /api/uovadipasqua/:id/*",
+]
+`;

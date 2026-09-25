@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { TransportFetchOptions } from "../../../../types";
+import type { TransportFetchOptions } from "../../../../types/extension";
 import { logger } from "../../../../utils/logger";
 
 const DEFAULT_TIMEOUT_SEC = 60;

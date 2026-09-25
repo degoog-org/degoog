@@ -1,8 +1,8 @@
 import { render } from "../../../shared/ui/tribute/dom";
 import { PluginCard } from "./plugin-card";
-import type { ExtensionMeta, AllExtensions } from "../../types";
-import { getBase } from "../../utils/base-url";
-import { initDragOrder } from "../../utils/drag-order";
+import type { AllExtensions, ExtensionMeta } from "../../types/extension";
+import { getBase } from "../../utils/net/base-url";
+import { initDragOrder } from "../../utils/dom/drag-order";
 
 const _priority = (plugin: ExtensionMeta): number => {
   const v = plugin.settings["priority"];

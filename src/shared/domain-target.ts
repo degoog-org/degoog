@@ -1,4 +1,4 @@
-export enum DomainToken {
+enum DomainToken {
   URL = "{{url}}",
   HOSTNAME = "{{hostname}}",
   PATH = "{{path}}",
@@ -6,12 +6,12 @@ export enum DomainToken {
   HASH = "{{hash}}",
 }
 
-export const RULE_SEPARATOR = "->";
+const RULE_SEPARATOR = "->";
 
 const SCHEME_PATTERN = /^[a-z][a-z0-9+.-]*:\/\//i;
 const TEMPLATE_MARKERS = ["/", "?", "#", "{{"];
 
-export const isUrlTarget = (target: string): boolean =>
+const isUrlTarget = (target: string): boolean =>
   SCHEME_PATTERN.test(target) ||
   TEMPLATE_MARKERS.some((marker) => target.includes(marker));
 

@@ -1,11 +1,11 @@
 import {
-  TranslateFunction,
   type BangCommand,
   type CommandContext,
   type CommandResult,
-} from "../../../../types";
-import { getBaseUrl } from "../../../../utils/base-url";
-import { outgoingFetch } from "../../../../utils/outgoing";
+  TranslateFunction,
+} from "../../../../types/extension";
+import { getBaseUrl } from "../../../../utils/net/base-url";
+import { outgoingFetch } from "../../../../utils/net/outgoing";
 import { logger } from "../../../../utils/logger";
 import { renderDetectRoot, renderInfo, renderMessage } from "./render";
 

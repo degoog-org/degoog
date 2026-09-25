@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, mock, test } from "bun:test";
-import { ExtensionStoreType } from "../../src/server/types";
+import { ExtensionStoreType } from "../../src/server/types/extension";
 import {
   INVALIDATE_SCOPE,
   type InvalidatePayload,
-} from "../../src/server/utils/cache-valkey";
+} from "../../src/server/utils/cache/cache-valkey";
 
 const SPECS_MOD = "../../src/server/extensions/store/store-types";
 const FACTORY_MOD = "../../src/server/extensions/registry-factory";

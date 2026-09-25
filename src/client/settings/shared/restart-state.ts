@@ -1,5 +1,5 @@
-import { authHeaders } from "../../utils/request";
-import { getBase } from "../../utils/base-url";
+import { authHeaders } from "../../utils/net/request";
+import { getBase } from "../../utils/net/base-url";
 import {
   isRestartState,
   type RestartState,

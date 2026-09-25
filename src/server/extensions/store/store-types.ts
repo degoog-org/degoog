@@ -1,4 +1,4 @@
-import { ExtensionStoreType } from "../../types";
+import { ExtensionStoreType } from "../../types/extension";
 import {
   pluginsDir,
   themesDir,
@@ -7,8 +7,8 @@ import {
   autocompleteDir,
   shortcutsDir,
 } from "../../utils/paths";
-import { getPluginSettingsIds } from "../../utils/plugin-assets";
-import { makeExtID } from "../../utils/extension-id";
+import { getPluginSettingsIds } from "../../utils/extension-support/plugin-assets";
+import { makeExtID } from "../../utils/extension-support/extension-id";
 import { reloadCommands } from "../commands/registry";
 import { reloadSlotPlugins } from "../slots/registry";
 import { reloadInterceptors } from "../interceptors/registry";
@@ -20,9 +20,9 @@ import {
 } from "../plugin-routes/registry";
 import { reloadMiddlewareRegistry } from "../middleware/registry";
 import { reloadThemes } from "../themes/registry";
-import { reloadEngines } from "../engines/registry";
-import { reloadTransports } from "../transports/registry";
-import { reloadAutocomplete } from "../autocomplete/registry";
+import { initEngines } from "../engines/loader";
+import { initTransports } from "../transports/registry";
+import { initAutocomplete } from "../autocomplete/registry";
 import { reloadShortcutsRegistry } from "../shortcuts/registry";
 
 type ManifestKey =
@@ -73,19 +73,19 @@ export const STORE_TYPE_SPECS: Record<ExtensionStoreType, StoreTypeSpec> = {
   [ExtensionStoreType.Engine]: {
     destDir: enginesDir,
     manifestKey: "engines",
-    reload: reloadEngines,
+    reload: initEngines,
     settingsIds: (id) => [makeExtID(id, "engine")],
   },
   [ExtensionStoreType.Transport]: {
     destDir: transportsDir,
     manifestKey: "transports",
-    reload: reloadTransports,
+    reload: initTransports,
     settingsIds: (id) => [makeExtID(id, "transport")],
   },
   [ExtensionStoreType.Autocomplete]: {
     destDir: autocompleteDir,
     manifestKey: "autocomplete",
-    reload: reloadAutocomplete,
+    reload: initAutocomplete,
     settingsIds: (id) => [makeExtID(id, "autocomplete")],
   },
   [ExtensionStoreType.Shortcut]: {

@@ -1,4 +1,4 @@
-import { openOverlay, closeOverlay, discardOverlay } from "../../utils/overlay-history";
+import { openOverlay, closeOverlay, discardOverlay } from "../../utils/navigation/overlay-history";
 
 export const LIGHTBOX_OVERLAY = "lightbox";
 
