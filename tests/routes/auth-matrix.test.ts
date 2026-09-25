@@ -192,7 +192,6 @@ describe("gate invariants that no snapshot update may waive", () => {
   test("every mutation route answers 401 unless it is a declared public mutation", () => {
     const ungated = rows()
       .filter((r) => MUTATION_METHODS.has(r.method))
-      .filter((r) => !r.path.startsWith("/api/indexer/"))
       .filter((r) => !PUBLIC_MUTATIONS.has(`${r.method} ${r.path}`))
       .filter((r) => r.status !== "401")
       .map((r) => `${r.module}: ${r.method} ${r.path} -> ${r.status}`);
@@ -207,10 +206,10 @@ describe("gate invariants that no snapshot update may waive", () => {
     expect(open).toEqual([]);
   });
 
-  test("a disabled indexer answers 404 before it answers 401", () => {
+  test("a disabled indexer answers 401 before it reveals that it is disabled", () => {
     const wrong = rows()
       .filter((r) => r.path.startsWith("/api/indexer/"))
-      .filter((r) => r.status !== "404")
+      .filter((r) => r.status !== "401")
       .map((r) => `${r.method} ${r.path} -> ${r.status}`);
     expect(wrong).toEqual([]);
   });

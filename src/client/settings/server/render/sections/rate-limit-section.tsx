@@ -1,5 +1,6 @@
 import { FIELDSET, FIELDSET_INNER } from "../classes";
 import { LimitGrid } from "../limit-grid";
+import { ServerLabel } from "../server-label";
 import { ServerSection } from "../server-section";
 import { ServerToggle } from "../server-toggle";
 
@@ -47,6 +48,18 @@ export const RateLimitSection = (): JSX.Element => (
             <LimitGrid fields={SUGGEST_LIMITS} />
           </fieldset>
         </div>
+        <fieldset class={FIELDSET_INNER}>
+          <p class="settings-rate-limit-defaults">{t("settings-page.server.request-body-max-desc")}</p>
+          <ServerLabel htmlFor="settings-request-body-max-kb" k="settings-page.server.request-body-max" />
+          <input
+            type="number"
+            id="settings-request-body-max-kb"
+            data-save-key="requestBodyMaxKb"
+            class="settings-rate-limit-input degoog-input"
+            min={0}
+            max={131072}
+          />
+        </fieldset>
       </fieldset>
     </div>
   </ServerSection>

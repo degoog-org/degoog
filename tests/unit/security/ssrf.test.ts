@@ -11,13 +11,19 @@ describe("ssrf isBlockedIp", () => {
       "169.254.10.10",
       "0.0.0.0",
       "100.64.0.1",
+      "192.0.0.8",
+      "192.0.2.45",
+      "198.18.0.1",
+      "198.19.255.254",
+      "198.51.100.7",
+      "203.0.113.9",
     ]) {
       expect(isBlockedIp(ip)).toBe(true);
     }
   });
 
   test("blocks IPv6 loopback, link-local, unique-local, mapped", () => {
-    for (const ip of ["::1", "::", "fe80::1", "fc00::1", "::ffff:127.0.0.1"]) {
+    for (const ip of ["::1", "::", "fe80::1", "fc00::1", "::ffff:127.0.0.1", "100::1", "::ffff:198.51.100.7"]) {
       expect(isBlockedIp(ip)).toBe(true);
     }
   });
@@ -91,7 +97,7 @@ describe("ssrf isBlockedIp", () => {
       "64:ff9b::808:808",
       "2002:0808:0808::",
       "2001:4860:4860::8888",
-      "2001:0:4136:e378:8000:63bf:3fff:fdd2",
+      "2001:0:4136:e378:8000:63bf:f7f7:f7f7",
     ]) {
       expect(isBlockedIp(ip)).toBe(false);
     }

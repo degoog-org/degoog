@@ -40,20 +40,20 @@ exports[`what an unauthenticated caller gets from every route health unauthentic
 
 exports[`what an unauthenticated caller gets from every route indexer unauthenticated responses are unchanged (nojs pinned off) 1`] = `
 [
-  "GET /api/indexer/export -> 404",
-  "GET /api/indexer/export/chunk -> 404",
-  "GET /api/indexer/rows -> 404",
-  "GET /api/indexer/sample -> 404",
-  "GET /api/indexer/stats -> 404",
-  "GET /api/indexer/types -> 404",
-  "POST /api/indexer/clear -> 404",
-  "POST /api/indexer/export/end -> 404",
-  "POST /api/indexer/export/start -> 404",
-  "POST /api/indexer/import -> 404",
-  "POST /api/indexer/import/chunk -> 404",
-  "POST /api/indexer/import/complete -> 404",
-  "POST /api/indexer/import/start -> 404",
-  "POST /api/indexer/rows/delete -> 404",
+  "GET /api/indexer/export -> 401",
+  "GET /api/indexer/export/chunk -> 401",
+  "GET /api/indexer/rows -> 401",
+  "GET /api/indexer/sample -> 401",
+  "GET /api/indexer/stats -> 401",
+  "GET /api/indexer/types -> 401",
+  "POST /api/indexer/clear -> 401",
+  "POST /api/indexer/export/end -> 401",
+  "POST /api/indexer/export/start -> 401",
+  "POST /api/indexer/import -> 401",
+  "POST /api/indexer/import/chunk -> 401",
+  "POST /api/indexer/import/complete -> 401",
+  "POST /api/indexer/import/start -> 401",
+  "POST /api/indexer/rows/delete -> 401",
 ]
 `;
 
@@ -116,6 +116,12 @@ exports[`what an unauthenticated caller gets from every route search unauthentic
 exports[`what an unauthenticated caller gets from every route search-bar unauthenticated responses are unchanged (nojs pinned off) 1`] = `
 [
   "GET /api/search-bar/actions -> 200",
+]
+`;
+
+exports[`what an unauthenticated caller gets from every route search/stream unauthenticated responses are unchanged (nojs pinned off) 1`] = `
+[
+  "GET /api/search/stream -> 400",
 ]
 `;
 
@@ -258,11 +264,5 @@ exports[`gate invariants that no snapshot update may waive plugin-owned catch-al
 [
   "plugin-routes: /api/plugin/:pluginId/*",
   "uovadipasqua: /api/uovadipasqua/:id/*",
-]
-`;
-
-exports[`what an unauthenticated caller gets from every route search/stream unauthenticated responses are unchanged (nojs pinned off) 1`] = `
-[
-  "GET /api/search/stream -> 400",
 ]
 `;

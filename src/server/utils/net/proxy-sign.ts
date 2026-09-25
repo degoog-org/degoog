@@ -1,12 +1,18 @@
 import type { ScoredResult } from "../../../shared/search-types";
 import type { AutocompleteCacheItem } from "../cache/cache";
 import { signData, verifyData } from "../security/server-key";
-import { getBasePath } from "./base-url";
+import { getBasePath, getBaseUrl } from "./base-url";
 
 const PROXY_PREFIX = "/api/proxy/";
 
+const _isOwnProxyUrl = (thumb: string): boolean => {
+  if (thumb.startsWith(`${getBasePath()}${PROXY_PREFIX}`)) return true;
+  const baseUrl = getBaseUrl();
+  return /^https?:\/\//i.test(baseUrl) && thumb.startsWith(`${baseUrl}${PROXY_PREFIX}`);
+};
+
 const _signThumb = (thumb: string | undefined): string | undefined =>
-  thumb && !thumb.includes(PROXY_PREFIX) ? buildSignedProxyUrl(thumb) : thumb;
+  thumb && !_isOwnProxyUrl(thumb) ? buildSignedProxyUrl(thumb) : thumb;
 
 export const buildSignedProxyUrl = (url: string): string => {
   const sig = signData(url);

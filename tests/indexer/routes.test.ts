@@ -51,10 +51,10 @@ describe("indexer routes", () => {
     else delete process.env.DEGOOG_PUBLIC_INSTANCE;
   });
 
-  test("stats returns 404 when indexer disabled", async () => {
+  test("stats answers 401 before revealing the indexer is disabled", async () => {
     await setInstanceSettings({ degoogIndexerEnabled: "false" });
     const res = await get("/api/indexer/stats");
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(401);
   });
 
   test("removed federation routes no longer exist", async () => {
@@ -73,10 +73,10 @@ describe("indexer routes", () => {
     expect(del.status).toBe(401);
   });
 
-  test("clear requires the indexer to be enabled", async () => {
+  test("clear answers 401 before revealing the indexer is disabled", async () => {
     await setInstanceSettings({ degoogIndexerEnabled: "false" });
     const res = await post("/api/indexer/clear", { confirm: true });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(401);
   });
 
   test("export requires admin auth on a public instance", async () => {

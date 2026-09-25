@@ -148,10 +148,8 @@ router.get("/settings/", (c) =>
 );
 router.get("/settings", async (c) => {
   const locale = getLocale(c);
-  if (isPublicInstance())
+  if (isPublicInstance() || ADMIN_PATH !== "settings")
     return c.html(await buildPage("settings-public.html", locale));
-  if (ADMIN_PATH !== "settings")
-    return c.redirect(`${BASE_URL || BASE_PATH}/${ADMIN_PATH}`, 302);
   if (await shouldServeSettingsGate(c)) {
     return c.html(await _buildSettingsGatePage(locale));
   }
@@ -159,15 +157,9 @@ router.get("/settings", async (c) => {
 });
 
 router.get("/settings/:tab", async (c) => {
-  if (isPublicInstance())
+  if (isPublicInstance() || ADMIN_PATH !== "settings")
     return c.redirect(`${BASE_URL || BASE_PATH}/settings`, 302);
   const tab = c.req.param("tab");
-  if (ADMIN_PATH !== "settings") {
-    const dest = (SETTINGS_TABS as readonly string[]).includes(tab)
-      ? `${BASE_URL || BASE_PATH}/${ADMIN_PATH}/${tab}`
-      : `${BASE_URL || BASE_PATH}/${ADMIN_PATH}`;
-    return c.redirect(dest, 302);
-  }
   if (!(SETTINGS_TABS as readonly string[]).includes(tab)) {
     return c.redirect(`${BASE_URL || BASE_PATH}/settings`, 302);
   }
@@ -187,7 +179,7 @@ for (const ap of _adminPaths) {
 
   router.get(`/${ap}`, async (c) => {
     if (isPublicInstance() && !isPasswordRequired())
-      return c.text("Not Found", 404);
+      return c.notFound();
     const locale = getLocale(c);
     if (await shouldServeSettingsGate(c)) {
       return c.html(await _buildSettingsGatePage(locale));
@@ -197,7 +189,7 @@ for (const ap of _adminPaths) {
 
   router.get(`/${ap}/:tab`, async (c) => {
     if (isPublicInstance() && !isPasswordRequired())
-      return c.text("Not Found", 404);
+      return c.notFound();
     const tab = c.req.param("tab");
     if (!(SETTINGS_TABS as readonly string[]).includes(tab)) {
       return c.redirect(`${BASE_URL || BASE_PATH}/${ap}`, 302);

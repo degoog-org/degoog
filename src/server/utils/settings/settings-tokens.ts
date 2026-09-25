@@ -124,7 +124,8 @@ export const checkAuthRate = (
   const now = Date.now();
   const cutoff = now - AUTH_RATE_WINDOW_MS;
   const attempts = (_authAttempts.get(ip) ?? []).filter((t) => t >= cutoff);
-  _authAttempts.set(ip, attempts);
+  if (attempts.length === 0) _authAttempts.delete(ip);
+  else _authAttempts.set(ip, attempts);
   if (attempts.length >= AUTH_RATE_MAX_FAILURES) {
     const retryAfter = Math.ceil(
       (attempts[0] + AUTH_RATE_WINDOW_MS - now) / 1000,
@@ -140,4 +141,11 @@ export const recordAuthFailure = (ip: string): void => {
   const attempts = (_authAttempts.get(ip) ?? []).filter((t) => t >= cutoff);
   attempts.push(now);
   _authAttempts.set(ip, attempts);
+};
+
+export const forgiveAuthAttempt = (ip: string): void => {
+  const attempts = _authAttempts.get(ip);
+  if (!attempts) return;
+  attempts.pop();
+  if (attempts.length === 0) _authAttempts.delete(ip);
 };

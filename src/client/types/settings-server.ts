@@ -15,6 +15,7 @@ export type ServerSettingsData = {
   rateLimitSuggestBurstMax?: string;
   rateLimitSuggestLongWindow?: string;
   rateLimitSuggestLongMax?: string;
+  requestBodyMaxKb?: string;
   acDebounceMs?: string;
   languagesEnabled?: BoolSetting;
   languages?: string;

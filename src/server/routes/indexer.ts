@@ -63,10 +63,10 @@ const guardIndexer = async (c: Context, label: string): Promise<Response | null>
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
 
-  if (!(await isIndexerOn())) return c.json({ error: "Indexer is disabled" }, 404);
-
   const denied = await guardSettingsRoute(c, label);
   if (denied) return denied;
+
+  if (!(await isIndexerOn())) return c.json({ error: "Indexer is disabled" }, 404);
 
   return null;
 };

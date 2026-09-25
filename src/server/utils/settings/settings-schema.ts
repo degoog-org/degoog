@@ -26,6 +26,7 @@ export const SETTINGS_SCHEMA = {
   rateLimitSuggestBurstMax:     { kind: "number",  default: "30" },
   rateLimitSuggestLongWindow:   { kind: "number",  default: "3600" },
   rateLimitSuggestLongMax:      { kind: "number",  default: "200" },
+  requestBodyMaxKb:             { kind: "number",  default: "0" },
   acDebounceMs:                 { kind: "number",  default: "300" },
   languagesEnabled:             { kind: "boolean", default: false },
   languages:                    { kind: "lines",   default: "" },

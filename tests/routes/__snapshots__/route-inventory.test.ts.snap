@@ -229,6 +229,12 @@ exports[`every mounted router exposes the routes it did before search-bar route 
 ]
 `;
 
+exports[`every mounted router exposes the routes it did before search/stream route list is unchanged 1`] = `
+[
+  "GET /api/search/stream",
+]
+`;
+
 exports[`every mounted router exposes the routes it did before searx-engines route list is unchanged 1`] = `
 [
   "GET /api/searx/engines",
@@ -381,13 +387,6 @@ exports[`every mounted router exposes the routes it did before nojs route list i
 ]
 `;
 
-exports[`route shape invariants the mounted surface totals stay put 1`] = `
-{
-  "totalHandlers": 294,
-  "unique": 247,
-}
-`;
-
 exports[`the admin path is operator-defined, not hardcoded DEGOOG_SETTINGS_PATH moves the admin routes 1`] = `
 [
   "GET /not-the-default-admin-path",
@@ -396,8 +395,9 @@ exports[`the admin path is operator-defined, not hardcoded DEGOOG_SETTINGS_PATH 
 ]
 `;
 
-exports[`every mounted router exposes the routes it did before search/stream route list is unchanged 1`] = `
-[
-  "GET /api/search/stream",
-]
+exports[`route shape invariants the mounted surface totals stay put 1`] = `
+{
+  "totalHandlers": 299,
+  "unique": 247,
+}
 `;

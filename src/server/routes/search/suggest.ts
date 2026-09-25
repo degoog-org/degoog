@@ -7,6 +7,7 @@ import { checkRateLimit } from "../../utils/security/rate-limit";
 import { getClientIp } from "../../utils/net/request";
 import { getSuggestionsFromProviders } from "../../extensions/autocomplete/registry";
 import { getInstanceSettings } from "../../utils/settings/server-settings";
+import { publicBodyLimit } from "../_guards";
 
 async function _applySuggestRateLimit(c: Parameters<typeof getClientIp>[0]) {
   const settings = await getInstanceSettings();
@@ -49,7 +50,7 @@ router.get("/api/suggest", async (c) => {
   return c.json(await getSuggestionsFromProviders(query));
 });
 
-router.post("/api/suggest", async (c) => {
+router.post("/api/suggest", publicBodyLimit, async (c) => {
   const limitRes = await _applySuggestRateLimit(c);
   if (limitRes) return limitRes;
   const authRes = await guardApiKey(c, "apiKeySuggestEnabled");

@@ -2,7 +2,7 @@ import { Hono, type Context } from "hono";
 import { readObjectBody } from "../../utils/hono";
 import { randomBytes } from "node:crypto";
 import { getMiddleware } from "../../extensions/middleware/registry";
-import { asString, getSettings } from "../../utils/settings/plugin-settings";
+import { asString, getSettings, isDisabled } from "../../utils/settings/plugin-settings";
 import { getAdminPath, isPublicInstance } from "../../utils/public-instance";
 import { logger } from "../../utils/logger";
 import { getBasePath } from "../../utils/net/base-url";
@@ -10,6 +10,7 @@ import { getClientIp, isHttpsRequest } from "../../utils/net/request";
 import {
   TOKEN_TTL_MS,
   checkAuthRate,
+  forgiveAuthAttempt,
   generateSettingsToken,
   passwordMatches,
   recordAuthFailure,
@@ -142,13 +143,19 @@ function getTokenFromCookie(c: Context): string | undefined {
   return value || undefined;
 }
 
+const _isLiveToken = (token: string): boolean => {
+  const expiresAt = tokenStore.get(token);
+  return expiresAt !== undefined && Date.now() <= expiresAt;
+};
+
 export function canBalrogPass(c: Context): string | undefined {
   const fromHeader = c.req.header("x-settings-token");
-  if (fromHeader) {
+  if (!fromHeader) return getTokenFromCookie(c);
+  if (_isLiveToken(fromHeader)) {
     logger.debug("settings-auth", "token source: x-settings-token header");
     return fromHeader;
   }
-  return getTokenFromCookie(c);
+  return getTokenFromCookie(c) ?? fromHeader;
 }
 
 export async function guardSettingsRoute(
@@ -214,7 +221,9 @@ async function getSelectedMiddlewareForSettingsGate(): Promise<
   const value = asString(settings[SETTINGS_GATE_KEY]).trim();
   if (!value.startsWith("plugin:")) return null;
   const id = value.slice(7);
-  return getMiddleware(id);
+  const m = getMiddleware(id);
+  if (!m || (await isDisabled(m.settingsId ?? id))) return null;
+  return m;
 }
 
 async function isAuthRequired(): Promise<boolean> {
@@ -225,6 +234,8 @@ async function isAuthRequired(): Promise<boolean> {
 }
 
 router.get("/api/settings/auth", async (c) => {
+  if (isPublicInstance() && !isPasswordRequired())
+    return c.json({ required: true, valid: false });
   const required = await isAuthRequired();
   if (!required)
     return c.json({
@@ -239,13 +250,7 @@ router.get("/api/settings/auth", async (c) => {
 
   const m = await getSelectedMiddlewareForSettingsGate();
   if (!m) {
-    if (isPasswordRequired())
-      return c.json({
-        required: true,
-        valid: false,
-        generatedDefaultPassword: hasGeneratedDefaultSettingsPassword(),
-        dangerouslyNoPassword: false,
-      });
+    if (isPasswordRequired()) return c.json({ required: true, valid: false });
     logger.warn(
       "settings-auth",
       "settingsGate references a middleware that is not loaded; refusing to grant access",
@@ -298,24 +303,26 @@ router.post("/api/settings/auth", async (c) => {
       "Retry-After": String(rate.retryAfter),
     });
   }
+  recordAuthFailure(ip);
   const m = await getSelectedMiddlewareForSettingsGate();
   if (m) {
+    forgiveAuthAttempt(ip);
     const result = await m.handle(c.req.raw, { route: "settings-auth-post" });
     if (result instanceof Response) return result;
     return c.json({ ok: false, error: "Use the login flow" }, 400);
   }
-  if (!isPasswordRequired()) return c.json({ ok: true, token: null });
-  const body = await readObjectBody<{ password?: string }>(c);
-  if (!body) {
-    recordAuthFailure(ip);
-    return c.json({ ok: false }, 400);
+  if (!isPasswordRequired()) {
+    forgiveAuthAttempt(ip);
+    return c.json({ ok: true, token: null });
   }
+  const body = await readObjectBody<{ password?: string }>(c);
+  if (!body) return c.json({ ok: false }, 400);
   const passwords = getPasswords();
   const candidate = typeof body.password === "string" ? body.password : "";
   if (!candidate || !passwordMatches(candidate, passwords)) {
-    recordAuthFailure(ip);
     return c.json({ ok: false }, 401);
   }
+  forgiveAuthAttempt(ip);
   tokenStore.pruneExpired();
   const token = generateSettingsToken();
   tokenStore.set(token, Date.now() + TOKEN_TTL_MS);

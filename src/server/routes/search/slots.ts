@@ -13,13 +13,14 @@ import { getClientIp } from "../../utils/net/request";
 import { _applyRateLimit } from "../../utils/search";
 import { runSlotPlugins, slotContext, slotPosition, toSlotPanel } from "../../extensions/slots/run";
 import { slotShowsOn } from "../../utils/extension-support/slot-types";
+import { publicBodyLimit } from "../_guards";
 
 const router = new Hono();
 
 const _requestedType = (raw: unknown): string =>
   typeof raw === "string" && raw.trim() ? raw.trim() : DEFAULT_SEARCH_TYPE;
 
-router.post("/api/slots", async (c) => {
+router.post("/api/slots", publicBodyLimit, async (c) => {
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
   const body = await readObjectBody<{ query?: string; type?: string; results?: ScoredResult[] }>(c);
@@ -43,7 +44,7 @@ router.post("/api/slots", async (c) => {
   return c.json({ panels });
 });
 
-router.post("/api/slots/glance", async (c) => {
+router.post("/api/slots/glance", publicBodyLimit, async (c) => {
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
   const body = await readObjectBody<{ query?: string; type?: string; results?: ScoredResult[] }>(c);

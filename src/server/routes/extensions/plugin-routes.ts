@@ -3,22 +3,20 @@ import { findPluginRoute, resolvePluginFolderId } from "../../extensions/plugin-
 import { logger } from "../../utils/logger";
 import { getPluginSettingsIds } from "../../utils/extension-support/plugin-assets";
 import { isDisabled } from "../../utils/settings/plugin-settings";
+import { routeSuffix } from "../../utils/net/route-path";
 
 const router = new Hono();
 
 router.all("/api/plugin/:pluginId/*", async (c) => {
-  const pluginId = resolvePluginFolderId(c.req.param("pluginId"));
+  const requestedId = c.req.param("pluginId");
+  const pluginId = resolvePluginFolderId(requestedId);
   const settingsIds = getPluginSettingsIds(pluginId);
   for (const sid of settingsIds) {
     if (await isDisabled(sid)) {
       return c.json({ error: "This plugin is disabled" }, 403);
     }
   }
-  const pathPrefix = `/api/plugin/${pluginId}`;
-  const pathname = c.req.path;
-  const suffix = pathname.startsWith(pathPrefix)
-    ? pathname.slice(pathPrefix.length) || "/"
-    : "/";
+  const suffix = routeSuffix(c.req.path, `/api/plugin/${requestedId}`);
   const method = c.req.method.toLowerCase();
   const route = findPluginRoute(pluginId, method, suffix);
 

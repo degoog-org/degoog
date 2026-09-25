@@ -53,6 +53,7 @@ app.use(trimSlash());
 const NOJS_CSP =
   "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'";
 const NOJS_HEADER_PREFIX = `${BASE_PATH}/nojs`;
+const BASELINE_CSP = "object-src 'none'; base-uri 'none'; frame-ancestors 'self'";
 
 app.use("*", async (c, next) => {
   await next();
@@ -62,6 +63,8 @@ app.use("*", async (c, next) => {
   const path = c.req.path;
   if (path === NOJS_HEADER_PREFIX || path.startsWith(`${NOJS_HEADER_PREFIX}/`)) {
     c.res.headers.set("Content-Security-Policy", NOJS_CSP);
+  } else if (!c.res.headers.has("Content-Security-Policy")) {
+    c.res.headers.set("Content-Security-Policy", BASELINE_CSP);
   }
 });
 

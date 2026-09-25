@@ -53,6 +53,7 @@ export async function loadServerSettings(
     setVal("rate-limit-suggest-long-window", data.rateLimitSuggestLongWindow);
     setVal("rate-limit-suggest-long-max", data.rateLimitSuggestLongMax);
     setVal("ac-debounce-ms", data.acDebounceMs);
+    setVal("request-body-max-kb", data.requestBodyMaxKb === "0" ? "" : data.requestBodyMaxKb);
 
     setToggle("streaming-enabled", data.streamingEnabled);
     setToggle("infinite-scroll-enabled", data.infiniteScrollEnabled);

@@ -4,6 +4,7 @@ import { gunzipSync, inflateSync, brotliDecompressSync } from "node:zlib";
 import type { TransportFetchOptions } from "../../types/extension";
 
 const MAX_REDIRECTS = 5;
+const MAX_RESPONSE_BYTES = 64 * 1024 * 1024;
 
 type OpenSocket = (host: string, port: number) => Promise<Socket>;
 
@@ -40,12 +41,33 @@ function _buildHttpRequest(
   return lines.join("\r\n");
 }
 
-const _readAll = (sock: Socket): Promise<Buffer> =>
+const _abortError = (signal: AbortSignal): Error =>
+  signal.reason instanceof Error
+    ? signal.reason
+    : new DOMException("The operation was aborted.", "AbortError");
+
+const _readAll = (sock: Socket, signal?: AbortSignal): Promise<Buffer> =>
   new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    sock.on("data", (c: Buffer) => chunks.push(c));
-    sock.on("end", () => resolve(Buffer.concat(chunks)));
-    sock.on("error", reject);
+    let total = 0;
+    const fail = (err: Error): void => {
+      signal?.removeEventListener("abort", onAbort);
+      sock.destroy();
+      reject(err);
+    };
+    const onAbort = (): void => fail(_abortError(signal!));
+    if (signal?.aborted) return onAbort();
+    signal?.addEventListener("abort", onAbort, { once: true });
+    sock.on("data", (c: Buffer) => {
+      total += c.byteLength;
+      if (total > MAX_RESPONSE_BYTES) return fail(new Error("Response too large"));
+      chunks.push(c);
+    });
+    sock.on("end", () => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve(Buffer.concat(chunks));
+    });
+    sock.on("error", fail);
   });
 
 function _splitHeaderBody(raw: Buffer): { head: string; body: Buffer } {
@@ -95,9 +117,10 @@ function _decodeChunked(buf: Buffer): Buffer {
 function _decompress(body: Buffer, encoding: string | null): Buffer {
   if (!encoding) return body;
   const enc = encoding.toLowerCase();
-  if (enc === "gzip" || enc === "x-gzip") return gunzipSync(body);
-  if (enc === "deflate") return inflateSync(body);
-  if (enc === "br") return brotliDecompressSync(body);
+  const limits = { maxOutputLength: MAX_RESPONSE_BYTES };
+  if (enc === "gzip" || enc === "x-gzip") return gunzipSync(body, limits);
+  if (enc === "deflate") return inflateSync(body, limits);
+  if (enc === "br") return brotliDecompressSync(body, limits);
   return body;
 }
 
@@ -123,7 +146,7 @@ export async function fetchOverSocket(
       sock.write(_buildHttpRequest(method, parsed, options.headers, options.body));
       if (options.body) sock.write(options.body);
 
-      const raw = await _readAll(sock);
+      const raw = await _readAll(sock, options.signal);
       const { head, body: rawBody } = _splitHeaderBody(raw);
       const { status, statusText } = _parseStatusLine(head);
       const resHeaders = _parseHeaders(head);

@@ -10,6 +10,10 @@ const RESERVED_IPV4 = new RegExp(
     "^169\\.254\\.",
     "^172\\.(?:1[6-9]|2\\d|3[01])\\.",
     "^192\\.168\\.",
+    "^192\\.0\\.[02]\\.",
+    "^198\\.1[89]\\.",
+    "^198\\.51\\.100\\.",
+    "^203\\.0\\.113\\.",
     "^100\\.(?:6[4-9]|[7-9]\\d|1[01]\\d|12[0-7])\\.",
     "^(?:22[4-9]|2[3-5]\\d)\\.",
   ].join("|"),
@@ -75,8 +79,14 @@ const tunnelledV4s = (h: number[]): string[] => {
   return [];
 };
 
+const DISCARD_V6 = 0x0100;
+
+const isDiscardV6 = (h: number[]): boolean =>
+  h[0] === DISCARD_V6 && zeroHead(h.slice(1), 3);
+
 const isReservedV6 = (h: number[]): boolean =>
   (h[0] & 0xff00) === 0xff00 ||
+  isDiscardV6(h) ||
   (h[0] & 0xff80) === 0xfe80 ||
   (h[0] & 0xfe00) === 0xfc00 ||
   (isNat64(h) && h[2] !== 0) ||

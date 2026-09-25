@@ -27,6 +27,7 @@ import {
 import { sanePage } from "../../search/page-counter";
 import { handleRetry, handleSearch } from "../../search/handlers";
 import { logger } from "../../utils/logger";
+import { publicBodyLimit } from "../_guards";
 
 /**
  * @todo Remove this once openwebui merges my future pull request to add degoog specific search support.
@@ -69,7 +70,7 @@ export function registerSearchRoutes(router: Hono): void {
     return respond(c, result, c.req.query(SEARX_FORMAT_PARAM));
   });
 
-  router.post("/api/search", async (c) => {
+  router.post("/api/search", publicBodyLimit, async (c) => {
     const limitRes = await _applyRateLimit(c);
     if (limitRes) return limitRes;
     const authRes = await guardApiKey(c, "apiKeySearchEnabled");
@@ -143,7 +144,7 @@ export function registerSearchRoutes(router: Hono): void {
     return respond(c, result, c.req.query(SEARX_FORMAT_PARAM));
   });
 
-  router.post("/api/search/retry", async (c) => {
+  router.post("/api/search/retry", publicBodyLimit, async (c) => {
     const limitRes = await _applyRateLimit(c);
     if (limitRes) return limitRes;
     const authRes = await guardApiKey(c, "apiKeySearchEnabled");
