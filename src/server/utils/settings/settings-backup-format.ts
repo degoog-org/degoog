@@ -2,8 +2,8 @@ import {
   BACKUP_KIND,
   BACKUP_VERSION,
   MIN_BACKUP_VERSION,
-  isRecord,
 } from "../../../shared/settings-backup";
+import { isRecord } from "../../../shared/utils/is-record";
 import { SETTINGS_SCHEMA } from "./settings-schema";
 import { getInstanceSettings } from "./server-settings";
 import { readIndexerLists } from "../../indexer/config/lists";

@@ -2,7 +2,7 @@ import { readFile } from "fs/promises";
 import { aliasesFile } from "../paths";
 import { writeJsonAtomic } from "../storage/atomic-json";
 import { logger } from "../logger";
-import { isRecord } from "../../../shared/settings-backup";
+import { isRecord } from "../../../shared/utils/is-record";
 import { ReloadMode, reloadSync } from "../../extensions/store/reload-sync";
 import { ExtensionStoreType } from "../../types/extension";
 

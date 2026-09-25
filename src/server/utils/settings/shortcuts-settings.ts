@@ -1,5 +1,6 @@
 import { getSettings, setSettings, type SettingValue } from "./plugin-settings";
 import {
+  MODIFIER_KEYS,
   parseShortcutsMap,
   type ShortcutBinding,
   type ShortcutActionMeta,
@@ -10,7 +11,6 @@ interface ShortcutsSettings {
 }
 
 const SETTINGS_ID = "shortcuts";
-const MODIFIER_KEYS = ["ctrl", "meta", "alt", "shift"] as const;
 const BINDING_KEYS = new Set<string>(["key", ...MODIFIER_KEYS]);
 
 let cache: ShortcutsSettings | null = null;

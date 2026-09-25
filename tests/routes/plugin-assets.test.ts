@@ -5,7 +5,7 @@ let pluginAssetsRouter: {
 };
 
 beforeAll(async () => {
-  const mod = await import("../../src/server/routes/plugin-assets");
+  const mod = await import("../../src/server/routes/extensions/plugin-assets");
   pluginAssetsRouter = mod.default;
 });
 

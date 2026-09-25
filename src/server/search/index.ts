@@ -1,6 +1,4 @@
-import { getEngineDefaultTransport, getEngineIdByInstance, getEngineMap } from "../extensions/engines/catalog";
-import { ENGINE_TIMEOUT_MS } from "../extensions/engines/setting-fields";
-import { resolveTransport } from "../extensions/transports/registry";
+import { getEngineIdByInstance, getEngineMap } from "../extensions/engines/catalog";
 import { selectActiveEngines } from "./engine-selection";
 import {
   isCacheable,
@@ -13,13 +11,11 @@ import {
   agreedPageTotal,
   makePageCounter,
   sanePage,
-  type PageCounter,
 } from "./page-counter";
 import type { CachedEngineRun } from "../utils/cache/cache";
 import type { SearchEngine } from "../types/extension";
 import type {
   EngineConfig,
-  EngineContext,
   ImageFilter,
   SearchType,
   TimeFilter,
@@ -29,129 +25,18 @@ import {
   type EngineTiming,
   type ScoredResult,
   type SearchResponse,
-  type SearchResult,
 } from "../../shared/search-types";
 
 import {
   THREAT_LEVEL,
-  SentinelBreach,
   isSentinelBreach,
-  sentinel,
   type ThreatLevel,
 } from "../utils/security/sentinel";
-import { extractImageUrl } from "../utils/extract-image";
-import { getRandomUserAgent } from "../utils/net/user-agents";
 import { logger } from "../utils/logger";
-import { noteEngineHost } from "../extensions/engines/engine-hosts";
 import { reportEngineRun } from "../utils/extension-support/run-observers";
-import { outgoingFetch, parseOutgoingTransport } from "../utils/net/outgoing";
-import {
-  stripHtml,
-  stripCssBlocks,
-  snippetDate,
-  isPublishDate,
-} from "../utils/text";
-import { asString, getSettings } from "../utils/settings/plugin-settings";
-import { buildSignedProxyUrl } from "../utils/net/proxy-sign";
-import { cleanUrl, normalizeUrl, urlIsGif } from "./url-normalize";
-
-
-export const ENGINE_TIMEOUT_BUFFER_MS = 5000;
-export const ENGINE_TIMEOUT_MIN_MS = 10;
-export const ENGINE_TIMEOUT_MAX_MS = 10 * 60 * 1000;
-
-const clampTimeout = (ms: number): number =>
-  Math.min(Math.max(ms, ENGINE_TIMEOUT_MIN_MS), ENGINE_TIMEOUT_MAX_MS);
-
-export const getEngineTimeout = async (
-  engineSettingsId: string | undefined,
-): Promise<number> => {
-  if (!engineSettingsId) return clampTimeout(ENGINE_TIMEOUT_MS);
-  const stored = await getSettings(engineSettingsId);
-  const configured = parseInt(asString(stored.timeoutMs), 10);
-  const base =
-    Number.isFinite(configured) && configured > 0
-      ? configured
-      : ENGINE_TIMEOUT_MS;
-  let raw = asString(stored.outgoingTransport) || undefined;
-  if (!raw) raw = getEngineDefaultTransport(engineSettingsId) ?? undefined;
-  const transportName = parseOutgoingTransport(raw);
-  const transport = resolveTransport(transportName);
-  if (transport.timeoutMs && transport.timeoutMs > base) {
-    return clampTimeout(transport.timeoutMs + ENGINE_TIMEOUT_BUFFER_MS);
-  }
-  return clampTimeout(base);
-};
-
-const _readSnippet = (
-  raw: string,
-  given?: string,
-): { text: string; publishedAt?: string } => {
-  const text = stripCssBlocks(stripHtml(raw));
-  if (given && isPublishDate(given)) return { text, publishedAt: given };
-  const dated = snippetDate(text);
-  return dated
-    ? { text: dated.rest, publishedAt: dated.iso }
-    : { text };
-};
-
-const _mergeIntoMap = (
-  urlMap: Map<string, ScoredResult>,
-  results: SearchResult[],
-  multiplier = 1,
-): void => {
-  for (let i = 0; i < results.length; i++) {
-    const r = results[i];
-    const normalized = normalizeUrl(r.url);
-    const insecure = normalized.startsWith("http://");
-    const positionScore = Math.max(10 - i, 1) * multiplier;
-
-    if (urlMap.has(normalized)) {
-      const existing = urlMap.get(normalized)!;
-      existing.score += positionScore + 5;
-      if (!existing.sources.includes(r.source)) {
-        existing.sources.push(r.source);
-      }
-      const incoming = _readSnippet(r.snippet, r.publishedAt);
-      if (incoming.text.length > existing.snippet.length) {
-        existing.snippet = incoming.text;
-      }
-      if (!existing.publishedAt && incoming.publishedAt) {
-        existing.publishedAt = incoming.publishedAt;
-      }
-      if (r.thumbnail && !existing.thumbnail) {
-        existing.thumbnail = r.thumbnail;
-      }
-      if (
-        r.imageUrl &&
-        (!existing.imageUrl || (!existing.isGif && urlIsGif(r.imageUrl)))
-      ) {
-        existing.imageUrl = r.imageUrl;
-        existing.isGif = urlIsGif(r.imageUrl);
-      }
-      if (insecure) existing.insecure = true;
-    } else {
-      const fresh = _readSnippet(r.snippet, r.publishedAt);
-      urlMap.set(normalized, {
-        ...r,
-        title: stripCssBlocks(stripHtml(r.title)),
-        snippet: fresh.text,
-        publishedAt: fresh.publishedAt,
-        url: cleanUrl(r.url),
-        score: positionScore,
-        sources: [r.source],
-        insecure,
-        isGif: urlIsGif(r.imageUrl),
-      });
-    }
-  }
-};
-
-const _sortedFromMap = (urlMap: Map<string, ScoredResult>): ScoredResult[] => {
-  const scored = Array.from(urlMap.values());
-  scored.sort((a, b) => b.score - a.score);
-  return scored;
-};
+import { createSearchEngineContext } from "./engine-context";
+import { getEngineTimeout } from "./engine-timeout";
+import { scoreResults } from "./scoring";
 
 const _withTimeout = <T>(
   promise: Promise<T>,
@@ -185,28 +70,6 @@ const _classifyReject = (
   return { status: THREAT_LEVEL.NETWORK, reason: msg };
 };
 
-export const scoreResults = (
-  allResults: { results: SearchResult[]; multiplier?: number }[],
-): ScoredResult[] => {
-  const urlMap = new Map<string, ScoredResult>();
-  for (const { results, multiplier } of allResults) {
-    _mergeIntoMap(urlMap, results, multiplier ?? 1);
-  }
-  return _sortedFromMap(urlMap);
-};
-
-export const mergeNewResults = (
-  existing: ScoredResult[],
-  newResults: SearchResult[],
-): ScoredResult[] => {
-  const urlMap = new Map<string, ScoredResult>();
-  for (const r of existing) {
-    urlMap.set(normalizeUrl(r.url), { ...r, sources: [...r.sources] });
-  }
-  _mergeIntoMap(urlMap, newResults);
-  return _sortedFromMap(urlMap);
-};
-
 const resolveEngine = (engineName: string): SearchEngine | null => {
   const engineMap = getEngineMap();
   if (engineMap[engineName]) return engineMap[engineName];
@@ -214,108 +77,6 @@ const resolveEngine = (engineName: string): SearchEngine | null => {
     if (engine.name === engineName) return engine;
   }
   return null;
-};
-
-const _buildAcceptLanguage = (lang?: string): string => {
-  if (!lang || lang === "en") return "en-US,en;q=0.9";
-  return `${lang},${lang}-${lang.toUpperCase()};q=0.9,en;q=0.8`;
-};
-
-const _pickRandomUserAgentFromTextarea = (raw: string | undefined): string => {
-  if (!raw) return "";
-  const lines = raw
-    .split(/\r?\n/g)
-    .map((l) => l.trim())
-    .filter(Boolean);
-  if (lines.length === 0) return "";
-  return lines[Math.floor(Math.random() * lines.length)] ?? "";
-};
-
-const _asBool = (v: string | undefined): boolean => {
-  const normalized = (v ?? "").trim().toLowerCase();
-  return normalized === "true" || normalized === "1" || normalized === "yes";
-};
-
-interface EngineContextOptions {
-  lang?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  imageFilter?: ImageFilter;
-  signal?: AbortSignal;
-  searchType?: SearchType;
-  pageCounter?: PageCounter;
-}
-
-export const createSearchEngineContext = (
-  engineSettingsId: string | undefined,
-  options: EngineContextOptions = {},
-): EngineContext => {
-  const {
-    lang,
-    dateFrom,
-    dateTo,
-    imageFilter,
-    signal,
-    searchType,
-    pageCounter,
-  } = options;
-  const resolvedLang =
-    lang ||
-    (process.env.DEGOOG_DEFAULT_SEARCH_LANGUAGE || "")
-      .trim()
-      .split(/[-_]/)[0]
-      .toLowerCase() ||
-    undefined;
-  return {
-    fetch: async (url, init) => {
-      noteEngineHost(engineSettingsId, typeof url === "string" ? url : String(url));
-      let raw: string | undefined;
-      let customUa = "";
-      let proxyOverrideEnabled = false;
-      let proxyOverrideUrls = "";
-      if (engineSettingsId !== undefined) {
-        const settings = await getSettings(engineSettingsId);
-        raw = asString(settings.outgoingTransport) || undefined;
-        customUa = _pickRandomUserAgentFromTextarea(
-          asString(settings.customUserAgents) || undefined,
-        );
-        proxyOverrideEnabled = _asBool(asString(settings.proxyOverrideEnabled));
-        proxyOverrideUrls = asString(settings.proxyOverrideUrls);
-      }
-      if (!raw && engineSettingsId !== undefined) {
-        raw = getEngineDefaultTransport(engineSettingsId) ?? undefined;
-      }
-      const transport = parseOutgoingTransport(raw);
-      const baseInit = { ...(init ?? {}) };
-      if (signal && !baseInit.signal) baseInit.signal = signal;
-      if (!customUa)
-        return outgoingFetch(url, baseInit, transport, {
-          proxyOverrideEnabled,
-          proxyOverrideUrls,
-          engineId: engineSettingsId,
-        });
-      const headers = { ...(baseInit.headers ?? {}), "User-Agent": customUa };
-      return outgoingFetch(url, { ...baseInit, headers }, transport, {
-        proxyOverrideEnabled,
-        proxyOverrideUrls,
-        engineId: engineSettingsId,
-      });
-    },
-    lang: resolvedLang,
-    dateFrom: dateFrom || undefined,
-    dateTo: dateTo || undefined,
-    buildAcceptLanguage: () => _buildAcceptLanguage(resolvedLang),
-    userAgent: () => getRandomUserAgent(),
-    extractImageUrl: extractImageUrl as EngineContext["extractImageUrl"],
-    signProxyUrl: buildSignedProxyUrl,
-    imageFilter,
-    sentinel: (response, engineName) =>
-      sentinel(response, engineName ?? engineSettingsId ?? "engine"),
-    engineError: (status, message, opts) =>
-      new SentinelBreach(status as ThreatLevel, message, opts),
-    searchType,
-    pagination: pageCounter?.report,
-  };
 };
 
 const _keepRun = async (key: string, run: CachedEngineRun): Promise<void> => {

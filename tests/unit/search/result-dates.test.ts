@@ -4,7 +4,7 @@ import {
   snippetDate,
   stripSnippetPrefix,
 } from "../../../src/server/utils/text";
-import { scoreResults } from "../../../src/server/search";
+import { scoreResults } from "../../../src/server/search/scoring";
 import type { SearchResult } from "../../../src/shared/search-types";
 
 const BODY = "A perfectly ordinary snippet about nothing in particular.";

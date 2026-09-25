@@ -10,7 +10,7 @@ let pot: {
 
 beforeAll(async () => {
   await initServerKey();
-  pot = (await import("../../src/server/routes/teapot")).default;
+  pot = (await import("../../src/server/routes/easter-eggs/teapot")).default;
 });
 
 const pour = (path = "/teapot", init?: RequestInit) =>

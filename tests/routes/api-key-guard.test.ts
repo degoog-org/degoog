@@ -29,7 +29,7 @@ let _savedSettings: Record<string, ServerSettingValue> = {};
 beforeAll(async () => {
   await initServerKey();
   const [suggestMod, searchMod] = await Promise.all([
-    import("../../src/server/routes/suggest"),
+    import("../../src/server/routes/search/suggest"),
     import("../../src/server/routes/search"),
   ]);
   suggestRouter = suggestMod.default;

@@ -132,8 +132,8 @@ describe("export holds the wal fold-back", () => {
 
     const stale = adapter.holdExport(TYPE);
     const holds = (adapter as unknown as {
-      _holds: Map<string, { type: string; since: number }>;
-    })._holds;
+      _holds: { _holds: Map<string, { type: string; since: number }> };
+    })._holds._holds;
     const entry = holds.get(stale);
     expect(entry).toBeDefined();
     if (entry) entry.since = Date.now() - 31 * 60_000;
@@ -232,8 +232,8 @@ describe("export stream lifecycle", () => {
     const adapter = getAdapter();
     const hold = adapter.holdExport(TYPE);
     const holds = (adapter as unknown as {
-      _holds: Map<string, { type: string; since: number }>;
-    })._holds;
+      _holds: { _holds: Map<string, { type: string; since: number }> };
+    })._holds._holds;
 
     const entry = holds.get(hold);
     if (entry) entry.since = Date.now() - 31 * 60_000;

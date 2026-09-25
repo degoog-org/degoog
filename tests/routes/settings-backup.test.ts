@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import backupRouter from "../../src/server/routes/settings-backup";
+import backupRouter from "../../src/server/routes/settings/settings-backup";
 import {
   clearServerSettingsCache,
   getInstanceSettings,

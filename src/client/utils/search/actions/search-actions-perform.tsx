@@ -5,9 +5,9 @@ import { PaginationWrap } from "../../pagination/pagination-wrap";
 import { MAX_PAGE } from "../../../constants";
 import {
   closeMediaPreview,
-  destroyMediaObserver,
   MediaPreviewCloseMode,
 } from "../../../modules/media/media";
+import { destroyMediaObserver } from "../../../modules/media/media-scroll";
 import { clearSlotPanels } from "../../../modules/renderer/render-slots";
 import { renderResults } from "../../../modules/renderer/render";
 import { teardownInfinite } from "../../../modules/renderer/infinite-scroll/infinite-scroll";

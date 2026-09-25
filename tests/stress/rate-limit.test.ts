@@ -21,7 +21,7 @@ describe("routes/rate-limit", () => {
 
   test("GET /api/rate-limit/test when rate limit disabled returns 200 with rateLimitEnabled false", async () => {
     await updateInstanceSettings({ rateLimitEnabled: "false" });
-    const { default: router } = await import("../../src/server/routes/rate-limit");
+    const { default: router } = await import("../../src/server/routes/security/rate-limit");
     const res = await router.request(
       "http://localhost/api/rate-limit/test",
     );

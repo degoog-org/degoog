@@ -5,15 +5,9 @@ import {
 } from "../../../../../shared/search-types";
 import { getKnownTypes } from "../../../../indexer/store/admin";
 import { queryIndex } from "../../../../indexer/store/query";
-import { asBoolean } from "../../../../utils/settings/plugin-settings";
-import { getInstanceSettings } from "../../../../utils/settings/server-settings";
+import { isIndexerOn } from "../../../../indexer/config/load";
 
 export const DEGOOG_ENGINE_ID = "degoog-engine";
-
-const isIndexerOn = async (): Promise<boolean> => {
-  const settings = await getInstanceSettings();
-  return asBoolean(settings.degoogIndexerEnabled);
-};
 
 export const type = async (): Promise<string[]> => {
   if (!(await isIndexerOn())) return [];

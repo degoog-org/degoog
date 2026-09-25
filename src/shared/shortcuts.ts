@@ -31,7 +31,7 @@ export type ShortcutsConfig = {
 export const SHORTCUT_ACTIONS: ShortcutActionMeta[] = [
   { id: "focus-search", kind: "single", defaultBinding: { key: "/" } },
 ];
-const MODIFIER_KEYS = ["ctrl", "meta", "alt", "shift"] as const;
+export const MODIFIER_KEYS = ["ctrl", "meta", "alt", "shift"] as const;
 const BINDING_KEYS = new Set(["key", ...MODIFIER_KEYS]);
 
 const _hasModifier = (binding: ShortcutBinding): boolean =>

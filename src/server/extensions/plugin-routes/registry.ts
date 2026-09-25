@@ -4,8 +4,9 @@ import { pathToFileURL } from "url";
 import type { PluginRoute } from "../../types/extension";
 import { logger } from "../../utils/logger";
 import { pluginsDir } from "../../utils/paths";
+import { normalizePath } from "../../utils/net/route-path";
 import { bootCircuitFromPath } from "../../utils/extension-support/translation-circuit";
-import { getPluginRegistryReloadGeneration } from "../registry-factory";
+import { INDEX_FILES, getPluginRegistryReloadGeneration } from "../registry-factory";
 
 interface RouteEntry {
   pluginId: string;
@@ -15,7 +16,6 @@ interface RouteEntry {
 const _entries: RouteEntry[] = [];
 const _registeredFolders = new Set<string>();
 
-const INDEX_FILES = ["index.js", "index.ts", "index.mjs", "index.cjs"];
 
 function isPluginRoute(val: unknown): val is PluginRoute {
   if (typeof val !== "object" || val === null) return false;
@@ -27,11 +27,6 @@ function isPluginRoute(val: unknown): val is PluginRoute {
     typeof r.handler === "function"
   );
 }
-
-const normalizePath = (p: string): string => {
-  const s = p.trim().replace(/^\/+/, "").replace(/\/+$/, "") || "";
-  return s ? `/${s}` : "/";
-};
 
 const extractRoutes = (mod: Record<string, unknown>): PluginRoute[] => {
   const routes =

@@ -59,3 +59,8 @@ export const getIndexerConfig = async (): Promise<IndexerConfig> => {
   _cache = { settings: s, lists, cfg };
   return cfg;
 };
+
+export const isIndexerOn = async (): Promise<boolean> => {
+  const settings = await getInstanceSettings();
+  return asBoolean(settings.degoogIndexerEnabled);
+};

@@ -38,7 +38,7 @@ beforeAll(async () => {
       { type: "engine", installedAs: "e1" },
     ],
   }));
-  router = (await import("../../src/server/routes/extensions")).default;
+  router = (await import("../../src/server/routes/extensions/extensions")).default;
 });
 
 afterAll(() => {

@@ -1,5 +1,5 @@
 import type { Child } from "../../../../shared/ui/tribute/types";
-import { EngineStatReason } from "./engine-stat-reason";
+import { EngineStatReason } from "../../../../server/nojs/sidebar/engine-stat-reason";
 import type { EngineTiming } from "../../../../shared/search-types";
 
 const t = window.scopedT("themes/degoog");

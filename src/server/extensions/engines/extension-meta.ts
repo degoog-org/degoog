@@ -21,7 +21,8 @@ import { manifestKeys } from "./entries";
 import { translateSchema } from "../extension-meta";
 import { allEngineEntries } from "./loader";
 import { getDefaultEngineConfig, getEngineMap } from "./catalog";
-import { primaryType, resolveTypes } from "./search-types";
+import { resolveTypes } from "./search-types";
+import { primaryType } from "../../../shared/search-types";
 import {
   CUSTOM_USER_AGENTS_FIELD,
   OUTGOING_TRANSPORT_FIELD,

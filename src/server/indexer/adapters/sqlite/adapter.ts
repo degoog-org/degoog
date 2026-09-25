@@ -1,6 +1,5 @@
 import { Database, type Statement } from "bun:sqlite";
 import type { IndexerHitRow } from "../../../../shared/indexer";
-import { randomBytes } from "crypto";
 import { mkdirSync, readdirSync, statSync, unlinkSync } from "fs";
 import type { IndexRow } from "../../recorders/default";
 import type { IndexerConfig } from "../../types/config";
@@ -14,24 +13,18 @@ import {
   UPSERT_HIT,
   EXACT_SQL,
   FUZZY_SQL,
-  LIST_SELECT,
-  LIST_ORDER_BY,
-  SEARCH_WHERE,
+  LIST_SEARCH_SQL,
+  LIST_ALL_SQL,
+  COUNT_SEARCH_SQL,
+  COUNT_ALL_SQL,
 } from "./statements";
 import { EXPORT_SELECT_SQL } from "../../shared/export-select";
 import { createRowImporter, urlParams } from "./import-rows";
 import { buildFtsQuery, escapeLike } from "./fts";
 import { FUZZY_CANDIDATE_CAP } from "../../shared/terms";
 import { pruneOrphans, runSqlitePrune } from "./prune";
-
-const HITS_SCHEMA_VERSION = 1;
-const AUTO_CHECKPOINT_PAGES = 1000;
-const HOLD_MAX_MS = 30 * 60_000;
-
-interface ExportHold {
-  type: string;
-  since: number;
-}
+import { migrateHits } from "./migrate-hits";
+import { ExportHolds, setAutoCheck } from "./export-holds";
 
 export class SqliteAdapter implements IndexerAdapter {
   private readonly _dbs = new Map<string, Database>();
@@ -44,7 +37,7 @@ export class SqliteAdapter implements IndexerAdapter {
   private readonly _countAllQs = new Map<string, Statement>();
   private readonly _countSearchQs = new Map<string, Statement>();
   private readonly _sampleQs = new Map<string, Statement>();
-  private readonly _holds = new Map<string, ExportHold>();
+  private readonly _holds = new ExportHolds(this._dbs);
 
   async boot(): Promise<void> { }
 
@@ -62,11 +55,11 @@ export class SqliteAdapter implements IndexerAdapter {
     db.exec("PRAGMA journal_mode = WAL");
     db.exec("PRAGMA synchronous = NORMAL");
     db.exec("PRAGMA foreign_keys = ON");
-    if (this._isHeld(key)) this._setAutoCheck(db, 0);
+    if (this._holds.isHeld(key)) setAutoCheck(db, 0);
     try {
       db.transaction(() => {
         for (const sql of SQLITE_SCHEMA_DDL) db.exec(sql);
-        this._migrateHits(db);
+        migrateHits(db);
       })();
     } catch (err) {
       logger.error("indexer", `schema init failed for type=${key}`, err);
@@ -74,32 +67,6 @@ export class SqliteAdapter implements IndexerAdapter {
     }
     this._dbs.set(key, db);
     return db;
-  }
-
-  private _migrateHits(db: Database): void {
-    const { user_version: version } = db
-      .prepare("PRAGMA user_version")
-      .get() as { user_version: number };
-    if (version >= HITS_SCHEMA_VERSION) return;
-
-    const existing = new Set(
-      (db.prepare("PRAGMA table_info(query_hits)").all() as { name: string }[]).map(
-        (col) => col.name,
-      ),
-    );
-    const addColumn = (name: string, ddl: string): void => {
-      if (!existing.has(name)) db.exec(`ALTER TABLE query_hits ADD COLUMN ${ddl}`);
-    };
-    const needsBackfill = !existing.has("pos_sum");
-    addColumn("pos_sum", "pos_sum INTEGER NOT NULL DEFAULT 9999");
-    addColumn("sources_json", "sources_json TEXT");
-    addColumn("filters_json", "filters_json TEXT");
-    addColumn("meta_json", "meta_json TEXT");
-
-    if (needsBackfill) {
-      db.exec("UPDATE query_hits SET pos_sum = best_position * hit_count");
-    }
-    db.exec(`PRAGMA user_version = ${HITS_SCHEMA_VERSION}`);
   }
 
   private _db(type: string): Database {
@@ -136,81 +103,24 @@ export class SqliteAdapter implements IndexerAdapter {
     ]) cache.clear();
   }
 
-  private _setAutoCheck(db: Database, pages: number): void {
-    try {
-      db.exec(`PRAGMA wal_autocheckpoint = ${pages}`);
-    } catch (err) {
-      logger.warn("indexer", `could not set wal_autocheckpoint to ${pages}`, err);
-    }
-  }
-
-  private _isHeld(key: string): boolean {
-    for (const hold of this._holds.values()) if (hold.type === key) return true;
-    return false;
-  }
-
-  private _fold(key: string): void {
-    const db = this._dbs.get(key);
-    if (!db) return;
-    try {
-      db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
-    } catch (err) {
-      logger.warn("indexer", `checkpoint failed for type=${key}`, err);
-    }
-  }
-
-  private _release(id: string): void {
-    const hold = this._holds.get(id);
-    if (!hold) return;
-    this._holds.delete(id);
-    if (this._isHeld(hold.type)) return;
-    const db = this._dbs.get(hold.type);
-    if (!db) return;
-    this._setAutoCheck(db, AUTO_CHECKPOINT_PAGES);
-    this._fold(hold.type);
-  }
-
-  private _dropStaleHolds(): void {
-    const cutoff = Date.now() - HOLD_MAX_MS;
-    for (const [id, hold] of this._holds) {
-      if (hold.since > cutoff) continue;
-      logger.warn("indexer", `export hold on type=${hold.type} outlived its download`);
-      this._release(id);
-    }
-  }
-
   holdExport(type: string): string {
-    this._dropStaleHolds();
-    const key = safeSlug(type);
-    const first = !this._isHeld(key);
-    const id = randomBytes(8).toString("hex");
-    this._holds.set(id, { type: key, since: Date.now() });
-    const db = this._dbs.get(key);
-    if (db && first) {
-      this._setAutoCheck(db, 0);
-      this._fold(key);
-    }
-    return id;
+    return this._holds.hold(type);
   }
 
   touchHold(id: string): void {
-    const hold = this._holds.get(id);
-    if (hold) hold.since = Date.now();
+    this._holds.touch(id);
   }
 
   freeExport(id: string): void {
-    this._release(id);
+    this._holds.release(id);
   }
 
   async checkpoint(type: string): Promise<void> {
-    this._dropStaleHolds();
-    const key = safeSlug(type);
-    if (this._isHeld(key)) return;
-    this._fold(key);
+    this._holds.checkpoint(type);
   }
 
   async writeBatch(type: string, rows: IndexRow[], now: number, window: number): Promise<void> {
-    this._dropStaleHolds();
+    this._holds.dropStale();
     const db = this._db(type);
     let upsertUrl = this._upsertUrlStmts.get(type);
     if (!upsertUrl) {
@@ -325,9 +235,7 @@ export class SqliteAdapter implements IndexerAdapter {
       if (term) {
         let stmt = this._listSearchQs.get(type);
         if (!stmt) {
-          stmt = db.prepare(
-            `${LIST_SELECT} ${SEARCH_WHERE} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`,
-          );
+          stmt = db.prepare(LIST_SEARCH_SQL);
           this._listSearchQs.set(type, stmt);
         }
         params.$term = `%${escapeLike(term.toLowerCase())}%`;
@@ -335,9 +243,7 @@ export class SqliteAdapter implements IndexerAdapter {
       }
       let stmt = this._listAllQs.get(type);
       if (!stmt) {
-        stmt = db.prepare(
-          `${LIST_SELECT} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`,
-        );
+        stmt = db.prepare(LIST_ALL_SQL);
         this._listAllQs.set(type, stmt);
       }
       return (stmt.all(params) as IndexerHitRow[]).slice(offset);
@@ -354,18 +260,14 @@ export class SqliteAdapter implements IndexerAdapter {
       if (term) {
         let stmt = this._countSearchQs.get(type);
         if (!stmt) {
-          stmt = db.prepare(
-            `SELECT COUNT(*) AS c FROM query_hits h JOIN urls u ON u.id = h.url_id ${SEARCH_WHERE}`,
-          );
+          stmt = db.prepare(COUNT_SEARCH_SQL);
           this._countSearchQs.set(type, stmt);
         }
         return (stmt.get({ $term: `%${escapeLike(term.toLowerCase())}%` }) as { c: number }).c;
       }
       let stmt = this._countAllQs.get(type);
       if (!stmt) {
-        stmt = db.prepare(
-          "SELECT COUNT(*) AS c FROM query_hits h JOIN urls u ON u.id = h.url_id",
-        );
+        stmt = db.prepare(COUNT_ALL_SQL);
         this._countAllQs.set(type, stmt);
       }
       return (stmt.get() as { c: number }).c;
@@ -425,9 +327,7 @@ export class SqliteAdapter implements IndexerAdapter {
 
   async clearType(type: string): Promise<void> {
     const key = safeSlug(type);
-    for (const [id, hold] of this._holds) {
-      if (hold.type === key) this._holds.delete(id);
-    }
+    this._holds.dropType(key);
     const db = this._db(key);
     db.exec("DELETE FROM query_hits");
     db.exec("DELETE FROM urls");

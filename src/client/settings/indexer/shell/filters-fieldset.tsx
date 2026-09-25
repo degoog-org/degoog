@@ -1,6 +1,6 @@
 import { Desc } from "../../../../shared/ui/components/forms/desc";
 import { LabelFor } from "./label-for";
-import { FIELDSET_INNER } from "./shell-consts";
+import { FIELDSET_INNER } from "../../server/render/classes";
 import { tr } from "../i18n";
 
 const TEXT_FILTERS = ["domain-allowlist", "domain-blocklist", "word-blocklist"];

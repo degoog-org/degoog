@@ -34,55 +34,55 @@ export const resolveRealChild = (
   }
 };
 
-const _dataDir = (): string =>
+export const dataDir = (): string =>
   process.env.DEGOOG_DATA_DIR ?? join(process.cwd(), "data");
 
-export const busDir = (): string => join(_dataDir(), "bus");
+export const busDir = (): string => join(dataDir(), "bus");
 
 export const pluginsDir = (): string =>
-  process.env.DEGOOG_PLUGINS_DIR ?? join(_dataDir(), "plugins");
+  process.env.DEGOOG_PLUGINS_DIR ?? join(dataDir(), "plugins");
 
 export const enginesDir = (): string =>
-  process.env.DEGOOG_ENGINES_DIR ?? join(_dataDir(), "engines");
+  process.env.DEGOOG_ENGINES_DIR ?? join(dataDir(), "engines");
 
 export const themesDir = (): string =>
-  process.env.DEGOOG_THEMES_DIR ?? join(_dataDir(), "themes");
+  process.env.DEGOOG_THEMES_DIR ?? join(dataDir(), "themes");
 
 export const transportsDir = (): string =>
-  process.env.DEGOOG_TRANSPORTS_DIR ?? join(_dataDir(), "transports");
+  process.env.DEGOOG_TRANSPORTS_DIR ?? join(dataDir(), "transports");
 
 export const aliasesFile = (): string =>
-  process.env.DEGOOG_ALIASES_FILE ?? join(_dataDir(), "aliases.json");
+  process.env.DEGOOG_ALIASES_FILE ?? join(dataDir(), "aliases.json");
 
 export const engineHostsFile = (): string =>
-  process.env.DEGOOG_ENGINE_HOSTS_FILE ?? join(_dataDir(), "engine-hosts.json");
+  process.env.DEGOOG_ENGINE_HOSTS_FILE ?? join(dataDir(), "engine-hosts.json");
 
 export const pluginSettingsFile = (): string =>
-  process.env.DEGOOG_PLUGIN_SETTINGS_FILE ?? join(_dataDir(), "plugin-settings.json");
+  process.env.DEGOOG_PLUGIN_SETTINGS_FILE ?? join(dataDir(), "plugin-settings.json");
 
 export const defaultEnginesFile = (): string =>
-  process.env.DEGOOG_DEFAULT_ENGINES_FILE ?? join(_dataDir(), "default-engines.json");
+  process.env.DEGOOG_DEFAULT_ENGINES_FILE ?? join(dataDir(), "default-engines.json");
 
 export const settingsTokensFile = (): string =>
-  process.env.DEGOOG_SETTINGS_TOKENS_FILE ?? join(_dataDir(), "settings-tokens.json");
+  process.env.DEGOOG_SETTINGS_TOKENS_FILE ?? join(dataDir(), "settings-tokens.json");
 
 export const autocompleteDir = (): string =>
-  process.env.DEGOOG_AUTOCOMPLETE_DIR ?? join(_dataDir(), "autocomplete");
+  process.env.DEGOOG_AUTOCOMPLETE_DIR ?? join(dataDir(), "autocomplete");
 
 export const shortcutsDir = (): string =>
-  process.env.DEGOOG_SHORTCUTS_DIR ?? join(_dataDir(), "shortcuts");
+  process.env.DEGOOG_SHORTCUTS_DIR ?? join(dataDir(), "shortcuts");
 
 export const blocklistFile = (): string =>
-  process.env.DEGOOG_BLOCKLIST_FILE ?? join(_dataDir(), "blocklist.json");
+  process.env.DEGOOG_BLOCKLIST_FILE ?? join(dataDir(), "blocklist.json");
 
 export const serverSettingsFile = (): string =>
-  process.env.DEGOOG_SERVER_SETTINGS_FILE ?? join(_dataDir(), "server-settings.json");
+  process.env.DEGOOG_SERVER_SETTINGS_FILE ?? join(dataDir(), "server-settings.json");
 
 export const searchListsFile = (): string =>
-  process.env.DEGOOG_SEARCH_LISTS_FILE ?? join(_dataDir(), "search", "search-lists.json");
+  process.env.DEGOOG_SEARCH_LISTS_FILE ?? join(dataDir(), "search", "search-lists.json");
 
 export const indexerDir = (): string =>
-  process.env.DEGOOG_INDEXER_DIR ?? join(_dataDir(), "indexer");
+  process.env.DEGOOG_INDEXER_DIR ?? join(dataDir(), "indexer");
 
 export const indexerConfigFile = (): string =>
   process.env.DEGOOG_INDEXER_CONFIG_FILE ?? join(indexerDir(), "indexer-config.json");

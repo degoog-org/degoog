@@ -3,6 +3,7 @@ import { getTypeOverride } from "../../utils/settings/plugin-settings";
 import { logger } from "../../utils/logger";
 import type { EngineFilters } from "../../../shared/engine-filters";
 import type { PluginEntry } from "./entries";
+import { primaryType } from "../../../shared/search-types";
 
 const TYPE_CACHE_TTL_MS = 60_000;
 const _typeCache = new Map<string, { types: string[]; at: number }>();
@@ -45,9 +46,6 @@ export const resolveTypes = (
       .filter(Boolean);
   return baseTypes;
 };
-
-export const primaryType = (types: string[]): string =>
-  types.length > 0 ? types[0] : "web";
 
 export const resolveTabSearchType = (
   types: string[],

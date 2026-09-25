@@ -5,9 +5,9 @@ import { shortcutsDir } from "../paths";
 import { logger } from "../logger";
 import {
   MAX_SHORTCUT_SOURCE_BYTES,
-  isRecord,
   weigh,
 } from "../../../shared/settings-backup";
+import { isRecord } from "../../../shared/utils/is-record";
 import { ReloadMode, reloadSync } from "../../extensions/store/reload-sync";
 import { ExtensionStoreType } from "../../types/extension";
 

@@ -1,8 +1,6 @@
 import { Hono } from "hono";
-import {
-  scoreResults,
-  searchSingleEngine,
-} from "../../search";
+import { searchSingleEngine } from "../../search";
+import { scoreResults } from "../../search/scoring";
 import { selectActiveEngines } from "../../search/engine-selection";
 import { agreedPageTotal } from "../../search/page-counter";
 import {

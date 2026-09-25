@@ -1,4 +1,5 @@
-import { scoreResults, search, searchSingleEngine } from "./index";
+import { search, searchSingleEngine } from "./index";
+import { scoreResults } from "./scoring";
 import type { SearchParams } from "../types/search";
 import { signResultThumbnails } from "../utils/net/proxy-sign";
 import { applyDomainRules } from "./domain-rules";

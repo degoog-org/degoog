@@ -51,7 +51,7 @@ beforeAll(async () => {
       log.push("reload");
     },
   }));
-  router = (await import("../../src/server/routes/searx-engines")).default;
+  router = (await import("../../src/server/routes/extensions/searx-engines")).default;
 });
 
 afterAll(() => {

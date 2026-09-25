@@ -62,7 +62,7 @@ beforeAll(async () => {
   writeFileSync(join(tempDir, "fourget", "scraper", "wiby.php"), "<?php\nclass wiby{}\n");
 
   enable(true, false);
-  router = (await import("../../src/server/routes/compat-engines")).default;
+  router = (await import("../../src/server/routes/extensions/compat-engines")).default;
 });
 
 afterAll(() => {

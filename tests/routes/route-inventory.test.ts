@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { routeModulePath } from "../helpers/route-modules";
 
 type HonoLike = { routes?: { method: string; path: string }[] };
 
@@ -75,8 +76,8 @@ beforeAll(async () => {
 
   for (const name of MODULES) {
     const spec = ENV_SHAPED_MODULES.has(name)
-      ? `../../src/server/routes/${name}${BUST}`
-      : `../../src/server/routes/${name}`;
+      ? `../../src/server/routes/${routeModulePath(name)}${BUST}`
+      : `../../src/server/routes/${routeModulePath(name)}`;
     record(name, await import(spec));
   }
   record("nojs", await import("../../src/server/nojs/router"));
@@ -104,7 +105,7 @@ describe("the admin path is operator-defined, not hardcoded", () => {
 
   beforeAll(async () => {
     process.env.DEGOOG_SETTINGS_PATH = CUSTOM_ADMIN_PATH;
-    const mod = await import(`../../src/server/routes/pages${CUSTOM_BUST}`);
+    const mod = await import(`../../src/server/routes/pages/pages${CUSTOM_BUST}`);
     customRoutes = listRoutes(mod);
     delete process.env.DEGOOG_SETTINGS_PATH;
   });

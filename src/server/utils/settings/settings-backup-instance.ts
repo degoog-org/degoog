@@ -4,7 +4,7 @@ import {
   writeSyncedDefaults,
   type SyncedDefaults,
 } from "./synced-settings";
-import { isRecord } from "../../../shared/settings-backup";
+import { isRecord } from "../../../shared/utils/is-record";
 
 const TAB_ORDER_KEY = "engineTabsOrder";
 

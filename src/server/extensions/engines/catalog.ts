@@ -24,10 +24,10 @@ import {
   mergedSettings,
 } from "./engine-settings";
 import {
-  primaryType,
   resolveEngineTypes,
   resolveTabSearchType,
 } from "./search-types";
+import { primaryType } from "../../../shared/search-types";
 
 export const getEngineSettingsView = async (
   engineId: string,

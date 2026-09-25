@@ -1,7 +1,7 @@
 import { Desc } from "../../../../shared/ui/components/forms/desc";
 import { Toggle } from "../../../../shared/ui/components/forms/toggle";
 import { IndexerNumberField } from "./indexer-number-field";
-import { FIELDSET_INNER } from "./shell-consts";
+import { FIELDSET_INNER } from "../../server/render/classes";
 import { tr } from "../i18n";
 
 const NUMBER_FIELDS = [

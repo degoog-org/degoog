@@ -36,7 +36,7 @@ import { generateSearchNonce } from "../../utils/security/search-nonce";
 import { getInstanceSettings } from "../../utils/settings/server-settings";
 import { readShortcutsSettings } from "../../utils/settings/shortcuts-settings";
 import { getClientShortcuts } from "../../extensions/shortcuts/registry";
-import { isPasswordRequired } from "../settings-auth";
+import { isPasswordRequired } from "../settings/settings-auth";
 import { readSyncedDefaults } from "../../utils/settings/synced-settings";
 import { buildSettingsNav, buildSettingsTabSelect } from "./settings-nav";
 import { renderHtml } from "../../../shared/ui/tribute/html";

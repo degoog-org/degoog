@@ -10,6 +10,7 @@ import type {
   TextNode,
   VNode,
 } from "./types";
+import { SKIPPED_PROPS, isEventProp } from "./props";
 
 type Concrete = ElementNode | TextNode | RawNode;
 
@@ -19,11 +20,6 @@ interface Instance {
   children?: Instance[];
   handlers?: Map<string, EventListener>;
 }
-
-const SKIPPED_PROPS = new Set(["key", "static", "children"]);
-
-const _isEventProp = (name: string): boolean =>
-  name.length > 2 && name.startsWith("on") && name[2] === name[2].toUpperCase();
 
 const _eventName = (prop: string): string => prop.slice(2).toLowerCase();
 
@@ -56,7 +52,7 @@ const _applyProps = (
   for (const name of Object.keys(oldProps)) {
     if (SKIPPED_PROPS.has(name)) continue;
     if (name in newProps) continue;
-    if (_isEventProp(name)) {
+    if (isEventProp(name)) {
       const event = _eventName(name);
       const existing = handlers.get(event);
       if (existing) {
@@ -72,7 +68,7 @@ const _applyProps = (
     if (SKIPPED_PROPS.has(name)) continue;
     const value = newProps[name];
 
-    if (_isEventProp(name)) {
+    if (isEventProp(name)) {
       const event = _eventName(name);
       const existing = handlers.get(event);
       const next = typeof value === "function" ? (value as EventHandler) : null;

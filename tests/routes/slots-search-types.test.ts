@@ -52,7 +52,7 @@ beforeAll(async () => {
     ...slotsReal,
     getSlotPlugins: () => SLOTS,
   }));
-  router = (await import("../../src/server/routes/slots")).default;
+  router = (await import("../../src/server/routes/search/slots")).default;
 });
 
 afterAll(() => {

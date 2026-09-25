@@ -6,10 +6,10 @@ import type { ScoredResult } from "../../shared/search-types";
 import type { Translate } from "../types/extension";
 import { asBoolean, asString } from "../utils/settings/plugin-settings";
 import { getInstanceSettings } from "../utils/settings/server-settings";
-import { HomeFooter } from "./home-footer";
-import { HomeFooterLink } from "./home-footer-link";
-import { ImageCard } from "./image-card";
-import { ImageGrid } from "./image-grid";
+import { HomeFooter } from "./home/home-footer";
+import { HomeFooterLink } from "./home/home-footer-link";
+import { ImageCard } from "./images/image-card";
+import { ImageGrid } from "./images/image-grid";
 import {
   buildMediaContext,
   buildPaginationContext,

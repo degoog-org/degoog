@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { mergeNewResults, scoreResults } from "../../../src/server/search";
+import { scoreResults, mergeNewResults } from "../../../src/server/search/scoring";
 import type { ScoredResult, SearchResult } from "../../../src/shared/search-types";
 
 const result = (

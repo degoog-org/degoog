@@ -8,7 +8,7 @@ let suggestRouter: {
 
 beforeAll(async () => {
   await initServerKey();
-  const mod = await import("../../src/server/routes/suggest");
+  const mod = await import("../../src/server/routes/search/suggest");
   suggestRouter = mod.default;
 });
 

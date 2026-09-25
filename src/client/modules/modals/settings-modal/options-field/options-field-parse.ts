@@ -1,10 +1,8 @@
 import type { FieldOption, FieldOptionsResult } from "../../../../../shared/field-options";
-
-const _isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+import { isRecord } from "../../../../../shared/utils/is-record";
 
 const _asFieldOption = (entry: unknown): FieldOption | null => {
-  if (!_isRecord(entry) || typeof entry.value !== "string") return null;
+  if (!isRecord(entry) || typeof entry.value !== "string") return null;
   if (entry.label !== undefined && typeof entry.label !== "string") return null;
   return entry.label !== undefined
     ? { value: entry.value, label: entry.label }
@@ -14,7 +12,7 @@ const _asFieldOption = (entry: unknown): FieldOption | null => {
 export const parseFieldOptionsResponse = (
   raw: unknown,
 ): FieldOptionsResult | null => {
-  if (!_isRecord(raw) || !Array.isArray(raw.options)) return null;
+  if (!isRecord(raw) || !Array.isArray(raw.options)) return null;
   const options: FieldOption[] = [];
   for (const entry of raw.options) {
     const option = _asFieldOption(entry);

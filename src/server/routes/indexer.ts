@@ -23,9 +23,8 @@ import {
   dropImportSession,
 } from "../indexer/transfer/sessions";
 import { indexerDbForType } from "../utils/paths";
-import { getInstanceSettings } from "../utils/settings/server-settings";
-import { asBoolean } from "../utils/settings/plugin-settings";
-import { guardSettingsRoute } from "./settings-auth";
+import { isIndexerOn } from "../indexer/config/load";
+import { guardSettingsRoute } from "./settings/settings-auth";
 import { _applyRateLimit } from "../utils/search";
 import { getClientIp } from "../utils/net/request";
 import { logger } from "../utils/logger";
@@ -39,11 +38,6 @@ const MAX_CHUNK_IMPORT_BYTES = 8 * 1024 * 1024 * 1024;
 const MAX_CHUNK_BYTES = 32 * 1024 * 1024;
 
 const _exportCooldown = new Map<string, number>();
-
-const gateMaster = async (): Promise<boolean> => {
-  const settings = await getInstanceSettings();
-  return asBoolean(settings.degoogIndexerEnabled);
-};
 
 const clientKey = (c: Parameters<typeof getClientIp>[0]): string =>
   c.req.header("x-settings-token") ?? getClientIp(c) ?? "unknown";
@@ -69,7 +63,7 @@ const guardIndexer = async (c: Context, label: string): Promise<Response | null>
   const limitRes = await _applyRateLimit(c);
   if (limitRes) return limitRes;
 
-  if (!(await gateMaster())) return c.json({ error: "Indexer is disabled" }, 404);
+  if (!(await isIndexerOn())) return c.json({ error: "Indexer is disabled" }, 404);
 
   const denied = await guardSettingsRoute(c, label);
   if (denied) return denied;

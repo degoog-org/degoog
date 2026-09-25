@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "hono";
-import { canBalrogPass, gandalf } from "./settings-auth";
+import { canBalrogPass, gandalf } from "./settings/settings-auth";
 import { logger } from "../utils/logger";
 
 export const settingsAuth = (route?: string): MiddlewareHandler =>

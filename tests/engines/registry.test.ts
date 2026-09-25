@@ -1,7 +1,8 @@
 import { describe, test, expect, beforeAll } from "bun:test";
 import { getEngineMap } from "../../src/server/extensions/engines/catalog";
 import { initEngines } from "../../src/server/extensions/engines/loader";
-import { primaryType, resolveTabSearchType } from "../../src/server/extensions/engines/search-types";
+import { resolveTabSearchType } from "../../src/server/extensions/engines/search-types";
+import { primaryType } from "../../src/shared/search-types";
 
 describe("engines registry", () => {
   beforeAll(async () => {

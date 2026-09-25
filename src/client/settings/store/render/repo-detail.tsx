@@ -1,6 +1,7 @@
 import { Button } from "../../../../shared/ui/components/primitives/button";
 import { RepoImage } from "./repo-image";
-import { formatRelativeTime, normalizeRepoUrl, OFFICIAL_REPO_URL, repoImageSrc } from "./repo-url";
+import { formatRelativeTime, normalizeRepoUrl, repoImageSrc } from "./repo-url";
+import { OFFICIAL_REPO_URL } from "../../../../shared/official-repo";
 import type { RepoInfo } from "../../../types/store-tab";
 
 export interface RepoDetailProps {

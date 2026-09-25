@@ -4,7 +4,7 @@ import { logger } from "./logger";
 import { closeAllDbs } from "../indexer/db/lifecycle";
 import { stopQueue } from "../indexer/queue/queue";
 import { clearRestartPending } from "./extension-support/restart-state";
-import { envTruthy } from "../routes/settings-auth";
+import { envTruthy } from "../routes/settings/settings-auth";
 
 const RESTART_EXIT_DELAY_MS = 250;
 

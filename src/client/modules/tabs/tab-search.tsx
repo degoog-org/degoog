@@ -23,11 +23,10 @@ import {
 import { renderTemplate } from "../../utils/dom/template";
 import {
   closeMediaPreview,
-  destroyMediaObserver,
   MediaPreviewCloseMode,
-  setupMediaObserver,
   syncMediaPreviewPanel,
 } from "../media/media";
+import { destroyMediaObserver, setupMediaObserver } from "../media/media-scroll";
 import { prependKnowledgePanels, renderSidebar } from "../renderer/sidebar/render-sidebar";
 import { clearSlotPanels } from "../renderer/render-slots";
 import { buildResultContext, renderResults } from "../renderer/render";

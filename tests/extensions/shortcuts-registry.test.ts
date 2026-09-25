@@ -16,7 +16,7 @@ import {
   getShortcutModuleSource,
   initShortcutsRegistry,
 } from "../../src/server/extensions/shortcuts/registry";
-import shortcutsRouter from "../../src/server/routes/shortcuts";
+import shortcutsRouter from "../../src/server/routes/extensions/shortcuts";
 
 describe("shortcuts registry", () => {
   beforeAll(async () => {

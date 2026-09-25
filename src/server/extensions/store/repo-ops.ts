@@ -20,9 +20,8 @@ import {
   resolveTrackedBranch,
   syncBranch,
 } from "./git";
+import { OFFICIAL_REPO_URL } from "../../../shared/official-repo";
 
-const OFFICIAL_REPO_URL =
-  "https://github.com/degoog-org/official-extensions.git";
 const OLD_OFFICIAL_REPO_URL =
   "https://github.com/fccview/fccview-degoog-extensions.git";
 

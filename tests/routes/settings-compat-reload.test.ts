@@ -49,7 +49,7 @@ describe("POST /api/settings/field compatibility layer reload", () => {
       },
     }));
 
-    router = (await import("../../src/server/routes/settings")).default;
+    router = (await import("../../src/server/routes/settings/settings")).default;
   });
 
   afterAll(() => {

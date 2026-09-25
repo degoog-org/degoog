@@ -53,7 +53,7 @@ describe("POST /api/settings/field indexer queue", () => {
       stopQueue: async () => {},
     }));
 
-    router = (await import("../../src/server/routes/settings")).default;
+    router = (await import("../../src/server/routes/settings/settings")).default;
   });
 
   afterAll(() => {

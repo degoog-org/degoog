@@ -6,7 +6,7 @@ import {
   type BangMatch,
 } from "../extensions/commands/registry";
 import { getDefaultEngineConfig, getEngineSearchType } from "../extensions/engines/catalog";
-import { build404 } from "../routes/pages";
+import { build404 } from "../routes/pages/pages";
 import { handleRetry, handleSearch } from "../search/handlers";
 import { handleTabSearch } from "../search/tab-search";
 import { sanePage } from "../search/page-counter";
@@ -25,7 +25,7 @@ import { _applyRateLimit, isValidQuery } from "../utils/search";
 import { addClassWhereClass, fillById } from "./dom";
 import { nojsHome, RETRY_PARAM, type NojsQuery } from "./links";
 import { buildNojsDocument, getNojsTranslator, loadNojsPartial, loadNojsShell } from "./render";
-import { renderNojsCommand } from "./commands";
+import { renderNojsCommand } from "./commands/commands";
 import {
   buildNojsResultsPage,
   renderNojsFooter,
@@ -36,7 +36,7 @@ import {
   renderNojsTabRow,
 } from "./page-parts";
 import { isNojsCssCheckOn, isNojsEnabled } from "./settings";
-import { renderNojsKnowledgePanels, renderNojsSidebar } from "./sidebar";
+import { renderNojsKnowledgePanels, renderNojsSidebar } from "./sidebar/sidebar";
 import { renderNojsSlots } from "./slots";
 import { ENGINE_TYPE_PREFIX, WEB_TAB_ID, nojsTabType, stripTabTypePrefix } from "./tabs";
 

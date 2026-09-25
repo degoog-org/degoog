@@ -3,6 +3,7 @@ import type { ImageFilter } from "../../types/search";
 import { state } from "../../state";
 import { getBase } from "./base-url";
 import { isImageSearchType } from "../../../shared/search-types";
+import { faviconHostname } from "../../../shared/utils/url";
 
 export const imgFilterRecord = (f: ImageFilter): Record<string, string> => {
   const r: Record<string, string> = {};
@@ -27,14 +28,6 @@ export const readImgFilter = (p: URLSearchParams): ImageFilter => {
   if (layout && layout !== "any") f.layout = layout;
   if (nsfw && nsfw !== "any") f.nsfw = nsfw;
   return f;
-};
-
-export const faviconHostname = (url: string): string => {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return "";
-  }
 };
 
 export const faviconUrl = (url: string): string => {

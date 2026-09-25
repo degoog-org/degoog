@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, mock, test } from "bun:test";
 import { Hono } from "hono";
-import { build404 } from "../../src/server/routes/pages";
+import { build404 } from "../../src/server/routes/pages/pages";
 import { getLocale } from "../../src/server/utils/hono";
 
 const SERVER_SETTINGS_MOD = "../../src/server/utils/settings/server-settings";

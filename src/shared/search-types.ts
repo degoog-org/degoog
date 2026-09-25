@@ -104,3 +104,6 @@ export const slotRunsOn = (allowed: string[], type: string): boolean => {
     (allowedType) => resolveBuiltinSearchType(allowedType) === wanted,
   );
 };
+
+export const primaryType = (types: string[]): string =>
+  types.length > 0 ? types[0] : "web";

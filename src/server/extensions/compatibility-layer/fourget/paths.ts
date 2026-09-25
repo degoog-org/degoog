@@ -1,10 +1,8 @@
 import { join } from "path";
-
-const _dataDir = (): string =>
-  process.env.DEGOOG_DATA_DIR ?? join(process.cwd(), "data");
+import { dataDir } from "../../../utils/paths";
 
 const fourgetRoot = (): string =>
-  process.env.DEGOOG_FOURGET_DIR ?? join(_dataDir(), "fourget");
+  process.env.DEGOOG_FOURGET_DIR ?? join(dataDir(), "fourget");
 
 export const scrapersDir = (): string => join(fourgetRoot(), "scraper");
 

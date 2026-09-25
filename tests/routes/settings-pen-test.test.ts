@@ -8,7 +8,7 @@ type Router = {
 const CORRECT_PASSWORD = "pentest-secret-pw-77x";
 
 const importPagesRouter = (): Promise<{ default: Router }> =>
-  import(`../../src/server/routes/pages?pen-test=${Date.now()}`);
+  import(`../../src/server/routes/pages/pages?pen-test=${Date.now()}`);
 
 let pagesRouter: Router;
 let authRouter: Router;
@@ -37,8 +37,8 @@ beforeAll(async () => {
 
   const [pagesMod, authMod, settingsMod] = await Promise.all([
     importPagesRouter(),
-    import("../../src/server/routes/settings-auth"),
-    import("../../src/server/routes/settings"),
+    import("../../src/server/routes/settings/settings-auth"),
+    import("../../src/server/routes/settings/settings"),
   ]);
 
   pagesRouter = pagesMod.default;

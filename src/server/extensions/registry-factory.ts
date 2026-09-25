@@ -120,7 +120,7 @@ interface RegistryOptions<T> {
   debugTag: string;
 }
 
-const INDEX_FILES = ["index.js", "index.ts", "index.mjs", "index.cjs"];
+export const INDEX_FILES = ["index.js", "index.ts", "index.mjs", "index.cjs"];
 const FLAT_FILE_EXT = /\.(js|ts|mjs|cjs)$/;
 
 async function resolveEntryPath(

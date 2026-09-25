@@ -1,9 +1,6 @@
 import { getBase } from "../../../utils/net/base-url";
 import type { RepoInfo } from "../../../types/store-tab";
 
-export const OFFICIAL_REPO_URL =
-  "https://github.com/degoog-org/official-extensions.git";
-
 export function normalizeRepoUrl(url: string): string {
   const normUrl = (url || "").trim();
   return normUrl.endsWith(".git")

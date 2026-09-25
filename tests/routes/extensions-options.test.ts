@@ -168,7 +168,7 @@ describe("POST /api/extensions/:id/options/:key", () => {
       getSettings: async () => ({ apiKey: "stored-secret", plain: "stored" }),
     }));
 
-    router = (await import("../../src/server/routes/extensions")).default;
+    router = (await import("../../src/server/routes/extensions/extensions")).default;
   });
 
   afterAll(() => {

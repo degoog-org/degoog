@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { routeModulePath } from "../helpers/route-modules";
 import type { ServerSettingValue } from "../../src/server/utils/settings/server-settings";
 
 type HonoLike = {
@@ -112,8 +113,8 @@ beforeAll(async () => {
 
   for (const name of MODULES) {
     const spec = FRESH_MODULES.has(name)
-      ? `../../src/server/routes/${name}${BUST}`
-      : `../../src/server/routes/${name}`;
+      ? `../../src/server/routes/${routeModulePath(name)}${BUST}`
+      : `../../src/server/routes/${routeModulePath(name)}`;
     routers.set(name, (await import(spec)).default);
   }
   routers.set("nojs", (await import("../../src/server/nojs/router")).default);

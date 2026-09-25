@@ -112,17 +112,25 @@ export const FUZZY_SQL = `
   LIMIT ? OFFSET ?
 `;
 
-export const LIST_SELECT = `
+const LIST_SELECT = `
   SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen,
          (h.pos_sum * 1.0 / h.hit_count) AS score
   FROM query_hits h
   JOIN urls u ON u.id = h.url_id
 `;
 
-export const LIST_ORDER_BY = "ORDER BY h.query_norm ASC, score ASC";
+const LIST_ORDER_BY = "ORDER BY h.query_norm ASC, score ASC";
 
-export const SEARCH_WHERE = `
+const SEARCH_WHERE = `
   WHERE h.query_norm LIKE $term ESCAPE '\\'
      OR u.url LIKE $term ESCAPE '\\'
      OR u.title LIKE $term ESCAPE '\\'
 `;
+
+export const LIST_SEARCH_SQL = `${LIST_SELECT} ${SEARCH_WHERE} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`;
+
+export const LIST_ALL_SQL = `${LIST_SELECT} ${LIST_ORDER_BY} LIMIT $limit OFFSET $offset`;
+
+export const COUNT_SEARCH_SQL = `SELECT COUNT(*) AS c FROM query_hits h JOIN urls u ON u.id = h.url_id ${SEARCH_WHERE}`;
+
+export const COUNT_ALL_SQL = "SELECT COUNT(*) AS c FROM query_hits h JOIN urls u ON u.id = h.url_id";

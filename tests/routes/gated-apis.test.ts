@@ -117,12 +117,12 @@ beforeAll(async () => {
   process.env.DEGOOG_PUBLIC_INSTANCE = "true";
   const [storeMod, themesMod, extensionsMod, pagesMod, compatMod, backupMod] =
     await Promise.all([
-      import("../../src/server/routes/store"),
-      import("../../src/server/routes/themes"),
-      import("../../src/server/routes/extensions"),
-      import("../../src/server/routes/pages"),
-      import("../../src/server/routes/compat-engines"),
-      import("../../src/server/routes/settings-backup"),
+      import("../../src/server/routes/extensions/store"),
+      import("../../src/server/routes/extensions/themes"),
+      import("../../src/server/routes/extensions/extensions"),
+      import("../../src/server/routes/pages/pages"),
+      import("../../src/server/routes/extensions/compat-engines"),
+      import("../../src/server/routes/settings/settings-backup"),
     ]);
   routers = {
     store: storeMod.default,

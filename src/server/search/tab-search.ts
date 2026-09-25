@@ -1,6 +1,6 @@
 import { getEnginesForCustomType } from "../extensions/engines/catalog";
 import { getSearchResultTabById } from "../extensions/search-result-tabs/registry";
-import { createSearchEngineContext } from "./index";
+import { createSearchEngineContext } from "./engine-context";
 import type { EngineTiming, ScoredResult } from "../../shared/search-types";
 import { applyDomainRules } from "./domain-rules";
 import { signResultThumbnails } from "../utils/net/proxy-sign";

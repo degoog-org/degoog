@@ -13,11 +13,11 @@ import { logger } from "../../utils/logger";
 import { STORE_TYPE_SPECS } from "./store-types";
 import { readAuthorJson, listScreenshots } from "./item-files";
 import {
-  catalogPrimaryType,
   readEngineTypes,
   readNeedsAppRestart,
   readShortcutMeta,
 } from "./item-metadata";
+import { primaryType } from "../../../shared/search-types";
 
 export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
   const data = await readReposData();
@@ -137,7 +137,7 @@ export async function listRepoItems(repoUrl?: string): Promise<StoreItem[]> {
                 ? fileTypes
                 : ["web"];
           item.engineTypes = types;
-          item.engineType = catalogPrimaryType(types);
+          item.engineType = primaryType(types);
         }
         items.push(item);
       }

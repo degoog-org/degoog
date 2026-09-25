@@ -1,21 +1,17 @@
 import { escapeAttribute, escapeHtml } from "./escape";
 import type { Props, VNode } from "./types";
+import { SKIPPED_PROPS, isEventProp } from "./props";
 
 const VOID_TAGS = new Set([
   "area", "base", "br", "col", "embed", "hr", "img", "input",
   "link", "meta", "param", "source", "track", "wbr",
 ]);
 
-const SKIPPED_PROPS = new Set(["key", "static", "children"]);
-
-const _isEventProp = (name: string): boolean =>
-  name.length > 2 && name.startsWith("on") && name[2] === name[2].toUpperCase();
-
 const _attributes = (props: Props): string => {
   let out = "";
   for (const name of Object.keys(props)) {
     if (SKIPPED_PROPS.has(name)) continue;
-    if (_isEventProp(name)) continue;
+    if (isEventProp(name)) continue;
 
     const value = props[name];
     if (value == null || value === false) continue;

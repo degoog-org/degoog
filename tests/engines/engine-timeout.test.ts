@@ -13,7 +13,7 @@ import {
   ENGINE_TIMEOUT_MAX_MS,
   ENGINE_TIMEOUT_MIN_MS,
   getEngineTimeout,
-} from "../../src/server/search";
+} from "../../src/server/search/engine-timeout";
 
 const withTempTimeoutEnv = async <T>(fn: () => Promise<T>): Promise<T> => {
   const dir = mkdtempSync(join(tmpdir(), "degoog-engine-timeout-"));

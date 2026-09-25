@@ -12,7 +12,7 @@ let savedEnabled: string | undefined;
 beforeAll(async () => {
   savedEnabled = process.env.DEGOOG_PUBLIC_INSTANCE;
   delete process.env.DEGOOG_SETTINGS_PASSWORDS;
-  const mod = await import("../../src/server/routes/honeypot");
+  const mod = await import("../../src/server/routes/security/honeypot");
   router = mod.default;
 });
 

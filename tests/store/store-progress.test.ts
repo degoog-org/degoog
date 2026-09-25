@@ -35,7 +35,7 @@ describe("store progress streaming", () => {
     savedDanger = process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD;
     process.env.DEGOOG_DATA_DIR = tmp;
     process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD = "true";
-    storeRouter = (await import("../../src/server/routes/store")).default;
+    storeRouter = (await import("../../src/server/routes/extensions/store")).default;
   });
 
   afterAll(async () => {
@@ -107,7 +107,7 @@ describe("store progress streaming auth (CSRF)", () => {
     savedPasswords = process.env.DEGOOG_SETTINGS_PASSWORDS;
     process.env.DEGOOG_DATA_DIR = tmp;
     process.env.DEGOOG_SETTINGS_PASSWORDS = "testpw";
-    storeRouter = (await import("../../src/server/routes/store")).default;
+    storeRouter = (await import("../../src/server/routes/extensions/store")).default;
     const tokens = await import("../../src/server/utils/settings/settings-tokens");
     tokenStore = tokens.tokenStore;
     validToken = tokens.generateSettingsToken();

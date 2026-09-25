@@ -1,7 +1,5 @@
 import type { CompatCatalogItem, CompatRuntimeNeed } from "../../../../shared/compat-layers";
-
-const _isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+import { isRecord } from "../../../../shared/utils/is-record";
 
 const _strings = (raw: unknown): string[] =>
   Array.isArray(raw)
@@ -9,7 +7,7 @@ const _strings = (raw: unknown): string[] =>
     : [];
 
 const _asRuntimeNeed = (raw: unknown): CompatRuntimeNeed | null => {
-  if (!_isRecord(raw)) return null;
+  if (!isRecord(raw)) return null;
   if (typeof raw.module !== "string" || typeof raw.package !== "string") return null;
   return { module: raw.module, package: raw.package, missing: raw.missing === true };
 };
@@ -31,7 +29,7 @@ const _asRuntimeNeeds = (raw: unknown): CompatRuntimeNeed[] | null => {
 };
 
 const _asCatalogItem = (raw: unknown): CompatCatalogItem | null => {
-  if (!_isRecord(raw)) return null;
+  if (!isRecord(raw)) return null;
   if (typeof raw.code !== "string" || typeof raw.name !== "string") return null;
   if (typeof raw.installed !== "boolean") return null;
   const types = _stringList(raw.types);
@@ -53,7 +51,7 @@ const _asCatalogItem = (raw: unknown): CompatCatalogItem | null => {
 };
 
 export const parseCompatCatalogue = (raw: unknown): CompatCatalogItem[] => {
-  if (!_isRecord(raw) || !Array.isArray(raw.engines)) return [];
+  if (!isRecord(raw) || !Array.isArray(raw.engines)) return [];
   const items: CompatCatalogItem[] = [];
   for (const entry of raw.engines) {
     const item = _asCatalogItem(entry);
@@ -63,12 +61,12 @@ export const parseCompatCatalogue = (raw: unknown): CompatCatalogItem[] => {
 };
 
 export const compatErrorText = (raw: unknown, fallback: string): string =>
-  _isRecord(raw) && typeof raw.error === "string" && raw.error.trim()
+  isRecord(raw) && typeof raw.error === "string" && raw.error.trim()
     ? raw.error
     : fallback;
 
 export const compatFlagOn = (raw: unknown, key: string): boolean => {
-  if (!_isRecord(raw)) return false;
+  if (!isRecord(raw)) return false;
   const value = raw[key];
   return value === true || value === "true";
 };

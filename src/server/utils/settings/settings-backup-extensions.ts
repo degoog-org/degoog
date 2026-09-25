@@ -16,7 +16,7 @@ import { clearShortcutsSettingsCache } from "./shortcuts-settings";
 import { defaultEnginesFile } from "../paths";
 import { writeJsonAtomic } from "../storage/atomic-json";
 import { logger } from "../logger";
-import { isRecord } from "../../../shared/settings-backup";
+import { isRecord } from "../../../shared/utils/is-record";
 
 const TAG = "settings-backup";
 const MARKER_PREFIX = "__";

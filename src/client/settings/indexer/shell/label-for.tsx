@@ -1,4 +1,4 @@
-import { LABEL } from "./shell-consts";
+import { LABEL } from "../../server/render/classes";
 import { tr } from "../i18n";
 
 export const LabelFor = ({ id, k }: { id: string; k: string }): JSX.Element => (

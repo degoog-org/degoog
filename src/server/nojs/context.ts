@@ -6,25 +6,9 @@ import { DEFAULT_LANGUAGES } from "../utils/search";
 import { logger } from "../utils/logger";
 import { searchHref, type NojsQuery } from "./links";
 import { nojsTabType } from "./tabs";
+import { cleanHostname, faviconHostname, linkHref } from "../../shared/utils/url";
 
 const BASE_PATH = getBasePath();
-
-const ALLOWED_URL_SCHEMES = new Set([
-  "http",
-  "https",
-  "ftp",
-  "magnet",
-  "mailto",
-  "tel",
-]);
-
-const safeHref = (url: string | null | undefined): string => {
-  if (!url) return "";
-  const normalized = url.replace(/[\t\n\r]/g, "").replace(/^[\x00-\x20]+/, "");
-  const scheme = normalized.match(/^([a-z][a-z0-9+.-]*):/i);
-  if (!scheme) return normalized;
-  return ALLOWED_URL_SCHEMES.has(scheme[1].toLowerCase()) ? normalized : "";
-};
 
 const citeUrl = (url: string): string => {
   try {
@@ -52,14 +36,6 @@ const _dateLabel = (iso: string | undefined, locale: string): string => {
   }
 };
 
-export const faviconHostname = (url: string): string => {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return "";
-  }
-};
-
 export const faviconUrl = (url: string): string => {
   const hostname = faviconHostname(url);
   if (!hostname) return "";
@@ -80,7 +56,7 @@ export const buildResultContext = (
   return {
     index,
     title: result.title,
-    url: safeHref(result.url),
+    url: linkHref(result.url),
     cite_url: citeUrl(result.url),
     snippet: result.snippet,
     published_at: _dateLabel(result.publishedAt, locale),
@@ -108,23 +84,15 @@ export interface NojsTab {
   name: string;
 }
 
-const hostLabel = (url: string): string => {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
-  }
-};
-
 export const buildMediaContext = (
   result: ScoredResult,
 ): Record<string, unknown> => ({
   title: result.title,
-  url: safeHref(result.url),
+  url: linkHref(result.url),
   thumbnail_url: result.thumbnail || result.imageUrl || "",
   fallback_url: result.thumbnail || "",
   duration: result.duration || "",
-  hostname: hostLabel(result.url),
+  hostname: cleanHostname(result.url),
   sources: (result.sources ?? []).map((name) => ({ name })),
 });
 

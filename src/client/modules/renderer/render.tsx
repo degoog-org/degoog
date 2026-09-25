@@ -9,19 +9,17 @@ import {
   isImageSearchType,
   type ScoredResult,
 } from "../../../shared/search-types";
-import { cleanUrl, linkHref } from "../../utils/dom/dom";
+import { cleanUrl } from "../../utils/dom/dom";
+import { linkHref, faviconHostname } from "../../../shared/utils/url";
 import { Pagination } from "../../utils/pagination/pagination";
 import { PaginationNav } from "../../utils/pagination/pagination-nav";
 import { goToPage } from "../../utils/search/actions/search-actions-page";
 import { renderTemplate } from "../../utils/dom/template";
 import { attachFaviconFallback } from "../../utils/dom/favicon";
-import { faviconHostname, faviconUrl } from "../../utils/net/url";
+import { faviconUrl } from "../../utils/net/url";
 import { getBase } from "../../utils/net/base-url";
-import {
-  destroyMediaObserver,
-  setupMediaObserver,
-  syncMediaPreviewPanel,
-} from "../media/media";
+import { syncMediaPreviewPanel } from "../media/media";
+import { destroyMediaObserver, setupMediaObserver } from "../media/media-scroll";
 import { renderImageGrid } from "./media/render-media";
 
 import { clearSlotPanels as _clearSlots } from "./render-slots";

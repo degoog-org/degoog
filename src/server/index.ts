@@ -21,9 +21,9 @@ import { initInterceptors } from "./extensions/interceptors/registry";
 import { initShortcutsRegistry } from "./extensions/shortcuts/registry";
 import globalRouter from "./routes";
 import { markReady } from "./routes/health";
-import { build404 } from "./routes/pages";
+import { build404 } from "./routes/pages/pages";
 import { initServerKey } from "./utils/security/server-key";
-import { logSettingsPasswordStatus } from "./routes/settings-auth";
+import { logSettingsPasswordStatus } from "./routes/settings/settings-auth";
 import { initValkey } from "./utils/cache/cache-valkey";
 import { openBifrost } from "./extensions/store/reload-sync";
 import { openPalantir } from "./extensions/settings-sync";
@@ -35,6 +35,14 @@ import { startQueue, stopQueue } from "./indexer/queue/queue";
 import { logger } from "./utils/logger";
 import { registerServerHandle } from "./utils/server-lifecycle";
 import { getTransportWsHandlers } from "./extensions/transports/ws-registry";
+import {
+  ANSI_BLUE,
+  ANSI_GRAY,
+  ANSI_GREEN,
+  ANSI_RED,
+  ANSI_RESET,
+  ANSI_YELLOW,
+} from "./utils/ansi";
 
 const BASE_PATH = getBasePath();
 
@@ -123,15 +131,6 @@ const bindPort = async (serve: () => void): Promise<void> => {
     }
   }
 };
-
-const _noColor = !!process.env.NO_COLOR;
-const _ansi = (code: string): string => (_noColor ? "" : code);
-const ANSI_BLUE = _ansi("\x1b[38;2;66;133;244m");
-const ANSI_RED = _ansi("\x1b[38;2;234;67;53m");
-const ANSI_YELLOW = _ansi("\x1b[38;2;251;188;5m");
-const ANSI_GREEN = _ansi("\x1b[38;2;52;168;83m");
-const ANSI_RESET = _ansi("\x1b[0m");
-const ANSI_GRAY = _ansi("\x1b[90m");
 
 console.log(
   `

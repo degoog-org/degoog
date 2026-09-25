@@ -1,12 +1,12 @@
 import { clear, render } from "../../../../shared/ui/tribute/dom";
 import { MediaGridShell } from "./media-grid-shell";
 import { state } from "../../../state";
-import { cleanHostname, linkHref } from "../../../utils/dom/dom";
+import { cleanHostname, linkHref } from "../../../../shared/utils/url";
 import {
   toggleMediaPreview,
-  registerAppendMediaCards,
   registerImageGridPanelSync,
 } from "../../media/media";
+import { registerAppendMediaCards } from "../../media/media-scroll";
 import { renderTemplate } from "../../../utils/dom/template";
 import type { ScoredResult } from "../../../../shared/search-types";
 

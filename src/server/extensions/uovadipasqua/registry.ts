@@ -10,6 +10,7 @@ import type {
 import { createRegistry } from "../registry-factory";
 import { getBasePath } from "../../utils/net/base-url";
 import { buildSignedProxyUrl } from "../../utils/net/proxy-sign";
+import { normalizePath } from "../../utils/net/route-path";
 import { logger } from "../../utils/logger";
 
 const builtinsDir = join(
@@ -25,11 +26,6 @@ const _hasStyle = new Map<string, boolean>();
 const _routes = new Map<string, PluginRoute[]>();
 
 const VALID_METHODS: PluginRouteMethod[] = ["get", "post", "put", "delete", "patch"];
-
-const _normalizePath = (p: string): string => {
-  const s = p.trim().replace(/^\/+/, "").replace(/\/+$/, "") || "";
-  return s ? `/${s}` : "/";
-};
 
 const _isValidRoute = (r: unknown): r is PluginRoute => {
   if (typeof r !== "object" || r === null) return false;
@@ -78,7 +74,7 @@ const registry = createRegistry<Uovadipasqua>({
     _hasStyle.set(id, !!styleStat?.isFile());
     const raw = item.routes;
     if (Array.isArray(raw) && raw.every(_isValidRoute)) {
-      _routes.set(id, raw.map((r) => ({ ...r, path: _normalizePath(r.path) })));
+      _routes.set(id, raw.map((r) => ({ ...r, path: normalizePath(r.path) })));
     } else {
       _routes.delete(id);
     }
@@ -100,7 +96,7 @@ export function findUovadipasquaRoute(
 ): PluginRoute | null {
   const routes = _routes.get(id);
   if (!routes) return null;
-  const normalized = _normalizePath(path);
+  const normalized = normalizePath(path);
   return (
     routes.find(
       (r) => r.method === method.toLowerCase() && r.path === normalized,

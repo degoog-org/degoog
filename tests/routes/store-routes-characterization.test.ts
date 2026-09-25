@@ -78,7 +78,7 @@ beforeAll(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "degoog-store-routes-"));
   process.env.DEGOOG_DATA_DIR = tempDir;
   process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD = "true";
-  router = (await import("../../src/server/routes/store")).default;
+  router = (await import("../../src/server/routes/extensions/store")).default;
 });
 
 afterAll(() => {

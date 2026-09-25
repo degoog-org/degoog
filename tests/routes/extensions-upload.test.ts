@@ -89,7 +89,7 @@ describe("POST /api/extensions/:id/upload", () => {
       }),
     }));
 
-    router = (await import("../../src/server/routes/extensions")).default;
+    router = (await import("../../src/server/routes/extensions/extensions")).default;
   });
 
   afterAll(() => {

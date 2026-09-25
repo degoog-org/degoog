@@ -54,7 +54,7 @@ beforeAll(async () => {
   process.env.DEGOOG_DATA_DIR = tempDir;
   process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD = "true";
 
-  router = (await import("../../src/server/routes/settings")).default;
+  router = (await import("../../src/server/routes/settings/settings")).default;
   settings = await import("../../src/server/utils/settings/server-settings");
   domainLists = await import("../../src/server/utils/filtering/domain-lists");
 });

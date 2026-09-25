@@ -18,9 +18,6 @@ const parseEngineTypesFromSource = (src: string): string[] | null => {
   return types.length > 0 ? types : null;
 };
 
-export const catalogPrimaryType = (types: string[]): string =>
-  types.length > 0 ? types[0] : "web";
-
 const NEEDS_APP_RESTART_RE = /\bneedsAppRestart\s*[:=]\s*true\b/;
 const needsAppRestartCache = new Map<string, boolean>();
 

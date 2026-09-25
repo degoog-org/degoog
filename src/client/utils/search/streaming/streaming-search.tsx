@@ -8,11 +8,10 @@ import { SkeletonSidebar } from "../../../animations/skeleton/skeleton-sidebar";
 import { MAX_PAGE } from "../../../constants";
 import {
   closeMediaPreview,
-  destroyMediaObserver,
   MediaPreviewCloseMode,
-  setupMediaObserver,
   syncMediaPreviewPanel,
 } from "../../../modules/media/media";
+import { destroyMediaObserver, setupMediaObserver } from "../../../modules/media/media-scroll";
 import {
   prependKnowledgePanels,
   renderSidebar,

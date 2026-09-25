@@ -12,7 +12,7 @@ beforeAll(async () => {
   await initThemes();
   if (orig !== undefined) process.env.DEGOOG_THEMES_DIR = orig;
   else delete process.env.DEGOOG_THEMES_DIR;
-  const mod = await import("../../src/server/routes/themes");
+  const mod = await import("../../src/server/routes/extensions/themes");
   themesRouter = mod.default;
 });
 
