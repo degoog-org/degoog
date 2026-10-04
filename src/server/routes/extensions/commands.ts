@@ -69,7 +69,7 @@ const _runCommand = async (
     if (limitRes) return limitRes;
     const authRes = await guardApiKey(c, "apiKeySearchEnabled");
     if (authRes) return authRes;
-    const requestedType = type?.trim().replace(/^tab:engine:/, "") || undefined;
+    const requestedType = type?.trim().replace(/^tab:engine:/, "") || "web";
     const plan = await planEngineBang(match.engineId, bangs, requestedType);
     if (!plan) return c.json({ error: "This engine is disabled" }, 403);
     const searchTypes = await getEngineSearchTypes(match.engineId);
