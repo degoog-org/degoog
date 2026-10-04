@@ -54,7 +54,12 @@
       "hide-url-params-aria": "Abfrageparameter in Ergebnis-URLs ausblenden",
       "show-result-dates": "Veröffentlichungsdatum bei Ergebnissen anzeigen",
       "show-result-dates-aria": "Veröffentlichungsdatum bei Ergebnissen anzeigen",
-      "show-result-dates-tooltip": "Zeigt das Datum an, das eine Suchmaschine für ein Ergebnis gemeldet hat, sofern sie eines gemeldet hat. Wenn du dies deaktivierst, wird das Datum komplett ausgeblendet."
+      "show-result-dates-tooltip": "Zeigt das Datum an, das eine Suchmaschine für ein Ergebnis gemeldet hat, sofern sie eines gemeldet hat. Wenn du dies deaktivierst, wird das Datum komplett ausgeblendet.",
+      "engine-origins": "Suchmaschinen-Badges in der Ergebnis-Seitenleiste",
+      "engine-origins-instance-default": "Instanz-Standardwert",
+      "engine-origins-favicon": "Favicons der Suchmaschinen",
+      "engine-origins-provenance": "Herkunft der Suchmaschine",
+      "engine-origins-off": "Ausblenden"
     },
     "sync": {
       "heading": "Instanz-Standardwerte",
@@ -77,7 +82,9 @@
       "desc": " ist aktuell installiert. Die neueste verfügbare Version ist ",
       "check-now-button": "Jetzt prüfen",
       "open-link-button": "Release ansehen",
-      "last-checked": "Zuletzt geprüft"
+      "last-checked": "Zuletzt geprüft",
+      "unknown": "Unbekannt",
+      "never": "Niemals"      
     },
     "server": {
       "config": {
@@ -172,6 +179,7 @@
           "rateLimitSuggestLongWindow": "Langes Fenster der Autovervollständigung",
           "rateLimitSuggestLongMax": "Langes Maximum der Autovervollständigung",
           "acDebounceMs": "Verzögerung der Autovervollständigung",
+          "requestBodyMaxKb": "Max. Request-Body-Größe",
           "imageProxyAllowLocal": "Zugriff des Bild-Proxys auf lokale Adressen",
           "honeypotEnabled": "Honeypot-Fallen",
           "honeypotCssCheck": "Browser-Verifizierung",
@@ -236,6 +244,12 @@
       "image-proxy-allow-local-aria": "Dem Bild-Proxy den Zugriff auf Adressen im lokalen Netzwerk erlauben",
       "image-proxy-allow-list-label": "Erlaubte lokale Hosts (ein Regex pro Zeile)",
       "image-proxy-allow-list-desc": "Standardmäßig blockiert der Bild-Proxy private und lokale Adressen. Füge Regex-Muster hinzu, die auf die Hosts oder IPs passen, denen du vertraust (z. B. selbst gehostetes Jellyfin oder Meilisearch). Leer lassen, um jede lokale Adresse auf eigenes Risiko zu erlauben.",
+      "block-client-leaks": "Weitergabe von Besucher-IPs blockieren",
+      "block-client-leaks-aria": "Alles blockieren, wodurch der Browser von Besuchern direkte Verbindungen zu Drittanbietern aufbaut",
+      "block-client-leaks-desc": "Verhindert, dass der Browser Bilder, Skripte, Schriftarten, Frames oder Verbindungen von externen Websites lädt, und zeigt einen Hinweis mit den blockierten Inhalten an. Einige Erweiterungen und integrierte Funktionen wie !ip und !speedtest funktionieren dann nicht mehr. Standardmäßig deaktiviert; in dem Fall werden diese Vorgänge lediglich in der Browser-Konsole protokolliert.",
+      "privacy-policy-label": "Datenschutzerklärung (Markdown)",
+      "privacy-policy-desc": "Wird Besuchern über einen Link „Datenschutz“ auf der Startseite angezeigt. Leer lassen, um den Link auszublenden.",
+      "privacy-policy-placeholder": "## Was diese Instanz speichert\\n\\nNichts über dich. Suchanfragen werden von diesem Server an die Suchmaschinen weitergeleitet, nicht von deinem Browser."
       "proxy-test": "Proxy-Verbindung testen",
       "proxy-testing": "Teste…",
       "rate-limit-heading": "Ratenlimit",
@@ -252,6 +266,8 @@
       "rate-limit-suggest-enable": "Ratenbegrenzung der Autovervollständigung aktivieren",
       "rate-limit-suggest-defaults": "Standard: 60 Anfragen pro 20 s, 120 pro Min. je IP.",
       "ac-debounce": "Verzögerung der Autovervollständigung (ms)",
+      "request-body-max": "Max. Request-Body-Größe (KB)",
+      "request-body-max-desc": "Begrenzt die Größe des Request-Bodys bei öffentlichen Such-, Autovervollständigungs- und Panel-Anfragen. Leer lassen, um den Standardwert der Instanz von 3 MB (oder den Wert von DEGOOG_BODY_SIZE) zu verwenden.",
       "domain-management-heading": "Domain-Verwaltung",
       "domain-management-desc": "Domains in allen Suchergebnissen sperren, ersetzen und bewerten.",
       "domain-block-desc": "Blende Suchergebnisse bestimmter Domains aus. Eine Domain pro Zeile. Subdomains sind automatisch eingeschlossen. Setze eine Zeile in /Schrägstriche/, um einen Regex zu verwenden. Filterlisten von uBlock Origin können unverändert eingefügt werden; Kommentare und Regeln ohne Domain werden ignoriert.",
@@ -296,6 +312,12 @@
       "honeypot-ban-permanent": "dauerhaft",
       "honeypot-unban": "Entsperren",
       "honeypot-blocklist-empty": "Aktuell sind keine IPs gesperrt.",
+      "nojs-heading": "Kein JavaScript",
+      "nojs-desc": "Eine minimalistische, JavaScript-freie Suchseite unter /nojs.",
+      "nojs-enable": "Kein JavaScript aktivieren",
+      "nojs-enable-aria": "Kein JavaScript aktivieren",
+      "nojs-css-check-enable": "CSS-Bot-Prüfung auf JavaScript-freie Suchen anwenden",
+      "nojs-css-check-desc": "Textbasierte Browser wie lynx und w3m laden keine Stylesheets und werden gesperrt, wenn diese Option aktiviert ist. Deaktiviert lassen, sofern kein Missbrauch vorliegt."
       "indexer-heading": "Degoog-Indexer",
       "indexer-desc": "Zeichne Ergebnisse auf, die du tatsächlich siehst, und blende sie bei späteren Suchen als Degoog-Suchmaschine wieder ein.",
       "indexer-enable": "Indexer aktivieren",
@@ -316,7 +338,12 @@
       "compat-desc": "Führe Suchmaschinen aus, die für andere Suchmaschinen geschrieben wurden. Beide Schichten sind experimentell.",
       "4get-enable": "4get-Kompatibilitätsschicht",
       "4get-enable-desc": "Führe 4get-Scraper als Suchmaschinen aus. Benötigt PHP 8.1+ auf dem Server. Fügt auf der Seite der Suchmaschinen einen 4get-Button hinzu.",
-      "4get-enable-aria": "4get-Kompatibilitätsschicht ein- oder ausschalten"
+      "4get-enable-aria": "4get-Kompatibilitätsschicht ein- oder ausschalten",
+      "engine-origins-label": "Suchmaschinen-Badges",
+      "engine-origins-desc": "Das kleine Symbol neben jeder Suchmaschine in der Ergebnis-Seitenleiste. Favicons zeigen die Website an, die die Suchmaschine durchsucht, die Herkunft gibt an, ob die Suchmaschine aus dem Store, von SearX oder von 4get stammt. Besucher können dies in den allgemeinen Einstellungen selbst festlegen.",
+      "engine-origins-favicon": "Favicons der Suchmaschinen",
+      "engine-origins-provenance": "Herkunft der Suchmaschine",
+      "engine-origins-off": "Ausblenden"      
     },
     "proxy-test": {
       "not-enabled": "Der Proxy ist nicht aktiviert. Aktiviere ihn und speichere, bevor du testest.",
@@ -363,10 +390,24 @@
       "active": "Aktiv",
       "built-in-theme-name": "Eingebaut",
       "built-in-theme-desc": "Das Standard-Design von degoog.",
+      "builtin-badge": "Integriert",
       "group-transports": "Transports",
       "group-builtin-transports": "Eingebaute Transports",
       "group-autocomplete": "Anbieter für Autovervollständigung",
       "group-themes": "Themes",
+      "group-favicon": "Favicon-Anbieter",
+      "favicon-order-desc": "Degoog prüft jeden Anbieter von oben nach unten und verwendet das erste gefundene Symbol. Zum Neuanordnen ziehen.",
+      "favicon-degoog-name": "Degoog",
+      "favicon-degoog-desc": "Symbole, die von dieser Instanz bereits gespeichert wurden. Werden vor allen anderen Anbietern geprüft.",
+      "favicon-shape-label": "Favicon-Form",
+      "favicon-shape-note": "Benutzerdefinierte Themes ignorieren dies möglicherweise.",
+      "favicon-shape-circle": "Kreis",
+      "favicon-shape-rounded": "Abgerundetes Quadrat",
+      "favicon-shape-square": "Quadrat",
+      "favicon-shape-squircle": "Squircle",
+      "favicon-shape-hexagon": "Sechseck",
+      "favicon-shape-star": "Stern",
+      "favicon-shape-flower": "Blume"
       "save-defaults": "Als Instanz-Standard speichern",
       "reset-defaults": "Auf Instanz-Standard zurücksetzen",
       "reset-confirm": "Dadurch wird deine Auswahl der Suchmaschinen in diesem Browser durch die Instanz-Standardwerte ersetzt. Fortfahren?",
@@ -388,6 +429,8 @@
       "no-engines-store": "Store",
       "no-autocomplete": "Keine Anbieter für Autovervollständigung installiert. Gehe zum Tab {store}, um welche zu durchsuchen und zu installieren.",
       "no-autocomplete-store": "Store",
+      "no-favicon": "Keine Favicon-Anbieter installiert, daher zeigen die Ergebnisse einen Platzhalter an. Füge einen über den Reiter {store} hinzu.",
+      "no-favicon-store": "Store"
       "restart-required": "Damit diese Erweiterung richtig funktioniert, ist ein Neustart des Servers erforderlich.",
       "compat-search": "Verfügbare {layer}-Suchmaschinen durchsuchen…",
       "compat-install": "Installieren",
@@ -428,12 +471,18 @@
       "compat-note-native": "Nach der Installation verhalten sie sich wie jede andere Suchmaschine. Bewertung, Safe Search, Bangs, Proxys und Transports greifen alle.",
       "compat-note-upstream": "Die Suchmaschine stammt vom Upstream, nicht von Degoog. Sie kann kaputtgehen, wenn sich die ausgelesene Website ändert.",
       "compat-note-updates": "Dateien werden bei Bedarf heruntergeladen. Ein Update holt den neuesten Code vom Upstream.",
-      "compat-note-needs": "Manche Suchmaschinen benötigen einen API-Schlüssel oder zusätzliche Software auf dem Server. Die Liste zeigt, was jeweils nötig ist."
+      "compat-note-needs": "Manche Suchmaschinen benötigen einen API-Schlüssel oder zusätzliche Software auf dem Server. Die Liste zeigt, was jeweils nötig ist.",
+      "docs-button": "Doku",
+      "docs-loading": "Wird geladen…",
+      "docs-empty": "(Leere README)",
+      "docs-error": "Dokumentation konnte nicht geladen werden.",
+      "plugins-search-placeholder": "Plugins durchsuchen…"
     },
     "errors": {
       "load-extensions": "Erweiterungen konnten nicht geladen werden.",
       "load-transports": "Transports konnten nicht geladen werden.",
       "load-autocomplete": "Anbieter für Autovervollständigung konnten nicht geladen werden.",
+      "load-favicon": "Laden der Favicon-Anbieter fehlgeschlagen.",
       "load-themes": "Themes konnten nicht geladen werden.",
       "load-engines": "Suchmaschinen konnten nicht geladen werden."
     },
@@ -479,6 +528,10 @@
       "query-limit-desc": "Wie viele Ergebnisse dein Index zu einer einzelnen Suche beisteuern kann.",
       "ranking-window": "Ranking-Gedächtnis (letzte Treffer)",
       "ranking-window-desc": "Wie viele der letzten Sichtungen in das Ranking eines Ergebnisses einfließen. Niedrigere Werte lassen das Ranking schneller auf frische Ergebnisse reagieren; höhere Werte halten es stabiler.",
+      "favicon-store-heading": "Gespeicherte Favicons",
+      "favicon-store-desc": "Degoog speichert Symbole im Index, damit wiederholte Suchen geladen werden, ohne einen Anbieter abzufragen. Dies kann auf der Degoog-Karte im Tab „Favicons“ deaktiviert werden.",
+      "favicon-store-max-age-days": "Maximales Favicon-Alter (Tage)",
+      "favicon-store-max-age-days-desc": "Gespeicherte Symbole, die älter als dieser Wert sind, werden erneut abgerufen. Bei Websites ohne Symbol wird es nach einem Tag erneut versucht."
       "stats-heading": "Index-Statistiken",
       "total-hits": "Gespeicherte Ergebnisse",
       "total-urls": "Eindeutige Seiten",
@@ -548,16 +601,21 @@
       "next-aria": "Weiter",
       "view-screenshots-aria": "Screenshots ansehen",
       "filter-all": "Alle",
+      "filter-extensions": "Erweiterungen",
       "filter-plugins": "Plugins",
       "filter-themes": "Themes",
       "filter-engines": "Suchmaschinen",
       "filter-transports": "Transports",
       "filter-autocomplete": "Autovervollständigung",
+      "filter-favicon": "Favicons",
+      "filter-shortcuts": "Shortcuts",
       "type-plugin": "Plugin",
       "type-engine": "Suchmaschine",
       "type-transport": "Transport",
       "type-theme": "Theme",
       "type-autocomplete": "Autovervollständigung",
+      "type-favicon": "Favicon",
+      "type-shortcut": "Shortcut",
       "plugin-type-bang": "Bang",
       "plugin-type-slot": "Slot",
       "plugin-type-search-tab": "Such-Tab",
@@ -587,7 +645,10 @@
       "uninstall-message": "Diesen Eintrag ({type}) deinstallieren?",
       "remove-repo-title": "Repository entfernen?",
       "remove-repo-message": "Dieses Repository entfernen? Du musst zuvor alle installierten Elemente deinstallieren.",
-      "failed-load-store": "Store konnte nicht geladen werden."
+      "failed-load-store": "Store konnte nicht geladen werden.",
+      "progress-done": "Erledigt",
+      "progress-failed": "Fehlgeschlagen",
+      "refresh-hint": "Aktualisieren, um die neuesten Daten zu laden"
     },
     "wizard": {
       "next": "Weiter",
@@ -716,5 +777,38 @@
       "button": "Server neu starten",
       "restarting": "Wird neu gestartet..."
     }
+  },
+  "leak-guard": {
+    "title": "Zum Schutz deiner IP blockiert",
+    "intro": "Diese Instanz verhindert, dass dein Browser direkte Verbindungen zu anderen Websites aufbaut. Folgende Anfragen wurden blockiert:",
+    "kind-img-src": "Bild",
+    "kind-media-src": "Medien",
+    "kind-font-src": "Schriftart",
+    "kind-script-src": "Skript",
+    "kind-script-src-elem": "Skript",
+    "kind-style-src": "Stylesheet",
+    "kind-style-src-elem": "Stylesheet",
+    "kind-connect-src": "Verbindung",
+    "kind-frame-src": "Eingebettete Seite",
+    "kind-child-src": "Eingebettete Seite",
+    "kind-worker-src": "Worker",
+    "kind-default-src": "Anfrage",
+    "from": "angefordert von {source}",
+    "from-page": "von der Seite angefordert",
+    "outro": "Falls dies durch eine Erweiterung ausgelöst wurde, deaktiviere die Erweiterung oder kontaktiere deren Entwickler. Wenn das Problem von degoog selbst stammt, melde es bitte.",
+    "report": "Melden",
+    "close": "Verstanden",
+    "console-reported": "[degoog] {url} ({kind}) wurde direkt von {host} geladen, wodurch deine IP-Adresse gegenüber diesem Host offengelegt wird. Falls eine Erweiterung dies hinzugefügt hat, deaktiviere die Erweiterung oder kontaktiere deren Entwickler. Wenn es von degoog selbst stammt, melde es bitte unter {reportUrl}.",
+    "console-blocked": "[degoog] {url} ({kind}) von {host} wurde blockiert, damit deine IP-Adresse verborgen bleibt.",
+    "continue": "Trotzdem fortfahren",
+    "continue-hint": "Mit „Trotzdem fortfahren“ werden diese Anfragen für die restliche Browser-Sitzung zugelassen und die Seite neu geladen.",
+    "kind-webrtc": "Direktverbindung (WebRTC)",
+    "webrtc-no-servers": "eine direkte Verbindung, die deine IP-Adresse offenlegen kann"
+  },
+  "privacy-policy": {
+    "title": "Datenschutzerklärung",
+    "loading": "Wird geladen…",
+    "error": "Die Datenschutzerklärung konnte nicht geladen werden."
   }
+}
 }
