@@ -11,9 +11,11 @@ import { ProxySection } from "./sections/proxy-section";
 import { RateLimitSection } from "./sections/rate-limit-section";
 import { RestartSection } from "./sections/restart-section";
 import { SearchOptionsSection } from "./sections/search-options-section";
+import { ValkeyAlert } from "./valkey-alert";
 
 export const ServerContent = (): JSX.Element => (
   <>
+    <ValkeyAlert />
     <RestartSection />
     <ConfigSection />
     <CacheSection />

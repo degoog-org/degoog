@@ -1044,3 +1044,14 @@ html:has(.settings-page-body) {
     white-space: nowrap;
   }
 }
+
+.settings-server-alert {
+  .settings-section-heading {
+    color: $warning;
+  }
+
+  .setting-section-heading-wrapper .floating-section-icon {
+    color: $warning;
+    opacity: 0.6;
+  }
+}

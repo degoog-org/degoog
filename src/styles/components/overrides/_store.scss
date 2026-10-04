@@ -33,22 +33,55 @@
 }
 
 .store-repo-img {
-  width: 4.375rem;
-  height: 4.375rem;
-  border-radius: $radius-lg;
-  padding: $space-1;
-  object-fit: cover;
-  background: var(--bg-hover);
-}
-
-.store-repo-img-placeholder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 4.375rem;
   height: 4.375rem;
   min-width: 4.375rem;
   min-height: 4.375rem;
   border-radius: $radius-lg;
   padding: $space-1;
-  background: var(--bg-hover);
+  overflow: hidden;
+  --repo-tile-bg: var(--bg-hover);
+  --repo-tint: hsl(var(--repo-hue, 220) 55% 55%);
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--repo-tint) 16%, transparent),
+      color-mix(in srgb, var(--repo-tint) 16%, transparent)
+    )
+    var(--repo-tile-bg);
+  color: var(--repo-tint);
+
+  &:has(img:not([hidden])) {
+    background: var(--repo-tile-bg);
+  }
+
+  img {
+    position: absolute;
+    inset: $space-1;
+    width: calc(100% - 2 * #{$space-1});
+    height: calc(100% - 2 * #{$space-1});
+    border-radius: inherit;
+    object-fit: cover;
+    background: var(--repo-tile-bg);
+  }
+
+  img[hidden] {
+    display: none;
+  }
+}
+
+.store-repo-img-initial {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.store-repo-img-icon {
+  font-size: 1.5rem;
+  opacity: 0.7;
 }
 
 .store-repo-update-dot {
@@ -72,7 +105,7 @@
   margin-bottom: $space-3;
 
   .store-repo-img {
-    background: var(--bg-light);
+    --repo-tile-bg: var(--bg-light);
   }
 }
 

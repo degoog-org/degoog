@@ -18,6 +18,7 @@ import { loadServerSettings } from "./controls/load-settings";
 import { initPresetControls } from "./controls/preset-controls";
 import { bindRestartButton, syncRestartPending } from "./controls/restart";
 import { bindToggles } from "./controls/toggle-wraps";
+import { syncValkeyAlert } from "./controls/valkey-status";
 
 const t = window.scopedT("core");
 
@@ -29,9 +30,11 @@ export async function initServerTab(
 
   bindRestartButton(getToken);
   void syncRestartPending(getToken);
+  void syncValkeyAlert(getToken);
   window.addEventListener("settings-tab-changed", (e) => {
-    if ((e as CustomEvent<string>).detail === "server")
-      void syncRestartPending(getToken);
+    if ((e as CustomEvent<string>).detail !== "server") return;
+    void syncRestartPending(getToken);
+    void syncValkeyAlert(getToken);
   });
   bindToggles();
 

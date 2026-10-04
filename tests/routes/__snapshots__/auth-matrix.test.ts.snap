@@ -155,6 +155,7 @@ exports[`what an unauthenticated caller gets from every route settings unauthent
   "GET /api/settings/streaming -> 200",
   "GET /api/settings/tab-order -> 200",
   "GET /api/settings/update-check -> 401",
+  "GET /api/settings/valkey-status -> 401",
   "POST /api/settings/api-key/regenerate -> 401",
   "POST /api/settings/default-engines -> 401",
   "POST /api/settings/domain-action -> 401",

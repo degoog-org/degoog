@@ -5,7 +5,7 @@ import { readWithin } from "../utils/net/read-body";
 import { localImageAccess } from "../utils/security/local-image-access";
 import { isFaviconHost } from "../extensions/favicon/host";
 import { resolveFaviconBytes } from "../extensions/favicon/resolve";
-import { getRandomUserAgent } from "../utils/net/user-agents";
+import { getRandomHintlessUserAgent } from "../utils/net/user-agents";
 import { fetchWithSafeRedirects } from "../utils/security/safe-redirects";
 import { logger } from "../utils/logger";
 import { createConcurrencyGate } from "../utils/net/concurrency-gate";
@@ -119,7 +119,7 @@ router.get("/api/proxy/image", async (c) => {
     return c.body("Invalid or missing signature", 403);
   }
   const headers: Record<string, string> = {
-    "User-Agent": getRandomUserAgent(),
+    "User-Agent": getRandomHintlessUserAgent(),
     Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
     "Sec-Fetch-Dest": "image",

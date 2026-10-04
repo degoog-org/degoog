@@ -46,7 +46,7 @@ export const RepoList = ({
               onClick={onSelect ? () => onSelect(repo.url) : undefined}
             >
               <div class="store-repo-item-media">
-                <RepoImage src={repoImageSrc(repo)} alt={repo.name || ""} />
+                <RepoImage src={repoImageSrc(repo)} label={repo.name || ""} />
                 {behind > 0 ? <span class="store-repo-update-dot"></span> : null}
               </div>
             </div>

@@ -73,6 +73,7 @@ const GATED_APIS: Array<{ method: Method; path: string; routerKey: RouterKey; bo
   { method: "POST", path: "/api/settings/honeypot/unban", routerKey: "settings" },
   { method: "POST", path: "/api/settings/proxy-test", routerKey: "settings" },
   { method: "GET", path: "/api/settings/restart-state", routerKey: "settings" },
+  { method: "GET", path: "/api/settings/valkey-status", routerKey: "settings" },
   { method: "POST", path: "/api/settings/restart", routerKey: "settings" },
   { method: "GET", path: "/api/settings/shortcuts", routerKey: "settings" },
   { method: "POST", path: "/api/settings/shortcuts", routerKey: "settings" },

@@ -265,6 +265,7 @@ exports[`every mounted router exposes the routes it did before settings route li
   "GET /api/settings/streaming",
   "GET /api/settings/tab-order",
   "GET /api/settings/update-check",
+  "GET /api/settings/valkey-status",
   "POST /api/settings/api-key/regenerate",
   "POST /api/settings/default-engines",
   "POST /api/settings/domain-action",
@@ -405,7 +406,7 @@ exports[`the admin path is operator-defined, not hardcoded DEGOOG_SETTINGS_PATH 
 
 exports[`route shape invariants the mounted surface totals stay put 1`] = `
 {
-  "totalHandlers": 310,
-  "unique": 250,
+  "totalHandlers": 312,
+  "unique": 251,
 }
 `;

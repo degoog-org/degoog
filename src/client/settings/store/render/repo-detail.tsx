@@ -19,7 +19,7 @@ export const RepoDetail = ({ repo, statusByUrl }: RepoDetailProps): JSX.Element 
   return (
     <div class="store-repo-detail" data-url={repo.url}>
       <div class="store-repo-detail-media">
-        <RepoImage src={repoImageSrc(repo)} />
+        <RepoImage src={repoImageSrc(repo)} label={repo.name || ""} />
       </div>
       <div class="store-repo-detail-body">
         <div class="store-repo-name">{repo.name || repo.url}</div>
