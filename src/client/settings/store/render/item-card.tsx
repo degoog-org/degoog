@@ -3,6 +3,7 @@ import { Badge } from "../../../../shared/ui/components/primitives/badge";
 import { ItemCardActions } from "./item-card-actions";
 import { ItemCardAuthor } from "./item-card-author";
 import { ShortcutKeycaps } from "./shortcut-keycaps";
+import { retryImageOnce } from "./repo-image";
 import { engineTypeLabel, pluginTypeLabel, storeTypeLabel } from "./labels";
 import { screenshotUrl } from "../overlays/lightbox";
 import { renderMdInline } from "../../../utils/dom/md";
@@ -58,7 +59,14 @@ export const ItemCard = ({ item }: { item: StoreItem }): JSX.Element => {
         {...thumbProps}
       >
         {hasScreenshots ? (
-          <img src={firstUrl} alt="" class="store-card-thumb" loading="lazy" />
+          <img
+            key={firstUrl}
+            src={firstUrl}
+            alt=""
+            class="store-card-thumb"
+            loading="lazy"
+            onError={retryImageOnce}
+          />
         ) : (
           (keycaps ?? (
             <div class="store-card-thumb store-card-thumb-placeholder"></div>

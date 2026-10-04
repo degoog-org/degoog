@@ -12,8 +12,25 @@ const _hue = (label: string): number => {
   return hash;
 };
 
+const RETRY_DELAY_MS = 1500;
+
+// Proxied and freshly pulled store images can fail, so the renderer retries once more.
+export const retryImageOnce = (event: Event): void => {
+  const img = event.currentTarget as HTMLImageElement;
+  if (img.dataset.retried) return;
+  img.dataset.retried = "true";
+  setTimeout(() => {
+    img.src = img.src;
+  }, RETRY_DELAY_MS);
+};
+
 const _hideBroken = (event: Event): void => {
   (event.currentTarget as HTMLImageElement).hidden = true;
+  retryImageOnce(event);
+};
+
+const _showLoaded = (event: Event): void => {
+  (event.currentTarget as HTMLImageElement).hidden = false;
 };
 
 export const RepoImage = ({ src, label = "" }: RepoImageProps): JSX.Element => {
@@ -27,7 +44,16 @@ export const RepoImage = ({ src, label = "" }: RepoImageProps): JSX.Element => {
       ) : (
         <i class="fa-solid fa-puzzle-piece store-repo-img-icon" aria-hidden="true"></i>
       )}
-      {src ? <img src={src} alt={label} loading="lazy" onError={_hideBroken} /> : null}
+      {src ? (
+        <img
+          key={src}
+          src={src}
+          alt={label}
+          loading="lazy"
+          onLoad={_showLoaded}
+          onError={_hideBroken}
+        />
+      ) : null}
     </div>
   );
 };
