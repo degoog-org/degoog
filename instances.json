@@ -25,6 +25,17 @@
       "theme": null
     },
     {
+      "id": "search-drescher-network",
+      "name": "search.drescher.network",
+      "clearnet": [
+        "https://search.drescher.network"
+      ],
+      "tor": [],
+      "i2p": [],
+      "appearance": "default",
+      "theme": null
+    },
+    {
       "id": "nepnir-com",
       "name": "nepnir.com",
       "clearnet": [
