@@ -55,7 +55,6 @@ in
           python = mkOption {
             type = nullOr package;
             default = null;
-            defaultText = literalExpression "pkgs.python3.withPackages (ps: with ps; [ babel python-dateutil lxml ])";
             example = literalExpression "pkgs.python3.withPackages (ps: with ps; [ babel python-dateutil lxml ])";
             description = ''
               Python interpreter forwarded to `DEGOOG_PYTHON_BIN`.
@@ -66,7 +65,6 @@ in
           php = mkOption {
             type = nullOr package;
             default = null;
-            defaultText = literalExpression "pkgs.php84";
             example = literalExpression "pkgs.php84";
             description = ''
               PHP interpreter forwarded to `DEGOOG_PHP_BIN`.
