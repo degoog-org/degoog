@@ -96,9 +96,11 @@ app.notFound(async (c) => {
   return c.html(await build404(locale), 404);
 });
 
+const bindAddress = process.env.DEGOOG_BIND_ADDRESS?.trim() || "0.0.0.0";
 const port = Number(process.env.DEGOOG_PORT) || 4444;
 const unixSocket = process.env.DEGOOG_UNIX_SOCKET?.trim();
-const listenUrl = unixSocket ? `unix:${unixSocket}` : `http://localhost:${port}`;
+const displayHost = bindAddress.includes(":") ? `[${bindAddress}]` : bindAddress;
+const listenUrl = unixSocket ? `unix:${unixSocket}` : `http://${displayHost == "0.0.0.0" ? "localhost" : displayHost}:${port}`;
 
 const isStaleUnixSocket = async (path: string): Promise<boolean> => {
   try {
@@ -243,7 +245,7 @@ Promise.all([initServerKey(), initExtensionRegistries()])
       );
     } else {
       await bindPort(() =>
-        registerServerHandle(Bun.serve({ port, fetch: app.fetch, websocket, idleTimeout: 120 })),
+        registerServerHandle(Bun.serve({ hostname: bindAddress, port, fetch: app.fetch, websocket, idleTimeout: 120 })),
       );
     }
     markReady();

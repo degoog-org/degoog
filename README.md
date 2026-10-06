@@ -27,7 +27,7 @@ Please check the [documentation](https://degoog-org.github.io/docs/) before rais
 
 ## Run
 
-By default the app will run on port `4444` with user `1000:1000`, please check the [documentation](https://degoog-org.github.io/docs/environment-variables.html) for a comprehensive list of env variables and various nuances.
+By default the app will bind every interface (`0.0.0.0`) on port `4444` with user `1000:1000`, please check the [documentation](https://degoog-org.github.io/docs/environment-variables.html) for a comprehensive list of env variables and various nuances.
 
 ```bash
 mkdir -p ./data

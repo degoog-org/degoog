@@ -66,6 +66,13 @@ in
         );
 
         options = {
+          DEGOOG_BIND_ADDRESS = mkOption {
+            type = str;
+            default = "0.0.0.0";
+            description = "Address Degoog binds its TCP listener to.";
+            example = "127.0.0.1";
+          };
+
           DEGOOG_PORT = mkOption {
             type = port;
             default = 4444;
@@ -195,6 +202,7 @@ in
       default = { };
 
       example = {
+        DEGOOG_BIND_ADDRESS = "127.0.0.1";
         DEGOOG_PORT = 8080;
         DEGOOG_WIZARD = false;
         DEGOOG_DISTRUST_PROXY = true;
