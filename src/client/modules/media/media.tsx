@@ -27,6 +27,10 @@ let currentMediaIdx = -1;
 let currentCardSelector = "";
 let imageGridPanelSyncRef: ((isOpen: boolean) => void) | null = null;
 
+export const remapCurrentMediaIdx = (map: (idx: number) => number): void => {
+  if (currentMediaIdx >= 0) currentMediaIdx = map(currentMediaIdx);
+};
+
 export function registerImageGridPanelSync(
   fn: (isOpen: boolean) => void,
 ): void {

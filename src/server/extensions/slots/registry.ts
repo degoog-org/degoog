@@ -21,6 +21,7 @@ import { extensionReadmeExists } from "../../utils/extension-support/extension-d
 import { getSettings, isDisabled, maskSecrets } from "../../utils/settings/plugin-settings";
 import { bootCircuitFromPath } from "../../utils/extension-support/translation-circuit";
 import { createRegistry } from "../registry-factory";
+import { translateSchema } from "../extension-meta";
 import { getInterceptors } from "../interceptors/registry";
 import { isPluginManifest } from "../plugin-manifest";
 import { getInstalledSearchTypes, manifestEngineSchema } from "../engines/catalog";
@@ -123,6 +124,12 @@ export async function reloadSlotPlugins(bust = true): Promise<void> {
   await (bust ? registry.reload() : registry.refresh());
 }
 
+const _translated = (slot: SlotPlugin, field: string, fallback: string): string => {
+  const key = `${slot.id}.${field}`;
+  const value = slot.t?.(key);
+  return value && value !== key ? value : fallback;
+};
+
 export const getSlotExtensionMeta = async (
   coreT?: Translate,
 ): Promise<ExtensionMeta[]> => {
@@ -140,7 +147,7 @@ export const getSlotExtensionMeta = async (
     }
 
     const manifest = slot.pluginManifest;
-    const baseSchema = slot.settingsSchema ?? [];
+    const baseSchema = translateSchema(slot.id, slot.settingsSchema ?? [], slot.t);
     const hasPositionChoice = (slot.slotPositions?.length ?? 0) > 0;
 
     const linkedInterceptorSchema = manifest
@@ -221,8 +228,8 @@ export const getSlotExtensionMeta = async (
 
     out.push({
       id,
-      displayName: manifest?.name ?? slot.name,
-      description: manifest?.description ?? slot.description,
+      displayName: manifest?.name ?? _translated(slot, "name", slot.name),
+      description: manifest?.description ?? _translated(slot, "description", slot.description),
       type: ExtensionStoreType.Plugin,
       configurable: fullSchema.length > 0,
       settingsSchema: fullSchema,

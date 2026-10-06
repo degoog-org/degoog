@@ -96,6 +96,7 @@ export interface PluginContext {
   signProxyUrl: (url: string) => string;
   signFaviconUrl: (url: string) => string;
   fetch?: (url: string, init?: RequestInit) => Promise<Response>;
+  searchTypes?: () => Promise<string[]>;
   /** @deprecated Use `useCache` (async, namespaced, Valkey-backed when enabled). */
   createCache: CreateCache;
   useCache: UseCache;
@@ -116,6 +117,7 @@ export interface SearchEngine {
   pluginManifest?: PluginManifest;
   configure?(settings: Record<string, SettingValue>): void;
   getFieldOptions?: GetFieldOptions;
+  routes?: PluginRoute[];
   executeSearch(
     query: string,
     page?: number,
@@ -224,13 +226,16 @@ export interface SlotPlugin {
 export interface CommandResult {
   title: string;
   html: string;
+  results?: (SearchResult & { favicon?: string })[];
   totalPages?: number;
   action?: string;
+  searchType?: string;
 }
 
 export interface CommandContext {
   clientIp?: string;
   page?: number;
+  searchType?: string;
   signProxyUrl?: (url: string) => string;
   nojs?: boolean;
   engines?: EngineConfig;
@@ -252,6 +257,7 @@ export interface BangCommand {
   hideWhenUnconfigured?: boolean;
   supportsNojs?: boolean;
   respectRateLimiting?: boolean;
+  searchType?: string;
   init?(context: PluginContext): void | Promise<void>;
   execute(args: string, context?: CommandContext): Promise<CommandResult>;
   t?: Translate;
@@ -317,6 +323,7 @@ export interface PluginRoute {
   method: PluginRouteMethod;
   path: string;
   handler: (req: Request) => Response | Promise<Response>;
+  rateLimit?: boolean;
   t?: Translate;
 }
 

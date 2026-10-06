@@ -394,19 +394,24 @@ async function _performBangCommand(
       html?: string;
       totalPages?: number;
       page?: number;
+      searchType?: string;
     };
     if (!isCurrentSearch(seq)) return;
-    if (data.type === "engine") {
-      const engineType = data.primaryType ?? "web";
+    const commandType = data.searchType ?? "";
+    if (data.type === "engine" || Array.isArray(data.results)) {
+      const engineType =
+        data.type === "engine" ? (data.primaryType ?? "web") : commandType || "web";
       const isMedia = isImageSearchType(engineType);
       state.currentResults = data.results ?? [];
       state.currentData = data as unknown as SearchResponse;
       state.currentType = engineType;
       state.lastPage = declaredPages(data.totalPages);
+      const mediaLastPage =
+        data.type === "engine" ? MAX_PAGE : Math.max(1, data.totalPages ?? 1);
       state.imagePage = 1;
-      state.imageLastPage = MAX_PAGE;
+      state.imageLastPage = mediaLastPage;
       state.videoPage = 1;
-      state.videoLastPage = MAX_PAGE;
+      state.videoLastPage = mediaLastPage;
       destroyMediaObserver();
       if (engineType !== requestedType) {
         history.replaceState(
@@ -416,7 +421,11 @@ async function _performBangCommand(
         );
       }
       setActiveTab(engineType);
-      setTabsForBang(data.searchTypes?.length ? data.searchTypes : [engineType]);
+      setTabsForBang(
+        data.type === "engine" && data.searchTypes?.length
+          ? data.searchTypes
+          : [engineType],
+      );
       if (isMedia) {
         const glanceElMedia = document.getElementById("at-a-glance");
         if (glanceElMedia) clear(glanceElMedia);
@@ -424,10 +433,13 @@ async function _performBangCommand(
         if (sidebarMedia) clear(sidebarMedia);
       }
       if (resultsMeta)
-        resultsMeta.textContent = t("search-templates.status.done", {
-          count: String(data.results?.length ?? 0),
-          time: ((data.totalTime ?? 0) / 1000).toFixed(2),
-        });
+        resultsMeta.textContent =
+          data.type === "engine"
+            ? t("search-templates.status.done", {
+                count: String(data.results?.length ?? 0),
+                time: ((data.totalTime ?? 0) / 1000).toFixed(2),
+              })
+            : (data.title ?? "");
       if (isMedia) renderImgEngines(data.engineTimings ?? []);
       state.currentPage = page;
       const infinite = (await fetchStreamingConfig()).infiniteScroll && !isMedia;
@@ -436,7 +448,21 @@ async function _performBangCommand(
       if (infinite) setupInfinite(engineType);
       return;
     }
-    setTabsForBang([]);
+    setTabsForBang(commandType ? [commandType] : []);
+    if (commandType) {
+      state.currentType = commandType;
+      setActiveTab(commandType);
+      document
+        .getElementById("results-layout")
+        ?.classList.toggle("media-mode", isImageSearchType(commandType));
+      if (commandType !== requestedType) {
+        history.replaceState(
+          { ...historyState, type: commandType },
+          "",
+          state.postMethodEnabled ? `${getBase()}/search` : bangUrl(commandType),
+        );
+      }
+    }
     if (resultsMeta) resultsMeta.textContent = data.title ?? "";
     if (resultsList) resultsList.innerHTML = data.html || "";
     runScriptsInContainer(resultsList);

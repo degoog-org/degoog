@@ -34,6 +34,7 @@ import { initShortcuts } from "../shortcuts/init";
 import { initSearchBarActions } from "../utils/search/search-bar-actions";
 import { renderPageTemplates } from "./renderer/render-page";
 import { initResultActions } from "./result-actions";
+import { exposeResultsApi } from "./renderer/media/result-ranking";
 import { initHomeWizard } from "./wizard/wizard";
 import { getBase } from "../utils/net/base-url";
 import { isSettingsPathname } from "../utils/settings/settings-path";
@@ -50,8 +51,40 @@ type DegoogHistoryState = {
   imageFilter?: ImageFilter;
 };
 
+const _navigateToSearch = (query: string, type?: string): void => {
+  if (state.postMethodEnabled) {
+    // Little hack to ensure we do not send the query in the URL
+    sessionStorage.setItem("degoog-post-query", query);
+    if (type) sessionStorage.setItem("degoog-post-type", type);
+    window.location.href = `${getBase()}/search`;
+    return;
+  }
+  const params = new URLSearchParams({ q: query });
+  if (type) params.set("type", type);
+  window.location.href = `${getBase()}/search?${params.toString()}`;
+};
+
+const _search = (query: string, type?: string): void => {
+  const q = typeof query === "string" ? query.trim() : "";
+  if (!q) return;
+  const t = typeof type === "string" && type ? type : undefined;
+  const onResults = /^\/search\/?$/.test(
+    window.location.pathname.slice(getBase().length),
+  );
+  if (onResults) {
+    const input = document.getElementById(
+      "results-search-input",
+    ) as HTMLInputElement | null;
+    if (input) input.value = q;
+    void performSearch(q, t);
+    return;
+  }
+  _navigateToSearch(q, t);
+};
+
 export async function init(): Promise<void> {
   initLeakWatch();
+  exposeResultsApi(_search);
   await applyDefaults();
 
   renderPageTemplates();
@@ -103,13 +136,7 @@ export async function init(): Promise<void> {
       e.preventDefault();
       const query = searchInput?.value.trim();
       if (!query) return;
-      if (state.postMethodEnabled) {
-        // Little hack to ensure we do not send the query in the URL
-        sessionStorage.setItem("degoog-post-query", query);
-        window.location.href = `${getBase()}/search`;
-      } else {
-        window.location.href = `${getBase()}/search?${new URLSearchParams({ q: query }).toString()}`;
-      }
+      _navigateToSearch(query);
     });
 
   resultsInput?.addEventListener("keydown", (e) => {

@@ -9,6 +9,7 @@ import { getRandomHintlessUserAgent } from "../utils/net/user-agents";
 import { fetchWithSafeRedirects } from "../utils/security/safe-redirects";
 import { logger } from "../utils/logger";
 import { createConcurrencyGate } from "../utils/net/concurrency-gate";
+import { fetchEngineRoute, isEngineRouteUrl } from "../extensions/engines/engine-routes";
 
 const router = new Hono();
 
@@ -102,16 +103,19 @@ router.get("/api/proxy/image", async (c) => {
   const url = c.req.query("url");
   if (!url) return c.body("Missing url parameter", 400);
 
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch (err) {
-    logger.debug("proxy", `invalid proxy URL ${url}`, err);
-    return c.body("Invalid URL", 400);
-  }
+  const engineRoute = isEngineRouteUrl(url);
+  let parsed: URL | null = null;
+  if (!engineRoute) {
+    try {
+      parsed = new URL(url);
+    } catch (err) {
+      logger.debug("proxy", `invalid proxy URL ${url}`, err);
+      return c.body("Invalid URL", 400);
+    }
 
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    return c.body("Invalid protocol", 400);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return c.body("Invalid protocol", 400);
+    }
   }
 
   const sig = c.req.query("sig");
@@ -125,7 +129,7 @@ router.get("/api/proxy/image", async (c) => {
     "Sec-Fetch-Dest": "image",
     "Sec-Fetch-Mode": "no-cors",
     "Sec-Fetch-Site": "cross-site",
-    Referer: parsed.origin + "/",
+    ...(parsed ? { Referer: parsed.origin + "/" } : {}),
   };
 
   const release = await imageProxyGate.acquire();
@@ -137,12 +141,14 @@ router.get("/api/proxy/image", async (c) => {
   let streaming = false;
 
   try {
-    const res = await fetchWithSafeRedirects(
-      outgoingFetch,
-      url,
-      { signal: controller.signal, headers },
-      await localImageAccess(),
-    );
+    const res = engineRoute
+      ? await fetchEngineRoute(url)
+      : await fetchWithSafeRedirects(
+          outgoingFetch,
+          url,
+          { signal: controller.signal, headers },
+          await localImageAccess(),
+        );
     clearTimeout(timeout);
 
     if (!res) return c.body("Blocked redirect", 502);

@@ -54,6 +54,17 @@ describe("proxy-sign own proxy detection", () => {
   });
 });
 
+describe("proxy-sign extension routes", () => {
+  test.each([
+    ["/api/engine/immich/thumb?id=abc"],
+    ["/api/plugin/immich/thumb?id=abc"],
+    ["http://localhost:4444/api/engine/immich/thumb?id=abc"],
+  ])("extension route %s goes through the image proxy", (thumb) => {
+    const [signed] = signResultThumbnails([result(thumb)]);
+    expect(signed.thumbnail).toStartWith("/api/proxy/image?url=");
+  });
+});
+
 describe("proxy-sign result seals", () => {
   test("every signed result carries a seal that verifies for its url", () => {
     const [sealed] = signResultThumbnails([result("https://cdn.example/a.png")]);
