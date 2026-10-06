@@ -1,5 +1,5 @@
 import type { PluginRoute } from "../../types/extension";
-import { getBasePath } from "../../utils/net/base-url";
+import { getBasePath, getBaseUrl } from "../../utils/net/base-url";
 import { isDisabled } from "../../utils/settings/plugin-settings";
 import { allEngineEntries } from "./loader";
 import type { PluginEntry } from "./entries";
@@ -51,25 +51,50 @@ export const engineRouteUrl = (base: string, path: string): string => {
 
 const INTERNAL_ORIGIN = "http://degoog.internal";
 
-const _ownRoute = (url: string): { folder: string; suffix: string } | null => {
+const _ownPath = (url: string): string => {
+  const baseUrl = getBaseUrl();
+  if (/^https?:\/\//i.test(baseUrl) && url.startsWith(`${baseUrl}/`)) {
+    return `${getBasePath()}${url.slice(baseUrl.length)}`;
+  }
+  return url;
+};
+
+const _ownRoute = (
+  url: string,
+): { folder: string; suffix: string; path: string } | null => {
+  const own = _ownPath(url);
   const prefix = `${getBasePath()}${ENGINE_ROUTE_PREFIX}/`;
-  if (!url.startsWith(prefix)) return null;
-  const [path] = url.slice(prefix.length).split("?", 1);
+  if (!own.startsWith(prefix)) return null;
+  const [path] = own.slice(prefix.length).split("?", 1);
   const [folder, ...rest] = path.split("/");
   const suffix = `/${rest.join("/")}`;
   if (!folder || !ROUTE_PATH_RE.test(`/${folder}`) || !ROUTE_PATH_RE.test(suffix)) return null;
   if (suffix.split("/").some((seg) => seg === "." || seg === "..")) return null;
-  return { folder, suffix };
+  return { folder, suffix, path: own };
 };
 
 export const isEngineRouteUrl = (url: string): boolean => _ownRoute(url) !== null;
 
-export const fetchEngineRoute = async (url: string): Promise<Response | null> => {
+export type EngineRouteDispatchOptions = {
+  signal?: AbortSignal;
+  rateLimit?: (bucket: string) => Promise<Response | null>;
+};
+
+export const fetchEngineRoute = async (
+  url: string,
+  opts: EngineRouteDispatchOptions = {},
+): Promise<Response | null> => {
   const own = _ownRoute(url);
   if (!own) return null;
   const entry = findEngineRouteEntry(own.folder);
   if (!entry || (await isDisabled(entry.id))) return null;
   const route = findEngineRoute(entry, "get", own.suffix);
   if (!route) return null;
-  return route.handler(new Request(`${INTERNAL_ORIGIN}${url}`));
+  if (route.rateLimit && opts.rateLimit) {
+    const limited = await opts.rateLimit(`ext:${entry.id}:`);
+    if (limited) return limited;
+  }
+  return route.handler(
+    new Request(`${INTERNAL_ORIGIN}${own.path}`, { signal: opts.signal }),
+  );
 };

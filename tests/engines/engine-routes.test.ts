@@ -25,6 +25,7 @@ export default class RouteEngine {
     },
     { method: "post", path: "/costly", rateLimit: true, handler: async () => new Response("ok") },
     { method: "get", path: "/png", handler: async () => new Response(new Uint8Array([137, 80, 78, 71]), { headers: { "Content-Type": "image/png" } }) },
+    { method: "get", path: "/limited-png", rateLimit: true, handler: async () => new Response(new Uint8Array([137, 80, 78, 71]), { headers: { "Content-Type": "image/png" } }) },
   ];
   async executeSearch(query, page, timeFilter, context) {
     return [
@@ -191,6 +192,23 @@ describe("engine routes", () => {
     expect(missing.status).toBe(502);
     const traversal = await proxy.request(`http://localhost${buildSignedProxyUrl("/api/engine/route-engine/../../settings")}`);
     expect(traversal.status).toBe(400);
+  });
+
+  test("the image proxy applies an engine route's rate limit to in-process dispatch", async () => {
+    const proxy = (await import("../../src/server/routes/proxy")).default;
+    const { buildSignedProxyUrl } = await import("../../src/server/utils/net/proxy-sign");
+    clearRateLimitState();
+    await updateInstanceSettings({ rateLimitEnabled: true, rateLimitBurstWindow: "60", rateLimitBurstMax: "2" });
+    clearServerSettingsCache();
+    const limited = () => proxy.request(`http://localhost${buildSignedProxyUrl("/api/engine/route-engine/limited-png")}`);
+    expect((await limited()).status).toBe(200);
+    expect((await limited()).status).toBe(200);
+    expect((await limited()).status).toBe(502);
+    const png = await proxy.request(`http://localhost${buildSignedProxyUrl("/api/engine/route-engine/png")}`);
+    expect(png.status).toBe(200);
+    await updateInstanceSettings({ rateLimitEnabled: false });
+    clearServerSettingsCache();
+    clearRateLimitState();
   });
 
   test.each([["../settings"], ["/thumb/../../settings"], ["/./thumb"], ["/%2e%2e/settings"], ["/thumb\\x"], [""]])(

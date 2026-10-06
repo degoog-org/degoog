@@ -84,7 +84,6 @@ const _search = (query: string, type?: string): void => {
 
 export async function init(): Promise<void> {
   initLeakWatch();
-  exposeResultsApi(_search);
   await applyDefaults();
 
   renderPageTemplates();
@@ -248,6 +247,8 @@ export async function init(): Promise<void> {
 
   const hideUrlParams = await idbGet<boolean>(HIDE_URL_PARAMS);
   if (hideUrlParams !== null) state.hideUrlParams = hideUrlParams;
+
+  exposeResultsApi(_search);
 
   const params = new URLSearchParams(window.location.search);
   const q = params.get("q");

@@ -194,7 +194,7 @@
         }
       },
       "valkey-unreachable-title": "Valkey is unreachable",
-      "valkey-unreachable-body": "Degoog can't reach the Valkey server in DEGOOG_VALKEY_URL, so settings and cache changes are syncing through the data folder instead. One instance works fine like this. Several instances without a shared data folder will drift apart. Check the URL and that Valkey is on the same Docker network. If Valkey was down when Degoog started, restart Degoog once Valkey is back.",
+      "valkey-unreachable-body": "Degoog can't reach the Valkey server in DEGOOG_VALKEY_URL. If the connection dropped after startup, Degoog keeps retrying and changes made on other instances won't reach this one until it reconnects. If Valkey was never reached, settings and cache changes sync through the data folder instead. One instance works fine like this. Several instances without a shared data folder will drift apart. Check the URL and that Valkey is on the same Docker network. If Valkey was down when Degoog started, restart Degoog once Valkey is back.",
       "restart-heading": "Restart server",
       "restart-desc": "Restart the Degoog process.",
       "restart-button": "Restart server",

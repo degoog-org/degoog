@@ -10,6 +10,8 @@ import { fetchWithSafeRedirects } from "../utils/security/safe-redirects";
 import { logger } from "../utils/logger";
 import { createConcurrencyGate } from "../utils/net/concurrency-gate";
 import { fetchEngineRoute, isEngineRouteUrl } from "../extensions/engines/engine-routes";
+import { withTimeout } from "../utils/net/with-timeout";
+import { _applyRateLimit } from "../utils/search";
 
 const router = new Hono();
 
@@ -142,7 +144,14 @@ router.get("/api/proxy/image", async (c) => {
 
   try {
     const res = engineRoute
-      ? await fetchEngineRoute(url)
+      ? await withTimeout(
+          fetchEngineRoute(url, {
+            signal: controller.signal,
+            rateLimit: (bucket) => _applyRateLimit(c, bucket),
+          }),
+          PROXY_TIMEOUT_MS,
+          "engine route",
+        )
       : await fetchWithSafeRedirects(
           outgoingFetch,
           url,

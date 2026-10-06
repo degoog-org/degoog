@@ -63,7 +63,11 @@ const READY_STATUS = "ready";
 
 export const getValkeyStatus = (): ValkeyStatus => {
   if (!process.env[VALKEY_URL_ENV]) return VALKEY_STATUS.OFF;
-  if (!_enabled || _publisher?.status !== READY_STATUS) {
+  if (
+    !_enabled ||
+    _publisher?.status !== READY_STATUS ||
+    _subscriber?.status !== READY_STATUS
+  ) {
     return VALKEY_STATUS.UNREACHABLE;
   }
   return VALKEY_STATUS.CONNECTED;

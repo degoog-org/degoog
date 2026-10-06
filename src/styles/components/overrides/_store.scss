@@ -52,7 +52,7 @@
       color-mix(in srgb, var(--repo-tint) 16%, transparent)
     )
     var(--repo-tile-bg);
-  color: var(--repo-tint);
+  color: color-mix(in srgb, var(--repo-tint) 35%, var(--text-primary));
 
   &:has(img:not([hidden])) {
     background: var(--repo-tile-bg);

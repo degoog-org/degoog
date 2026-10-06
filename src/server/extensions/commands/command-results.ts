@@ -3,7 +3,15 @@ import { isOwnFaviconUrl, signResultThumbnails } from "../../utils/net/proxy-sig
 
 const MAX_RESULTS = 500;
 const MAX_TEXT = 2000;
-const URL_RE = /^https?:\/\//i;
+
+const _isHttpUrl = (value: string): boolean => {
+  try {
+    const u = new URL(value);
+    return (u.protocol === "http:" || u.protocol === "https:") && !!u.hostname;
+  } catch {
+    return false;
+  }
+};
 
 const _text = (value: unknown, max = MAX_TEXT): string =>
   typeof value === "string" ? value.slice(0, max) : "";
@@ -15,11 +23,11 @@ export const normalizeCommandResults = (
   if (!Array.isArray(raw)) return undefined;
   const media = (value: unknown): string | undefined => {
     const url = _text(value);
-    return URL_RE.test(url) ? url : undefined;
+    return _isHttpUrl(url) ? url : undefined;
   };
   const items = raw.slice(0, MAX_RESULTS).filter(
     (r): r is Record<string, unknown> =>
-      !!r && typeof r === "object" && URL_RE.test(_text(r.url)) && !!_text(r.title),
+      !!r && typeof r === "object" && _isHttpUrl(_text(r.url)) && !!_text(r.title),
   );
   const signed = signResultThumbnails(
     items.map((r, i) => {

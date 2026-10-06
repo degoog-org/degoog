@@ -408,9 +408,9 @@ async function _performBangCommand(
       state.lastPage = declaredPages(data.totalPages);
       const mediaLastPage =
         data.type === "engine" ? MAX_PAGE : Math.max(1, data.totalPages ?? 1);
-      state.imagePage = 1;
+      state.imagePage = page;
       state.imageLastPage = mediaLastPage;
-      state.videoPage = 1;
+      state.videoPage = page;
       state.videoLastPage = mediaLastPage;
       destroyMediaObserver();
       if (engineType !== requestedType) {
