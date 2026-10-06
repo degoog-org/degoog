@@ -27,6 +27,7 @@ import {
 } from "../types/extension";
 import { asString, getSettings } from "../utils/settings/plugin-settings";
 import { buildSignedProxyUrl } from "../utils/net/proxy-sign";
+import { engineRouteUrl } from "../extensions/engines/engine-routes";
 
 const _buildAcceptLanguage = (lang?: string): string => {
   if (!lang || lang === "en") return "en-US,en;q=0.9";
@@ -58,6 +59,7 @@ interface EngineContextOptions {
   pageCounter?: PageCounter;
   challenges?: readonly EngineChallenge[];
   engineName?: string;
+  routeBase?: string;
 }
 
 const _solvesAnubis = (
@@ -81,6 +83,7 @@ export const createSearchEngineContext = (
     pageCounter,
     challenges,
     engineName: engineLabel,
+    routeBase,
   } = options;
   const resolvedLang =
     lang ||
@@ -141,6 +144,12 @@ export const createSearchEngineContext = (
     userAgent: () => getRandomUserAgent(),
     extractImageUrl: extractImageUrl as EngineContext["extractImageUrl"],
     signProxyUrl: buildSignedProxyUrl,
+    ...(routeBase
+      ? {
+          apiBase: routeBase,
+          routeUrl: (path: string) => engineRouteUrl(routeBase, path),
+        }
+      : {}),
     imageFilter,
     sentinel: (response, engineName) =>
       sentinel(response, engineName ?? engineSettingsId ?? "engine"),

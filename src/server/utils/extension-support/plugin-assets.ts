@@ -158,6 +158,11 @@ export async function initPlugin(
       signProxyUrl: buildSignedProxyUrl,
       signFaviconUrl,
       fetch: outgoingFetch as PluginContext["fetch"],
+      searchTypes: async () => {
+        const { getInstalledSearchTypes } = await import("../../extensions/engines/catalog");
+        const types = await getInstalledSearchTypes();
+        return ["web", ...types.filter((t) => t !== "web")];
+      },
       createCache,
       useCache,
     };

@@ -1,4 +1,4 @@
-import type { PluginManifest, SearchEngine } from "../../types/extension";
+import type { PluginManifest, PluginRoute, SearchEngine } from "../../types/extension";
 import type { SettingField } from "../../../shared/setting-field";
 import type { EngineFilters } from "../../../shared/engine-filters";
 import type { EngineOrigin } from "../../../shared/engine-origins";
@@ -12,6 +12,8 @@ export interface PluginEntry {
   description?: string;
   site?: string;
   instance: SearchEngine;
+  folder?: string;
+  routes?: PluginRoute[];
   disabledByDefault?: boolean;
   source?: RegistrySource;
   compatibilityLayer?: string;

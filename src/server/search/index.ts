@@ -38,6 +38,7 @@ import { createSearchEngineContext } from "./engine-context";
 import { getEngineTimeout } from "./engine-timeout";
 import { scoreResults } from "./scoring";
 import { rewriteEngineRuns } from "./domain-rules";
+import { engineRouteBase } from "../extensions/engines/engine-routes";
 
 const _withTimeout = <T>(
   promise: Promise<T>,
@@ -188,6 +189,7 @@ export const searchSingleEngine = async (
     pageCounter,
     challenges: engine.challenges,
     engineName: engine.name,
+    routeBase: engineRouteBase(engineSettingsId),
   });
   try {
     const timeout = await getEngineTimeout(engineSettingsId);

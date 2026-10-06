@@ -1,10 +1,16 @@
+import { RANK_HIDDEN_CLASS } from "../renderer/media/result-ranking";
 import { state } from "../../state";
 
 const _isMediaLoaded = (idx: number, cardSelector: string): boolean => {
   const card = document.querySelector<HTMLElement>(
     `${cardSelector}[data-idx="${idx}"]`,
   );
-  if (!card || card.style.display === "none") return false;
+  if (
+    !card ||
+    card.style.display === "none" ||
+    card.classList.contains(RANK_HIDDEN_CLASS)
+  )
+    return false;
 
   const thumbSelector =
     cardSelector === ".video-card" ? ".video-thumb" : ".image-thumb";

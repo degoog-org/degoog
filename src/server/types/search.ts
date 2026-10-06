@@ -135,6 +135,8 @@ export interface EngineContext {
     selectors?: string[],
   ) => string;
   signProxyUrl?: (url: string) => string;
+  apiBase?: string;
+  routeUrl?: (path: string) => string;
   imageFilter?: ImageFilter;
   sentinel?: (
     response: { ok: boolean; status: number },

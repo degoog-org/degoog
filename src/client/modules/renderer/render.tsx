@@ -154,6 +154,7 @@ export function renderResults(
     _clearSlots();
     const pagination = document.getElementById("pagination");
     if (pagination) clear(pagination);
+    window.dispatchEvent(new CustomEvent("degoog-results-ready"));
     return;
   }
 

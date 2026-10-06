@@ -27,7 +27,7 @@ function isPluginRoute(val: unknown): val is PluginRoute {
   );
 }
 
-const extractRoutes = (mod: Record<string, unknown>): PluginRoute[] => {
+export const extractRoutes = (mod: Record<string, unknown>): PluginRoute[] => {
   const routes =
     mod.routes ?? (mod.default as Record<string, unknown> | undefined)?.routes;
   if (

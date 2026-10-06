@@ -103,6 +103,7 @@ export async function loadMoreMedia(type: string): Promise<void> {
         appendMediaCardsRef(grid, data.results, isImage ? "image" : "video");
       }
       appended = true;
+      window.dispatchEvent(new CustomEvent("degoog-results-ready"));
     }
   } catch (err) {
     console.warn("[media-scroll] next page failed", err);

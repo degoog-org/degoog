@@ -9,6 +9,12 @@ import {
 import { registerAppendMediaCards } from "../../media/media-scroll";
 import { renderTemplate } from "../../../utils/dom/template";
 import type { ScoredResult } from "../../../../shared/search-types";
+import {
+  applyResultRanking,
+  hasResultRanking,
+  RANK_HIDDEN_CLASS,
+  registerRankingRelayout,
+} from "./result-ranking";
 
 const COLUMN_STEPS: ReadonlyArray<{ upTo: number; columns: number }> = [
   { upTo: 800, columns: 3 },
@@ -24,7 +30,8 @@ const _getImageColumnCount = (grid: HTMLElement): number => {
 };
 
 const _isDeadCard = (card: Element): boolean =>
-  (card as HTMLElement).style.display === "none";
+  (card as HTMLElement).style.display === "none" ||
+  card.classList.contains(RANK_HIDDEN_CLASS);
 
 const _liveCount = (column: HTMLElement): number =>
   Array.from(column.children).filter((child) => !_isDeadCard(child)).length;
@@ -129,6 +136,20 @@ export function syncImageGridColumns(): void {
   requestAnimationFrame(() => _ensureImageColumns(grid));
 }
 
+const _relayoutRankedGrid = (grid: HTMLElement): void => {
+  if (grid.classList.contains("image-grid")) {
+    _rebuildColumns(grid, _getImageColumnCount(grid));
+    _scrollSelectedIntoView(grid);
+    return;
+  }
+  const cards = Array.from(grid.children) as HTMLElement[];
+  cards
+    .sort((a, b) => Number(a.dataset.idx ?? 0) - Number(b.dataset.idx ?? 0))
+    .forEach((card) => grid.appendChild(card));
+};
+
+registerRankingRelayout(_relayoutRankedGrid);
+
 export const PANEL_LAYOUT_BREAKPOINT = 768;
 
 registerImageGridPanelSync(syncImageGridColumns);
@@ -171,7 +192,8 @@ export function appendMediaCards(
       card.dataset.idx = String(idx);
       card.innerHTML = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
       card.addEventListener("click", () => {
-        toggleMediaPreview(state.currentResults[idx], idx, selector);
+        const current = Number(card.dataset.idx);
+        toggleMediaPreview(state.currentResults[current], current, selector);
       });
       place(card);
     });
@@ -186,12 +208,15 @@ export function appendMediaCards(
       card.dataset.idx = String(idx);
       card.innerHTML = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
       card.addEventListener("click", () => {
-        toggleMediaPreview(state.currentResults[idx], idx, selector);
+        const current = Number(card.dataset.idx);
+        toggleMediaPreview(state.currentResults[current], current, selector);
       });
       fragment.appendChild(card);
     });
     grid.appendChild(fragment);
   }
+
+  if (hasResultRanking()) applyResultRanking();
 }
 
 registerAppendMediaCards(appendMediaCards);
