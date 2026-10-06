@@ -23,6 +23,7 @@ import { getBase } from "../../utils/net/base-url";
 import { syncMediaPreviewPanel } from "../media/media";
 import { destroyMediaObserver, setupMediaObserver } from "../media/media-scroll";
 import { renderImageGrid } from "./media/render-media";
+import { RESULTS_READY } from "./media/result-ranking";
 
 import { clearSlotPanels as _clearSlots } from "./render-slots";
 
@@ -154,7 +155,7 @@ export function renderResults(
     _clearSlots();
     const pagination = document.getElementById("pagination");
     if (pagination) clear(pagination);
-    window.dispatchEvent(new CustomEvent("degoog-results-ready"));
+    window.dispatchEvent(new CustomEvent(RESULTS_READY));
     return;
   }
 
@@ -175,7 +176,7 @@ export function renderResults(
     const pagination = document.getElementById("pagination");
     if (pagination) clear(pagination);
   }
-  window.dispatchEvent(new CustomEvent("degoog-results-ready"));
+  window.dispatchEvent(new CustomEvent(RESULTS_READY));
 }
 
 export function appendResults(
@@ -200,7 +201,7 @@ export function appendResults(
 
   hydrateFavicons(container);
   attachVideoPlayers(container);
-  window.dispatchEvent(new CustomEvent("degoog-results-ready"));
+  window.dispatchEvent(new CustomEvent(RESULTS_READY));
 }
 
 export const attachVideoPlayers = (container: HTMLElement): void => {

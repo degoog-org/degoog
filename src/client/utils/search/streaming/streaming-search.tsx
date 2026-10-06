@@ -7,6 +7,7 @@ import { destroyMediaObserver, setupMediaObserver } from "../../../modules/media
 import { renderSidebar } from "../../../modules/renderer/sidebar/render-sidebar";
 import { attachVideoPlayers, renderPagination } from "../../../modules/renderer/render";
 import { renderImageGrid } from "../../../modules/renderer/media/render-media";
+import { RESULTS_READY } from "../../../modules/renderer/media/result-ranking";
 import { renderImgEngines } from "../../../modules/filters/image-filters";
 import { beginSearch, isCurrentSearch, state } from "../../../state";
 import {
@@ -65,6 +66,10 @@ interface StreamDone {
 
 let _activeSource: EventSource | null = null;
 let _linkWatch: AbortController | null = null;
+
+const _announceResults = (): void => {
+  window.dispatchEvent(new CustomEvent(RESULTS_READY));
+};
 
 const dropStream = (source: EventSource): void => {
   source.close();
@@ -192,6 +197,7 @@ export async function performStreamingSearch(
     } else {
       updateEngineTimings(sidebar, engineTimings);
     }
+    _announceResults();
   });
 
   source.addEventListener("engine-retry", (e) => {
@@ -299,6 +305,7 @@ export async function performStreamingSearch(
         );
       }
     }
+    _announceResults();
   });
 
   source.addEventListener("error", (e) => {

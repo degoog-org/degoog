@@ -3,6 +3,7 @@ import { LoadingDots } from "../../../shared/ui/components/feedback/loading-dots
 import { isCurrentSearch, state } from "../../state";
 import { isImageSearchType, type ScoredResult } from "../../../shared/search-types";
 import { fetchResultsPage } from "../../utils/net/url";
+import { RESULTS_READY } from "../renderer/media/result-ranking";
 
 let mediaObserver: IntersectionObserver | null = null;
 let appendMediaCardsRef:
@@ -103,7 +104,7 @@ export async function loadMoreMedia(type: string): Promise<void> {
         appendMediaCardsRef(grid, data.results, isImage ? "image" : "video");
       }
       appended = true;
-      window.dispatchEvent(new CustomEvent("degoog-results-ready"));
+      window.dispatchEvent(new CustomEvent(RESULTS_READY));
     }
   } catch (err) {
     console.warn("[media-scroll] next page failed", err);

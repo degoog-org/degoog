@@ -27,6 +27,7 @@ declare global {
 
 export const RANK_HIDDEN_CLASS = "degoog-rank-hidden";
 export const RESULTS_API_READY = "degoog-results-api-ready";
+export const RESULTS_READY = "degoog-results-ready";
 
 const BADGE_CLASS = "degoog-rank-badge";
 const GRIDS: ReadonlyArray<{ grid: string; card: string }> = [
