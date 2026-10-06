@@ -3,6 +3,17 @@
   "version": 1,
   "instances": [
     {
+      "id": "utilibre",
+      "name": "Utilibre",
+      "clearnet": ["https://degoog.utilibre.org"],
+      "tor": [],
+      "i2p": [],
+      "appearance": "default",
+      "theme": null,
+      "country": "DE",
+      "cloudflare": true
+    },
+    {
       "id": "degoog-org",
       "name": "degoog.org",
       "clearnet": [
