@@ -41,6 +41,18 @@ import { isSettingsPathname } from "../utils/settings/settings-path";
 import type { ImageFilter } from "../types/search";
 import { isImageSearchType } from "../../shared/search-types";
 import { readImgFilter } from "../utils/net/url";
+import {
+  currentSearchImage,
+  handOffHomeImage,
+  homeSearchImage,
+  IMAGE_SEARCH_TYPE,
+  initSearchImage,
+  onSearchImageSubmit,
+  RESULTS_INPUT_ID,
+  restoreSearchImage,
+  useSearchImage,
+} from "./search-image/search-image";
+import { readSearchImage } from "./search-image/search-image-store";
 
 type DegoogHistoryState = {
   degoog: boolean;
@@ -49,6 +61,7 @@ type DegoogHistoryState = {
   page: number;
   loaded?: number;
   imageFilter?: ImageFilter;
+  imageId?: string;
 };
 
 const _navigateToSearch = (query: string, type?: string): void => {
@@ -59,10 +72,19 @@ const _navigateToSearch = (query: string, type?: string): void => {
     window.location.href = `${getBase()}/search`;
     return;
   }
-  const params = new URLSearchParams({ q: query });
+  const params = new URLSearchParams(query ? { q: query } : {});
   if (type) params.set("type", type);
   window.location.href = `${getBase()}/search?${params.toString()}`;
 };
+
+const _historyImageId = (): string | undefined =>
+  (history.state as DegoogHistoryState | null)?.imageId;
+
+function _searchFromResults(query: string): void {
+  const image = currentSearchImage();
+  const fresh = !!image && image.id !== _historyImageId();
+  void performSearch(query, fresh ? IMAGE_SEARCH_TYPE : undefined);
+}
 
 const _search = (query: string, type?: string): void => {
   const q = typeof query === "string" ? query.trim() : "";
@@ -133,15 +155,28 @@ export async function init(): Promise<void> {
     .getElementById("search-form-home")
     ?.addEventListener("submit", (e) => {
       e.preventDefault();
-      const query = searchInput?.value.trim();
+      const query = searchInput?.value.trim() ?? "";
+      const image = homeSearchImage();
+      if (image) {
+        handOffHomeImage(image);
+        _navigateToSearch(query, IMAGE_SEARCH_TYPE);
+        return;
+      }
       if (!query) return;
       _navigateToSearch(query);
     });
 
+  onSearchImageSubmit((inputId) => {
+    if (inputId === RESULTS_INPUT_ID) {
+      if (resultsInput) _searchFromResults(resultsInput.value);
+      return;
+    }
+    (document.getElementById("search-form-home") as HTMLFormElement | null)?.requestSubmit();
+  });
+
   resultsInput?.addEventListener("keydown", (e) => {
     if (e.isComposing) return;
-    if (e.key === "Enter" && resultsInput)
-      void performSearch(resultsInput.value);
+    if (e.key === "Enter" && resultsInput) _searchFromResults(resultsInput.value);
   });
 
   resultsInput?.addEventListener("input", () => {
@@ -155,7 +190,7 @@ export async function init(): Promise<void> {
   document
     .getElementById("results-search-btn")
     ?.addEventListener("click", () => {
-      if (resultsInput) void performSearch(resultsInput.value);
+      if (resultsInput) _searchFromResults(resultsInput.value);
     });
 
   document.querySelector(".results-logo")?.addEventListener("click", (e) => {
@@ -249,6 +284,8 @@ export async function init(): Promise<void> {
   if (hideUrlParams !== null) state.hideUrlParams = hideUrlParams;
 
   exposeResultsApi(_search);
+  void initSearchImage();
+  const restoredImage = restoreSearchImage(_historyImageId());
 
   const params = new URLSearchParams(window.location.search);
   const q = params.get("q");
@@ -261,7 +298,9 @@ export async function init(): Promise<void> {
   if (postPage) sessionStorage.removeItem("degoog-post-page");
 
   const resolvedQ = q || postQuery;
-  const type = params.get("type") || postType || "web";
+  if (restoredImage) useSearchImage(restoredImage);
+  const type =
+    params.get("type") || postType || (restoredImage ? IMAGE_SEARCH_TYPE : "web");
   const page = parseInt(params.get("page") ?? postPage ?? "1", 10) || 1;
   const loadedPage = parseInt(params.get("loaded") ?? "1", 10) || 1;
   state.restoreInfinitePage = type.startsWith("tab:")
@@ -270,7 +309,10 @@ export async function init(): Promise<void> {
 
   if (isImageSearchType(type)) state.imageFilter = readImgFilter(params);
 
-  if (resolvedQ) {
+  if (restoredImage) {
+    state.isInitialLoad = true;
+    void performSearch(resolvedQ ?? "", type, page);
+  } else if (resolvedQ) {
     state.isInitialLoad = true;
     if (searchInput) searchInput.value = resolvedQ;
     if (type.startsWith("tab:")) {
@@ -333,6 +375,7 @@ export async function init(): Promise<void> {
     if (onOverlayPop(e)) return;
 
     const hs = e.state as DegoogHistoryState | null;
+    useSearchImage(readSearchImage(hs?.imageId));
     if (hs?.degoog) {
       state.isInitialLoad = true;
       state.imageFilter = hs.imageFilter

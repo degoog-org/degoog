@@ -17,7 +17,12 @@ import { getInstanceSettings } from "../../utils/settings/server-settings";
 import { DEGOOG_ENGINE_ID } from "./builtins/degoog";
 import type { EngineFilters } from "../../../shared/engine-filters";
 import { engineOrigin, storeOrigins } from "./origins";
-import { manifestOf, type AnyEngineEntry, type EngineCatalogEntry } from "./entries";
+import {
+  inputOf,
+  manifestOf,
+  type AnyEngineEntry,
+  type EngineCatalogEntry,
+} from "./entries";
 import { allEngineEntries } from "./loader";
 import {
   configureEngine,
@@ -30,6 +35,7 @@ import {
   resolveTabSearchType,
 } from "./search-types";
 import { primaryType } from "../../../shared/search-types";
+import { ENGINE_INPUT, type EngineInput } from "../../../shared/engine-input";
 
 export const getEngineSettingsView = async (
   engineId: string,
@@ -109,6 +115,7 @@ export const listEngines = async (): Promise<EngineCatalogEntry[]> => {
     searchTypes,
     primaryType: primaryType(searchTypes),
     filters: e.filters,
+    input: inputOf(e),
     origin: engineOrigin(e, origins),
   }));
 };
@@ -118,6 +125,14 @@ export const readEngineScore = async (id: string): Promise<number> => {
   const parsed = parseFloat(asString(stored["score"]));
   const score = Number.isFinite(parsed) ? parsed : 1;
   return Math.max(score, 0.1);
+};
+
+export const getEngineInput = (engine: string | undefined): EngineInput => {
+  const entries = allEngineEntries();
+  const entry =
+    entries.find((e) => e.id === engine) ??
+    entries.find((e) => e.instance.name === engine);
+  return entry ? inputOf(entry) : ENGINE_INPUT.TEXT;
 };
 
 export const getEngineMap = (): Record<string, SearchEngine> =>

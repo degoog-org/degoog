@@ -1,7 +1,7 @@
 import type { Socket } from "node:net";
 import tls from "node:tls";
 import { gunzipSync, inflateSync, brotliDecompressSync } from "node:zlib";
-import type { TransportFetchOptions } from "../../types/extension";
+import type { TransportBody, TransportFetchOptions } from "../../types/extension";
 
 const MAX_REDIRECTS = 5;
 const MAX_RESPONSE_BYTES = 64 * 1024 * 1024;
@@ -13,7 +13,7 @@ function _buildHttpRequest(
   method: string,
   parsed: URL,
   headers: Record<string, string> | undefined,
-  body: string | undefined,
+  body: TransportBody | undefined,
 ): string {
   const path = parsed.pathname + parsed.search;
   const lines: string[] = [`${method} ${path || "/"} HTTP/1.1`];

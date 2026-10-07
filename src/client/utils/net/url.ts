@@ -6,6 +6,10 @@ import { appendSearchAuthParams, searchAuthHeaders } from "./request";
 import { isImageSearchType } from "../../../shared/search-types";
 import { enabledIds, getEngineBangs, getEngines } from "../search/engines";
 import { ENGINE_BANGS_FIELD } from "../../../shared/sync";
+import {
+  currentSearchImage,
+  withSearchImage,
+} from "../../modules/search-image/search-image";
 
 export const imgFilterRecord = (f: ImageFilter): Record<string, string> => {
   const r: Record<string, string> = {};
@@ -115,8 +119,11 @@ export const fetchSearch = (
   type: string,
   page: number,
 ): Promise<Response> =>
-  state.postMethodEnabled
-    ? _postSearchJson("/api/search", buildSearchBody(query, engines, type, page))
+  state.postMethodEnabled || currentSearchImage()
+    ? _postSearchJson(
+        "/api/search",
+        withSearchImage(buildSearchBody(query, engines, type, page)),
+      )
     : fetch(appendSearchAuthParams(buildSearchUrl(query, engines, type, page)));
 
 export const fetchCommand = async (

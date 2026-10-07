@@ -78,6 +78,8 @@ export interface SearchBody {
   safeMode?: string;
   /** @deprecated use safeMode; still read for old bookmarks/clients. */
   imgNsfw?: string;
+  image?: string;
+  imageQuery?: string;
 }
 
 export interface RetryPostBody extends SearchBody {
@@ -98,6 +100,15 @@ export interface SearchParams {
   dateFrom: string;
   dateTo: string;
   imageFilter?: ImageFilter;
+  image?: SearchImage;
+  imageQuery?: string;
+}
+
+export interface SearchImage {
+  bytes: Uint8Array<ArrayBuffer>;
+  mime: string;
+  base64: string;
+  hash: string;
 }
 
 export type SearchType = string;
@@ -115,7 +126,9 @@ export type EngineConfig = Record<string, boolean>;
 type EngineFetch = (
   url: string,
   options?: {
+    method?: string;
     headers?: Record<string, string>;
+    body?: string | Uint8Array<ArrayBuffer>;
     redirect?: RequestRedirect;
     signal?: AbortSignal;
   },
@@ -138,6 +151,7 @@ export interface EngineContext {
   apiBase?: string;
   routeUrl?: (path: string) => string;
   imageFilter?: ImageFilter;
+  image?: SearchImage;
   sentinel?: (
     response: { ok: boolean; status: number },
     engineName?: string,

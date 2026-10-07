@@ -247,6 +247,7 @@ exports[`every mounted router exposes the routes it did before search-bar route 
 exports[`every mounted router exposes the routes it did before search/stream route list is unchanged 1`] = `
 [
   "GET /api/search/stream",
+  "POST /api/search/stream",
 ]
 `;
 
@@ -406,7 +407,7 @@ exports[`the admin path is operator-defined, not hardcoded DEGOOG_SETTINGS_PATH 
 
 exports[`route shape invariants the mounted surface totals stay put 1`] = `
 {
-  "totalHandlers": 312,
-  "unique": 251,
+  "totalHandlers": 314,
+  "unique": 252,
 }
 `;

@@ -1,4 +1,5 @@
 import { renderHtml } from "../../../shared/ui/tribute/html";
+import { canQueryImages } from "../../search/image-query";
 import { GateNote } from "./gate-note";
 import { TakeoverResultItem } from "./takeover-result";
 import { Context, Hono } from "hono";
@@ -222,6 +223,7 @@ router.get("/api/engines", async (c) => {
     engines: await listEngines(),
     defaults: getDefaultEngineConfig(),
     bangDefaults: getDefaultEngineBangConfig(),
+    imageQuery: await canQueryImages(),
   });
 });
 

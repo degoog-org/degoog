@@ -9,13 +9,55 @@ import { getInstanceSettings } from "../utils/settings/server-settings";
 import { asBoolean } from "../utils/settings/plugin-settings";
 import { tagIndexRelation } from "../indexer/store/record";
 import { DEGOOG_ENGINE_NAME } from "../../shared/search-types";
-import { selectActiveEngines } from "./engine-selection";
+import { engineQuery, selectActiveEngines, type SearchInputs } from "./engine-selection";
 import { agreedPageTotal } from "./page-counter";
+import { getEngineInput } from "../extensions/engines/catalog";
+import {
+  canQueryImages,
+  imageQueryProvider,
+  queryImage,
+  type ImageQueryOutcome,
+} from "./image-query";
+import { ENGINE_INPUT } from "../../shared/engine-input";
 import {
   isCacheable,
   readActiveRuns,
   type RunScope,
 } from "./engine-cache";
+
+export const searchInputsOf = async (
+  params: Pick<SearchParams, "image" | "imageQuery">,
+): Promise<SearchInputs> => ({
+  image: params.image,
+  imageQuery:
+    params.image && params.imageQuery && (await canQueryImages())
+      ? params.imageQuery
+      : undefined,
+});
+
+export const withImageQuery = async (
+  inputs: SearchInputs,
+  text: string,
+  lang?: string,
+  needsText = true,
+): Promise<{ inputs: SearchInputs; outcome: ImageQueryOutcome }> => {
+  if (!needsText || !inputs.image || inputs.imageQuery) return { inputs, outcome: {} };
+  const provider = await imageQueryProvider();
+  if (!provider) return { inputs, outcome: {} };
+  const outcome = await queryImage(provider, inputs.image, text, { lang });
+  return { inputs: { ...inputs, imageQuery: outcome.query }, outcome };
+};
+
+export const imageQueryFields = (
+  inputs: SearchInputs,
+  outcome: ImageQueryOutcome,
+): { imageQuery?: string; imageQueryError?: string } =>
+  inputs.image
+    ? { imageQuery: inputs.imageQuery, imageQueryError: outcome.error }
+    : {};
+
+export const indexesSearch = (indexerOn: boolean, inputs: SearchInputs): boolean =>
+  indexerOn && !inputs.image;
 
 export async function handleSearch(params: SearchParams) {
   const {
@@ -36,6 +78,7 @@ export async function handleSearch(params: SearchParams) {
     lang: resolvedLang,
     timeFilter: resolvedTime,
   } = await resolveSearchOverrides(origQ, searchType, lang, timeFilter);
+  const { inputs, outcome } = await withImageQuery(await searchInputsOf(params), query, resolvedLang);
 
   const { indexBasis, ...response } = await search(
     query,
@@ -47,13 +90,14 @@ export async function handleSearch(params: SearchParams) {
     dateFrom,
     dateTo,
     imageFilter,
+    inputs,
   );
 
   const settings = await getInstanceSettings();
 
   const displayResults = await applyMergedDomainRules(response.results);
   const indexedUrls = await recordIndexBasis(
-    asBoolean(settings.degoogIndexerEnabled),
+    indexesSearch(asBoolean(settings.degoogIndexerEnabled), inputs),
     query,
     type,
     await applyMergedDomainRules(indexBasis),
@@ -62,6 +106,7 @@ export async function handleSearch(params: SearchParams) {
 
   return {
     ...response,
+    ...imageQueryFields(inputs, outcome),
     results: signResultThumbnails(
       tagIndexRelation(displayResults, new Set(indexedUrls)),
     ),
@@ -90,6 +135,12 @@ export async function handleRetry(
     lang: resolvedLang,
     timeFilter: resolvedTime,
   } = await resolveSearchOverrides(origQ, searchType, lang, timeFilter);
+  const { inputs, outcome } = await withImageQuery(
+    await searchInputsOf(params),
+    query,
+    resolvedLang,
+    getEngineInput(engineName) === ENGINE_INPUT.TEXT,
+  );
 
   const {
     results: newResults,
@@ -97,7 +148,7 @@ export async function handleRetry(
     pages: retriedPages,
   } = await searchSingleEngine(
     engineName,
-    query,
+    engineQuery(getEngineInput(engineName), query, inputs),
     page,
     resolvedTime,
     resolvedLang,
@@ -106,7 +157,7 @@ export async function handleRetry(
     imageFilter,
     undefined,
     type,
-    { forceFresh: true },
+    { forceFresh: true, image: inputs.image },
   );
 
   const scope: RunScope = {
@@ -119,7 +170,7 @@ export async function handleRetry(
     dateTo,
     imageFilter,
   };
-  const active = await selectActiveEngines(type, engines, imageFilter);
+  const active = await selectActiveEngines(type, engines, imageFilter, inputs);
   const isRetried = (entry: { id: string; instance: { name: string } }): boolean =>
     timing.id ? entry.id === timing.id : entry.instance.name === timing.name;
   const retried = active.find(isRetried);
@@ -132,7 +183,7 @@ export async function handleRetry(
         engine,
         run: await searchSingleEngine(
           engine.id,
-          query,
+          engineQuery(engine.input, query, inputs),
           page,
           resolvedTime,
           resolvedLang,
@@ -141,18 +192,25 @@ export async function handleRetry(
           imageFilter,
           undefined,
           type,
+          { image: inputs.image },
         ),
       })),
   );
-  const knownRuns = [...(await readActiveRuns(others, scope)), ...liveRuns];
+  const knownRuns = [...(await readActiveRuns(others, scope, inputs)), ...liveRuns];
 
   const runs = await rewriteEngineRuns([
     ...knownRuns.map(({ engine, run }) => ({
       results: run.results,
       multiplier: engine.score,
       name: engine.instance.name,
+      visual: engine.input === ENGINE_INPUT.IMAGE,
     })),
-    { results: newResults, multiplier: retried?.score ?? 1, name: timing.name },
+    {
+      results: newResults,
+      multiplier: retried?.score ?? 1,
+      name: timing.name,
+      visual: getEngineInput(engineName) === ENGINE_INPUT.IMAGE,
+    },
   ]);
   const merged = scoreResults(runs);
   const engineTimings = [...knownRuns.map(({ run }) => run.timing), timing];
@@ -160,7 +218,7 @@ export async function handleRetry(
   const settings = await getInstanceSettings();
   const displayMerged = await applyMergedDomainRules(merged);
   const indexedUrls = await recordIndexBasis(
-    asBoolean(settings.degoogIndexerEnabled),
+    indexesSearch(asBoolean(settings.degoogIndexerEnabled), inputs),
     query,
     type,
     await applyMergedDomainRules(
@@ -174,6 +232,7 @@ export async function handleRetry(
     type,
     totalTime: timing.time,
     relatedSearches: [],
+    ...imageQueryFields(inputs, outcome),
     timing,
     engineTimings,
     totalPages: agreedPageTotal([

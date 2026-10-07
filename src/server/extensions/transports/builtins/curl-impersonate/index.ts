@@ -12,6 +12,7 @@ import {
   parseCurlStdoutWithCookieJar,
   saveCookieJar,
 } from "../../utils/curl-cookie-cache";
+import { withCurlBodyArgs } from "../../utils/curl-body-file";
 import { killOnAbort } from "../../utils/kill-on-abort";
 
 const STATUS_DELIMITER = randomUUID();
@@ -43,13 +44,11 @@ function _resolveBinary(): string | null {
   return null;
 }
 
-const _hasBody = (method: string): boolean =>
-  ["POST", "PUT", "PATCH"].includes(method);
-
 function _buildCurlArgs(
   url: string,
   options: TransportFetchOptions,
   proxyUrl: string | undefined,
+  bodyArgs: string[] = [],
 ): string[] {
   const method = (options.method ?? "GET").toUpperCase();
   const args = [
@@ -63,9 +62,7 @@ function _buildCurlArgs(
 
   if (proxyUrl?.trim()) args.push("--proxy", proxyUrl.trim());
   if (method !== "GET" && method !== "HEAD") args.push("-X", method);
-  if (options.body && _hasBody(method)) {
-    args.push("--data-binary", options.body);
-  }
+  args.push(...bodyArgs);
 
   for (const [k, v] of Object.entries(options.headers ?? {})) {
     if (!STRIP_HEADERS.has(k.toLowerCase())) {
@@ -167,8 +164,9 @@ async function _fetchViaImpersonate(
     }
   }
 
-  const args = _buildCurlArgs(url, options, proxyUrl);
-  const result = await _run(binary, args, jar, options.signal);
+  const result = await withCurlBodyArgs(options, (bodyArgs) =>
+    _run(binary, _buildCurlArgs(url, options, proxyUrl, bodyArgs), jar, options.signal),
+  );
   await saveCookieJar(cookieCache, cookieKey, result.cookieJarText, COOKIE_TTL_MS);
   return result.response;
 }

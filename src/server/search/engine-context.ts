@@ -4,6 +4,7 @@ import type { PageCounter } from "./page-counter";
 import type {
   EngineContext,
   ImageFilter,
+  SearchImage,
   SearchType,
 } from "../types/search";
 import {
@@ -54,6 +55,7 @@ interface EngineContextOptions {
   dateFrom?: string;
   dateTo?: string;
   imageFilter?: ImageFilter;
+  image?: SearchImage;
   signal?: AbortSignal;
   searchType?: SearchType;
   pageCounter?: PageCounter;
@@ -78,6 +80,7 @@ export const createSearchEngineContext = (
     dateFrom,
     dateTo,
     imageFilter,
+    image,
     signal,
     searchType,
     pageCounter,
@@ -151,6 +154,7 @@ export const createSearchEngineContext = (
         }
       : {}),
     imageFilter,
+    ...(image ? { image } : {}),
     sentinel: (response, engineName) =>
       sentinel(response, engineName ?? engineSettingsId ?? "engine"),
     engineError: (status, message, opts) =>

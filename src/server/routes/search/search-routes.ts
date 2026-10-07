@@ -28,6 +28,7 @@ import { sanePage } from "../../search/page-counter";
 import { handleRetry, handleSearch } from "../../search/handlers";
 import { logger } from "../../utils/logger";
 import { publicBodyLimit } from "../_guards";
+import { hasSearchInput, INVALID_IMAGE, rejectsImage } from "../../search/search-image";
 
 /**
  * @todo Remove this once openwebui merges my future pull request to add degoog specific search support.
@@ -119,10 +120,12 @@ export function registerSearchRoutes(router: Hono): void {
     const body = await readObjectBody<SearchBody>(c);
     if (!body) return c.json({ error: "Invalid JSON" }, 400);
     const query = body.query ?? "";
-    if (!isValidQuery(query))
+    const parsed = parseSearchBody(body);
+    if (rejectsImage(body, parsed)) return c.json(INVALID_IMAGE, 400);
+    if (!hasSearchInput(query, parsed.image))
       return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
 
-    const result = await handleSearch({ query, ...parseSearchBody(body) });
+    const result = await handleSearch({ query, ...parsed });
 
     return respond(c, result, body.format ?? c.req.query(SEARX_FORMAT_PARAM));
   });
@@ -154,10 +157,12 @@ export function registerSearchRoutes(router: Hono): void {
     if (!body) return c.json({ error: "Invalid JSON" }, 400);
     const query = body.query ?? "";
     const engineName = body.engine ?? "";
-    if (!query || !engineName)
+    const parsed = parseSearchBody(body);
+    if (rejectsImage(body, parsed)) return c.json(INVALID_IMAGE, 400);
+    if (!hasSearchInput(query, parsed.image) || !engineName)
       return c.json({ error: "Missing 'query' or 'engine' parameter" }, 400);
 
-    const result = await handleRetry({ query, engineName, ...parseSearchBody(body) });
+    const result = await handleRetry({ query, engineName, ...parsed });
 
     return respond(c, result, body.format ?? c.req.query(SEARX_FORMAT_PARAM));
   });

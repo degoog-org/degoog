@@ -33,4 +33,5 @@ export interface AppState {
   isInitialLoad: boolean;
   imageFilter: ImageFilter;
   searchSeq: number;
+  settledSeq: number;
 }

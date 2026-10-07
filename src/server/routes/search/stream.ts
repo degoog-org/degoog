@@ -1,7 +1,24 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { searchSingleEngine } from "../../search";
 import { scoreResults } from "../../search/scoring";
-import { selectActiveEngines } from "../../search/engine-selection";
+import {
+  engineQuery,
+  selectActiveEngines,
+  type ActiveEngine,
+  type SearchInputs,
+} from "../../search/engine-selection";
+import { imageQueryFields, indexesSearch, searchInputsOf } from "../../search/handlers";
+import {
+  imageQueryProvider,
+  queryImage,
+  type ImageQueryOutcome,
+  type ImageQueryProvider,
+} from "../../search/image-query";
+import { ENGINE_INPUT } from "../../../shared/engine-input";
+import { hasSearchInput, INVALID_IMAGE, rejectsImage } from "../../search/search-image";
+import type { SearchBody, SearchImage, SearchParams } from "../../types/search";
+import { readObjectBody } from "../../utils/hono";
+import { publicBodyLimit } from "../_guards";
 import { agreedPageTotal } from "../../search/page-counter";
 import {
   DEGOOG_ENGINE_NAME,
@@ -11,30 +28,48 @@ import {
 } from "../../../shared/search-types";
 import { logger } from "../../utils/logger";
 import { asBoolean, asString } from "../../utils/settings/plugin-settings";
-import { _applyRateLimit, isValidQuery } from "../../utils/search";
+import { _applyRateLimit } from "../../utils/search";
 import { resolveSearchOverrides } from "../../search/overrides";
 import { recordIndexBasis } from "../../search/indexing";
 import { guardApiKey } from "../../utils/security/api-key-guard";
 import { applyMergedDomainRules, rewriteEngineRuns } from "../../search/domain-rules";
 import { signResultThumbnails } from "../../utils/net/proxy-sign";
-import { parseSearchRequest } from "./parsers";
+import { parseSearchBody, parseSearchRequest } from "./parsers";
 import { getInstanceSettings } from "../../utils/settings/server-settings";
 import { tagIndexRelation } from "../../indexer/store/record";
 
 const router = new Hono();
 
+const MISSING_QUERY = { error: "Missing or invalid query parameter 'q'" };
+
+const _guard = async (c: Context): Promise<Response | null> =>
+  (await _applyRateLimit(c)) ?? (await guardApiKey(c, "apiKeySearchEnabled"));
+
 router.get("/api/search/stream", async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-  const authRes = await guardApiKey(c, "apiKeySearchEnabled");
-  if (authRes) return authRes;
-
+  const blocked = await _guard(c);
+  if (blocked) return blocked;
   const { origQ, ...params } = parseSearchRequest(c);
+  if (!hasSearchInput(origQ)) return c.json(MISSING_QUERY, 400);
+  return _streamSearch({ query: origQ, ...params });
+});
 
-  if (!isValidQuery(origQ))
-    return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
+router.post("/api/search/stream", publicBodyLimit, async (c) => {
+  const blocked = await _guard(c);
+  if (blocked) return blocked;
+  const body = await readObjectBody<SearchBody>(c);
+  if (!body) return c.json({ error: "Invalid JSON" }, 400);
+  const parsed = parseSearchBody(body);
+  if (rejectsImage(body, parsed)) return c.json(INVALID_IMAGE, 400);
+  const query = body.query ?? "";
+  if (!hasSearchInput(query, parsed.image)) return c.json(MISSING_QUERY, 400);
+  return _streamSearch({ query, ...parsed });
+});
 
-  const { engines, searchType, page, timeFilter, lang, dateFrom, dateTo, imageFilter } = params;
+async function _streamSearch(params: SearchParams): Promise<Response> {
+  const { query: origQ, engines, searchType, page, timeFilter, lang, dateFrom, dateTo, imageFilter } = params;
+  const inputs = await searchInputsOf(params);
+  const provider =
+    inputs.image && !inputs.imageQuery ? await imageQueryProvider() : undefined;
 
   const {
     query,
@@ -50,7 +85,7 @@ router.get("/api/search/stream", async (c) => {
     Math.max(1, parseInt(asString(settings.streamingMaxRetries) || "2", 10)),
   );
 
-  const rawActiveEngines = await selectActiveEngines(type, engines, imageFilter);
+  const rawActiveEngines = await selectActiveEngines(type, engines, imageFilter, inputs);
 
   const start = performance.now();
 
@@ -66,6 +101,7 @@ router.get("/api/search/stream", async (c) => {
         results: SearchResult[];
         multiplier: number;
         name: string;
+        visual: boolean;
       }[] = [];
 
       function _send(event: string, data: unknown) {
@@ -87,8 +123,10 @@ router.get("/api/search/stream", async (c) => {
           tagIndexRelation(await applyMergedDomainRules(scoreResults(allRawResults))),
         );
 
-      const enginePromises = rawActiveEngines.map(
-        async ({ instance, score, id }) => {
+      const runEngine = async (
+        { instance, score, id, input }: ActiveEngine,
+        runInputs: SearchInputs,
+      ): Promise<void> => {
           const engineName = instance.name;
           let attempt = 0;
           let lastTiming: EngineTiming = {
@@ -104,7 +142,7 @@ router.get("/api/search/stream", async (c) => {
             const isRetry = attempt > 0;
             const { results, timing, pages } = await searchSingleEngine(
               id,
-              query,
+              engineQuery(input, query, runInputs),
               page,
               resolvedTime,
               resolvedLang,
@@ -113,14 +151,21 @@ router.get("/api/search/stream", async (c) => {
               imageFilter,
               cancelController.signal,
               type,
-              { forceFresh: isRetry },
+              { forceFresh: isRetry, image: runInputs.image },
             );
             lastTiming = timing;
             lastPages = pages;
 
             if (timing.resultCount > 0) {
               allRawResults.push(
-                ...(await rewriteEngineRuns([{ results, multiplier: score, name: engineName }])),
+                ...(await rewriteEngineRuns([
+                  {
+                    results,
+                    multiplier: score,
+                    name: engineName,
+                    visual: input === ENGINE_INPUT.IMAGE,
+                  },
+                ])),
               );
               allTimings.push(timing);
               allPages.push(pages);
@@ -154,12 +199,47 @@ router.get("/api/search/stream", async (c) => {
             retry: false,
             attempt: 0,
           });
-        },
-      ).map((run, i) =>
-        run.catch((err: unknown) => {
-          logger.warn("search-stream", `${rawActiveEngines[i].instance.name} failed mid-stream`, err);
-        }),
-      );
+      };
+
+      const runAll = (active: ActiveEngine[], runInputs: SearchInputs): Promise<void>[] =>
+        active.map((engine) =>
+          runEngine(engine, runInputs).catch((err: unknown) => {
+            logger.warn("search-stream", `${engine.instance.name} failed mid-stream`, err);
+          }),
+        );
+
+      let imageOutcome: ImageQueryOutcome = {};
+      const describeThenSearch = async (
+        describer: ImageQueryProvider,
+        image: SearchImage,
+      ): Promise<void> => {
+        imageOutcome = await queryImage(describer, image, query, {
+          lang: resolvedLang,
+          signal: cancelController.signal,
+        });
+        if (cancelController.signal.aborted) return;
+        _send("image-query", {
+          query: imageOutcome.query ?? null,
+          error: imageOutcome.error ?? null,
+        });
+        if (!imageOutcome.query) return;
+        const described = { ...inputs, imageQuery: imageOutcome.query };
+        const textEngines = (
+          await selectActiveEngines(type, engines, imageFilter, described)
+        ).filter((e) => e.input === ENGINE_INPUT.TEXT);
+        await Promise.all(runAll(textEngines, described));
+      };
+
+      const enginePromises = [
+        ...runAll(rawActiveEngines, inputs),
+        ...(provider && inputs.image
+          ? [
+              describeThenSearch(provider, inputs.image).catch((err: unknown) => {
+                logger.warn("search-stream", "image query failed mid-stream", err);
+              }),
+            ]
+          : []),
+      ];
 
       void Promise.all(enginePromises)
         .then(async () => {
@@ -170,7 +250,7 @@ router.get("/api/search/stream", async (c) => {
           scoreResults(allRawResults.filter((e) => e.name !== DEGOOG_ENGINE_NAME)),
         );
         const indexedUrls = await recordIndexBasis(
-          asBoolean(indexerSettings.degoogIndexerEnabled),
+          indexesSearch(asBoolean(indexerSettings.degoogIndexerEnabled), inputs),
           query,
           type,
           indexBasis,
@@ -192,6 +272,10 @@ router.get("/api/search/stream", async (c) => {
           indexedUrls,
           relatedSearches: [],
           totalPages: agreedPageTotal(allPages),
+          ...imageQueryFields(
+            { ...inputs, imageQuery: inputs.imageQuery ?? imageOutcome.query },
+            imageOutcome,
+          ),
         });
         })
         .catch((err) => {
@@ -217,6 +301,6 @@ router.get("/api/search/stream", async (c) => {
       Connection: "keep-alive",
     },
   });
-});
+}
 
 export default router;

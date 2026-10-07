@@ -11,6 +11,10 @@ import { renderSidebar } from "../../../modules/renderer/sidebar/render-sidebar"
 import { renderResults } from "../../../modules/renderer/render";
 import { performSearch } from "./search-actions-perform";
 import { buildSearchBody, buildSearchParams } from "../../net/url";
+import {
+  currentSearchImage,
+  withSearchImage,
+} from "../../../modules/search-image/search-image";
 import { searchAuthHeaders, appendSearchAuthParams } from "../../net/request";
 import { infiniteScrollOn } from "../streaming/streaming-config";
 import { mergeEngineTimings, mergeScoredResults } from "../engine-stats/engine-stats";
@@ -21,7 +25,7 @@ export async function retryEngine(
   engineName: string,
   page = state.currentPage,
 ): Promise<void> {
-  if (!state.currentQuery || !state.currentData) return;
+  if ((!state.currentQuery && !currentSearchImage()) || !state.currentData) return;
   const seq = state.searchSeq;
 
   const engines = await getEngines();
@@ -30,11 +34,13 @@ export async function retryEngine(
   params.set("engine", engineName);
 
   try {
-    const res = state.postMethodEnabled
+    const res = state.postMethodEnabled || currentSearchImage()
       ? await fetch(`${getBase()}/api/search/retry`, {
           method: "POST",
           body: JSON.stringify({
-            ...buildSearchBody(state.currentQuery, engines, state.currentType, page),
+            ...withSearchImage(
+              buildSearchBody(state.currentQuery, engines, state.currentType, page),
+            ),
             engine: engineName,
           }),
           headers: { "Content-Type": "application/json", ...searchAuthHeaders() },

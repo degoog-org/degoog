@@ -1,4 +1,4 @@
-import type { ScoredResult } from "../../../shared/search-types";
+import { compareScored, type ScoredResult } from "../../../shared/search-types";
 import { asBoolean } from "../settings/plugin-settings";
 import { getInstanceSettings } from "../settings/server-settings";
 import { readDomainLists } from "./domain-lists";
@@ -181,5 +181,5 @@ export const applyDomainScores = async (
     }
   });
 
-  return adjusted.sort((a, b) => b.score - a.score);
+  return adjusted.sort(compareScored);
 };

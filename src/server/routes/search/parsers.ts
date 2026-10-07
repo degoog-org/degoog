@@ -16,6 +16,7 @@ import type {
 } from "../../types/search";
 import { parseEngineConfig } from "../../utils/search";
 import { sanePage } from "../../search/page-counter";
+import { parseImageQuery, parseSearchImage } from "../../search/search-image";
 
 export const SAFE_MODE_PARAM = "safeMode";
 export const LEGACY_SAFE_MODE_PARAM = "imgNsfw";
@@ -71,6 +72,8 @@ export const parseSearchBody = (body: SearchBody): Omit<SearchParams, "query"> =
   dateFrom: body.dateFrom || "",
   dateTo: body.dateTo || "",
   imageFilter: parseImageFilter(body.imgColor, body.imgSize, body.imgType, body.imgLayout, body.safeMode ?? body.imgNsfw),
+  image: parseSearchImage(body.image),
+  imageQuery: parseImageQuery(body.imageQuery),
 });
 
 export function parseImageFilter(

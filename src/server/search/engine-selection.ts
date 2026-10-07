@@ -1,5 +1,6 @@
 import {
   getActiveWebEngines,
+  getEngineInput,
   getEngineMap,
   getEngineSettingsView,
   getEnginesForCustomType,
@@ -7,28 +8,54 @@ import {
 } from "../extensions/engines/catalog";
 import { engineFullSchema } from "../extensions/engines/engine-settings";
 import type { SearchEngine } from "../types/extension";
-import type { EngineConfig, ImageFilter } from "../types/search";
+import type { EngineConfig, ImageFilter, SearchImage } from "../types/search";
 import { maskSecrets } from "../utils/settings/plugin-settings";
+import { ENGINE_INPUT, type EngineInput } from "../../shared/engine-input";
 
 export interface ActiveEngine {
   id: string;
   instance: SearchEngine;
   score: number;
+  input: EngineInput;
 }
+
+export interface SearchInputs {
+  image?: SearchImage;
+  imageQuery?: string;
+}
+
+export const acceptsInputs = (input: EngineInput, inputs: SearchInputs = {}): boolean =>
+  input === ENGINE_INPUT.IMAGE ? !!inputs.image : !inputs.image || !!inputs.imageQuery;
+
+export const engineQuery = (
+  input: EngineInput,
+  query: string,
+  inputs: SearchInputs = {},
+): string =>
+  input === ENGINE_INPUT.TEXT && inputs.image ? (inputs.imageQuery ?? "") : query;
+
+const _withInput = <T extends { id: string }>(engine: T): T & { input: EngineInput } => ({
+  ...engine,
+  input: getEngineInput(engine.id),
+});
 
 export const selectActiveEngines = async (
   type: string,
   config: EngineConfig,
   imageFilter?: ImageFilter,
+  inputs?: SearchInputs,
 ): Promise<ActiveEngine[]> => {
-  if (type === "web") return getActiveWebEngines(config);
-  return Promise.all(
-    (await getEnginesForCustomType(type, config, imageFilter)).map(async (e) => ({
-      id: e.id,
-      instance: e.instance,
-      score: await readEngineScore(e.id),
-    })),
-  );
+  const candidates =
+    type === "web"
+      ? await getActiveWebEngines(config)
+      : await Promise.all(
+          (await getEnginesForCustomType(type, config, imageFilter)).map(async (e) => ({
+            id: e.id,
+            instance: e.instance,
+            score: await readEngineScore(e.id),
+          })),
+        );
+  return candidates.map(_withInput).filter((e) => acceptsInputs(e.input, inputs));
 };
 
 const _stableSettings = (settings: Record<string, unknown>): Record<string, unknown> =>

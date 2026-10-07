@@ -812,5 +812,22 @@
     "title": "Privacy policy",
     "loading": "Loading…",
     "error": "The privacy policy could not be loaded."
+  },
+  "search-image": {
+    "title": "Image search",
+    "pick": "Search with an image",
+    "remove": "Remove image",
+    "refine": "Add words to narrow it down",
+    "drop-title": "Drop an image to search with it",
+    "drop-hint": "Or paste one, or use the lens button",
+    "not-image": "That file isn't an image",
+    "read-failed": "Couldn't read that image, try another one",
+    "crop": "Crop the image",
+    "crop-title": "Search part of the image",
+    "crop-hint": "Drag the corners, move the box, or draw a new one. Arrow keys move it, Shift and arrows resize it.",
+    "crop-area": "Crop area",
+    "crop-reset": "Whole image",
+    "crop-cancel": "Cancel",
+    "crop-search": "Search"
   }
 }
