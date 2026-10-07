@@ -87,10 +87,15 @@ export async function loadMoreMedia(type: string): Promise<void> {
       type?: string;
     };
     if (!isCurrentSearch(seq)) return;
-    const data = { results: raw.results ?? [] };
-    if (data.results.length === 0) {
+    const fetched = raw.results ?? [];
+    const seen = new Set(state.currentResults.map((r) => r.url));
+    const data = { results: fetched.filter((r) => !seen.has(r.url)) };
+    if (fetched.length === 0) {
       if (isImage) state.imageLastPage = page;
       else state.videoLastPage = page;
+    } else if (data.results.length === 0) {
+      if (isImage) state.imagePage = nextPage;
+      else state.videoPage = nextPage;
     } else {
       state.currentResults = state.currentResults.concat(data.results);
       if (isImage) state.imagePage = nextPage;

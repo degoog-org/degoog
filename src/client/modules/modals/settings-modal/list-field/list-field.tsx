@@ -18,6 +18,7 @@ import {
   type ListRow,
 } from "./list-field-data";
 import type { ExtensionMeta } from "../../../../types/extension";
+import { isFieldVisible } from "../../../../../shared/visible-when";
 import type { SettingField } from "../../../../../shared/setting-field";
 
 const t = window.scopedT("core");
@@ -203,6 +204,16 @@ const _initOne = (fieldEl: HTMLElement, extId: string): void => {
     }
   };
 
+  const syncRowVisibility = (rowEl: HTMLElement): void => {
+    const row = _collectRow(rowEl, itemSchema);
+    rowEl
+      .querySelectorAll<HTMLElement>(".ext-list-sub-wrap")
+      .forEach((wrap) => {
+        const sub = itemSchema.find((f) => f.key === wrap.dataset.subwrap);
+        if (sub) wrap.hidden = !isFieldVisible(sub, itemSchema, row);
+      });
+  };
+
   const bindRow = (rowEl: HTMLElement): void => {
     const editor = rowEl.querySelector<HTMLElement>(".ext-list-row-editor");
     rowEl.querySelector(".ext-list-row-edit")?.addEventListener("click", () => {
@@ -216,6 +227,7 @@ const _initOne = (fieldEl: HTMLElement, extId: string): void => {
       });
     const rowChanged = (): void => {
       updateSummary(rowEl);
+      syncRowVisibility(rowEl);
       sync();
     };
     rowEl

@@ -6,6 +6,7 @@ import {
   type SettingValue,
 } from "../../utils/settings/plugin-settings";
 import { manifestOf, type AnyEngineEntry } from "./entries";
+import { isFieldVisible } from "../../../shared/visible-when";
 
 export const engineFullSchema = (instance: SearchEngine): SettingField[] => {
   const own = instance.settingsSchema ?? [];
@@ -48,13 +49,13 @@ export const engineRequiresConfig = (engine: SearchEngine): boolean =>
 export const hasRequiredConfig = async (
   entry: AnyEngineEntry,
 ): Promise<boolean> => {
-  const requiredKeys = engineFullSchema(entry.instance)
-    .filter((f) => f.required)
-    .map((f) => f.key);
-  if (requiredKeys.length === 0) return true;
+  const schema = engineFullSchema(entry.instance);
+  const required = schema.filter((f) => f.required);
+  if (required.length === 0) return true;
   const stored = await mergedSettings(entry);
-  return requiredKeys.every((k) => {
-    const v = stored[k];
+  return required.every((f) => {
+    if (!isFieldVisible(f, schema, stored)) return true;
+    const v = stored[f.key];
     if (Array.isArray(v)) return v.length > 0;
     return typeof v === "string" && v.trim() !== "";
   });
