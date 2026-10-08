@@ -104,6 +104,7 @@ export const createSearchEngineContext = (
       .toLowerCase() ||
     undefined;
   return {
+    signal,
     fetch: async (url, init) => {
       noteEngineHost(engineSettingsId, typeof url === "string" ? url : String(url));
       let raw: string | undefined;

@@ -342,7 +342,8 @@ export async function init(): Promise<void> {
     }
   }
 
-  window.addEventListener("pageshow", () => {
+  window.addEventListener("pageshow", async () => {
+    state.currentRegion = normalizeRegion(await idbGet<string>(REGION_KEY));
     const restoredParams = new URLSearchParams(window.location.search);
     const restoredQ = restoredParams.get("q");
     if (restoredQ) {

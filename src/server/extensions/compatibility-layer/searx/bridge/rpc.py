@@ -2,7 +2,7 @@ import json
 import sys
 
 from .errors import raise_for_status
-from .http import Response
+from .http import Response, encode_body
 
 _NEXT_ID = 0
 
@@ -26,26 +26,22 @@ def call(payload):
     return reply.get("data")
 
 
-def _payload(args, kwargs):
-    data = kwargs.get("data") or kwargs.get("content") or kwargs.get("json")
-    if data is None and args:
-        data = args[0]
-    if isinstance(data, (dict, list)):
-        data = json.dumps(data)
-    if isinstance(data, bytes):
-        data = data.decode("utf-8", "replace")
-    return data
-
-
 def fetch(method, url, *args, **kwargs):
+    body, headers = encode_body(
+        kwargs.get("headers"),
+        data=kwargs.get("data", args[0] if args else None),
+        json_body=kwargs.get("json"),
+        content=kwargs.get("content"),
+        multipart=kwargs.get("multipart"),
+    )
     reply = call(
         {
             "rpc": "fetch",
             "url": str(url),
             "method": method,
-            "headers": dict(kwargs.get("headers") or {}),
+            "headers": headers,
             "cookies": dict(kwargs.get("cookies") or {}),
-            "data": _payload(args, kwargs),
+            "data": body,
         }
     )
     resp = Response(reply or {})

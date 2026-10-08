@@ -11,6 +11,7 @@ exports[`every mounted router exposes the routes it did before commands route li
 exports[`every mounted router exposes the routes it did before compat-engines route list is unchanged 1`] = `
 [
   "GET /api/compat/:layer/engines",
+  "POST /api/compat/:layer/add",
   "POST /api/compat/:layer/install",
   "POST /api/compat/:layer/uninstall",
   "POST /api/compat/:layer/update",
@@ -407,7 +408,7 @@ exports[`the admin path is operator-defined, not hardcoded DEGOOG_SETTINGS_PATH 
 
 exports[`route shape invariants the mounted surface totals stay put 1`] = `
 {
-  "totalHandlers": 314,
-  "unique": 252,
+  "totalHandlers": 315,
+  "unique": 253,
 }
 `;

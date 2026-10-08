@@ -37,8 +37,8 @@ export const mountRegionSelect = async (): Promise<HTMLSelectElement | null> => 
   const host = document.getElementById(REGION_HOST_ID);
   if (!host) return null;
   const declared = await _declaredRegions();
-  if (declared.length === 0) return null;
   const saved = normalizeRegion(await idbGet<string>(REGION_KEY));
+  if (declared.length === 0 && !saved) return null;
   render(<RegionSelect regions={_regionOptions([...declared, saved])} />, host);
   host.hidden = false;
   const select = document.getElementById(REGION_SELECT_ID) as HTMLSelectElement | null;

@@ -4,6 +4,7 @@ import { bindCompatClicks } from "./compat-clicks";
 import { openCustomModal } from "../../../modules/modals/settings-modal/modal";
 import { confirmModal } from "../../../modules/modals/confirm-modal/confirm";
 import {
+  addCompat,
   CompatAction,
   CompatLayerId,
   fetchCompat,
@@ -188,6 +189,28 @@ export const openCompatModal = async (
     }
   };
 
+  const addEngine = async (
+    source: string,
+    btn: HTMLButtonElement,
+  ): Promise<void> => {
+    btn.disabled = true;
+    _say(t(`${KEY}compat-adding`));
+    try {
+      await addCompat(layer.id, source);
+      items = await fetchCompat(layer.id);
+      if (!live()) return;
+      if (addInput) addInput.value = "";
+      _paint(items, query, name, ui());
+      window.dispatchEvent(new CustomEvent("extensions-saved"));
+      _say(t(`${KEY}compat-added`, { layer: name }));
+    } catch (err) {
+      if (!live()) return;
+      _say(err instanceof Error ? err.message : String(err), true);
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
   const startInstall = async (
     code: string,
     btn: HTMLButtonElement,
@@ -210,6 +233,16 @@ export const openCompatModal = async (
       void runAction(CompatAction.Update, update.dataset.code, update);
     if (uninstall?.dataset.code)
       void runAction(CompatAction.Uninstall, uninstall.dataset.code, uninstall);
+  });
+
+  const addForm = body.querySelector<HTMLFormElement>("#compat-add-form");
+  const addInput = body.querySelector<HTMLInputElement>("#compat-add-input");
+  const addBtn = body.querySelector<HTMLButtonElement>("#compat-add-btn");
+  addForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const source = addInput?.value.trim() ?? "";
+    if (!source || !addBtn || addBtn.disabled) return;
+    void addEngine(source, addBtn);
   });
 
   const search = body.querySelector<HTMLInputElement>("#compat-search-input");

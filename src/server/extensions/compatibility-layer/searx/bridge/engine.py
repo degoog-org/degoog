@@ -15,6 +15,7 @@ CONFIG_ATTR = "_degoog_config"
 
 ENGINE_DEFAULTS = {
     "play_categ": "apps",
+    "qwant_categ": "web",
 }
 
 
@@ -89,7 +90,7 @@ def _setup(mod, name):
     if not callable(setup):
         return
     try:
-        setup({"name": name, "categories": categories(mod)})
+        setup({"name": name, "engine": name, "categories": categories(mod)})
     except Exception:
         pass
 
@@ -102,7 +103,7 @@ def load(path, overrides=None):
     if engines is not None:
         getattr(engines, "engines", {})[code_of(path)] = mod
     _adopt(mod, path, overrides)
-    _setup(mod, name)
+    _setup(mod, code_of(path))
     return mod
 
 
@@ -115,6 +116,7 @@ def describe(path, overrides=None):
         "path": path,
         "id": code_of(path),
         "name": about.get("name") or code_of(path).replace("_", " ").title(),
+        "site": str(about.get("website") or "").rstrip("/"),
         "categories": found,
         "types": types_of(found),
         "paging": bool(getattr(mod, "paging", False)),

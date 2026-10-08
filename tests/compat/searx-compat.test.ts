@@ -209,6 +209,82 @@ def response(resp):
     return [{"url": "https://knobs.example/a", "title": "hit", "content": "c"}]
 `;
 
+const UPSTREAM_IMPORTS_ENGINE = `from curl_cffi import CurlMime
+from searx.exceptions import (
+    SearxEngineAccessDeniedException,
+    SearxEngineAPIException,
+    SearxEngineCaptchaException,
+    SearxEngineResponseException,
+    SearxEngineTooManyRequestsException,
+)
+from searx.result_types import EngineResults, Video
+from searx.search.processors.abstract import TimeRangeType
+from searx.utils import solve_altcha
+from searx.wikidata import get_wikidata_headers
+
+about = {"website": "https://imports.example"}
+base_url = "https://imports.example"
+categories = ["general"]
+paging = False
+
+def request(query, params):
+    checks = [
+        issubclass(SearxEngineAPIException, SearxEngineResponseException),
+        issubclass(SearxEngineCaptchaException, SearxEngineAccessDeniedException),
+        issubclass(SearxEngineTooManyRequestsException, SearxEngineAccessDeniedException),
+        "Accept" in get_wikidata_headers(),
+    ]
+    params["url"] = base_url + "/?ok=" + str(all(checks))
+
+def response(resp):
+    results = EngineResults()
+    results.add(Video(url="https://imports.example/v", title="clip", content="c"))
+    return results
+`;
+
+const FORM_ENGINE = `about = {"website": "https://form.example"}
+base_url = "https://form.example"
+categories = ["general"]
+paging = False
+
+def request(query, params):
+    params["url"] = base_url + "/search"
+    params["method"] = "POST"
+    params["data"] = {"q": query, "kl": None}
+
+def response(resp):
+    return [{"url": "https://form.example/a", "title": resp.search_params["data"]["q"], "content": "c"}]
+`;
+
+const JSON_ENGINE = `about = {"website": "https://json.example"}
+base_url = "https://json.example"
+categories = ["general"]
+paging = False
+
+def request(query, params):
+    params["url"] = base_url + "/api"
+    params["method"] = "POST"
+    params["json"] = {"query": query, "page": params["pageno"]}
+
+def response(resp):
+    return [{"url": "https://json.example/a", "title": "hit", "content": "c"}]
+`;
+
+const HANGING_ENGINE = `import time
+
+about = {"website": "https://hang.example"}
+base_url = "https://hang.example"
+categories = ["general"]
+paging = False
+
+def request(query, params):
+    time.sleep(30)
+    params["url"] = base_url + "/?q=" + query
+
+def response(resp):
+    return []
+`;
+
 const NEEDY_ENGINE = `about = {}
 base_url = None
 """Instance this engine talks to."""
@@ -357,6 +433,88 @@ describe("SearX engine parity with native engines", () => {
       });
       expect(seen).toBe(
         "https://traits.example/?lang=lang_de&region=DE&host=www.example.de",
+      );
+    });
+  });
+
+  test("upstream exception, result and helper imports resolve with the real hierarchy", async () => {
+    await withSearxEnv(async (dir) => {
+      writeEngine(dir, "statics", UPSTREAM_IMPORTS_ENGINE);
+      await initEngines(true);
+      let seen = "";
+      const results = await getEngineMap()["searx-statics-engine"].executeSearch("q", 1, "any", {
+        fetch: async (url: string) => {
+          seen = url;
+          return new Response("<html></html>", { status: 200 });
+        },
+      });
+      expect(seen).toBe("https://imports.example/?ok=True");
+      expect(results[0]?.title).toBe("clip");
+    });
+  });
+
+  test("form posts are url encoded and the original form reaches the response parser", async () => {
+    await withSearxEnv(async (dir) => {
+      writeEngine(dir, "statics", FORM_ENGINE);
+      await initEngines(true);
+      let init: RequestInit | undefined;
+      const results = await getEngineMap()["searx-statics-engine"].executeSearch("rust lang", 1, "any", {
+        fetch: async (_url: string, sent?: RequestInit) => {
+          init = sent;
+          return new Response("<html></html>", { status: 200 });
+        },
+      });
+      const headers = (init?.headers ?? {}) as Record<string, string>;
+      expect(init?.method).toBe("POST");
+      expect(init?.body).toBe("q=rust+lang&kl=");
+      expect(headers["Content-Type"]).toBe("application/x-www-form-urlencoded");
+      expect(results[0]?.title).toBe("rust lang");
+    });
+  });
+
+  test("json bodies are serialised with a json content type", async () => {
+    await withSearxEnv(async (dir) => {
+      writeEngine(dir, "statics", JSON_ENGINE);
+      await initEngines(true);
+      let init: RequestInit | undefined;
+      await getEngineMap()["searx-statics-engine"].executeSearch("rust", 1, "any", {
+        fetch: async (_url: string, sent?: RequestInit) => {
+          init = sent;
+          return new Response("<html></html>", { status: 200 });
+        },
+      });
+      const headers = (init?.headers ?? {}) as Record<string, string>;
+      expect(init?.body).toBe('{"query": "rust", "page": 1}');
+      expect(headers["Content-Type"]).toBe("application/json");
+    });
+  });
+
+  test("the engine timeout signal stops a hanging python runner", async () => {
+    await withSearxEnv(async (dir) => {
+      writeEngine(dir, "statics", HANGING_ENGINE);
+      await initEngines(true);
+      const started = performance.now();
+      const run = getEngineMap()["searx-statics-engine"].executeSearch("q", 1, "any", {
+        fetch: okFetch,
+        signal: AbortSignal.timeout(300),
+      });
+      await expect(run).rejects.toThrow("the engine timed out");
+      expect(performance.now() - started).toBeLessThan(5_000);
+    });
+  });
+
+  test("http errors surface as searx exceptions before the response parser runs", async () => {
+    await withSearxEnv(async (dir) => {
+      writeEngine(dir, "statics", FORM_ENGINE);
+      await initEngines(true);
+      const engine = getEngineMap()["searx-statics-engine"];
+      const failWith = (status: number) => async (): Promise<Response> =>
+        new Response("<html>captcha</html>", { status });
+      await expect(engine.executeSearch("q", 1, "any", { fetch: failWith(429) })).rejects.toThrow(
+        "Too many requests",
+      );
+      await expect(engine.executeSearch("q", 1, "any", { fetch: failWith(403) })).rejects.toThrow(
+        "HTTP error 403",
       );
     });
   });
