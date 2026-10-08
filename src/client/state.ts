@@ -20,6 +20,7 @@ export const state: AppState = {
   customDateFrom: "",
   customDateTo: "",
   currentLanguage: "",
+  currentRegion: "",
   mediaLoading: false,
   currentBangQuery: "",
   openInNewTab: false,

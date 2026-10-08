@@ -19,6 +19,7 @@ export interface PluginEntry {
   source?: RegistrySource;
   compatibilityLayer?: string;
   filters?: EngineFilters;
+  regions?: string[];
   input?: EngineInput;
   pluginManifest?: PluginManifest;
 }
@@ -32,6 +33,7 @@ export interface EngineCatalogEntry {
   searchTypes: string[];
   primaryType: string;
   filters?: EngineFilters;
+  regions?: string[];
   input: EngineInput;
   origin: EngineOrigin;
 }

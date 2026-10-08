@@ -60,7 +60,7 @@ afterAll(() => {
 });
 
 const FULL_QUERY =
-  "type=images&page=3&time=week&lang=de&dateFrom=2024-01-01&dateTo=2024-02-01" +
+  "type=images&page=3&time=week&lang=de&region=gb&dateFrom=2024-01-01&dateTo=2024-02-01" +
   "&imgColor=red&imgSize=large&imgType=photo&imgLayout=wide&safeMode=on";
 
 const FULL_BODY = {
@@ -69,6 +69,7 @@ const FULL_BODY = {
   page: 3,
   time: "week",
   lang: "de",
+  region: "gb",
   dateFrom: "2024-01-01",
   dateTo: "2024-02-01",
   imgColor: "red",
@@ -83,6 +84,7 @@ const EXPECTED = {
   page: 3,
   timeFilter: "week",
   lang: "de",
+  region: "GB",
   dateFrom: "2024-01-01",
   dateTo: "2024-02-01",
   imageFilter: { color: "red", size: "large", type: "photo", layout: "wide", nsfw: "on" },
@@ -93,6 +95,7 @@ const DEFAULTS = {
   page: 1,
   timeFilter: "any",
   lang: "",
+  region: "",
   dateFrom: "",
   dateTo: "",
   imageFilter: undefined,
@@ -118,6 +121,27 @@ describe("search routes hand the handlers the same params", () => {
     expect(Object.values(engines as Record<string, boolean>).every((on) => on === false)).toBe(true);
   });
 
+  test("POST /api/search form data reads every param through the shared parser", async () => {
+    const res = await router.request(
+      new Request("http://localhost/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `q=rust&${FULL_QUERY}`,
+      }),
+    );
+    expect(res.status).toBe(200);
+    const { fn, params } = lastCall();
+    expect(fn).toBe("search");
+    expect(params).toMatchObject({ query: "rust", ...EXPECTED });
+  });
+
+  test("a region that is not a two letter country code is dropped", async () => {
+    await router.request("http://localhost/api/search?q=q&region=GBR");
+    expect(lastCall().params).toMatchObject({ region: "" });
+    await postJson("http://localhost/api/search", { query: "q", region: "../etc" });
+    expect(lastCall().params).toMatchObject({ region: "" });
+  });
+
   test("GET /api/search/retry reads the same params plus the engine", async () => {
     const res = await router.request(`http://localhost/api/search/retry?q=rust&engine=Brave&${FULL_QUERY}`);
     expect(res.status).toBe(200);
@@ -126,7 +150,7 @@ describe("search routes hand the handlers the same params", () => {
     expect(params).toMatchObject({ query: "rust", engineName: "Brave", ...EXPECTED });
     expect(params).not.toHaveProperty("origQ");
     expect(Object.keys(params).sort()).toEqual(
-      ["dateFrom", "dateTo", "engineName", "engines", "imageFilter", "lang", "page", "query", "searchType", "timeFilter"],
+      ["dateFrom", "dateTo", "engineName", "engines", "imageFilter", "lang", "page", "query", "region", "searchType", "timeFilter"],
     );
   });
 

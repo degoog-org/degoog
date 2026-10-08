@@ -2,6 +2,7 @@ import { getEngines } from "../engines";
 import { getBase } from "../../net/base-url";
 import { state } from "../../../state";
 import { appendSearchAuthParams } from "../../net/request";
+import { REGION_PARAM } from "../../../../shared/region";
 
 const LUCKY_PATH = "/api/lucky";
 
@@ -28,6 +29,7 @@ export async function performLucky(query: string): Promise<void> {
   for (const [key, val] of Object.entries(engines)) {
     params.set(key, String(val));
   }
+  if (state.currentRegion) params.set(REGION_PARAM, state.currentRegion);
   if (state.postMethodEnabled) {
     _postLucky(params);
     return;

@@ -13,6 +13,8 @@ import type { ToggleOpts } from "../../types/settings-section";
 
 export const INSTANCE_DEFAULT_VALUE = "";
 export const FOLLOW_INSTANCE_ORIGIN = "follow-instance";
+export const REGION_HOST_ID = "region-select-host";
+export const REGION_SELECT_ID = "region-select";
 
 export const SEARCH_OPTION_TOGGLES: ToggleOpts[] = [
   {

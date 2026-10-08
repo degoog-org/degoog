@@ -115,6 +115,7 @@ export const listEngines = async (): Promise<EngineCatalogEntry[]> => {
     searchTypes,
     primaryType: primaryType(searchTypes),
     filters: e.filters,
+    regions: e.regions,
     input: inputOf(e),
     origin: engineOrigin(e, origins),
   }));

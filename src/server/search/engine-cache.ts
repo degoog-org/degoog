@@ -28,6 +28,7 @@ export interface RunScope {
   dateTo?: string;
   imageFilter?: ImageFilter;
   image?: string;
+  region?: string;
 }
 
 const _imageKey = (filter?: ImageFilter): string =>
@@ -44,7 +45,7 @@ export const runKey = async (
 ): Promise<string> => {
   const q = scope.query.trim().toLowerCase();
   const fingerprint = await engineFingerprint(engineId);
-  return [
+  const key = [
     engineId,
     q,
     scope.type,
@@ -57,6 +58,7 @@ export const runKey = async (
     scope.image ?? "",
     fingerprint,
   ].join("|");
+  return scope.region ? `${key}|region=${scope.region}` : key;
 };
 
 export const runTtl = (timing: EngineTiming): number =>

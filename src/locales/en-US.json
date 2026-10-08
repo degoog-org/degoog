@@ -60,7 +60,10 @@
       "engine-origins-instance-default": "Instance default",
       "engine-origins-favicon": "Engine favicons",
       "engine-origins-provenance": "Where the engine came from",
-      "engine-origins-off": "Hide them"
+      "engine-origins-off": "Hide them",
+      "region": "Region for results",
+      "region-none": "No region",
+      "region-tooltip": "Engines that support it favour results and local sites from this country. Engines without regional support ignore it."
     },
     "sync": {
       "heading": "Instance defaults",

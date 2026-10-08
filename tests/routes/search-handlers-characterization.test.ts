@@ -38,7 +38,14 @@ type Overrides = {
 };
 
 let indexCalls: IndexCall[] = [];
-let engineCalls: { name: string; page: number; lang?: string; timeFilter: string }[] = [];
+let engineCalls: {
+  name: string;
+  page: number;
+  lang?: string;
+  region?: string;
+  acceptLanguage?: string;
+  timeFilter: string;
+}[] = [];
 let indexedUrls: string[] = [];
 let queryCounter = 0;
 
@@ -68,6 +75,8 @@ const makeEngine = (
         name,
         page: page ?? 1,
         lang: context?.lang,
+        region: context?.region,
+        acceptLanguage: context?.buildAcceptLanguage?.(),
         timeFilter: String(timeFilter),
       });
       if (opts.pages !== undefined) context?.pagination?.({ total: opts.pages });
@@ -172,6 +181,7 @@ const baseParams = (query: string) => ({
   page: 1,
   timeFilter: "any" as const,
   lang: "",
+  region: "",
   dateFrom: "",
   dateTo: "",
   imageFilter: undefined,
@@ -329,6 +339,31 @@ describe("handleSearch intercept overrides reach the engines and the index", () 
   });
 });
 
+describe("handleSearch region", () => {
+  test("without a region the engines and the index see exactly what they did before", async () => {
+    harness({ engines: [makeEngine("Alpha", 1)] });
+    const { handleSearch } = await handlers();
+    await handleSearch(baseParams(uniqueQuery("noregion")));
+
+    expect(engineCalls[0].region).toBeUndefined();
+    expect(engineCalls[0].acceptLanguage).toBe("en-US,en;q=0.9");
+    expect(indexCalls[0].filtersJson).toBe("");
+  });
+
+  test("a region reaches the engine context, the Accept-Language header and the index tag", async () => {
+    harness({ engines: [makeEngine("Alpha", 1)] });
+    const { handleSearch } = await handlers();
+    await handleSearch({ ...baseParams(uniqueQuery("gb")), region: "GB" });
+    await handleSearch({ ...baseParams(uniqueQuery("frca")), lang: "fr", region: "CA" });
+
+    expect(engineCalls.map((c) => [c.region, c.acceptLanguage])).toEqual([
+      ["GB", "en-GB,en;q=0.9"],
+      ["CA", "fr-CA,fr;q=0.9,en;q=0.8"],
+    ]);
+    expect(JSON.parse(indexCalls[0].filtersJson)).toEqual({ region: "GB" });
+  });
+});
+
 describe("handleSearch indexing basis", () => {
   test("the indexer sees results without the degoog engine, display keeps them", async () => {
     harness({
@@ -470,6 +505,28 @@ describe("handleRetry", () => {
     await handleRetry({ ...baseParams(query), engineName: "alpha-engine" });
 
     expect(engineCalls.map((c) => c.name)).toEqual(["Alpha"]);
+  });
+
+  test("a regional retry never merges siblings cached without that region", async () => {
+    const query = uniqueQuery("regionretry");
+    harness({ engines: [makeEngine("Alpha", 1), makeEngine("Beta", 1)] });
+    const { handleSearch, handleRetry } = await handlers();
+
+    await handleSearch(baseParams(query));
+    const cold = await handleRetry({
+      ...baseParams(query),
+      region: "GB",
+      engineName: "alpha-engine",
+    });
+    expect(cold.engineTimings.map((t) => t.name)).toEqual(["Alpha"]);
+
+    await handleSearch({ ...baseParams(query), region: "GB" });
+    const warm = await handleRetry({
+      ...baseParams(query),
+      region: "GB",
+      engineName: "alpha-engine",
+    });
+    expect(warm.engineTimings.map((t) => t.name).sort()).toEqual(["Alpha", "Beta"]);
   });
 
   test("retry drops recalled results from indexing while still displaying them", async () => {

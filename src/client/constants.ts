@@ -12,6 +12,7 @@ export {
   HIDE_URL_PARAMS,
   SHOW_RESULT_DATES,
   ENGINE_ORIGIN_DISPLAY,
+  REGION_KEY,
   TAB_ORDER_SAVED,
 } from "../shared/sync";
 
