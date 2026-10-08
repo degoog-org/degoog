@@ -58,7 +58,8 @@ export const upstreamSearxUrl = (code: string): string => `${SEARX_SOURCE_BASE_U
 
 const _fileUrl = (file: string, owner: string): string => {
   const custom = customEntry(owner);
-  return custom ? new URL(`${file}.py`, custom.source).href : upstreamSearxUrl(file);
+  if (!custom || isCuratedEngine(file) || isSupportFile(file)) return upstreamSearxUrl(file);
+  return file === owner ? custom.source : new URL(`${file}.py`, custom.source).href;
 };
 
 export const downloadSearxSource = async (url: string): Promise<string> => {

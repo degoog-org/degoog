@@ -193,6 +193,7 @@ export const injectFieldSaveBtns = (getToken: () => string | null): void => {
   if (redirectEditor && !isRedirectEditorLocked()) {
     const btn = createFieldSaveBtn();
     redirectEditor.insertAdjacentElement("afterend", btn);
+    btn.disabled = hasRedirectProblems();
     onRedirectsChanged(() => {
       markFieldDirty(btn);
       btn.disabled = hasRedirectProblems();

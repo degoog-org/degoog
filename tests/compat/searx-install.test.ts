@@ -253,6 +253,28 @@ describe("searx engines added by hand", () => {
     });
   });
 
+  test("update pulls shared upstream files from upstream, not the custom host", async () => {
+    await withEnginesDir(async (dir) => {
+      const shared = "def build_url(query):\n    return query\n";
+      writeFileSync(join(dir, "google.py"), shared);
+      const engine = HAND_ENGINE.replace("hand_helpers", "google");
+      const calls = stubFiles({ [HAND_URL]: engine });
+      await addSearx(HAND_URL);
+      calls.length = 0;
+      globalThis.fetch = (async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith("/engine_traits.json")) return Response.json({});
+        calls.push(url);
+        return new Response(url === HAND_URL ? engine : shared);
+      }) as typeof fetch;
+      await updateSearx("hand");
+      expect(calls).toHaveLength(2);
+      expect(calls[0]).toContain("/searx/engines/google.py");
+      expect(calls[0]).not.toContain("code.example");
+      expect(calls[1]).toBe(HAND_URL);
+    });
+  });
+
   test("an engine that cannot load leaves nothing behind", async () => {
     await withEnginesDir(async (dir) => {
       stubFiles({ [HAND_URL]: "import not_a_real_module\n" });
