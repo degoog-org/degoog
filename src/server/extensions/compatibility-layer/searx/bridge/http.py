@@ -1,7 +1,53 @@
 import json
-from urllib.parse import urlparse
+import uuid
+from urllib.parse import urlencode, urlparse
 
 from .errors import raise_for_status
+
+
+FORM_TYPE = "application/x-www-form-urlencoded"
+JSON_TYPE = "application/json"
+
+
+def _text(value):
+    if isinstance(value, bytes):
+        return value.decode("utf-8", "replace")
+    return "" if value is None else str(value)
+
+
+def _has_type(headers):
+    return any(str(key).lower() == "content-type" for key in headers)
+
+
+def _multipart(parts):
+    boundary = uuid.uuid4().hex
+    chunks = []
+    for name, value in parts.items():
+        chunks.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{_text(value)}\r\n')
+    chunks.append(f"--{boundary}--\r\n")
+    return "".join(chunks), f"multipart/form-data; boundary={boundary}"
+
+
+def encode_body(headers, data=None, json_body=None, content=None, multipart=None):
+    headers = dict(headers or {})
+    if multipart is not None:
+        body, kind = _multipart(getattr(multipart, "parts", multipart) or {})
+    elif content:
+        return _text(content), headers
+    elif json_body:
+        body, kind = json.dumps(json_body), JSON_TYPE
+    elif isinstance(data, dict) and data:
+        body, kind = urlencode({k: "" if v is None else v for k, v in data.items()}, doseq=True), FORM_TYPE
+    elif isinstance(data, list) and data:
+        body, kind = urlencode(data, doseq=True), FORM_TYPE
+    elif data and not isinstance(data, (dict, list)):
+        return _text(data), headers
+    else:
+        return None, headers
+    if multipart is not None or not _has_type(headers):
+        headers = {k: v for k, v in headers.items() if str(k).lower() != "content-type"}
+        headers["Content-Type"] = kind
+    return body, headers
 
 
 class RespUrl:
@@ -37,6 +83,11 @@ class Response:
 
     def json(self):
         return json.loads(self.text or "null")
+
+    def html(self):
+        from lxml import html
+
+        return html.fromstring(self.text)
 
     def raise_for_status(self):
         raise_for_status(self)

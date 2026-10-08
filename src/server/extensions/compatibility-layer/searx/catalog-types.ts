@@ -22,6 +22,7 @@ export interface SearxLibStatus {
 
 export interface SearxCatalogItem extends Omit<SearxCatalogEntry, "libs"> {
   installed: boolean;
+  custom: boolean;
   missingDeps: string[];
   libs: SearxLibStatus[];
 }

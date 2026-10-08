@@ -1,29 +1,29 @@
 import builtins
 import functools
+import hashlib
+import importlib
 import json
 import sys
 import types
+from urllib.parse import urlencode
 
-from . import rpc, text
-from .errors import (
-    SearxEngineAPIException,
-    SearxEngineAccessDeniedException,
-    SearxEngineCaptchaException,
-    SearxEngineException,
-    SearxEngineTooManyRequestsException,
-    SearxEngineXPathException,
-    raise_for_status,
-)
+from . import errors, rpc, text
+from .errors import raise_for_status
 from .http import Response
 from .results import (
     Answer,
+    AnswerSet,
+    Code,
     EngineResults,
+    File,
     KeyValue,
     LegacyResult,
     MainResult,
+    Paper,
     Result,
     ResultTypes,
     Translations,
+    Video,
     WeatherAnswer,
 )
 from .runtime import EngineCache, EngineTraits, Logger, match_locale, user_agent
@@ -41,6 +41,23 @@ SETTINGS = {
 
 HTTP_VERBS = ("get", "post", "put", "patch", "delete", "head", "options")
 
+EXCEPTION_NAMES = (
+    "SearxException",
+    "SearxParameterException",
+    "SearxSettingsException",
+    "SearxEngineException",
+    "SearxXPathSyntaxException",
+    "SearxEngineResponseException",
+    "SearxEngineAPIException",
+    "SearxEngineAccessDeniedException",
+    "SearxEngineCaptchaException",
+    "SearxEngineTooManyRequestsException",
+    "SearxEngineXPathException",
+)
+
+WIKIDATA_SPARQL_URL = "https://query.wikidata.org/sparql"
+WIKIDATA_EXPLAIN_URL = "https://query.wikidata.org/bigdata/namespace/wdq/sparql?explain"
+
 
 def _module(name):
     module = types.ModuleType(name)
@@ -57,13 +74,7 @@ def _fill(module, **members):
 def _exceptions():
     return _fill(
         _module("searx.exceptions"),
-        SearxException=SearxEngineException,
-        SearxEngineException=SearxEngineException,
-        SearxEngineCaptchaException=SearxEngineCaptchaException,
-        SearxEngineAPIException=SearxEngineAPIException,
-        SearxEngineAccessDeniedException=SearxEngineAccessDeniedException,
-        SearxEngineXPathException=SearxEngineXPathException,
-        SearxEngineTooManyRequestsException=SearxEngineTooManyRequestsException,
+        **{name: getattr(errors, name) for name in EXCEPTION_NAMES},
     )
 
 
@@ -77,7 +88,12 @@ def _results():
         LegacyResult=LegacyResult,
         Answer=Answer,
         Translations=Translations,
+        AnswerSet=AnswerSet,
         Result=Result,
+        Code=Code,
+        Paper=Paper,
+        File=File,
+        Video=Video,
         Image=ResultTypes.Image,
         ImageRef=ResultTypes.ImageRef,
         __path__=[],
@@ -89,6 +105,12 @@ def _results():
     )
     setattr(result_types, "image", images)
     return result_types
+
+
+def _eval_xpath(node, xpath, *args, **kwargs):
+    if not isinstance(xpath, str) and callable(xpath):
+        return xpath(node)
+    return node.xpath(xpath) if hasattr(node, "xpath") else []
 
 
 def _xpath_at(utils):
@@ -105,7 +127,7 @@ def _utils():
     utils = _fill(
         _module("searx.utils"),
         extract_text=text.as_text,
-        eval_xpath=lambda node, xpath, *a, **k: node.xpath(xpath) if hasattr(node, "xpath") else [],
+        eval_xpath=_eval_xpath,
         extract_url=text.as_url,
         html_to_text=text.from_html,
         markdown_to_text=text.from_html,
@@ -121,7 +143,7 @@ def _utils():
         get_embeded_stream_url=lambda url, *a, **k: url,
         js_variable_to_python=lambda value, *a, **k: json.loads(value),
         get_string_replaces_function=lambda replaces, *a, **k: (lambda value, *aa, **kk: str(value)),
-        parse_duration_string=lambda value, *a, **k: value,
+        parse_duration_string=text.as_timedelta,
         format_duration=text.duration,
         js_obj_str_to_json_str=text.js_to_json,
         js_obj_str_to_python=lambda value, *a, **k: json.loads(text.js_to_json(value)),
@@ -130,11 +152,30 @@ def _utils():
         get_node=lambda node, *a, **k: node,
         sparql_string_escape=lambda value, *a, **k: str(value).replace('"', '\\"'),
         detect_language=lambda *a, **k: None,
+        solve_altcha=_solve_altcha,
         ElementType=object,
     )
     setattr(utils, "eval_xpath_list", lambda node, xpath, *a, **k: list(utils.eval_xpath(node, xpath)))
     setattr(utils, "eval_xpath_getindex", _xpath_at(utils))
     return utils
+
+
+def _solve_altcha(parameters, maxCounter=1000):
+    nonce = bytes.fromhex(parameters["nonce"])
+    salt = bytes.fromhex(parameters["salt"])
+    prefix = bytes.fromhex(parameters["keyPrefix"])
+    algorithm = parameters["algorithm"].split("/")[-1].replace("-", "").lower()
+    for counter in range(maxCounter):
+        key = hashlib.pbkdf2_hmac(
+            algorithm,
+            nonce + counter.to_bytes(4, "big"),
+            salt,
+            parameters["cost"],
+            parameters["keyLength"],
+        )
+        if key.startswith(prefix):
+            return key.hex(), counter
+    return None
 
 
 def _locales():
@@ -234,8 +275,59 @@ def _processors():
         setattr(processors, stub, dict)
     dictionary = _fill(_module("searx.search.processors.online_dictionary"), OnlineDictParams=dict)
     setattr(processors, "online_dictionary", dictionary)
+    abstract = _fill(_module("searx.search.processors.abstract"), TimeRangeType=str, RequestParams=dict)
+    setattr(processors, "abstract", abstract)
     search = _fill(_module("searx.search"), __path__=[], processors=processors)
     return search
+
+
+def _wikidata(network, utils):
+    def headers():
+        return {"Accept": "application/sparql-results+json", "User-Agent": utils.gen_useragent()}
+
+    def query(sparql, method="GET", **kwargs):
+        if method == "GET":
+            resp = network.get(f"{WIKIDATA_SPARQL_URL}?{urlencode({'query': sparql})}", headers=headers(), **kwargs)
+        else:
+            resp = network.post(WIKIDATA_SPARQL_URL, data={"query": sparql}, headers=headers(), **kwargs)
+        resp.raise_for_status()
+        return resp.json()
+
+    return _fill(
+        _module("searx.wikidata"),
+        SPARQL_ENDPOINT_URL=WIKIDATA_SPARQL_URL,
+        SPARQL_EXPLAIN_URL=WIKIDATA_EXPLAIN_URL,
+        get_wikidata_headers=headers,
+        send_wikidata_query=query,
+    )
+
+
+def _curl():
+    class CurlMime:
+        def __init__(self):
+            self.parts = {}
+
+        def addpart(self, name, data=None, **kwargs):
+            self.parts[name] = data
+
+    class CurlOpt:
+        HTTPAUTH = "HTTPAUTH"
+        USERPWD = "USERPWD"
+
+    class TooManyRedirects(errors.SearxEngineResponseException):
+        pass
+
+    curl = _fill(_module("curl_cffi"), CurlMime=CurlMime, CurlOpt=CurlOpt, __path__=[])
+    exceptions = _fill(_module("curl_cffi.requests.exceptions"), TooManyRedirects=TooManyRedirects)
+    requests = _fill(_module("curl_cffi.requests"), exceptions=exceptions, __path__=[])
+    setattr(curl, "requests", requests)
+
+
+def _babel():
+    try:
+        importlib.import_module("babel.numbers")
+    except ImportError:
+        pass
 
 
 def _outsiders():
@@ -243,6 +335,7 @@ def _outsiders():
         _module("flask_babel"),
         gettext=lambda value, *a, **k: str(value),
         lazy_gettext=lambda value, *a, **k: str(value),
+        format_decimal=lambda value, *a, **k: f"{value:,}",
     )
     _fill(_module("isodate"), parse_duration=lambda value, *a, **k: value)
     _fill(_module("httpx"), Client=object, AsyncClient=object, Response=Response, DigestAuth=object)
@@ -264,8 +357,12 @@ def install(engines_dir=None):
         external_bang=_bangs(),
         search=_processors(),
     )
-    _network()
+    network = _network()
+    setattr(searx, "network", network)
+    setattr(searx, "wikidata", _wikidata(network, utils))
     _urls()
+    _curl()
+    _babel()
     _outsiders()
     _fill(
         _module("searx.data"),

@@ -11,6 +11,7 @@ exports[`what an unauthenticated caller gets from every route commands unauthent
 exports[`what an unauthenticated caller gets from every route compat-engines unauthenticated responses are unchanged (nojs pinned off) 1`] = `
 [
   "GET /api/compat/:layer/engines -> 401",
+  "POST /api/compat/:layer/add -> 401",
   "POST /api/compat/:layer/install -> 401",
   "POST /api/compat/:layer/uninstall -> 401",
   "POST /api/compat/:layer/update -> 401",

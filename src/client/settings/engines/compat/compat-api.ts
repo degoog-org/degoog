@@ -2,6 +2,7 @@ import { authHeaders, jsonHeaders } from "../../../utils/net/request";
 import { getBase } from "../../../utils/net/base-url";
 import { getStoredToken } from "../../../utils/settings/settings-token";
 import {
+  COMPAT_ADD_PATH,
   CompatAction,
   compatApiUrl,
   type CompatCatalogItem,
@@ -71,5 +72,20 @@ export const sendCompat = async (
   if (!res.ok) {
     const data: unknown = await res.json().catch(() => ({}));
     throw new Error(compatErrorText(data, `${layer} ${action} failed`));
+  }
+};
+
+export const addCompat = async (
+  layer: CompatLayerId,
+  source: string,
+): Promise<void> => {
+  const res = await fetch(`${getBase()}${compatApiUrl(layer, COMPAT_ADD_PATH)}`, {
+    method: "POST",
+    headers: jsonHeaders(getStoredToken),
+    body: JSON.stringify({ source }),
+  });
+  if (!res.ok) {
+    const data: unknown = await res.json().catch(() => ({}));
+    throw new Error(compatErrorText(data, `${layer} add failed`));
   }
 };

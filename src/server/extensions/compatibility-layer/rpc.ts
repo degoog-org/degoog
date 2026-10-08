@@ -129,7 +129,9 @@ export const runBridge = async <T>(
   scriptPath: string,
   payload: Record<string, unknown>,
   handlers: RpcHandlers = {},
+  signal?: AbortSignal,
 ): Promise<T> => {
+  signal?.throwIfAborted();
   const proc = Bun.spawn([spec.bin, ...spec.args, scriptPath], {
     stdin: "pipe",
     stdout: "pipe",
@@ -137,6 +139,8 @@ export const runBridge = async <T>(
     timeout: RUNNER_TIMEOUT_MS,
     killSignal: RUNNER_KILL_SIGNAL,
   });
+  const abort = () => proc.kill(RUNNER_KILL_SIGNAL);
+  signal?.addEventListener("abort", abort, { once: true });
   const stderrPromise = new Response(proc.stderr).text();
   let envelope: RpcEnvelope<T> | null = null;
   let lastLine = "";
@@ -156,8 +160,10 @@ export const runBridge = async <T>(
           lastLine = line;
           const msg = _asMessage(line, spec.label);
           if (!msg) garbled = true;
-          else if (msg.rpc) await _serve(msg, handlers, proc.stdin, spec.label);
-          else envelope = msg as unknown as RpcEnvelope<T>;
+          else if (msg.rpc) {
+            lastLine = "";
+            await _serve(msg, handlers, proc.stdin, spec.label);
+          } else envelope = msg as unknown as RpcEnvelope<T>;
         }
         cut = buffer.indexOf("\n");
       }
@@ -175,6 +181,7 @@ export const runBridge = async <T>(
     proc.kill();
     throw err;
   } finally {
+    signal?.removeEventListener("abort", abort);
     if (!envelope) proc.kill();
     try {
       proc.stdin.end();
@@ -183,12 +190,16 @@ export const runBridge = async <T>(
     }
   }
   const [stderr, exitCode] = await Promise.all([stderrPromise, proc.exited]);
+  if (signal?.aborted) throw new Error(`${spec.label} runner stopped, the engine timed out`);
   const failure = `${spec.label} runner failed (${exitCode})`;
   if (garbled) {
     const details = [stderr.trim(), lastLine].filter(Boolean).join(" | ");
     throw new Error(
       details ? `${spec.label} runner broke the rpc protocol: ${details}` : failure,
     );
+  }
+  if (!envelope && proc.signalCode === RUNNER_KILL_SIGNAL) {
+    throw new Error(`${spec.label} runner timed out after ${RUNNER_TIMEOUT_MS}ms`);
   }
   if (!envelope) throw new Error(stderr.trim() || lastLine || failure);
   if (exitCode !== 0 || !envelope.ok || envelope.data === undefined) {

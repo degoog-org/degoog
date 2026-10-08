@@ -162,4 +162,5 @@ export interface EngineContext {
     opts?: { httpStatus?: number; engine?: string },
   ) => Error;
   pagination?: (info: EnginePagination) => void;
+  signal?: AbortSignal;
 }

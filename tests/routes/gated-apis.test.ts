@@ -31,6 +31,7 @@ const GATED_APIS: Array<{ method: Method; path: string; routerKey: RouterKey; bo
   { method: "POST", path: "/api/compat/searx/install", routerKey: "compat-engines", body: '{"code":"fake"}' },
   { method: "POST", path: "/api/compat/searx/update", routerKey: "compat-engines", body: '{"code":"fake"}' },
   { method: "POST", path: "/api/compat/searx/uninstall", routerKey: "compat-engines", body: '{"code":"fake"}' },
+  { method: "POST", path: "/api/compat/searx/add", routerKey: "compat-engines", body: '{"source":"fake"}' },
   { method: "POST", path: "/api/compat/4get/install", routerKey: "compat-engines", body: '{"code":"fake"}' },
   { method: "POST", path: "/api/compat/4get/update", routerKey: "compat-engines", body: '{"code":"fake"}' },
   { method: "POST", path: "/api/compat/4get/uninstall", routerKey: "compat-engines", body: '{"code":"fake"}' },

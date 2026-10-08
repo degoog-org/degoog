@@ -318,6 +318,7 @@ class FourGetCompatEngine implements SearchEngine {
         dateTo,
       },
       _bridge(this.spec.engineId, this.name, context),
+      context?.signal,
     );
 
     if (result.npt) {
