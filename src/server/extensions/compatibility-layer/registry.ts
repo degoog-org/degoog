@@ -39,6 +39,7 @@ export interface CompatEntry {
   source?: "plugin" | "builtin";
   compatibilityLayer?: CompatLayerId;
   filters?: EngineFilters;
+  regions?: string[];
 }
 
 export interface CompatLayerDef extends CompatLayerInfo {

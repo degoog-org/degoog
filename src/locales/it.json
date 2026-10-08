@@ -49,7 +49,10 @@
       "centered-mode": "Centra i risultati di ricerca",
       "centered-mode-aria": "Centra i risultati di ricerca",
       "hide-url-params": "Nascondi i parametri di query negli URL dei risultati",
-      "hide-url-params-aria": "Nascondi i parametri di query negli URL dei risultati"
+      "hide-url-params-aria": "Nascondi i parametri di query negli URL dei risultati",
+      "region": "Regione dei risultati",
+      "region-none": "Nessuna regione",
+      "region-tooltip": "I motori che lo supportano privilegiano risultati e siti locali di questo paese. Gli altri motori lo ignorano."
     },
     "sync": {
       "heading": "Impostazioni predefinite dell'istanza",

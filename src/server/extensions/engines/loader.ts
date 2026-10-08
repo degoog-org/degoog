@@ -17,6 +17,7 @@ import { coerceEngineInput } from "../../../shared/engine-input";
 import {
   clearTypeCache,
   coerceFilters,
+  coerceRegions,
   coerceTypeList,
   type TypeFn,
 } from "./search-types";
@@ -81,6 +82,7 @@ const engineRegistry = createRegistry<PluginEntry>({
         typeof mod.description === "string" ? mod.description : undefined,
       site: typeof mod.site === "string" ? mod.site : undefined,
       filters: coerceFilters(mod.filters),
+      regions: coerceRegions(mod.regions),
       input: coerceEngineInput(mod.input),
       instance,
       routes: routes.length > 0 ? routes : undefined,

@@ -50,7 +50,10 @@
       "centered-mode": "Centrer les résultats de recherche",
       "centered-mode-aria": "Centrer les résultats de recherche",
       "hide-url-params": "Masquer les paramètres de requête dans les URL des résultats",
-      "hide-url-params-aria": "Masquer les paramètres de requête dans les URL des résultats"
+      "hide-url-params-aria": "Masquer les paramètres de requête dans les URL des résultats",
+      "region": "Région des résultats",
+      "region-none": "Aucune région",
+      "region-tooltip": "Les moteurs compatibles privilégient les résultats et les sites locaux de ce pays. Les autres moteurs l'ignorent."
     },
     "sync": {
       "heading": "Paramètres par défaut de l'instance",

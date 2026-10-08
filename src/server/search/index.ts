@@ -136,7 +136,7 @@ export const searchSingleEngine = async (
   imageFilter?: ImageFilter,
   signal?: AbortSignal,
   searchType?: SearchType,
-  opts?: { forceFresh?: boolean; image?: SearchImage },
+  opts?: { forceFresh?: boolean; image?: SearchImage; region?: string },
 ): Promise<CachedEngineRun> => {
   const engine = resolveEngine(engineName);
   if (!engine) {
@@ -170,6 +170,7 @@ export const searchSingleEngine = async (
     dateTo,
     imageFilter,
     image: image?.hash,
+    region: opts?.region,
   };
   const key = isCacheable(engine.name)
     ? await runKey(cacheId, scope).catch((err) => {
@@ -202,6 +203,7 @@ export const searchSingleEngine = async (
   const pageCounter = makePageCounter();
   const engineContext = createSearchEngineContext(engineSettingsId, {
     lang,
+    region: opts?.region,
     dateFrom,
     dateTo,
     imageFilter,
@@ -262,6 +264,7 @@ export const search = async (
   dateTo?: string,
   imageFilter?: ImageFilter,
   inputs: SearchInputs = {},
+  region = "",
 ): Promise<SearchResponse & { indexBasis: ScoredResult[] }> => {
   const start = performance.now();
   const p = sanePage(page);
@@ -293,7 +296,7 @@ export const search = async (
         imageFilter,
         undefined,
         type,
-        { image: inputs.image },
+        { image: inputs.image, region },
       ),
     ),
   );

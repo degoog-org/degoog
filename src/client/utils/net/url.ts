@@ -6,6 +6,7 @@ import { appendSearchAuthParams, searchAuthHeaders } from "./request";
 import { isImageSearchType } from "../../../shared/search-types";
 import { enabledIds, getEngineBangs, getEngines } from "../search/engines";
 import { ENGINE_BANGS_FIELD } from "../../../shared/sync";
+import { REGION_PARAM } from "../../../shared/region";
 import {
   currentSearchImage,
   withSearchImage,
@@ -62,6 +63,9 @@ export const buildSearchParams = (
   if (state.currentLanguage) {
     params.set("lang", state.currentLanguage);
   }
+  if (state.currentRegion) {
+    params.set(REGION_PARAM, state.currentRegion);
+  }
   if (isImageSearchType(type)) {
     for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
       params.set(k, v);
@@ -99,6 +103,7 @@ export const buildSearchBody = (
     if (state.customDateTo) body.dateTo = state.customDateTo;
   }
   if (state.currentLanguage) body.lang = state.currentLanguage;
+  if (state.currentRegion) body.region = state.currentRegion;
   if (isImageSearchType(type)) {
     Object.assign(body, imgFilterRecord(state.imageFilter));
   }

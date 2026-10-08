@@ -415,6 +415,28 @@ describe("SearX engine parity with native engines", () => {
     });
   });
 
+  test("trait regions become declared regions and a region builds the locale", async () => {
+    await withSearxEnv(async (dir) => {
+      writeEngine(dir, "traits", TRAITS_ENGINE);
+      writeTraits(dir, "traits", TRAITS_FILE);
+      await initEngines(true);
+      const entry = (await listEngines()).find((e) => e.id === "searx-traits-engine");
+      expect(entry?.regions).toEqual(["DE"]);
+      let seen = "";
+      await getEngineMap()["searx-traits-engine"].executeSearch("q", 1, "any", {
+        lang: "de",
+        region: "DE",
+        fetch: async (url: string) => {
+          seen = url;
+          return new Response("<html></html>", { status: 200 });
+        },
+      });
+      expect(seen).toBe(
+        "https://traits.example/?lang=lang_de&region=DE&host=www.example.de",
+      );
+    });
+  });
+
   test("upstream exception, result and helper imports resolve with the real hierarchy", async () => {
     await withSearxEnv(async (dir) => {
       writeEngine(dir, "statics", UPSTREAM_IMPORTS_ENGINE);

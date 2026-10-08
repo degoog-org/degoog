@@ -67,6 +67,7 @@ export async function handleSearch(params: SearchParams) {
     page,
     timeFilter,
     lang,
+    region,
     dateFrom,
     dateTo,
     imageFilter,
@@ -91,6 +92,7 @@ export async function handleSearch(params: SearchParams) {
     dateTo,
     imageFilter,
     inputs,
+    region,
   );
 
   const settings = await getInstanceSettings();
@@ -101,7 +103,7 @@ export async function handleSearch(params: SearchParams) {
     query,
     type,
     await applyMergedDomainRules(indexBasis),
-    { lang: resolvedLang, timeFilter: resolvedTime, dateFrom, dateTo, imageFilter },
+    { lang: resolvedLang, region, timeFilter: resolvedTime, dateFrom, dateTo, imageFilter },
   );
 
   return {
@@ -124,6 +126,7 @@ export async function handleRetry(
     page,
     timeFilter,
     lang,
+    region,
     dateFrom,
     dateTo,
     imageFilter,
@@ -157,7 +160,7 @@ export async function handleRetry(
     imageFilter,
     undefined,
     type,
-    { forceFresh: true, image: inputs.image },
+    { forceFresh: true, image: inputs.image, region },
   );
 
   const scope: RunScope = {
@@ -169,6 +172,7 @@ export async function handleRetry(
     dateFrom,
     dateTo,
     imageFilter,
+    region,
   };
   const active = await selectActiveEngines(type, engines, imageFilter, inputs);
   const isRetried = (entry: { id: string; instance: { name: string } }): boolean =>
@@ -192,7 +196,7 @@ export async function handleRetry(
           imageFilter,
           undefined,
           type,
-          { image: inputs.image },
+          { image: inputs.image, region },
         ),
       })),
   );
@@ -224,7 +228,7 @@ export async function handleRetry(
     await applyMergedDomainRules(
       scoreResults(runs.filter((r) => r.name !== DEGOOG_ENGINE_NAME)),
     ),
-    { lang: resolvedLang, timeFilter: resolvedTime, dateFrom, dateTo, imageFilter },
+    { lang: resolvedLang, region, timeFilter: resolvedTime, dateFrom, dateTo, imageFilter },
   );
 
   return {

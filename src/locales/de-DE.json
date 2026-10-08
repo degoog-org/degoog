@@ -59,7 +59,10 @@
       "engine-origins-instance-default": "Instanz-Standardwert",
       "engine-origins-favicon": "Favicons der Suchmaschinen",
       "engine-origins-provenance": "Herkunft der Suchmaschine",
-      "engine-origins-off": "Ausblenden"
+      "engine-origins-off": "Ausblenden",
+      "region": "Region für Ergebnisse",
+      "region-none": "Keine Region",
+      "region-tooltip": "Suchmaschinen, die es unterstützen, bevorzugen Ergebnisse und lokale Seiten aus diesem Land. Suchmaschinen ohne regionale Unterstützung ignorieren es."
     },
     "sync": {
       "heading": "Instanz-Standardwerte",

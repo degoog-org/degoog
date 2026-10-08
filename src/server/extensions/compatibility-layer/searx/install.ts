@@ -19,12 +19,12 @@ import {
 import { customEntries, customEntry, dropCustomEntry } from "./custom";
 import type { SearxCatalogItem, SearxLibStatus } from "./catalog-types";
 import { searxEnginesDir } from "./paths";
+import { TRAITS_SUFFIX } from "./traits";
 import { LIB_PACKAGES, missingPythonLibs, type PythonLib } from "./python-deps";
 
 const NS = "searx-install";
 const PYCACHE_DIR = "__pycache__";
 const DOWNLOAD_TIMEOUT_MS = 20_000;
-const TRAITS_SUFFIX = ".traits.json";
 const SHORTEST_ALIAS = 4;
 
 export const withSearxLock = createMutex();

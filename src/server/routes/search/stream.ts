@@ -66,7 +66,7 @@ router.post("/api/search/stream", publicBodyLimit, async (c) => {
 });
 
 async function _streamSearch(params: SearchParams): Promise<Response> {
-  const { query: origQ, engines, searchType, page, timeFilter, lang, dateFrom, dateTo, imageFilter } = params;
+  const { query: origQ, engines, searchType, page, timeFilter, lang, region, dateFrom, dateTo, imageFilter } = params;
   const inputs = await searchInputsOf(params);
   const provider =
     inputs.image && !inputs.imageQuery ? await imageQueryProvider() : undefined;
@@ -151,7 +151,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
               imageFilter,
               cancelController.signal,
               type,
-              { forceFresh: isRetry, image: runInputs.image },
+              { forceFresh: isRetry, image: runInputs.image, region },
             );
             lastTiming = timing;
             lastPages = pages;
@@ -256,6 +256,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
           indexBasis,
           {
             lang: resolvedLang,
+            region,
             timeFilter: resolvedTime,
             dateFrom,
             dateTo,

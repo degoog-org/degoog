@@ -8,9 +8,11 @@ import {
   STICKY_SIDEBAR,
   CENTERED_MODE,
   HIDE_URL_PARAMS,
+  REGION_KEY,
   SHOW_RESULT_DATES,
 } from "../constants";
 import { state, defaultImageFilter } from "../state";
+import { normalizeRegion } from "../../shared/region";
 import { initAutocomplete } from "../utils/autocomplete/autocomplete";
 import { idbGet } from "../utils/storage/db";
 import { recordSettingsReturn, showHome } from "../utils/navigation/navigation";
@@ -280,6 +282,8 @@ export async function init(): Promise<void> {
   const postMethodEnabled = await idbGet<boolean>(POST_METHOD_ENABLED);
   if (postMethodEnabled !== null) state.postMethodEnabled = postMethodEnabled;
 
+  state.currentRegion = normalizeRegion(await idbGet<string>(REGION_KEY));
+
   const hideUrlParams = await idbGet<boolean>(HIDE_URL_PARAMS);
   if (hideUrlParams !== null) state.hideUrlParams = hideUrlParams;
 
@@ -338,7 +342,8 @@ export async function init(): Promise<void> {
     }
   }
 
-  window.addEventListener("pageshow", () => {
+  window.addEventListener("pageshow", async () => {
+    state.currentRegion = normalizeRegion(await idbGet<string>(REGION_KEY));
     const restoredParams = new URLSearchParams(window.location.search);
     const restoredQ = restoredParams.get("q");
     if (restoredQ) {

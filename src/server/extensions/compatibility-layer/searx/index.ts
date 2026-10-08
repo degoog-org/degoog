@@ -33,6 +33,7 @@ import {
 } from "./engine-config";
 import { LIB_PACKAGES, missingPythonLibs } from "./python-deps";
 import { searxEnginesDir } from "./paths";
+import { traitRegions } from "./traits";
 
 interface DiscoverPayload {
   path: string;
@@ -170,6 +171,11 @@ const _timeRange = (
   return TIME_FILTER_RANGE[timeFilter] ?? null;
 };
 
+const _locale = (context?: EngineContext): string =>
+  context?.region
+    ? `${context.lang || "en"}-${context.region}`
+    : (context?.lang ?? "all");
+
 const _defaultSafe = (types: string[]): SafeSearch =>
   types.some((type) => GUARDED_TYPES.includes(type.toLowerCase()))
     ? SafeSearch.Moderate
@@ -221,7 +227,7 @@ class SearxCompatEngine implements SearchEngine {
         query,
         page,
         timeFilter: timeRange,
-        locale: context?.lang ?? "all",
+        locale: _locale(context),
         safesearch,
         headers: browserHeaders(context),
         overrides: this.overrides,
@@ -251,7 +257,7 @@ class SearxCompatEngine implements SearchEngine {
         query,
         page,
         timeFilter: timeRange,
-        locale: context?.lang ?? "all",
+        locale: _locale(context),
         safesearch,
         headers: browserHeaders(context),
         overrides: this.overrides,
@@ -370,6 +376,7 @@ export const loadSearxCompatibilityEngines = async (): Promise<CompatEntry[]> =>
       displayName,
       searchTypes: types,
       site: catalogEntry(rawId)?.site,
+      regions: await traitRegions(meta.path),
       instance,
       source: "plugin",
       compatibilityLayer: CompatLayerId.Searx,

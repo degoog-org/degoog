@@ -70,6 +70,7 @@ export interface SearchBody {
   dateFrom?: string;
   dateTo?: string;
   lang?: string;
+  region?: string;
   imgColor?: string;
   imgSize?: string;
   imgType?: string;
@@ -97,6 +98,7 @@ export interface SearchParams {
   page: number;
   timeFilter: TimeFilter;
   lang: string;
+  region: string;
   dateFrom: string;
   dateTo: string;
   imageFilter?: ImageFilter;
@@ -138,6 +140,7 @@ export interface EngineContext {
   fetch: EngineFetch;
   searchType?: SearchType;
   lang?: string;
+  region?: string;
   dateFrom?: string;
   dateTo?: string;
   buildAcceptLanguage?: () => string;

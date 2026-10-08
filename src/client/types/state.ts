@@ -20,6 +20,7 @@ export interface AppState {
   customDateFrom: string;
   customDateTo: string;
   currentLanguage: string;
+  currentRegion: string;
   mediaLoading: boolean;
   currentBangQuery: string;
   openInNewTab: boolean;

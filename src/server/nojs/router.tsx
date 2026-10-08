@@ -24,6 +24,7 @@ import {
 } from "../../shared/search-types";
 import type { SearchParams, SearchType, TimeFilter } from "../types/search";
 import { getLocale } from "../utils/hono";
+import { normalizeRegion, REGION_PARAM } from "../../shared/region";
 import { logger } from "../utils/logger";
 import { hasPinged, strike } from "../utils/security/link-token";
 import { getClientIp } from "../utils/net/request";
@@ -86,6 +87,7 @@ const _toQuery = (field: (name: string) => string): NojsQuery => ({
   page: sanePage(field("page")),
   time: field("time") || "any",
   lang: field("lang"),
+  region: normalizeRegion(field(REGION_PARAM)),
   dateFrom: field("dateFrom"),
   dateTo: field("dateTo"),
 });
@@ -127,6 +129,7 @@ const _searchParams = (
   page: query.page ?? 1,
   timeFilter: (query.time || "any") as TimeFilter,
   lang: query.lang ?? "",
+  region: query.region ?? "",
   dateFrom: query.dateFrom ?? "",
   dateTo: query.dateTo ?? "",
   imageFilter: undefined,

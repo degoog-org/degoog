@@ -30,7 +30,13 @@ import { asString, getSettings } from "../utils/settings/plugin-settings";
 import { buildSignedProxyUrl } from "../utils/net/proxy-sign";
 import { engineRouteUrl } from "../extensions/engines/engine-routes";
 
-const _buildAcceptLanguage = (lang?: string): string => {
+const _buildRegionalAcceptLanguage = (lang: string, region: string): string =>
+  lang === "en"
+    ? `en-${region},en;q=0.9`
+    : `${lang}-${region},${lang};q=0.9,en;q=0.8`;
+
+const _buildAcceptLanguage = (lang?: string, region?: string): string => {
+  if (region) return _buildRegionalAcceptLanguage(lang || "en", region);
   if (!lang || lang === "en") return "en-US,en;q=0.9";
   return `${lang},${lang}-${lang.toUpperCase()};q=0.9,en;q=0.8`;
 };
@@ -52,6 +58,7 @@ const _asBool = (v: string | undefined): boolean => {
 
 interface EngineContextOptions {
   lang?: string;
+  region?: string;
   dateFrom?: string;
   dateTo?: string;
   imageFilter?: ImageFilter;
@@ -77,6 +84,7 @@ export const createSearchEngineContext = (
 ): EngineContext => {
   const {
     lang,
+    region,
     dateFrom,
     dateTo,
     imageFilter,
@@ -142,9 +150,10 @@ export const createSearchEngineContext = (
       });
     },
     lang: resolvedLang,
+    region: region || undefined,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
-    buildAcceptLanguage: () => _buildAcceptLanguage(resolvedLang),
+    buildAcceptLanguage: () => _buildAcceptLanguage(resolvedLang, region),
     userAgent: () => getRandomUserAgent(),
     extractImageUrl: extractImageUrl as EngineContext["extractImageUrl"],
     signProxyUrl: buildSignedProxyUrl,

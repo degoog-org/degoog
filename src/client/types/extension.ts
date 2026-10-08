@@ -61,6 +61,7 @@ export interface EngineRegistry {
     searchTypes: string[];
     disabledByDefault?: boolean;
     filters?: EngineFilters;
+    regions?: string[];
     input?: EngineInput;
     origin?: EngineOrigin;
   }>;
