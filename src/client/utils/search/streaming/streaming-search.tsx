@@ -224,7 +224,7 @@ export async function performStreamingSearch(
     } else {
       updateEngineTimings(sidebar, engineTimings);
     }
-    _announceResults();
+    if (data.results.length > 0) _announceResults();
   });
 
   source.addEventListener("engine-retry", (e) => {

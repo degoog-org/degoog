@@ -223,7 +223,19 @@ describe("POST /api/settings/domain-action hostname handling", () => {
       target: "c.com",
     });
     expect((await domainLists.readDomainLists()).domainReplaceList).toBe(
-      "a.com -> c.com",
+      '{"match":"a.com","replace":"c.com"}',
+    );
+  });
+
+  test("a replacement overwrites a legacy line for the same source and keeps the others", async () => {
+    await domainLists.writeDomainList("domainReplaceList", "a.com -> b.com\nx.com -> y.com");
+    await post("/api/settings/domain-action", {
+      kind: "replace",
+      source: "a.com",
+      target: "c.com",
+    });
+    expect((await domainLists.readDomainLists()).domainReplaceList).toBe(
+      'x.com -> y.com\n{"match":"a.com","replace":"c.com"}',
     );
   });
 

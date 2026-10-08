@@ -20,8 +20,8 @@ export const withCurlBodyArgs = async <T>(
   const body = _bodyOf(options);
   if (!body) return run([]);
   const path = join(tmpdir(), `degoog-curl-${randomUUID()}`);
-  await writeFile(path, body, { mode: 0o600 });
   try {
+    await writeFile(path, body, { mode: 0o600 });
     return await run(["--data-binary", `@${path}`]);
   } finally {
     await rm(path, { force: true }).catch((err) =>

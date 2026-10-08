@@ -2,7 +2,8 @@ import { getBase } from "../../../utils/net/base-url";
 import { authHeaders } from "../../../utils/net/request";
 import type { ServerSettingsData } from "../../../types/settings-server";
 import { setIndexerNavVisible } from "../../indexer/nav";
-import { markOversized, oversizedMap } from "../../shared/oversized";
+import { formatOversizedSize, markOversized, oversizedMap } from "../../shared/oversized";
+import { loadRedirectRows } from "../redirects/redirect-state";
 import { renderScoreRows } from "../domain-score";
 import { el, setSelect, setToggle, setVal } from "../fields";
 import { setCurrentServerSettings } from "./preset-controls";
@@ -68,10 +69,15 @@ export async function loadServerSettings(
     setToggle("domain-block-ui-enabled", data.domainBlockUiEnabled);
 
     setToggle("domain-replace-enabled", data.domainReplaceEnabled);
-    setListVal(
-      "domain-replace-list",
-      "domainReplaceList",
-      data.domainReplaceList,
+    const replaceOversized = oversized.domainReplaceList;
+    loadRedirectRows(
+      data.domainReplaceList ?? "",
+      replaceOversized
+        ? t("settings-page.server.oversized", {
+            lines: replaceOversized.lines.toLocaleString(),
+            size: formatOversizedSize(replaceOversized.chars),
+          })
+        : null,
     );
     setToggle("domain-replace-ui-enabled", data.domainReplaceUiEnabled);
 

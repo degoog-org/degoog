@@ -5,7 +5,12 @@ import { readDomainLists } from "./domain-lists";
 import { INVALIDATE_SCOPE, onInvalidate } from "../cache/cache-valkey";
 import { isUboFilterLine, uboLineToDomain } from "./ubo-filter";
 import { logger } from "../logger";
-import { parseRule, resolveTarget } from "../../../shared/domain-target";
+import {
+  applyRedirect,
+  checkRedirectRule,
+  parseRedirectList,
+  type CompiledRedirect,
+} from "../../../shared/redirects/redirect-rules";
 
 interface BlockPatterns {
   exact: Set<string>;
@@ -14,7 +19,7 @@ interface BlockPatterns {
 
 interface ParsedLists {
   block: BlockPatterns;
-  replace: { source: string; target: string }[];
+  replace: CompiledRedirect[];
   score: { pattern: string; score: number }[];
 }
 
@@ -77,14 +82,19 @@ const _matchesBlock = (hostname: string, patterns: BlockPatterns): boolean => {
   return patterns.regex.some((re) => re.test(hostname));
 };
 
-const _parseReplaceList = (
-  raw: string,
-): { source: string; target: string }[] =>
-  raw
-    .split("\n")
-    .map((line) => line.trim())
-    .map(parseRule)
-    .filter((rule): rule is { source: string; target: string } => rule !== null);
+const _parseReplaceList = (raw: string): CompiledRedirect[] => {
+  const parsed = parseRedirectList(raw);
+  if (parsed.unreadable.length > 0) {
+    logger.warn("domain-filter", `skipped unreadable redirect lines=${parsed.unreadable.length}`);
+  }
+  const compiled: CompiledRedirect[] = [];
+  parsed.rules.forEach((rule, index) => {
+    const check = checkRedirectRule(rule);
+    if (check.ok) compiled.push(check.compiled);
+    else logger.warn("domain-filter", `skipped redirect rule=${index + 1} problem=${check.problem}`);
+  });
+  return compiled;
+};
 
 const _parseScoreList = (raw: string): { pattern: string; score: number }[] =>
   raw
@@ -139,22 +149,8 @@ export const applyDomainReplacements = async <T extends { url: string }>(
   if (rules.length === 0) return results;
 
   return results.map((result) => {
-    try {
-      const url = new URL(result.url);
-      for (const rule of rules) {
-        if (!_matchesDomain(url.hostname, rule.source)) continue;
-        const replaced = resolveTarget(result.url, rule.target);
-        if (!replaced) {
-          logger.debug("domain-filter", "unusable domain replacement target");
-          return result;
-        }
-        return { ...result, url: replaced };
-      }
-      return result;
-    } catch (err) {
-      logger.debug("domain-filter", `domain replace skipped for "${result.url}"`, err);
-      return result;
-    }
+    const hit = applyRedirect(result.url, rules);
+    return hit ? { ...result, url: hit.url } : result;
   });
 };
 

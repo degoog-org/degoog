@@ -9,6 +9,15 @@ import { setIndexerNavVisible } from "../indexer/nav";
 import { OVERSIZED_CLASS } from "../shared/oversized";
 import { boolStr, el } from "./fields";
 import { serializeScoreRows } from "./domain-score";
+import {
+  REDIRECT_EDITOR_ID,
+  hasRedirectProblems,
+  isRedirectEditorLocked,
+  markRedirectsSaved,
+  needsRedirectMigration,
+  onRedirectsChanged,
+  serializeRedirectRows,
+} from "./redirects/redirect-state";
 
 const COMPAT_TOGGLES = ["searx-compat-enabled", "fourget-compat-enabled"];
 
@@ -178,6 +187,22 @@ export const injectFieldSaveBtns = (getToken: () => string | null): void => {
       });
     });
     bindFieldSaveBtn(btn, () => saveBatch(_rlPayload(RL_SUGGEST_KEYS), getToken));
+  }
+
+  const redirectEditor = document.getElementById(REDIRECT_EDITOR_ID);
+  if (redirectEditor && !isRedirectEditorLocked()) {
+    const btn = createFieldSaveBtn();
+    redirectEditor.insertAdjacentElement("afterend", btn);
+    onRedirectsChanged(() => {
+      markFieldDirty(btn);
+      btn.disabled = hasRedirectProblems();
+    });
+    if (needsRedirectMigration()) markFieldDirty(btn);
+    bindFieldSaveBtn(btn, async () => {
+      const ok = await saveField("domainReplaceList", serializeRedirectRows(), getToken);
+      if (ok) markRedirectsSaved();
+      return ok;
+    });
   }
 
   const scoreSection = document.getElementById("settings-domain-score-rows");

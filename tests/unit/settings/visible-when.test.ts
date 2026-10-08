@@ -49,6 +49,11 @@ describe("visibleWhen", () => {
     expect(ruleMatches({ key: "x", equals: "true" }, true)).toBe(true);
   });
 
+  test("free text never reads as a false toggle", () => {
+    expect(ruleMatches({ key: "x", equals: "false" }, "https://example.com")).toBe(false);
+    expect(ruleMatches({ key: "x", notEquals: "false" }, "https://example.com")).toBe(true);
+  });
+
   test("falls back to the dependency default when unset", () => {
     expect(isFieldVisible(field("provider"), schema, {})).toBe(true);
     expect(isFieldVisible(field("token"), schema, {})).toBe(false);

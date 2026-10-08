@@ -36,16 +36,7 @@ export const DomainSection = (): JSX.Element => (
       <SectionDesc k="settings-page.server.domain-replace-desc" />
       <div class={WRAP} id="settings-domain-replace-wrap" style="display: none">
         <fieldset class={FIELDSET_INNER}>
-          <ServerLabel htmlFor="settings-domain-replace-list" k="settings-page.server.domain-replace-list-label" />
-          <textarea
-            id="settings-domain-replace-list"
-            data-save-key="domainReplaceList"
-            class={TEXTAREA}
-            rows={5}
-            placeholder={
-              "reddit.com -> teddit.example.com\ntwitter.com -> nitter.example.com\nwikipedia.org -> https://wiki.example.com/viewer#wikipedia_en_all{{path}}"
-            }
-          ></textarea>
+          <div id="settings-domain-replace-editor" class="settings-redirect-editor"></div>
           <ServerToggle id="settings-domain-replace-ui-enabled" label="settings-page.server.domain-replace-ui-enable" />
           <SectionDesc k="settings-page.server.domain-replace-ui-desc" />
         </fieldset>

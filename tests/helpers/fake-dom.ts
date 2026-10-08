@@ -48,6 +48,7 @@ export class FakeText extends FakeNode {
 
 export class FakeElement extends FakeNode {
   tagName: string;
+  localName: string;
   namespaceURI = "http://www.w3.org/1999/xhtml";
   attributes = new Map<string, string>();
   listeners: Array<{ type: string; fn: (event: unknown) => void }> = [];
@@ -56,6 +57,7 @@ export class FakeElement extends FakeNode {
   constructor(tag: string, namespaceURI?: string) {
     super();
     this.tagName = tag.toLowerCase();
+    this.localName = namespaceURI ? tag : this.tagName;
     if (namespaceURI) this.namespaceURI = namespaceURI;
     if (this.tagName === "template") this.content = new FakeElement("#fragment");
     if (["input", "textarea", "select"].includes(this.tagName)) {

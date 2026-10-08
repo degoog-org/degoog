@@ -73,7 +73,7 @@ export async function loadMoreMedia(type: string): Promise<void> {
   );
   if (sentinel) render(<LoadingDots />, sentinel);
 
-  let appended = false;
+  let advanced = false;
   try {
     const res = await fetchResultsPage(type, nextPage);
     if (!isCurrentSearch(seq)) return;
@@ -96,6 +96,7 @@ export async function loadMoreMedia(type: string): Promise<void> {
     } else if (data.results.length === 0) {
       if (isImage) state.imagePage = nextPage;
       else state.videoPage = nextPage;
+      advanced = true;
     } else {
       state.currentResults = state.currentResults.concat(data.results);
       if (isImage) state.imagePage = nextPage;
@@ -108,7 +109,7 @@ export async function loadMoreMedia(type: string): Promise<void> {
       if (grid && appendMediaCardsRef) {
         appendMediaCardsRef(grid, data.results, isImage ? "image" : "video");
       }
-      appended = true;
+      advanced = true;
       window.dispatchEvent(new CustomEvent(RESULTS_READY));
     }
   } catch (err) {
@@ -116,6 +117,6 @@ export async function loadMoreMedia(type: string): Promise<void> {
   } finally {
     state.mediaLoading = false;
     if (sentinel) clear(sentinel);
-    if (appended || !isCurrentSearch(seq)) _rearmMediaObserver();
+    if (advanced || !isCurrentSearch(seq)) _rearmMediaObserver();
   }
 }

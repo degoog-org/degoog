@@ -35,9 +35,6 @@ const _asString = (value: FieldValue): string => {
   return Array.isArray(value) ? value.join("\n") : String(value);
 };
 
-const _isBool = (expected: string): boolean =>
-  expected === "true" || expected === "false";
-
 const _hits = (
   expected: string | string[] | undefined,
   actual: string,
@@ -46,7 +43,7 @@ const _hits = (
   const list = Array.isArray(expected) ? expected : [expected];
   return list.some((item) => {
     const want = String(item);
-    if (_isBool(want)) return (actual === "true" ? "true" : "false") === want;
+    if (want === "false" && actual === "") return true;
     return actual === want;
   });
 };
