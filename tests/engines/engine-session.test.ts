@@ -152,6 +152,21 @@ describe("engine run session", () => {
     });
   });
 
+  test("a run refuses new requests once it has ended", async () => {
+    await withSessionEnv(async (engineId) => {
+      const context = createSearchEngineContext(engineId);
+      await context.fetch("https://example.com/a");
+      await endRunSession(context);
+
+      await expect(context.fetch("https://example.com/late")).rejects.toThrow(
+        "engine run already ended",
+      );
+      const { fetches, ended } = spyLog();
+      expect(fetches.map((f) => f.url)).toEqual(["https://example.com/a"]);
+      expect(ended).toHaveLength(1);
+    });
+  });
+
   test("a run that never fetched ends without calling the transport", async () => {
     await withSessionEnv(async (engineId) => {
       const context = createSearchEngineContext(engineId);

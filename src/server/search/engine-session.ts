@@ -6,10 +6,12 @@ import {
   type OutgoingProxyOptions,
 } from "../utils/net/outgoing";
 
+export const SESSION_CLOSED_MESSAGE = "engine run already ended";
+
 export interface EngineSession {
   key: string;
   proxyFor: (opts: OutgoingProxyOptions) => Promise<string | null>;
-  touch: (transportName: string) => void;
+  touch: (transportName: string) => boolean;
   close: () => Promise<void>;
 }
 
@@ -17,17 +19,21 @@ export const openSession = (): EngineSession => {
   const key = randomUUID();
   const transports = new Set<string>();
   let pinned: Promise<string | null> | undefined;
+  let closed = false;
 
   const proxyFor = (opts: OutgoingProxyOptions): Promise<string | null> => {
     pinned ??= pickProxyUrl(opts).then((url) => url ?? null);
     return pinned;
   };
 
-  const touch = (transportName: string): void => {
+  const touch = (transportName: string): boolean => {
+    if (closed) return false;
     transports.add(transportName);
+    return true;
   };
 
   const close = async (): Promise<void> => {
+    closed = true;
     const names = [...transports];
     transports.clear();
     for (const name of names) {

@@ -28,7 +28,11 @@ import {
 import { asString, getSettings } from "../utils/settings/plugin-settings";
 import { buildSignedProxyUrl } from "../utils/net/proxy-sign";
 import { engineRouteUrl } from "../extensions/engines/engine-routes";
-import { openSession, type EngineSession } from "./engine-session";
+import {
+  openSession,
+  SESSION_CLOSED_MESSAGE,
+  type EngineSession,
+} from "./engine-session";
 
 const _buildRegionalAcceptLanguage = (lang: string, region: string): string =>
   lang === "en"
@@ -142,7 +146,7 @@ export const createSearchEngineContext = (
       const target = typeof url === "string" ? url : String(url);
       const proxyOptions = { proxyOverrideEnabled, proxyOverrideUrls };
       const pinnedProxyUrl = await session.proxyFor(proxyOptions);
-      session.touch(transport);
+      if (!session.touch(transport)) throw new Error(SESSION_CLOSED_MESSAGE);
       const outgoing = {
         ...proxyOptions,
         engineId: engineSettingsId,
