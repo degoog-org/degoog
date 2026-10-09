@@ -11,23 +11,32 @@ import { ProxySection } from "./sections/proxy-section";
 import { RateLimitSection } from "./sections/rate-limit-section";
 import { RestartSection } from "./sections/restart-section";
 import { SearchOptionsSection } from "./sections/search-options-section";
+import { ServerGroup } from "./server-group";
 import { ValkeyAlert } from "./valkey-alert";
 
 export const ServerContent = (): JSX.Element => (
   <>
     <ValkeyAlert />
-    <RestartSection />
-    <ConfigSection />
-    <CacheSection />
-    <ApiKeySection />
-    <IndexerSection />
-    <CompatSection />
-    <SearchOptionsSection />
-    <NojsSection />
-    <DomainSection />
-    <ProxySection />
-    <RateLimitSection />
-    <HoneypotSection />
-    <CustomCssSection />
+    <ServerGroup label="settings-page.server.group-instance">
+      <RestartSection />
+      <ConfigSection />
+      <CacheSection />
+      <CustomCssSection />
+    </ServerGroup>
+    <ServerGroup label="settings-page.server.group-search">
+      <SearchOptionsSection />
+      <CompatSection />
+      <IndexerSection />
+      <NojsSection />
+      <DomainSection />
+    </ServerGroup>
+    <ServerGroup label="settings-page.server.group-network">
+      <ProxySection />
+      <RateLimitSection />
+    </ServerGroup>
+    <ServerGroup label="settings-page.server.group-security">
+      <ApiKeySection />
+      <HoneypotSection />
+    </ServerGroup>
   </>
 );

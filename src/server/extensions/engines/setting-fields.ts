@@ -17,7 +17,6 @@ export const OUTGOING_TRANSPORT_FIELD: SettingField = {
   options: ["fetch", "curl", "curl-fallback"],
   default: "fetch",
   description: "The outgoing HTTP client to use for this engine.",
-  advanced: true,
 };
 
 export const ENGINE_TIMEOUT_MS = 10_000;

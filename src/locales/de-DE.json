@@ -252,7 +252,7 @@
       "block-client-leaks-desc": "Verhindert, dass der Browser Bilder, Skripte, Schriftarten, Frames oder Verbindungen von externen Websites lädt, und zeigt einen Hinweis mit den blockierten Inhalten an. Einige Erweiterungen und integrierte Funktionen wie !ip und !speedtest funktionieren dann nicht mehr. Standardmäßig deaktiviert; in dem Fall werden diese Vorgänge lediglich in der Browser-Konsole protokolliert.",
       "privacy-policy-label": "Datenschutzerklärung (Markdown)",
       "privacy-policy-desc": "Wird Besuchern über einen Link „Datenschutz“ auf der Startseite angezeigt. Leer lassen, um den Link auszublenden.",
-      "privacy-policy-placeholder": "## Was diese Instanz speichert\\n\\nNichts über dich. Suchanfragen werden von diesem Server an die Suchmaschinen weitergeleitet, nicht von deinem Browser."
+      "privacy-policy-placeholder": "## Was diese Instanz speichert\\n\\nNichts über dich. Suchanfragen werden von diesem Server an die Suchmaschinen weitergeleitet, nicht von deinem Browser.",
       "proxy-test": "Proxy-Verbindung testen",
       "proxy-testing": "Teste…",
       "rate-limit-heading": "Ratenlimit",
@@ -318,7 +318,7 @@
       "nojs-enable": "Kein JavaScript aktivieren",
       "nojs-enable-aria": "Kein JavaScript aktivieren",
       "nojs-css-check-enable": "CSS-Bot-Prüfung auf JavaScript-freie Suchen anwenden",
-      "nojs-css-check-desc": "Textbasierte Browser wie lynx und w3m laden keine Stylesheets und werden gesperrt, wenn diese Option aktiviert ist. Deaktiviert lassen, sofern kein Missbrauch vorliegt."
+      "nojs-css-check-desc": "Textbasierte Browser wie lynx und w3m laden keine Stylesheets und werden gesperrt, wenn diese Option aktiviert ist. Deaktiviert lassen, sofern kein Missbrauch vorliegt.",
       "indexer-heading": "Degoog-Indexer",
       "indexer-desc": "Zeichne Ergebnisse auf, die du tatsächlich siehst, und blende sie bei späteren Suchen als Degoog-Suchmaschine wieder ein.",
       "indexer-enable": "Indexer aktivieren",
@@ -335,8 +335,12 @@
       "infinite-scroll-enable": "Seitenweise Navigation durch endloses Scrollen ersetzen",
       "infinite-scroll-enable-aria": "Seitenweise Navigation durch endloses Scrollen ersetzen",
       "infinite-scroll-enable-desc": "Ersetzt die Links „Zurück“ und „Weiter“ durch automatisches Nachladen, sobald du das Seitenende erreichst",
+      "group-instance": "Instanz",
+      "group-search": "Suche",
+      "group-network": "Netzwerk & Datenschutz",
+      "group-security": "Sicherheit",
       "compat-heading": "Kompatibilitätsschichten",
-      "compat-desc": "Führe Suchmaschinen aus, die für andere Suchmaschinen geschrieben wurden. Beide Schichten sind experimentell.",
+      "compat-desc": "Führe Suchmaschinen aus, die für andere Suchaggregatoren geschrieben wurden. Beide Schichten sind experimentell.",
       "4get-enable": "4get-Kompatibilitätsschicht",
       "4get-enable-desc": "Führe 4get-Scraper als Suchmaschinen aus. Benötigt PHP 8.1+ auf dem Server. Fügt auf der Seite der Suchmaschinen einen 4get-Button hinzu.",
       "4get-enable-aria": "4get-Kompatibilitätsschicht ein- oder ausschalten",
@@ -408,7 +412,7 @@
       "favicon-shape-squircle": "Squircle",
       "favicon-shape-hexagon": "Sechseck",
       "favicon-shape-star": "Stern",
-      "favicon-shape-flower": "Blume"
+      "favicon-shape-flower": "Blume",
       "save-defaults": "Als Instanz-Standard speichern",
       "reset-defaults": "Auf Instanz-Standard zurücksetzen",
       "reset-confirm": "Dadurch wird deine Auswahl der Suchmaschinen in diesem Browser durch die Instanz-Standardwerte ersetzt. Fortfahren?",
@@ -431,7 +435,7 @@
       "no-autocomplete": "Keine Anbieter für Autovervollständigung installiert. Gehe zum Tab {store}, um welche zu durchsuchen und zu installieren.",
       "no-autocomplete-store": "Store",
       "no-favicon": "Keine Favicon-Anbieter installiert, daher zeigen die Ergebnisse einen Platzhalter an. Füge einen über den Reiter {store} hinzu.",
-      "no-favicon-store": "Store"
+      "no-favicon-store": "Store",
       "restart-required": "Damit diese Erweiterung richtig funktioniert, ist ein Neustart des Servers erforderlich.",
       "compat-search": "Verfügbare {layer}-Suchmaschinen durchsuchen…",
       "compat-install": "Installieren",
@@ -532,7 +536,7 @@
       "favicon-store-heading": "Gespeicherte Favicons",
       "favicon-store-desc": "Degoog speichert Symbole im Index, damit wiederholte Suchen geladen werden, ohne einen Anbieter abzufragen. Dies kann auf der Degoog-Karte im Tab „Favicons“ deaktiviert werden.",
       "favicon-store-max-age-days": "Maximales Favicon-Alter (Tage)",
-      "favicon-store-max-age-days-desc": "Gespeicherte Symbole, die älter als dieser Wert sind, werden erneut abgerufen. Bei Websites ohne Symbol wird es nach einem Tag erneut versucht."
+      "favicon-store-max-age-days-desc": "Gespeicherte Symbole, die älter als dieser Wert sind, werden erneut abgerufen. Bei Websites ohne Symbol wird es nach einem Tag erneut versucht.",
       "stats-heading": "Index-Statistiken",
       "total-hits": "Gespeicherte Ergebnisse",
       "total-urls": "Eindeutige Seiten",
@@ -811,5 +815,4 @@
     "loading": "Wird geladen…",
     "error": "Die Datenschutzerklärung konnte nicht geladen werden."
   }
-}
 }

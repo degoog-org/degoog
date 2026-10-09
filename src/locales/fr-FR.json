@@ -291,8 +291,12 @@
       "searx-api-enable": "Servir la forme d'API SearXNG",
       "searx-api-enable-desc": "Fait honorer format=json à /api/search comme l'envoient déjà les clients SearXNG, Open WebUI par exemple, et répond dans la forme SearXNG. Les requêtes sans ce paramètre ne changent pas.",
       "searx-api-enable-aria": "Servir la forme d'API SearXNG",
+      "group-instance": "Instance",
+      "group-search": "Recherche",
+      "group-network": "Réseau et confidentialité",
+      "group-security": "Sécurité",
       "compat-heading": "Couches de compatibilité",
-      "compat-desc": "Faire tourner des moteurs écrits pour d'autres moteurs de recherche. Les deux couches sont expérimentales.",
+      "compat-desc": "Faire tourner des moteurs écrits pour d'autres agrégateurs de recherche. Les deux couches sont expérimentales.",
       "4get-enable": "Couche de compatibilité 4get",
       "4get-enable-desc": "Faire tourner les scrapers 4get comme moteurs. Il faut PHP 8.1+ sur le serveur. Ajoute un bouton 4get sur la page moteurs.",
       "4get-enable-aria": "Activer ou désactiver la couche de compatibilité 4get"

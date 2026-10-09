@@ -9,6 +9,7 @@ import type {
 
 export class FetchTransport implements Transport {
   name = "fetch";
+  usesContextProxy = true;
   displayName = "Fetch";
   description = "Native Bun fetch with SOCKS/HTTP proxy support.";
 
@@ -29,22 +30,10 @@ export class FetchTransport implements Transport {
       return bunFetch(url, { method, redirect, signal, headers, body });
     }
 
+    const proxied = { method, redirect, signal, headers, body: body ?? undefined };
     if (isSocksProxy(context.proxyUrl)) {
-      return fetchViaSocks(url, context.proxyUrl, {
-        method,
-        redirect,
-        signal,
-        headers,
-        body: body ?? undefined,
-      });
+      return fetchViaSocks(url, context.proxyUrl, proxied, undefined, context.egressKey);
     }
-
-    return fetchViaHttpProxy(url, context.proxyUrl, {
-      method,
-      redirect,
-      signal,
-      headers,
-      body: body ?? undefined,
-    });
+    return fetchViaHttpProxy(url, context.proxyUrl, proxied, undefined, context.egressKey);
   }
 }

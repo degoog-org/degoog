@@ -1,37 +1,62 @@
-import { Desc } from "../../../../shared/ui/components/forms/desc";
-import { Icon } from "../../../../shared/ui/components/primitives/icon";
+import { ServerSection } from "../../server/render/server-section";
 import { FiltersFieldset } from "./filters-fieldset";
 import { StatsBlock } from "./stats-block";
 import { StorageFieldset } from "./storage-fieldset";
 import { FaviconStoreFieldset } from "./favicon-store-fieldset";
 import { tr } from "../i18n";
 
-export const IndexerShell = (): JSX.Element => (
-  <section
-    class="settings-section ext-card degoog-panel degoog-panel--ext-card"
-    id="indexer-tab-section"
-  >
-    <div class="setting-section-heading-wrapper">
-      <h2 class="settings-section-heading">{tr("heading")}</h2>
-      <div class="floating-section-icon">
-        <Icon name="fa-solid fa-database" />
-      </div>
-    </div>
-    <Desc text={tr("desc")} />
+const KEY = "settings-page.indexer";
 
-    <p
-      id="indexer-disabled-note"
-      class="settings-desc degoog-indexer-disabled-note"
+export const IndexerShell = (): JSX.Element => (
+  <>
+    <ServerSection
+      id="indexer-tab-section"
+      heading={`${KEY}.heading`}
+      icon="fa-solid fa-database"
+      desc={`${KEY}.desc`}
+      collapsible={false}
+    >
+      <p
+        id="indexer-disabled-note"
+        class="settings-desc degoog-indexer-disabled-note"
+        hidden={true}
+      >
+        {tr("disabled")}
+      </p>
+    </ServerSection>
+    <ServerSection
+      id="indexer-stats-wrap"
+      heading={`${KEY}.stats-heading`}
+      icon="fa-solid fa-chart-simple"
+      open={true}
       hidden={true}
     >
-      {tr("disabled")}
-    </p>
-
-    <fieldset class="settings-fieldset">
-      <FiltersFieldset />
-      <StorageFieldset />
-      <FaviconStoreFieldset />
       <StatsBlock />
-    </fieldset>
-  </section>
+    </ServerSection>
+    <ServerSection
+      id="indexer-filters-wrap"
+      heading={`${KEY}.filters-heading`}
+      icon="fa-solid fa-filter"
+      hidden={true}
+    >
+      <FiltersFieldset />
+    </ServerSection>
+    <ServerSection
+      id="indexer-storage-wrap"
+      heading={`${KEY}.storage-heading`}
+      icon="fa-solid fa-hard-drive"
+      hidden={true}
+    >
+      <StorageFieldset />
+    </ServerSection>
+    <ServerSection
+      id="indexer-favicon-store-wrap"
+      heading={`${KEY}.favicon-store-heading`}
+      icon="fa-solid fa-icons"
+      desc={`${KEY}.favicon-store-desc`}
+      hidden={true}
+    >
+      <FaviconStoreFieldset />
+    </ServerSection>
+  </>
 );

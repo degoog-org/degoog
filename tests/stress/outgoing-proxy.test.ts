@@ -6,6 +6,7 @@ import {
   type ServerSettingValue,
 } from "../../src/server/utils/settings/server-settings";
 import { outgoingFetch } from "../../src/server/utils/net/outgoing";
+import { closeIdleConnections } from "../../src/server/utils/net/raw-http";
 import net from "node:net";
 
 function createConnectProxy(): { server: net.Server; port: number; hits: string[]; close: () => void } {
@@ -74,6 +75,7 @@ describe("outgoing proxy integration", () => {
 
   afterEach(async () => {
     await setInstanceSettings(savedSettings);
+    closeIdleConnections();
     proxy.hits.length = 0;
   });
 

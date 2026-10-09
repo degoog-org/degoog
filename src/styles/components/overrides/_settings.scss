@@ -119,7 +119,6 @@ html:has(.settings-page-body) {
   border: none;
   outline: none;
   appearance: none;
-  text-transform: uppercase;
   height: $space-9;
 
   &:focus {
@@ -276,8 +275,15 @@ html:has(.settings-page-body) {
 
 .settings-desc {
   font-size: $font-size-small;
+  line-height: 1.55;
   color: var(--text-secondary);
   margin: 0 0 $space-4;
+}
+
+.settings-fieldset > .degoog-toggle-wrap + .settings-desc,
+.settings-fieldset > .settings-toggle-wrap + .settings-desc {
+  margin-top: -$space-2;
+  padding-inline: $space-3;
 }
 
 .settings-server-restart-pending {
@@ -422,7 +428,7 @@ html:has(.settings-page-body) {
 
 .theme-select {
   background-color: var(--bg);
-  border-radius: $radius-sm;
+  border-radius: $radius-md;
   border: 0;
   color: var(--text-primary);
   font-size: $font-size-base;
@@ -431,7 +437,6 @@ html:has(.settings-page-body) {
   cursor: pointer;
   outline: none;
   appearance: none;
-  text-transform: uppercase;
 
   &:focus {
     border-color: $primary;
@@ -440,6 +445,7 @@ html:has(.settings-page-body) {
 
 .settings-toggle-label {
   font-size: $font-size-base;
+  font-weight: 500;
   color: var(--text-primary);
   flex: 1;
 }
@@ -458,8 +464,9 @@ html:has(.settings-page-body) {
 
 .settings-proxy-urls-label {
   display: block;
-  font-size: $font-size-small;
-  color: var(--text-secondary);
+  font-size: $font-size-base;
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0 0 $space-2 0;
 }
 
@@ -1054,4 +1061,158 @@ html:has(.settings-page-body) {
     color: $warning;
     opacity: 0.6;
   }
+}
+
+.settings-accordion-group {
+  & + & {
+    margin-top: $space-7;
+  }
+}
+
+.settings-accordion-group-heading {
+  color: var(--text-secondary);
+  font-size: $font-size-md;
+  font-weight: 500;
+  margin: 0 0 $space-3;
+}
+
+.settings-section.settings-accordion {
+  padding: 0;
+}
+
+.settings-accordion-toggle {
+  cursor: pointer;
+  gap: $space-4;
+  margin: 0;
+  padding: $space-4;
+  border-radius: $radius-lg;
+
+  &:has(.settings-accordion-button:focus-visible) {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+  }
+}
+
+.settings-accordion-button {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.settings-accordion-title {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  min-width: 0;
+}
+
+.settings-section .settings-accordion-summary {
+  margin: 0;
+}
+
+.settings-accordion-icons {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  flex-shrink: 0;
+
+  .accordion-chevron {
+    color: var(--text-secondary);
+    transition: transform $transition-fast;
+  }
+}
+
+.settings-accordion-body {
+  padding: 0 $space-4 $space-4;
+
+  .settings-fieldset-inverse {
+    background: transparent;
+    padding: 0;
+    gap: $space-2;
+
+    .settings-toggle-wrap {
+      background: var(--bg);
+    }
+
+    .settings-desc {
+      margin: 0;
+    }
+  }
+
+  .settings-proxy-urls-wrap > * + * {
+    margin-top: $space-5;
+  }
+
+  .settings-proxy-urls-label {
+    margin: 0;
+  }
+
+  input[type="number"].degoog-input {
+    max-width: 12rem;
+  }
+
+  .settings-fieldset > .degoog-btn,
+  .settings-fieldset > .btn {
+    justify-self: start;
+  }
+
+  .degoog-input,
+  .theme-select {
+    background: var(--bg);
+  }
+}
+
+.settings-accordion.open .accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.settings-search-active {
+  .settings-accordion-group-heading {
+    display: none;
+  }
+
+  .settings-accordion-group + .settings-accordion-group {
+    margin-top: 0;
+  }
+
+  .settings-accordion .degoog-accordion-body {
+    display: block;
+  }
+
+  .settings-accordion .accordion-chevron {
+    transform: rotate(180deg);
+  }
+}
+
+.settings-section[hidden] {
+  display: none;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+
+  > .settings-proxy-urls-label,
+  > .settings-desc {
+    margin: 0;
+  }
+}
+
+#indexer-tab-section .degoog-indexer-disabled-note {
+  margin: 0;
+}
+
+#indexer-action-status:empty {
+  display: none;
 }

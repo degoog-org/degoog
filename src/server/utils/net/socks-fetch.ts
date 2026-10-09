@@ -2,6 +2,7 @@ import { SocksClient, type SocksProxy } from "socks";
 import type { Socket } from "node:net";
 import type { TransportFetchOptions } from "../../types/extension";
 import { fetchOverSocket } from "./raw-http";
+import { asProxyConnectError } from "./proxy-error";
 
 const SOCKS_PREFIX_RE = /^socks[45ah]*:\/\//i;
 const SOCKS_TIMEOUT_MS = 8_000;
@@ -32,13 +33,17 @@ async function openSocksSocket(
   port: number,
   timeoutMs: number = SOCKS_TIMEOUT_MS,
 ): Promise<Socket> {
-  const { socket } = await SocksClient.createConnection({
-    proxy,
-    command: "connect",
-    destination: { host, port },
-    timeout: timeoutMs,
-  });
-  return socket;
+  try {
+    const { socket } = await SocksClient.createConnection({
+      proxy,
+      command: "connect",
+      destination: { host, port },
+      timeout: timeoutMs,
+    });
+    return socket;
+  } catch (err) {
+    throw asProxyConnectError(err, "SOCKS proxy connection failed");
+  }
 }
 
 export async function fetchViaSocks(
@@ -46,9 +51,13 @@ export async function fetchViaSocks(
   proxyUrl: string,
   options: TransportFetchOptions = {},
   timeoutMs?: number,
+  reuseKey?: string,
 ): Promise<Response> {
   const proxy = parseSocksUrl(proxyUrl);
-  return fetchOverSocket(url, options, (host, port) =>
-    openSocksSocket(proxy, host, port, timeoutMs),
+  return fetchOverSocket(
+    url,
+    options,
+    (host, port) => openSocksSocket(proxy, host, port, timeoutMs),
+    reuseKey,
   );
 }

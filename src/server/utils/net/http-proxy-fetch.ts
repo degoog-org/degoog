@@ -1,6 +1,7 @@
 import net from "node:net";
 import type { TransportFetchOptions } from "../../types/extension";
 import { fetchOverSocket } from "./raw-http";
+import { asProxyConnectError } from "./proxy-error";
 
 const CONNECT_TIMEOUT_MS = 8_000;
 
@@ -76,10 +77,19 @@ export async function fetchViaHttpProxy(
   proxyUrl: string,
   options: TransportFetchOptions = {},
   timeoutMs?: number,
+  reuseKey?: string,
 ): Promise<Response> {
   const { host: proxyHost, port: proxyPort, auth: proxyAuth } =
     parseProxyUrl(proxyUrl);
-  return fetchOverSocket(url, options, (host, port) =>
-    _openConnectTunnel(proxyHost, proxyPort, host, port, proxyAuth, timeoutMs),
+  return fetchOverSocket(
+    url,
+    options,
+    (host, port) =>
+      _openConnectTunnel(proxyHost, proxyPort, host, port, proxyAuth, timeoutMs).catch(
+        (err: unknown) => {
+          throw asProxyConnectError(err, "HTTP proxy connection failed");
+        },
+      ),
+    reuseKey,
   );
 }

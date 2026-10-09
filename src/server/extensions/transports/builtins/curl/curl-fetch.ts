@@ -3,6 +3,7 @@ import type { TransportFetchOptions } from "../../../../types/extension";
 import { logger } from "../../../../utils/logger";
 import { withCurlBodyArgs } from "../../utils/curl-body-file";
 import { killOnAbort } from "../../utils/kill-on-abort";
+import { curlFailure } from "../../utils/curl-failure";
 
 const DEFAULT_TIMEOUT_SEC = 60;
 const DELIMITER = randomUUID();
@@ -52,13 +53,18 @@ export async function fetchViaCurl(
 
   options.signal?.throwIfAborted();
   return withCurlBodyArgs(options, (bodyArgs) =>
-    _runCurl(buildCurlArgs(url, options, proxyUrl, DEFAULT_TIMEOUT_SEC, bodyArgs), options),
+    _runCurl(
+      buildCurlArgs(url, options, proxyUrl, DEFAULT_TIMEOUT_SEC, bodyArgs),
+      options,
+      Boolean(proxyUrl?.trim()),
+    ),
   );
 }
 
 async function _runCurl(
   args: string[],
   options: TransportFetchOptions,
+  proxied: boolean,
 ): Promise<Response> {
   options.signal?.throwIfAborted();
 
@@ -97,7 +103,7 @@ async function _runCurl(
 
   options.signal?.throwIfAborted();
   if (exitCode !== 0) {
-    throw new Error(stderrText.trim() || `Curl failed (${exitCode})`);
+    throw curlFailure(exitCode, stderrText.trim() || `Curl failed (${exitCode})`, proxied);
   }
 
   const output = new TextDecoder().decode(stdoutBuf);

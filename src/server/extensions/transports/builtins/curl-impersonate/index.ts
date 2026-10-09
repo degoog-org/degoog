@@ -7,6 +7,7 @@ import type {
 import type { AsyncTtlCache } from "../../../../utils/cache/cache";
 import { logger } from "../../../../utils/logger";
 import {
+  COOKIE_JAR_HEADER,
   appendCurlCookieStdoutDelimiters,
   getCookieJar,
   parseCurlStdoutWithCookieJar,
@@ -14,11 +15,15 @@ import {
 } from "../../utils/curl-cookie-cache";
 import { withCurlBodyArgs } from "../../utils/curl-body-file";
 import { killOnAbort } from "../../utils/kill-on-abort";
+import { curlFailure } from "../../utils/curl-failure";
+import { DIRECT_EGRESS } from "../../../../utils/net/proxy-bench";
+import { impersonateAvailable, impersonateFetch } from "../../../../utils/net/impersonate";
 
 const STATUS_DELIMITER = randomUUID();
 const COOKIE_DELIMITER = randomUUID();
 const COOKIE_NAMESPACE = "transport:curl-impersonate:cookies";
-const COOKIE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const COOKIE_TTL_MS = 5 * 60 * 60 * 1000;
+const TIMEOUT_MS = 30_000;
 const BINARIES = [
   "curl_firefox135",
   "curl_firefox133",
@@ -87,6 +92,7 @@ async function _run(
   args: string[],
   cookieJarText: string,
   signal: AbortSignal | undefined,
+  proxied: boolean,
 ): Promise<CurlRunResult> {
   signal?.throwIfAborted();
   const proc = Bun.spawn([binary, ...args], {
@@ -115,7 +121,11 @@ async function _run(
 
   signal?.throwIfAborted();
   if (exitCode !== 0) {
-    throw new Error(stderrText.trim() || `curl-impersonate failed (${exitCode})`);
+    throw curlFailure(
+      exitCode,
+      stderrText.trim() || `curl-impersonate failed (${exitCode})`,
+      proxied,
+    );
   }
 
   const output = new TextDecoder().decode(stdoutBuf);
@@ -137,48 +147,80 @@ async function _run(
   };
 }
 
+type Send = (
+  url: string,
+  options: TransportFetchOptions,
+  jar: string,
+) => Promise<CurlRunResult>;
+
+const _passHeaders = (headers: TransportFetchOptions["headers"]): [string, string][] =>
+  Object.entries(headers ?? {}).filter(([k]) => !STRIP_HEADERS.has(k.toLowerCase()));
+
+const _viaLibrary = (context: TransportContext): Send => async (url, options, jar) => {
+  const { response, cookieJar } = await impersonateFetch({
+    url,
+    method: options.method,
+    headers: _passHeaders(options.headers),
+    body: options.body,
+    proxyUrl: context.proxyUrl,
+    egressKey: context.egressKey ?? DIRECT_EGRESS,
+    followRedirects: options.redirect !== "manual",
+    timeoutMs: TIMEOUT_MS,
+    cookieJar: jar,
+    signal: options.signal,
+  });
+  return {
+    response,
+    cookieJarText: cookieJar === undefined ? null : `${COOKIE_JAR_HEADER}${cookieJar}`,
+  };
+};
+
+const _viaBinary = (binary: string, context: TransportContext): Send => {
+  const proxied = Boolean(context.proxyUrl?.trim());
+  return (url, options, jar) =>
+    withCurlBodyArgs(options, (bodyArgs) =>
+      _run(binary, _buildCurlArgs(url, options, context.proxyUrl, bodyArgs), jar, options.signal, proxied),
+    );
+};
+
 async function _fetchViaImpersonate(
   url: string,
   options: TransportFetchOptions,
-  proxyUrl: string | undefined,
-  binary: string,
+  context: TransportContext,
+  send: Send,
   cookieCache: AsyncTtlCache<string>,
 ): Promise<Response> {
   const parsed = new URL(url);
-  const cookieKey = parsed.hostname;
+  const cookieKey = `${context.egressKey ?? DIRECT_EGRESS}|${parsed.hostname}`;
   let jar = await getCookieJar(cookieCache, cookieKey);
 
-  if (!_warmedHosts.has(parsed.hostname)) {
-    _warmedHosts.add(parsed.hostname);
-    const warmupArgs = _buildCurlArgs(
+  if (!_warmedHosts.has(cookieKey)) {
+    _warmedHosts.add(cookieKey);
+    const warmup = await send(
       `${parsed.protocol}//${parsed.hostname}/`,
-      {},
-      proxyUrl,
-    );
-    const warmup = await _run(binary, warmupArgs, jar, options.signal).catch(
-      () => null,
-    );
+      { signal: options.signal },
+      jar,
+    ).catch(() => null);
     if (warmup?.cookieJarText) {
       jar = warmup.cookieJarText;
       await saveCookieJar(cookieCache, cookieKey, jar, COOKIE_TTL_MS);
     }
   }
 
-  const result = await withCurlBodyArgs(options, (bodyArgs) =>
-    _run(binary, _buildCurlArgs(url, options, proxyUrl, bodyArgs), jar, options.signal),
-  );
+  const result = await send(url, options, jar);
   await saveCookieJar(cookieCache, cookieKey, result.cookieJarText, COOKIE_TTL_MS);
   return result.response;
 }
 
 export class CurlImpersonateTransport implements Transport {
   name = "curl-impersonate";
+  usesContextProxy = true;
   displayName = "Curl Impersonate";
   description =
-    "Uses curl-impersonate to mimic Firefox TLS fingerprints. Helps with endpoints that block based on TLS fingerprinting.";
+    "Uses curl-impersonate to mimic Firefox TLS fingerprints. Helps with endpoints that block based on TLS fingerprinting. With libcurl-impersonate installed it also keeps connections open per proxy like a browser does, instead of starting a new connection for every request.";
 
-  available() {
-    return _resolveBinary() !== null;
+  async available() {
+    return _resolveBinary() !== null || (await impersonateAvailable());
   }
 
   async fetch(
@@ -186,23 +228,19 @@ export class CurlImpersonateTransport implements Transport {
     options: TransportFetchOptions,
     context: TransportContext,
   ): Promise<Response> {
-    const binary = _resolveBinary();
-    if (!binary) {
+    const viaLibrary = await impersonateAvailable();
+    const binary = viaLibrary ? null : _resolveBinary();
+    if (!viaLibrary && !binary) {
       throw new Error(
-        "No curl-impersonate binary found. Install curl-impersonate and ensure it is on PATH.",
+        "No curl-impersonate found. Install libcurl-impersonate or the curl-impersonate binaries.",
       );
     }
-    logger.debug("outgoing", `curl-impersonate ${new URL(url).hostname}`);
+    logger.debug("outgoing", `curl-impersonate ${new URL(url).hostname}${viaLibrary ? " (library)" : ""}`);
     const cookieCache = context.useCache<string>(
       COOKIE_NAMESPACE,
       COOKIE_TTL_MS,
     );
-    return _fetchViaImpersonate(
-      url,
-      options,
-      context.proxyUrl,
-      binary,
-      cookieCache,
-    );
+    const send = viaLibrary ? _viaLibrary(context) : _viaBinary(binary!, context);
+    return _fetchViaImpersonate(url, options, context, send, cookieCache);
   }
 }

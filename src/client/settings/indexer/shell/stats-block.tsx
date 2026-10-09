@@ -11,8 +11,7 @@ const STATS = [
 const ACTIONS = ["manage", "export", "import", "clear"];
 
 export const StatsBlock = (): JSX.Element => (
-  <div id="indexer-stats-wrap" class="degoog-indexer-stats" hidden={true}>
-    <p class="settings-rate-limit-defaults">{tr("stats-heading")}</p>
+  <div class="degoog-indexer-stats">
     <dl class="degoog-stat-grid">
       {STATS.map((stat) => (
         <div>

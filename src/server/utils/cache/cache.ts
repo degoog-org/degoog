@@ -194,6 +194,8 @@ export interface CachedEngineRun {
   results: SearchResult[];
   timing: EngineTiming;
   pages?: number;
+  proxyId?: string;
+  carry?: Record<string, string>;
 }
 
 export const engineRunCache = useCache<CachedEngineRun>(

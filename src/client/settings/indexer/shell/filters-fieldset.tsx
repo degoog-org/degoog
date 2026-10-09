@@ -1,23 +1,21 @@
 import { Desc } from "../../../../shared/ui/components/forms/desc";
 import { LabelFor } from "./label-for";
-import { FIELDSET_INNER } from "../../server/render/classes";
 import { tr } from "../i18n";
 
 const TEXT_FILTERS = ["domain-allowlist", "domain-blocklist", "word-blocklist"];
 
 export const FiltersFieldset = (): JSX.Element => (
-  <fieldset id="indexer-filters-wrap" class={FIELDSET_INNER} hidden={true}>
-    <p class="settings-rate-limit-defaults">{tr("filters-heading")}</p>
+  <fieldset class="settings-fieldset">
     {TEXT_FILTERS.map((key) => (
-      <>
+      <div class="settings-field">
         <LabelFor id={`indexer-${key}`} k={key} />
+        <Desc text={tr(`${key}-desc`)} />
         <textarea
           id={`indexer-${key}`}
           class="settings-proxy-urls degoog-input"
           rows={3}
         ></textarea>
-        <Desc text={tr(`${key}-desc`)} />
-      </>
+      </div>
     ))}
   </fieldset>
 );
