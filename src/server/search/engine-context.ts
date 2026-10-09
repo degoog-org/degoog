@@ -16,7 +16,6 @@ import { getRandomUserAgent } from "../utils/net/user-agents";
 import {
   outgoingFetch,
   parseOutgoingTransport,
-  pickProxyUrl,
 } from "../utils/net/outgoing";
 import { fetchPastAnubis } from "../utils/net/challenges/anubis";
 import { resolveTransport } from "../extensions/transports/registry";
@@ -28,6 +27,7 @@ import {
 import { asString, getSettings } from "../utils/settings/plugin-settings";
 import { buildSignedProxyUrl } from "../utils/net/proxy-sign";
 import { engineRouteUrl } from "../extensions/engines/engine-routes";
+import { openSession, type EngineSession } from "./engine-session";
 
 const _buildAcceptLanguage = (lang?: string): string => {
   if (!lang || lang === "en") return "en-US,en;q=0.9";
@@ -69,6 +69,15 @@ const _solvesAnubis = (
   !!challenges?.includes(ENGINE_CHALLENGE.ANUBIS) &&
   resolveTransport(transport).handlesChallenges !== true;
 
+const _runSessions = new WeakMap<EngineContext, EngineSession>();
+
+export const endRunSession = async (context: EngineContext): Promise<void> => {
+  const session = _runSessions.get(context);
+  if (!session) return;
+  _runSessions.delete(context);
+  await session.close();
+};
+
 export const createSearchEngineContext = (
   engineSettingsId: string | undefined,
   options: EngineContextOptions = {},
@@ -92,7 +101,8 @@ export const createSearchEngineContext = (
       .split(/[-_]/)[0]
       .toLowerCase() ||
     undefined;
-  return {
+  const session = openSession();
+  const context: EngineContext = {
     fetch: async (url, init) => {
       noteEngineHost(engineSettingsId, typeof url === "string" ? url : String(url));
       let raw: string | undefined;
@@ -119,19 +129,19 @@ export const createSearchEngineContext = (
         : baseInit;
       const target = typeof url === "string" ? url : String(url);
       const proxyOptions = { proxyOverrideEnabled, proxyOverrideUrls };
+      const pinnedProxyUrl = await session.proxyFor(proxyOptions);
+      session.touch(transport);
+      const outgoing = {
+        ...proxyOptions,
+        engineId: engineSettingsId,
+        pinnedProxyUrl,
+        sessionKey: session.key,
+      };
       if (!_solvesAnubis(challenges, transport)) {
-        return outgoingFetch(target, requestInit, transport, {
-          ...proxyOptions,
-          engineId: engineSettingsId,
-        });
+        return outgoingFetch(target, requestInit, transport, outgoing);
       }
-      const pinnedProxyUrl = (await pickProxyUrl(proxyOptions)) ?? null;
       const send = (next: string, requestOptions: TransportFetchOptions) =>
-        outgoingFetch(next, requestOptions, transport, {
-          ...proxyOptions,
-          engineId: engineSettingsId,
-          pinnedProxyUrl,
-        });
+        outgoingFetch(next, requestOptions, transport, outgoing);
       return fetchPastAnubis(send, target, requestInit, {
         jarKey: `${transport}|${engineSettingsId ?? ""}|${pinnedProxyUrl ?? "direct"}`,
         engine: engineLabel,
@@ -158,4 +168,6 @@ export const createSearchEngineContext = (
     searchType,
     pagination: pageCounter?.report,
   };
+  _runSessions.set(context, session);
+  return context;
 };

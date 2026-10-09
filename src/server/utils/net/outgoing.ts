@@ -176,6 +176,7 @@ export interface OutgoingProxyOptions {
 export interface OutgoingFetchOptions extends OutgoingProxyOptions {
   engineId?: string;
   pinnedProxyUrl?: string | null;
+  sessionKey?: string;
 }
 
 export async function pickProxyUrl(
@@ -221,6 +222,7 @@ async function buildTransportContext(
     context: {
       proxyUrl,
       engineId: opts?.engineId,
+      sessionKey: opts?.sessionKey,
       fetch: _buildProxyFetch(proxyUrl, transport.timeoutMs),
       useCache,
     },
@@ -268,7 +270,11 @@ export const fetchWithinAllowlist = async (
   allowed: string[] | null,
 ): Promise<Response> => {
   let current = url;
-  let hopOptions: TransportFetchOptions = { ...options, redirect: "manual" };
+  let hopOptions: TransportFetchOptions = {
+    ...options,
+    redirect: "manual",
+    allowlistHop: true,
+  };
   for (let hop = 0; ; hop++) {
     const res = await transport.fetch(current, hopOptions, context);
     const location = res.headers.get("location");

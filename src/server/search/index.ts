@@ -34,7 +34,7 @@ import {
 } from "../utils/security/sentinel";
 import { logger } from "../utils/logger";
 import { reportEngineRun } from "../utils/extension-support/run-observers";
-import { createSearchEngineContext } from "./engine-context";
+import { createSearchEngineContext, endRunSession } from "./engine-context";
 import { getEngineTimeout } from "./engine-timeout";
 import { scoreResults } from "./scoring";
 import { rewriteEngineRuns } from "./domain-rules";
@@ -226,6 +226,8 @@ export const searchSingleEngine = async (
     _tellObservers(run.timing, engineSettingsId, scope, false);
     await _keepRun(key, run);
     return run;
+  } finally {
+    void endRunSession(engineContext);
   }
 };
 

@@ -332,6 +332,7 @@ export interface TransportFetchOptions {
   headers?: Record<string, string>;
   body?: string;
   redirect?: RequestRedirect;
+  allowlistHop?: boolean;
   signal?: AbortSignal;
 }
 
@@ -343,6 +344,7 @@ export type ProxyAwareFetch = (
 export interface TransportContext {
   proxyUrl?: string;
   engineId?: string;
+  sessionKey?: string;
   fetch: ProxyAwareFetch;
   useCache: UseCache;
 }
@@ -375,6 +377,7 @@ export interface Transport {
     options: TransportFetchOptions,
     context: TransportContext,
   ): Promise<Response>;
+  endSession?(sessionKey: string): void | Promise<void>;
   wsHandler?: TransportWsHandlers;
 }
 
