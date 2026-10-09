@@ -16,7 +16,7 @@ $settings-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Liberation Mono
 
 .settings-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) fit-content(50%);
   align-items: center;
   column-gap: $space-7;
   row-gap: 0.625rem;
