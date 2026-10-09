@@ -197,7 +197,7 @@ const _framing = (head: string, bodiless: boolean): Framing => {
 
 const _keepsAlive = (head: string): boolean => {
   if (!/^HTTP\/1\.1 /.test(head)) return false;
-  return !/^connection:\s*close\s*$/im.test(head);
+  return !/^connection:[^\r\n]*\bclose\b/im.test(head);
 };
 
 const _chunkedComplete = (body: Buffer): boolean => {

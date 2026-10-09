@@ -19,9 +19,15 @@ export interface ServerSectionProps {
   children?: Child;
 }
 
-const _heading = (heading: string, badge?: string): JSX.Element => (
+const _heading = (heading: string, badge?: string, open?: boolean): JSX.Element => (
   <h2 class="settings-section-heading">
-    {t(heading)}
+    {open === undefined ? (
+      t(heading)
+    ) : (
+      <button type="button" class="settings-accordion-button" aria-expanded={open ? "true" : "false"}>
+        {t(heading)}
+      </button>
+    )}
     {badge ? <Badge modifier="experimental">{t(badge)}</Badge> : null}
   </h2>
 );
@@ -62,15 +68,9 @@ export const ServerSection = ({
       id={id}
       hidden={hidden}
     >
-      <div
-        class="setting-section-heading-wrapper settings-accordion-toggle"
-        role="button"
-        tabindex="0"
-        aria-expanded={open ? "true" : "false"}
-        data-settings-accordion=""
-      >
+      <div class="setting-section-heading-wrapper settings-accordion-toggle" data-settings-accordion="">
         <div class="settings-accordion-title">
-          {_heading(heading, badge)}
+          {_heading(heading, badge, open)}
           {desc ? <p class="settings-desc settings-accordion-summary">{t(desc)}</p> : null}
         </div>
         <div class="settings-accordion-icons">
@@ -82,10 +82,3 @@ export const ServerSection = ({
     </section>
   );
 };
-
-export const ServerGroup = ({ label, children }: { label: string; children?: Child }): JSX.Element => (
-  <div class="settings-accordion-group">
-    <h3 class="settings-accordion-group-heading">{t(label)}</h3>
-    {children}
-  </div>
-);

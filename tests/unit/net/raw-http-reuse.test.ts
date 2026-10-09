@@ -93,15 +93,18 @@ describe("raw-http connection reuse", () => {
     expect(connections()).toBe(2);
   });
 
-  test("a server that says close is not reused", async () => {
-    const { port, connections } = await keepAliveServer(() =>
-      lengthReply("x", "Connection: close\r\n"),
-    );
-    const open = opener(port);
-    await fetchOverSocket("http://site.test/", {}, open, "run");
-    await fetchOverSocket("http://site.test/", {}, open, "run");
-    expect(connections()).toBe(2);
-  });
+  test.each(["close", "keep-alive, close", "Close, Upgrade"])(
+    "a server that says Connection: %s is not reused",
+    async (value) => {
+      const { port, connections } = await keepAliveServer(() =>
+        lengthReply("x", `Connection: ${value}\r\n`),
+      );
+      const open = opener(port);
+      await fetchOverSocket("http://site.test/", {}, open, "run");
+      await fetchOverSocket("http://site.test/", {}, open, "run");
+      expect(connections()).toBe(2);
+    },
+  );
 
   test("a parked connection the server dropped is replaced transparently", async () => {
     const { port, connections } = await keepAliveServer(() => lengthReply("x"), {
