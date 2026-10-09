@@ -47,21 +47,29 @@ export async function initStoreTab(
   const isVisible = (): boolean =>
     !!container.closest(".settings-tab-panel")?.classList.contains("active");
 
+  let statusRun = 0;
+
   const ctx: StoreContext = {
     state,
     getToken,
     render: () => paint(),
     reload: async () => {
-      const [repos, items, behind, restart] = await Promise.all([
+      const [repos, items, restart] = await Promise.all([
         fetchRepos(getToken),
         fetchItems(getToken),
-        fetchBehind(getToken),
         fetchRestartState(getToken),
       ]);
       if (repos) state.repos = repos;
       if (items) state.items = items;
-      if (behind) state.behind = behind;
       if (restart) state.restartReasons = restart.pending ? restart.reasons : [];
+    },
+    reloadStatus: () => {
+      const run = ++statusRun;
+      void fetchBehind(getToken).then((behind) => {
+        if (!behind || run !== statusRun) return;
+        state.behind = behind;
+        paint();
+      });
     },
     focus: (selector) => {
       const el = container.querySelector<HTMLElement>(selector);
@@ -143,6 +151,7 @@ export async function initStoreTab(
     }).catch((err) => console.debug("[store] background refresh failed", err));
     await ctx.reload();
     paint();
+    ctx.reloadStatus();
   };
 
   try {

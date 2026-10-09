@@ -153,6 +153,7 @@ export interface StoreContext {
   getToken: () => string | null;
   render: () => void;
   reload: () => Promise<void>;
+  reloadStatus: () => void;
   focus: (selector: string) => void;
   scrollToViews: () => void;
   showRestartNotice: () => void;

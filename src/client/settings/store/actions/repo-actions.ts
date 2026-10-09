@@ -34,6 +34,7 @@ export const refreshRepo = async (
   ctx.render();
   const res = await sendStore("/api/store/repos/refresh", { url: repo.url }, ctx.getToken);
   await ctx.reload();
+  ctx.reloadStatus();
   state.repoBusy.delete(key);
   const after = findRepo(state, url);
   if (!res.ok || !after || after.error) {
@@ -68,6 +69,7 @@ export const refreshAllRepos = async (ctx: StoreContext): Promise<void> => {
     ctx.render();
   });
   await ctx.reload();
+  ctx.reloadStatus();
   state.repoBusy.clear();
   state.refreshingAll = false;
   ctx.render();
@@ -107,6 +109,7 @@ export const removeRepo = async (ctx: StoreContext, url: string): Promise<void> 
   state.repoSel = state.repoSel.filter((u) => u !== key);
   if (state.expanded === key) state.expanded = "";
   await ctx.reload();
+  ctx.reloadStatus();
   ctx.render();
   flashSuccess(st("removed-flash", { name: repo.name }));
 };
@@ -130,7 +133,10 @@ export const addRepo = async (ctx: StoreContext): Promise<void> => {
   state.adding = true;
   ctx.render();
   const res = await sendStore<RepoInfo>("/api/store/repos", { url }, ctx.getToken);
-  if (res.ok) await ctx.reload();
+  if (res.ok) {
+    await ctx.reload();
+    ctx.reloadStatus();
+  }
   state.adding = false;
   const added = res.ok && res.data ? findRepo(state, res.data.url) : undefined;
   if (!added) {
