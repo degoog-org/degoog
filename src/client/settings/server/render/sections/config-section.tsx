@@ -7,7 +7,7 @@ export const ConfigSection = (): JSX.Element => (
     id="settings-section-server-presets"
     heading="settings-page.server.config.heading"
     icon="fa-solid fa-sliders"
-    class="settings-server-presets"
+    desc="settings-page.server.config.desc"
   >
     <PresetsBlock />
     <BackupBlock />

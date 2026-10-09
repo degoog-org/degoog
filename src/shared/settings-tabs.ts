@@ -33,3 +33,9 @@ export const SETTINGS_NAV: readonly SettingsNavItem[] = [
   { id: "themes", icon: "fa-palette" },
   { id: "store", icon: "fa-store" },
 ];
+
+const PUBLIC_TABS: readonly SettingsTab[] = ["general", "engines"];
+
+export const PUBLIC_SETTINGS_NAV: readonly SettingsNavItem[] = SETTINGS_NAV.filter(
+  (item) => PUBLIC_TABS.includes(item.id),
+);

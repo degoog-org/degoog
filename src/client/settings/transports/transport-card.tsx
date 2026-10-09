@@ -16,8 +16,10 @@ import type { ExtensionMeta } from "../../types/extension";
 
 export const TransportCard = ({
   transport,
+  onSaved,
 }: {
   transport: ExtensionMeta;
+  onSaved: (enabled: boolean) => void;
 }): JSX.Element => {
   const isEnabled = transport.settings["disabled"] !== "true";
   const toggleId = `transport-toggle-${transport.id}`;
@@ -48,7 +50,7 @@ export const TransportCard = ({
             inputClass="transport-toggle-input"
             dataId={transport.id}
             checked={isEnabled}
-            onChange={extToggleHandler(transport.id, isEnabled, "transport")}
+            onChange={extToggleHandler(transport.id, isEnabled, "transport", onSaved)}
           />
         ) : null,
       ]}

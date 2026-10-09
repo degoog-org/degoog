@@ -569,7 +569,7 @@ describe("POST /api/settings/proxy-test", () => {
     globalThis.fetch = realFetch;
   });
 
-  test("a disabled proxy reports the direct ip and no proxy ip", async () => {
+  test("a disabled proxy reports the direct ip and tests no proxies", async () => {
     globalThis.fetch = (async () =>
       new Response(JSON.stringify({ ip: "198.51.100.9" }), {
         status: 200,
@@ -600,4 +600,26 @@ describe("POST /api/settings/proxy-test", () => {
 
 afterEach(() => {
   settings.clearServerSettingsCache();
+});
+
+describe("POST /api/settings/proxy-ping", () => {
+  test("answers one result per proxy, in order, and drops what is not a string", async () => {
+    const res = await post("/api/settings/proxy-ping", {
+      urls: ["http://127.0.0.1:1", 42, "  "],
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      results: [
+        { ok: false, ms: null, ip: null },
+        { ok: false, ms: null, ip: null },
+      ],
+    });
+  });
+
+  test("caps the batch so one request cannot fan out without limit", async () => {
+    const res = await post("/api/settings/proxy-ping", {
+      urls: Array.from({ length: 100 }, () => ""),
+    });
+    expect(((await res.json()) as { results: unknown[] }).results).toHaveLength(64);
+  });
 });

@@ -3,6 +3,7 @@ import type { Child } from "../../tribute/types";
 
 export interface SectionProps {
   id?: string;
+  class?: string;
   icon?: string;
   heading: string;
   desc?: string;
@@ -11,13 +12,14 @@ export interface SectionProps {
 
 export const Section = ({
   id,
+  class: extra,
   icon,
   heading,
   desc,
   children,
 }: SectionProps): JSX.Element => (
   <section
-    class="settings-section ext-card degoog-panel degoog-panel--ext-card"
+    class={extra ? `settings-section ext-card degoog-panel degoog-panel--ext-card ${extra}` : "settings-section ext-card degoog-panel degoog-panel--ext-card"}
     id={id}
   >
     {icon ? (

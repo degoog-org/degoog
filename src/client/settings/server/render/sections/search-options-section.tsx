@@ -1,10 +1,11 @@
 import { ENGINE_ORIGIN_DISPLAY_VALUES } from "../../../../../shared/engine-origins";
-import { FIELDSET, TEXTAREA } from "../classes";
-import { SectionDesc } from "../section-desc";
-import { ServerLabel } from "../server-label";
+import { SettingGroup } from "../../../shared/rows/setting-group";
+import { SettingNum } from "../../../shared/rows/setting-num";
+import { SettingRow } from "../../../shared/rows/setting-row";
+import { SettingSelect } from "../../../shared/rows/setting-select";
+import { SettingStackRow } from "../../../shared/rows/setting-stack-row";
+import { SettingSwitchRow } from "../../../shared/rows/setting-switch-row";
 import { ServerSection } from "../server-section";
-import { ServerToggle } from "../server-toggle";
-import { SubHeading } from "../sub-heading";
 
 const t = window.scopedT("core");
 
@@ -15,76 +16,87 @@ export const SearchOptionsSection = (): JSX.Element => (
     icon="fa-solid fa-arrow-down-1-9"
     desc="settings-page.server.search-options-desc"
   >
-    <fieldset class={FIELDSET}>
-      <ServerToggle
+    <SettingGroup>
+      <SettingSwitchRow
         id="settings-infinite-scroll-enabled"
-        label="settings-page.server.infinite-scroll-enable"
-        aria="settings-page.server.infinite-scroll-enable-aria"
+        label={t("settings-page.server.infinite-scroll-enable")}
+        desc={t("settings-page.server.infinite-scroll-enable-desc")}
+        main={true}
       />
-      <SectionDesc k="settings-page.server.infinite-scroll-enable-desc" />
-
-      <div class="settings-server-block">
-        <SubHeading k="settings-page.server.engine-origins-label" />
-        <SectionDesc k="settings-page.server.engine-origins-desc" />
-        <div class="degoog-select-wrap">
-          <select
-            id="settings-engine-origin-display"
-            class="degoog-input"
-            aria-label={t("settings-page.server.engine-origins-label")}
-          >
-            {ENGINE_ORIGIN_DISPLAY_VALUES.map((value) => (
-              <option value={value}>{t(`settings-page.server.engine-origins-${value}`)}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <ServerToggle id="settings-languages-enabled" label="settings-page.server.languages-toggle" aria="settings-page.server.languages-toggle-aria" />
-      <SectionDesc k="settings-page.server.languages-desc" />
-      <div
-        class="settings-proxy-urls-wrap settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
-        id="settings-languages-wrap"
-        style="display: none"
+    </SettingGroup>
+    <SettingGroup>
+      <SettingRow
+        label={t("settings-page.server.engine-origins-label")}
+        desc={t("settings-page.server.engine-origins-desc")}
+        forId="settings-engine-origin-display"
       >
-        <ServerLabel htmlFor="settings-languages" k="settings-page.server.languages-codes-label" />
+        <SettingSelect id="settings-engine-origin-display">
+          {ENGINE_ORIGIN_DISPLAY_VALUES.map((value) => (
+            <option value={value}>{t(`settings-page.server.engine-origins-${value}`)}</option>
+          ))}
+        </SettingSelect>
+      </SettingRow>
+    </SettingGroup>
+    <SettingGroup>
+      <SettingSwitchRow
+        id="settings-languages-enabled"
+        label={t("settings-page.server.languages-toggle")}
+        desc={t("settings-page.server.languages-desc")}
+        main={true}
+      />
+      <SettingStackRow
+        label={t("settings-page.server.languages-codes-label")}
+        desc={t("settings-page.server.one-per-line")}
+        forId="settings-languages"
+        dep="settings-languages-enabled"
+      >
         <textarea
           id="settings-languages"
           data-save-key="languages"
-          class={TEXTAREA}
+          class="degoog-input settings-textarea settings-textarea--mono"
           rows={5}
-          placeholder={"en\nit\nde\nfr\nes"}
+          spellcheck="false"
+          placeholder={"en\nit\nde"}
         ></textarea>
-      </div>
-
-      <ServerToggle
+      </SettingStackRow>
+    </SettingGroup>
+    <SettingGroup>
+      <SettingSwitchRow
         id="settings-streaming-enabled"
-        label="settings-page.server.streaming-enable"
-        aria="settings-page.server.streaming-enable-aria"
-        title="settings-page.server.streaming-enable-tooltip"
+        label={t("settings-page.server.streaming-enable")}
+        desc={t("settings-page.server.streaming-desc")}
+        main={true}
       />
-      <SectionDesc k="settings-page.server.streaming-desc" />
-      <div class="settings-streaming-options" id="settings-streaming-options" style="display: none">
-        <fieldset class="settings-fieldset settings-fieldset--compact">
-          <div id="settings-streaming-type-checks" class="settings-streaming-type-checks"></div>
-          <ServerToggle id="settings-streaming-auto-retry" label="settings-page.server.streaming-auto-retry" aria="settings-page.server.streaming-auto-retry-aria" />
-          <div
-            class="settings-streaming-retry-wrap settings-fieldset settings-fieldset-inverse settings-fieldset--compact"
-            id="settings-streaming-retry-wrap"
-            style="display: none"
-          >
-            <ServerLabel htmlFor="settings-streaming-max-retries" k="settings-page.server.streaming-max-retries-label" />
-            <input
-              type="number"
-              id="settings-streaming-max-retries"
-              data-save-key="streamingMaxRetries"
-              class="settings-rate-limit-input degoog-input"
-              min={1}
-              max={5}
-              placeholder="2"
-            />
-          </div>
-        </fieldset>
-      </div>
-    </fieldset>
+      <SettingStackRow
+        id="settings-streaming-types-row"
+        label={t("settings-page.server.streaming-types-label")}
+        desc={<span id="settings-streaming-types-count"></span>}
+        dep="settings-streaming-enabled"
+      >
+        <span class="settings-filter" id="settings-streaming-types-filter-wrap" hidden={true}>
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input
+            type="search"
+            class="degoog-input"
+            id="settings-streaming-types-filter"
+            placeholder={t("settings-page.server.streaming-types-filter")}
+            aria-label={t("settings-page.server.streaming-types-filter")}
+          />
+        </span>
+        <div id="settings-streaming-type-checks" class="settings-type-grid"></div>
+      </SettingStackRow>
+      <SettingSwitchRow
+        id="settings-streaming-auto-retry"
+        label={t("settings-page.server.streaming-auto-retry")}
+        dep="settings-streaming-enabled"
+      />
+      <SettingRow
+        label={t("settings-page.server.streaming-max-retries-label")}
+        forId="settings-streaming-max-retries"
+        dep="settings-streaming-auto-retry"
+      >
+        <SettingNum id="settings-streaming-max-retries" saveKey="streamingMaxRetries" min={1} max={5} placeholder="2" />
+      </SettingRow>
+    </SettingGroup>
   </ServerSection>
 );

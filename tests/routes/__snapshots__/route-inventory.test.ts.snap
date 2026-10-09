@@ -275,6 +275,7 @@ exports[`every mounted router exposes the routes it did before settings route li
   "POST /api/settings/general",
   "POST /api/settings/honeypot/ban",
   "POST /api/settings/honeypot/unban",
+  "POST /api/settings/proxy-ping",
   "POST /api/settings/proxy-test",
   "POST /api/settings/restart",
   "POST /api/settings/shortcuts",
@@ -408,7 +409,7 @@ exports[`the admin path is operator-defined, not hardcoded DEGOOG_SETTINGS_PATH 
 
 exports[`route shape invariants the mounted surface totals stay put 1`] = `
 {
-  "totalHandlers": 315,
-  "unique": 253,
+  "totalHandlers": 317,
+  "unique": 254,
 }
 `;

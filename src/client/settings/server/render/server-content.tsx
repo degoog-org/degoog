@@ -7,6 +7,7 @@ import { DomainSection } from "./sections/domain-section";
 import { HoneypotSection } from "./sections/honeypot-section";
 import { IndexerSection } from "./sections/indexer-section";
 import { NojsSection } from "./sections/nojs-section";
+import { PrivacySection } from "./sections/privacy-section";
 import { ProxySection } from "./sections/proxy-section";
 import { RateLimitSection } from "./sections/rate-limit-section";
 import { RestartSection } from "./sections/restart-section";
@@ -32,6 +33,7 @@ export const ServerContent = (): JSX.Element => (
     </ServerGroup>
     <ServerGroup label="settings-page.server.group-network">
       <ProxySection />
+      <PrivacySection />
       <RateLimitSection />
     </ServerGroup>
     <ServerGroup label="settings-page.server.group-security">

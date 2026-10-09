@@ -1,7 +1,7 @@
 import pkg from "../../../../package.json";
 import { render } from "../../../shared/ui/tribute/dom";
 import { GeneralContent } from "./general-content";
-import { WIZARD_SECTION_ID } from "./sections/wizard-section";
+import { WIZARD_ROW_ID } from "./sections/about-section";
 import { fetchWizardDisabled } from "../../modules/wizard/server";
 import { PublicSettingsTop } from "./public-settings-top";
 import { mountRegionSelect } from "./region-settings";
@@ -194,7 +194,7 @@ async function initVersionChecker(): Promise<void> {
     isUpdateAvailable(pkg.version, currentVersion) &&
     newAvailableEl
   )
-    newAvailableEl.removeAttribute("style");
+    newAvailableEl.hidden = false;
 
   const latestVersion = localStorage.getItem("last-update-check-version");
   if (latestVersion && newestVersionEl)
@@ -213,8 +213,8 @@ async function initVersionChecker(): Promise<void> {
       isUpdateAvailable(pkg.version, newest) &&
       newAvailableEl
     )
-      newAvailableEl.removeAttribute("style");
-    else newAvailableEl?.setAttribute("style", "display:none");
+      newAvailableEl.hidden = false;
+    else if (newAvailableEl) newAvailableEl.hidden = true;
   });
 }
 
@@ -223,7 +223,7 @@ export async function initGeneralTab(
 ): Promise<void> {
   const container = document.getElementById("general-content");
   if (container) render(<GeneralContent />, container);
-  if (await fetchWizardDisabled()) document.getElementById(WIZARD_SECTION_ID)?.remove();
+  if (await fetchWizardDisabled()) document.getElementById(WIZARD_ROW_ID)?.remove();
 
   await initAppearanceSettings();
   await initSyncSetting(getToken);

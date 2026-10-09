@@ -6,3 +6,4 @@ export interface TypeEntry {
 }
 
 export type GroupEntry = { key: string; label: string; engines: ExtensionMeta[] };
+

@@ -1,10 +1,11 @@
 import { Desc } from "../../../../shared/ui/components/forms/desc";
 import { Icon } from "../../../../shared/ui/components/primitives/icon";
 import { Badge } from "../../../../shared/ui/components/primitives/badge";
-import { SECTION_CLASS } from "./classes";
 import type { Child } from "../../../../shared/ui/tribute/types";
 
 const t = window.scopedT("core");
+
+const SECTION_CLASS = "settings-section ext-card degoog-panel degoog-panel--ext-card";
 
 export interface ServerSectionProps {
   id?: string;

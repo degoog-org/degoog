@@ -1,4 +1,4 @@
-import type { PopoverAnchor } from "./dom";
+import { waitFor, type PopoverAnchor } from "./dom";
 
 export interface WizardStepLink {
   href: string;
@@ -20,13 +20,21 @@ export interface WizardStep {
   link?: WizardStepLink;
 }
 
-const setStoreFilter = (value: string): void => {
-  const select =
-    document.querySelector<HTMLSelectElement>(".store-filter-type");
-  if (!select) return;
-  if (select.value === value) return;
-  select.value = value;
-  select.dispatchEvent(new Event("change", { bubbles: true }));
+const STORE_READY_SELECTOR = ".store-views";
+const STORE_READY_TIMEOUT_MS = 10000;
+
+const _select = async (selector: string): Promise<void> => {
+  await waitFor(STORE_READY_SELECTOR, STORE_READY_TIMEOUT_MS);
+  const tab = document.querySelector<HTMLElement>(selector);
+  if (tab && tab.getAttribute("aria-selected") !== "true") tab.click();
+};
+
+const showStoreView = (view: string): Promise<void> =>
+  _select(`.store-view-btn[data-view="${view}"]`);
+
+const showStoreKind = async (kind: string): Promise<void> => {
+  await showStoreView("browse");
+  await _select(`#store-kinds [data-value="${kind}"]`);
 };
 
 const settingsHref = (): string | null => {
@@ -40,7 +48,7 @@ const settingsHref = (): string | null => {
 const COMMUNITY_EXTENSIONS_URL =
   "https://degoog-org.github.io/community-extensions/";
 
-const INSTALLED_GRID_SELECTOR = ".store-catalog-grid .store-btn-uninstall";
+const INSTALLED_GRID_SELECTOR = ".store-results .store-btn-uninstall";
 
 export const HOME_STEPS: readonly WizardStep[] = [
   {
@@ -68,11 +76,11 @@ const storeInstallStep = (
   extras: Partial<WizardStep> = {},
 ): WizardStep => ({
   tab: "store",
-  selector: ".store-catalog-section",
+  selector: "#store-catalog-view",
   titleKey,
   bodyKey,
   hintKey,
-  onEnter: () => setStoreFilter(type),
+  onEnter: () => showStoreKind(type),
   interactive: true,
   popoverAnchor: "bottom-right",
   ...extras,
@@ -81,7 +89,8 @@ const storeInstallStep = (
 export const SETTINGS_STEPS: readonly WizardStep[] = [
   {
     tab: "store",
-    selector: ".store-repos-header",
+    selector: "#store-add",
+    onEnter: () => showStoreView("repos"),
     titleKey: "settings-page.wizard.store-repos-title",
     bodyKey: "settings-page.wizard.store-repos-body",
     interactive: true,

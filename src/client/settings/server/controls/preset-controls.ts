@@ -10,7 +10,7 @@ import {
   type ServerPresetValues,
   type ServerSettingsPreset,
 } from "../presets";
-import { syncDependentPanels } from "./toggle-wraps";
+import { syncDependentPanels } from "./dependent-panels";
 
 const t = window.scopedT("core");
 

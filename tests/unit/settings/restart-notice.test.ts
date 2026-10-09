@@ -118,8 +118,8 @@ describe("restart notice state check", () => {
       });
     });
 
-    const first = maybeShowRestartNotice(() => null);
-    const second = maybeShowRestartNotice(() => null);
+    const first = maybeShowRestartNotice(() => null, () => undefined);
+    const second = maybeShowRestartNotice(() => null, () => undefined);
     release();
     await Promise.all([first, second]);
 
@@ -130,8 +130,8 @@ describe("restart notice state check", () => {
     const { maybeShowRestartNotice } = await loadNotice();
     stubFetch(jsonOnce({ pending: false, reasons: [] }));
 
-    await maybeShowRestartNotice(() => null);
-    await maybeShowRestartNotice(() => null);
+    await maybeShowRestartNotice(() => null, () => undefined);
+    await maybeShowRestartNotice(() => null, () => undefined);
 
     expect(calls).toHaveLength(2);
   });

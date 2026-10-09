@@ -40,6 +40,7 @@ import { getClientShortcuts } from "../../extensions/shortcuts/registry";
 import { isPasswordRequired } from "../settings/settings-auth";
 import { readSyncedDefaults } from "../../utils/settings/synced-settings";
 import { buildSettingsNav, buildSettingsTabSelect } from "./settings-nav";
+import { PUBLIC_SETTINGS_NAV } from "../../../shared/settings-tabs";
 import { renderHtml } from "../../../shared/ui/tribute/html";
 import { faviconShapeAttr } from "../../utils/settings/favicon-shape";
 import { ThemeTemplate } from "../../../shared/ui/components/layout/theme-template";
@@ -301,6 +302,16 @@ export async function buildPage(
   }
   if (html.includes("__SETTINGS_TAB_SELECT__")) {
     html = subFirst(html, "__SETTINGS_TAB_SELECT__", buildSettingsTabSelect());
+  }
+  if (html.includes("__PUBLIC_SETTINGS_NAV__")) {
+    html = subFirst(html, "__PUBLIC_SETTINGS_NAV__", buildSettingsNav(PUBLIC_SETTINGS_NAV));
+  }
+  if (html.includes("__PUBLIC_SETTINGS_TAB_SELECT__")) {
+    html = subFirst(
+      html,
+      "__PUBLIC_SETTINGS_TAB_SELECT__",
+      buildSettingsTabSelect(PUBLIC_SETTINGS_NAV),
+    );
   }
   const t = await getTranslator(locale);
   return applyPagePlaceholders(html, t, locale);

@@ -83,6 +83,7 @@ export const runTour = async (
   };
 
   const cleanupGlobal = (): void => {
+    layoutObserver.disconnect();
     window.removeEventListener("resize", reposition);
     window.removeEventListener("scroll", reposition, true);
     clearLiveListener();
@@ -107,6 +108,8 @@ export const runTour = async (
     placePopover(root, rect, step.popoverAnchor ?? "auto");
   };
 
+  const layoutObserver = new ResizeObserver(() => reposition());
+
   const updateDynamic = (step: WizardStep): void => {
     if (bodyEl) bodyEl.textContent = tWithCount(step.bodyKey, step);
     if (hintEl) {
@@ -123,8 +126,8 @@ export const runTour = async (
     clearLiveListener();
     applyInteractiveMode(root, !!step.interactive);
     if (step.tab) switchSettingsTab(step.tab, false);
-    target = step.selector ? await waitFor(step.selector) : null;
     if (step.onEnter) await step.onEnter();
+    target = step.selector ? await waitFor(step.selector) : null;
     if (target && !step.interactive) await ensureInView(target);
     if (titleEl) titleEl.textContent = t(step.titleKey);
     applyLink(linkEl, step);
@@ -181,6 +184,7 @@ export const runTour = async (
 
   window.addEventListener("resize", reposition);
   window.addEventListener("scroll", reposition, true);
+  layoutObserver.observe(document.body);
 
   await render();
 };

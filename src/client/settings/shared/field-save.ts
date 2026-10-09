@@ -9,6 +9,12 @@ export const createFieldSaveBtn = (): HTMLButtonElement => {
   return btn;
 };
 
+export const placeFieldSaveBtn = (field: HTMLElement, btn: HTMLButtonElement): void => {
+  const row = field.closest(".settings-row");
+  if (row) row.append(btn);
+  else field.insertAdjacentElement("afterend", btn);
+};
+
 const _revisions = new WeakMap<HTMLButtonElement, number>();
 
 export const markFieldDirty = (btn: HTMLButtonElement): void => {

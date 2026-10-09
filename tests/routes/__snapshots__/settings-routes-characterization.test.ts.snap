@@ -100,11 +100,10 @@ exports[`appearance, tab order and default engines default engines round-trip 1`
 }
 `;
 
-exports[`POST /api/settings/proxy-test a disabled proxy reports the direct ip and no proxy ip 1`] = `
+exports[`POST /api/settings/proxy-test a disabled proxy reports the direct ip and tests no proxies 1`] = `
 {
   "directIp": "198.51.100.9",
   "enabled": false,
-  "match": null,
-  "proxyIp": null,
+  "proxies": [],
 }
 `;

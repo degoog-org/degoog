@@ -1,7 +1,8 @@
-import { FIELDSET, FIELDSET_INNER, WRAP } from "../classes";
-import { SectionDesc } from "../section-desc";
+import { SettingGroup } from "../../../shared/rows/setting-group";
+import { SettingSwitchRow } from "../../../shared/rows/setting-switch-row";
 import { ServerSection } from "../server-section";
-import { ServerToggle } from "../server-toggle";
+
+const t = window.scopedT("core");
 
 export const NojsSection = (): JSX.Element => (
   <ServerSection
@@ -11,14 +12,14 @@ export const NojsSection = (): JSX.Element => (
     badge="settings-page.extensions.compat-experimental"
     desc="settings-page.server.nojs-desc"
   >
-    <fieldset class={FIELDSET}>
-      <ServerToggle id="settings-nojs-enabled" label="settings-page.server.nojs-enable" aria="settings-page.server.nojs-enable-aria" />
-      <div class={WRAP} id="settings-nojs-wrap" style="display: none">
-        <fieldset class={FIELDSET_INNER}>
-          <ServerToggle id="settings-nojs-css-check" label="settings-page.server.nojs-css-check-enable" />
-          <SectionDesc k="settings-page.server.nojs-css-check-desc" />
-        </fieldset>
-      </div>
-    </fieldset>
+    <SettingGroup>
+      <SettingSwitchRow id="settings-nojs-enabled" label={t("settings-page.server.nojs-enable")} main={true} />
+      <SettingSwitchRow
+        id="settings-nojs-css-check"
+        label={t("settings-page.server.nojs-css-check-enable")}
+        desc={t("settings-page.server.nojs-css-check-desc")}
+        dep="settings-nojs-enabled"
+      />
+    </SettingGroup>
   </ServerSection>
 );

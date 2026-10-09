@@ -165,6 +165,7 @@ exports[`what an unauthenticated caller gets from every route settings unauthent
   "POST /api/settings/general -> 401",
   "POST /api/settings/honeypot/ban -> 401",
   "POST /api/settings/honeypot/unban -> 401",
+  "POST /api/settings/proxy-ping -> 401",
   "POST /api/settings/proxy-test -> 401",
   "POST /api/settings/restart -> 401",
   "POST /api/settings/shortcuts -> 401",

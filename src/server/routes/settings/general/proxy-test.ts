@@ -1,5 +1,8 @@
 import { Hono } from "hono";
-import { outgoingFetch, proxyEnv } from "../../../utils/net/outgoing";
+import { isUrlAllowedForOutgoing, proxyEnv } from "../../../utils/net/outgoing";
+import { fetchViaHttpProxy } from "../../../utils/net/http-proxy-fetch";
+import { fetchViaSocks, isSocksProxy } from "../../../utils/net/socks-fetch";
+import { createConcurrencyGate } from "../../../utils/net/concurrency-gate";
 import { asBoolean, asString } from "../../../utils/settings/plugin-settings";
 import { getRandomUserAgent } from "../../../utils/net/user-agents";
 import { readObjectBody } from "../../../utils/hono";
@@ -11,14 +14,25 @@ const router = new Hono();
 
 const IP_CHECK_URL = "https://api.ipify.org?format=json";
 const IP_CHECK_TIMEOUT_MS = 8_000;
-const PROXY_TEST_ID = "proxy-test";
+const PING_MAX_URLS = 64;
+const PING_MAX_ACTIVE = 8;
 
-let _testIndex = 0;
+const _pingGate = createConcurrencyGate(PING_MAX_ACTIVE, PING_MAX_URLS * 2);
 
-const _testProxies = (raw: string): string[] =>
+const IP_CHECK_REFUSED = "IP check host not allowed for outgoing requests";
+
+export interface ProxyPing {
+  ok: boolean;
+  ms: number | null;
+  ip: string | null;
+}
+
+const UNREACHABLE: ProxyPing = { ok: false, ms: null, ip: null };
+
+const _lines = (raw: string): string[] =>
   raw
     .split("\n")
-    .map((line) => proxyEnv(line.trim()))
+    .map((line) => line.trim())
     .filter(Boolean);
 
 const fetchIp = async (useFn: typeof fetch): Promise<string | null> => {
@@ -40,8 +54,45 @@ const fetchIp = async (useFn: typeof fetch): Promise<string | null> => {
   }
 };
 
-router.post("/api/settings/proxy-test", settingsAuth("POST /api/settings/proxy-test"), async (c) => {
+const _viaProxy = (proxyUrl: string): typeof fetch =>
+  ((url: RequestInfo | URL, init?: RequestInit) => {
+    const options = {
+      method: init?.method,
+      headers: init?.headers as Record<string, string> | undefined,
+      signal: init?.signal ?? undefined,
+    };
+    return isSocksProxy(proxyUrl)
+      ? fetchViaSocks(String(url), proxyUrl, options, IP_CHECK_TIMEOUT_MS)
+      : fetchViaHttpProxy(String(url), proxyUrl, options, IP_CHECK_TIMEOUT_MS);
+  }) as typeof fetch;
 
+const _pingOne = async (raw: string): Promise<ProxyPing> => {
+  const proxyUrl = proxyEnv(raw.trim());
+  if (!proxyUrl) return UNREACHABLE;
+  const release = await _pingGate.acquire();
+  if (!release) return UNREACHABLE;
+  try {
+    const started = performance.now();
+    const ip = await fetchIp(_viaProxy(proxyUrl));
+    return ip ? { ok: true, ms: Math.round(performance.now() - started), ip } : UNREACHABLE;
+  } finally {
+    release();
+  }
+};
+
+const _pingAll = (urls: string[]): Promise<ProxyPing[]> =>
+  Promise.all(urls.slice(0, PING_MAX_URLS).map(_pingOne));
+
+router.post("/api/settings/proxy-ping", settingsAuth("POST /api/settings/proxy-ping"), async (c) => {
+  const body = await readObjectBody<{ urls?: unknown }>(c);
+  const urls = Array.isArray(body?.urls)
+    ? body.urls.filter((u): u is string => typeof u === "string")
+    : [];
+  if (!isUrlAllowedForOutgoing(IP_CHECK_URL)) return c.json({ error: IP_CHECK_REFUSED }, 409);
+  return c.json({ results: await _pingAll(urls) });
+});
+
+router.post("/api/settings/proxy-test", settingsAuth("POST /api/settings/proxy-test"), async (c) => {
   const body = await readObjectBody<{ proxyEnabled?: string; proxyUrls?: string }>(c);
 
   let enabled: boolean;
@@ -56,41 +107,13 @@ router.post("/api/settings/proxy-test", settingsAuth("POST /api/settings/proxy-t
     proxyUrls = asString(settings.proxyUrls);
   }
 
-  const directIp = await fetchIp(fetch);
-
-  if (!enabled || _testProxies(proxyUrls).length === 0) {
-    return c.json({
-      enabled: false,
-      directIp,
-      proxyIp: null,
-      match: null,
-    });
+  const urls = enabled ? _lines(proxyUrls) : [];
+  if (urls.length > 0 && !isUrlAllowedForOutgoing(IP_CHECK_URL)) {
+    return c.json({ error: IP_CHECK_REFUSED }, 409);
   }
+  const [directIp, proxies] = await Promise.all([fetchIp(fetch), _pingAll(urls)]);
 
-  const candidates = _testProxies(proxyUrls);
-  const pinnedProxy = {
-    url: candidates[_testIndex++ % candidates.length],
-    id: PROXY_TEST_ID,
-  };
-  const overrideFetch = ((_url: RequestInfo | URL, init?: RequestInit) =>
-    outgoingFetch(
-      String(_url),
-      {
-        method: init?.method,
-        headers: init?.headers as Record<string, string> | undefined,
-        signal: init?.signal ?? undefined,
-      },
-      "fetch",
-      { pinnedProxy },
-    )) as typeof fetch;
-  const proxyIp = await fetchIp(overrideFetch);
-
-  return c.json({
-    enabled: true,
-    directIp,
-    proxyIp,
-    match: directIp !== null && proxyIp !== null && directIp === proxyIp,
-  });
+  return c.json({ enabled: urls.length > 0, directIp, proxies });
 });
 
 export default router;

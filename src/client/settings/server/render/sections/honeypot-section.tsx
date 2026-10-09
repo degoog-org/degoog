@@ -1,8 +1,10 @@
-import { FIELDSET, FIELDSET_INNER, LABEL } from "../classes";
-import { SectionDesc } from "../section-desc";
-import { ServerLabel } from "../server-label";
+import { Button } from "../../../../../shared/ui/components/primitives/button";
+import { SettingGroup } from "../../../shared/rows/setting-group";
+import { SettingNum } from "../../../shared/rows/setting-num";
+import { SettingRow } from "../../../shared/rows/setting-row";
+import { SettingStackRow } from "../../../shared/rows/setting-stack-row";
+import { SettingSwitchRow } from "../../../shared/rows/setting-switch-row";
 import { ServerSection } from "../server-section";
-import { ServerToggle } from "../server-toggle";
 
 const t = window.scopedT("core");
 
@@ -13,25 +15,55 @@ export const HoneypotSection = (): JSX.Element => (
     icon="fa-solid fa-spider"
     desc="settings-page.server.honeypot-desc"
   >
-    <fieldset class={FIELDSET}>
-      <ServerToggle id="settings-honeypot-enabled" label="settings-page.server.honeypot-enable" aria="settings-page.server.honeypot-enable-aria" />
-      <ServerToggle id="settings-honeypot-css-check" label="settings-page.server.honeypot-css-check-enable" aria="settings-page.server.honeypot-css-check-aria" checked={true} />
-      <fieldset class={FIELDSET_INNER}>
-        <ServerLabel htmlFor="settings-honeypot-ban-duration" k="settings-page.server.honeypot-ban-duration-label" />
-        <SectionDesc k="settings-page.server.honeypot-ban-duration-desc" />
-        <input type="text" id="settings-honeypot-ban-duration" data-save-key="honeypotBanDuration" class="degoog-input" min={0} placeholder="72" />
-      </fieldset>
-      <fieldset class={FIELDSET_INNER}>
-        <label class={LABEL}>{t("settings-page.server.honeypot-blocklist-label")}</label>
-        <SectionDesc k="settings-page.server.honeypot-blocklist-desc" />
-        <div class="settings-honeypot-ban-row">
-          <input type="text" id="settings-honeypot-ban-ip" class="degoog-input" placeholder="192.168.1.100" spellcheck="false" />
-          <button type="button" id="settings-honeypot-ban-add" class="degoog-btn degoog-btn--primary degoog-btn--sm">
+    <SettingGroup>
+      <SettingSwitchRow
+        id="settings-honeypot-enabled"
+        label={t("settings-page.server.honeypot-enable")}
+        desc={t("settings-page.server.honeypot-enable-desc")}
+        main={true}
+      />
+      <SettingSwitchRow
+        id="settings-honeypot-css-check"
+        label={t("settings-page.server.honeypot-css-check-enable")}
+        desc={t("settings-page.server.honeypot-css-check-desc")}
+        main={true}
+        checked={true}
+      />
+      <SettingRow
+        label={t("settings-page.server.honeypot-ban-duration-label")}
+        desc={t("settings-page.server.honeypot-ban-duration-desc")}
+        forId="settings-honeypot-ban-duration"
+      >
+        <SettingNum
+          id="settings-honeypot-ban-duration"
+          saveKey="honeypotBanDuration"
+          min={0}
+          placeholder="72"
+          unit={t("settings-page.server.unit-hours")}
+        />
+      </SettingRow>
+    </SettingGroup>
+    <SettingGroup>
+      <SettingStackRow
+        label={t("settings-page.server.honeypot-blocklist-label")}
+        desc={<span id="settings-honeypot-ban-count"></span>}
+        forId="settings-honeypot-ban-ip"
+      >
+        <div class="settings-ban-add">
+          <input
+            type="text"
+            id="settings-honeypot-ban-ip"
+            class="degoog-input"
+            placeholder={t("settings-page.server.honeypot-ban-placeholder")}
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <Button variant="primary" id="settings-honeypot-ban-add">
             {t("settings-page.server.honeypot-ban-add")}
-          </button>
+          </Button>
         </div>
-        <div id="settings-honeypot-blocklist-rows"></div>
-      </fieldset>
-    </fieldset>
+        <div id="settings-honeypot-blocklist-rows" class="settings-ban-list"></div>
+      </SettingStackRow>
+    </SettingGroup>
   </ServerSection>
 );

@@ -1,8 +1,23 @@
 import { RawDogIt } from "../../../../shared/ui/tribute/rawdogit";
 import { Button } from "../../../../shared/ui/components/primitives/button";
-import { formatReason } from "../../shared/restart-state";
+import { parseReason } from "../../shared/restart-state";
+import { CONFIRM_MODAL_CLASS } from "../../../modules/modals/confirm-modal/confirm";
 
 const t = window.scopedT("core");
+
+export const RESTART_CONFIRM_CLASS = "store-restart-confirm";
+
+const _Reason = ({ reason }: { reason: string }): JSX.Element => {
+  const parsed = parseReason(reason);
+  return parsed ? (
+    <li>
+      {parsed.name}
+      <span>{`${parsed.type[0].toUpperCase()}${parsed.type.slice(1)}`}</span>
+    </li>
+  ) : (
+    <li>{reason}</li>
+  );
+};
 
 export interface RestartNoticeModalProps {
   reasons: string[];
@@ -16,7 +31,7 @@ export const RestartNoticeModal = ({
   onLater,
 }: RestartNoticeModalProps): JSX.Element => (
   <div
-    class="ext-modal"
+    class={`ext-modal ${CONFIRM_MODAL_CLASS}`}
     role="dialog"
     aria-modal="true"
     aria-labelledby="store-restart-title"
@@ -26,7 +41,7 @@ export const RestartNoticeModal = ({
         {t("settings-page.restart.heading")}
       </h2>
       <button
-        class="ext-modal-close degoog-icon-btn store-restart-close"
+        class="ext-modal-close degoog-icon-btn"
         type="button"
         aria-label={t("settings-page.restart.later")}
         onClick={onClose}
@@ -35,22 +50,22 @@ export const RestartNoticeModal = ({
       </button>
     </div>
     <div class="ext-modal-body">
-      <p class="store-restart-intro">
-        {t("settings-page.restart.modal-intro")}
-      </p>
-      <ul class="store-restart-list">
-        {reasons.map((reason) => (
-          <li key={reason}>{`• ${formatReason(reason)}`}</li>
-        ))}
-      </ul>
-      <p class="store-restart-note">{t("settings-page.restart.modal-note")}</p>
+      <div>
+        <p>{t("settings-page.restart.modal-intro")}</p>
+        <ul class="store-modal-list">
+          {reasons.map((reason) => (
+            <_Reason key={reason} reason={reason} />
+          ))}
+        </ul>
+        <p>{t("settings-page.restart.modal-note")}</p>
+      </div>
     </div>
-    <div class="ext-modal-footer store-restart-footer">
-      <Button variant="secondary" class="store-restart-confirm">
-        {t("settings-page.restart.button")}
-      </Button>
-      <Button variant="primary" class="store-restart-later" onClick={onLater}>
+    <div class="ext-modal-footer">
+      <Button variant="secondary" onClick={onLater}>
         {t("settings-page.restart.later")}
+      </Button>
+      <Button variant="primary" class={RESTART_CONFIRM_CLASS}>
+        {t("settings-page.restart.button")}
       </Button>
     </div>
   </div>
