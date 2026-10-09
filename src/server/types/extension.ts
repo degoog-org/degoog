@@ -337,12 +337,19 @@ export interface PluginRoute {
 
 export type TransportBody = string | Uint8Array<ArrayBuffer>;
 
+export interface TransportMatch {
+  urlMatch?: string;
+  domMatch?: string;
+  failUrlMatch?: string;
+}
+
 export interface TransportFetchOptions {
   method?: string;
   headers?: Record<string, string>;
   body?: TransportBody;
   redirect?: RequestRedirect;
   allowlistHop?: boolean;
+  match?: TransportMatch;
   signal?: AbortSignal;
 }
 
@@ -353,6 +360,7 @@ export type ProxyAwareFetch = (
 
 export interface TransportContext {
   proxyUrl?: string;
+  egressKey?: string;
   engineId?: string;
   sessionKey?: string;
   fetch: ProxyAwareFetch;
@@ -378,6 +386,7 @@ export interface Transport {
   timeoutMs?: number;
   needsAppRestart?: boolean;
   handlesChallenges?: boolean;
+  usesContextProxy?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
   getFieldOptions?: GetFieldOptions;

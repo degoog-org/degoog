@@ -22,9 +22,11 @@ import type {
 import { useCache } from "../cache/cache";
 import { fetchViaHttpProxy } from "./http-proxy-fetch";
 import { logger } from "../logger";
-import { asBoolean } from "../settings/plugin-settings";
 import { fetchViaSocks, isSocksProxy } from "./socks-fetch";
 import { getInstanceSettings } from "../settings/server-settings";
+import { asBoolean } from "../settings/plugin-settings";
+import { rosterIdFor } from "./proxy-roster";
+import { benchedUntil, jerseyFor } from "./proxy-bench";
 export function parseOutgoingTransport(raw: string | undefined): string {
   return raw?.trim() || "fetch";
 }
@@ -123,9 +125,17 @@ function parseProxyUrlsList(rawList: string[]): string[] {
   return out;
 }
 
+const _asList = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((v): v is string => typeof v === "string")
+    : typeof value === "string"
+      ? [value]
+      : [];
+
 function _buildProxyFetch(
   proxyUrl?: string,
   timeoutMs?: number,
+  reuseKey?: string,
 ): ProxyAwareFetch {
   return async (url: string, init?: RequestInit): Promise<Response> => {
     const method = init?.method ?? "GET";
@@ -138,33 +148,11 @@ function _buildProxyFetch(
       return bunFetch(url, { method, redirect, signal, headers, body });
     }
 
+    const proxied = { method, redirect, signal, headers, body };
     if (isSocksProxy(proxyUrl)) {
-      return fetchViaSocks(
-        url,
-        proxyUrl,
-        {
-          method,
-          redirect,
-          signal,
-          headers,
-          body,
-        },
-        timeoutMs,
-      );
+      return fetchViaSocks(url, proxyUrl, proxied, timeoutMs, reuseKey);
     }
-
-    return fetchViaHttpProxy(
-      url,
-      proxyUrl,
-      {
-        method,
-        redirect,
-        signal,
-        headers,
-        body,
-      },
-      timeoutMs,
-    );
+    return fetchViaHttpProxy(url, proxyUrl, proxied, timeoutMs, reuseKey);
   };
 }
 
@@ -175,55 +163,69 @@ export interface OutgoingProxyOptions {
 
 export interface OutgoingFetchOptions extends OutgoingProxyOptions {
   engineId?: string;
-  pinnedProxyUrl?: string | null;
+  pinnedProxy?: Batter | null;
   sessionKey?: string;
 }
 
-export async function pickProxyUrl(
-  opts?: OutgoingProxyOptions,
-): Promise<string | undefined> {
+export interface Batter {
+  url: string;
+  id: string;
+}
+
+const _proxyUrls = async (opts?: OutgoingProxyOptions): Promise<string[]> => {
+  if (opts?.proxyOverrideEnabled === true) {
+    return parseProxyUrlsList(_asList(opts.proxyOverrideUrls));
+  }
   const settings = await getInstanceSettings();
-  const proxyOverrideEnabled = opts?.proxyOverrideEnabled === true;
-  const proxyOverrideRaw = opts?.proxyOverrideUrls;
+  if (!asBoolean(settings.proxyEnabled)) return [];
+  return parseProxyUrlsList(_asList(settings.proxyUrls));
+};
 
-  const globalEnabled = asBoolean(settings.proxyEnabled);
-  const globalProxyUrlsRaw = settings.proxyUrls;
-  const globalUrls = parseProxyUrlsList(
-    typeof globalProxyUrlsRaw === "string" ? [globalProxyUrlsRaw] : [],
-  );
+const _firstOffTheBench = (untils: number[]): number =>
+  untils.indexOf(Math.min(...untils));
 
-  const overrideUrls = parseProxyUrlsList(
-    Array.isArray(proxyOverrideRaw)
-      ? proxyOverrideRaw
-      : typeof proxyOverrideRaw === "string"
-        ? [proxyOverrideRaw]
-        : [],
-  );
+const _suitUp = (url: string): Batter => ({ url, id: rosterIdFor(url) });
 
-  const useProxy = proxyOverrideEnabled
-    ? overrideUrls.length > 0
-    : globalEnabled && globalUrls.length > 0;
-
-  const urls = proxyOverrideEnabled ? overrideUrls : globalUrls;
-  return useProxy ? urls[proxyIndex++ % urls.length] : undefined;
+export async function pickBatter(
+  opts?: OutgoingProxyOptions,
+  host?: string,
+  preferredId?: string,
+): Promise<Batter | undefined> {
+  const urls = await _proxyUrls(opts);
+  if (urls.length === 0) return undefined;
+  const preferred = preferredId
+    ? urls.find((url) => rosterIdFor(url) === preferredId)
+    : undefined;
+  if (preferred && (!host || (await benchedUntil(preferredId!, host)) === 0)) {
+    return _suitUp(preferred);
+  }
+  const start = proxyIndex++;
+  const ordered = urls.map((_, i) => urls[(start + i) % urls.length]);
+  if (!host) return _suitUp(ordered[0]);
+  const untils = await Promise.all(ordered.map((url) => benchedUntil(rosterIdFor(url), host)));
+  const free = untils.indexOf(0);
+  return _suitUp(ordered[free >= 0 ? free : _firstOffTheBench(untils)]);
 }
 
 async function buildTransportContext(
   transportName: string,
+  host: string,
   opts?: OutgoingFetchOptions,
 ): Promise<{ transport: Transport; context: TransportContext }> {
-  const proxyUrl =
-    opts?.pinnedProxyUrl !== undefined
-      ? opts.pinnedProxyUrl ?? undefined
-      : await pickProxyUrl(opts);
+  const proxy =
+    opts?.pinnedProxy !== undefined
+      ? opts.pinnedProxy ?? undefined
+      : await pickBatter(opts, host);
   const transport = resolveTransport(transportName);
+  const egressKey = await jerseyFor(proxy?.id, host);
   return {
     transport,
     context: {
-      proxyUrl,
+      proxyUrl: proxy?.url,
+      egressKey,
       engineId: opts?.engineId,
       sessionKey: opts?.sessionKey,
-      fetch: _buildProxyFetch(proxyUrl, transport.timeoutMs),
+      fetch: _buildProxyFetch(proxy?.url, transport.timeoutMs, proxy ? egressKey : undefined),
       useCache,
     },
   };
@@ -301,7 +303,7 @@ export async function outgoingFetch(
   const allowed = _allowedHosts();
   _assertAllowed(url, allowed);
   const host = new URL(url).hostname;
-  const { transport, context } = await buildTransportContext(transportName, ctx);
+  const { transport, context } = await buildTransportContext(transportName, host, ctx);
   if (context.proxyUrl) {
     logger.debug(
       "outgoing",

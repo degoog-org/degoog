@@ -13,12 +13,15 @@ import {
   type ThreatLevel,
 } from "../utils/security/sentinel";
 import { extractImageUrl } from "../utils/extract-image";
+import type { CachedEngineRun } from "../utils/cache/cache";
 import { getRandomUserAgent } from "../utils/net/user-agents";
 import {
   outgoingFetch,
   parseOutgoingTransport,
 } from "../utils/net/outgoing";
 import { fetchPastAnubis } from "../utils/net/challenges/anubis";
+import { jerseyFor } from "../utils/net/proxy-bench";
+import { isProxyConnectError } from "../utils/net/proxy-error";
 import { resolveTransport } from "../extensions/transports/registry";
 import {
   ENGINE_CHALLENGE,
@@ -73,7 +76,26 @@ interface EngineContextOptions {
   challenges?: readonly EngineChallenge[];
   engineName?: string;
   routeBase?: string;
+  firstPage?: Pick<CachedEngineRun, "proxyId" | "carry"> | null;
 }
+
+export interface BoxScore {
+  proxyId?: string;
+  carry?: Record<string, string>;
+}
+
+const CARRY_MAX_KEYS = 16;
+const CARRY_MAX_CHARS = 4096;
+
+const _cleanCarry = (data: unknown): Record<string, string> | undefined => {
+  if (!data || typeof data !== "object") return undefined;
+  const entries = Object.entries(data as Record<string, unknown>)
+    .filter((entry): entry is [string, string] => typeof entry[1] === "string")
+    .slice(0, CARRY_MAX_KEYS);
+  if (entries.length === 0) return undefined;
+  const clean = Object.fromEntries(entries);
+  return JSON.stringify(clean).length <= CARRY_MAX_CHARS ? clean : undefined;
+};
 
 const _solvesAnubis = (
   challenges: readonly EngineChallenge[] | undefined,
@@ -83,12 +105,25 @@ const _solvesAnubis = (
   resolveTransport(transport).handlesChallenges !== true;
 
 const _runSessions = new WeakMap<EngineContext, EngineSession>();
+const _runCarry = new WeakMap<EngineContext, Record<string, string>>();
 
-export const endRunSession = async (context: EngineContext): Promise<void> => {
+export const boxScore = async (context: EngineContext): Promise<BoxScore> => {
+  const proxyId = await _runSessions.get(context)?.whoBatted();
+  const carry = _runCarry.get(context);
+  return {
+    ...(proxyId ? { proxyId } : {}),
+    ...(carry ? { carry } : {}),
+  };
+};
+
+export const endRunSession = async (
+  context: EngineContext,
+  outcome?: string,
+): Promise<void> => {
   const session = _runSessions.get(context);
   if (!session) return;
   _runSessions.delete(context);
-  await session.close();
+  await session.close(outcome);
 };
 
 export const createSearchEngineContext = (
@@ -108,6 +143,7 @@ export const createSearchEngineContext = (
     challenges,
     engineName: engineLabel,
     routeBase,
+    firstPage,
   } = options;
   const resolvedLang =
     lang ||
@@ -116,7 +152,8 @@ export const createSearchEngineContext = (
       .split(/[-_]/)[0]
       .toLowerCase() ||
     undefined;
-  const session = openSession();
+  const session = openSession(firstPage?.proxyId);
+  const carried = _cleanCarry(firstPage?.carry);
   const context: EngineContext = {
     signal,
     fetch: async (url, init) => {
@@ -144,22 +181,25 @@ export const createSearchEngineContext = (
         ? { ...baseInit, headers: { ...(baseInit.headers ?? {}), "User-Agent": customUa } }
         : baseInit;
       const target = typeof url === "string" ? url : String(url);
+      const host = new URL(target).hostname;
       const proxyOptions = { proxyOverrideEnabled, proxyOverrideUrls };
-      const pinnedProxyUrl = await session.proxyFor(proxyOptions);
+      const pinnedProxy = await session.batterFor(proxyOptions, host);
       if (!session.touch(transport)) throw new Error(SESSION_CLOSED_MESSAGE);
       const outgoing = {
         ...proxyOptions,
         engineId: engineSettingsId,
-        pinnedProxyUrl,
+        pinnedProxy,
         sessionKey: session.key,
       };
-      if (!_solvesAnubis(challenges, transport)) {
-        return outgoingFetch(target, requestInit, transport, outgoing);
-      }
       const send = (next: string, requestOptions: TransportFetchOptions) =>
-        outgoingFetch(next, requestOptions, transport, outgoing);
+        outgoingFetch(next, requestOptions, transport, outgoing).catch((err: unknown) => {
+          if (pinnedProxy && isProxyConnectError(err)) session.noteNoShow();
+          throw err;
+        });
+      if (!_solvesAnubis(challenges, transport)) return send(target, requestInit);
+      const egressKey = await jerseyFor(pinnedProxy?.id, host);
       return fetchPastAnubis(send, target, requestInit, {
-        jarKey: `${transport}|${engineSettingsId ?? ""}|${pinnedProxyUrl ?? "direct"}`,
+        jarKey: `${transport}|${engineSettingsId ?? ""}|${egressKey}`,
         engine: engineLabel,
       });
     },
@@ -185,6 +225,11 @@ export const createSearchEngineContext = (
       new SentinelBreach(status as ThreatLevel, message, opts),
     searchType,
     pagination: pageCounter?.report,
+    carry: (data) => {
+      const clean = _cleanCarry(data);
+      if (clean) _runCarry.set(context, clean);
+    },
+    ...(carried ? { carried } : {}),
   };
   _runSessions.set(context, session);
   return context;

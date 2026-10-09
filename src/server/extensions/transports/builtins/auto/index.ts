@@ -16,6 +16,7 @@ function _shouldRetryWithCurl(status: number): boolean {
 
 export class AutoTransport implements Transport {
   name = "curl-fallback";
+  usesContextProxy = true;
   displayName = "Curl Fallback";
   description =
     "Tries Bun's native fetch first, falls back to curl on 403/429/502/503.";

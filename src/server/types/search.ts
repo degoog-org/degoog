@@ -165,5 +165,7 @@ export interface EngineContext {
     opts?: { httpStatus?: number; engine?: string },
   ) => Error;
   pagination?: (info: EnginePagination) => void;
+  carry?: (data: Record<string, string>) => void;
+  carried?: Readonly<Record<string, string>>;
   signal?: AbortSignal;
 }

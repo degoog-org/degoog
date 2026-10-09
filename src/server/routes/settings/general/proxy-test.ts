@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { outgoingFetch } from "../../../utils/net/outgoing";
+import { outgoingFetch, proxyEnv } from "../../../utils/net/outgoing";
 import { asBoolean, asString } from "../../../utils/settings/plugin-settings";
 import { getRandomUserAgent } from "../../../utils/net/user-agents";
 import { readObjectBody } from "../../../utils/hono";
@@ -11,6 +11,15 @@ const router = new Hono();
 
 const IP_CHECK_URL = "https://api.ipify.org?format=json";
 const IP_CHECK_TIMEOUT_MS = 8_000;
+const PROXY_TEST_ID = "proxy-test";
+
+let _testIndex = 0;
+
+const _testProxies = (raw: string): string[] =>
+  raw
+    .split("\n")
+    .map((line) => proxyEnv(line.trim()))
+    .filter(Boolean);
 
 const fetchIp = async (useFn: typeof fetch): Promise<string | null> => {
   try {
@@ -49,7 +58,7 @@ router.post("/api/settings/proxy-test", settingsAuth("POST /api/settings/proxy-t
 
   const directIp = await fetchIp(fetch);
 
-  if (!enabled || !proxyUrls.trim()) {
+  if (!enabled || _testProxies(proxyUrls).length === 0) {
     return c.json({
       enabled: false,
       directIp,
@@ -58,6 +67,11 @@ router.post("/api/settings/proxy-test", settingsAuth("POST /api/settings/proxy-t
     });
   }
 
+  const candidates = _testProxies(proxyUrls);
+  const pinnedProxy = {
+    url: candidates[_testIndex++ % candidates.length],
+    id: PROXY_TEST_ID,
+  };
   const overrideFetch = ((_url: RequestInfo | URL, init?: RequestInit) =>
     outgoingFetch(
       String(_url),
@@ -67,10 +81,7 @@ router.post("/api/settings/proxy-test", settingsAuth("POST /api/settings/proxy-t
         signal: init?.signal ?? undefined,
       },
       "fetch",
-      {
-        proxyOverrideEnabled: true,
-        proxyOverrideUrls: proxyUrls,
-      },
+      { pinnedProxy },
     )) as typeof fetch;
   const proxyIp = await fetchIp(overrideFetch);
 

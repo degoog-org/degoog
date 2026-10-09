@@ -31,6 +31,41 @@ export const ProxySection = (): JSX.Element => (
           </Button>
           <div class="proxy-test-result" id="settings-proxy-test-result" hidden={true}></div>
         </fieldset>
+        <fieldset class={FIELDSET_INNER}>
+          <ServerLabel htmlFor="settings-proxy-cooldown-minutes" k="settings-page.server.proxy-cooldown-minutes-label" />
+          <SectionDesc k="settings-page.server.proxy-cooldown-minutes-desc" />
+          <input
+            type="number"
+            id="settings-proxy-cooldown-minutes"
+            data-save-key="proxyCooldownMinutes"
+            class="degoog-input"
+            min={0}
+            max={1440}
+            placeholder="10"
+          />
+        </fieldset>
+        <fieldset class={FIELDSET_INNER}>
+          <ServerLabel htmlFor="settings-proxy-cooldown-triggers" k="settings-page.server.proxy-cooldown-triggers-label" />
+          <SectionDesc k="settings-page.server.proxy-cooldown-triggers-desc" />
+          <textarea
+            id="settings-proxy-cooldown-triggers"
+            data-save-key="proxyCooldownTriggers"
+            class={TEXTAREA}
+            rows={4}
+            placeholder={"rate_limited\ncaptcha\nblocked\nconnect"}
+          ></textarea>
+        </fieldset>
+        <fieldset class={FIELDSET_INNER}>
+          <ServerLabel htmlFor="settings-proxy-host-groups" k="settings-page.server.proxy-host-groups-label" />
+          <SectionDesc k="settings-page.server.proxy-host-groups-desc" />
+          <textarea
+            id="settings-proxy-host-groups"
+            data-save-key="proxyHostGroups"
+            class={TEXTAREA}
+            rows={3}
+            placeholder={"example.com example.co.uk"}
+          ></textarea>
+        </fieldset>
       </div>
       <ServerToggle id="settings-image-proxy-allow-local" label="settings-page.server.image-proxy-allow-local" aria="settings-page.server.image-proxy-allow-local-aria" />
       <div class={WRAP} id="settings-image-proxy-allow-list-wrap" style="display: none">

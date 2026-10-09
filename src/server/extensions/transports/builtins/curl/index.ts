@@ -8,6 +8,7 @@ import { fetchViaCurl } from "./curl-fetch";
 
 export class CurlTransport implements Transport {
   name = "curl";
+  usesContextProxy = true;
   displayName = "Curl";
   description = "Uses the curl binary for requests. Useful as a TLS fallback.";
 

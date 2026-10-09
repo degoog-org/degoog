@@ -14,11 +14,13 @@ import {
 } from "../../utils/curl-cookie-cache";
 import { withCurlBodyArgs } from "../../utils/curl-body-file";
 import { killOnAbort } from "../../utils/kill-on-abort";
+import { curlFailure } from "../../utils/curl-failure";
+import { DIRECT_EGRESS } from "../../../../utils/net/proxy-bench";
 
 const STATUS_DELIMITER = randomUUID();
 const COOKIE_DELIMITER = randomUUID();
 const COOKIE_NAMESPACE = "transport:curl-impersonate:cookies";
-const COOKIE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const COOKIE_TTL_MS = 5 * 60 * 60 * 1000;
 const BINARIES = [
   "curl_firefox135",
   "curl_firefox133",
@@ -87,6 +89,7 @@ async function _run(
   args: string[],
   cookieJarText: string,
   signal: AbortSignal | undefined,
+  proxied: boolean,
 ): Promise<CurlRunResult> {
   signal?.throwIfAborted();
   const proc = Bun.spawn([binary, ...args], {
@@ -115,7 +118,11 @@ async function _run(
 
   signal?.throwIfAborted();
   if (exitCode !== 0) {
-    throw new Error(stderrText.trim() || `curl-impersonate failed (${exitCode})`);
+    throw curlFailure(
+      exitCode,
+      stderrText.trim() || `curl-impersonate failed (${exitCode})`,
+      proxied,
+    );
   }
 
   const output = new TextDecoder().decode(stdoutBuf);
@@ -140,22 +147,24 @@ async function _run(
 async function _fetchViaImpersonate(
   url: string,
   options: TransportFetchOptions,
-  proxyUrl: string | undefined,
+  context: TransportContext,
   binary: string,
   cookieCache: AsyncTtlCache<string>,
 ): Promise<Response> {
+  const { proxyUrl } = context;
+  const proxied = Boolean(proxyUrl?.trim());
   const parsed = new URL(url);
-  const cookieKey = parsed.hostname;
+  const cookieKey = `${context.egressKey ?? DIRECT_EGRESS}|${parsed.hostname}`;
   let jar = await getCookieJar(cookieCache, cookieKey);
 
-  if (!_warmedHosts.has(parsed.hostname)) {
-    _warmedHosts.add(parsed.hostname);
+  if (!_warmedHosts.has(cookieKey)) {
+    _warmedHosts.add(cookieKey);
     const warmupArgs = _buildCurlArgs(
       `${parsed.protocol}//${parsed.hostname}/`,
       {},
       proxyUrl,
     );
-    const warmup = await _run(binary, warmupArgs, jar, options.signal).catch(
+    const warmup = await _run(binary, warmupArgs, jar, options.signal, proxied).catch(
       () => null,
     );
     if (warmup?.cookieJarText) {
@@ -165,7 +174,7 @@ async function _fetchViaImpersonate(
   }
 
   const result = await withCurlBodyArgs(options, (bodyArgs) =>
-    _run(binary, _buildCurlArgs(url, options, proxyUrl, bodyArgs), jar, options.signal),
+    _run(binary, _buildCurlArgs(url, options, proxyUrl, bodyArgs), jar, options.signal, proxied),
   );
   await saveCookieJar(cookieCache, cookieKey, result.cookieJarText, COOKIE_TTL_MS);
   return result.response;
@@ -173,6 +182,7 @@ async function _fetchViaImpersonate(
 
 export class CurlImpersonateTransport implements Transport {
   name = "curl-impersonate";
+  usesContextProxy = true;
   displayName = "Curl Impersonate";
   description =
     "Uses curl-impersonate to mimic Firefox TLS fingerprints. Helps with endpoints that block based on TLS fingerprinting.";
@@ -197,12 +207,6 @@ export class CurlImpersonateTransport implements Transport {
       COOKIE_NAMESPACE,
       COOKIE_TTL_MS,
     );
-    return _fetchViaImpersonate(
-      url,
-      options,
-      context.proxyUrl,
-      binary,
-      cookieCache,
-    );
+    return _fetchViaImpersonate(url, options, context, binary, cookieCache);
   }
 }

@@ -37,6 +37,9 @@ export async function loadServerSettings(
 
     setToggle("proxy-enabled", data.proxyEnabled);
     setVal("proxy-urls", data.proxyUrls);
+    setVal("proxy-cooldown-minutes", data.proxyCooldownMinutes);
+    setVal("proxy-cooldown-triggers", data.proxyCooldownTriggers);
+    setVal("proxy-host-groups", data.proxyHostGroups);
     setToggle("image-proxy-allow-local", data.imageProxyAllowLocal);
     setVal("image-proxy-allow-list", data.imageProxyAllowList);
     setToggle("block-client-leaks", data.blockClientLeaks);
