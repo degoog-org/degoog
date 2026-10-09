@@ -1,6 +1,7 @@
 import { ListSubField } from "./list-sub-field";
 import { rowSummary, type ListRow } from "./list-field-data";
 import type { SettingField } from "../../../../../shared/setting-field";
+import { isFieldVisible } from "../../../../../shared/visible-when";
 
 const t = window.scopedT("core");
 
@@ -43,7 +44,14 @@ export const ListFieldRow = ({
       </div>
       <div class="ext-list-row-editor" hidden={true}>
         {itemSchema.map((sub) => (
-          <ListSubField key={sub.key} sub={sub} row={row} />
+          <div
+            key={sub.key}
+            class="ext-list-sub-wrap"
+            data-subwrap={sub.key}
+            hidden={!isFieldVisible(sub, itemSchema, row)}
+          >
+            <ListSubField sub={sub} row={row} />
+          </div>
         ))}
       </div>
     </div>

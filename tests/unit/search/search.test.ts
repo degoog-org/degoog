@@ -60,6 +60,51 @@ describe("search", () => {
       ]);
       expect(out[0].url).toBe("https://first.com");
     });
+
+    test("visual engine results rank above every text result", () => {
+      const out = scoreResults([
+        {
+          results: [result("https://t1.com", "T1"), result("https://t2.com", "T1")],
+          multiplier: 10,
+        },
+        {
+          results: [result("https://t1.com", "T2"), result("https://t2.com", "T2")],
+          multiplier: 10,
+        },
+        {
+          results: [
+            result("https://v1.com", "V"),
+            result("https://v2.com", "V"),
+            result("https://v3.com", "V"),
+          ],
+          visual: true,
+        },
+      ]);
+      expect(out.map((r) => r.url)).toEqual([
+        "https://v1.com",
+        "https://v2.com",
+        "https://v3.com",
+        "https://t1.com",
+        "https://t2.com",
+      ]);
+      expect(out.slice(0, 3).every((r) => r.visual)).toBe(true);
+      expect(out.slice(3).some((r) => r.visual)).toBe(false);
+    });
+
+    test("a text engine agreeing with a visual match boosts it within the visual group", () => {
+      const out = scoreResults([
+        { results: [result("https://v1.com", "V"), result("https://v2.com", "V")], visual: true },
+        { results: [result("https://v2.com", "T")] },
+      ]);
+      expect(out[0].url).toBe("https://v2.com");
+      expect(out[0].visual).toBe(true);
+      expect(out[0].sources).toEqual(["V", "T"]);
+    });
+
+    test("without visual runs nothing is marked visual", () => {
+      const out = scoreResults([{ results: [result("https://a.com", "E1")] }]);
+      expect("visual" in out[0]).toBe(false);
+    });
   });
 
 });

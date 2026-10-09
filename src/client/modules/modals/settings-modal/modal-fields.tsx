@@ -11,56 +11,45 @@ import { optionsListFor, wrapOptionsRow } from "./options-field/options-field";
 import { MultiselectField } from "./fields/multiselect-field";
 import type { Child } from "../../../../shared/ui/tribute/types";
 import type { ExtensionMeta } from "../../../types/extension";
-import type { SettingField } from "../../../../shared/setting-field";
-
-const _depMeetsSavedValue = (
-  ext: ExtensionMeta,
-  depKey: string,
-  equals: string,
-): boolean => {
-  const stored = ext.settings[depKey];
-  let v: string;
-  if (stored === undefined || stored === null) {
-    const def = ext.settingsSchema.find((f) => f.key === depKey)?.default;
-    v = def !== undefined && def !== null ? String(def) : "";
-  } else {
-    v = Array.isArray(stored) ? stored.join("\n") : String(stored);
-  }
-  if (equals === "true" || equals === "false") {
-    const norm = v === "true" ? "true" : "false";
-    return norm === equals;
-  }
-  return v === equals;
-};
+import type {
+  SettingField,
+  VisibleWhenRule,
+} from "../../../../shared/setting-field";
+import {
+  evaluateRule,
+  isFieldVisible,
+  SECRET_SET,
+  visibleWhenRules,
+} from "../../../../shared/visible-when";
 
 const _wrapVisibleWhen = (
   field: SettingField,
   inner: Child,
   ext: ExtensionMeta,
 ): Child => {
-  const w = field.visibleWhen;
-  if (!w) return inner;
+  const rules = visibleWhenRules(field);
+  if (rules.length === 0) return inner;
   return (
     <ConditionalField
-      depKey={w.key}
-      equals={w.equals}
-      show={_depMeetsSavedValue(ext, w.key, w.equals)}
+      rules={rules}
+      show={isFieldVisible(field, ext.settingsSchema, ext.settings)}
     >
       {inner}
     </ConditionalField>
   );
 };
 
+const _escapeKey = (key: string): string =>
+  typeof CSS !== "undefined" && typeof CSS.escape === "function"
+    ? CSS.escape(key)
+    : key.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+
 export function readLiveSettingFieldValue(
   container: HTMLElement,
   depKey: string,
 ): string {
-  const escapedKey =
-    typeof CSS !== "undefined" && typeof CSS.escape === "function"
-      ? CSS.escape(depKey)
-      : depKey.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   const fieldEl = container.querySelector<HTMLElement>(
-    `.ext-field[data-key="${escapedKey}"]`,
+    `.ext-field[data-key="${_escapeKey(depKey)}"]`,
   );
   if (!fieldEl) return "";
   const type = fieldEl.dataset.type;
@@ -103,16 +92,56 @@ export function readLiveSettingFieldValue(
   return input?.value.trim() ?? "";
 }
 
+const _wrapperRules = (wrapper: HTMLElement): VisibleWhenRule[] => {
+  try {
+    const parsed: unknown = JSON.parse(wrapper.dataset.visibleWhen ?? "[]");
+    return Array.isArray(parsed) ? (parsed as VisibleWhenRule[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const _depShown = (container: HTMLElement, depKey: string): boolean => {
+  const fieldEl = container.querySelector<HTMLElement>(
+    `.ext-field[data-key="${_escapeKey(depKey)}"]`,
+  );
+  return !fieldEl?.closest<HTMLElement>(".ext-conditional-field")?.hidden;
+};
+
+const _liveRuleValue = (container: HTMLElement, key: string): string => {
+  const value = readLiveSettingFieldValue(container, key);
+  if (value !== "") return value;
+  const fieldEl = container.querySelector<HTMLElement>(
+    `.ext-field[data-key="${_escapeKey(key)}"]`,
+  );
+  return fieldEl?.dataset.secret === "true" && fieldEl.dataset.wasSet === "true"
+    ? SECRET_SET
+    : value;
+};
+
 export function syncConditionalFields(container: HTMLElement): void {
-  container
-    .querySelectorAll<HTMLElement>(".ext-conditional-field")
-    .forEach((wrapper) => {
-      const depKey = wrapper.dataset.visibleDepKey;
-      const equals = wrapper.dataset.visibleDepEquals;
-      if (depKey === undefined || equals === undefined) return;
-      const actual = readLiveSettingFieldValue(container, depKey);
-      wrapper.hidden = actual !== equals;
-    });
+  const wrappers = Array.from(
+    container.querySelectorAll<HTMLElement>(".ext-conditional-field"),
+  );
+  for (let pass = 0; pass <= wrappers.length; pass++) {
+    let changed = false;
+    for (const wrapper of wrappers) {
+      const rules = _wrapperRules(wrapper);
+      if (rules.length === 0) continue;
+      const hidden = !rules.every((rule) =>
+        evaluateRule(
+          rule,
+          (key) => _liveRuleValue(container, key),
+          (key) => _depShown(container, key),
+        ),
+      );
+      if (wrapper.hidden !== hidden) {
+        wrapper.hidden = hidden;
+        changed = true;
+      }
+    }
+    if (!changed) return;
+  }
 }
 
 const _selectValues = (declared: string[], current: string): string[] =>
@@ -133,7 +162,8 @@ export const renderField = (
 
   if (field.type === "info") {
     const hasValue = field.default != null && field.default !== "";
-    return (
+    return _wrapVisibleWhen(
+      field,
       <ExtField fieldKey={field.key} type="info">
         <label class="ext-field-label">{field.label}</label>
         {hasValue ? (
@@ -145,7 +175,8 @@ export const renderField = (
           />
         ) : null}
         {fieldDesc(field.description)}
-      </ExtField>
+      </ExtField>,
+      ext,
     );
   }
 

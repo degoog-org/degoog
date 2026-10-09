@@ -1,4 +1,5 @@
 import re
+from datetime import timedelta
 
 try:
     from lxml import html
@@ -67,6 +68,15 @@ def duration(seconds, *args, **kwargs):
     if hours:
         return "%d:%02d:%02d" % (hours, minutes, secs)
     return "%d:%02d" % (minutes, secs)
+
+
+def as_timedelta(value, *args, **kwargs):
+    parts = (["00"] + str(value or "").strip().split(":"))[-3:]
+    try:
+        hours, minutes, seconds = map(int, parts)
+    except (ValueError, TypeError):
+        return None
+    return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
 
 def js_to_json(value, *args, **kwargs):

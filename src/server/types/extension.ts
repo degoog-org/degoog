@@ -1,7 +1,7 @@
 import type { CreateCache, UseCache } from "../utils/cache/cache";
 import type { SettingValue } from "../utils/settings/plugin-settings";
 import type { ThreatLevel } from "../utils/security/sentinel";
-import type { EngineConfig, EngineContext, TimeFilter } from "./search";
+import type { EngineConfig, EngineContext, SearchImage, TimeFilter } from "./search";
 import {
   type ScoredResult,
   type SearchResult,
@@ -242,6 +242,12 @@ export interface CommandContext {
   bangs?: EngineConfig;
 }
 
+export interface ImageQueryContext {
+  text: string;
+  lang?: string;
+  signal?: AbortSignal;
+}
+
 export interface BangCommand {
   name: string;
   description: string;
@@ -260,6 +266,8 @@ export interface BangCommand {
   searchType?: string;
   init?(context: PluginContext): void | Promise<void>;
   execute(args: string, context?: CommandContext): Promise<CommandResult>;
+  describesImages?(): boolean | Promise<boolean>;
+  imageQuery?(image: SearchImage, context: ImageQueryContext): Promise<string | null>;
   t?: Translate;
 }
 
@@ -327,10 +335,12 @@ export interface PluginRoute {
   t?: Translate;
 }
 
+export type TransportBody = string | Uint8Array<ArrayBuffer>;
+
 export interface TransportFetchOptions {
   method?: string;
   headers?: Record<string, string>;
-  body?: string;
+  body?: TransportBody;
   redirect?: RequestRedirect;
   allowlistHop?: boolean;
   signal?: AbortSignal;

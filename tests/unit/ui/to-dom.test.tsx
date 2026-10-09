@@ -270,3 +270,43 @@ describe("append", () => {
     expect(innerHtmlOf(el)).toBe(renderHtml(node));
   });
 });
+
+describe("svg", () => {
+  const SVG_NS = "http://www.w3.org/2000/svg";
+
+  test("creates svg and everything inside it in the svg namespace", () => {
+    const el = host();
+    into(
+      el,
+      <span>
+        <svg viewBox="0 0 24 24">
+          <path d="M0 0" />
+          <circle r="3" />
+        </svg>
+      </span>,
+    );
+    const span = el.childNodes[0] as FakeElement;
+    const svg = span.childNodes[0] as FakeElement;
+    expect(span.namespaceURI).not.toBe(SVG_NS);
+    expect(svg.namespaceURI).toBe(SVG_NS);
+    expect((svg.childNodes as FakeElement[]).map((c) => c.namespaceURI)).toEqual([SVG_NS, SVG_NS]);
+    expect(innerHtmlOf(el)).toBe('<span><svg viewBox="0 0 24 24"><path d="M0 0"></path><circle r="3"></circle></svg></span>');
+  });
+
+  test("returns to html inside foreignObject", () => {
+    const el = host();
+    into(
+      el,
+      <svg>
+        <foreignObject>
+          <div>hi</div>
+        </foreignObject>
+      </svg>,
+    );
+    const svg = el.childNodes[0] as FakeElement;
+    const foreign = svg.childNodes[0] as FakeElement;
+    const div = foreign.childNodes[0] as FakeElement;
+    expect(foreign.namespaceURI).toBe(SVG_NS);
+    expect(div.namespaceURI).not.toBe(SVG_NS);
+  });
+});

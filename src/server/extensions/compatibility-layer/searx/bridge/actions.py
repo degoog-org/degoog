@@ -1,5 +1,6 @@
 from . import engine
-from .http import RequestEcho, Response
+from .errors import raise_for_status
+from .http import RequestEcho, Response, encode_body
 from .runtime import set_agent
 
 ANY_TIME_FILTER = (None, "any")
@@ -34,6 +35,7 @@ def _params(payload):
         },
         "headers": dict(payload.get("headers") or {}),
         "cookies": {},
+        "raise_for_httperror": True,
     }
 
 
@@ -43,8 +45,11 @@ def _sent(mapping):
 
 def _echo_params(payload):
     params = _params(payload)
-    echo = payload.get("request") or {}
+    echo = dict(payload.get("request") or {})
+    form = echo.pop("form", None)
     params.update({key: value for key, value in echo.items() if value is not None})
+    if form is not None:
+        params["data"] = form
     return params
 
 
@@ -56,15 +61,21 @@ def build_request(payload):
         raise RuntimeError("engine does not export request")
     params = _params(payload)
     request(payload.get("query") or "", params)
-    data = params.get("data") or params.get("body")
-    if isinstance(data, bytes):
-        data = data.decode("utf-8", "replace")
+    form = params.get("data") or params.get("body")
+    data, headers = encode_body(
+        params.get("headers"),
+        data=form,
+        json_body=params.get("json"),
+        content=params.get("content"),
+    )
     return {
         "url": params.get("url"),
         "method": params.get("method") or "GET",
-        "headers": _sent(params.get("headers")),
+        "headers": _sent(headers),
         "cookies": _sent(params.get("cookies")),
         "data": data,
+        "form": form if isinstance(form, (dict, list)) else None,
+        "raise_for_httperror": params.get("raise_for_httperror") is not False,
     }
 
 
@@ -116,6 +127,8 @@ def parse_response(payload):
     resp = Response(payload.get("response") or {})
     resp.search_params = _echo_params(payload)
     resp.request = RequestEcho(payload.get("request") or {})
+    if resp.search_params.get("raise_for_httperror") is not False:
+        raise_for_status(resp)
     raw = response(resp)
     source = payload.get("source") or engine.describe(payload["path"], payload.get("overrides"))["name"]
     results = [_one_result(item, source) for item in list(raw or [])]

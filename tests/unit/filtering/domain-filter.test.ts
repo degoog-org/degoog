@@ -110,6 +110,27 @@ describe("domain replacements", () => {
     });
   }
 
+  test("applies new format rules next to legacy ones and skips a broken rule", async () => {
+    await seedSettings({
+      domainReplaceEnabled: true,
+      domainReplaceList: [
+        JSON.stringify({ match: "^(unclosed", replace: "x.example" }),
+        JSON.stringify({ match: "^(?!www\\.)(.*)\\.fandom\\.com$", replace: "antifandom.com/$1" }),
+        "reddit.com -> redlib.example.com",
+      ].join("\n"),
+    });
+
+    const out = await applyDomainReplacements([
+      result("https://halo.fandom.com/wiki/Cortana"),
+      result("https://old.reddit.com/r/x"),
+    ]);
+
+    expect(out.map((r) => r.url)).toEqual([
+      "https://antifandom.com/halo/wiki/Cortana",
+      "https://redlib.example.com/r/x",
+    ]);
+  });
+
   test("picks up list edits without a restart", async () => {
     await seedSettings({ domainReplaceEnabled: true, domainReplaceList: "" });
 

@@ -1,6 +1,6 @@
 import { Checkbox } from "../../../../shared/ui/components/forms/checkbox";
 import { EngineOriginSelect } from "./engine-origin-select";
-import { SEARCH_OPTION_TOGGLES } from "../toggles";
+import { REGION_HOST_ID, SEARCH_OPTION_TOGGLES } from "../toggles";
 
 const t = window.scopedT("core");
 
@@ -17,5 +17,6 @@ export const SearchOptionFields = (): JSX.Element => (
       />
     ))}
     <EngineOriginSelect />
+    <div id={REGION_HOST_ID} hidden={true} />
   </>
 );

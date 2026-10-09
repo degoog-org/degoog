@@ -134,6 +134,25 @@ export function getCommandInstanceById(id: string): BangCommand | undefined {
   return registry.items().find((c) => c.id === id)?.instance;
 }
 
+const _describes = async (instance: BangCommand): Promise<boolean> => {
+  try {
+    return (await instance.describesImages?.()) ?? true;
+  } catch (err) {
+    logger.warn("commands", `${instance.name} could not say whether it describes images`, err);
+    return false;
+  }
+};
+
+export const getImageQueryCommands = async (): Promise<BangCommand[]> => {
+  const out: BangCommand[] = [];
+  for (const entry of registry.items()) {
+    if (typeof entry.instance.imageQuery !== "function") continue;
+    if (await isDisabled(entry.id)) continue;
+    if (await _describes(entry.instance)) out.push(entry.instance);
+  }
+  return out;
+};
+
 export function getAllCommandTranslators(): {
   namespace: string;
   translator: Translate;

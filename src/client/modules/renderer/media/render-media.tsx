@@ -216,7 +216,7 @@ export function appendMediaCards(
     grid.appendChild(fragment);
   }
 
-  if (hasResultRanking()) applyResultRanking();
+  if (hasResultRanking() || results.some((r) => r.visual)) applyResultRanking();
 }
 
 registerAppendMediaCards(appendMediaCards);

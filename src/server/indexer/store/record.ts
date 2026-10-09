@@ -12,7 +12,7 @@ import { normalizeQuery } from "./mapper";
 
 export type FilterContext = Pick<
   SearchParams,
-  "lang" | "timeFilter" | "dateFrom" | "dateTo" | "imageFilter"
+  "lang" | "region" | "timeFilter" | "dateFrom" | "dateTo" | "imageFilter"
 >;
 
 const cleanImageFilter = (f?: ImageFilter): Record<string, string> | null => {
@@ -27,6 +27,7 @@ const cleanImageFilter = (f?: ImageFilter): Record<string, string> | null => {
 export const toFilterTag = (params: FilterContext): string => {
   const tag: Record<string, unknown> = {};
   if (params.lang) tag.lang = params.lang;
+  if (params.region) tag.region = params.region;
   if (params.timeFilter && params.timeFilter !== "any") tag.time = params.timeFilter;
   if (params.dateFrom) tag.dateFrom = params.dateFrom;
   if (params.dateTo) tag.dateTo = params.dateTo;

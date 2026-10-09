@@ -45,6 +45,8 @@ export enum CompatAction {
   Uninstall = "uninstall",
 }
 
+export const COMPAT_ADD_PATH = "add";
+
 const COMPAT_API_BASE = "/api/compat";
 
 export const compatApiUrl = (layer: CompatLayerId, path: string): string =>

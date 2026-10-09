@@ -1,5 +1,10 @@
-import { getEngineIdByInstance, getEngineMap } from "../extensions/engines/catalog";
-import { selectActiveEngines } from "./engine-selection";
+import {
+  getEngineIdByInstance,
+  getEngineInput,
+  getEngineMap,
+} from "../extensions/engines/catalog";
+import { engineQuery, selectActiveEngines, type SearchInputs } from "./engine-selection";
+import { ENGINE_INPUT } from "../../shared/engine-input";
 import {
   isCacheable,
   readRun,
@@ -17,6 +22,7 @@ import type { SearchEngine } from "../types/extension";
 import type {
   EngineConfig,
   ImageFilter,
+  SearchImage,
   SearchType,
   TimeFilter,
 } from "../types/search";
@@ -39,6 +45,9 @@ import { getEngineTimeout } from "./engine-timeout";
 import { scoreResults } from "./scoring";
 import { rewriteEngineRuns } from "./domain-rules";
 import { engineRouteBase } from "../extensions/engines/engine-routes";
+
+const NEEDS_IMAGE = "This engine searches with an image";
+const NEEDS_TEXT = "This engine needs the image described as text";
 
 const _withTimeout = <T>(
   promise: Promise<T>,
@@ -127,7 +136,7 @@ export const searchSingleEngine = async (
   imageFilter?: ImageFilter,
   signal?: AbortSignal,
   searchType?: SearchType,
-  opts?: { forceFresh?: boolean },
+  opts?: { forceFresh?: boolean; image?: SearchImage; region?: string },
 ): Promise<CachedEngineRun> => {
   const engine = resolveEngine(engineName);
   if (!engine) {
@@ -140,6 +149,17 @@ export const searchSingleEngine = async (
   const t0 = performance.now();
   const engineSettingsId = getEngineIdByInstance(engine);
   const cacheId = engineSettingsId ?? engine.name;
+  const takesImage = getEngineInput(engineSettingsId) === ENGINE_INPUT.IMAGE;
+  const image = takesImage ? opts?.image : undefined;
+  const missing = takesImage
+    ? !image && NEEDS_IMAGE
+    : !!opts?.image && !query.trim() && NEEDS_TEXT;
+  if (missing) {
+    return {
+      results: [],
+      timing: { name: engine.name, id: engineSettingsId, time: 0, resultCount: 0, status: THREAT_LEVEL.OK, errorReason: missing },
+    };
+  }
   const scope: RunScope = {
     query,
     type: searchType ?? "web",
@@ -149,6 +169,8 @@ export const searchSingleEngine = async (
     dateFrom,
     dateTo,
     imageFilter,
+    image: image?.hash,
+    region: opts?.region,
   };
   const key = isCacheable(engine.name)
     ? await runKey(cacheId, scope).catch((err) => {
@@ -181,9 +203,11 @@ export const searchSingleEngine = async (
   const pageCounter = makePageCounter();
   const engineContext = createSearchEngineContext(engineSettingsId, {
     lang,
+    region: opts?.region,
     dateFrom,
     dateTo,
     imageFilter,
+    image,
     signal: ac.signal,
     searchType,
     pageCounter,
@@ -241,11 +265,13 @@ export const search = async (
   dateFrom?: string,
   dateTo?: string,
   imageFilter?: ImageFilter,
+  inputs: SearchInputs = {},
+  region = "",
 ): Promise<SearchResponse & { indexBasis: ScoredResult[] }> => {
   const start = performance.now();
   const p = sanePage(page);
 
-  const rawActiveEngines = await selectActiveEngines(type, config, imageFilter);
+  const rawActiveEngines = await selectActiveEngines(type, config, imageFilter, inputs);
 
   if (rawActiveEngines.length === 0) {
     return {
@@ -260,10 +286,10 @@ export const search = async (
   }
 
   const runs = await Promise.all(
-    rawActiveEngines.map(({ id }) =>
+    rawActiveEngines.map(({ id, input }) =>
       searchSingleEngine(
         id,
-        query,
+        engineQuery(input, query, inputs),
         p,
         timeFilter,
         lang,
@@ -272,6 +298,7 @@ export const search = async (
         imageFilter,
         undefined,
         type,
+        { image: inputs.image, region },
       ),
     ),
   );
@@ -281,6 +308,7 @@ export const search = async (
       results: run.results,
       multiplier: rawActiveEngines[i].score,
       name: run.timing.name,
+      visual: rawActiveEngines[i].input === ENGINE_INPUT.IMAGE,
     })),
   );
   const engineTimings: EngineTiming[] = runs.map((run) => run.timing);

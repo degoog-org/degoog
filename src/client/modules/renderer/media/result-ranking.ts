@@ -1,6 +1,7 @@
-import { state } from "../../../state";
+import { settleSearch, state } from "../../../state";
 import type { ScoredResult } from "../../../../shared/search-types";
 import { remapCurrentMediaIdx } from "../../media/media";
+import { currentSearchImage } from "../../search-image/search-image";
 
 export type ResultBadge = { text: string; tone?: "strong" | "weak" };
 
@@ -10,8 +11,16 @@ export type ResultRanking = {
   badge?: (result: ScoredResult) => ResultBadge | string | null | undefined;
 };
 
+export type ResultsImage = { id: string; dataUrl: string; query: string | null };
+
 export type ResultsApi = {
-  current: () => { query: string; type: string };
+  current: () => {
+    query: string;
+    type: string;
+    search: number;
+    settled: boolean;
+    image: ResultsImage | null;
+  };
   list: () => ScoredResult[];
   setRanking: (id: string, ranking: ResultRanking | null) => void;
   refresh: () => void;
@@ -21,13 +30,19 @@ export type SearchApi = (query: string, type?: string) => void;
 
 declare global {
   interface Window {
-    degoog?: { results?: ResultsApi; search?: SearchApi };
+    degoog?: { results?: ResultsApi; search?: SearchApi; pickImage?: () => void };
   }
 }
 
 export const RANK_HIDDEN_CLASS = "degoog-rank-hidden";
 export const RESULTS_API_READY = "degoog-results-api-ready";
 export const RESULTS_READY = "degoog-results-ready";
+export const RESULTS_SETTLED = "degoog-results-settled";
+
+export function announceSettled(seq: number): void {
+  if (!settleSearch(seq)) return;
+  window.dispatchEvent(new CustomEvent(RESULTS_SETTLED, { detail: { search: seq } }));
+}
 
 const BADGE_CLASS = "degoog-rank-badge";
 const GRIDS: ReadonlyArray<{ grid: string; card: string }> = [
@@ -102,6 +117,7 @@ const _sorted = (
   return [...results].sort(
     (a, b) =>
       Number(hidden.has(a)) - Number(hidden.has(b)) ||
+      Number(!!b.visual) - Number(!!a.visual) ||
       (compare ? _safe(() => compare(a, b), 0) || 0 : 0) ||
       (_arrival.get(a) ?? 0) - (_arrival.get(b) ?? 0),
   );
@@ -147,7 +163,22 @@ export const applyResultRanking = (): void => {
 };
 
 const _api: ResultsApi = {
-  current: () => ({ query: state.currentQuery, type: state.currentType }),
+  current: () => {
+    const image = currentSearchImage();
+    return {
+      query: state.currentQuery,
+      type: state.currentType,
+      search: state.searchSeq,
+      settled: state.settledSeq === state.searchSeq,
+      image: image
+        ? {
+            id: image.id,
+            dataUrl: image.dataUrl,
+            query: image.queryText === state.currentQuery.trim() ? (image.query ?? null) : null,
+          }
+        : null,
+    };
+  },
   list: () => [...state.currentResults],
   setRanking: (id, ranking) => {
     if (typeof id !== "string" || !id) return;

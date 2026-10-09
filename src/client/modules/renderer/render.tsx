@@ -126,7 +126,7 @@ export function renderResults(
   syncMediaPreviewPanel(isImageType);
 
   if (results.length === 0) {
-    const noEngines = state.currentData?.engineTimings.length === 0;
+    const noEngines = state.currentData?.engineTimings?.length === 0;
     const body = noEngines ? (
       <TransText
         text={t("search-templates.no-engines", { store: "{store}" })}

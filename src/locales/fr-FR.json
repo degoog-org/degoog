@@ -50,7 +50,10 @@
       "centered-mode": "Centrer les résultats de recherche",
       "centered-mode-aria": "Centrer les résultats de recherche",
       "hide-url-params": "Masquer les paramètres de requête dans les URL des résultats",
-      "hide-url-params-aria": "Masquer les paramètres de requête dans les URL des résultats"
+      "hide-url-params-aria": "Masquer les paramètres de requête dans les URL des résultats",
+      "region": "Région des résultats",
+      "region-none": "Aucune région",
+      "region-tooltip": "Les moteurs compatibles privilégient les résultats et les sites locaux de ce pays. Les autres moteurs l'ignorent."
     },
     "sync": {
       "heading": "Paramètres par défaut de l'instance",
@@ -251,10 +254,8 @@
       "domain-score-ui-desc": "Les gens connectés peuvent scorer un domaine depuis le menu kebab d'un résultat. Les instances publiques ou non authentifiées cachent le menu de toute façon.",
       "oversized": "<trop volumineux pour l'affichage> {lines} entrées ({size}). Modifiez cette liste directement dans data/search/search-lists.json.",
       "domain-block-regex-help": "Les regex vont entre /slashes/ et utilisent la syntaxe RegExp JavaScript, sans drapeaux. Elles matchent le hostname, pas l'URL entière. Exemple : /(^|\\\\.)instagram\\\\.com$/ bloque instagram.com et tous les sous-domaines. /^www\\\\.instagram\\\\.com$/ ne bloque que www.instagram.com.",
-      "domain-replace-desc": "Réécrivez les domaines dans les URL des résultats. Format : source.com -> cible.com, une par ligne. Les sous-domaines matchent tout seuls, le chemin reste. Une cible peut être une URL complète, utilisée telle quelle, avec {{url}}, {{hostname}}, {{path}}, {{query}} et {{hash}} pris du résultat d'origine.",
       "domain-replace-enable": "Activer le remplacement de domaines",
       "domain-replace-enable-aria": "Activer le remplacement de domaines",
-      "domain-replace-list-label": "Règles de remplacement (une par ligne)",
       "honeypot-heading": "Contrôle des bots",
       "honeypot-desc": "Les liens honeypot appâtent les crawlers et les bannissent. Le contrôle navigateur injecte un jeton CSS signé sur chaque page, pour qu'un vrai navigateur doive le charger.",
       "honeypot-enable": "Activer les pièges honeypot",

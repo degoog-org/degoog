@@ -4,8 +4,9 @@ import { GeneralContent } from "./general-content";
 import { WIZARD_SECTION_ID } from "./sections/wizard-section";
 import { fetchWizardDisabled } from "../../modules/wizard/server";
 import { PublicSettingsTop } from "./public-settings-top";
+import { mountRegionSelect } from "./region-settings";
 import { FOLLOW_INSTANCE_ORIGIN, INSTANCE_DEFAULT_VALUE, PREF_TOGGLES } from "./toggles";
-import { ENGINE_ORIGIN_DISPLAY, THEME_KEY } from "../../constants";
+import { ENGINE_ORIGIN_DISPLAY, REGION_KEY, THEME_KEY } from "../../constants";
 import { idbGet, idbSet } from "../../utils/storage/db";
 import { ENGINE_ORIGIN_DISPLAY_VALUES } from "../../../shared/engine-origins";
 import { resetDefaults, saveDefaults } from "../../utils/storage/sync";
@@ -89,6 +90,13 @@ export async function initAppearanceSettings(): Promise<void> {
         value === INSTANCE_DEFAULT_VALUE ? FOLLOW_INSTANCE_ORIGIN : value,
       );
       window.dispatchEvent(new Event("extensions-saved"));
+    });
+  }
+
+  const regionSelect = await mountRegionSelect();
+  if (regionSelect) {
+    _bindOnce(regionSelect, "change", async () => {
+      await idbSet(REGION_KEY, regionSelect.value);
     });
   }
 

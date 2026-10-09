@@ -1,4 +1,8 @@
-import type { EngineTiming, ScoredResult } from "../../../../shared/search-types";
+import {
+  compareScored,
+  type EngineTiming,
+  type ScoredResult,
+} from "../../../../shared/search-types";
 
 export type EngineTimingWithPage = EngineTiming & {
   failedPage?: number;
@@ -65,10 +69,11 @@ export const mergeScoredResults = (
       ...prev,
       ...result,
       score: Math.max(prev.score, result.score),
+      ...(prev.visual || result.visual ? { visual: true } : {}),
       sources: Array.from(new Set([...prev.sources, ...result.sources])),
       snippet: result.snippet.length > prev.snippet.length ? result.snippet : prev.snippet,
     });
   });
 
-  return Array.from(merged.values()).sort((a, b) => b.score - a.score);
+  return Array.from(merged.values()).sort(compareScored);
 };

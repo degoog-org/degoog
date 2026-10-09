@@ -19,7 +19,7 @@ const _feelLucky = async (
   if (limitRes) return limitRes;
   const authRes = await guardApiKey(c, "apiKeySearchEnabled");
   if (authRes) return authRes;
-  const { origQ, engines, timeFilter, lang, dateFrom, dateTo, imageFilter } =
+  const { origQ, engines, timeFilter, lang, region, dateFrom, dateTo, imageFilter } =
     parseSearchParams(params);
   if (!origQ) return c.json({ error: "Missing query parameter 'q'" }, 400);
 
@@ -39,6 +39,8 @@ const _feelLucky = async (
     dateFrom,
     dateTo,
     imageFilter,
+    {},
+    region,
   );
   const luckyResults = await applyMergedDomainRules(response.results);
   if (luckyResults.length > 0) return c.redirect(luckyResults[0].url);

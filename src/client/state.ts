@@ -20,6 +20,7 @@ export const state: AppState = {
   customDateFrom: "",
   customDateTo: "",
   currentLanguage: "",
+  currentRegion: "",
   mediaLoading: false,
   currentBangQuery: "",
   openInNewTab: false,
@@ -33,9 +34,16 @@ export const state: AppState = {
   isInitialLoad: false,
   imageFilter: defaultImageFilter(),
   searchSeq: 0,
+  settledSeq: 0,
 };
 
 export const beginSearch = (): number => ++state.searchSeq;
+
+export const settleSearch = (seq: number): boolean => {
+  if (seq !== state.searchSeq || state.settledSeq === seq) return false;
+  state.settledSeq = seq;
+  return true;
+};
 
 export const isCurrentSearch = (seq: number): boolean => seq === state.searchSeq;
 

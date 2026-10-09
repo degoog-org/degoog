@@ -101,6 +101,12 @@ describe("utils/cache-valkey client", () => {
 
     made[0].status = "ready";
     expect(valkey.getValkeyStatus()).toBe(valkey.VALKEY_STATUS.CONNECTED);
+
+    made[1].status = "reconnecting";
+    expect(valkey.getValkeyStatus()).toBe(valkey.VALKEY_STATUS.UNREACHABLE);
+
+    made[1].status = "ready";
+    expect(valkey.getValkeyStatus()).toBe(valkey.VALKEY_STATUS.CONNECTED);
   });
 
   test("status is off when no valkey url is set", () => {

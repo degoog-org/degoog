@@ -1,4 +1,4 @@
-import type { ScoredResult, SearchResult } from "../../shared/search-types";
+import { compareScored, type ScoredResult, type SearchResult } from "../../shared/search-types";
 import {
   stripHtml,
   stripCssBlocks,
@@ -23,6 +23,7 @@ const _mergeIntoMap = (
   urlMap: Map<string, ScoredResult>,
   results: SearchResult[],
   multiplier = 1,
+  visual = false,
 ): void => {
   for (let i = 0; i < results.length; i++) {
     const r = results[i];
@@ -54,6 +55,7 @@ const _mergeIntoMap = (
         existing.isGif = urlIsGif(r.imageUrl);
       }
       if (insecure) existing.insecure = true;
+      if (visual) existing.visual = true;
     } else {
       const fresh = _readSnippet(r.snippet, r.publishedAt);
       urlMap.set(normalized, {
@@ -66,6 +68,7 @@ const _mergeIntoMap = (
         sources: [r.source],
         insecure,
         isGif: urlIsGif(r.imageUrl),
+        ...(visual ? { visual: true } : {}),
       });
     }
   }
@@ -73,16 +76,16 @@ const _mergeIntoMap = (
 
 const _sortedFromMap = (urlMap: Map<string, ScoredResult>): ScoredResult[] => {
   const scored = Array.from(urlMap.values());
-  scored.sort((a, b) => b.score - a.score);
+  scored.sort(compareScored);
   return scored;
 };
 
 export const scoreResults = (
-  allResults: { results: SearchResult[]; multiplier?: number }[],
+  allResults: { results: SearchResult[]; multiplier?: number; visual?: boolean }[],
 ): ScoredResult[] => {
   const urlMap = new Map<string, ScoredResult>();
-  for (const { results, multiplier } of allResults) {
-    _mergeIntoMap(urlMap, results, multiplier ?? 1);
+  for (const { results, multiplier, visual } of allResults) {
+    _mergeIntoMap(urlMap, results, multiplier ?? 1, visual);
   }
   return _sortedFromMap(urlMap);
 };

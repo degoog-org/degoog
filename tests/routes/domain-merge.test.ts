@@ -97,6 +97,7 @@ describe("domain replacement before merging (#320)", () => {
       page: 1,
       timeFilter: "any",
       lang: "",
+      region: "",
       dateFrom: "",
       dateTo: "",
     });
@@ -114,6 +115,7 @@ describe("domain replacement before merging (#320)", () => {
       page: 1,
       timeFilter: "any",
       lang: "",
+      region: "",
       dateFrom: "",
       dateTo: "",
     });

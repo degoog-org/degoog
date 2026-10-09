@@ -8,7 +8,11 @@ import {
   uninstallSearx,
   updateSearx,
 } from "../../src/server/extensions/compatibility-layer/searx/install";
-import { SEARX_CATALOG } from "../../src/server/extensions/compatibility-layer/searx/catalog";
+import {
+  SEARX_CATALOG,
+  isSupportedEngine,
+} from "../../src/server/extensions/compatibility-layer/searx/catalog";
+import { addSearx } from "../../src/server/extensions/compatibility-layer/searx/add";
 
 const realFetch = globalThis.fetch;
 
@@ -169,6 +173,133 @@ describe("searx install layer", () => {
       await expect(installSearx("../../etc/passwd")).rejects.toThrow("Unknown SearX engine");
       await expect(uninstallSearx("not_an_engine")).rejects.toThrow("Unknown SearX engine");
       await expect(updateSearx("not_an_engine")).rejects.toThrow("Unknown SearX engine");
+    });
+  });
+});
+
+const HAND_ENGINE = `from searx.engines.hand_helpers import build_url
+
+about = {"name": "Hand Search", "website": "https://hand.example/"}
+categories = ["general"]
+
+def request(query, params):
+    params["url"] = build_url(query)
+
+def response(resp):
+    return []
+`;
+
+const HAND_HELPERS = `def build_url(query):
+    return "https://hand.example/?q=" + query
+`;
+
+const stubFiles = (files: Record<string, string>): string[] => {
+  const calls: string[] = [];
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.endsWith("/engine_traits.json")) return Response.json({});
+    calls.push(url);
+    const body = files[url];
+    return body === undefined ? new Response("missing", { status: 404 }) : new Response(body);
+  }) as typeof fetch;
+  return calls;
+};
+
+const HAND_URL = "https://code.example/engines/hand.py";
+const HELPERS_URL = "https://code.example/engines/hand_helpers.py";
+
+describe("searx engines added by hand", () => {
+  test("a link pulls the engine and its sibling files and lists it as custom", async () => {
+    await withEnginesDir(async (dir) => {
+      const calls = stubFiles({ [HAND_URL]: HAND_ENGINE, [HELPERS_URL]: HAND_HELPERS });
+      expect(await addSearx(HAND_URL)).toBe("hand");
+      expect(calls).toEqual([HAND_URL, HELPERS_URL]);
+      expect(existsSync(join(dir, "hand.py"))).toBe(true);
+      expect(existsSync(join(dir, "hand_helpers.py"))).toBe(true);
+      expect(isSupportedEngine("hand")).toBe(true);
+      const item = (await listSearxItems()).find((entry) => entry.code === "hand");
+      expect(item?.name).toBe("Hand Search");
+      expect(item?.site).toBe("https://hand.example");
+      expect(item?.deps).toEqual(["hand_helpers"]);
+      expect(item?.custom).toBe(true);
+      expect(item?.installed).toBe(true);
+    });
+  });
+
+  test("github file links are fetched from their raw address", async () => {
+    await withEnginesDir(async () => {
+      const raw = "https://raw.githubusercontent.com/someone/engines/main/hand.py";
+      const calls = stubFiles({
+        [raw]: HAND_ENGINE,
+        "https://raw.githubusercontent.com/someone/engines/main/hand_helpers.py": HAND_HELPERS,
+      });
+      await addSearx("https://github.com/someone/engines/blob/main/hand.py");
+      expect(calls[0]).toBe(raw);
+    });
+  });
+
+  test("update and uninstall work on hand-added engines", async () => {
+    await withEnginesDir(async (dir) => {
+      const calls = stubFiles({ [HAND_URL]: HAND_ENGINE, [HELPERS_URL]: HAND_HELPERS });
+      await addSearx(HAND_URL);
+      calls.length = 0;
+      await updateSearx("hand");
+      expect(calls).toEqual([HELPERS_URL, HAND_URL]);
+      await uninstallSearx("hand");
+      expect(existsSync(join(dir, "hand.py"))).toBe(false);
+      expect(existsSync(join(dir, "hand_helpers.py"))).toBe(false);
+      expect(isSupportedEngine("hand")).toBe(false);
+      expect((await listSearxItems()).some((entry) => entry.code === "hand")).toBe(false);
+    });
+  });
+
+  test("update pulls shared upstream files from upstream, not the custom host", async () => {
+    await withEnginesDir(async (dir) => {
+      const shared = "def build_url(query):\n    return query\n";
+      writeFileSync(join(dir, "google.py"), shared);
+      const engine = HAND_ENGINE.replace("hand_helpers", "google");
+      const calls = stubFiles({ [HAND_URL]: engine });
+      await addSearx(HAND_URL);
+      calls.length = 0;
+      globalThis.fetch = (async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith("/engine_traits.json")) return Response.json({});
+        calls.push(url);
+        return new Response(url === HAND_URL ? engine : shared);
+      }) as typeof fetch;
+      await updateSearx("hand");
+      expect(calls).toHaveLength(2);
+      expect(calls[0]).toContain("/searx/engines/google.py");
+      expect(calls[0]).not.toContain("code.example");
+      expect(calls[1]).toBe(HAND_URL);
+    });
+  });
+
+  test("an engine that cannot load leaves nothing behind", async () => {
+    await withEnginesDir(async (dir) => {
+      stubFiles({ [HAND_URL]: "import not_a_real_module\n" });
+      await expect(addSearx(HAND_URL)).rejects.toThrow("hand could not be loaded");
+      expect(existsSync(join(dir, "hand.py"))).toBe(false);
+      expect(isSupportedEngine("hand")).toBe(false);
+    });
+  });
+
+  test("names of tested engines install from the list instead", async () => {
+    await withEnginesDir(async (dir) => {
+      const calls = stubFetch("def request(query, params):\n    return params\n");
+      expect(await addSearx("mojeek")).toBe("mojeek");
+      expect(calls[0]).toContain("/searx/engines/mojeek.py");
+      expect(existsSync(join(dir, "mojeek.py"))).toBe(true);
+    });
+  });
+
+  test("refuses plain http, non python files and links that shadow tested engines", async () => {
+    await withEnginesDir(async () => {
+      stubFiles({});
+      await expect(addSearx("http://code.example/hand.py")).rejects.toThrow("Only https");
+      await expect(addSearx("https://code.example/hand.js")).rejects.toThrow(".py file");
+      await expect(addSearx("https://code.example/mojeek.py")).rejects.toThrow("already in the list");
+      await expect(addSearx("https://code.example/google.py")).rejects.toThrow("shared code");
     });
   });
 });

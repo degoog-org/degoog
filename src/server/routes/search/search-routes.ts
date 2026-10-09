@@ -1,11 +1,6 @@
 import type { Context, Hono } from "hono";
 import { readObjectBody } from "../../utils/hono";
-import type {
-  RetryPostBody,
-  SearchBody,
-  SearchType,
-  TimeFilter,
-} from "../../types/search";
+import type { RetryPostBody, SearchBody } from "../../types/search";
 import type { ScoredResult, SearchResponse } from "../../../shared/search-types";
 import {
   isSearxFormat,
@@ -16,18 +11,11 @@ import { getInstanceSettings } from "../../utils/settings/server-settings";
 import { asBoolean } from "../../utils/settings/plugin-settings";
 import { _applyRateLimit, isValidQuery } from "../../utils/search";
 import { guardApiKey } from "../../utils/security/api-key-guard";
-import {
-  LEGACY_SAFE_MODE_PARAM,
-  parseEnginesFromBody,
-  parseImageFilter,
-  parseSearchBody,
-  parseSearchRequest,
-  SAFE_MODE_PARAM,
-} from "./parsers";
-import { sanePage } from "../../search/page-counter";
+import { parseSearchBody, parseSearchForm, parseSearchRequest } from "./parsers";
 import { handleRetry, handleSearch } from "../../search/handlers";
 import { logger } from "../../utils/logger";
 import { publicBodyLimit } from "../_guards";
+import { hasSearchInput, INVALID_IMAGE, rejectsImage } from "../../search/search-image";
 
 /**
  * @todo Remove this once openwebui merges my future pull request to add degoog specific search support.
@@ -86,27 +74,11 @@ export function registerSearchRoutes(router: Hono): void {
         logger.debug("search", "invalid form data", err);
         return c.json({ error: "Invalid form data" }, 400);
       }
-      const query = (form.get("q") as string | null) ?? "";
+      const { origQ: query, ...params } = parseSearchForm(form);
       if (!isValidQuery(query))
         return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
 
-      const result = await handleSearch({
-        query,
-        engines: parseEnginesFromBody(undefined),
-        searchType: ((form.get("type") as string | null) || "web") as SearchType,
-        page: sanePage(form.get("page")),
-        timeFilter: ((form.get("time") as string | null) || "any") as TimeFilter,
-        lang: (form.get("lang") as string | null) || "",
-        dateFrom: (form.get("dateFrom") as string | null) || "",
-        dateTo: (form.get("dateTo") as string | null) || "",
-        imageFilter: parseImageFilter(
-          form.get("imgColor") as string | null,
-          form.get("imgSize") as string | null,
-          form.get("imgType") as string | null,
-          form.get("imgLayout") as string | null,
-          (form.get(SAFE_MODE_PARAM) ?? form.get(LEGACY_SAFE_MODE_PARAM)) as string | null,
-        ),
-      });
+      const result = await handleSearch({ query, ...params });
 
       return respond(
         c,
@@ -119,10 +91,12 @@ export function registerSearchRoutes(router: Hono): void {
     const body = await readObjectBody<SearchBody>(c);
     if (!body) return c.json({ error: "Invalid JSON" }, 400);
     const query = body.query ?? "";
-    if (!isValidQuery(query))
+    const parsed = parseSearchBody(body);
+    if (rejectsImage(body, parsed)) return c.json(INVALID_IMAGE, 400);
+    if (!hasSearchInput(query, parsed.image))
       return c.json({ error: "Missing or invalid query parameter 'q'" }, 400);
 
-    const result = await handleSearch({ query, ...parseSearchBody(body) });
+    const result = await handleSearch({ query, ...parsed });
 
     return respond(c, result, body.format ?? c.req.query(SEARX_FORMAT_PARAM));
   });
@@ -154,10 +128,12 @@ export function registerSearchRoutes(router: Hono): void {
     if (!body) return c.json({ error: "Invalid JSON" }, 400);
     const query = body.query ?? "";
     const engineName = body.engine ?? "";
-    if (!query || !engineName)
+    const parsed = parseSearchBody(body);
+    if (rejectsImage(body, parsed)) return c.json(INVALID_IMAGE, 400);
+    if (!hasSearchInput(query, parsed.image) || !engineName)
       return c.json({ error: "Missing 'query' or 'engine' parameter" }, 400);
 
-    const result = await handleRetry({ query, engineName, ...parseSearchBody(body) });
+    const result = await handleRetry({ query, engineName, ...parsed });
 
     return respond(c, result, body.format ?? c.req.query(SEARX_FORMAT_PARAM));
   });

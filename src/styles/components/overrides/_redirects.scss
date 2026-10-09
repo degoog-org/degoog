@@ -1,0 +1,234 @@
+$redirect-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Liberation Mono", Menlo, Monaco, Consolas, monospace;
+
+.settings-redirects {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.settings-redirect-builder,
+.settings-redirect-rules,
+.settings-redirect-tester {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.settings-redirect-builder {
+  background: var(--bg);
+  border-radius: $radius-lg;
+  padding: $space-4;
+  gap: $space-4;
+
+  .settings-desc {
+    margin: 0;
+  }
+}
+
+.settings-redirect-generator {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $space-2;
+
+  .settings-redirect-builder {
+    align-self: stretch;
+  }
+}
+
+.settings-redirect-pair {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: $space-2 $space-3;
+
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.settings-redirect-pair-label {
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+}
+
+.settings-redirect-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2 $space-5;
+}
+
+.settings-redirect-proof {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: $space-2;
+  font-size: $font-size-small;
+}
+
+.settings-redirect-builder-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-redirect-input {
+  font-family: $redirect-mono;
+  font-size: $font-size-small;
+}
+
+.settings-redirect-generated,
+.settings-redirect-preview {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  padding: $space-2 $space-3;
+  border-radius: $radius-md;
+  background: var(--bg-light);
+  font-size: $font-size-small;
+  min-width: 0;
+}
+
+
+.settings-redirect-preview-line {
+  display: flex;
+  align-items: baseline;
+  gap: $space-2;
+  min-width: 0;
+}
+
+.settings-redirect-preview-label {
+  color: $success;
+  font-weight: 600;
+}
+
+.settings-redirect-preview-tag {
+  flex-shrink: 0;
+  min-width: 3.25rem;
+  color: var(--text-secondary);
+}
+
+.settings-redirect-preview-url {
+  font-family: $redirect-mono;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+
+  &--after {
+    color: $success;
+  }
+}
+
+.settings-redirect-preview-miss {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.settings-redirect-rows {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.settings-redirect-row {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+}
+
+.settings-redirect-row-main {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.settings-redirect-drag {
+  padding: 0 $space-1;
+}
+
+.settings-redirect-position {
+  flex-shrink: 0;
+  min-width: 1.25rem;
+  font-size: $font-size-xs;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.settings-redirect-side {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+
+  .settings-redirect-input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.settings-redirect-side--tagged .settings-redirect-input {
+  padding-inline-end: 4.5rem;
+}
+
+.settings-redirect-kind {
+  position: absolute;
+  inset-inline-end: $space-2;
+  pointer-events: none;
+}
+
+.settings-redirect-arrow {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: $font-size-small;
+}
+
+.settings-redirect-row--invalid .settings-redirect-input[aria-invalid="true"] {
+  color: $danger;
+}
+
+.settings-redirect-problem {
+  margin: 0;
+  font-size: $font-size-small;
+  color: $danger;
+}
+
+.settings-redirect-row .settings-redirect-problem {
+  padding-inline-start: 3.75rem;
+}
+
+.settings-redirect-note {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  margin: 0;
+  padding: $space-2 $space-3;
+  border-radius: $radius-md;
+  background: var(--bg);
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+
+  &--warn {
+    color: $warning;
+  }
+}
+
+@media (max-width: 640px) {
+  .settings-redirect-row-main {
+    flex-wrap: wrap;
+  }
+
+  .settings-redirect-side {
+    flex-basis: calc(100% - 4rem);
+  }
+
+  .settings-redirect-arrow {
+    transform: rotate(90deg);
+  }
+
+  .settings-redirect-row .settings-redirect-problem {
+    padding-inline-start: 0;
+  }
+}

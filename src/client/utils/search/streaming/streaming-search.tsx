@@ -7,7 +7,7 @@ import { destroyMediaObserver, setupMediaObserver } from "../../../modules/media
 import { renderSidebar } from "../../../modules/renderer/sidebar/render-sidebar";
 import { attachVideoPlayers, renderPagination } from "../../../modules/renderer/render";
 import { renderImageGrid } from "../../../modules/renderer/media/render-media";
-import { RESULTS_READY } from "../../../modules/renderer/media/result-ranking";
+import { announceSettled, RESULTS_READY } from "../../../modules/renderer/media/result-ranking";
 import { renderImgEngines } from "../../../modules/filters/image-filters";
 import { beginSearch, isCurrentSearch, state } from "../../../state";
 import {
@@ -19,8 +19,16 @@ import {
 } from "../../../../shared/search-types";
 import { getEngines } from "../engines";
 import { fetchGlancePanels, fetchSlotPanels } from "../search-utils";
-import { buildSearchUrl } from "../../net/url";
-import { appendSearchAuthParams } from "../../net/request";
+import { buildSearchBody, buildSearchUrl } from "../../net/url";
+import { appendSearchAuthParams, searchAuthHeaders } from "../../net/request";
+import { PostEventStream, type SearchEventSource } from "./post-event-stream";
+import {
+  beginImageQuery,
+  currentSearchImage,
+  imageQueryError,
+  noteImageQuery,
+  withSearchImage,
+} from "../../../modules/search-image/search-image";
 import { declaredPages } from "../search-helpers";
 import { infiniteScrollOn } from "./streaming-config";
 import {
@@ -56,22 +64,29 @@ interface StreamEngineRetry {
   timing: EngineTiming;
 }
 
+interface StreamImageQuery {
+  query: string | null;
+  error: string | null;
+}
+
 interface StreamDone {
   totalTime: number;
   engineTimings: EngineTiming[];
   indexedUrls?: string[];
   relatedSearches: string[];
   totalPages?: number;
+  imageQuery?: string;
+  imageQueryError?: string;
 }
 
-let _activeSource: EventSource | null = null;
+let _activeSource: SearchEventSource | null = null;
 let _linkWatch: AbortController | null = null;
 
 const _announceResults = (): void => {
   window.dispatchEvent(new CustomEvent(RESULTS_READY));
 };
 
-const dropStream = (source: EventSource): void => {
+const dropStream = (source: SearchEventSource): void => {
   source.close();
   if (_activeSource !== source) return;
   _activeSource = null;
@@ -107,10 +122,21 @@ export async function performStreamingSearch(
 
   const engines = await getEngines();
   if (!isCurrentSearch(seq)) return;
-  const url = buildSearchUrl(query, engines, type, 1);
-  const streamUrl = appendSearchAuthParams(
-    url.replace("/api/search?", "/api/search/stream?"),
-  );
+  const openStream = (): SearchEventSource =>
+    currentSearchImage()
+      ? new PostEventStream(
+          `${getBase()}/api/search/stream`,
+          withSearchImage(buildSearchBody(query, engines, type, 1)),
+          searchAuthHeaders(),
+        )
+      : new EventSource(
+          appendSearchAuthParams(
+            buildSearchUrl(query, engines, type, 1).replace(
+              "/api/search?",
+              "/api/search/stream?",
+            ),
+          ),
+        );
 
   prepareResultsUi(query, type);
   loadSidebarSuggestions(query, type, onComplete);
@@ -126,7 +152,8 @@ export async function performStreamingSearch(
   let currentResults: ScoredResult[] = [];
   const renderedUrls = new Set<string>();
 
-  const source = new EventSource(streamUrl);
+  beginImageQuery();
+  const source = openStream();
   _activeSource = source;
   _linkWatch = new AbortController();
 
@@ -197,7 +224,7 @@ export async function performStreamingSearch(
     } else {
       updateEngineTimings(sidebar, engineTimings);
     }
-    _announceResults();
+    if (data.results.length > 0) _announceResults();
   });
 
   source.addEventListener("engine-retry", (e) => {
@@ -218,10 +245,17 @@ export async function performStreamingSearch(
     }
   });
 
+  source.addEventListener("image-query", (e) => {
+    if (!live()) return;
+    const data = JSON.parse(e.data) as StreamImageQuery;
+    noteImageQuery(query, data.query, data.error);
+  });
+
   source.addEventListener("done", (e) => {
     if (!live()) return;
     const data = JSON.parse(e.data) as StreamDone;
     dropStream(source);
+    if (currentSearchImage()) noteImageQuery(query, data.imageQuery, data.imageQueryError);
 
     if (!isImageType && data.indexedUrls && data.indexedUrls.length > 0) {
       const indexedSet = new Set(data.indexedUrls);
@@ -273,7 +307,8 @@ export async function performStreamingSearch(
 
     if (currentResults.length === 0 && resultsList) {
       const body =
-        engineTimings.length === 0 ? (
+        imageQueryError() ??
+        (engineTimings.length === 0 ? (
           <TransText
             text={t("search-templates.no-engines", { store: "{store}" })}
             slots={{
@@ -287,7 +322,7 @@ export async function performStreamingSearch(
           />
         ) : (
           t("search-templates.no-results")
-        );
+        ));
       render(<NoResults>{body}</NoResults>, resultsList);
     }
 
@@ -306,6 +341,7 @@ export async function performStreamingSearch(
       }
     }
     _announceResults();
+    announceSettled(seq);
   });
 
   source.addEventListener("error", (e) => {
@@ -315,6 +351,7 @@ export async function performStreamingSearch(
     }
     console.error("[streaming-search] stream error", e);
     dropStream(source);
+    announceSettled(seq);
     if (resultsMeta) resultsMeta.textContent = "";
     if (resultsList)
       render(

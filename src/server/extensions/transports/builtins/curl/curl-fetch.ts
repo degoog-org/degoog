@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import type { TransportFetchOptions } from "../../../../types/extension";
 import { logger } from "../../../../utils/logger";
+import { withCurlBodyArgs } from "../../utils/curl-body-file";
 import { killOnAbort } from "../../utils/kill-on-abort";
 
 const DEFAULT_TIMEOUT_SEC = 60;
@@ -11,6 +12,7 @@ function buildCurlArgs(
   options: TransportFetchOptions,
   proxyUrl: string | undefined,
   timeoutSec: number,
+  bodyArgs: string[],
 ): string[] {
   const method = options.method ?? "GET";
   const args = [
@@ -31,6 +33,7 @@ function buildCurlArgs(
     args.push("-X", method);
   }
 
+  args.push(...bodyArgs);
   args.push("-H", "@-");
   args.push("--", url);
 
@@ -48,7 +51,16 @@ export async function fetchViaCurl(
   }
 
   options.signal?.throwIfAborted();
-  const args = buildCurlArgs(url, options, proxyUrl, DEFAULT_TIMEOUT_SEC);
+  return withCurlBodyArgs(options, (bodyArgs) =>
+    _runCurl(buildCurlArgs(url, options, proxyUrl, DEFAULT_TIMEOUT_SEC, bodyArgs), options),
+  );
+}
+
+async function _runCurl(
+  args: string[],
+  options: TransportFetchOptions,
+): Promise<Response> {
+  options.signal?.throwIfAborted();
 
   const proc = Bun.spawn(["curl", ...args], {
     stdin: "pipe",
@@ -67,13 +79,7 @@ export async function fetchViaCurl(
 
   const writeToStdin = async () => {
     try {
-      proc.stdin.write(headerPayload + "\n\n");
-      if (
-        options.body &&
-        ["POST", "PUT", "PATCH"].includes(options.method ?? "")
-      ) {
-        proc.stdin.write(options.body);
-      }
+      proc.stdin.write(headerPayload + "\n");
       proc.stdin.end();
     } catch (err) {
       logger.debug("transport:curl", "stdin write failed, killing process", err);
