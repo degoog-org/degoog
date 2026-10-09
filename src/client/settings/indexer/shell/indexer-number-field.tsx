@@ -12,8 +12,9 @@ export const IndexerNumberField = ({
   min: number;
   max?: number;
 }): JSX.Element => (
-  <>
+  <div class="settings-field">
     <LabelFor id={`indexer-${fieldKey}`} k={fieldKey} />
+    <Desc text={tr(`${fieldKey}-desc`)} />
     <input
       type="number"
       id={`indexer-${fieldKey}`}
@@ -22,6 +23,5 @@ export const IndexerNumberField = ({
       max={max}
       step={1}
     />
-    <Desc text={tr(`${fieldKey}-desc`)} />
-  </>
+  </div>
 );

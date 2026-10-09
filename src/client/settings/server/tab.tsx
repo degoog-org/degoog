@@ -12,6 +12,7 @@ import {
   injectFieldSaveBtns,
 } from "./auto-save";
 import { ServerContent } from "./render/server-content";
+import { initSectionAccordions } from "./accordions";
 import { initBackupControls } from "./backup";
 import { initApiKeyControls, loadApiKey } from "./controls/api-key";
 import { loadServerSettings } from "./controls/load-settings";
@@ -26,7 +27,10 @@ export async function initServerTab(
   getToken: () => string | null,
 ): Promise<void> {
   const container = document.getElementById("server-content");
-  if (container) render(<ServerContent />, container);
+  if (container) {
+    render(<ServerContent />, container);
+    initSectionAccordions(container);
+  }
 
   bindRestartButton(getToken);
   void syncRestartPending(getToken);

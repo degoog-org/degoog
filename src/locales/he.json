@@ -285,8 +285,12 @@
       "searx-api-enable": "הגישו את צורת ה-API של SearXNG",
       "searx-api-enable-desc": "גורם ל-/api/search לכבד format=json כמו שלקוחות SearXNG כבר שולחים, למשל Open WebUI, ועונה בצורת SearXNG. בקשות בלי הפרמטר לא משתנות.",
       "searx-api-enable-aria": "הגישו את צורת ה-API של SearXNG",
+      "group-instance": "מופע",
+      "group-search": "חיפוש",
+      "group-network": "רשת ופרטיות",
+      "group-security": "אבטחה",
       "compat-heading": "שכבות תאימות",
-      "compat-desc": "הריצו מנועים שנכתבו למנועי חיפוש אחרים. שתי השכבות ניסיוניות.",
+      "compat-desc": "הריצו מנועים שנכתבו לאגרגטורי חיפוש אחרים. שתי השכבות ניסיוניות.",
       "4get-enable": "שכבת תאימות 4get",
       "4get-enable-desc": "הריצו סקרייפרים של 4get כמנועים. צריך PHP 8.1+ על השרת. מוסיף כפתור 4get בדף המנועים.",
       "4get-enable-aria": "הפעלה או כיבוי של שכבת התאימות 4get"

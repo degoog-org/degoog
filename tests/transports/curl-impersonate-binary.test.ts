@@ -4,7 +4,7 @@ import { CurlImpersonateTransport } from "../../src/server/extensions/transports
 import type { TransportContext } from "../../src/server/types/extension";
 
 const transport = new CurlImpersonateTransport();
-const hasBinary = transport.available();
+const hasBinary = await transport.available();
 
 const server = Bun.serve({
   port: 0,

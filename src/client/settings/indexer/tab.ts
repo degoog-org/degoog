@@ -4,11 +4,13 @@ import { openExportModal } from "./modals/export-modal";
 import { openImportModal } from "./modals/import-modal";
 import { openManageModal } from "./modals/manage-modal";
 import { renderShell } from "./shell/shell";
+import { initSectionAccordions } from "../server/accordions";
 import { fetchStats, renderStats } from "./stats";
 import { wireToggles } from "./toggles";
 
 export const initIndexerTab = async (container: HTMLElement): Promise<void> => {
   renderShell(container);
+  initSectionAccordions(container);
 
   let _lastStats: IndexerStats | null = null;
 
