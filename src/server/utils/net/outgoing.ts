@@ -18,6 +18,7 @@ import type {
   Transport,
   TransportContext,
   TransportFetchOptions,
+  TransportImpersonate,
 } from "../../types/extension";
 import { useCache } from "../cache/cache";
 import { fetchViaHttpProxy } from "./http-proxy-fetch";
@@ -26,6 +27,7 @@ import { fetchViaSocks, isSocksProxy } from "./socks-fetch";
 import { getInstanceSettings } from "../settings/server-settings";
 import { asBoolean } from "../settings/plugin-settings";
 import { rosterIdFor } from "./proxy-roster";
+import { impersonateAvailable, impersonateFetch } from "./impersonate";
 import { benchedUntil, jerseyFor } from "./proxy-bench";
 export function parseOutgoingTransport(raw: string | undefined): string {
   return raw?.trim() || "fetch";
@@ -181,6 +183,8 @@ const _proxyUrls = async (opts?: OutgoingProxyOptions): Promise<string[]> => {
   return parseProxyUrlsList(_asList(settings.proxyUrls));
 };
 
+export const lineupUrls = (): Promise<string[]> => _proxyUrls();
+
 const _firstOffTheBench = (untils: number[]): number =>
   untils.indexOf(Math.min(...untils));
 
@@ -218,6 +222,14 @@ async function buildTransportContext(
       : await pickBatter(opts, host);
   const transport = resolveTransport(transportName);
   const egressKey = await jerseyFor(proxy?.id, host);
+  const impersonate: TransportImpersonate | undefined = (await impersonateAvailable())
+    ? (request) =>
+        impersonateFetch({
+          ...request,
+          proxyUrl: request.proxyUrl ?? proxy?.url,
+          egressKey: request.egressKey ?? egressKey,
+        })
+    : undefined;
   return {
     transport,
     context: {
@@ -226,6 +238,7 @@ async function buildTransportContext(
       engineId: opts?.engineId,
       sessionKey: opts?.sessionKey,
       fetch: _buildProxyFetch(proxy?.url, transport.timeoutMs, proxy ? egressKey : undefined),
+      ...(impersonate ? { impersonate } : {}),
       useCache,
     },
   };

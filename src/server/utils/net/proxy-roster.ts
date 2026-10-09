@@ -16,3 +16,10 @@ export const rosterIdFor = (url: string): string => {
 export const clearRoster = (): void => {
   _ids.clear();
 };
+
+export const rosterUrlFor = (id: string): string | undefined => {
+  for (const [url, known] of _ids) {
+    if (known === id) return url;
+  }
+  return undefined;
+};

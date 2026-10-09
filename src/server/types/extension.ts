@@ -1,3 +1,4 @@
+import type { ImpersonateRequest, ImpersonateResult } from "../utils/net/impersonate";
 import type { CreateCache, UseCache } from "../utils/cache/cache";
 import type { SettingValue } from "../utils/settings/plugin-settings";
 import type { ThreatLevel } from "../utils/security/sentinel";
@@ -8,6 +9,7 @@ import {
   SlotPanelPosition,
 } from "../../shared/search-types";
 import type { FieldOptionsResult } from "../../shared/field-options";
+import type { ProxyScoreboard } from "../utils/net/proxy-scoreboard";
 import type { SettingField } from "../../shared/setting-field";
 
 export type TranslationVars = string | number | boolean;
@@ -100,6 +102,7 @@ export interface PluginContext {
   /** @deprecated Use `useCache` (async, namespaced, Valkey-backed when enabled). */
   createCache: CreateCache;
   useCache: UseCache;
+  proxies?: ProxyScoreboard;
 }
 
 export const ENGINE_CHALLENGE = {
@@ -358,12 +361,17 @@ export type ProxyAwareFetch = (
   init?: RequestInit,
 ) => Promise<Response>;
 
+export type TransportImpersonate = (
+  request: Omit<ImpersonateRequest, "egressKey"> & { egressKey?: string },
+) => Promise<ImpersonateResult>;
+
 export interface TransportContext {
   proxyUrl?: string;
   egressKey?: string;
   engineId?: string;
   sessionKey?: string;
   fetch: ProxyAwareFetch;
+  impersonate?: TransportImpersonate;
   useCache: UseCache;
 }
 

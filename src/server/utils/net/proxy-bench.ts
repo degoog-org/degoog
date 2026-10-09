@@ -9,12 +9,34 @@ const MS_PER_MINUTE = 60_000;
 const EPOCH_TTL_MS = 24 * 60 * MS_PER_MINUTE;
 const LABEL_PREVIEW = 8;
 const GROUP_SPLIT_RE = /[\s,]+/;
+const MAX_BOX_SCORES = 256;
 
 export const DIRECT_EGRESS = "direct";
 export const CONNECT_TRIGGER = "connect";
 
 const _bench = useCache<number>("proxy:cooldown", MS_PER_MINUTE);
 const _jerseys = useCache<number>("proxy:epoch", EPOCH_TTL_MS);
+
+export interface Strikeout {
+  proxyId: string;
+  site: string;
+  trigger: string;
+  at: number;
+  until: number;
+}
+
+const _boxScores = new Map<string, Strikeout>();
+
+const _scoreIt = (key: string, strikeout: Strikeout): void => {
+  _boxScores.delete(key);
+  _boxScores.set(key, strikeout);
+  if (_boxScores.size > MAX_BOX_SCORES) _boxScores.delete(_boxScores.keys().next().value!);
+};
+
+export const recentStrikeouts = (): Strikeout[] => [..._boxScores.values()].reverse();
+
+export const siteFor = async (host: string): Promise<string> =>
+  ballparkFor(host, (await _config()).groups);
 
 interface CooldownConfig {
   cooldownMs: number;
@@ -90,6 +112,8 @@ export const strikeOut = async (
   const epoch = (await _jerseys.get(key)) ?? 0;
   await _jerseys.set(key, epoch + 1);
   const label = proxyId.slice(0, LABEL_PREVIEW);
+  const at = Date.now();
+  _scoreIt(key, { proxyId, site, trigger, at, until: config.cooldownMs > 0 ? at + config.cooldownMs : 0 });
   if (config.cooldownMs <= 0) {
     logger.info(NS, `proxy ${label} struck out on ${site} (${trigger}); new jersey, stays in the lineup`);
     return true;
