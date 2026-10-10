@@ -4,6 +4,7 @@ import {
   applyProxyResults,
   currentProxyRows,
   markProxiesPending,
+  PROXY_PING_BATCH,
 } from "./proxies/proxy-state";
 import { getBase } from "../../utils/net/base-url";
 import { jsonHeaders } from "../../utils/net/request";
@@ -65,7 +66,13 @@ export function initProxyTest(getToken: () => string | null): void {
       "settings-proxy-enabled",
     ) as HTMLInputElement | null;
     const enabled = !!enabledEl?.checked;
-    const targets = enabled ? markProxiesPending(currentProxyRows()) : [];
+    const targets = enabled
+      ? markProxiesPending(
+          currentProxyRows()
+            .filter((row) => row.url.trim())
+            .slice(0, PROXY_PING_BATCH),
+        )
+      : [];
 
     try {
       const res = await fetch(`${getBase()}/api/settings/proxy-test`, {

@@ -13,6 +13,8 @@ A machine readable version of this list lives in [instances.json](./instances.js
 
 [https://search.drescher.network](https://search.drescher.network)
 
+[https://degoog.utilibre.org](https://degoog.utilibre.org) (Mwmbl, Open Library and Hacker News)
+
 ## Custom appearance
 
 [https://nepnir.com](https://nepnir.com) (Zen)

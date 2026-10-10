@@ -11,7 +11,7 @@ import { openProxyBulkModal, splitProxyLines } from "./proxy-bulk-modal";
 
 export const PROXY_LIST_ID = "settings-proxy-list";
 const PROXY_COUNT_ID = "settings-proxy-count";
-const PING_BATCH = 64;
+export const PROXY_PING_BATCH = 64;
 const SHOWN_PROXIES = 8;
 
 const t = window.scopedT("core");
@@ -86,8 +86,8 @@ async function _ping(targets: ProxyRow[]): Promise<void> {
   if (live.length === 0) return;
 
   const batches: ProxyRow[][] = [];
-  for (let i = 0; i < live.length; i += PING_BATCH) batches.push(live.slice(i, i + PING_BATCH));
-  await Promise.all(batches.map(_pingBatch));
+  for (let i = 0; i < live.length; i += PROXY_PING_BATCH) batches.push(live.slice(i, i + PROXY_PING_BATCH));
+  for (const batch of batches) await _pingBatch(batch);
 }
 
 async function _pingBatch(batch: ProxyRow[]): Promise<void> {

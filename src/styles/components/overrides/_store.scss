@@ -92,6 +92,8 @@
 }
 
 .store-lightbox {
+  --store-lightbox-fg: #fff;
+  --store-lightbox-fg-muted: rgba(255, 255, 255, 0.7);
   position: fixed;
   inset: 0;
   z-index: 300;
@@ -129,7 +131,7 @@
   border: 0;
   border-radius: $radius-full;
   box-shadow: none;
-  color: var(--text-secondary);
+  color: var(--store-lightbox-fg-muted);
   cursor: pointer;
   font-size: $font-size-2xl;
   font-weight: 300;
@@ -144,7 +146,7 @@
 
   &:hover {
     background: rgba(255, 255, 255, 0.12);
-    color: var(--text-primary);
+    color: var(--store-lightbox-fg);
   }
 }
 
@@ -160,7 +162,7 @@
   border: 0;
   border-radius: $radius-full;
   box-shadow: none;
-  color: var(--text-primary);
+  color: var(--store-lightbox-fg);
   cursor: pointer;
   font-size: $font-size-xl;
   line-height: 1;
@@ -193,7 +195,7 @@
   border: 0;
   border-radius: $radius-full;
   box-shadow: none;
-  color: var(--text-primary);
+  color: var(--store-lightbox-fg);
   cursor: pointer;
   font-size: $font-size-xl;
   line-height: 1;
@@ -239,7 +241,7 @@
   z-index: 2;
   background: rgba(0, 0, 0, 0.5);
   border-radius: $radius-pill;
-  color: var(--text-primary);
+  color: var(--store-lightbox-fg);
   font-size: $font-size-small;
   font-weight: 500;
   padding: $space-2 $space-4;
