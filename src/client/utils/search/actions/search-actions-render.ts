@@ -180,7 +180,10 @@ export const renderSearchResponse = (
   state.currentData = data;
   state.lastPage = declaredPages(data.totalPages);
 
-  const metaText = `About ${data.results.length} results (${(data.totalTime / 1000).toFixed(2)} seconds)`;
+  const metaText = t("search-templates.status.done", {
+    count: String(data.results.length),
+    time: (data.totalTime / 1000).toFixed(2),
+  });
   setResultsMeta(metaText);
 
   const glanceEl = document.getElementById("at-a-glance");
