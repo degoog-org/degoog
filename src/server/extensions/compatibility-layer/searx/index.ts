@@ -6,7 +6,6 @@ import type { SearchResult } from "../../../../shared/search-types";
 import type { SettingField } from "../../../../shared/setting-field";
 import { CompatLayerId } from "../../../../shared/compat-layers";
 import type { CompatEntry } from "../registry";
-import { makeExtID } from "../../../utils/extension-support/extension-id";
 import { logger } from "../../../utils/logger";
 import {
   asBoolean,
@@ -32,7 +31,7 @@ import {
   type SearxConfigField,
 } from "./engine-config";
 import { LIB_PACKAGES, missingPythonLibs } from "./python-deps";
-import { searxEnginesDir } from "./paths";
+import { searxEngineId, searxEnginesDir } from "./paths";
 import { traitRegions } from "./traits";
 
 interface DiscoverPayload {
@@ -117,8 +116,6 @@ const _runPython = <T>(
   handlers: RpcHandlers = {},
   signal?: AbortSignal,
 ): Promise<T> => runBridge<T>(_pythonSpec(), runnerPath, payload, handlers, signal);
-
-const _safeId = (name: string): string => makeExtID(`searx-${name}`, "engine");
 
 const _bridge = (engineId: string, context?: EngineContext): RpcHandlers => {
   const fetcher = (context?.fetch ?? fetch) as typeof fetch;
@@ -323,7 +320,7 @@ export const loadSearxCompatibilityEngines = async (): Promise<CompatEntry[]> =>
   const paths: DiscoverRequest[] = [];
   for (const file of files) {
     const code = basename(file, ".py");
-    const settings = await getSettings(_safeId(code));
+    const settings = await getSettings(searxEngineId(code));
     stored.set(code, settings);
     paths.push({ path: join(dir, file), overrides: overridesFrom(settings) });
   }
@@ -355,7 +352,7 @@ export const loadSearxCompatibilityEngines = async (): Promise<CompatEntry[]> =>
       continue;
     }
     const rawId = code;
-    const id = _safeId(rawId);
+    const id = searxEngineId(rawId);
     const displayName = catalogEntry(rawId)?.name || meta.name || file;
     const types = meta.types?.length ? meta.types : ["web"];
     const instance = new SearxCompatEngine({

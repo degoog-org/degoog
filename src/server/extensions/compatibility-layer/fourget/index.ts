@@ -4,7 +4,6 @@ import type { SearchEngine } from "../../../types/extension";
 import type { EngineContext, TimeFilter } from "../../../types/search";
 import type { SearchResult } from "../../../../shared/search-types";
 import type { SettingField } from "../../../../shared/setting-field";
-import { makeExtID } from "../../../utils/extension-support/extension-id";
 import { logger } from "../../../utils/logger";
 import { getRandomUserAgent } from "../../../utils/net/user-agents";
 import { TTL_MS, useCache } from "../../../utils/cache/cache";
@@ -32,7 +31,7 @@ import { optionFields, overridesFrom, type FourGetFilters } from "./engine-confi
 import { followEngineFetch, isHttpRedirect } from "./follow";
 import { nptKey } from "./npt-key";
 import { FOURGET_PAGES, mapPages, type FourGetPage } from "./pages";
-import { scrapersDir, sharedLibDir, stagingRoot } from "./paths";
+import { fourgetEngineId, scrapersDir, sharedLibDir, stagingRoot } from "./paths";
 import { phpBinary, phpStatus } from "./php-runtime";
 
 const NS = "4get-compat";
@@ -95,8 +94,6 @@ const _spec = (): RunnerSpec => ({
   label: "4get",
 });
 
-const _safeId = (code: string): string => makeExtID(`4get-${code}`, "engine");
-
 const _readDir = async (dir: string): Promise<string[]> => {
   try {
     return (await readdir(dir)).filter((name) => name.endsWith(".php"));
@@ -128,7 +125,7 @@ const _apiKeys = async (codes: string[]): Promise<Record<string, string>> => {
   const out: Record<string, string> = {};
   for (const code of codes) {
     if (!catalogEntry(code)?.needsApiKey) continue;
-    const settings = await getSettings(_safeId(code));
+    const settings = await getSettings(fourgetEngineId(code));
     const key = settings[API_KEY_SETTING];
     if (typeof key === "string" && key.trim()) out[code] = key.trim();
   }
@@ -375,7 +372,7 @@ export const loadFourGetEngines = async (): Promise<CompatEntry[]> => {
     }
     const pages = FOURGET_PAGES.filter((page) => meta.types.includes(page.type));
     if (pages.length === 0) continue;
-    const id = _safeId(meta.code);
+    const id = fourgetEngineId(meta.code);
     const displayName = _displayName(meta.code);
     const instance = new FourGetCompatEngine({
       code: meta.code,

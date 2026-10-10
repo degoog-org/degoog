@@ -1,4 +1,9 @@
-import { getSettings, setSettings, type SettingValue } from "./plugin-settings";
+import {
+  getSettings,
+  removeSettingKeys,
+  setSettings,
+  type SettingValue,
+} from "./plugin-settings";
 import {
   MODIFIER_KEYS,
   parseShortcutsMap,
@@ -59,6 +64,11 @@ export const writeShortcutsSettings = async (
   }
   await setSettings(SETTINGS_ID, stored);
   cache = settings;
+};
+
+export const forgetShortcutBindings = async (ids: string[]): Promise<void> => {
+  await removeSettingKeys(SETTINGS_ID, ids);
+  cache = null;
 };
 
 export const saveShortcutBindings = async (

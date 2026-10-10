@@ -18,7 +18,8 @@ import {
 } from "./catalog";
 import { customEntries, customEntry, dropCustomEntry } from "./custom";
 import type { SearxCatalogItem, SearxLibStatus } from "./catalog-types";
-import { searxEnginesDir } from "./paths";
+import { searxEngineId, searxEnginesDir } from "./paths";
+import { purgeEngineSettings } from "../../engines/engine-purge";
 import { TRAITS_SUFFIX } from "./traits";
 import { LIB_PACKAGES, missingPythonLibs, type PythonLib } from "./python-deps";
 
@@ -201,6 +202,7 @@ export const uninstallSearx = async (code: string): Promise<void> => {
   const engine = _known(code);
   if (!_isInstalled(engine)) {
     await dropCustomEntry(engine);
+    await purgeEngineSettings([searxEngineId(engine)]);
     return;
   }
   const queue = [engine, ..._orphanDeps(engine)];
@@ -211,6 +213,7 @@ export const uninstallSearx = async (code: string): Promise<void> => {
       await _dropCache(file);
     }
     await dropCustomEntry(engine);
+    await purgeEngineSettings(queue.map(searxEngineId));
     logger.info(NS, `uninstalled SearX engine ${engine} (${queue.join(", ")})`);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

@@ -1,6 +1,5 @@
 import { readFile, mkdir, readdir, rm, stat } from "fs/promises";
 import { join } from "path";
-import { removeSettings } from "../../utils/settings/plugin-settings";
 import { ExtensionStoreType } from "../../types/extension";
 import type {
   InstalledItem,
@@ -27,7 +26,6 @@ import { folderNameForItem } from "../../utils/extension-support/extension-id";
 import {
   getDestDir,
   canonicalInstalledFolder,
-  settingsIdsForInstalled,
   getEntriesForType,
   reloadAfterAction,
   parseDependencyUrl,
@@ -37,6 +35,7 @@ import {
   readNeedsAppRestart,
 } from "./item-metadata";
 import { listRepoItems } from "./item-catalog";
+import { purgeItemSettings } from "./item-purge";
 
 const _installingSet = new Set<string>();
 
@@ -194,8 +193,7 @@ async function _uninstallItem(
   const inst = _findInstalled(data, repoUrl, type, normalizedPath);
   const destDir = join(getDestDir(type), inst.installedAs);
   await rm(destDir, { recursive: true, force: true }).catch(() => {});
-  for (const id of settingsIdsForInstalled(type, inst.installedAs))
-    await removeSettings(id);
+  await purgeItemSettings(type, inst.installedAs);
   data.installed = data.installed.filter((i) => i !== inst);
   await writeReposData(data);
   await reloadAfterAction(type);
@@ -309,5 +307,6 @@ async function _deleteUntracked(
   );
   if (!target) throw new Error("Invalid folder name.");
   await rm(target, { recursive: true, force: true });
+  await purgeItemSettings(type, folderName);
   await reloadAfterAction(type);
 }

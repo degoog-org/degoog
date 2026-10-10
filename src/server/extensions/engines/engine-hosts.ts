@@ -65,6 +65,14 @@ export const flushHosts = async (): Promise<void> => {
   await _flush();
 };
 
+export const forgetEngineHosts = async (engineIds: string[]): Promise<void> => {
+  const hosts = await _load();
+  const forgotten = engineIds.filter((id) => hosts.delete(id));
+  if (forgotten.length === 0) return;
+  logger.debug(NS, `forgot hosts for ${forgotten.join(", ")}`);
+  await flushHosts();
+};
+
 const _scheduleFlush = (): void => {
   if (_flushTimer) return;
   _flushTimer = setTimeout(() => void _flush(), FLUSH_DELAY_MS);

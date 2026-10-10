@@ -170,6 +170,20 @@ export function removeSettings(id: string): Promise<void> {
   });
 }
 
+export function removeSettingKeys(id: string, keys: string[]): Promise<void> {
+  return writeLock(async () => {
+    const store = await load();
+    const current = store[id];
+    if (!current || !keys.some((key) => key in current)) return;
+    store[id] = Object.fromEntries(
+      Object.entries(current).filter(([key]) => !keys.includes(key)),
+    );
+    await persist(store);
+    cache = store;
+    await publishInvalidate(INVALIDATE_SCOPE.PLUGIN_SETTINGS, id);
+  });
+}
+
 export const maskSecrets = (
   settings: Record<string, SettingValue>,
   schema: { key: string; secret?: boolean }[],

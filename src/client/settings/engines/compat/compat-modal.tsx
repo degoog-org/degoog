@@ -221,6 +221,21 @@ export const openCompatModal = async (
     await runAction(CompatAction.Install, code, btn);
   };
 
+  const startUninstall = async (
+    code: string,
+    btn: HTMLButtonElement,
+  ): Promise<void> => {
+    const engine = items.find((entry) => entry.code === code)?.name ?? code;
+    const ok = await confirmModal({
+      title: t(`${KEY}compat-uninstall-title`, { engine }),
+      message: t(`${KEY}compat-uninstall-message`),
+      confirmLabel: t(`${KEY}compat-uninstall`),
+      danger: true,
+    });
+    if (!ok || !live()) return;
+    await runAction(CompatAction.Uninstall, code, btn);
+  };
+
   bindCompatClicks(body, (event) => {
     const target = event.target as HTMLElement;
     const install = target.closest<HTMLButtonElement>(".compat-btn-install");
@@ -232,7 +247,7 @@ export const openCompatModal = async (
     if (update?.dataset.code)
       void runAction(CompatAction.Update, update.dataset.code, update);
     if (uninstall?.dataset.code)
-      void runAction(CompatAction.Uninstall, uninstall.dataset.code, uninstall);
+      void startUninstall(uninstall.dataset.code, uninstall);
   });
 
   const addForm = body.querySelector<HTMLFormElement>("#compat-add-form");
