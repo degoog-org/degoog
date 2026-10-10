@@ -277,7 +277,7 @@
       "domain-block-desc": "Masquez les résultats de ces domaines. Un par ligne. Les sous-domaines viennent avec. Entourez une ligne de /slashes/ pour une regex. Vous pouvez coller une liste uBlock Origin. Commentaires et règles sans domaine sont ignorés.",
       "domain-block-enable": "Activer le blocage de domaines",
       "domain-block-list-label": "Domaines bloqués (un par ligne)",
-      "domain-block-regex-help": "Les regex vont entre /slashes/ et utilisent la syntaxe RegExp JavaScript, sans drapeaux. Elles matchent le hostname, pas l'URL entière. Exemple : /(^|\\\\.)instagram\\\\.com$/ bloque instagram.com et tous les sous-domaines. /^www\\\\.instagram\\\\.com$/ ne bloque que www.instagram.com.",
+      "domain-block-regex-help": "Les regex vont entre /slashes/ et utilisent la syntaxe RegExp JavaScript, sans drapeaux. Elles matchent le hostname, pas l'URL entière. Exemple : /(^|\\.)instagram\\.com$/ bloque instagram.com et tous les sous-domaines. /^www\\.instagram\\.com$/ ne bloque que www.instagram.com.",
       "domain-block-ui-enable": "Autoriser le blocage depuis les résultats de recherche",
       "domain-block-ui-desc": "Les gens connectés peuvent bloquer un domaine depuis le menu kebab d'un résultat. Les instances publiques ou non authentifiées cachent le menu de toute façon.",
       "domain-replace-desc": "Réécrit les liens des résultats pour un site, par exemple vers un frontend respectueux de la vie privée.",
