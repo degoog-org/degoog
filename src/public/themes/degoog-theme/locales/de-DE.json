@@ -38,6 +38,7 @@
       "any-time": "Beliebige Zeit",
       "language": "Sprache",
       "any": "Alle",
+      "any-language": "Beliebige Sprache",
       "hour": "Stunde",
       "day": "24 Stunden",
       "week": "Woche",
@@ -117,6 +118,7 @@
       "saving-to-index": "Wird in deinem Index gespeichert",
       "insecure": "Unsicher",
       "insecure-tooltip": "Diese Seite wird über eine unverschlüsselte HTTP-Verbindung ausgeliefert.",
+      "favicon-missing": "Keine Favicon-Erweiterung installiert",
       "actions": {
         "menu-aria": "Domain-Aktionen",
         "block": "Diese Domain sperren",
@@ -130,7 +132,10 @@
         "prompt-score": "Wertung für diese Domain (positiv hebt an, negativ stuft herab):",
         "modal-confirm": "Bestätigen",
         "modal-cancel": "Abbrechen",
-        "scored": "Bewertet"
+        "scored": "Bewertet",
+        "refresh": "Favicon aktualisieren",
+        "refreshed": "Favicon aktualisiert",
+        "refresh-failed": "Kein Favicon gefunden"
       }
     },
     "pagination": {
@@ -138,6 +143,29 @@
       "next": "Weiter",
       "page": "Seite {page}",
       "end": "Keine weiteren Ergebnisse."
+    },
+    "status": {
+      "streaming": "Etwa {count} Ergebnisse (Streaming…)",
+      "done": "Etwa {count} Ergebnisse ({time} Sekunden)",
+      "page": "Etwa {count} Ergebnisse – Seite {page}",
+      "searching": "Suche…",
+      "running-command": "Befehl wird ausgeführt…"
+    },
+    "media-preview": {
+      "visit": "Seite besuchen",
+      "watch": "Video ansehen",
+      "download": "Herunterladen"
     }
+  },
+  "nojs": {
+    "search-label": "Suchanfrage",
+    "pagination-label": "Ergebnisseiten",
+    "results-meta": "{count} Ergebnisse in {time} ms",
+    "no-results": "Keine Ergebnisse gefunden.",
+    "rate-limited": "Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.",
+    "full-app": "Vollversion",
+    "command-unsupported": "Diese Erweiterung wurde nicht für die Umgebung ohne JavaScript eingerichtet. Bitte wende dich an den Entwickler der Erweiterung und frage, ob eine Integration möglich oder geplant ist.",
+    "command-disabled": "Dieser Befehl ist auf dieser Instanz deaktiviert.",
+    "command-failed": "Dieser Befehl konnte nicht abgeschlossen werden. Bitte versuche es erneut."
   }
 }
