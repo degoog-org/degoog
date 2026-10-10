@@ -111,7 +111,7 @@ const _applyPage = async (
     if (!isCurrentSearch(seq)) return false;
     const results: ScoredResult[] = data?.results ?? [];
     state.currentPage = page;
-    if (state.currentData) {
+    if (state.currentData?.engineTimings) {
       state.currentData.engineTimings = mergeEngineTimings(
         state.currentData.engineTimings,
         data?.engineTimings ?? [],

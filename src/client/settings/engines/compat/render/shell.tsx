@@ -1,6 +1,7 @@
 import { escapeHtml } from "../../../../../shared/ui/tribute/escape";
 import { RawDogIt } from "../../../../../shared/ui/tribute/rawdogit";
 import { copy } from "./copy";
+import { CompatAddRow } from "./add-row";
 import {
   CompatLayerId,
   COMPAT_LAYER_LABELS,
@@ -22,6 +23,7 @@ export const CompatShell = ({ id }: { id: CompatLayerId }): JSX.Element => {
       <p class="compat-note-intro">
         <RawDogIt html={_introHtml(id, layer)} />
       </p>
+      {id === CompatLayerId.Searx ? <CompatAddRow layer={layer} /> : null}
       <input
         type="text"
         class="store-search-input degoog-search-bar degoog-search-bar--square-advanced"

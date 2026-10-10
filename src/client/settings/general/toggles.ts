@@ -9,59 +9,36 @@ import {
   HIDE_URL_PARAMS,
   SHOW_RESULT_DATES,
 } from "../../constants";
-import type { ToggleOpts } from "../../types/settings-section";
 
 export const INSTANCE_DEFAULT_VALUE = "";
 export const FOLLOW_INSTANCE_ORIGIN = "follow-instance";
+export const REGION_HOST_ID = "region-select-host";
+export const REGION_SELECT_ID = "region-select";
 
-export const SEARCH_OPTION_TOGGLES: ToggleOpts[] = [
-  {
-    id: "settings-open-new-tab",
-    labelKey: "settings-page.search-options.open-new-tab",
-    ariaKey: "settings-page.search-options.open-new-tab-aria",
-  },
-  {
-    id: "display-engine-performance",
-    labelKey: "settings-page.search-options.engine-performance",
-    ariaKey: "settings-page.search-options.engine-performance-aria",
-  },
-  {
-    id: "display-related-queries",
-    labelKey: "settings-page.search-options.related-queries",
-    ariaKey: "settings-page.search-options.related-queries-aria",
-  },
-  {
-    id: "settings-inline-gif-playback",
-    labelKey: "settings-page.search-options.inline-gif-playback",
-    ariaKey: "settings-page.search-options.inline-gif-playback-aria",
-  },
-  {
-    id: "settings-post-method-enabled",
-    labelKey: "settings-page.search-options.post-method",
-    ariaKey: "settings-page.search-options.post-method-aria",
-    titleKey: "settings-page.search-options.post-method-tooltip",
-  },
-  {
-    id: "settings-sticky-sidebar",
-    labelKey: "settings-page.search-options.sticky-sidebar",
-    ariaKey: "settings-page.search-options.sticky-sidebar-aria",
-  },
-  {
-    id: "settings-centered-mode",
-    labelKey: "settings-page.search-options.centered-mode",
-    ariaKey: "settings-page.search-options.centered-mode-aria",
-  },
-  {
-    id: "settings-hide-url-params",
-    labelKey: "settings-page.search-options.hide-url-params",
-    ariaKey: "settings-page.search-options.hide-url-params-aria",
-  },
-  {
-    id: "settings-show-result-dates",
-    labelKey: "settings-page.search-options.show-result-dates",
-    ariaKey: "settings-page.search-options.show-result-dates-aria",
-    titleKey: "settings-page.search-options.show-result-dates-tooltip",
-  },
+export interface PrefCheck {
+  id: string;
+  labelKey: string;
+  descKey?: string;
+}
+
+const KEY = "settings-page.search-options";
+
+export const APPEARANCE_CHECKS: PrefCheck[] = [
+  { id: "settings-centered-mode", labelKey: `${KEY}.centered-mode` },
+  { id: "settings-sticky-sidebar", labelKey: `${KEY}.sticky-sidebar` },
+];
+
+export const RESULT_CHECKS: PrefCheck[] = [
+  { id: "display-related-queries", labelKey: `${KEY}.related-queries` },
+  { id: "display-engine-performance", labelKey: `${KEY}.engine-performance` },
+  { id: "settings-show-result-dates", labelKey: `${KEY}.show-result-dates`, descKey: `${KEY}.show-result-dates-desc` },
+  { id: "settings-inline-gif-playback", labelKey: `${KEY}.inline-gif-playback` },
+  { id: "settings-hide-url-params", labelKey: `${KEY}.hide-url-params` },
+];
+
+export const SEARCHING_CHECKS: PrefCheck[] = [
+  { id: "settings-open-new-tab", labelKey: `${KEY}.open-new-tab` },
+  { id: "settings-post-method-enabled", labelKey: `${KEY}.post-method`, descKey: `${KEY}.post-method-desc` },
 ];
 
 export const PREF_TOGGLES: {

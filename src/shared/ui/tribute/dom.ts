@@ -95,20 +95,28 @@ const _applyProps = (
   }
 };
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+const _element = (tag: string, parent?: Element): Element =>
+  tag === "svg" ||
+  (parent?.namespaceURI === SVG_NS && parent.localName !== "foreignObject")
+    ? document.createElementNS(SVG_NS, tag)
+    : document.createElement(tag);
+
 const _rawNodes = (html: string): Node[] => {
   const template = document.createElement("template");
   template.innerHTML = html;
   return [...template.content.childNodes];
 };
 
-const _create = (vnode: Concrete): Instance => {
+const _create = (vnode: Concrete, parent?: Element): Instance => {
   if (vnode.k === "text") {
     return { vnode, nodes: [document.createTextNode(vnode.value)] };
   }
   if (vnode.k === "raw") {
     return { vnode, nodes: _rawNodes(vnode.html) };
   }
-  const el = document.createElement(vnode.tag);
+  const el = _element(vnode.tag, parent);
   const handlers = new Map<string, EventListener>();
   _applyProps(el, {}, vnode.props, handlers);
   const children = _patchChildren(el, [], _flatten(vnode.children));
@@ -206,7 +214,7 @@ function _patchChildren(
       used.add(candidate);
       result.push(_patch(candidate, vnode));
     } else {
-      result.push(_create(vnode));
+      result.push(_create(vnode, parent));
     }
   }
 
@@ -256,7 +264,7 @@ export const clear = (container: Element): void => {
 
 export const append = (node: VNode | VNode[], container: Element): void => {
   for (const concrete of _flatten(Array.isArray(node) ? node : [node])) {
-    for (const created of _create(concrete).nodes)
+    for (const created of _create(concrete, container).nodes)
       container.appendChild(created);
   }
 };

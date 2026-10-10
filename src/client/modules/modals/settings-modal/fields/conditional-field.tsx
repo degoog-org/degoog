@@ -1,23 +1,21 @@
 import type { Child } from "../../../../../shared/ui/tribute/types";
+import type { VisibleWhenRule } from "../../../../../shared/setting-field";
 
 export interface ConditionalFieldProps {
-  depKey: string;
-  equals: string;
+  rules: VisibleWhenRule[];
   show: boolean;
   children?: Child;
 }
 
 export const ConditionalField = ({
-  depKey,
-  equals,
+  rules,
   show,
   children,
 }: ConditionalFieldProps): JSX.Element => (
   <div
     class="ext-conditional-field"
     hidden={!show}
-    data-visible-dep-key={depKey}
-    data-visible-dep-equals={equals}
+    data-visible-when={JSON.stringify(rules)}
   >
     {children}
   </div>

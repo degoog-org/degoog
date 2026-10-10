@@ -1,25 +1,82 @@
 import type { Socket } from "node:net";
 import tls from "node:tls";
 import { gunzipSync, inflateSync, brotliDecompressSync } from "node:zlib";
-import type { TransportFetchOptions } from "../../types/extension";
+import type { TransportBody, TransportFetchOptions } from "../../types/extension";
 
 const MAX_REDIRECTS = 5;
 const MAX_RESPONSE_BYTES = 64 * 1024 * 1024;
+const IDLE_CONNECTION_MS = 60_000;
+const HEADER_END = "\r\n\r\n";
+const CHUNKED_TAIL = "0\r\n\r\n";
+const TAIL_BYTES = 16;
 
 type OpenSocket = (host: string, port: number) => Promise<Socket>;
 
+interface Parked {
+  sock: Socket;
+  timer: ReturnType<typeof setTimeout>;
+  drop: () => void;
+}
+
+const _parked = new Map<string, Parked[]>();
+
+const _unpark = (key: string): Socket | null => {
+  const list = _parked.get(key);
+  while (list?.length) {
+    const entry = list.pop()!;
+    clearTimeout(entry.timer);
+    entry.sock.removeListener("close", entry.drop);
+    entry.sock.removeListener("error", entry.drop);
+    entry.sock.removeListener("data", entry.drop);
+    if (!entry.sock.destroyed && entry.sock.writable) {
+      if (list.length === 0) _parked.delete(key);
+      return entry.sock;
+    }
+  }
+  _parked.delete(key);
+  return null;
+};
+
+const _park = (key: string, sock: Socket): void => {
+  const list = _parked.get(key) ?? [];
+  const entry: Parked = {
+    sock,
+    timer: setTimeout(() => entry.drop(), IDLE_CONNECTION_MS),
+    drop: () => {
+      clearTimeout(entry.timer);
+      const index = list.indexOf(entry);
+      if (index >= 0) list.splice(index, 1);
+      if (list.length === 0 && _parked.get(key) === list) _parked.delete(key);
+      sock.destroy();
+    },
+  };
+  entry.timer.unref?.();
+  sock.once("close", entry.drop);
+  sock.once("error", entry.drop);
+  sock.once("data", entry.drop);
+  list.push(entry);
+  _parked.set(key, list);
+};
+
+export const closeIdleConnections = (): void => {
+  for (const list of [..._parked.values()]) {
+    for (const entry of [...list]) entry.drop();
+  }
+  _parked.clear();
+};
 
 function _buildHttpRequest(
   method: string,
   parsed: URL,
   headers: Record<string, string> | undefined,
-  body: string | undefined,
+  body: TransportBody | undefined,
+  keepAlive: boolean,
 ): string {
   const path = parsed.pathname + parsed.search;
   const lines: string[] = [`${method} ${path || "/"} HTTP/1.1`];
   const merged: Record<string, string> = { ...headers };
   merged["Host"] = parsed.host;
-  merged["Connection"] = "close";
+  merged["Connection"] = keepAlive ? "keep-alive" : "close";
   if (!merged["Accept-Encoding"])
     merged["Accept-Encoding"] = "gzip, deflate, br";
   if (body && !merged["Content-Length"])
@@ -105,39 +162,129 @@ const _upgradeTls = async (
   return tlsSock;
 };
 
-const _readAll = (sock: Socket, signal?: AbortSignal): Promise<Buffer> =>
+interface RawResponse {
+  head: string;
+  body: Buffer;
+  reusable: boolean;
+}
+
+class ResponseError extends Error {
+  readonly received: boolean;
+
+  constructor(cause: Error, received: boolean) {
+    super(cause.message);
+    this.name = cause.name;
+    this.received = received;
+    (this as Error & { cause?: unknown }).cause = cause;
+  }
+}
+
+type Framing = { kind: "none" } | { kind: "length"; length: number } | { kind: "chunked" } | { kind: "close" };
+
+const _framing = (head: string, bodiless: boolean): Framing => {
+  const status = _parseStatusLine(head).status;
+  if (bodiless || status === 204 || status === 304 || (status >= 100 && status < 200)) {
+    return { kind: "none" };
+  }
+  const headers = _parseHeaders(head);
+  if (headers.get("transfer-encoding")?.toLowerCase().includes("chunked")) return { kind: "chunked" };
+  const length = Number(headers.get("content-length"));
+  if (headers.has("content-length") && Number.isInteger(length) && length >= 0) {
+    return { kind: "length", length };
+  }
+  return { kind: "close" };
+};
+
+const _keepsAlive = (head: string): boolean => {
+  if (!/^HTTP\/1\.1 /.test(head)) return false;
+  return !/^connection:[^\r\n]*\bclose\b/im.test(head);
+};
+
+const _chunkedComplete = (body: Buffer): boolean => {
+  let pos = 0;
+  while (pos < body.length) {
+    const lineEnd = body.indexOf("\r\n", pos);
+    if (lineEnd === -1) return false;
+    const size = parseInt(body.subarray(pos, lineEnd).toString("ascii"), 16);
+    if (!Number.isFinite(size)) return false;
+    if (size === 0) return body.indexOf(HEADER_END, lineEnd) !== -1;
+    pos = lineEnd + 2 + size + 2;
+  }
+  return false;
+};
+
+const _readResponse = (
+  sock: Socket,
+  bodiless: boolean,
+  signal?: AbortSignal,
+): Promise<RawResponse> =>
   new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let total = 0;
-    const fail = (err: Error): void => {
+    let head = "";
+    let bodyStart = -1;
+    let framing: Framing = { kind: "close" };
+    let tail = Buffer.alloc(0);
+
+    const cleanup = (): void => {
+      sock.removeListener("data", onData);
+      sock.removeListener("end", onEnd);
+      sock.removeListener("error", onError);
       signal?.removeEventListener("abort", onAbort);
-      sock.destroy();
-      reject(err);
     };
+    const all = (): Buffer => Buffer.concat(chunks, total);
+    const finish = (body: Buffer, reusable: boolean): void => {
+      cleanup();
+      resolve({ head, body, reusable: reusable && _keepsAlive(head) });
+    };
+    const fail = (err: Error): void => {
+      cleanup();
+      sock.destroy();
+      reject(new ResponseError(err, total > 0));
+    };
+    const settle = (): void => {
+      if (bodyStart < 0) {
+        const raw = all();
+        const sep = raw.indexOf(HEADER_END);
+        if (sep === -1) return;
+        head = raw.subarray(0, sep).toString("latin1");
+        bodyStart = sep + HEADER_END.length;
+        framing = _framing(head, bodiless);
+      }
+      const bodyBytes = total - bodyStart;
+      if (framing.kind === "none") return finish(Buffer.alloc(0), true);
+      if (framing.kind === "length" && bodyBytes >= framing.length) {
+        return finish(all().subarray(bodyStart, bodyStart + framing.length), true);
+      }
+      if (framing.kind === "chunked" && tail.includes(CHUNKED_TAIL)) {
+        const body = all().subarray(bodyStart);
+        if (_chunkedComplete(body)) return finish(body, true);
+      }
+    };
+    const onData = (chunk: Buffer): void => {
+      total += chunk.byteLength;
+      if (total > MAX_RESPONSE_BYTES) return fail(new Error("Response too large"));
+      chunks.push(chunk);
+      tail = Buffer.concat([tail, chunk]).subarray(-TAIL_BYTES);
+      settle();
+    };
+    const onEnd = (): void => {
+      if (bodyStart < 0) {
+        const raw = all();
+        const sep = raw.indexOf(HEADER_END);
+        head = (sep === -1 ? raw : raw.subarray(0, sep)).toString("latin1");
+        return finish(sep === -1 ? Buffer.alloc(0) : raw.subarray(sep + HEADER_END.length), false);
+      }
+      finish(all().subarray(bodyStart), false);
+    };
+    const onError = (err: Error): void => fail(err);
     const onAbort = (): void => fail(_abortError(signal!));
     if (signal?.aborted) return onAbort();
     signal?.addEventListener("abort", onAbort, { once: true });
-    sock.on("data", (c: Buffer) => {
-      total += c.byteLength;
-      if (total > MAX_RESPONSE_BYTES) return fail(new Error("Response too large"));
-      chunks.push(c);
-    });
-    sock.on("end", () => {
-      signal?.removeEventListener("abort", onAbort);
-      resolve(Buffer.concat(chunks));
-    });
-    sock.on("error", fail);
+    sock.on("data", onData);
+    sock.once("end", onEnd);
+    sock.once("error", onError);
   });
-
-function _splitHeaderBody(raw: Buffer): { head: string; body: Buffer } {
-  const sep = raw.indexOf("\r\n\r\n");
-  if (sep === -1)
-    return { head: raw.toString("latin1"), body: Buffer.alloc(0) };
-  return {
-    head: raw.subarray(0, sep).toString("latin1"),
-    body: raw.subarray(sep + 4),
-  };
-}
 
 function _parseStatusLine(head: string): { status: number; statusText: string } {
   const first = head.split("\r\n")[0];
@@ -187,9 +334,41 @@ export async function fetchOverSocket(
   url: string,
   options: TransportFetchOptions,
   open: OpenSocket,
+  reuseKey?: string,
 ): Promise<Response> {
   const followRedirects = (options.redirect ?? "follow") !== "manual";
   const method = options.method ?? "GET";
+
+  const connect = async (parsed: URL, useTls: boolean, port: number): Promise<Socket> =>
+    _upgradeTls(
+      await _openAbortable(open, parsed.hostname, port, options.signal),
+      parsed.hostname,
+      useTls,
+      options.signal,
+    );
+
+  const exchange = async (
+    parsed: URL,
+    useTls: boolean,
+    port: number,
+    poolKey: string,
+  ): Promise<RawResponse> => {
+    const idle = poolKey ? _unpark(poolKey) : null;
+    const sock = idle ?? (await connect(parsed, useTls, port));
+    try {
+      sock.write(_buildHttpRequest(method, parsed, options.headers, options.body, Boolean(poolKey)));
+      if (options.body) sock.write(options.body);
+      const raw = await _readResponse(sock, method.toUpperCase() === "HEAD", options.signal);
+      if (poolKey && raw.reusable) _park(poolKey, sock);
+      else sock.destroy();
+      return raw;
+    } catch (err) {
+      sock.destroy();
+      const stale = idle && err instanceof ResponseError && !err.received && !options.signal?.aborted;
+      if (stale) return exchange(parsed, useTls, port, poolKey);
+      throw err instanceof ResponseError ? ((err as Error & { cause?: unknown }).cause ?? err) : err;
+    }
+  };
 
   const doRequest = async (
     targetUrl: string,
@@ -198,48 +377,34 @@ export async function fetchOverSocket(
     const parsed = new URL(targetUrl);
     const useTls = parsed.protocol === "https:";
     const port = Number(parsed.port) || (useTls ? 443 : 80);
+    const poolKey = reuseKey ? `${reuseKey}|${parsed.protocol}//${parsed.hostname}:${port}` : "";
 
-    const sock = await _upgradeTls(
-      await _openAbortable(open, parsed.hostname, port, options.signal),
-      parsed.hostname,
-      useTls,
-      options.signal,
-    );
+    const { head, body: rawBody } = await exchange(parsed, useTls, port, poolKey);
+    const { status, statusText } = _parseStatusLine(head);
+    const resHeaders = _parseHeaders(head);
 
-    try {
-      sock.write(_buildHttpRequest(method, parsed, options.headers, options.body));
-      if (options.body) sock.write(options.body);
-
-      const raw = await _readAll(sock, options.signal);
-      const { head, body: rawBody } = _splitHeaderBody(raw);
-      const { status, statusText } = _parseStatusLine(head);
-      const resHeaders = _parseHeaders(head);
-
-      let finalBody = rawBody;
-      if (resHeaders.get("transfer-encoding")?.includes("chunked")) {
-        finalBody = _decodeChunked(rawBody);
-      }
-      finalBody = _decompress(finalBody, resHeaders.get("content-encoding"));
-
-      if (
-        followRedirects &&
-        status >= 300 &&
-        status < 400 &&
-        resHeaders.get("location") &&
-        redirectsLeft > 0
-      ) {
-        const next = new URL(resHeaders.get("location")!, targetUrl).href;
-        return doRequest(next, redirectsLeft - 1);
-      }
-
-      return new Response(new Uint8Array(finalBody), {
-        status,
-        statusText,
-        headers: resHeaders,
-      });
-    } finally {
-      sock.destroy();
+    let finalBody = rawBody;
+    if (resHeaders.get("transfer-encoding")?.includes("chunked")) {
+      finalBody = _decodeChunked(rawBody);
     }
+    finalBody = _decompress(finalBody, resHeaders.get("content-encoding"));
+
+    if (
+      followRedirects &&
+      status >= 300 &&
+      status < 400 &&
+      resHeaders.get("location") &&
+      redirectsLeft > 0
+    ) {
+      const next = new URL(resHeaders.get("location")!, targetUrl).href;
+      return doRequest(next, redirectsLeft - 1);
+    }
+
+    return new Response(new Uint8Array(finalBody), {
+      status,
+      statusText,
+      headers: resHeaders,
+    });
   };
 
   return doRequest(url);

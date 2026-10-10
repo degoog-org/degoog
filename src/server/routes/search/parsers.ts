@@ -16,6 +16,8 @@ import type {
 } from "../../types/search";
 import { parseEngineConfig } from "../../utils/search";
 import { sanePage } from "../../search/page-counter";
+import { parseImageQuery, parseSearchImage } from "../../search/search-image";
+import { normalizeRegion, REGION_PARAM } from "../../../shared/region";
 
 export const SAFE_MODE_PARAM = "safeMode";
 export const LEGACY_SAFE_MODE_PARAM = "imgNsfw";
@@ -42,6 +44,7 @@ const _parseSearchFields = (
   page: sanePage(read("page")),
   timeFilter: (read("time") || "any") as TimeFilter,
   lang: read("lang") || "",
+  region: normalizeRegion(read(REGION_PARAM)),
   dateFrom: read("dateFrom") || "",
   dateTo: read("dateTo") || "",
   imageFilter: parseImageFilter(
@@ -62,15 +65,24 @@ export const parseSearchRequest = (c: Context): ParsedSearchRequest =>
 export const parseSearchParams = (params: URLSearchParams): ParsedSearchRequest =>
   _parseSearchFields((key) => params.get(key), parseEngineConfig(params));
 
+export const parseSearchForm = (form: FormData): ParsedSearchRequest =>
+  _parseSearchFields((key) => {
+    const value = form.get(key);
+    return typeof value === "string" ? value : null;
+  }, parseEnginesFromBody(undefined));
+
 export const parseSearchBody = (body: SearchBody): Omit<SearchParams, "query"> => ({
   engines: parseEnginesFromBody(body.engines),
   searchType: (body.type || "web") as SearchType,
   page: sanePage(body.page),
   timeFilter: (body.time || "any") as TimeFilter,
   lang: body.lang || "",
+  region: normalizeRegion(body.region),
   dateFrom: body.dateFrom || "",
   dateTo: body.dateTo || "",
   imageFilter: parseImageFilter(body.imgColor, body.imgSize, body.imgType, body.imgLayout, body.safeMode ?? body.imgNsfw),
+  image: parseSearchImage(body.image),
+  imageQuery: parseImageQuery(body.imageQuery),
 });
 
 export function parseImageFilter(

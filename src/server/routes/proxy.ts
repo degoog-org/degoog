@@ -5,10 +5,13 @@ import { readWithin } from "../utils/net/read-body";
 import { localImageAccess } from "../utils/security/local-image-access";
 import { isFaviconHost } from "../extensions/favicon/host";
 import { resolveFaviconBytes } from "../extensions/favicon/resolve";
-import { getRandomUserAgent } from "../utils/net/user-agents";
+import { getRandomHintlessUserAgent } from "../utils/net/user-agents";
 import { fetchWithSafeRedirects } from "../utils/security/safe-redirects";
 import { logger } from "../utils/logger";
 import { createConcurrencyGate } from "../utils/net/concurrency-gate";
+import { fetchEngineRoute, isEngineRouteUrl } from "../extensions/engines/engine-routes";
+import { withTimeout } from "../utils/net/with-timeout";
+import { _applyRateLimit } from "../utils/search";
 
 const router = new Hono();
 
@@ -102,16 +105,19 @@ router.get("/api/proxy/image", async (c) => {
   const url = c.req.query("url");
   if (!url) return c.body("Missing url parameter", 400);
 
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch (err) {
-    logger.debug("proxy", `invalid proxy URL ${url}`, err);
-    return c.body("Invalid URL", 400);
-  }
+  const engineRoute = isEngineRouteUrl(url);
+  let parsed: URL | null = null;
+  if (!engineRoute) {
+    try {
+      parsed = new URL(url);
+    } catch (err) {
+      logger.debug("proxy", `invalid proxy URL ${url}`, err);
+      return c.body("Invalid URL", 400);
+    }
 
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    return c.body("Invalid protocol", 400);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return c.body("Invalid protocol", 400);
+    }
   }
 
   const sig = c.req.query("sig");
@@ -119,13 +125,13 @@ router.get("/api/proxy/image", async (c) => {
     return c.body("Invalid or missing signature", 403);
   }
   const headers: Record<string, string> = {
-    "User-Agent": getRandomUserAgent(),
+    "User-Agent": getRandomHintlessUserAgent(),
     Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
     "Sec-Fetch-Dest": "image",
     "Sec-Fetch-Mode": "no-cors",
     "Sec-Fetch-Site": "cross-site",
-    Referer: parsed.origin + "/",
+    ...(parsed ? { Referer: parsed.origin + "/" } : {}),
   };
 
   const release = await imageProxyGate.acquire();
@@ -137,12 +143,21 @@ router.get("/api/proxy/image", async (c) => {
   let streaming = false;
 
   try {
-    const res = await fetchWithSafeRedirects(
-      outgoingFetch,
-      url,
-      { signal: controller.signal, headers },
-      await localImageAccess(),
-    );
+    const res = engineRoute
+      ? await withTimeout(
+          fetchEngineRoute(url, {
+            signal: controller.signal,
+            rateLimit: (bucket) => _applyRateLimit(c, bucket),
+          }),
+          PROXY_TIMEOUT_MS,
+          "engine route",
+        )
+      : await fetchWithSafeRedirects(
+          outgoingFetch,
+          url,
+          { signal: controller.signal, headers },
+          await localImageAccess(),
+        );
     clearTimeout(timeout);
 
     if (!res) return c.body("Blocked redirect", 502);

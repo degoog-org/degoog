@@ -6,6 +6,16 @@ import { Icon } from "../../../shared/ui/components/primitives/icon";
 import { ExtGroup } from "../../../shared/ui/components/extensions/ext-group";
 import { CompatSection } from "./compat/compat-section";
 import { EngineCard } from "./engine-card";
+import { PublicEnginesHeader } from "./public-engines-header";
+import { ExtFilterBar, extFilterIds } from "../shared/filter/ext-filter-bar";
+import { ExtNoMatch } from "../shared/filter/ext-no-match";
+import {
+  countItems,
+  createExtFilter,
+  createExtFilterActions,
+  filterExtGroups,
+} from "../shared/filter/ext-filter";
+import { revealActiveTab } from "../shared/filter/filter-tabs";
 import { paintEngineBang } from "./engine-bang";
 import { engineTypes } from "./engine-types";
 import { primaryType } from "../../../shared/search-types";
@@ -22,6 +32,7 @@ import { openModal } from "../../modules/modals/settings-modal/modal";
 import type { AllExtensions, ExtensionMeta } from "../../types/extension";
 import type { EngineRecord } from "../../types/state";
 import type { GroupEntry, TypeEntry } from "../../types/engines-tab";
+import type { ExtFilterGroup } from "../../types/ext-filter";
 import { getBase } from "../../utils/net/base-url";
 import { jsonHeaders } from "../../utils/net/request";
 import { getTabOrder, applyTabOrder } from "../../utils/settings/tab-order";
@@ -103,8 +114,9 @@ export async function initEnginesTab(
   allExtensions: AllExtensions,
   options?: { publicInstance?: boolean },
 ): Promise<void> {
-  const container = document.getElementById("engines-content");
-  if (!container) return;
+  const host = document.getElementById("engines-content");
+  if (!host) return;
+  const container: HTMLElement = host;
   const allowConfigure = !options?.publicInstance;
 
   const savedEngines = await idbGet<EngineRecord>(SETTINGS_KEY);
@@ -144,6 +156,7 @@ export async function initEnginesTab(
         void _persistToggle(ENGINE_BANGS_KEY, engine.id, true);
       }
       paintEngineBang(container, engine.id, on, bangMap[engine.id], wakeBang);
+      paint();
     };
 
   const onToggleBang = (engine: ExtensionMeta) => (): void => {
@@ -197,90 +210,123 @@ export async function initEnginesTab(
     void openTabOrderModal(_allTypeEntries(allExtensions.engines), token);
   };
 
-  render(
-    <>
-      {allowConfigure ? (
-        <section class="settings-section ext-card degoog-panel degoog-panel--ext-card">
-          <div class="setting-section-heading-wrapper">
-            <h2 class="settings-section-heading">
-              {t("settings-page.extensions.tabs-heading")}
-            </h2>
-            <div class="floating-section-icon">
-              <Icon name="fa-solid fa-table-columns" />
+  const filter = createExtFilter();
+  const filterIds = extFilterIds("engines");
+  const isOn = (engine: ExtensionMeta): boolean => enabledMap[engine.id] !== false;
+  const filterGroups: ExtFilterGroup[] = groups.map((g) => ({
+    key: g.key,
+    label: g.label,
+    items: g.engines,
+  }));
+  const filterActions = createExtFilterActions(filter, () => paint(), filterIds);
+
+  function paint(): void {
+    const visible = filterExtGroups(filterGroups, filter, isOn);
+    render(
+      <>
+        {allowConfigure ? (
+          <section class="settings-section ext-card degoog-panel degoog-panel--ext-card">
+            <div class="setting-section-heading-wrapper">
+              <h2 class="settings-section-heading">
+                {t("settings-page.extensions.tabs-heading")}
+              </h2>
+              <div class="floating-section-icon">
+                <Icon name="fa-solid fa-table-columns" />
+              </div>
             </div>
-          </div>
-          <p class="settings-desc">{t("settings-page.extensions.tabs-desc")}</p>
-          <div class="settings-page-actions">
-            <Button
-              variant="secondary"
-              id="order-engine-tabs"
-              onClick={_openOrderModal}
-            >
-              {t("settings-page.extensions.order-tabs")}
-            </Button>
-            <Button
-              variant="secondary"
-              id="save-default-engines"
-              onClick={() => void _saveDefaults()}
-            >
-              {t("settings-page.extensions.save-defaults")}
-            </Button>
-            <Button
-              variant="secondary"
-              id="reset-default-engines"
-              onClick={() => void _resetDefaults()}
-            >
-              {t("settings-page.extensions.reset-defaults")}
-            </Button>
-          </div>
-        </section>
-      ) : null}
+            <p class="settings-desc">
+              {t("settings-page.extensions.tabs-desc")}
+            </p>
+            <div class="settings-page-actions">
+              <Button
+                variant="secondary"
+                id="order-engine-tabs"
+                onClick={_openOrderModal}
+              >
+                {t("settings-page.extensions.order-tabs")}
+              </Button>
+              <Button
+                variant="secondary"
+                id="save-default-engines"
+                onClick={() => void _saveDefaults()}
+              >
+                {t("settings-page.extensions.save-defaults")}
+              </Button>
+              <Button
+                variant="secondary"
+                id="reset-default-engines"
+                onClick={() => void _resetDefaults()}
+              >
+                {t("settings-page.extensions.reset-defaults")}
+              </Button>
+            </div>
+          </section>
+        ) : (
+          <PublicEnginesHeader />
+        )}
 
-      {layers.length > 0 ? (
-        <CompatSection
-          layers={layers}
-          onOpen={(layer) => void openCompatModal(layer)}
+        {layers.length > 0 ? (
+          <CompatSection
+            layers={layers}
+            onOpen={(layer) => void openCompatModal(layer)}
+          />
+        ) : null}
+
+        <ExtFilterBar
+          noun="engines"
+          ids={filterIds}
+          groups={filterGroups}
+          shown={countItems(visible)}
+          filter={filter}
+          isOn={isOn}
+          actions={filterActions}
         />
-      ) : null}
+        {visible.length ? null : (
+          <ExtNoMatch filter={filter} onClear={filterActions.clear} />
+        )}
 
-      {groups.map(({ label, engines }) => (
-        <ExtGroup key={label} label={label}>
-          {engines.map((engine) => (
-            <EngineCard
-              key={engine.id}
-              engine={engine}
-              enabled={enabledMap[engine.id] !== false}
-              bangEnabled={bangMap[engine.id] !== false}
-              allowConfigure={allowConfigure}
-              onToggle={onToggle(engine)}
-              onToggleBang={onToggleBang(engine)}
-              onConfigure={() => openModal(engine)}
-            />
-          ))}
-        </ExtGroup>
-      ))}
+        {visible.map(({ label, items: engines }) => (
+          <ExtGroup key={label} label={label}>
+            {engines.map((engine) => (
+              <EngineCard
+                key={engine.id}
+                engine={engine}
+                enabled={enabledMap[engine.id] !== false}
+                bangEnabled={bangMap[engine.id] !== false}
+                allowConfigure={allowConfigure}
+                onToggle={onToggle(engine)}
+                onToggleBang={onToggleBang(engine)}
+                onConfigure={() => openModal(engine)}
+              />
+            ))}
+          </ExtGroup>
+        ))}
 
-      {!hasStoreEngines ? (
-        <div class="ext-group">
-          <p class="degoog-text degoog-text--sm degoog-text--secondary">
-            <TransText
-              text={t("settings-page.extensions.no-engines", {
-                store: "{store}",
-              })}
-              slots={{
-                store: (
-                  <StoreLinkButton
-                    label={t("settings-page.extensions.no-engines-store")}
-                  />
-                ),
-              }}
-            />
-          </p>
-        </div>
-      ) : null}
-    </>,
-    container,
-  );
+        {!hasStoreEngines ? (
+          <div class="ext-group">
+            <p class="degoog-text degoog-text--sm degoog-text--secondary">
+              <TransText
+                text={t("settings-page.extensions.no-engines", {
+                  store: "{store}",
+                })}
+                slots={{
+                  store: (
+                    <StoreLinkButton
+                      label={t("settings-page.extensions.no-engines-store")}
+                    />
+                  ),
+                }}
+              />
+            </p>
+          </div>
+        ) : null}
+      </>,
+      container,
+    );
+    revealActiveTab(filterIds.tabs);
+  }
+
+  paint();
 
   if (_orderSavedHandler) {
     window.removeEventListener(TAB_ORDER_SAVED, _orderSavedHandler);

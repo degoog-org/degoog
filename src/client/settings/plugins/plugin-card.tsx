@@ -27,9 +27,11 @@ const _canDisable = (plugin: ExtensionMeta): boolean =>
 export const PluginCard = ({
   plugin,
   orderable,
+  onSaved,
 }: {
   plugin: ExtensionMeta;
   orderable: boolean;
+  onSaved: (enabled: boolean) => void;
 }): JSX.Element => {
   const isEnabled = plugin.settings["disabled"] !== "true";
   const toggleId = `plugin-toggle-${plugin.id}`;
@@ -64,7 +66,7 @@ export const PluginCard = ({
             inputClass="plugin-toggle-input"
             dataId={plugin.id}
             checked={isEnabled}
-            onChange={extToggleHandler(plugin.id, isEnabled, "plugin")}
+            onChange={extToggleHandler(plugin.id, isEnabled, "plugin", onSaved)}
           />
         ) : null,
         orderable ? (

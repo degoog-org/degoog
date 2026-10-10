@@ -8,7 +8,13 @@ import {
   engineRunCache,
 } from "../utils/cache/cache";
 import { logger } from "../utils/logger";
-import { engineFingerprint, type ActiveEngine } from "./engine-selection";
+import {
+  engineFingerprint,
+  engineQuery,
+  type ActiveEngine,
+  type SearchInputs,
+} from "./engine-selection";
+import { ENGINE_INPUT } from "../../shared/engine-input";
 
 const NS = "engine-cache";
 
@@ -21,6 +27,8 @@ export interface RunScope {
   dateFrom?: string;
   dateTo?: string;
   imageFilter?: ImageFilter;
+  image?: string;
+  region?: string;
 }
 
 const _imageKey = (filter?: ImageFilter): string =>
@@ -37,7 +45,7 @@ export const runKey = async (
 ): Promise<string> => {
   const q = scope.query.trim().toLowerCase();
   const fingerprint = await engineFingerprint(engineId);
-  return [
+  const key = [
     engineId,
     q,
     scope.type,
@@ -47,8 +55,10 @@ export const runKey = async (
     scope.dateFrom ?? "",
     scope.dateTo ?? "",
     _imageKey(scope.imageFilter),
+    scope.image ?? "",
     fingerprint,
   ].join("|");
+  return scope.region ? `${key}|region=${scope.region}` : key;
 };
 
 export const runTtl = (timing: EngineTiming): number =>
@@ -79,14 +89,25 @@ interface CachedActiveRun {
   run: CachedEngineRun;
 }
 
+export const engineScope = (
+  engine: Pick<ActiveEngine, "input">,
+  scope: RunScope,
+  inputs: SearchInputs = {},
+): RunScope => ({
+  ...scope,
+  query: engineQuery(engine.input, scope.query, inputs),
+  image: engine.input === ENGINE_INPUT.IMAGE ? inputs.image?.hash : undefined,
+});
+
 export const readActiveRuns = async (
   active: ActiveEngine[],
   scope: RunScope,
+  inputs: SearchInputs = {},
 ): Promise<CachedActiveRun[]> => {
   const found = await Promise.all(
     active.map(async (engine) => {
       if (!isCacheable(engine.instance.name)) return null;
-      const run = await readRun(await runKey(engine.id, scope));
+      const run = await readRun(await runKey(engine.id, engineScope(engine, scope, inputs)));
       return run ? { engine, run } : null;
     }),
   );

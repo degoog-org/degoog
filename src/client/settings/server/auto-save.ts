@@ -3,12 +3,23 @@ import {
   bindFieldSaveBtn,
   createFieldSaveBtn,
   markFieldDirty,
+  placeFieldSaveBtn,
 } from "../shared/field-save";
 import { flashError, flashSuccess } from "../shared/flash-msg";
 import { setIndexerNavVisible } from "../indexer/nav";
 import { OVERSIZED_CLASS } from "../shared/oversized";
 import { boolStr, el } from "./fields";
 import { serializeScoreRows } from "./domain-score";
+import { PROXY_LIST_ID, onProxiesChanged, serializeProxyRows } from "./proxies/proxy-state";
+import {
+  REDIRECT_EDITOR_ID,
+  hasRedirectProblems,
+  isRedirectEditorLocked,
+  markRedirectsSaved,
+  needsRedirectMigration,
+  onRedirectsChanged,
+  serializeRedirectRows,
+} from "./redirects/redirect-state";
 
 const COMPAT_TOGGLES = ["searx-compat-enabled", "fourget-compat-enabled"];
 
@@ -54,7 +65,6 @@ const RL_SUGGEST_KEYS = [
   "rateLimitSuggestBurstMax",
   "rateLimitSuggestLongWindow",
   "rateLimitSuggestLongMax",
-  "acDebounceMs",
 ] as const;
 
 const _toCamel = (s: string): string =>
@@ -137,6 +147,24 @@ const _rlPayload = (
   return payload;
 };
 
+function _bindGroupSave(
+  groupId: string,
+  keys: readonly string[],
+  getToken: () => string | null,
+): void {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  const btn = createFieldSaveBtn();
+  group.appendChild(btn);
+  group.querySelectorAll<HTMLInputElement>('input[type="number"]').forEach((input) => {
+    input.addEventListener("input", () => markFieldDirty(btn));
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); btn.click(); }
+    });
+  });
+  bindFieldSaveBtn(btn, () => saveBatch(_rlPayload(keys), getToken));
+}
+
 export const injectFieldSaveBtns = (getToken: () => string | null): void => {
   const fields = document.querySelectorAll<HTMLElement>("[data-save-key]");
   for (const field of fields) {
@@ -144,7 +172,7 @@ export const injectFieldSaveBtns = (getToken: () => string | null): void => {
     if (!key) continue;
     if (field.classList.contains(OVERSIZED_CLASS)) continue;
     const btn = createFieldSaveBtn();
-    field.insertAdjacentElement("afterend", btn);
+    placeFieldSaveBtn(field, btn);
     field.addEventListener("input", () => markFieldDirty(btn));
     if (field instanceof HTMLInputElement && field.type === "number") {
       field.addEventListener("keydown", (e) => {
@@ -154,36 +182,38 @@ export const injectFieldSaveBtns = (getToken: () => string | null): void => {
     bindFieldSaveBtn(btn, () => saveField(key, (field as HTMLInputElement).value, getToken));
   }
 
-  const rlSearchGroup = document.getElementById("settings-rate-limit-options");
-  if (rlSearchGroup) {
+  _bindGroupSave("settings-rate-limit-options", RL_SEARCH_KEYS, getToken);
+  _bindGroupSave("settings-rate-limit-suggest-options", RL_SUGGEST_KEYS, getToken);
+
+  const redirectEditor = document.getElementById(REDIRECT_EDITOR_ID);
+  if (redirectEditor && !isRedirectEditorLocked()) {
     const btn = createFieldSaveBtn();
-    rlSearchGroup.appendChild(btn);
-    rlSearchGroup.querySelectorAll<HTMLInputElement>('input[type="number"]').forEach((input) => {
-      input.addEventListener("input", () => markFieldDirty(btn));
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") { e.preventDefault(); btn.click(); }
-      });
+    placeFieldSaveBtn(redirectEditor, btn);
+    btn.disabled = hasRedirectProblems();
+    onRedirectsChanged(() => {
+      markFieldDirty(btn);
+      btn.disabled = hasRedirectProblems();
     });
-    bindFieldSaveBtn(btn, () => saveBatch(_rlPayload(RL_SEARCH_KEYS), getToken));
+    if (needsRedirectMigration()) markFieldDirty(btn);
+    bindFieldSaveBtn(btn, async () => {
+      const ok = await saveField("domainReplaceList", serializeRedirectRows(), getToken);
+      if (ok) markRedirectsSaved();
+      return ok;
+    });
   }
 
-  const rlSuggestGroup = document.getElementById("settings-rate-limit-suggest-options");
-  if (rlSuggestGroup) {
+  const proxyList = document.getElementById(PROXY_LIST_ID);
+  if (proxyList) {
     const btn = createFieldSaveBtn();
-    rlSuggestGroup.appendChild(btn);
-    rlSuggestGroup.querySelectorAll<HTMLInputElement>('input[type="number"]').forEach((input) => {
-      input.addEventListener("input", () => markFieldDirty(btn));
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") { e.preventDefault(); btn.click(); }
-      });
-    });
-    bindFieldSaveBtn(btn, () => saveBatch(_rlPayload(RL_SUGGEST_KEYS), getToken));
+    placeFieldSaveBtn(proxyList, btn);
+    onProxiesChanged(() => markFieldDirty(btn));
+    bindFieldSaveBtn(btn, () => saveField("proxyUrls", serializeProxyRows(), getToken));
   }
 
   const scoreSection = document.getElementById("settings-domain-score-rows");
   if (scoreSection) {
     const btn = createFieldSaveBtn();
-    scoreSection.insertAdjacentElement("afterend", btn);
+    placeFieldSaveBtn(scoreSection, btn);
     const markDirty = (): void => markFieldDirty(btn);
     new MutationObserver(markDirty).observe(scoreSection, { childList: true, subtree: true });
     document.getElementById("settings-domain-score-add")?.addEventListener("click", markDirty);

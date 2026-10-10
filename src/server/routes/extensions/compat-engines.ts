@@ -6,7 +6,7 @@ import {
   isLayerOn,
   type CompatLayerDef,
 } from "../../extensions/compatibility-layer/registry";
-import { CompatAction } from "../../../shared/compat-layers";
+import { COMPAT_ADD_PATH, CompatAction } from "../../../shared/compat-layers";
 import { ReloadMode, reloadSync } from "../../extensions/store/reload-sync";
 import { ExtensionStoreType } from "../../types/extension";
 import { scrubLog } from "../../extensions/compatibility-layer/scrub-log";
@@ -87,5 +87,31 @@ const _mutate = (action: CompatAction) => async (c: Context) => {
 for (const action of Object.values(CompatAction)) {
   router.post(`/api/compat/:layer/${action}`, _mutate(action));
 }
+
+const _sourceFrom = async (c: Context): Promise<string> => {
+  const body = await readObjectBody<{ source?: unknown }>(c);
+  return typeof body?.source === "string" ? body.source.trim() : "";
+};
+
+router.post(`/api/compat/:layer/${COMPAT_ADD_PATH}`, async (c) => {
+  const result = await _guard(c);
+  if (_isDenied(result)) return result;
+  const { layer } = result;
+  const add = layer.add;
+  if (!add) return c.json({ error: `${layer.label} engines can only be installed from the list` }, 404);
+  const source = await _sourceFrom(c);
+  if (!source) return c.json({ error: "Missing source" }, 400);
+  try {
+    const code = await layer.lock(async () => {
+      const added = await add(source);
+      await _refresh(added);
+      return added;
+    });
+    return c.json({ ok: true, code });
+  } catch (e) {
+    logger.warn(NS, `${layer.label} add from ${scrubLog(source)} failed`, e);
+    return c.json({ error: e instanceof Error ? e.message : "Add failed" }, 400);
+  }
+});
 
 export default router;

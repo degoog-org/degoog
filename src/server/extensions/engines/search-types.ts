@@ -4,6 +4,7 @@ import { logger } from "../../utils/logger";
 import type { EngineFilters } from "../../../shared/engine-filters";
 import type { PluginEntry } from "./entries";
 import { primaryType } from "../../../shared/search-types";
+import { normalizeRegion } from "../../../shared/region";
 
 const TYPE_CACHE_TTL_MS = 60_000;
 const _typeCache = new Map<string, { types: string[]; at: number }>();
@@ -33,6 +34,12 @@ export const coerceFilters = (raw: unknown): EngineFilters | undefined => {
     if (list.length > 0) out[group] = list;
   }
   return Object.keys(out).length > 0 ? out : undefined;
+};
+
+export const coerceRegions = (raw: unknown): string[] | undefined => {
+  if (!Array.isArray(raw)) return undefined;
+  const regions = [...new Set(raw.map(normalizeRegion).filter(Boolean))].sort();
+  return regions.length > 0 ? regions : undefined;
 };
 
 export const resolveTypes = (

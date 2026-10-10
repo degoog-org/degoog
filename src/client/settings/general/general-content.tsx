@@ -1,17 +1,15 @@
+import { AboutSection } from "./sections/about-section";
 import { AppearanceSection } from "./sections/appearance-section";
-import { InstallSection } from "./sections/install-section";
-import { SearchOptionsSection } from "./sections/search-options-section";
+import { ResultsSection } from "./sections/results-section";
+import { SearchingSection } from "./sections/searching-section";
 import { SyncSection } from "./sections/sync-section";
-import { UpdateSection } from "./sections/update-section";
-import { WizardSection } from "./sections/wizard-section";
 
 export const GeneralContent = (): JSX.Element => (
   <>
-    <AppearanceSection icon="fa-solid fa-palette" />
-    <SearchOptionsSection icon="fa-solid fa-magnifying-glass" />
+    <AppearanceSection />
+    <ResultsSection />
+    <SearchingSection />
     <SyncSection />
-    <WizardSection />
-    <InstallSection />
-    <UpdateSection />
+    <AboutSection />
   </>
 );

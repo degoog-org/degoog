@@ -86,6 +86,7 @@ import { join } from "path";
 import type { PluginContext } from "../../types/extension";
 import type { SettingField } from "../../../shared/setting-field";
 import { createCache, useCache } from "../cache/cache";
+import { proxyScoreboard } from "../net/proxy-scoreboard";
 import { outgoingFetch } from "../net/outgoing";
 import { buildSignedProxyUrl, signFaviconUrl } from "../net/proxy-sign";
 import {
@@ -158,8 +159,14 @@ export async function initPlugin(
       signProxyUrl: buildSignedProxyUrl,
       signFaviconUrl,
       fetch: outgoingFetch as PluginContext["fetch"],
+      searchTypes: async () => {
+        const { getInstalledSearchTypes } = await import("../../extensions/engines/catalog");
+        const types = await getInstalledSearchTypes();
+        return ["web", ...types.filter((t) => t !== "web")];
+      },
       createCache,
       useCache,
+      proxies: proxyScoreboard,
     };
     await Promise.resolve(plugin.init(ctx));
     _initedPlugins.add(plugin as object);

@@ -11,6 +11,7 @@ exports[`every mounted router exposes the routes it did before commands route li
 exports[`every mounted router exposes the routes it did before compat-engines route list is unchanged 1`] = `
 [
   "GET /api/compat/:layer/engines",
+  "POST /api/compat/:layer/add",
   "POST /api/compat/:layer/install",
   "POST /api/compat/:layer/uninstall",
   "POST /api/compat/:layer/update",
@@ -247,6 +248,7 @@ exports[`every mounted router exposes the routes it did before search-bar route 
 exports[`every mounted router exposes the routes it did before search/stream route list is unchanged 1`] = `
 [
   "GET /api/search/stream",
+  "POST /api/search/stream",
 ]
 `;
 
@@ -265,6 +267,7 @@ exports[`every mounted router exposes the routes it did before settings route li
   "GET /api/settings/streaming",
   "GET /api/settings/tab-order",
   "GET /api/settings/update-check",
+  "GET /api/settings/valkey-status",
   "POST /api/settings/api-key/regenerate",
   "POST /api/settings/default-engines",
   "POST /api/settings/domain-action",
@@ -272,6 +275,7 @@ exports[`every mounted router exposes the routes it did before settings route li
   "POST /api/settings/general",
   "POST /api/settings/honeypot/ban",
   "POST /api/settings/honeypot/unban",
+  "POST /api/settings/proxy-ping",
   "POST /api/settings/proxy-test",
   "POST /api/settings/restart",
   "POST /api/settings/shortcuts",
@@ -405,7 +409,7 @@ exports[`the admin path is operator-defined, not hardcoded DEGOOG_SETTINGS_PATH 
 
 exports[`route shape invariants the mounted surface totals stay put 1`] = `
 {
-  "totalHandlers": 310,
-  "unique": 250,
+  "totalHandlers": 317,
+  "unique": 254,
 }
 `;

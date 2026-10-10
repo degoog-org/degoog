@@ -3,6 +3,8 @@ import { getBase } from "../../utils/net/base-url";
 import type { ButtonStateHandler } from "../../types/settings-server";
 import { setIndexerNavVisible } from "../indexer/nav";
 import { initProxyTest } from "./proxy-test";
+import { bindProxyPings } from "./proxies/proxy-pings";
+import { initProxyList } from "./proxies/proxy-state";
 import { el } from "./fields";
 import { scoreRowTemplate } from "./domain-score";
 import { initHoneypot } from "./honeypot";
@@ -12,12 +14,14 @@ import {
   injectFieldSaveBtns,
 } from "./auto-save";
 import { ServerContent } from "./render/server-content";
+import { initSectionAccordions } from "./accordions";
 import { initBackupControls } from "./backup";
 import { initApiKeyControls, loadApiKey } from "./controls/api-key";
 import { loadServerSettings } from "./controls/load-settings";
 import { initPresetControls } from "./controls/preset-controls";
 import { bindRestartButton, syncRestartPending } from "./controls/restart";
-import { bindToggles } from "./controls/toggle-wraps";
+import { bindDependentPanels } from "./controls/dependent-panels";
+import { syncValkeyAlert } from "./controls/valkey-status";
 
 const t = window.scopedT("core");
 
@@ -25,15 +29,20 @@ export async function initServerTab(
   getToken: () => string | null,
 ): Promise<void> {
   const container = document.getElementById("server-content");
-  if (container) render(<ServerContent />, container);
+  if (container) {
+    render(<ServerContent />, container);
+    initSectionAccordions(container);
+  }
 
   bindRestartButton(getToken);
   void syncRestartPending(getToken);
+  void syncValkeyAlert(getToken);
   window.addEventListener("settings-tab-changed", (e) => {
-    if ((e as CustomEvent<string>).detail === "server")
-      void syncRestartPending(getToken);
+    if ((e as CustomEvent<string>).detail !== "server") return;
+    void syncRestartPending(getToken);
+    void syncValkeyAlert(getToken);
   });
-  bindToggles();
+  bindDependentPanels();
 
   document
     .getElementById("settings-domain-score-add")
@@ -43,8 +52,10 @@ export async function initServerTab(
     });
 
   if (el("proxy-enabled")) initProxyTest(getToken);
+  initProxyList(getToken);
 
   await loadServerSettings(getToken);
+  bindProxyPings(container);
 
   await loadApiKey(getToken);
 

@@ -1,7 +1,8 @@
-import { FIELDSET } from "../classes";
-import { SectionDesc } from "../section-desc";
+import { SettingGroup } from "../../../shared/rows/setting-group";
+import { SettingSwitchRow } from "../../../shared/rows/setting-switch-row";
 import { ServerSection } from "../server-section";
-import { ServerToggle } from "../server-toggle";
+
+const t = window.scopedT("core");
 
 export const IndexerSection = (): JSX.Element => (
   <ServerSection
@@ -10,13 +11,13 @@ export const IndexerSection = (): JSX.Element => (
     icon="fa-solid fa-database"
     desc="settings-page.server.indexer-desc"
   >
-    <fieldset class={FIELDSET}>
-      <ServerToggle
+    <SettingGroup>
+      <SettingSwitchRow
         id="settings-degoog-indexer-enabled"
-        label="settings-page.server.indexer-enable"
-        aria="settings-page.server.indexer-enable-aria"
+        label={t("settings-page.server.indexer-enable")}
+        desc={t("settings-page.server.indexer-enable-desc")}
+        main={true}
       />
-      <SectionDesc k="settings-page.server.indexer-enable-desc" />
-    </fieldset>
+    </SettingGroup>
   </ServerSection>
 );

@@ -38,6 +38,7 @@ let defaultBangOn = true;
 type EngineContext = Parameters<SearchEngine["executeSearch"]>[3];
 
 let seen: { query: string; time: TimeFilter; context?: EngineContext }[] = [];
+let preferredTypes: (string | undefined)[] = [];
 
 const ENGINE_ID = "fake-images";
 
@@ -117,7 +118,10 @@ beforeAll(async () => {
     ...catalogReal,
     getDefaultEngineConfig: () => ({ [ENGINE_ID]: true }),
     getDefaultEngineBangConfig: () => ({ [ENGINE_ID]: defaultBangOn }),
-    getEngineSearchType: async () => "images",
+    getEngineSearchType: async (_id: string, preferred?: string) => {
+      preferredTypes.push(preferred);
+      return "images";
+    },
     getEnginesForCustomType: async () => active,
     getActiveWebEngines: async () => active,
     getEngineMap: () => ({ [ENGINE_ID]: fakeEngine }),
@@ -135,6 +139,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   seen = [];
+  preferredTypes = [];
   defaultBangOn = true;
   await writeSettings();
 });
@@ -167,6 +172,12 @@ describe("GET /api/command engine bang", () => {
     expect(new URL(r.url).hostname).toBe("redlib.example.com");
     expect(r.url).not.toContain("utm_source");
     expect(r.title).toBe("dog");
+  });
+
+  test("asks for the web tab when the request carries no type", async () => {
+    const res = await bang();
+    expect(res.status).toBe(200);
+    expect(preferredTypes).toEqual(["web"]);
   });
 
   test("forwards language, time and image filters to the engine", async () => {

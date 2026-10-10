@@ -56,6 +56,7 @@ const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const PUBLIC_MUTATIONS = new Set([
   "POST /api/search",
   "POST /api/search/retry",
+  "POST /api/search/stream",
   "POST /api/suggest",
   "POST /api/slots",
   "POST /api/slots/glance",

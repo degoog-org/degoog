@@ -17,6 +17,7 @@ import {
   updateSearx,
   withSearxLock,
 } from "./searx/install";
+import { addSearx } from "./searx/add";
 import { loadSearxCompatibilityEngines } from "./searx";
 import {
   installFourGet,
@@ -38,16 +39,20 @@ export interface CompatEntry {
   source?: "plugin" | "builtin";
   compatibilityLayer?: CompatLayerId;
   filters?: EngineFilters;
+  regions?: string[];
 }
 
 export interface CompatLayerDef extends CompatLayerInfo {
   loadEngines: () => Promise<CompatEntry[]>;
   listItems: () => Promise<CompatCatalogItem[]>;
   install: (code: string) => Promise<void>;
+  add?: (source: string) => Promise<string>;
   update: (code: string) => Promise<void>;
   uninstall: (code: string) => Promise<void>;
   lock: <T>(task: () => Promise<T>) => Promise<T>;
 }
+
+const SEARX_CUSTOM_NOTE = "custom";
 
 const SEARX_SETTING_KEY = "searxCompatEnabled";
 const FOURGET_SETTING_KEY = "fourgetCompatEnabled";
@@ -59,7 +64,7 @@ const _searxItems = async (): Promise<CompatCatalogItem[]> =>
     types: [...item.types],
     site: item.site,
     deps: item.deps ? [...item.deps] : undefined,
-    notes: [],
+    notes: item.custom ? [SEARX_CUSTOM_NOTE] : [],
     installed: item.installed,
     missingDeps: [...item.missingDeps],
     runtime: item.libs.map((lib) => ({
@@ -85,6 +90,7 @@ export const COMPAT_LAYERS: readonly CompatLayerDef[] = Object.freeze([
     loadEngines: loadSearxCompatibilityEngines,
     listItems: _withFavicons(_searxItems),
     install: installSearx,
+    add: addSearx,
     update: updateSearx,
     uninstall: uninstallSearx,
     lock: withSearxLock,

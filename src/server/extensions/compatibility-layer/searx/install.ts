@@ -12,23 +12,31 @@ import {
   catalogEntry,
   dependants,
   engineLibs,
+  isCuratedEngine,
   isSupportFile,
+  isSupportedEngine,
 } from "./catalog";
+import { customEntries, customEntry, dropCustomEntry } from "./custom";
 import type { SearxCatalogItem, SearxLibStatus } from "./catalog-types";
-import { searxEnginesDir } from "./paths";
+import { searxEngineId, searxEnginesDir } from "./paths";
+import { purgeEngineSettings } from "../../engines/engine-purge";
+import { TRAITS_SUFFIX } from "./traits";
 import { LIB_PACKAGES, missingPythonLibs, type PythonLib } from "./python-deps";
 
 const NS = "searx-install";
 const PYCACHE_DIR = "__pycache__";
 const DOWNLOAD_TIMEOUT_MS = 20_000;
-const TRAITS_SUFFIX = ".traits.json";
 const SHORTEST_ALIAS = 4;
 
 export const withSearxLock = createMutex();
 
 const _enginePath = (code: string): string => join(resolve(searxEnginesDir()), `${code}.py`);
 
-const _isInstalled = (code: string): boolean => existsSync(_enginePath(code));
+export const isSearxInstalled = (code: string): boolean => existsSync(_enginePath(code));
+
+const _isInstalled = isSearxInstalled;
+
+export const searxEnginePath = _enginePath;
 
 const _known = (code: string): string => {
   const entry = catalogEntry(code);
@@ -47,8 +55,15 @@ const _dropCache = async (code: string): Promise<void> => {
   }
 };
 
-const _download = async (code: string): Promise<string> => {
-  const url = `${SEARX_SOURCE_BASE_URL}/${code}.py`;
+export const upstreamSearxUrl = (code: string): string => `${SEARX_SOURCE_BASE_URL}/${code}.py`;
+
+const _fileUrl = (file: string, owner: string): string => {
+  const custom = customEntry(owner);
+  if (!custom || isCuratedEngine(file) || isSupportFile(file)) return upstreamSearxUrl(file);
+  return file === owner ? custom.source : new URL(`${file}.py`, custom.source).href;
+};
+
+export const downloadSearxSource = async (url: string): Promise<string> => {
   const resp = await fetch(url, { signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS) });
   if (!resp.ok) throw new Error(`Download failed with HTTP ${resp.status}`);
   const source = await resp.text();
@@ -59,11 +74,14 @@ const _download = async (code: string): Promise<string> => {
 const _missingDeps = (code: string): string[] =>
   catalogDeps(code).filter((dep) => !_isInstalled(dep));
 
-const _fetchFile = async (code: string, dir: string): Promise<void> => {
-  const source = await _download(code);
-  await mkdir(dir, { recursive: true });
+export const writeSearxFile = async (code: string, source: string): Promise<void> => {
+  await mkdir(resolve(searxEnginesDir()), { recursive: true });
   await writeFileAtomic(_enginePath(code), source);
   await _dropCache(code);
+};
+
+const _fetchFile = async (code: string, url: string): Promise<void> => {
+  await writeSearxFile(code, await downloadSearxSource(url));
 };
 
 const _traitsPath = (code: string): string =>
@@ -101,7 +119,7 @@ const _saveTraits = async (code: string, book: Record<string, unknown>): Promise
   await writeFileAtomic(_traitsPath(code), JSON.stringify(entry ?? {}));
 };
 
-const _pullTraits = async (codes: readonly string[]): Promise<void> => {
+export const pullSearxTraits = async (codes: readonly string[]): Promise<void> => {
   if (codes.length === 0) return;
   try {
     const book = await _traitsBook();
@@ -116,7 +134,7 @@ const _pullTraits = async (codes: readonly string[]): Promise<void> => {
 const _orphanDeps = (code: string): string[] =>
   catalogDeps(code).filter(
     (dep) =>
-      isSupportFile(dep) &&
+      (isSupportFile(dep) || !isSupportedEngine(dep)) &&
       _isInstalled(dep) &&
       !dependants(dep).some((other) => other !== code && _isInstalled(other)),
   );
@@ -130,7 +148,8 @@ const _libStatus = (code: string, missing: readonly PythonLib[]): SearxLibStatus
 
 export const listSearxItems = async (): Promise<SearxCatalogItem[]> => {
   const missing = await missingPythonLibs();
-  return SEARX_CATALOG.map((entry) => ({
+  const custom = customEntries().filter((entry) => !isCuratedEngine(entry.code));
+  return [...SEARX_CATALOG, ...custom].map((entry) => ({
     code: entry.code,
     name: entry.name,
     types: entry.types,
@@ -139,6 +158,7 @@ export const listSearxItems = async (): Promise<SearxCatalogItem[]> => {
     installed: _isInstalled(entry.code),
     missingDeps: _missingDeps(entry.code),
     libs: _libStatus(entry.code, missing),
+    custom: !isCuratedEngine(entry.code),
   }));
 };
 
@@ -147,10 +167,9 @@ const _pull = async (
   queue: string[],
   verb: string,
 ): Promise<void> => {
-  const dir = resolve(searxEnginesDir());
   try {
-    for (const file of queue) await _fetchFile(file, dir);
-    await _pullTraits(queue);
+    for (const file of queue) await _fetchFile(file, _fileUrl(file, engine));
+    await pullSearxTraits(queue);
     logger.info(NS, `${verb} SearX engine ${engine} (${queue.join(", ")})`);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -171,9 +190,21 @@ export const updateSearx = async (code: string): Promise<void> => {
   await _pull(engine, [...catalogDeps(engine), engine], "updated");
 };
 
+export const removeSearxFiles = async (codes: readonly string[]): Promise<void> => {
+  for (const file of codes) {
+    await unlink(_enginePath(file)).catch(() => undefined);
+    await unlink(_traitsPath(file)).catch(() => undefined);
+    await _dropCache(file);
+  }
+};
+
 export const uninstallSearx = async (code: string): Promise<void> => {
   const engine = _known(code);
-  if (!_isInstalled(engine)) return;
+  if (!_isInstalled(engine)) {
+    await dropCustomEntry(engine);
+    await purgeEngineSettings([searxEngineId(engine)]);
+    return;
+  }
   const queue = [engine, ..._orphanDeps(engine)];
   try {
     for (const file of queue) {
@@ -181,6 +212,8 @@ export const uninstallSearx = async (code: string): Promise<void> => {
       await unlink(_traitsPath(file)).catch(() => undefined);
       await _dropCache(file);
     }
+    await dropCustomEntry(engine);
+    await purgeEngineSettings(queue.map(searxEngineId));
     logger.info(NS, `uninstalled SearX engine ${engine} (${queue.join(", ")})`);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

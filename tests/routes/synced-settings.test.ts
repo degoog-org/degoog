@@ -50,6 +50,13 @@ describe("utils/synced-settings", () => {
     });
   });
 
+  test("a search region default keeps a country code or no region and drops anything else", async () => {
+    expect(await writeSyncedDefaults({ search_region: "GB" })).toEqual({ search_region: "GB" });
+    expect(await writeSyncedDefaults({ search_region: "" })).toEqual({ search_region: "" });
+    expect(await writeSyncedDefaults({ search_region: "gb" })).toEqual({});
+    expect(await writeSyncedDefaults({ search_region: true })).toEqual({});
+  });
+
   test("read recovers from a corrupt syncedDefaults value", async () => {
     await updateInstanceSettings({ syncedDefaults: "{not json" });
     clearServerSettingsCache();

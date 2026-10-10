@@ -12,9 +12,12 @@ import {
 import { primeEngineHosts } from "./engine-hosts";
 import { manifestOf, type AnyEngineEntry, type PluginEntry } from "./entries";
 import { configureEngine } from "./engine-settings";
+import { extractRoutes } from "../plugin-routes/registry";
+import { coerceEngineInput } from "../../../shared/engine-input";
 import {
   clearTypeCache,
   coerceFilters,
+  coerceRegions,
   coerceTypeList,
   type TypeFn,
 } from "./search-types";
@@ -67,6 +70,9 @@ const engineRegistry = createRegistry<PluginEntry>({
       : undefined;
     const declared = isFn ? [] : coerceTypeList(mod.type);
     if (isPluginManifest(mod.plugin)) instance.pluginManifest = mod.plugin;
+    const routes = extractRoutes(
+      instance.routes ? { routes: instance.routes } : mod,
+    );
     return {
       id: "",
       displayName: instance.name,
@@ -76,13 +82,18 @@ const engineRegistry = createRegistry<PluginEntry>({
         typeof mod.description === "string" ? mod.description : undefined,
       site: typeof mod.site === "string" ? mod.site : undefined,
       filters: coerceFilters(mod.filters),
+      regions: coerceRegions(mod.regions),
+      input: coerceEngineInput(mod.input),
       instance,
+      routes: routes.length > 0 ? routes : undefined,
     };
   },
   onLoad: async (entry, { entryPath, canonicalId, folderName, source }) => {
     entry.id = canonicalId ?? `${folderName}-engine`;
     entry.source = source;
     entry.instance.t = await bootCircuitFromPath(entryPath);
+    entry.folder = folderName;
+    for (const route of entry.routes ?? []) route.t = entry.instance.t;
     trackManifestId(entry);
     await configureEngine(entry);
   },

@@ -51,6 +51,28 @@ const _kvKey = (namespace: string, key: string): string =>
 
 export const isValkeyEnabled = (): boolean => _enabled;
 
+export const VALKEY_STATUS = {
+  OFF: "off",
+  CONNECTED: "connected",
+  UNREACHABLE: "unreachable",
+} as const;
+
+export type ValkeyStatus = (typeof VALKEY_STATUS)[keyof typeof VALKEY_STATUS];
+
+const READY_STATUS = "ready";
+
+export const getValkeyStatus = (): ValkeyStatus => {
+  if (!process.env[VALKEY_URL_ENV]) return VALKEY_STATUS.OFF;
+  if (
+    !_enabled ||
+    _publisher?.status !== READY_STATUS ||
+    _subscriber?.status !== READY_STATUS
+  ) {
+    return VALKEY_STATUS.UNREACHABLE;
+  }
+  return VALKEY_STATUS.CONNECTED;
+};
+
 export const isOwnEvent = (payload: InvalidatePayload): boolean =>
   payload.origin === PROCESS_ORIGIN;
 

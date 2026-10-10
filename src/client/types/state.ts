@@ -20,6 +20,7 @@ export interface AppState {
   customDateFrom: string;
   customDateTo: string;
   currentLanguage: string;
+  currentRegion: string;
   mediaLoading: boolean;
   currentBangQuery: string;
   openInNewTab: boolean;
@@ -33,4 +34,5 @@ export interface AppState {
   isInitialLoad: boolean;
   imageFilter: ImageFilter;
   searchSeq: number;
+  settledSeq: number;
 }

@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import { getBasePath } from "../utils/net/base-url";
 import { logger } from "../utils/logger";
+import { REGION_PARAM } from "../../shared/region";
 
 const BASE_PATH = getBasePath();
 
@@ -15,6 +16,7 @@ export interface NojsQuery {
   page?: number;
   time?: string;
   lang?: string;
+  region?: string;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -54,6 +56,7 @@ export const searchParams = (query: NojsQuery): URLSearchParams => {
   if (query.page && query.page > 1) params.set("page", String(query.page));
   if (query.time && query.time !== "any") params.set("time", query.time);
   if (query.lang) params.set("lang", query.lang);
+  if (query.region) params.set(REGION_PARAM, query.region);
   if (query.dateFrom) params.set("dateFrom", query.dateFrom);
   if (query.dateTo) params.set("dateTo", query.dateTo);
   return params;

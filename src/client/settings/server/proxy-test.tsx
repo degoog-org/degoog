@@ -1,74 +1,50 @@
 import { render } from "../../../shared/ui/tribute/dom";
-import { ProxyTestMessage } from "./proxy-test-message";
+import { ProxyTestReport } from "./proxy-test-message";
+import {
+  applyProxyResults,
+  currentProxyRows,
+  markProxiesPending,
+  PROXY_PING_BATCH,
+} from "./proxies/proxy-state";
 import { getBase } from "../../utils/net/base-url";
 import { jsonHeaders } from "../../utils/net/request";
-import type { ProxyTestResult } from "../../types/settings-proxy";
+import type { ProxyRow, ProxyTestResult } from "../../types/settings-proxy";
 
 const t = window.scopedT("core");
 
-function renderResult(el: HTMLElement, data: ProxyTestResult): void {
+const _reportClass = (data: ProxyTestResult): string => {
+  const working = data.proxies.filter((p) => p.ok);
+  if (working.length === 0) return "proxy-test-result--error";
+  const leaking = working.some((p) => p.ip === data.directIp);
+  return leaking || working.length < data.proxies.length
+    ? "proxy-test-result--warn"
+    : "proxy-test-result--ok";
+};
+
+function renderResult(el: HTMLElement, data: ProxyTestResult, rows: ProxyRow[]): void {
   if (!data.enabled) {
     el.className = "proxy-test-result proxy-test-result--warn";
     el.textContent = t("settings-page.proxy-test.not-enabled");
     return;
   }
 
-  if (!data.directIp && !data.proxyIp) {
+  if (!data.directIp && !data.proxies.some((p) => p.ok)) {
     el.className = "proxy-test-result proxy-test-result--error";
     el.textContent = t("settings-page.proxy-test.ip-unreachable");
     return;
   }
 
-  if (!data.proxyIp) {
-    el.className = "proxy-test-result proxy-test-result--error";
-    const dip = data.directIp ?? "";
-    render(
-      <ProxyTestMessage
-        title={t("settings-page.proxy-test.unreachable-title")}
-        detail={t("settings-page.proxy-test.unreachable-detail", {
-          directIp: dip,
-        })}
-        hint={t("settings-page.proxy-test.unreachable-hint")}
-        breakAfterTitle={false}
-      />,
-      el,
-    );
-    return;
-  }
-
-  if (data.match) {
-    el.className = "proxy-test-result proxy-test-result--warn";
-    const dip = data.directIp ?? "";
-    const pip = data.proxyIp ?? "";
-    render(
-      <ProxyTestMessage
-        title={t("settings-page.proxy-test.match-title")}
-        detail={t("settings-page.proxy-test.match-detail", {
-          directIp: dip,
-          proxyIp: pip,
-        })}
-        hint={t("settings-page.proxy-test.match-hint")}
-        breakAfterTitle={true}
-      />,
-      el,
-    );
-    return;
-  }
-
-  el.className = "proxy-test-result proxy-test-result--ok";
-  const dip = data.directIp ?? "";
-  const pip = data.proxyIp ?? "";
+  el.className = `proxy-test-result ${_reportClass(data)}`;
   render(
-    <ProxyTestMessage
-      title={t("settings-page.proxy-test.ok-title")}
-      detail={t("settings-page.proxy-test.ok-detail", {
-        directIp: dip,
-        proxyIp: pip,
-      })}
-      breakAfterTitle={true}
-    />,
+    <ProxyTestReport directIp={data.directIp} rows={rows} results={data.proxies} />,
     el,
   );
+}
+
+function _showError(el: HTMLElement, text: string): void {
+  el.className = "proxy-test-result proxy-test-result--error";
+  el.textContent = text;
+  el.hidden = false;
 }
 
 export function initProxyTest(getToken: () => string | null): void {
@@ -89,34 +65,38 @@ export function initProxyTest(getToken: () => string | null): void {
     const enabledEl = document.getElementById(
       "settings-proxy-enabled",
     ) as HTMLInputElement | null;
-    const urlsEl = document.getElementById(
-      "settings-proxy-urls",
-    ) as HTMLTextAreaElement | null;
+    const enabled = !!enabledEl?.checked;
+    const targets = enabled
+      ? markProxiesPending(
+          currentProxyRows()
+            .filter((row) => row.url.trim())
+            .slice(0, PROXY_PING_BATCH),
+        )
+      : [];
 
     try {
       const res = await fetch(`${getBase()}/api/settings/proxy-test`, {
         method: "POST",
         headers: jsonHeaders(getToken),
         body: JSON.stringify({
-          proxyEnabled: enabledEl?.checked ? "true" : "false",
-          proxyUrls: urlsEl?.value ?? "",
+          proxyEnabled: enabled ? "true" : "false",
+          proxyUrls: targets.map((row) => row.url).join("\n"),
         }),
       });
       if (!res.ok) {
-        resultEl.className = "proxy-test-result proxy-test-result--error";
-        resultEl.textContent = t("settings-page.proxy-test.server-error", {
+        applyProxyResults(targets, []);
+        _showError(resultEl, t("settings-page.proxy-test.server-error", {
           status: String(res.status),
-        });
-        resultEl.hidden = false;
+        }));
         return;
       }
       const data = (await res.json()) as ProxyTestResult;
-      renderResult(resultEl, data);
+      applyProxyResults(targets, data.proxies, data.directIp);
+      renderResult(resultEl, data, targets);
       resultEl.hidden = false;
     } catch {
-      resultEl.className = "proxy-test-result proxy-test-result--error";
-      resultEl.textContent = t("settings-page.proxy-test.request-failed");
-      resultEl.hidden = false;
+      applyProxyResults(targets, []);
+      _showError(resultEl, t("settings-page.proxy-test.request-failed"));
     } finally {
       btn.disabled = false;
       btn.textContent = labelTest;

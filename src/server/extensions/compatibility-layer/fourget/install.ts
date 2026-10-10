@@ -15,7 +15,8 @@ import {
   sharedUrl,
 } from "./catalog";
 import { isHttpRedirect } from "./follow";
-import { scrapersDir, sharedLibDir, stagingRoot } from "./paths";
+import { fourgetEngineId, scrapersDir, sharedLibDir, stagingRoot } from "./paths";
+import { purgeEngineSettings } from "../../engines/engine-purge";
 import { EXT_PACKAGES, phpStatus } from "./php-runtime";
 
 const NS = "4get-compat";
@@ -182,6 +183,7 @@ export const uninstallFourGet = async (code: string): Promise<void> => {
       await unlink(_libPath(lib));
       await _dropStaged(lib);
     }
+    await purgeEngineSettings([fourgetEngineId(scraper)]);
     const also = orphans.length > 0 ? ` (and ${orphans.join(", ")})` : "";
     logger.info(NS, `uninstalled 4get scraper ${scraper}${also}`);
   } catch (err) {

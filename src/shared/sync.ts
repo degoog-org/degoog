@@ -1,4 +1,5 @@
 import { isOriginDisplay } from "./engine-origins";
+import { isRegion } from "./region";
 
 export const ENGINES_KEY = "engines";
 export const ENGINE_BANGS_KEY = "engine_bangs";
@@ -14,6 +15,7 @@ export const CENTERED_MODE = "centered_mode";
 export const HIDE_URL_PARAMS = "hide_url_params";
 export const SHOW_RESULT_DATES = "show_result_dates";
 export const ENGINE_ORIGIN_DISPLAY = "engine_origin_display";
+export const REGION_KEY = "search_region";
 export const TAB_ORDER_SAVED = "tab-order-saved";
 
 const GENERAL_SYNC_KEYS = [
@@ -28,6 +30,7 @@ const GENERAL_SYNC_KEYS = [
   HIDE_URL_PARAMS,
   SHOW_RESULT_DATES,
   ENGINE_ORIGIN_DISPLAY,
+  REGION_KEY,
 ] as const;
 
 export const ENGINE_SYNC_KEYS = [ENGINES_KEY, ENGINE_BANGS_KEY] as const;
@@ -47,6 +50,7 @@ const isEngineRecord = (v: unknown): boolean =>
 export const isValidSyncValue = (key: string, value: unknown): boolean => {
   if (key === THEME_KEY) return isThemeValue(value);
   if (key === ENGINE_ORIGIN_DISPLAY) return isOriginDisplay(value);
+  if (key === REGION_KEY) return value === "" || isRegion(value);
   if (key === ENGINES_KEY || key === ENGINE_BANGS_KEY)
     return isEngineRecord(value);
   if ((GENERAL_SYNC_KEYS as readonly string[]).includes(key))

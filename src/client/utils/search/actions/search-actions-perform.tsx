@@ -1,4 +1,5 @@
 import { clear, render } from "../../../../shared/ui/tribute/dom";
+import { announceSettled } from "../../../modules/renderer/media/result-ranking";
 import { LoadingDots } from "../../../../shared/ui/components/feedback/loading-dots";
 import { NoResults } from "../../../../shared/ui/components/feedback/no-results";
 import { PaginationWrap } from "../../pagination/pagination-wrap";
@@ -28,6 +29,10 @@ import {
   type SearchResponse,
 } from "../../../../shared/search-types";
 import { abortAcReq, hideAcDropdown } from "../../autocomplete/autocomplete";
+import {
+  beginImageQuery,
+  currentSearchImage,
+} from "../../../modules/search-image/search-image";
 import { triggerUovadipasqua } from "../../app/uovadipasqua";
 import {
   enabledIds,
@@ -48,8 +53,7 @@ import {
   abortStreamingSearch,
   performStreamingSearch,
 } from "../streaming/streaming-search";
-import { buildSearchBody, buildSearchUrl, fetchCommand, fetchSearch } from "../../net/url";
-import { searchAuthHeaders, appendSearchAuthParams } from "../../net/request";
+import { fetchCommand, fetchSearch } from "../../net/url";
 import { getBase } from "../../net/base-url";
 import { onWindowEvent } from "../../dom/window-event";
 import { fetchStreamingConfig } from "../streaming/streaming-config";
@@ -94,10 +98,12 @@ export async function performSearch(
 ): Promise<void> {
   const restorePage = takeRestoreInfinitePage();
   const resolvedType = type || state.currentType || "web";
-  if (!query.trim()) return;
+  const image = currentSearchImage();
+  if (!query.trim() && !image) return;
   destroyMediaObserver();
   teardownInfinite();
   const seq = beginSearch();
+  beginImageQuery();
 
   void import("../../../modules/filters/image-filters").then(
     ({ syncImgFilters }) => syncImgFilters(resolvedType),
@@ -106,14 +112,14 @@ export async function performSearch(
 
   const isInit = state.isInitialLoad;
 
-  if (query.trim().startsWith("!") || /\s!\S+$/.test(query.trim())) {
+  if (!image && (query.trim().startsWith("!") || /\s!\S+$/.test(query.trim()))) {
     state.isInitialLoad = false;
     state.currentQuery = query;
     return _performBangCommand(query, resolvedType, page || 1, isInit);
   }
 
   const prefixMatch = query.trim().match(/^(\w+):(.+)$/);
-  if (prefixMatch && !query.trim().startsWith("http")) {
+  if (!image && prefixMatch && !query.trim().startsWith("http")) {
     const prefix = prefixMatch[1].toLowerCase();
     const actualQuery = prefixMatch[2].trim();
     if (actualQuery) {
@@ -127,14 +133,14 @@ export async function performSearch(
     }
   }
 
-  if (resolvedType.startsWith("tab:")) {
+  if (!image && resolvedType.startsWith("tab:")) {
     const { performTabSearch } = await import("../../../modules/tabs/tab-search");
     return performTabSearch(query, resolvedType.slice(4), page);
   }
 
   state.isInitialLoad = false;
 
-  const commands = await _fetchCommands();
+  const commands = image ? [] : await _fetchCommands();
   if (!isCurrentSearch(seq)) return;
   const naturalBangQuery = commands.length
     ? getNaturalLanguageBangQuery(query, commands)
@@ -144,7 +150,7 @@ export async function performSearch(
   if (!isCurrentSearch(seq)) return;
   if (
     !naturalBangQuery &&
-    !state.postMethodEnabled &&
+    (!state.postMethodEnabled || image) &&
     (!page || page === 1) &&
     streamingConfig.enabled &&
     !streamingConfig.disabledTypes.includes(resolvedType)
@@ -172,7 +178,6 @@ export async function performSearch(
 
   const engines = await getEngines();
   if (!isCurrentSearch(seq)) return;
-  const url = buildSearchUrl(query, engines, resolvedType, resolvedPage);
 
   prepareResultsUi(query, resolvedType);
   loadSidebarSuggestions(query, resolvedType, (q) => void performSearch(q));
@@ -194,18 +199,7 @@ export async function performSearch(
   const resultsList = document.getElementById("results-list");
 
   try {
-    const res = state.postMethodEnabled
-      ? await fetch(`${getBase()}/api/search`, {
-          method: "POST",
-          body: JSON.stringify(
-            buildSearchBody(query, engines, resolvedType, resolvedPage),
-          ),
-          headers: {
-            "Content-Type": "application/json",
-            ...searchAuthHeaders(),
-          },
-        })
-      : await fetch(appendSearchAuthParams(url));
+    const res = await fetchSearch(query, engines, resolvedType, resolvedPage);
     if (!isCurrentSearch(seq)) return;
 
     if (!res.ok) {
@@ -241,6 +235,8 @@ export async function performSearch(
         <NoResults>{t("search-templates.search-failed")}</NoResults>,
         resultsList,
       );
+  } finally {
+    announceSettled(seq);
   }
 }
 
@@ -304,6 +300,8 @@ async function _performSearchWithBang(
         <NoResults>{t("search-templates.search-failed")}</NoResults>,
         resultsList,
       );
+  } finally {
+    announceSettled(seq);
   }
 }
 
@@ -394,19 +392,24 @@ async function _performBangCommand(
       html?: string;
       totalPages?: number;
       page?: number;
+      searchType?: string;
     };
     if (!isCurrentSearch(seq)) return;
-    if (data.type === "engine") {
-      const engineType = data.primaryType ?? "web";
+    const commandType = data.searchType ?? "";
+    if (data.type === "engine" || Array.isArray(data.results)) {
+      const engineType =
+        data.type === "engine" ? (data.primaryType ?? "web") : commandType || "web";
       const isMedia = isImageSearchType(engineType);
       state.currentResults = data.results ?? [];
       state.currentData = data as unknown as SearchResponse;
       state.currentType = engineType;
       state.lastPage = declaredPages(data.totalPages);
-      state.imagePage = 1;
-      state.imageLastPage = MAX_PAGE;
-      state.videoPage = 1;
-      state.videoLastPage = MAX_PAGE;
+      const mediaLastPage =
+        data.type === "engine" ? MAX_PAGE : Math.max(1, data.totalPages ?? 1);
+      state.imagePage = page;
+      state.imageLastPage = mediaLastPage;
+      state.videoPage = page;
+      state.videoLastPage = mediaLastPage;
       destroyMediaObserver();
       if (engineType !== requestedType) {
         history.replaceState(
@@ -416,7 +419,11 @@ async function _performBangCommand(
         );
       }
       setActiveTab(engineType);
-      setTabsForBang(data.searchTypes?.length ? data.searchTypes : [engineType]);
+      setTabsForBang(
+        data.type === "engine" && data.searchTypes?.length
+          ? data.searchTypes
+          : [engineType],
+      );
       if (isMedia) {
         const glanceElMedia = document.getElementById("at-a-glance");
         if (glanceElMedia) clear(glanceElMedia);
@@ -424,10 +431,13 @@ async function _performBangCommand(
         if (sidebarMedia) clear(sidebarMedia);
       }
       if (resultsMeta)
-        resultsMeta.textContent = t("search-templates.status.done", {
-          count: String(data.results?.length ?? 0),
-          time: ((data.totalTime ?? 0) / 1000).toFixed(2),
-        });
+        resultsMeta.textContent =
+          data.type === "engine"
+            ? t("search-templates.status.done", {
+                count: String(data.results?.length ?? 0),
+                time: ((data.totalTime ?? 0) / 1000).toFixed(2),
+              })
+            : (data.title ?? "");
       if (isMedia) renderImgEngines(data.engineTimings ?? []);
       state.currentPage = page;
       const infinite = (await fetchStreamingConfig()).infiniteScroll && !isMedia;
@@ -436,7 +446,21 @@ async function _performBangCommand(
       if (infinite) setupInfinite(engineType);
       return;
     }
-    setTabsForBang([]);
+    setTabsForBang(commandType ? [commandType] : []);
+    if (commandType) {
+      state.currentType = commandType;
+      setActiveTab(commandType);
+      document
+        .getElementById("results-layout")
+        ?.classList.toggle("media-mode", isImageSearchType(commandType));
+      if (commandType !== requestedType) {
+        history.replaceState(
+          { ...historyState, type: commandType },
+          "",
+          state.postMethodEnabled ? `${getBase()}/search` : bangUrl(commandType),
+        );
+      }
+    }
     if (resultsMeta) resultsMeta.textContent = data.title ?? "";
     if (resultsList) resultsList.innerHTML = data.html || "";
     runScriptsInContainer(resultsList);

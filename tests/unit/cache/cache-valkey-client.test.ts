@@ -8,6 +8,7 @@ type Listener = (...args: unknown[]) => void;
 interface FakeClient {
   listeners: Map<string, Listener[]>;
   disconnected: boolean;
+  status: string;
   on: (event: string, cb: Listener) => void;
   emit: (event: string, ...args: unknown[]) => void;
   subscribe: () => Promise<unknown>;
@@ -24,6 +25,7 @@ const makeClient = (): FakeClient => {
   const client: FakeClient = {
     listeners: new Map(),
     disconnected: false,
+    status: "ready",
     on: (event, cb) => {
       client.listeners.set(event, [...(client.listeners.get(event) ?? []), cb]);
     },
@@ -87,6 +89,33 @@ describe("utils/cache-valkey client", () => {
     expect(made).toHaveLength(2);
     expect(made.every((c) => c.disconnected)).toBe(true);
     expect(valkey.isValkeyEnabled()).toBe(false);
+    expect(valkey.getValkeyStatus()).toBe(valkey.VALKEY_STATUS.UNREACHABLE);
+  });
+
+  test("status follows the live connection", async () => {
+    await valkey.initValkey("instance-c");
+    expect(valkey.getValkeyStatus()).toBe(valkey.VALKEY_STATUS.CONNECTED);
+
+    made[0].status = "reconnecting";
+    expect(valkey.getValkeyStatus()).toBe(valkey.VALKEY_STATUS.UNREACHABLE);
+
+    made[0].status = "ready";
+    expect(valkey.getValkeyStatus()).toBe(valkey.VALKEY_STATUS.CONNECTED);
+
+    made[1].status = "reconnecting";
+    expect(valkey.getValkeyStatus()).toBe(valkey.VALKEY_STATUS.UNREACHABLE);
+
+    made[1].status = "ready";
+    expect(valkey.getValkeyStatus()).toBe(valkey.VALKEY_STATUS.CONNECTED);
+  });
+
+  test("status is off when no valkey url is set", () => {
+    delete process.env.DEGOOG_VALKEY_URL;
+    try {
+      expect(valkey.getValkeyStatus()).toBe(valkey.VALKEY_STATUS.OFF);
+    } finally {
+      process.env.DEGOOG_VALKEY_URL = "redis://fake:6379";
+    }
   });
 
   test("messages are validated before reaching handlers", async () => {

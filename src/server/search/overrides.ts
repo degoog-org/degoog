@@ -1,5 +1,6 @@
 import { runIntercepts } from "../utils/extension-support/run-interceptors";
 import type { SearchType, TimeFilter } from "../types/search";
+import type { InterceptorOverrides } from "../types/extension";
 
 interface ResolvedSearch {
   query: string;
@@ -14,7 +15,9 @@ export const resolveSearchOverrides = async (
   lang: string,
   timeFilter: TimeFilter,
 ): Promise<ResolvedSearch> => {
-  const { query, overrides } = await runIntercepts(origQuery, lang);
+  const { query, overrides } = origQuery.trim()
+    ? await runIntercepts(origQuery, lang)
+    : { query: origQuery, overrides: {} as InterceptorOverrides };
   return {
     query,
     type: (overrides.searchType ?? searchType) as SearchType,

@@ -4,6 +4,7 @@ import { bindCompatClicks } from "./compat-clicks";
 import { openCustomModal } from "../../../modules/modals/settings-modal/modal";
 import { confirmModal } from "../../../modules/modals/confirm-modal/confirm";
 import {
+  addCompat,
   CompatAction,
   CompatLayerId,
   fetchCompat,
@@ -188,6 +189,28 @@ export const openCompatModal = async (
     }
   };
 
+  const addEngine = async (
+    source: string,
+    btn: HTMLButtonElement,
+  ): Promise<void> => {
+    btn.disabled = true;
+    _say(t(`${KEY}compat-adding`));
+    try {
+      await addCompat(layer.id, source);
+      items = await fetchCompat(layer.id);
+      if (!live()) return;
+      if (addInput) addInput.value = "";
+      _paint(items, query, name, ui());
+      window.dispatchEvent(new CustomEvent("extensions-saved"));
+      _say(t(`${KEY}compat-added`, { layer: name }));
+    } catch (err) {
+      if (!live()) return;
+      _say(err instanceof Error ? err.message : String(err), true);
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
   const startInstall = async (
     code: string,
     btn: HTMLButtonElement,
@@ -196,6 +219,21 @@ export const openCompatModal = async (
     if (!(await _depsOkay(item, name))) return;
     if (!live()) return;
     await runAction(CompatAction.Install, code, btn);
+  };
+
+  const startUninstall = async (
+    code: string,
+    btn: HTMLButtonElement,
+  ): Promise<void> => {
+    const engine = items.find((entry) => entry.code === code)?.name ?? code;
+    const ok = await confirmModal({
+      title: t(`${KEY}compat-uninstall-title`, { engine }),
+      message: t(`${KEY}compat-uninstall-message`),
+      confirmLabel: t(`${KEY}compat-uninstall`),
+      danger: true,
+    });
+    if (!ok || !live()) return;
+    await runAction(CompatAction.Uninstall, code, btn);
   };
 
   bindCompatClicks(body, (event) => {
@@ -209,7 +247,17 @@ export const openCompatModal = async (
     if (update?.dataset.code)
       void runAction(CompatAction.Update, update.dataset.code, update);
     if (uninstall?.dataset.code)
-      void runAction(CompatAction.Uninstall, uninstall.dataset.code, uninstall);
+      void startUninstall(uninstall.dataset.code, uninstall);
+  });
+
+  const addForm = body.querySelector<HTMLFormElement>("#compat-add-form");
+  const addInput = body.querySelector<HTMLInputElement>("#compat-add-input");
+  const addBtn = body.querySelector<HTMLButtonElement>("#compat-add-btn");
+  addForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const source = addInput?.value.trim() ?? "";
+    if (!source || !addBtn || addBtn.disabled) return;
+    void addEngine(source, addBtn);
   });
 
   const search = body.querySelector<HTMLInputElement>("#compat-search-input");

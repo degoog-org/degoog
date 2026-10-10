@@ -212,6 +212,47 @@
   }
 }
 
+.ext-modal--confirm {
+  .ext-modal-body {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.55;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .ext-modal-footer {
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .degoog-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.25rem;
+    padding: 0 1rem;
+    border: 0;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .degoog-btn--secondary {
+    background: var(--bg);
+    color: var(--text-primary);
+
+    &:hover {
+      background: var(--bg-hover);
+    }
+  }
+}
+
 .ext-docs-body {
   overflow-y: auto;
   max-width: 100%;
@@ -258,17 +299,39 @@
   margin: 0;
 }
 
+.ext-modal-body,
+.ext-fieldset,
+.ext-advanced-body {
+  > :not([hidden]):not([data-type="info"]) ~ :not([hidden]):not([data-type="info"]) {
+    border-top: 2px solid var(--bg);
+    padding-top: $space-4;
+  }
+}
+
 .ext-field {
   display: flex;
   flex-direction: column;
   gap: $space-2;
 
+  > * {
+    order: 2;
+  }
+
+  > .ext-field-label,
+  > .ext-field-toggle-row {
+    order: 0;
+  }
+
+  > .ext-field-desc {
+    order: 1;
+    margin-top: -$space-1;
+  }
+
   &-label {
-    color: var(--text-secondary);
-    font-size: $font-size-small;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    color: var(--text-primary);
+    font-size: $font-size-base;
+    font-weight: 600;
+    line-height: 1.4;
   }
 
   &-toggle-row {
@@ -279,8 +342,21 @@
   }
 
   &-input {
-    background: var(--bg-hover);
-    box-shadow: inset 0 0 0 1px var(--border-light);
+    background: var(--bg);
+    box-shadow: none;
+    padding: $space-2 $space-3;
+    min-height: 2.375rem;
+    transition: box-shadow $transition-fast;
+
+    &:focus {
+      box-shadow: inset 0 0 0 2px var(--primary);
+    }
+
+    &:disabled {
+      color: var(--text-primary);
+      opacity: 1;
+      cursor: text;
+    }
 
     &--configured {
       color: var(--text-secondary);
@@ -296,7 +372,33 @@
   &-desc {
     color: var(--text-secondary);
     font-size: $font-size-small;
+    line-height: 1.55;
     margin: 0;
+
+    code {
+      font-size: 0.95em;
+      padding: 0 $space-1;
+      border-radius: $radius-xs;
+      background: var(--bg);
+    }
+
+    a {
+      color: var(--primary);
+    }
+  }
+
+  &[data-type="info"] {
+    padding: $space-3 $space-4;
+    border-radius: $radius-lg;
+    background: var(--bg);
+  }
+
+  &[data-type="info"] &-desc {
+    color: var(--text-primary);
+  }
+
+  &[data-type="info"] &-input {
+    background: var(--bg-light);
   }
 
   &-configured-note {
@@ -460,11 +562,9 @@
   }
 
   &-sub-label {
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: $font-size-small;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-weight: 600;
   }
 
   &-add {
@@ -639,15 +739,18 @@
   padding: $space-4;
   border: none;
   background: var(--bg);
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
+
+  .ext-field-input {
+    background: var(--bg-light);
+  }
 }
 
 .ext-fieldset-legend {
-  color: var(--text-secondary);
-  font-size: $font-size-small;
+  color: var(--text-primary);
+  font-size: $font-size-md;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  margin-bottom: $space-1;
   padding: 0;
 }
 
@@ -657,10 +760,13 @@
 }
 
 .ext-advanced-body {
-  margin-top: $space-3;
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  margin-top: $space-4;
 
-  .ext-field {
-    margin-bottom: 1em;
+  &[hidden] {
+    display: none;
   }
 }
 

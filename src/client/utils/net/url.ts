@@ -6,6 +6,11 @@ import { appendSearchAuthParams, searchAuthHeaders } from "./request";
 import { isImageSearchType } from "../../../shared/search-types";
 import { enabledIds, getEngineBangs, getEngines } from "../search/engines";
 import { ENGINE_BANGS_FIELD } from "../../../shared/sync";
+import { REGION_PARAM } from "../../../shared/region";
+import {
+  currentSearchImage,
+  withSearchImage,
+} from "../../modules/search-image/search-image";
 
 export const imgFilterRecord = (f: ImageFilter): Record<string, string> => {
   const r: Record<string, string> = {};
@@ -58,6 +63,9 @@ export const buildSearchParams = (
   if (state.currentLanguage) {
     params.set("lang", state.currentLanguage);
   }
+  if (state.currentRegion) {
+    params.set(REGION_PARAM, state.currentRegion);
+  }
   if (isImageSearchType(type)) {
     for (const [k, v] of Object.entries(imgFilterRecord(state.imageFilter))) {
       params.set(k, v);
@@ -95,6 +103,7 @@ export const buildSearchBody = (
     if (state.customDateTo) body.dateTo = state.customDateTo;
   }
   if (state.currentLanguage) body.lang = state.currentLanguage;
+  if (state.currentRegion) body.region = state.currentRegion;
   if (isImageSearchType(type)) {
     Object.assign(body, imgFilterRecord(state.imageFilter));
   }
@@ -115,8 +124,11 @@ export const fetchSearch = (
   type: string,
   page: number,
 ): Promise<Response> =>
-  state.postMethodEnabled
-    ? _postSearchJson("/api/search", buildSearchBody(query, engines, type, page))
+  state.postMethodEnabled || currentSearchImage()
+    ? _postSearchJson(
+        "/api/search",
+        withSearchImage(buildSearchBody(query, engines, type, page)),
+      )
     : fetch(appendSearchAuthParams(buildSearchUrl(query, engines, type, page)));
 
 export const fetchCommand = async (

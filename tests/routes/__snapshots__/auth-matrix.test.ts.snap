@@ -11,6 +11,7 @@ exports[`what an unauthenticated caller gets from every route commands unauthent
 exports[`what an unauthenticated caller gets from every route compat-engines unauthenticated responses are unchanged (nojs pinned off) 1`] = `
 [
   "GET /api/compat/:layer/engines -> 401",
+  "POST /api/compat/:layer/add -> 401",
   "POST /api/compat/:layer/install -> 401",
   "POST /api/compat/:layer/uninstall -> 401",
   "POST /api/compat/:layer/update -> 401",
@@ -137,6 +138,7 @@ exports[`what an unauthenticated caller gets from every route search-bar unauthe
 exports[`what an unauthenticated caller gets from every route search/stream unauthenticated responses are unchanged (nojs pinned off) 1`] = `
 [
   "GET /api/search/stream -> 400",
+  "POST /api/search/stream -> 400",
 ]
 `;
 
@@ -155,6 +157,7 @@ exports[`what an unauthenticated caller gets from every route settings unauthent
   "GET /api/settings/streaming -> 200",
   "GET /api/settings/tab-order -> 200",
   "GET /api/settings/update-check -> 401",
+  "GET /api/settings/valkey-status -> 401",
   "POST /api/settings/api-key/regenerate -> 401",
   "POST /api/settings/default-engines -> 401",
   "POST /api/settings/domain-action -> 401",
@@ -162,6 +165,7 @@ exports[`what an unauthenticated caller gets from every route settings unauthent
   "POST /api/settings/general -> 401",
   "POST /api/settings/honeypot/ban -> 401",
   "POST /api/settings/honeypot/unban -> 401",
+  "POST /api/settings/proxy-ping -> 401",
   "POST /api/settings/proxy-test -> 401",
   "POST /api/settings/restart -> 401",
   "POST /api/settings/shortcuts -> 401",

@@ -26,6 +26,9 @@ const _isOwnProxyUrl = (thumb: string): boolean =>
     return PROXY_PATHS.includes(path);
   });
 
+export const isOwnFaviconUrl = (url: string): boolean =>
+  _ownPrefixes().some((origin) => url.startsWith(`${origin}/api/proxy/favicon?`));
+
 const _signThumb = (thumb: string | undefined): string | undefined =>
   thumb && !_isOwnProxyUrl(thumb) ? buildSignedProxyUrl(thumb) : thumb;
 

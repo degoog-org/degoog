@@ -2,13 +2,22 @@ import { getBase } from "../../../utils/net/base-url";
 import { authHeaders } from "../../../utils/net/request";
 import type { ServerSettingsData } from "../../../types/settings-server";
 import { setIndexerNavVisible } from "../../indexer/nav";
-import { markOversized, oversizedMap } from "../../shared/oversized";
+import { formatOversizedSize, markOversized, oversizedMap } from "../../shared/oversized";
+import { loadRedirectRows } from "../redirects/redirect-state";
 import { renderScoreRows } from "../domain-score";
+import { loadProxyRows } from "../proxies/proxy-state";
 import { el, setSelect, setToggle, setVal } from "../fields";
 import { setCurrentServerSettings } from "./preset-controls";
 import { initStreamingTypeChecks } from "./streaming-type-checks";
+import { bindEntryCount } from "../entry-count";
 
 const t = window.scopedT("core");
+
+const _banHours = (raw?: string): string | undefined => {
+  if (raw === undefined) return undefined;
+  const hours = parseInt(raw, 10);
+  return Number.isFinite(hours) ? String(hours) : "";
+};
 
 export async function loadServerSettings(
   getToken: () => string | null,
@@ -35,7 +44,10 @@ export async function loadServerSettings(
     };
 
     setToggle("proxy-enabled", data.proxyEnabled);
-    setVal("proxy-urls", data.proxyUrls);
+    loadProxyRows(data.proxyUrls ?? "");
+    setVal("proxy-cooldown-minutes", data.proxyCooldownMinutes);
+    setVal("proxy-cooldown-triggers", data.proxyCooldownTriggers);
+    setVal("proxy-host-groups", data.proxyHostGroups);
     setToggle("image-proxy-allow-local", data.imageProxyAllowLocal);
     setVal("image-proxy-allow-list", data.imageProxyAllowList);
     setToggle("block-client-leaks", data.blockClientLeaks);
@@ -65,13 +77,21 @@ export async function loadServerSettings(
 
     setToggle("domain-block-enabled", data.domainBlockEnabled);
     setListVal("domain-block-list", "domainBlockList", data.domainBlockList);
+    bindEntryCount("settings-domain-block-list", "settings-domain-block-count", (count) =>
+      t("settings-page.server.entry-count", { count }),
+    );
     setToggle("domain-block-ui-enabled", data.domainBlockUiEnabled);
 
     setToggle("domain-replace-enabled", data.domainReplaceEnabled);
-    setListVal(
-      "domain-replace-list",
-      "domainReplaceList",
-      data.domainReplaceList,
+    const replaceOversized = oversized.domainReplaceList;
+    loadRedirectRows(
+      data.domainReplaceList ?? "",
+      replaceOversized
+        ? t("settings-page.server.oversized", {
+            lines: replaceOversized.lines.toLocaleString(),
+            size: formatOversizedSize(replaceOversized.chars),
+          })
+        : null,
     );
     setToggle("domain-replace-ui-enabled", data.domainReplaceUiEnabled);
 
@@ -86,7 +106,7 @@ export async function loadServerSettings(
 
     setToggle("honeypot-enabled", data.honeypotEnabled ?? "true");
     setToggle("honeypot-css-check", data.honeypotCssCheck ?? "true");
-    setVal("honeypot-ban-duration", data.honeypotBanDuration);
+    setVal("honeypot-ban-duration", _banHours(data.honeypotBanDuration));
 
     setToggle("nojs-enabled", data.nojsEnabled);
     setToggle("nojs-css-check", data.nojsCssCheck);

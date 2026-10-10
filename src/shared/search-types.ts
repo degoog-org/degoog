@@ -21,7 +21,11 @@ export interface ScoredResult extends SearchResult {
   idx?: IndexRelation;
   seal?: string;
   favicon?: string;
+  visual?: boolean;
 }
+
+export const compareScored = (a: ScoredResult, b: ScoredResult): number =>
+  Number(!!b.visual) - Number(!!a.visual) || b.score - a.score;
 
 export interface EngineTiming {
   name: string;
@@ -64,6 +68,8 @@ export interface SearchResponse {
   relatedSearches: string[];
   slotPanels?: SlotPanel[];
   totalPages?: number;
+  imageQuery?: string;
+  imageQueryError?: string;
 }
 
 export const DEFAULT_SEARCH_TYPE = "web";

@@ -8,11 +8,17 @@ import {
 // Server reasons read `plugin "Name" was installed`; this turns them into `Plugin - Name`.
 const REASON_RE = /^(\w+) "(.+)" was \w+$/;
 
-export const formatReason = (reason: string): string => {
+export const parseReason = (
+  reason: string,
+): { type: string; name: string } | null => {
   const parsed = REASON_RE.exec(reason);
+  return parsed ? { type: parsed[1], name: parsed[2] } : null;
+};
+
+export const formatReason = (reason: string): string => {
+  const parsed = parseReason(reason);
   if (!parsed) return reason;
-  const [, type, name] = parsed;
-  return `${type[0].toUpperCase()}${type.slice(1)} - ${name}`;
+  return `${parsed.type[0].toUpperCase()}${parsed.type.slice(1)} - ${parsed.name}`;
 };
 
 // Null means "unknown", so callers leave the restart hints hidden instead of guessing.

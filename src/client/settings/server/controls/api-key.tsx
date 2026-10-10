@@ -4,12 +4,21 @@ import { copyTextToClipboard } from "../../../utils/dom/clipboard";
 import { getBase } from "../../../utils/net/base-url";
 import { authHeaders } from "../../../utils/net/request";
 import type { ButtonStateHandler } from "../../../types/settings-server";
-import { API_KEY_COPY_ICON } from "../render/sections/api-key-section";
+import { API_KEY_COPY_ICON, API_KEY_HIDE_ICON, API_KEY_REVEAL_ICON } from "../render/sections/api-key-section";
 
 const t = window.scopedT("core");
 
 let _apiKey = "";
 let _keyRevealed = false;
+
+function _renderRevealButton(): void {
+  const btn = document.getElementById("settings-api-key-reveal");
+  if (!btn) return;
+  const label = t(_keyRevealed ? "settings-page.server.api-key-hide" : "settings-page.server.api-key-reveal");
+  render(<Icon name={_keyRevealed ? API_KEY_HIDE_ICON : API_KEY_REVEAL_ICON} />, btn);
+  btn.setAttribute("aria-label", label);
+  btn.dataset.tooltip = label;
+}
 
 function _renderApiKey(): void {
   const element = document.getElementById("settings-api-key-value");
@@ -28,27 +37,7 @@ export const initApiKeyControls = (
     ?.addEventListener("click", () => {
       _keyRevealed = !_keyRevealed;
       _renderApiKey();
-      const btn = document.getElementById("settings-api-key-reveal");
-      if (btn)
-        render(
-          <Icon
-            name={
-              _keyRevealed
-                ? "fa-solid fa-eye-slash fa-lg"
-                : "fa-solid fa-eye fa-lg"
-            }
-          />,
-          btn,
-        );
-      if (btn)
-        btn.setAttribute(
-          "aria-label",
-          t(
-            _keyRevealed
-              ? "settings-page.server.api-key-hide"
-              : "settings-page.server.api-key-reveal",
-          ),
-        );
+      _renderRevealButton();
     });
 
   document
@@ -78,9 +67,7 @@ export const initApiKeyControls = (
       _apiKey = data.key;
       _keyRevealed = false;
       _renderApiKey();
-      const revealBtn = document.getElementById("settings-api-key-reveal");
-      if (revealBtn)
-        revealBtn.textContent = t("settings-page.server.api-key-reveal");
+      _renderRevealButton();
     },
     "settings-page.server.api-key-regenerated",
     "settings-page.server.api-key-regenerate-failed",
@@ -104,7 +91,7 @@ export const loadApiKey = async (getToken: () => string | null): Promise<void> =
       _apiKey = apiKeyData.key;
       _renderApiKey();
       if (controls) controls.style.display = "";
-      if (toggles) toggles.style.display = "";
+      if (toggles) toggles.hidden = false;
     } else if (apiKeyRes.status === 403) {
       if (locked) locked.hidden = false;
     }

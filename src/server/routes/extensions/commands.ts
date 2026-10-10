@@ -4,6 +4,7 @@ import {
   matchBangCommand,
 } from "../../extensions/commands/registry";
 import { clampCommandPage } from "../../extensions/commands/command-page";
+import { normalizeCommandResults } from "../../extensions/commands/command-results";
 import { getEngineSearchTypes } from "../../extensions/engines/catalog";
 import { parseEngineBangs, planEngineBang } from "../../search/engine-bang";
 import { handleSearch } from "../../search/handlers";
@@ -44,6 +45,13 @@ type CommandRequest = {
   bangs: EngineConfig;
 };
 
+const SEARCH_TYPE_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
+
+const _commandSearchType = (value: unknown): string | undefined =>
+  typeof value === "string" && SEARCH_TYPE_RE.test(value.trim())
+    ? value.trim()
+    : undefined;
+
 const _runCommand = async (
   c: Context,
   { q, type, page: rawPage, search, bangs }: CommandRequest,
@@ -52,6 +60,7 @@ const _runCommand = async (
 
   const match = matchBangCommand(q);
   if (!match) return c.json({ error: "Unknown command" }, 404);
+  const requestedType = type?.trim().replace(/^tab:engine:/, "") || "web";
 
   if (match.type === "command") {
     if (await isDisabled(match.commandId)) {
@@ -69,7 +78,6 @@ const _runCommand = async (
     if (limitRes) return limitRes;
     const authRes = await guardApiKey(c, "apiKeySearchEnabled");
     if (authRes) return authRes;
-    const requestedType = type?.trim().replace(/^tab:engine:/, "") || undefined;
     const plan = await planEngineBang(match.engineId, bangs, requestedType);
     if (!plan) return c.json({ error: "This engine is disabled" }, 403);
     const searchTypes = await getEngineSearchTypes(match.engineId);
@@ -106,6 +114,7 @@ const _runCommand = async (
     result = await match.command.execute(match.args, {
       clientIp,
       page,
+      searchType: requestedType,
       signProxyUrl: buildSignedProxyUrl,
       engines: search.engines,
       bangs,
@@ -118,10 +127,12 @@ const _runCommand = async (
     "plugin",
     `${match.command.trigger} executed in ${Math.round(performance.now() - t0)}ms`,
   );
+  const results = normalizeCommandResults(result.results, match.command.name);
   return c.json({
     type: "command",
     trigger: match.command.trigger,
     title: result.title,
+    ...(results ? { results } : {}),
     html: applyFilter(
       match.command.t
         ? syncVortexSignal(result.html, match.command.t, language)
@@ -131,6 +142,7 @@ const _runCommand = async (
     action: result.action,
     page,
     totalPages: result.totalPages ?? 1,
+    searchType: _commandSearchType(result.searchType ?? match.command.searchType),
   });
 };
 

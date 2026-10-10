@@ -6,7 +6,6 @@ import type { SearchResult } from "../../../../shared/search-types";
 import type { SettingField } from "../../../../shared/setting-field";
 import { CompatLayerId } from "../../../../shared/compat-layers";
 import type { CompatEntry } from "../registry";
-import { makeExtID } from "../../../utils/extension-support/extension-id";
 import { logger } from "../../../utils/logger";
 import {
   asBoolean,
@@ -25,19 +24,21 @@ import {
   TIME_FILTER_RANGE,
 } from "../safe-search";
 import { scrubLog } from "../scrub-log";
-import { catalogEntry, isSupportFile, isSupportedEngine, SEARX_EXTRA_ENGINES_ENV } from "./catalog";
+import { catalogEntry, isHelperFile, isSupportedEngine, SEARX_EXTRA_ENGINES_ENV } from "./catalog";
 import {
   optionFields,
   overridesFrom,
   type SearxConfigField,
 } from "./engine-config";
 import { LIB_PACKAGES, missingPythonLibs } from "./python-deps";
-import { searxEnginesDir } from "./paths";
+import { searxEngineId, searxEnginesDir } from "./paths";
+import { traitRegions } from "./traits";
 
 interface DiscoverPayload {
   path: string;
   id: string;
   name: string;
+  site?: string;
   types: string[];
   paging?: boolean;
   maxPage?: number;
@@ -74,6 +75,8 @@ interface RequestPayload {
   headers?: Record<string, string>;
   cookies?: Record<string, string>;
   data?: string;
+  form?: unknown;
+  raise_for_httperror?: boolean;
 }
 
 interface ResponsePayload {
@@ -108,10 +111,11 @@ const _pythonSpec = (): RunnerSpec => ({
   label: "SearX",
 });
 
-const _runPython = <T>(payload: Record<string, unknown>, handlers: RpcHandlers = {}): Promise<T> =>
-  runBridge<T>(_pythonSpec(), runnerPath, payload, handlers);
-
-const _safeId = (name: string): string => makeExtID(`searx-${name}`, "engine");
+const _runPython = <T>(
+  payload: Record<string, unknown>,
+  handlers: RpcHandlers = {},
+  signal?: AbortSignal,
+): Promise<T> => runBridge<T>(_pythonSpec(), runnerPath, payload, handlers, signal);
 
 const _bridge = (engineId: string, context?: EngineContext): RpcHandlers => {
   const fetcher = (context?.fetch ?? fetch) as typeof fetch;
@@ -164,6 +168,11 @@ const _timeRange = (
   return TIME_FILTER_RANGE[timeFilter] ?? null;
 };
 
+const _locale = (context?: EngineContext): string =>
+  context?.region
+    ? `${context.lang || "en"}-${context.region}`
+    : (context?.lang ?? "all");
+
 const _defaultSafe = (types: string[]): SafeSearch =>
   types.some((type) => GUARDED_TYPES.includes(type.toLowerCase()))
     ? SafeSearch.Moderate
@@ -215,12 +224,13 @@ class SearxCompatEngine implements SearchEngine {
         query,
         page,
         timeFilter: timeRange,
-        locale: context?.lang ?? "all",
+        locale: _locale(context),
         safesearch,
         headers: browserHeaders(context),
         overrides: this.overrides,
       },
       bridge,
+      context?.signal,
     );
     if (!req.url || !/^https?:\/\//i.test(req.url)) {
       throw new Error(`${this.name} needs an instance URL configured before it can search`);
@@ -244,7 +254,7 @@ class SearxCompatEngine implements SearchEngine {
         query,
         page,
         timeFilter: timeRange,
-        locale: context?.lang ?? "all",
+        locale: _locale(context),
         safesearch,
         headers: browserHeaders(context),
         overrides: this.overrides,
@@ -252,6 +262,7 @@ class SearxCompatEngine implements SearchEngine {
         response,
       },
       bridge,
+      context?.signal,
     );
     return parsed.results;
   }
@@ -265,6 +276,23 @@ const _pythonHint = async (): Promise<void> => {
     NS,
     `missing python libs (${packages.join(", ")}), install them with "pip install ${packages.join(" ")}" and restart`,
   );
+};
+
+export interface SearxFileMeta {
+  name: string;
+  site?: string;
+  types: string[];
+  offline: boolean;
+}
+
+export const describeSearxFile = async (path: string): Promise<SearxFileMeta> => {
+  const meta = await _runPython<DiscoverPayload>({ action: "discover", path, overrides: {} });
+  return {
+    name: meta.name,
+    site: meta.site || undefined,
+    types: meta.types?.length ? meta.types : ["web"],
+    offline: meta.offline === true,
+  };
 };
 
 export const isSearxCompatOn = async (): Promise<boolean> =>
@@ -285,14 +313,14 @@ export const loadSearxCompatibilityEngines = async (): Promise<CompatEntry[]> =>
   }
   const files = names
     .filter((name) => name.endsWith(".py") && !name.startsWith("__"))
-    .filter((name) => !isSupportFile(basename(name, ".py")))
+    .filter((name) => !isHelperFile(basename(name, ".py")))
     .sort((a, b) => a.localeCompare(b));
   if (files.length === 0) return [];
   const stored = new Map<string, Record<string, SettingValue>>();
   const paths: DiscoverRequest[] = [];
   for (const file of files) {
     const code = basename(file, ".py");
-    const settings = await getSettings(_safeId(code));
+    const settings = await getSettings(searxEngineId(code));
     stored.set(code, settings);
     paths.push({ path: join(dir, file), overrides: overridesFrom(settings) });
   }
@@ -324,11 +352,12 @@ export const loadSearxCompatibilityEngines = async (): Promise<CompatEntry[]> =>
       continue;
     }
     const rawId = code;
-    const id = _safeId(rawId);
+    const id = searxEngineId(rawId);
+    const displayName = catalogEntry(rawId)?.name || meta.name || file;
     const types = meta.types?.length ? meta.types : ["web"];
     const instance = new SearxCompatEngine({
       path: meta.path,
-      displayName: meta.name || file,
+      displayName,
       bangShortcut: rawId,
       engineId: id,
       paging: meta.paging === true,
@@ -341,9 +370,10 @@ export const loadSearxCompatibilityEngines = async (): Promise<CompatEntry[]> =>
     instance.configure(mergeDefaults(settings, instance.settingsSchema));
     entries.push({
       id,
-      displayName: meta.name || file,
+      displayName,
       searchTypes: types,
       site: catalogEntry(rawId)?.site,
+      regions: await traitRegions(meta.path),
       instance,
       source: "plugin",
       compatibilityLayer: CompatLayerId.Searx,

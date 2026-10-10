@@ -1,13 +1,15 @@
+import type { ImpersonateRequest, ImpersonateResult } from "../utils/net/impersonate";
 import type { CreateCache, UseCache } from "../utils/cache/cache";
 import type { SettingValue } from "../utils/settings/plugin-settings";
 import type { ThreatLevel } from "../utils/security/sentinel";
-import type { EngineConfig, EngineContext, TimeFilter } from "./search";
+import type { EngineConfig, EngineContext, SearchImage, TimeFilter } from "./search";
 import {
   type ScoredResult,
   type SearchResult,
   SlotPanelPosition,
 } from "../../shared/search-types";
 import type { FieldOptionsResult } from "../../shared/field-options";
+import type { ProxyScoreboard } from "../utils/net/proxy-scoreboard";
 import type { SettingField } from "../../shared/setting-field";
 
 export type TranslationVars = string | number | boolean;
@@ -96,9 +98,11 @@ export interface PluginContext {
   signProxyUrl: (url: string) => string;
   signFaviconUrl: (url: string) => string;
   fetch?: (url: string, init?: RequestInit) => Promise<Response>;
+  searchTypes?: () => Promise<string[]>;
   /** @deprecated Use `useCache` (async, namespaced, Valkey-backed when enabled). */
   createCache: CreateCache;
   useCache: UseCache;
+  proxies?: ProxyScoreboard;
 }
 
 export const ENGINE_CHALLENGE = {
@@ -116,6 +120,7 @@ export interface SearchEngine {
   pluginManifest?: PluginManifest;
   configure?(settings: Record<string, SettingValue>): void;
   getFieldOptions?: GetFieldOptions;
+  routes?: PluginRoute[];
   executeSearch(
     query: string,
     page?: number,
@@ -224,17 +229,26 @@ export interface SlotPlugin {
 export interface CommandResult {
   title: string;
   html: string;
+  results?: (SearchResult & { favicon?: string })[];
   totalPages?: number;
   action?: string;
+  searchType?: string;
 }
 
 export interface CommandContext {
   clientIp?: string;
   page?: number;
+  searchType?: string;
   signProxyUrl?: (url: string) => string;
   nojs?: boolean;
   engines?: EngineConfig;
   bangs?: EngineConfig;
+}
+
+export interface ImageQueryContext {
+  text: string;
+  lang?: string;
+  signal?: AbortSignal;
 }
 
 export interface BangCommand {
@@ -252,8 +266,11 @@ export interface BangCommand {
   hideWhenUnconfigured?: boolean;
   supportsNojs?: boolean;
   respectRateLimiting?: boolean;
+  searchType?: string;
   init?(context: PluginContext): void | Promise<void>;
   execute(args: string, context?: CommandContext): Promise<CommandResult>;
+  describesImages?(): boolean | Promise<boolean>;
+  imageQuery?(image: SearchImage, context: ImageQueryContext): Promise<string | null>;
   t?: Translate;
 }
 
@@ -317,14 +334,25 @@ export interface PluginRoute {
   method: PluginRouteMethod;
   path: string;
   handler: (req: Request) => Response | Promise<Response>;
+  rateLimit?: boolean;
   t?: Translate;
+}
+
+export type TransportBody = string | Uint8Array<ArrayBuffer>;
+
+export interface TransportMatch {
+  urlMatch?: string;
+  domMatch?: string;
+  failUrlMatch?: string;
 }
 
 export interface TransportFetchOptions {
   method?: string;
   headers?: Record<string, string>;
-  body?: string;
+  body?: TransportBody;
   redirect?: RequestRedirect;
+  allowlistHop?: boolean;
+  match?: TransportMatch;
   signal?: AbortSignal;
 }
 
@@ -333,10 +361,17 @@ export type ProxyAwareFetch = (
   init?: RequestInit,
 ) => Promise<Response>;
 
+export type TransportImpersonate = (
+  request: Omit<ImpersonateRequest, "egressKey"> & { egressKey?: string },
+) => Promise<ImpersonateResult>;
+
 export interface TransportContext {
   proxyUrl?: string;
+  egressKey?: string;
   engineId?: string;
+  sessionKey?: string;
   fetch: ProxyAwareFetch;
+  impersonate?: TransportImpersonate;
   useCache: UseCache;
 }
 
@@ -359,6 +394,7 @@ export interface Transport {
   timeoutMs?: number;
   needsAppRestart?: boolean;
   handlesChallenges?: boolean;
+  usesContextProxy?: boolean;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
   getFieldOptions?: GetFieldOptions;
@@ -368,6 +404,7 @@ export interface Transport {
     options: TransportFetchOptions,
     context: TransportContext,
   ): Promise<Response>;
+  endSession?(sessionKey: string): void | Promise<void>;
   wsHandler?: TransportWsHandlers;
 }
 

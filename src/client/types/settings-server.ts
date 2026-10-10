@@ -3,6 +3,9 @@ export type BoolSetting = boolean | string;
 export type ServerSettingsData = {
   proxyEnabled?: BoolSetting;
   proxyUrls?: string;
+  proxyCooldownMinutes?: string;
+  proxyCooldownTriggers?: string;
+  proxyHostGroups?: string;
   imageProxyAllowLocal?: BoolSetting;
   imageProxyAllowList?: string;
   blockClientLeaks?: BoolSetting;

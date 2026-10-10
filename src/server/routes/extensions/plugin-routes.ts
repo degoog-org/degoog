@@ -4,6 +4,7 @@ import { logger } from "../../utils/logger";
 import { getPluginSettingsIds } from "../../utils/extension-support/plugin-assets";
 import { isDisabled } from "../../utils/settings/plugin-settings";
 import { routeSuffix } from "../../utils/net/route-path";
+import { _applyRateLimit } from "../../utils/search";
 
 const router = new Hono();
 
@@ -21,6 +22,10 @@ router.all("/api/plugin/:pluginId/*", async (c) => {
   const route = findPluginRoute(pluginId, method, suffix);
 
   if (!route) return c.notFound();
+  if (route.rateLimit) {
+    const limited = await _applyRateLimit(c, `ext:${pluginId}:`);
+    if (limited) return limited;
+  }
   try {
     const t0 = performance.now();
     const res = await route.handler(c.req.raw);

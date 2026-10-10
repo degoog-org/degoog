@@ -1,6 +1,7 @@
 import type { UovadipasquaClientStorageBinding } from "../../../server/types/extension";
 import { getBase } from "../net/base-url";
 import { state } from "../../state";
+import { RESULTS_READY } from "../../modules/renderer/media/result-ranking";
 
 interface UovadipasquaMatchPayload {
   id: string;
@@ -41,7 +42,6 @@ type UovadRunContext = {
 };
 
 const _fired = new Set<string>();
-const RESULTS_READY_EVENT = "degoog-results-ready";
 const RESULTS_WAIT_TIMEOUT_MS = 8000;
 
 let _clientStorageBindings: UovadipasquaClientStorageBinding[] | null = null;
@@ -112,10 +112,10 @@ const _waitForResults = (): Promise<void> =>
     const finish = (): void => {
       if (done) return;
       done = true;
-      window.removeEventListener(RESULTS_READY_EVENT, finish);
+      window.removeEventListener(RESULTS_READY, finish);
       resolve();
     };
-    window.addEventListener(RESULTS_READY_EVENT, finish, { once: true });
+    window.addEventListener(RESULTS_READY, finish, { once: true });
     window.setTimeout(finish, RESULTS_WAIT_TIMEOUT_MS);
   });
 

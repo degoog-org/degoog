@@ -15,6 +15,7 @@ let
     optional
     optionalAttrs
     boolToString
+    literalExpression
     types
     ;
 
@@ -22,6 +23,7 @@ let
     attrsOf
     bool
     nullOr
+    package
     path
     port
     str
@@ -47,6 +49,39 @@ in
 
     configurePostgres = mkEnableOption "PostgreSQL locally using services.postgresql";
 
+    binPaths = mkOption {
+      type = submodule {
+        options = {
+          python = mkOption {
+            type = nullOr package;
+            default = null;
+            example = literalExpression "pkgs.python3.withPackages (ps: with ps; [ babel python-dateutil lxml ])";
+            description = ''
+              Python interpreter forwarded to `DEGOOG_PYTHON_BIN`.
+              This is currently used for the searx compatibility layer.
+            '';
+          };
+
+          php = mkOption {
+            type = nullOr package;
+            default = null;
+            example = literalExpression "pkgs.php84";
+            description = ''
+              PHP interpreter forwarded to `DEGOOG_PHP_BIN`.
+              This is currently used for the 4get compatibility layer.
+            '';
+          };
+        };
+      };
+
+      default = { };
+
+      description = ''
+        Interpreters Degoog shells out to for its compatibility layers.
+        These are unset by default because they contain large binaries for features that are off by default.
+      '';
+    };
+
     environment = mkOption {
       description = ''
         Environment variables used to configure Degoog.
@@ -66,6 +101,13 @@ in
         );
 
         options = {
+          DEGOOG_BIND_ADDRESS = mkOption {
+            type = str;
+            default = "0.0.0.0";
+            description = "Address Degoog binds its TCP listener to.";
+            example = "127.0.0.1";
+          };
+
           DEGOOG_PORT = mkOption {
             type = port;
             default = 4444;
@@ -195,6 +237,7 @@ in
       default = { };
 
       example = {
+        DEGOOG_BIND_ADDRESS = "127.0.0.1";
         DEGOOG_PORT = 8080;
         DEGOOG_WIZARD = false;
         DEGOOG_DISTRUST_PROXY = true;
@@ -264,6 +307,12 @@ in
         // optionalAttrs cfg.configurePostgres {
           DEGOOG_POSTGRES_HOST = "/var/run/postgresql";
           DEGOOG_POSTGRES_USER = "degoog";
+        }
+        // optionalAttrs (cfg.binPaths.python != null) {
+          DEGOOG_PYTHON_BIN = "${cfg.binPaths.python}/bin/python3";
+        }
+        // optionalAttrs (cfg.binPaths.php != null) {
+          DEGOOG_PHP_BIN = "${cfg.binPaths.php}/bin/php";
         };
 
       serviceConfig = {

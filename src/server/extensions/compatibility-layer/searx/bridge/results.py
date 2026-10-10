@@ -56,6 +56,26 @@ class Translations(Result):
     pass
 
 
+class AnswerSet(EngineResults):
+    pass
+
+
+class Code(MainResult):
+    pass
+
+
+class Paper(MainResult):
+    pass
+
+
+class File(MainResult):
+    pass
+
+
+class Video(MainResult):
+    pass
+
+
 class _TypesMeta(type):
     def __getattr__(cls, name):
         if name.startswith("__"):
@@ -70,6 +90,10 @@ class ResultTypes(metaclass=_TypesMeta):
     Answer = Answer
     Translations = Translations
     WeatherAnswer = WeatherAnswer
+    Code = Code
+    Paper = Paper
+    File = File
+    Video = Video
 
 
 EngineResults.types = ResultTypes

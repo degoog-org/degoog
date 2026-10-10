@@ -70,6 +70,7 @@ export interface SearchBody {
   dateFrom?: string;
   dateTo?: string;
   lang?: string;
+  region?: string;
   imgColor?: string;
   imgSize?: string;
   imgType?: string;
@@ -78,6 +79,8 @@ export interface SearchBody {
   safeMode?: string;
   /** @deprecated use safeMode; still read for old bookmarks/clients. */
   imgNsfw?: string;
+  image?: string;
+  imageQuery?: string;
 }
 
 export interface RetryPostBody extends SearchBody {
@@ -95,9 +98,19 @@ export interface SearchParams {
   page: number;
   timeFilter: TimeFilter;
   lang: string;
+  region: string;
   dateFrom: string;
   dateTo: string;
   imageFilter?: ImageFilter;
+  image?: SearchImage;
+  imageQuery?: string;
+}
+
+export interface SearchImage {
+  bytes: Uint8Array<ArrayBuffer>;
+  mime: string;
+  base64: string;
+  hash: string;
 }
 
 export type SearchType = string;
@@ -115,7 +128,9 @@ export type EngineConfig = Record<string, boolean>;
 type EngineFetch = (
   url: string,
   options?: {
+    method?: string;
     headers?: Record<string, string>;
+    body?: string | Uint8Array<ArrayBuffer>;
     redirect?: RequestRedirect;
     signal?: AbortSignal;
   },
@@ -125,6 +140,7 @@ export interface EngineContext {
   fetch: EngineFetch;
   searchType?: SearchType;
   lang?: string;
+  region?: string;
   dateFrom?: string;
   dateTo?: string;
   buildAcceptLanguage?: () => string;
@@ -135,7 +151,10 @@ export interface EngineContext {
     selectors?: string[],
   ) => string;
   signProxyUrl?: (url: string) => string;
+  apiBase?: string;
+  routeUrl?: (path: string) => string;
   imageFilter?: ImageFilter;
+  image?: SearchImage;
   sentinel?: (
     response: { ok: boolean; status: number },
     engineName?: string,
@@ -146,4 +165,7 @@ export interface EngineContext {
     opts?: { httpStatus?: number; engine?: string },
   ) => Error;
   pagination?: (info: EnginePagination) => void;
+  carry?: (data: Record<string, string>) => void;
+  carried?: Readonly<Record<string, string>>;
+  signal?: AbortSignal;
 }

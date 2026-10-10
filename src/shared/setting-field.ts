@@ -16,6 +16,18 @@ type SettingFieldType =
   | "file"
   | "info";
 
+export interface VisibleWhenMatch {
+  key: string;
+  equals?: string | string[];
+  notEquals?: string | string[];
+}
+
+export interface VisibleWhenAnyOf {
+  anyOf: VisibleWhenRule[];
+}
+
+export type VisibleWhenRule = VisibleWhenMatch | VisibleWhenAnyOf;
+
 export interface SettingField {
   key: string;
   label: string;
@@ -28,7 +40,7 @@ export interface SettingField {
   optionLabels?: string[];
   default?: string;
   advanced?: boolean;
-  visibleWhen?: { key: string; equals: string };
+  visibleWhen?: VisibleWhenRule | VisibleWhenRule[];
   itemSchema?: SettingField[];
   addLabel?: string;
   fieldset?: string;

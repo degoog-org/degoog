@@ -1,3 +1,4 @@
+import { makeExtID } from "../../../utils/extension-support/extension-id";
 import { join } from "path";
 import { dataDir } from "../../../utils/paths";
 
@@ -9,3 +10,6 @@ export const scrapersDir = (): string => join(fourgetRoot(), "scraper");
 export const sharedLibDir = (): string => join(fourgetRoot(), "lib");
 
 export const stagingRoot = (): string => join(fourgetRoot(), ".run");
+
+export const fourgetEngineId = (code: string): string =>
+  makeExtID(`4get-${code}`, "engine");

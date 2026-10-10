@@ -109,19 +109,6 @@
   @extend .degoog-accordion-toggle--sidebar;
 }
 
-.store-updates-panel:not([class~="degoog-accordion"]) {
-  @extend .degoog-accordion;
-}
-
-.store-updates-body:not([class~="degoog-accordion-body"]) {
-  @extend .degoog-accordion-body;
-  @extend .degoog-accordion-body--flex;
-}
-
-.store-updates-toggle:not([class~="degoog-accordion-toggle"]) {
-  @extend .degoog-accordion-toggle;
-}
-
 .results-tab:not([class~="degoog-tab"]) {
   @extend .degoog-tab;
 }
@@ -145,12 +132,6 @@
   @extend .degoog-badge--engine-tag;
 }
 
-.store-type-badge:not([class~="degoog-badge"]) {
-  @extend .degoog-badge;
-  @extend .degoog-badge--store-type;
-}
-
-.store-subtype-badge:not([class~="degoog-badge"]),
 .glance-ai-badge:not([class~="degoog-badge"]) {
   @extend .degoog-badge;
 }

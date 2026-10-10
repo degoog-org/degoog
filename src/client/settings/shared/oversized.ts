@@ -5,7 +5,7 @@ import {
 
 export const OVERSIZED_CLASS = "degoog-field--oversized";
 
-const fmtSize = (chars: number): string => {
+export const formatOversizedSize = (chars: number): string => {
   const mb = chars / (1024 * 1024);
   return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.max(1, Math.round(chars / 1024))} KB`;
 };
@@ -26,6 +26,6 @@ export const markOversized = (
   el.classList.add(OVERSIZED_CLASS);
   el.placeholder = describe({
     lines: info.lines.toLocaleString(),
-    size: fmtSize(info.chars),
+    size: formatOversizedSize(info.chars),
   });
 };

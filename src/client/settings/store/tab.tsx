@@ -1,411 +1,141 @@
-import { jsonHeaders, authHeaders } from "../../utils/net/request";
-import type { RepoInfo, StoreItem } from "../../types/store-tab";
-import { clear, render as renderNodes } from "../../../shared/ui/tribute/dom";
-import { FilterOptions } from "./sections/filter-options";
-import { RepoErrors } from "./sections/repo-errors";
-import { StoreEmpty } from "./sections/store-empty";
-import { UpdatesPanel } from "./updates/updates-panel";
+import { jsonHeaders } from "../../utils/net/request";
 import { getBase } from "../../utils/net/base-url";
-import { initLightbox } from "./overlays/lightbox";
+import { render as renderNodes } from "../../../shared/ui/tribute/dom";
+import { fetchRestartState } from "../shared/restart-state";
+import { fetchBehind, fetchItems, fetchRepos } from "./api";
+import { createStoreState } from "./state";
+import { StoreRoot } from "./render/store-root";
+import { REPO_GRID_ID } from "./render/repos/repo-grid";
+import { KIND_TABS_ID } from "./render/catalog/kind-tabs";
+import { revealActiveTab } from "../shared/filter/filter-tabs";
+import { REPO_FILTER_CLASS } from "./render/catalog/repo-filter";
 import { maybeShowRestartNotice } from "./overlays/restart-notice";
-import { StoreTabTemplate } from "./template";
+import { createViewActions } from "./actions/view-actions";
 import {
-  confirmRemoveRepo,
-  handleAddRepo,
-  handleDeleteUntracked,
-  handleInstall,
-  handleRefresh,
-  handleRefreshAll,
-  handleRemove,
-  handleUninstall,
-  handleUpdate,
-  handleUpdateAll,
-} from "./handlers";
-import { collectSubtypes, filterItems } from "./render/filters";
-import { ItemCard } from "./render/item-card";
+  deleteOrphan,
+  installItem,
+  uninstallItem,
+  updateAllItems,
+  updateItem,
+} from "./actions/item-actions";
 import {
-  STORE_ITEM_TYPES,
-  engineTypeLabel,
-  pluginTypeLabel,
-  storeAllFilterLabel,
-  storeFilterLabel,
-} from "./render/labels";
-import { RepoList } from "./render/repo-list";
-import { normalizeRepoUrl } from "./render/repo-url";
+  addRepo,
+  refreshAllRepos,
+  refreshBehind,
+  refreshRepo,
+  removeRepo,
+} from "./actions/repo-actions";
+import { restartServer } from "./actions/restart";
+import { st } from "./format";
+import type { StoreActions, StoreContext } from "../../types/store-tab";
 
-const t = window.scopedT("core");
+const VIEWS_SELECTOR = ".store-views";
+const VIEWS_SCROLL_GAP = 8;
+
+const _gridCols = (): number => {
+  const grid = document.getElementById(REPO_GRID_ID);
+  if (!grid) return 0;
+  return getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length;
+};
 
 export async function initStoreTab(
   container: HTMLElement,
   getToken: () => string | null,
 ): Promise<void> {
   if (!container) return;
-
-  let repos: RepoInfo[] = [];
-  let items: StoreItem[] = [];
-  let repoStatusByUrl: Record<string, number> = {};
-  let selectedRepoUrl: string | null = null;
-  let typeFilter = "all";
-  let subtypeFilter = "all";
-  let installedFilter = "all";
-  let searchQuery = "";
-  let updatesOpen = false;
-
-  async function loadRepos(): Promise<void> {
-    const res = await fetch(`${getBase()}/api/store/repos`, {
-      headers: authHeaders(getToken),
-    });
-    if (!res.ok) return;
-    const data = (await res.json()) as { repos?: RepoInfo[] };
-    repos = data.repos || [];
-  }
-
-  async function loadReposStatus(): Promise<void> {
-    const res = await fetch(`${getBase()}/api/store/repos/status`, {
-      headers: authHeaders(getToken),
-    });
-    if (!res.ok) return;
-    const data = (await res.json()) as {
-      statuses?: Array<{ url: string; behind: number }>;
-    };
-    const statuses = data.statuses || [];
-    const map: Record<string, number> = {};
-    for (const s of statuses) {
-      map[normalizeRepoUrl(s.url)] = s.behind;
-      map[s.url] = s.behind;
-    }
-    repoStatusByUrl = map;
-  }
-
-  async function loadItems(): Promise<void> {
-    const res = await fetch(`${getBase()}/api/store/items`, {
-      headers: authHeaders(getToken),
-    });
-    if (!res.ok) return;
-    const data = (await res.json()) as { items?: StoreItem[] };
-    items = data.items || [];
-  }
-
-  async function refreshAndRender(): Promise<void> {
-    await loadRepos();
-    await loadItems();
-    render();
-  }
-
-  function render(): void {
-    const repoSection = container.querySelector<HTMLElement>(
-      ".store-repos-section",
-    );
-    const listEl = repoSection?.querySelector<HTMLElement>(
-      ".store-repo-list-wrap",
-    );
-    if (listEl) {
-      renderNodes(
-        <RepoList
-          repos={repos}
-          statusByUrl={repoStatusByUrl}
-          selectedUrl={selectedRepoUrl}
-          onSelect={(url) => {
-            selectedRepoUrl = selectedRepoUrl === url ? null : url;
-            render();
-          }}
-        />,
-        listEl,
-      );
-    }
-
-    const repoErrorsEl =
-      repoSection?.querySelector<HTMLElement>(".store-repo-errors");
-    if (repoErrorsEl) {
-      const errored = repos.filter((r) => r.error);
-      if (errored.length > 0) {
-        renderNodes(<RepoErrors repos={errored} />, repoErrorsEl);
-        repoErrorsEl.style.display = "";
-      } else {
-        repoErrorsEl.textContent = "";
-        repoErrorsEl.style.display = "none";
-      }
-    }
-
-    const catalogSection = container.querySelector<HTMLElement>(
-      ".store-catalog-section",
-    );
-    const typeSelect =
-      catalogSection?.querySelector<HTMLSelectElement>(".store-filter-type");
-    const subtypeSelect = catalogSection?.querySelector<HTMLSelectElement>(
-      ".store-filter-subtype",
-    );
-    const statusSelect = catalogSection?.querySelector<HTMLSelectElement>(
-      ".store-filter-status",
-    );
-    const grid = catalogSection?.querySelector<HTMLElement>(
-      ".store-catalog-grid",
-    );
-
-    const scopedItems = selectedRepoUrl
-      ? items.filter(
-          (i) =>
-            normalizeRepoUrl(i.repoUrl) ===
-            normalizeRepoUrl(selectedRepoUrl ?? ""),
-        )
-      : items;
-
-    if (typeSelect) {
-      renderNodes(
-        <FilterOptions
-          selected={typeFilter}
-          options={[
-            {
-              id: "all",
-              label: storeAllFilterLabel(),
-              count: scopedItems.length,
-            },
-            ...STORE_ITEM_TYPES.map((type) => ({
-              id: type,
-              label: storeFilterLabel(type),
-              count: scopedItems.filter((i) => i.type === type).length,
-            })),
-          ]}
-        />,
-        typeSelect,
-      );
-      typeSelect.onchange = () => {
-        typeFilter = typeSelect.value;
-        subtypeFilter = "all";
-        render();
-      };
-    }
-
-    const subtypes = collectSubtypes(scopedItems, typeFilter);
-    if (subtypeSelect) {
-      if (subtypes.length === 0) {
-        subtypeSelect.style.display = "none";
-        clear(subtypeSelect);
-      } else {
-        subtypeSelect.style.display = "";
-        const filteredForType = scopedItems.filter(
-          (i) => i.type === typeFilter,
-        );
-        renderNodes(
-          <FilterOptions
-            selected={subtypeFilter}
-            options={[
-              {
-                id: "all",
-                label: t("settings-page.store.filter-all"),
-                count: filteredForType.length,
-              },
-              ...subtypes.map((id) => ({
-                id,
-                label:
-                  typeFilter === "plugin"
-                    ? pluginTypeLabel(id)
-                    : engineTypeLabel(id),
-                count: filteredForType.filter(
-                  (i) =>
-                    (typeFilter === "plugin" && i.pluginType === id) ||
-                    (typeFilter === "engine" &&
-                      (
-                        i.engineTypes ?? (i.engineType ? [i.engineType] : [])
-                      ).includes(id)),
-                ).length,
-              })),
-            ]}
-          />,
-          subtypeSelect,
-        );
-        subtypeSelect.onchange = () => {
-          subtypeFilter = subtypeSelect.value;
-          render();
-        };
-      }
-    }
-
-    if (statusSelect) {
-      const installed = scopedItems.filter((i) => i.installed).length;
-      renderNodes(
-        <FilterOptions
-          selected={installedFilter}
-          options={[
-            {
-              id: "all",
-              label: t("settings-page.store.filter-all"),
-              count: scopedItems.length,
-            },
-            { id: "installed", label: "Installed", count: installed },
-            {
-              id: "not-installed",
-              label: "Not Installed",
-              count: scopedItems.length - installed,
-            },
-          ]}
-        />,
-        statusSelect,
-      );
-      statusSelect.onchange = () => {
-        installedFilter = statusSelect.value;
-        render();
-      };
-    }
-
-    if (grid) {
-      const filtered = filterItems(
-        items,
-        typeFilter,
-        subtypeFilter,
-        searchQuery,
-        selectedRepoUrl,
-        installedFilter,
-      );
-      renderNodes(
-        <>
-          {filtered.map((item) => (
-            <ItemCard
-              key={`${item.repoUrl}::${item.path}::${item.type}`}
-              item={item}
-            />
-          ))}
-        </>,
-        grid,
-      );
-    }
-
-    const updatesPanel = container.querySelector<HTMLElement>(
-      ".store-updates-panel",
-    );
-    const updatable = items.filter((i) => i.updateAvailable);
-    if (updatesPanel) {
-      if (updatable.length === 0) {
-        updatesPanel.style.display = "none";
-        clear(updatesPanel);
-      } else {
-        updatesPanel.style.display = "";
-        updatesPanel.classList.toggle("open", updatesOpen);
-        renderNodes(
-          <UpdatesPanel
-            items={updatable}
-            onToggle={() => {
-              updatesOpen = !updatesOpen;
-              updatesPanel.classList.toggle("open", updatesOpen);
-            }}
-            onUpdateAll={() =>
-              void handleUpdateAll(container, getToken, loadItems, render)
-            }
-            onUpdate={(button) =>
-              void handleUpdate(container, button, getToken, loadItems, render)
-            }
-          />,
-          updatesPanel,
-        );
-      }
-    }
-  }
-
-  clear(container);
-  renderNodes(<StoreTabTemplate />, container);
-
-  container
-    .querySelector<HTMLElement>(".store-catalog-grid")
-    ?.addEventListener("click", (e) => {
-      const target = e.target as HTMLElement;
-      const installBtn = target.closest<HTMLButtonElement>(".store-btn-install");
-      const uninstallBtn = target.closest<HTMLButtonElement>(".store-btn-uninstall");
-      const updateBtn = target.closest<HTMLButtonElement>(".store-btn-update");
-      const deleteBtn = target.closest<HTMLButtonElement>(".store-btn-delete");
-      if (installBtn)
-        void handleInstall(container, installBtn, getToken, loadItems, render);
-      if (uninstallBtn)
-        void handleUninstall(uninstallBtn, getToken, loadItems, render);
-      if (updateBtn)
-        void handleUpdate(container, updateBtn, getToken, loadItems, render);
-      if (deleteBtn) {
-        if (deleteBtn.dataset.untracked === "true")
-          void handleDeleteUntracked(deleteBtn, getToken, loadItems, render);
-        else void handleUninstall(deleteBtn, getToken, loadItems, render);
-      }
-    });
-
-  initLightbox(container);
-
-  const addWrap = container.querySelector<HTMLElement>(".store-add-repo-wrap");
-  const addBtn = container.querySelector<HTMLButtonElement>(".store-btn-add");
-  const addConfirmBtn = container.querySelector<HTMLButtonElement>(
-    ".store-btn-add-confirm",
-  );
-  const urlInput =
-    container.querySelector<HTMLInputElement>(".store-input-url");
-  const addErrorEl = container.querySelector<HTMLElement>(
-    ".store-inline-error",
-  );
-
-  addBtn?.addEventListener("click", () => {
-    if (addWrap)
-      addWrap.style.display =
-        addWrap.style.display === "none" ? "flex" : "none";
-  });
-  addConfirmBtn?.addEventListener("click", () => {
-    if (addConfirmBtn)
-      void handleAddRepo(
-        urlInput,
-        addConfirmBtn,
-        addErrorEl,
-        getToken,
-        refreshAndRender,
-      );
-  });
-
-  container
-    .querySelector<HTMLButtonElement>(".store-btn-refresh-all")
-    ?.addEventListener("click", async () => {
-      await handleRefreshAll(
-        container,
-        refreshAndRender,
-        loadReposStatus,
-        render,
-      );
-    });
-
-  container.addEventListener("click", async (e) => {
-    const refreshBtn = (e.target as HTMLElement).closest<HTMLElement>(
-      ".store-btn-refresh",
-    );
-    const removeBtn = (e.target as HTMLElement).closest<HTMLElement>(
-      ".store-btn-remove",
-    );
-    if (refreshBtn?.dataset.url)
-      void handleRefresh(
-        container,
-        refreshBtn.dataset.url,
-        getToken,
-        refreshAndRender,
-        loadReposStatus,
-        render,
-      );
-    if (removeBtn?.dataset.url) {
-      const ok = await confirmRemoveRepo(removeBtn.dataset.url);
-      if (ok)
-        void handleRemove(
-          removeBtn.dataset.url,
-          repos,
-          getToken,
-          refreshAndRender,
-        );
-    }
-  });
-
-  const searchInput = container.querySelector<HTMLInputElement>(
-    "#store-search-input",
-  );
-  searchInput?.addEventListener("input", () => {
-    searchQuery = searchInput?.value || "";
-    render();
-  });
-
+  const state = createStoreState();
   const isVisible = (): boolean =>
     !!container.closest(".settings-tab-panel")?.classList.contains("active");
 
+  let statusRun = 0;
+
+  const ctx: StoreContext = {
+    state,
+    getToken,
+    render: () => paint(),
+    reload: async () => {
+      const [repos, items, restart] = await Promise.all([
+        fetchRepos(getToken),
+        fetchItems(getToken),
+        fetchRestartState(getToken),
+      ]);
+      if (repos) state.repos = repos;
+      if (items) state.items = items;
+      if (restart) state.restartReasons = restart.pending ? restart.reasons : [];
+    },
+    reloadStatus: () => {
+      const run = ++statusRun;
+      void fetchBehind(getToken).then((behind) => {
+        if (!behind || run !== statusRun) return;
+        state.behind = behind;
+        paint();
+      });
+    },
+    focus: (selector) => {
+      const el = container.querySelector<HTMLElement>(selector);
+      el?.focus();
+      if (el instanceof HTMLInputElement) el.setSelectionRange(el.value.length, el.value.length);
+    },
+    scrollToViews: () => {
+      const views = container.querySelector(VIEWS_SELECTOR);
+      if (!views) return;
+      const top = views.getBoundingClientRect().top + window.scrollY - VIEWS_SCROLL_GAP;
+      if (window.scrollY > top) window.scrollTo({ top, behavior: "smooth" });
+    },
+    showRestartNotice: () => {
+      void maybeShowRestartNotice(getToken, () => void restartServer(ctx));
+    },
+  };
+
+  const actions: StoreActions = {
+    ...createViewActions(ctx),
+    install: (item) => void installItem(ctx, item),
+    update: (item) => void updateItem(ctx, item),
+    uninstall: (item) => void uninstallItem(ctx, item),
+    deleteOrphan: (item) => void deleteOrphan(ctx, item),
+    updateAll: () => void updateAllItems(ctx),
+    restart: () => void restartServer(ctx),
+    refreshRepo: (url) => void refreshRepo(ctx, url),
+    refreshBehind: () => refreshBehind(ctx),
+    refreshAll: () => void refreshAllRepos(ctx),
+    removeRepo: (url) => void removeRepo(ctx, url),
+    addRepo: () => void addRepo(ctx),
+  };
+
+  function paint(): void {
+    renderNodes(<StoreRoot state={state} actions={actions} />, container);
+    revealActiveTab(KIND_TABS_ID);
+    const cols = _gridCols();
+    if (cols && cols !== state.repoCols) {
+      state.repoCols = cols;
+      paint();
+    }
+  }
+
+  new ResizeObserver(() => {
+    if (_gridCols() !== state.repoCols) paint();
+  }).observe(container);
+
+  document.addEventListener("keydown", (e) => {
+    if (!isVisible()) return;
+    if (state.lightbox) {
+      if (e.key === "ArrowLeft") actions.stepLightbox(-1);
+      if (e.key === "ArrowRight") actions.stepLightbox(1);
+      if (e.key === "Escape") actions.closeLightbox();
+      return;
+    }
+    if (e.key === "Escape" && state.repoPopOpen) actions.toggleRepoPop();
+  });
+
+  document.addEventListener("pointerdown", (e) => {
+    if (!state.repoPopOpen) return;
+    if ((e.target as Element).closest(`.${REPO_FILTER_CLASS}`)) return;
+    Object.assign(state, { repoPopOpen: false, repoPopQ: "" });
+    paint();
+  });
+
   const noticeIfVisible = (): void => {
-    if (isVisible()) void maybeShowRestartNotice(getToken);
+    if (isVisible()) ctx.showRestartNotice();
   };
   window.addEventListener("settings-tab-changed", noticeIfVisible);
   noticeIfVisible();
@@ -418,19 +148,19 @@ export async function initStoreTab(
       method: "POST",
       headers: jsonHeaders(getToken),
       body: JSON.stringify({}),
-    }).catch(() => {});
-    await loadRepos();
-    await loadItems();
-    await loadReposStatus();
-    render();
+    }).catch((err) => console.debug("[store] background refresh failed", err));
+    await ctx.reload();
+    paint();
+    ctx.reloadStatus();
   };
 
   try {
-    await refreshAndRender();
+    await ctx.reload();
+    paint();
     window.addEventListener("settings-tab-changed", () => void refreshRemoteIfVisible());
     void refreshRemoteIfVisible();
-  } catch {
-    const wrap = container.querySelector<HTMLElement>(".store-repo-list-wrap");
-    if (wrap) renderNodes(<StoreEmpty message={t("settings-page.store.failed-load-store")} />, wrap);
+  } catch (err) {
+    console.warn("[store] load failed", err);
+    container.textContent = st("failed-load-store");
   }
 }

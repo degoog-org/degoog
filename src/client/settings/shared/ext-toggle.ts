@@ -9,6 +9,7 @@ export const extToggleHandler = (
   id: string,
   initiallyEnabled: boolean,
   label: string,
+  onSaved?: (enabled: boolean) => void,
 ): ((event: Event) => void) => {
   let reqToken = 0;
   let confirmed = initiallyEnabled;
@@ -31,6 +32,7 @@ export const extToggleHandler = (
         if (!res.ok) throw new Error("save failed");
         if (token !== reqToken) return;
         confirmed = intended;
+        onSaved?.(intended);
         window.dispatchEvent(new CustomEvent("extensions-saved"));
         flashSuccess(t("settings-page.server.saved"));
       } catch (err) {

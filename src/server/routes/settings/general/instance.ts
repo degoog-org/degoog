@@ -30,6 +30,7 @@ import { readIndexerLists } from "../../../indexer/config/lists";
 import { readDomainLists } from "../../../utils/filtering/domain-lists";
 import { logger } from "../../../utils/logger";
 import { getRestartState } from "../../../utils/extension-support/restart-state";
+import { getValkeyStatus } from "../../../utils/cache/cache-valkey";
 import { requestRestart } from "../../../utils/server-lifecycle";
 import { settingsAuth } from "../../_guards";
 import { trimBigFields } from "./trim-big-fields";
@@ -160,6 +161,10 @@ router.post("/api/settings/default-engines", settingsAuth("POST /api/settings/de
 
 router.get("/api/settings/restart-state", settingsAuth("GET /api/settings/restart-state"), async (c) => {
   return c.json(getRestartState());
+});
+
+router.get("/api/settings/valkey-status", settingsAuth("GET /api/settings/valkey-status"), async (c) => {
+  return c.json({ status: getValkeyStatus() });
 });
 
 router.post("/api/settings/restart", settingsAuth("POST /api/settings/restart"), async (c) => {

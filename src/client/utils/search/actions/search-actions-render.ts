@@ -38,8 +38,14 @@ import {
 import { imgFilterRecord } from "../../net/url";
 import { getBase } from "../../net/base-url";
 import { fetchSidebarSuggestions } from "../sidebar/sidebar-suggestions";
+import {
+  currentSearchImage,
+  noteImageQuery,
+} from "../../../modules/search-image/search-image";
+import { keepSearchImage } from "../../../modules/search-image/search-image-store";
 
 const t = window.scopedT("themes/degoog");
+const coreT = window.scopedT("core");
 
 type Navigate = (query: string) => void;
 
@@ -121,7 +127,7 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
     if (isImageType) clear(sidebar);
     else render(SkeletonSidebar(), sidebar);
   }
-  document.title = `${query} - degoog`;
+  document.title = `${query || (currentSearchImage() ? coreT("search-image.title") : "")} - degoog`;
 };
 
 export const pushSearchHistory = (
@@ -131,12 +137,15 @@ export const pushSearchHistory = (
   isInit: boolean,
 ): void => {
   const isImageType = isImageSearchType(resolvedType);
+  const image = currentSearchImage();
+  if (image) keepSearchImage(image);
   const historyState = {
     degoog: true,
     query,
     type: resolvedType,
     page: resolvedPage,
     imageFilter: isImageType ? { ...state.imageFilter } : undefined,
+    imageId: image?.id,
   };
   const apply = (url: string) =>
     isInit
@@ -147,7 +156,7 @@ export const pushSearchHistory = (
     apply(`${getBase()}/search`);
     return;
   }
-  const urlParams = new URLSearchParams({ q: query });
+  const urlParams = new URLSearchParams(query || !image ? { q: query } : {});
   if (resolvedType !== "web") urlParams.set("type", resolvedType);
   if (resolvedPage > 1) urlParams.set("page", String(resolvedPage));
   if (isImageType) {
@@ -166,6 +175,7 @@ export const renderSearchResponse = (
   opts: { fetchGlance: boolean; restorePage?: number },
 ): void => {
   const seq = state.searchSeq;
+  if (currentSearchImage()) noteImageQuery(query, data.imageQuery, data.imageQueryError);
   state.currentResults = data.results;
   state.currentData = data;
   state.lastPage = declaredPages(data.totalPages);

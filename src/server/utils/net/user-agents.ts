@@ -15,3 +15,7 @@ const USER_AGENTS = [
 ];
 
 export const getRandomUserAgent = (): string => _randomFrom(USER_AGENTS);
+
+const HINTLESS_USER_AGENTS = USER_AGENTS.filter((ua) => !ua.includes("Chrome/"));
+
+export const getRandomHintlessUserAgent = (): string => _randomFrom(HINTLESS_USER_AGENTS);

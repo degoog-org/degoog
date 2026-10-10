@@ -1,10 +1,6 @@
-import { authHeaders } from "../../../utils/net/request";
-import { getBase } from "../../../utils/net/base-url";
 import { render } from "../../../../shared/ui/tribute/dom";
-import { RestartNoticeModal } from "./restart-notice-modal";
+import { RESTART_CONFIRM_CLASS, RestartNoticeModal } from "./restart-notice-modal";
 import { fetchRestartState } from "../../shared/restart-state";
-
-const t = window.scopedT("core");
 
 const DISMISSED_KEY = "store-restart-dismissed";
 
@@ -35,7 +31,7 @@ function buildModal(reasons: string[]): {
   close: () => void;
 } {
   const overlay = document.createElement("div");
-  overlay.className = "ext-modal-overlay store-restart-overlay";
+  overlay.className = "ext-modal-overlay";
   render(
     <RestartNoticeModal
       reasons={reasons}
@@ -94,7 +90,7 @@ function buildModal(reasons: string[]): {
   return {
     overlay,
     restartBtn: overlay.querySelector<HTMLButtonElement>(
-      ".store-restart-confirm",
+      `.${RESTART_CONFIRM_CLASS}`,
     )!,
     close,
   };
@@ -120,6 +116,7 @@ export const pendingReasons = async (
 
 export async function maybeShowRestartNotice(
   getToken: () => string | null,
+  onRestart: () => void,
 ): Promise<void> {
   if (checkInFlight) return;
   checkInFlight = true;
@@ -133,20 +130,8 @@ export async function maybeShowRestartNotice(
   if (!reasons) return;
 
   const { restartBtn, close } = buildModal(reasons);
-  restartBtn.addEventListener("click", async () => {
-    restartBtn.disabled = true;
-    restartBtn.textContent = t("settings-page.restart.restarting");
-    try {
-      const res = await fetch(`${getBase()}/api/settings/restart`, {
-        method: "POST",
-        headers: authHeaders(getToken),
-      });
-      if (!res.ok) throw new Error(`restart request failed: ${res.status}`);
-      close();
-    } catch (err) {
-      console.debug("[store] restart trigger failed", err);
-      restartBtn.disabled = false;
-      restartBtn.textContent = t("settings-page.restart.button");
-    }
+  restartBtn.addEventListener("click", () => {
+    close();
+    onRestart();
   });
 }

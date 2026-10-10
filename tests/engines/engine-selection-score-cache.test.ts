@@ -243,6 +243,22 @@ describe("per engine cache keys", () => {
     });
   });
 
+  test("a region only ever appends to the key, so keys without one stay as they were", async () => {
+    await withTempEngineEnv(async () => {
+      await initEngines(true);
+      const alpha = listEngineIds().find((id) => id.includes("alpha-images"));
+
+      const plain = await runKey(alpha!, scope);
+      expect(await runKey(alpha!, { ...scope, region: "" })).toBe(plain);
+      expect(plain).not.toContain("region");
+
+      const gb = await runKey(alpha!, { ...scope, region: "GB" });
+      const us = await runKey(alpha!, { ...scope, region: "US" });
+      expect(gb).toBe(`${plain}|region=GB`);
+      expect(gb).not.toBe(us);
+    });
+  });
+
   test("stays stable when imageFilter is absent", async () => {
     await withTempEngineEnv(async () => {
       await initEngines(true);

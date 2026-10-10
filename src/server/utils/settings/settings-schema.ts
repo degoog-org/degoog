@@ -20,6 +20,9 @@ interface SettingDef {
 export const SETTINGS_SCHEMA = {
   proxyEnabled:                 { kind: "boolean", default: false },
   proxyUrls:                    { kind: "lines",   default: "" },
+  proxyCooldownMinutes:         { kind: "number",  default: "10", min: 0, max: 1440 },
+  proxyCooldownTriggers:        { kind: "lines",   default: "rate_limited\ncaptcha\nblocked\nconnect" },
+  proxyHostGroups:              { kind: "lines",   default: "" },
   imageProxyAllowLocal:         { kind: "boolean", default: false },
   imageProxyAllowList:          { kind: "lines",   default: "" },
   blockClientLeaks:             { kind: "boolean", default: false },

@@ -116,17 +116,20 @@ function _showAuthGate(): void {
   render(<AuthGate onSubmit={(event) => void _submitAuth(event)} />, page);
 }
 
-function _initTabs(): void {
+function _initTabs(updateUrl = true): void {
   const select = document.getElementById(
     "settings-tab-select",
   ) as HTMLSelectElement | null;
   const nav = document.getElementById("settings-tabs-nav");
-  select?.addEventListener("change", () => switchSettingsTab(select.value));
+  select?.addEventListener("change", () =>
+    switchSettingsTab(select.value, updateUrl),
+  );
   nav?.querySelectorAll<HTMLElement>(".settings-nav-item").forEach((btn) => {
     btn.addEventListener("click", () =>
-      switchSettingsTab(btn.dataset.tab ?? "general"),
+      switchSettingsTab(btn.dataset.tab ?? "general", updateUrl),
     );
   });
+  if (!updateUrl) return;
 
   const tab = getActiveSettingsTab();
   if (tab && tab !== "general") {
@@ -137,7 +140,9 @@ function _initTabs(): void {
 function _initSettingsMainOffset(): void {
   const main = document.querySelector<HTMLElement>(".settings-page-main");
   const sidebar = document.querySelector<HTMLElement>(".settings-sidebar");
-  const search = document.querySelector<HTMLElement>(".settings-nav-search");
+  const search =
+    document.querySelector<HTMLElement>(".settings-nav-search") ??
+    document.querySelector<HTMLElement>(".settings-nav");
   if (!main || !sidebar || !search) return;
 
   const desktop = window.matchMedia("(min-width: 768px)");
@@ -271,6 +276,8 @@ async function _renderPublicTabs(allExtensions: AllExtensions): Promise<void> {
 }
 
 async function _initPublicSettings(): Promise<void> {
+  _initTabs(false);
+  _initSettingsMainOffset();
   await applyDefaults();
   void initTheme();
   try {

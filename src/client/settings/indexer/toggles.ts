@@ -6,6 +6,7 @@ import {
   bindFieldSaveBtn,
   createFieldSaveBtn,
   markFieldDirty,
+  placeFieldSaveBtn,
 } from "../shared/field-save";
 import { flashError } from "../shared/flash-msg";
 import { setIndexerNavVisible } from "./nav";
@@ -135,7 +136,7 @@ export const wireToggles = async (
   for (const [field, key, fallback] of fieldSpecs) {
     if (!field || oversized[key]) continue;
     const btn = createFieldSaveBtn();
-    field.insertAdjacentElement("afterend", btn);
+    placeFieldSaveBtn(field, btn);
     field.addEventListener("input", () => markFieldDirty(btn));
     bindFieldSaveBtn(btn, () => {
       _clampToBounds(field);

@@ -6,15 +6,10 @@ import { readDomainLists, writeDomainList } from "../../../utils/filtering/domai
 import { buildFaviconUrl } from "../../../utils/net/proxy-sign";
 import { settingsAuth } from "../../_guards";
 import { settingsLock } from "../../../utils/settings/settings-write";
+import { parseRedirectList, toRedirectLine } from "../../../../shared/redirects/redirect-rules";
+import { normalizeHostname, toBareHost } from "../../../../shared/redirects/redirect-match";
 
 const router = new Hono();
-
-const _normalizeHostname = (raw: string): string =>
-  raw
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/\/.*$/, "");
 
 const _splitLines = (raw: string): string[] =>
   raw
@@ -32,6 +27,18 @@ const _appendBlock = (existing: string, source: string): string => {
 const _upsertKeyed = (existing: string, source: string, sep: string, line: string): string => {
   const next = _splitLines(existing).filter((l) => l.split(sep)[0].trim() !== source);
   next.push(line);
+  return next.join("\n");
+};
+
+const _redirectMatchOf = (line: string): string | null =>
+  parseRedirectList(line).rules[0]?.match ?? null;
+
+const _upsertRedirect = (existing: string, source: string, target: string): string => {
+  const next = _splitLines(existing).filter((line) => {
+    const match = _redirectMatchOf(line);
+    return match === null || normalizeHostname(match.trim()) !== source;
+  });
+  next.push(toRedirectLine({ match: source, replace: target }));
   return next.join("\n");
 };
 
@@ -56,9 +63,9 @@ const DOMAIN_ACTIONS: Record<
     flag: "domainReplaceUiEnabled",
     list: "domainReplaceList",
     edit: (existing, source, body) => {
-      const target = _normalizeHostname(body.target ?? "");
+      const target = toBareHost(body.target ?? "");
       if (!target) return { error: "Missing target" };
-      return _upsertKeyed(existing, source, "->", `${source} -> ${target}`);
+      return _upsertRedirect(existing, source, target);
     },
   },
   score: {
@@ -76,7 +83,7 @@ router.post("/api/settings/domain-action", settingsAuth("POST /api/settings/doma
   const body = await readObjectBody<DomainActionBody>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
 
-  const source = _normalizeHostname(body.source ?? "");
+  const source = toBareHost(body.source ?? "");
   if (!source) return c.json({ error: "Missing source" }, 400);
 
   const kind = body.kind ?? "";
@@ -93,7 +100,7 @@ router.post("/api/settings/domain-action", settingsAuth("POST /api/settings/doma
   });
   if (typeof next !== "string") return c.json(next, 400);
   if (kind === REPLACE_KIND) {
-    return c.json({ ok: true, favicon: buildFaviconUrl(_normalizeHostname(body.target ?? "")) });
+    return c.json({ ok: true, favicon: buildFaviconUrl(toBareHost(body.target ?? "")) });
   }
   return c.json({ ok: true });
 });

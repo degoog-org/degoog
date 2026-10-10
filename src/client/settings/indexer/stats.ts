@@ -28,20 +28,20 @@ export const renderStats = (stats: IndexerStats): void => {
   const queriesEl = document.getElementById("indexer-stat-queries");
   const sizeEl = document.getElementById("indexer-stat-size");
   const hits = stats.totalHits ?? stats.totalResults;
-  if (hitsEl) hitsEl.textContent = String(hits);
-  if (urlsEl) urlsEl.textContent = String(stats.totalUrls ?? 0);
-  if (queriesEl) queriesEl.textContent = String(stats.totalQueries);
+  if (hitsEl) hitsEl.textContent = hits.toLocaleString();
+  if (urlsEl) urlsEl.textContent = (stats.totalUrls ?? 0).toLocaleString();
+  if (queriesEl) queriesEl.textContent = stats.totalQueries.toLocaleString();
   if (sizeEl) sizeEl.textContent = formatBytes(stats.dbSizeBytes);
 
   const byTypeEl = document.getElementById("indexer-by-type");
   if (byTypeEl) {
     byTypeEl.replaceChildren();
-    for (const [type, count] of Object.entries(stats.byType)) {
+    for (const [type, count] of Object.entries(stats.byType).sort((a, b) => b[1] - a[1])) {
       const cell = document.createElement("div");
       const dt = document.createElement("dt");
       dt.textContent = type;
       const dd = document.createElement("dd");
-      dd.textContent = String(count);
+      dd.textContent = count.toLocaleString();
       cell.append(dt, dd);
       byTypeEl.append(cell);
     }

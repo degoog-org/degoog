@@ -1,9 +1,10 @@
-import { Button } from "../../../../shared/ui/components/primitives/button";
+import { Button, buttonClass } from "../../../../shared/ui/components/primitives/button";
 import { mountModalShell, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
 
 const t = window.scopedT("themes/degoog");
 
 const MODAL_ID = "confirm-modal";
+export const CONFIRM_MODAL_CLASS = "ext-modal--confirm";
 
 let shell: MountedModal | null = null;
 let confirmBtn: HTMLButtonElement | null = null;
@@ -23,6 +24,7 @@ function _ensureMounted(): void {
 
   shell = mountModalShell({
     id: MODAL_ID,
+    modalClass: CONFIRM_MODAL_CLASS,
     footer: [
       Button({
         variant: "secondary",
@@ -54,6 +56,8 @@ function _ensureMounted(): void {
 export function confirmModal(options: {
   message: string;
   title?: string;
+  confirmLabel?: string;
+  danger?: boolean;
 }): Promise<boolean> {
   return new Promise((resolve) => {
     _ensureMounted();
@@ -63,6 +67,11 @@ export function confirmModal(options: {
       shell.title.textContent =
         options.title ?? t("search-templates.result.actions.modal-confirm");
       shell.body.textContent = options.message;
+      if (confirmBtn) {
+        confirmBtn.textContent =
+          options.confirmLabel ?? t("search-templates.result.actions.modal-confirm");
+        confirmBtn.className = buttonClass(options.danger ? "danger" : "primary");
+      }
       shell.open();
     }
     confirmBtn?.focus();

@@ -1,7 +1,8 @@
 import { cleanUrl } from "../utils/dom/dom";
 import { getBase } from "../utils/net/base-url";
 import { swapFavicon } from "../utils/dom/favicon";
-import { resolveTarget } from "../../shared/domain-target";
+import { applyRedirect, checkRedirectRule } from "../../shared/redirects/redirect-rules";
+import { toBareHost } from "../../shared/redirects/redirect-match";
 import { confirmModal } from "./modals/confirm-modal/confirm";
 import { promptModal } from "./modals/prompt-modal/prompt";
 
@@ -135,6 +136,7 @@ function _removeRowsForHost(host: string): void {
 
 function _applyReplaceToRow(
   row: HTMLElement,
+  source: string,
   target: string,
   faviconSrc: string,
 ): void {
@@ -144,7 +146,8 @@ function _applyReplaceToRow(
   const wrap = row.querySelector<HTMLElement>('[id^="result-actions-"]');
   if (!link) return;
   try {
-    const replaced = resolveTarget(link.href, target);
+    const check = checkRedirectRule({ match: source, replace: toBareHost(target) });
+    const replaced = check.ok ? applyRedirect(link.href, [check.compiled])?.url : null;
     if (!replaced) {
       console.debug("[result-actions] unusable replace target", target);
       return;
@@ -223,7 +226,7 @@ const _handleClick = async (e: MouseEvent): Promise<void> => {
     const res = await _postAction({ kind, source: host, target: replacement });
     if (!res) return;
     const data = await _readJson(res);
-    _applyReplaceToRow(row, replacement, _stringField(data, "favicon"));
+    _applyReplaceToRow(row, host, replacement, _stringField(data, "favicon"));
     return;
   }
 

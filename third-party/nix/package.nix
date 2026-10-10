@@ -1,9 +1,11 @@
 {
-  lib,
-  src,
-  git,
-  runCommandLocal,
   bun2nix,
+  curl,
+  curl-impersonate,
+  git,
+  lib,
+  runCommandLocal,
+  src,
   ...
 }:
 bun2nix.writeBunApplication {
@@ -21,6 +23,8 @@ bun2nix.writeBunApplication {
   };
 
   runtimeInputs = [
+    curl
+    curl-impersonate
     git
   ];
 
