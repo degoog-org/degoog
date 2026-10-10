@@ -38,6 +38,7 @@
       "any-time": "Tout moment",
       "language": "Langue",
       "any": "Tout",
+      "any-language": "Toutes les langues",
       "hour": "Heure",
       "day": "24 heures",
       "week": "Semaine",
@@ -117,6 +118,7 @@
       "saving-to-index": "Enregistrement dans votre index",
       "insecure": "Insecure",
       "insecure-tooltip": "Ce site est servi sur une connexion HTTP non chiffrée.",
+      "favicon-missing": "Aucune extension de favicons installée",
       "actions": {
         "menu-aria": "Actions du domaine",
         "block": "Bloquer ce domaine",
@@ -130,7 +132,10 @@
         "prompt-score": "Score pour ce domaine (positives boost, négatives déboost) :",
         "modal-confirm": "Confirmer",
         "modal-cancel": "Annuler",
-        "scored": "Scoré"
+        "scored": "Scoré",
+        "refresh": "Actualiser le favicon",
+        "refreshed": "Favicon actualisé",
+        "refresh-failed": "Aucun favicon trouvé"
       }
     },
     "pagination": {
@@ -138,6 +143,29 @@
       "next": "Suivant",
       "page": "Page {page}",
       "end": "Aucun autre résultat."
+    },
+    "status": {
+      "streaming": "Environ {count} résultats (streaming...)",
+      "done": "Environ {count} résultats ({time} secondes)",
+      "page": "Environ {count} résultats - Page {page}",
+      "searching": "Recherche...",
+      "running-command": "Exécution de la commande..."
+    },
+    "media-preview": {
+      "visit": "Visiter la page",
+      "watch": "Regarder la vidéo",
+      "download": "Télécharger"
     }
+  },
+  "nojs": {
+    "search-label": "Requête de recherche",
+    "pagination-label": "Pages de résultats",
+    "results-meta": "{count} résultats en {time} ms",
+    "no-results": "Aucun résultat trouvé.",
+    "rate-limited": "Trop de requêtes. Patientez un instant et réessayez.",
+    "full-app": "Version complète",
+    "command-unsupported": "Cette extension n'a pas été prévue pour fonctionner sans JavaScript. Contactez son développeur pour savoir si une intégration est possible ou prévue.",
+    "command-disabled": "Cette commande est désactivée sur cette instance.",
+    "command-failed": "Cette commande n'a pas pu aboutir. Veuillez réessayer."
   }
 }
