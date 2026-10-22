@@ -13,6 +13,8 @@ interface TabInfo {
   icon: string | null;
 }
 
+const themeT = window.scopedT("themes/degoog");
+
 let pluginTabs: TabInfo[] = [];
 let tabsReady: Promise<void> | null = null;
 
@@ -68,6 +70,13 @@ const _reorderDomTabs = (order: string[]): void => {
   }
 };
 
+const _tabLabel = (tab: TabInfo): string => {
+  if (!tab.id.startsWith("engine:")) return tab.name;
+  const key = `search-templates.tabs.${tab.id.slice(7)}`;
+  const translated = themeT(key);
+  return translated !== key ? translated : tab.name;
+};
+
 const _tabOrderKey = (tab: TabInfo): string => {
   if (tab.id.startsWith("engine:")) return tab.id.slice(7);
   return tab.id;
@@ -113,7 +122,7 @@ function _renderPluginTabs(): void {
     el.className = "results-tab degoog-tab";
     el.dataset.type = `tab:${tab.id}`;
     el.dataset.pluginTab = "true";
-    el.textContent = tab.name;
+    el.textContent = _tabLabel(tab);
 
     const bangVisible = isBangTabVisible(el.dataset.type);
     if (bangVisible !== undefined) {
