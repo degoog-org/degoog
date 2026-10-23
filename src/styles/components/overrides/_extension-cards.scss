@@ -248,7 +248,7 @@
     color: var(--text-primary);
 
     &:hover {
-      background: var(--bg-hover);
+      background: $btn-secondary-hover;
     }
   }
 }

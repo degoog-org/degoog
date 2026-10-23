@@ -51,6 +51,7 @@ $transition-med: 0.3s ease;
 
 $primary: var(--primary);
 $primary-hover: var(--primary-hover);
+$btn-secondary-hover: color-mix(in srgb, var(--text-primary) 26%, var(--bg));
 $danger: var(--danger);
 $warning: var(--warning);
 $success: var(--success);

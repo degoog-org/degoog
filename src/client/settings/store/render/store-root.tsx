@@ -1,4 +1,5 @@
 import { AttentionPanel } from "./attention/attention-panel";
+import { UpdatesMenu } from "./attention/updates-menu";
 import { FilterBar } from "./catalog/filter-bar";
 import { Results } from "./catalog/results";
 import { Lightbox } from "./lightbox";
@@ -26,7 +27,10 @@ export const StoreRoot = ({
   return (
     <div class="store">
       <AttentionPanel state={state} actions={actions} />
-      <ViewsSwitch state={state} actions={actions} />
+      <div class="store-nav">
+        <ViewsSwitch state={state} actions={actions} />
+        <UpdatesMenu state={state} actions={actions} />
+      </div>
       {state.view === "repos" ? (
         <ReposView state={state} actions={actions} />
       ) : (

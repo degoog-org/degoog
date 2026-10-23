@@ -44,9 +44,11 @@ export const createViewActions = (ctx: StoreContext): ViewActions => {
   };
 
   const setKind = (kind: StoreKind, focus = false): void => {
+    const changed = kind !== state.kind;
     Object.assign(state, { kind, sub: "" });
     ctx.render();
     if (focus) focusTab(KIND_TABS_ID, kind);
+    if (changed) ctx.scrollToViews();
   };
 
   const setRepoPop = (open: boolean): void => {
@@ -107,10 +109,7 @@ export const createViewActions = (ctx: StoreContext): ViewActions => {
       ctx.focus(`#${SEARCH_ID}`);
     },
     setKind,
-    showKind: (kind) => {
-      setKind(kind);
-      ctx.scrollToViews();
-    },
+    showKind: (kind) => setKind(kind),
     setStatus: (status) => {
       state.status = status;
       ctx.render();

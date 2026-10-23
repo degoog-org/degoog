@@ -21,7 +21,7 @@ import { getEngines } from "../engines";
 import { fetchGlancePanels, fetchSlotPanels } from "../search-utils";
 import { buildSearchBody, buildSearchUrl } from "../../net/url";
 import { appendSearchAuthParams, searchAuthHeaders } from "../../net/request";
-import { PostEventStream, type SearchEventSource } from "./post-event-stream";
+import { FetchEventStream, type SearchEventSource } from "./fetch-event-stream";
 import {
   beginImageQuery,
   currentSearchImage,
@@ -40,6 +40,8 @@ import {
   loadSidebarSuggestions,
   prepareResultsUi,
   pushSearchHistory,
+  searchFailureMessage,
+  showSearchFailure,
 } from "../actions/search-actions-render";
 import { staysHere } from "../../dom/plain-click";
 import {
@@ -81,6 +83,15 @@ interface StreamDone {
 
 let _activeSource: SearchEventSource | null = null;
 let _linkWatch: AbortController | null = null;
+
+const _streamErrorStatus = (e: MessageEvent<string>): number | undefined => {
+  try {
+    const { status } = JSON.parse(e.data) as { status?: unknown };
+    return typeof status === "number" ? status : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 const _announceResults = (): void => {
   window.dispatchEvent(new CustomEvent(RESULTS_READY));
@@ -124,12 +135,11 @@ export async function performStreamingSearch(
   if (!isCurrentSearch(seq)) return;
   const openStream = (): SearchEventSource =>
     currentSearchImage()
-      ? new PostEventStream(
-          `${getBase()}/api/search/stream`,
-          withSearchImage(buildSearchBody(query, engines, type, 1)),
-          searchAuthHeaders(),
-        )
-      : new EventSource(
+      ? new FetchEventStream(`${getBase()}/api/search/stream`, {
+          body: withSearchImage(buildSearchBody(query, engines, type, 1)),
+          headers: searchAuthHeaders(),
+        })
+      : new FetchEventStream(
           appendSearchAuthParams(
             buildSearchUrl(query, engines, type, 1).replace(
               "/api/search?",
@@ -352,11 +362,6 @@ export async function performStreamingSearch(
     console.error("[streaming-search] stream error", e);
     dropStream(source);
     announceSettled(seq);
-    if (resultsMeta) resultsMeta.textContent = "";
-    if (resultsList)
-      render(
-        <NoResults>{t("search-templates.search-failed")}</NoResults>,
-        resultsList,
-      );
+    showSearchFailure(searchFailureMessage(_streamErrorStatus(e)));
   });
 }

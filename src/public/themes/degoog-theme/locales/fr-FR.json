@@ -89,6 +89,7 @@
     },
     "no-results": "Aucun résultat trouvé.",
     "search-failed": "La recherche a échoué. Veuillez réessayer.",
+    "rate-limited": "Trop de requêtes. Veuillez patienter un instant et réessayer.",
     "no-engines": "Aucun moteur de recherche installé. {store} pour en parcourir et en installer.",
     "no-engines-store": "Aller au Store",
     "sidebar": {

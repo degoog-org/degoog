@@ -1,8 +1,8 @@
-import { FaIcon } from "./fa-icon";
+import { Spinner } from "./spinner";
 
 export const BusyLabel = ({ label }: { label: string }): JSX.Element => (
   <>
-    <FaIcon name="fa-circle-notch" class="fa-spin" />
+    <Spinner />
     {label}
   </>
 );

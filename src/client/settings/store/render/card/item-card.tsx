@@ -1,4 +1,7 @@
 import { RawDogIt } from "../../../../../shared/ui/tribute/rawdogit";
+import { TransText } from "../../../../../shared/ui/components/primitives/trans-text";
+import type { Child } from "../../../../../shared/ui/tribute/types";
+import { linkHref } from "../../../../../shared/utils/url";
 import { renderMdInline } from "../../../../utils/dom/md";
 import { CardActions } from "./card-actions";
 import { CardNotes } from "./card-notes";
@@ -8,16 +11,35 @@ import { itemSubLabel } from "../labels";
 import { st } from "../../format";
 import type { StoreActions, StoreItem, StoreState } from "../../../../types/store-tab";
 
-const _meta = (item: StoreItem): string => {
-  if (item.untracked) return st("not-in-repo");
-  if (item.orphaned) return item.repoName;
-  return [
+const _author = (item: StoreItem): JSX.Element | null => {
+  const author = item.author;
+  if (!author?.name) return null;
+  const href = linkHref(author.url);
+  return (
+    <TransText
+      text={st("by-author", { author: "{author}" })}
+      slots={{
+        author: href ? (
+          <a class="store-card-author" href={href} target="_blank" rel="noopener noreferrer">
+            {author.name}
+          </a>
+        ) : (
+          author.name
+        ),
+      }}
+    />
+  );
+};
+
+const _meta = (item: StoreItem): Child[] => {
+  if (item.untracked) return [st("not-in-repo")];
+  if (item.orphaned) return [item.repoName];
+  const parts: Child[] = [
     item.type === "theme" ? "" : itemSubLabel(item),
-    item.author?.name ? st("by-author", { author: item.author.name }) : "",
+    _author(item),
     item.repoName,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  ].filter(Boolean);
+  return parts.flatMap((part, i) => (i === 0 ? [part] : [" · ", part]));
 };
 
 export const ItemCard = ({

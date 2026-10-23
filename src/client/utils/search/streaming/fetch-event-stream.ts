@@ -15,12 +15,17 @@ const _parseBlock = (block: string): { event: string; data: string } | null => {
   return data.length ? { event, data: data.join("\n") } : null;
 };
 
-export class PostEventStream implements SearchEventSource {
+export interface EventStreamRequest {
+  body?: unknown;
+  headers?: Record<string, string>;
+}
+
+export class FetchEventStream implements SearchEventSource {
   private readonly _target = new EventTarget();
   private readonly _abort = new AbortController();
 
-  constructor(url: string, body: unknown, headers: Record<string, string> = {}) {
-    void this._read(url, body, headers);
+  constructor(url: string, request: EventStreamRequest = {}) {
+    void this._read(url, request);
   }
 
   addEventListener(type: string, listener: (event: MessageEvent<string>) => void): void {
@@ -35,18 +40,19 @@ export class PostEventStream implements SearchEventSource {
     this._target.dispatchEvent(new MessageEvent(event, { data }));
   }
 
-  private async _read(
-    url: string,
-    body: unknown,
-    headers: Record<string, string>,
-  ): Promise<void> {
+  private async _read(url: string, { body, headers = {} }: EventStreamRequest): Promise<void> {
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...headers },
-        body: JSON.stringify(body),
-        signal: this._abort.signal,
-      });
+      const res = await fetch(
+        url,
+        body === undefined
+          ? { headers, signal: this._abort.signal }
+          : {
+              method: "POST",
+              headers: { "Content-Type": "application/json", ...headers },
+              body: JSON.stringify(body),
+              signal: this._abort.signal,
+            },
+      );
       if (!res.ok || !res.body) {
         this._emit("error", JSON.stringify({ status: res.status }));
         return;
@@ -67,7 +73,7 @@ export class PostEventStream implements SearchEventSource {
       if (!this._abort.signal.aborted) this._emit("error", "{}");
     } catch (err) {
       if (this._abort.signal.aborted) return;
-      console.warn("[streaming-search] image stream failed", err);
+      console.warn("[streaming-search] stream failed", err);
       this._emit("error", "{}");
     }
   }

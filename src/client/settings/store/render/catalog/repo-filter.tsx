@@ -1,6 +1,7 @@
 import { RepoOption } from "./repo-option";
 import { findRepo, repoKey, scopeItems } from "../../model";
 import { st } from "../../format";
+import { matchesWords } from "../../../shared/filter/match-words";
 import type { StoreActions, StoreState } from "../../../../types/store-tab";
 
 export const REPO_FILTER_CLASS = "store-repo-filter";
@@ -23,11 +24,9 @@ const _Options = ({
   actions: StoreActions;
 }): JSX.Element => {
   const scope = scopeItems(state);
-  const q = state.repoPopQ.trim().toLowerCase();
   const list = state.repos.filter((repo) => {
     const key = repoKey(repo.url);
-    if (q && !repo.name.toLowerCase().includes(q) && !repo.url.toLowerCase().includes(q))
-      return false;
+    if (!matchesWords([repo.name, repo.url], state.repoPopQ)) return false;
     return (
       state.view !== "installed" ||
       state.repoSel.includes(key) ||

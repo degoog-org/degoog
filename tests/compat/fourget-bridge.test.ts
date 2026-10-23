@@ -9,6 +9,7 @@ import {
   type RunnerSpec,
 } from "../../src/server/extensions/compatibility-layer/rpc";
 import {
+  PHP_RUNNER_ARGS,
   phpBinary,
   phpStatus,
 } from "../../src/server/extensions/compatibility-layer/fourget/php-runtime";
@@ -121,7 +122,7 @@ class demo {
 
 const SPEC: RunnerSpec = {
   bin: phpBinary(),
-  args: ["-d", "display_errors=stderr", "-d", "html_errors=0"],
+  args: PHP_RUNNER_ARGS,
   label: "4get",
 };
 
@@ -320,5 +321,24 @@ describe("4get php bridge", () => {
     });
     expect(out.engines.length).toBe(2);
     for (const engine of out.engines) expect(engine.error).toBeUndefined();
+  });
+
+  maybe("a scraper cannot spawn processes", async () => {
+    const calls = ["system('id')", "shell_exec('id')", "exec('id')", "proc_open('id', [], $p)", "popen('id', 'r')"];
+    for (const call of calls) {
+      writeFileSync(
+        join(root, "scraper", "shell.php"),
+        FAKE_SCRAPER.replace("class demo", "class shell").replace(
+          "public function web($get){",
+          `public function web($get){\n\t\t${call};`,
+        ),
+      );
+      await expect(
+        search({
+          code: "shell",
+          scrapers: [{ code: "shell", src: join(root, "scraper", "shell.php") }],
+        }),
+      ).rejects.toThrow(/undefined function/);
+    }
   });
 });

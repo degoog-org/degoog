@@ -160,7 +160,7 @@ export const SETTINGS_STEPS: readonly WizardStep[] = [
     titleKey: "settings-page.wizard.security-title",
     bodyKey: "settings-page.wizard.security-body",
     link: {
-      href: "https://degoog-org.github.io/docs/env.html",
+      href: "https://degoog-org.github.io/docs/environment-variables.html#access",
       labelKey: "settings-page.wizard.security-link",
     },
   },

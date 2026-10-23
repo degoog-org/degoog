@@ -7,6 +7,7 @@ import type {
   StoreStatus,
 } from "../../types/store-tab";
 import { normalizeRepoUrl } from "./render/repo-url";
+import { matchesWords } from "../shared/filter/match-words";
 
 export const STORE_KINDS: readonly StoreItemType[] = [
   "engine",
@@ -72,9 +73,9 @@ export const inRepoSelection = (state: StoreState, item: StoreItem): boolean =>
   !state.repoSel.length || state.repoSel.includes(repoKey(item.repoUrl));
 
 const _matchesQuery = (item: StoreItem, q: string, sub: string): boolean =>
-  !q ||
-  [item.name, item.description, item.author?.name, item.repoName, sub].some(
-    (v) => !!v && v.toLowerCase().includes(q),
+  matchesWords(
+    [item.name, item.description, item.author?.name, item.repoName, sub],
+    q,
   );
 
 const _passesStatus = (item: StoreItem, status: StoreStatus): boolean => {
@@ -97,7 +98,7 @@ export const passes = (
     return false;
   if (withKind && state.sub && !itemSubtypes(item).includes(state.sub))
     return false;
-  return _matchesQuery(item, state.q.trim().toLowerCase(), subLabel);
+  return _matchesQuery(item, state.q, subLabel);
 };
 
 export const kindSubtypes = (state: StoreState): string[] => {

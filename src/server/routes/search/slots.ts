@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { getSlotPlugins } from "../../extensions/slots/registry";
 import {
   DEFAULT_SEARCH_TYPE,
@@ -21,6 +21,17 @@ const router = new Hono();
 
 type SlotBody = { query?: string; type?: string; results?: ScoredResult[] };
 
+const _slotBucket = (route: string, body: SlotBody): string =>
+  `slots:${route}:${"results" in body ? "results" : "early"}:`;
+
+const _guardSlotCall = async (
+  c: Context,
+  route: string,
+  body: SlotBody,
+): Promise<Response | null> =>
+  (await _applyRateLimit(c, _slotBucket(route, body))) ??
+  (await guardApiKey(c, "apiKeySearchEnabled"));
+
 const _sealedResults = (body: SlotBody): ScoredResult[] | undefined =>
   Array.isArray(body.results) ? body.results.filter(isSealedResult) : undefined;
 
@@ -28,12 +39,10 @@ const _requestedType = (raw: unknown): string =>
   typeof raw === "string" && raw.trim() ? raw.trim() : DEFAULT_SEARCH_TYPE;
 
 router.post("/api/slots", publicBodyLimit, async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-  const authRes = await guardApiKey(c, "apiKeySearchEnabled");
-  if (authRes) return authRes;
   const body = await readObjectBody<SlotBody>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
+  const blocked = await _guardSlotCall(c, "panels", body);
+  if (blocked) return blocked;
   if (!body.query || !body.query.trim()) return c.json({ panels: [] });
   const clientIp = getClientIp(c);
   const withResults = "results" in body;
@@ -54,12 +63,10 @@ router.post("/api/slots", publicBodyLimit, async (c) => {
 });
 
 router.post("/api/slots/glance", publicBodyLimit, async (c) => {
-  const limitRes = await _applyRateLimit(c);
-  if (limitRes) return limitRes;
-  const authRes = await guardApiKey(c, "apiKeySearchEnabled");
-  if (authRes) return authRes;
   const body = await readObjectBody<SlotBody>(c);
   if (!body) return c.json({ error: "Invalid JSON" }, 400);
+  const blocked = await _guardSlotCall(c, "glance", body);
+  if (blocked) return blocked;
   if (!body.query || !body.query.trim()) {
     return c.json({ error: "Missing query or results" }, 400);
   }

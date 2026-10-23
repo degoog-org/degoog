@@ -1,5 +1,6 @@
 import { Button } from "../../../../../shared/ui/components/primitives/button";
 import { FaIcon } from "../fa-icon";
+import { Spinner } from "../spinner";
 import { REPO_DETAIL_ID } from "./repo-tile";
 import { isOfficial, repoBehind, repoItems, repoKey } from "../../model";
 import { ago, counted, st } from "../../format";
@@ -105,11 +106,7 @@ export const RepoDetail = ({
           disabled={busy || state.refreshingAll}
           onClick={() => actions.refreshRepo(repo.url)}
         >
-          {busy ? (
-            <FaIcon name="fa-circle-notch" class="fa-spin" />
-          ) : (
-            <FaIcon name="fa-rotate-right" />
-          )}
+          {busy ? <Spinner /> : <FaIcon name="fa-rotate-right" />}
         </button>
         {official ? null : (
           <button

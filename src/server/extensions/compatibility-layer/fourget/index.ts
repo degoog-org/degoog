@@ -32,7 +32,7 @@ import { followEngineFetch, isHttpRedirect } from "./follow";
 import { nptKey } from "./npt-key";
 import { FOURGET_PAGES, mapPages, type FourGetPage } from "./pages";
 import { fourgetEngineId, scrapersDir, sharedLibDir, stagingRoot } from "./paths";
-import { phpBinary, phpStatus } from "./php-runtime";
+import { PHP_RUNNER_ARGS, phpBinary, phpStatus } from "./php-runtime";
 
 const NS = "4get-compat";
 const CACHE_NAMESPACE = "fourget-compat";
@@ -90,7 +90,7 @@ interface FourGetSpec {
 
 const _spec = (): RunnerSpec => ({
   bin: phpBinary(),
-  args: ["-d", "display_errors=stderr", "-d", "html_errors=0"],
+  args: PHP_RUNNER_ARGS,
   label: "4get",
 });
 

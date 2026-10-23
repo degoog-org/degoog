@@ -5,6 +5,7 @@ import type {
   ExtFilterGroup,
 } from "../../../types/ext-filter";
 import { focusTab } from "./filter-tabs";
+import { matchesWords } from "./match-words";
 
 export type IsOn = (ext: ExtensionMeta) => boolean;
 
@@ -20,11 +21,6 @@ export const createExtFilter = (): ExtFilter => ({
 export const isFiltered = (filter: ExtFilter): boolean =>
   !!filter.q.trim() || filter.status !== "all";
 
-const _matchesQuery = (ext: ExtensionMeta, q: string): boolean =>
-  !q ||
-  [ext.displayName, ext.description, ext.bangShortcut].some(
-    (v) => !!v && v.toLowerCase().includes(q),
-  );
 
 export const extMatches = (
   ext: ExtensionMeta,
@@ -34,7 +30,7 @@ export const extMatches = (
 ): boolean => {
   if (withStatus && filter.status === "on" && !isOn(ext)) return false;
   if (withStatus && filter.status === "off" && isOn(ext)) return false;
-  return _matchesQuery(ext, filter.q.trim().toLowerCase());
+  return matchesWords([ext.displayName, ext.description, ext.bangShortcut], filter.q);
 };
 
 export const filterExtGroups = (

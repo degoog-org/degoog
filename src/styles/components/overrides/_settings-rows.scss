@@ -92,7 +92,7 @@ $settings-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Liberation Mono
     border-radius: $radius-md;
 
     &:hover {
-      background: var(--bg-hover);
+      background: $btn-secondary-hover;
     }
   }
 

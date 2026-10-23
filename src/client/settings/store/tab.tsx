@@ -4,11 +4,13 @@ import { render as renderNodes } from "../../../shared/ui/tribute/dom";
 import { fetchRestartState } from "../shared/restart-state";
 import { fetchBehind, fetchItems, fetchRepos } from "./api";
 import { createStoreState } from "./state";
+import { hasUpdate } from "./model";
 import { StoreRoot } from "./render/store-root";
 import { REPO_GRID_ID } from "./render/repos/repo-grid";
 import { KIND_TABS_ID } from "./render/catalog/kind-tabs";
 import { revealActiveTab } from "../shared/filter/filter-tabs";
 import { REPO_FILTER_CLASS } from "./render/catalog/repo-filter";
+import { UPDATES_MENU_CLASS } from "./render/attention/updates-menu";
 import { maybeShowRestartNotice } from "./overlays/restart-notice";
 import { createViewActions } from "./actions/view-actions";
 import {
@@ -31,6 +33,7 @@ import type { StoreActions, StoreContext } from "../../types/store-tab";
 
 const VIEWS_SELECTOR = ".store-views";
 const VIEWS_SCROLL_GAP = 8;
+const DIALOG_SELECTOR = '[role="dialog"]';
 
 const _gridCols = (): number => {
   const grid = document.getElementById(REPO_GRID_ID);
@@ -61,6 +64,7 @@ export async function initStoreTab(
       ]);
       if (repos) state.repos = repos;
       if (items) state.items = items;
+      if (!state.updatingAll && !state.items.some(hasUpdate)) state.updatesOpen = false;
       if (restart) state.restartReasons = restart.pending ? restart.reasons : [];
     },
     reloadStatus: () => {
@@ -118,6 +122,7 @@ export async function initStoreTab(
 
   document.addEventListener("keydown", (e) => {
     if (!isVisible()) return;
+    if (!state.lightbox && document.activeElement?.closest(DIALOG_SELECTOR)) return;
     if (state.lightbox) {
       if (e.key === "ArrowLeft") actions.stepLightbox(-1);
       if (e.key === "ArrowRight") actions.stepLightbox(1);
@@ -125,12 +130,21 @@ export async function initStoreTab(
       return;
     }
     if (e.key === "Escape" && state.repoPopOpen) actions.toggleRepoPop();
+    else if (e.key === "Escape" && state.updatesOpen && !state.updatingAll) {
+      actions.toggleUpdates();
+      ctx.focus(`.${UPDATES_MENU_CLASS} button`);
+    }
   });
 
   document.addEventListener("pointerdown", (e) => {
-    if (!state.repoPopOpen) return;
-    if ((e.target as Element).closest(`.${REPO_FILTER_CLASS}`)) return;
-    Object.assign(state, { repoPopOpen: false, repoPopQ: "" });
+    if (!isVisible()) return;
+    const target = e.target as Element;
+    const closeRepoPop = state.repoPopOpen && !target.closest(`.${REPO_FILTER_CLASS}`);
+    const closeUpdates =
+      state.updatesOpen && !state.updatingAll && !target.closest(`.${UPDATES_MENU_CLASS}`);
+    if (!closeRepoPop && !closeUpdates) return;
+    if (closeRepoPop) Object.assign(state, { repoPopOpen: false, repoPopQ: "" });
+    if (closeUpdates) state.updatesOpen = false;
     paint();
   });
 

@@ -4,11 +4,16 @@
   z-index: 20;
   background: var(--bg);
   margin-top: -0.5rem;
-  padding: 0.5rem 0 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.filter-bar-wrap + * {
+  margin-top: 0.75rem;
 }
 
 .filter-bar {
   background: var(--bg-light);
+  box-shadow: 0 2px 0 color-mix(in srgb, #000 30%, var(--bg));
   border-radius: 0.5rem;
   padding: 0.75rem 0.75rem 0.5rem;
   display: flex;

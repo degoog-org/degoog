@@ -89,6 +89,7 @@
     },
     "no-results": "Nessun risultato trovato.",
     "search-failed": "Ricerca fallita. Riprova.",
+    "rate-limited": "Troppe richieste. Attendi un momento e riprova.",
     "no-engines": "Nessun motore di ricerca installato. {store} per sfogliarne e installarne alcuni.",
     "no-engines-store": "Vai allo Store",
     "sidebar": {

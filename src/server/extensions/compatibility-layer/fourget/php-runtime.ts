@@ -40,6 +40,29 @@ interface ProbePayload {
 
 export const phpBinary = (): string => process.env.DEGOOG_PHP_BIN ?? "php";
 
+const DISABLED_FUNCTIONS = [
+  "exec",
+  "shell_exec",
+  "system",
+  "passthru",
+  "proc_open",
+  "popen",
+  "pcntl_exec",
+  "pcntl_fork",
+  "putenv",
+  "dl",
+  "mail",
+];
+
+export const PHP_RUNNER_ARGS = [
+  "-d",
+  "display_errors=stderr",
+  "-d",
+  "html_errors=0",
+  "-d",
+  `disable_functions=${DISABLED_FUNCTIONS.join(",")}`,
+];
+
 const _probe = async (): Promise<PhpStatus> => {
   const proc = Bun.spawn([phpBinary(), "-d", "display_errors=stderr", "-r", PROBE_SNIPPET], {
     stdout: "pipe",

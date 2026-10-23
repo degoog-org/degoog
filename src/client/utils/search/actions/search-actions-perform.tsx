@@ -62,6 +62,8 @@ import {
   prepareResultsUi,
   pushSearchHistory,
   renderSearchResponse,
+  searchFailureMessage,
+  showSearchFailure,
 } from "./search-actions-render";
 
 const t = window.scopedT("themes/degoog");
@@ -195,9 +197,6 @@ export async function performSearch(
     );
   }
 
-  const resultsMeta = document.getElementById("results-meta");
-  const resultsList = document.getElementById("results-list");
-
   try {
     const res = await fetchSearch(query, engines, resolvedType, resolvedPage);
     if (!isCurrentSearch(seq)) return;
@@ -206,12 +205,7 @@ export async function performSearch(
       const body = await res.text().catch(() => "(unreadable)");
       if (!isCurrentSearch(seq)) return;
       console.error("[search] non-ok response", res.status, body);
-      const msg =
-        res.status === 429
-          ? "Too many requests. Please slow down."
-          : t("search-templates.search-failed");
-      if (resultsMeta) resultsMeta.textContent = "";
-      if (resultsList) render(<NoResults>{msg}</NoResults>, resultsList);
+      showSearchFailure(searchFailureMessage(res.status));
       return;
     }
     const data = (await res.json()) as SearchResponse;
@@ -229,12 +223,7 @@ export async function performSearch(
   } catch (err) {
     console.error("[search] search failed", err);
     if (!isCurrentSearch(seq)) return;
-    if (resultsMeta) resultsMeta.textContent = "";
-    if (resultsList)
-      render(
-        <NoResults>{t("search-templates.search-failed")}</NoResults>,
-        resultsList,
-      );
+    showSearchFailure(searchFailureMessage());
   } finally {
     announceSettled(seq);
   }
@@ -250,15 +239,15 @@ async function _performSearchWithBang(
   restorePage: number,
 ): Promise<void> {
   const glanceEl = document.getElementById("at-a-glance");
-  const resultsMeta = document.getElementById("results-meta");
-  const resultsList = document.getElementById("results-list");
   try {
     const [cmdRes, searchRes] = await Promise.all([
       fetchCommand(bangQuery, type, 1),
       fetchSearch(query, engines, type, page),
     ]);
     if (!searchRes.ok) {
-      throw new Error(`search request failed: ${searchRes.status}`);
+      if (!isCurrentSearch(seq)) return;
+      showSearchFailure(searchFailureMessage(searchRes.status));
+      return;
     }
     const searchData = (await searchRes.json()) as SearchResponse;
     if (!isCurrentSearch(seq)) return;
@@ -294,12 +283,7 @@ async function _performSearchWithBang(
   } catch (err) {
     console.error("[search] bang search failed", err);
     if (!isCurrentSearch(seq)) return;
-    if (resultsMeta) resultsMeta.textContent = "";
-    if (resultsList)
-      render(
-        <NoResults>{t("search-templates.search-failed")}</NoResults>,
-        resultsList,
-      );
+    showSearchFailure(searchFailureMessage());
   } finally {
     announceSettled(seq);
   }
