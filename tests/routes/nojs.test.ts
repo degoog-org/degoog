@@ -121,6 +121,7 @@ const harness = ({
   mock.module(SERVER_SETTINGS_MOD, () => ({
     ...serverSettingsReal,
     getInstanceSettings: async () => settings,
+    peekInstanceSettings: () => settings,
   }));
   mock.module(SEARCH_HANDLERS_MOD, () => ({
     ...searchHandlersReal,
@@ -523,7 +524,7 @@ describe("nojs results layout matches the real page", () => {
     expect(html).not.toContain("result-actions-menu");
   });
 
-  test("with no favicon provider the card shows the placeholder and never asks the proxy", async () => {
+  test("with no favicon source the card shows the placeholder and never asks the proxy", async () => {
     fakeFaviconProviders(false);
     harness({
       settings: enabled(),
@@ -533,6 +534,18 @@ describe("nojs results layout matches the real page", () => {
     expect(html).toContain("result-favicon-missing degoog-result--favicon-missing");
     expect(html).toContain('data-tooltip="No favicon extension installed"');
     expect(html).not.toContain("/api/proxy/favicon");
+  });
+
+  test("saved favicons render without an installed provider", async () => {
+    fakeFaviconProviders(false);
+    harness({
+      settings: enabled({ degoogIndexerEnabled: true }),
+      results: [makeResult({ favicon: "/api/proxy/favicon?domain=example.test&sig=feedface" })],
+    });
+    const html = await text("/nojs/search?q=hello").finally(restoreFaviconProviders);
+    expect(html).toContain("result-favicon degoog-result--favicon");
+    expect(html).toContain("/api/proxy/favicon?domain=example.test&amp;sig=feedface");
+    expect(html).not.toContain("result-favicon-missing");
   });
 
   test("an engine tag recalled from the index carries a tooltip", async () => {

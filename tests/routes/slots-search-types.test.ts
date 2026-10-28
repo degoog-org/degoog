@@ -5,9 +5,11 @@ import type { SettingValue } from "../../src/server/utils/settings/plugin-settin
 
 const SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
 const SLOTS_MOD = "../../src/server/extensions/slots/registry";
+const SERVER_SETTINGS_MOD = "../../src/server/utils/settings/server-settings";
 
 const settingsReal = { ...(await import(SETTINGS_MOD)) };
 const slotsReal = { ...(await import(SLOTS_MOD)) };
+const serverSettingsReal = { ...(await import(SERVER_SETTINGS_MOD)) };
 
 const STORED: Record<string, Record<string, SettingValue>> = {
   "news-panel": { [SLOT_SEARCH_TYPES_KEY]: ["news"] },
@@ -43,6 +45,10 @@ const SLOTS = [
 let router: { request: (req: Request) => Response | Promise<Response> };
 
 beforeAll(async () => {
+  mock.module(SERVER_SETTINGS_MOD, () => ({
+    ...serverSettingsReal,
+    getInstanceSettings: async () => ({}),
+  }));
   mock.module(SETTINGS_MOD, () => ({
     ...settingsReal,
     getSettings: async (id: string) => STORED[id] ?? {},
@@ -56,6 +62,7 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
+  mock.module(SERVER_SETTINGS_MOD, () => serverSettingsReal);
   mock.module(SETTINGS_MOD, () => settingsReal);
   mock.module(SLOTS_MOD, () => slotsReal);
 });

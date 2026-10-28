@@ -1,6 +1,11 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+import { describe, test, expect, beforeAll, afterAll, mock } from "bun:test";
 import { initServerKey } from "../../src/server/utils/security/server-key";
 import { fakeFaviconProviders, restoreFaviconProviders } from "../helpers/favicon-providers";
+import type { ServerSettingValue } from "../../src/server/utils/settings/server-settings";
+
+const SERVER_SETTINGS_MOD = "../../src/server/utils/settings/server-settings";
+const serverSettingsReal = { ...(await import(SERVER_SETTINGS_MOD)) };
+let instanceSettings: Record<string, ServerSettingValue> = {};
 
 let pagesRouter: {
   request: (req: Request | string) => Response | Promise<Response>;
@@ -16,6 +21,11 @@ beforeAll(async () => {
   delete process.env.DEGOOG_PUBLIC_INSTANCE;
   delete process.env.DEGOOG_SETTINGS_PATH;
 
+  mock.module(SERVER_SETTINGS_MOD, () => ({
+    ...serverSettingsReal,
+    getInstanceSettings: async () => instanceSettings,
+    peekInstanceSettings: () => instanceSettings,
+  }));
   await initServerKey();
   const mod = await import(
     `../../src/server/routes/pages/pages?pages-test=${Date.now()}`
@@ -24,6 +34,7 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
+  mock.module(SERVER_SETTINGS_MOD, () => serverSettingsReal);
   if (savedPublic !== undefined)
     process.env.DEGOOG_PUBLIC_INSTANCE = savedPublic;
   else delete process.env.DEGOOG_PUBLIC_INSTANCE;
@@ -53,16 +64,31 @@ describe("routes/pages", () => {
     expect(res.headers.get("Content-Type")).toContain("text/html");
   });
 
-  test("GET /search tells the page whether favicon providers exist", async () => {
-    for (const providers of [false, true]) {
+  test.each([
+    [false, false, false, false],
+    [false, false, true, false],
+    [false, true, false, false],
+    [false, true, true, true],
+    [true, false, false, true],
+    [true, false, true, true],
+    [true, true, false, true],
+    [true, true, true, true],
+  ])(
+    "GET /search reports favicon availability (provider=%s, indexer=%s, store=%s)",
+    async (providers, indexer, store, expected) => {
+      instanceSettings = {
+        degoogIndexerEnabled: indexer,
+        degoogFaviconStoreEnabled: store,
+      };
       fakeFaviconProviders(providers);
       try {
         const html = await (await pagesRouter.request("http://localhost/search")).text();
-        expect(html).toContain(`window.__DEGOOG_FAVICONS__={"providers":${providers}}`);
+        expect(html).toContain(`window.__DEGOOG_FAVICONS__={"providers":${expected}}`);
         expect(html).toContain('"refresh":false');
       } finally {
+        instanceSettings = {};
         restoreFaviconProviders();
       }
-    }
-  });
+    },
+  );
 });
