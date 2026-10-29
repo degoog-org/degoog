@@ -1,10 +1,9 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync } from "fs";
+import { mkdtempSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-const SHARED = join(tmpdir(), "degoog-settings-shortcuts-tests");
-mkdirSync(SHARED, { recursive: true });
+const SHARED = mkdtempSync(join(tmpdir(), "degoog-settings-shortcuts-tests-"));
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
 process.env.DEGOOG_PLUGIN_SETTINGS_FILE = join(SHARED, "plugin-settings.json");
 

@@ -1,11 +1,10 @@
 import { describe, test, expect, beforeAll, beforeEach } from "bun:test";
-import { mkdirSync } from "fs";
+import { mkdtempSync } from "fs";
 import { Database } from "bun:sqlite";
 import { tmpdir } from "os";
 import { join } from "path";
 
-const SHARED = join(tmpdir(), "degoog-indexer-tests");
-mkdirSync(SHARED, { recursive: true });
+const SHARED = mkdtempSync(join(tmpdir(), "degoog-indexer-tests-"));
 process.env.DEGOOG_INDEXER_DIR = SHARED;
 process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");

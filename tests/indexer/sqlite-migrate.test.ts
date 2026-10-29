@@ -1,12 +1,10 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { Database } from "bun:sqlite";
-import { mkdirSync, rmSync } from "fs";
+import { mkdtempSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-const SHARED = join(tmpdir(), "degoog-sqlite-migrate-tests");
-rmSync(SHARED, { recursive: true, force: true });
-mkdirSync(SHARED, { recursive: true });
+const SHARED = mkdtempSync(join(tmpdir(), "degoog-sqlite-migrate-tests-"));
 process.env.DEGOOG_INDEXER_DIR = SHARED;
 process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 
