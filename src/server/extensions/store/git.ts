@@ -167,10 +167,21 @@ export const resolveTrackedBranch = async (repoPath: string): Promise<string> =>
   return useBeta ? BETA_BRANCH : await headBranch(repoPath);
 };
 
-export const headSha = async (repoPath: string): Promise<string> =>
+const headSha = async (repoPath: string): Promise<string> =>
   (await runGit(["-C", repoPath, "rev-parse", "HEAD"])).stdout.trim();
 
+const hasStaleCommits = async (repoPath: string): Promise<boolean> => {
+  const head = await headSha(repoPath);
+  const run = await runGit(["-C", repoPath, "reflog", "show", "--all", "--format=%H"]);
+  if (run.exit !== 0) {
+    logger.debug("store:repo", `reflog read failed: ${sanitizeGitError(run.stderr)}`);
+    return false;
+  }
+  return run.stdout.split("\n").some((sha) => sha.trim() && sha.trim() !== head);
+};
+
 export const marieKondo = async (repoPath: string): Promise<void> => {
+  if (!(await hasStaleCommits(repoPath))) return;
   const expire = await runGit(["-C", repoPath, "reflog", "expire", "--expire=now", "--all"]);
   if (expire.exit !== 0) {
     logger.warn("store:repo", `reflog expire failed: ${sanitizeGitError(expire.stderr)}`);

@@ -17,7 +17,6 @@ import {
   cloneRepo,
   fetchRef,
   hardReset,
-  headSha,
   marieKondo,
   resolveTrackedBranch,
   syncBranch,
@@ -143,7 +142,6 @@ async function _removeRepo(url: string): Promise<void> {
 async function _refreshRepo(repo: RepoInfo): Promise<void> {
   const repoPath = join(getStoreDir(), repo.localPath);
   try {
-    const before = await headSha(repoPath);
     await syncBranch(repoPath);
     const branch = await resolveTrackedBranch(repoPath);
     const fetched = await fetchRef(repoPath, branch);
@@ -156,7 +154,7 @@ async function _refreshRepo(repo: RepoInfo): Promise<void> {
       repo.error = reset.error || `Git reset failed for ${branch}`;
       return;
     }
-    if ((await headSha(repoPath)) !== before) await marieKondo(repoPath);
+    await marieKondo(repoPath);
     clearItemCachesForRepo(repoPath);
     repo.error = null;
     repo.lastFetched = new Date().toISOString();

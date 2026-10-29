@@ -114,6 +114,18 @@ describe("refreshing a repo", () => {
     expect(readRepos().repos[0]).toMatchObject({ name: "Acme v2", error: null });
   });
 
+  test("a clone advanced before pruning existed is cleaned on the next no-op refresh", async () => {
+    const replaced = git(clone, "rev-parse", "HEAD");
+    pushNewVersion("Acme v2");
+    git(clone, "fetch", "-q", "--depth", "1", "origin", "+main:refs/remotes/origin/main");
+    git(clone, "reset", "-q", "--hard", "origin/main");
+    await refreshRepo(REPO_URL);
+
+    const probe = Bun.spawnSync(["git", "-C", clone, "cat-file", "-e", replaced]);
+    expect(probe.exitCode).not.toBe(0);
+    expect(readRepos().repos[0]).toMatchObject({ name: "Acme v2", error: null });
+  });
+
   test("missing package fields keep the old name and description but drop the image", async () => {
     writeRepos({ repos: [repoEntry({ description: "kept", repoImage: "old.png" })] });
     writeFileSync(join(work, "package.json"), JSON.stringify({}));
