@@ -126,6 +126,19 @@ describe("refreshing a repo", () => {
     expect(readRepos().repos[0]).toMatchObject({ name: "Acme v2", error: null });
   });
 
+  test("refs left on an untracked branch are dropped so their objects can be pruned", async () => {
+    git(clone, "fetch", "-q", "--depth", "1", "origin", "+develop:refs/remotes/origin/develop");
+    const leftover = git(clone, "rev-parse", "origin/develop");
+    pushNewVersion("Acme v2");
+    await refreshRepo(REPO_URL);
+
+    expect(git(clone, "for-each-ref", "--format=%(refname)")).toBe(
+      "refs/heads/main\nrefs/remotes/origin/main",
+    );
+    const probe = Bun.spawnSync(["git", "-C", clone, "cat-file", "-e", leftover]);
+    expect(probe.exitCode).not.toBe(0);
+  });
+
   test("missing package fields keep the old name and description but drop the image", async () => {
     writeRepos({ repos: [repoEntry({ description: "kept", repoImage: "old.png" })] });
     writeFileSync(join(work, "package.json"), JSON.stringify({}));

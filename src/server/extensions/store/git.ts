@@ -180,8 +180,28 @@ const hasStaleCommits = async (repoPath: string): Promise<boolean> => {
   return run.stdout.split("\n").some((sha) => sha.trim() && sha.trim() !== head);
 };
 
+const dropOtherRefs = async (repoPath: string): Promise<boolean> => {
+  const branch = await headBranch(repoPath);
+  if (!branch || branch === "HEAD") return false;
+  const keep = new Set([`refs/heads/${branch}`, `refs/remotes/origin/${branch}`]);
+  const run = await runGit(["-C", repoPath, "for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes"]);
+  if (run.exit !== 0) {
+    logger.debug("store:repo", `ref listing failed: ${sanitizeGitError(run.stderr)}`);
+    return false;
+  }
+  const stale = run.stdout.split("\n").map((ref) => ref.trim()).filter((ref) => ref && !keep.has(ref));
+  for (const ref of stale) {
+    const drop = await runGit(["-C", repoPath, "update-ref", "--no-deref", "-d", ref]);
+    if (drop.exit !== 0) {
+      logger.debug("store:repo", `could not drop ${ref}: ${sanitizeGitError(drop.stderr)}`);
+    }
+  }
+  return stale.length > 0;
+};
+
 export const marieKondo = async (repoPath: string): Promise<void> => {
-  if (!(await hasStaleCommits(repoPath))) return;
+  const dropped = await dropOtherRefs(repoPath);
+  if (!dropped && !(await hasStaleCommits(repoPath))) return;
   const expire = await runGit(["-C", repoPath, "reflog", "expire", "--expire=now", "--all"]);
   if (expire.exit !== 0) {
     logger.warn("store:repo", `reflog expire failed: ${sanitizeGitError(expire.stderr)}`);
