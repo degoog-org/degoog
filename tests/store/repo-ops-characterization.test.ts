@@ -103,6 +103,17 @@ describe("refreshing a repo", () => {
     expect(git(clone, "rev-parse", "HEAD")).toBe(git(work, "rev-parse", "HEAD"));
   });
 
+  test("a refresh that moves HEAD prunes the objects of the replaced commit", async () => {
+    const replaced = git(clone, "rev-parse", "HEAD");
+    pushNewVersion("Acme v2");
+    await refreshRepo(REPO_URL);
+
+    const probe = Bun.spawnSync(["git", "-C", clone, "cat-file", "-e", replaced]);
+    expect(probe.exitCode).not.toBe(0);
+    expect(git(clone, "status", "--porcelain")).toBe("");
+    expect(readRepos().repos[0]).toMatchObject({ name: "Acme v2", error: null });
+  });
+
   test("missing package fields keep the old name and description but drop the image", async () => {
     writeRepos({ repos: [repoEntry({ description: "kept", repoImage: "old.png" })] });
     writeFileSync(join(work, "package.json"), JSON.stringify({}));

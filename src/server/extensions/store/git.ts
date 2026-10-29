@@ -5,6 +5,7 @@ import { getStoreDir } from "./persistence";
 
 const CLONE_TIMEOUT_MS = 60_000;
 const FETCH_TIMEOUT_MS = 15_000;
+const GC_TIMEOUT_MS = 60_000;
 const DEGOOG_BETA_STORE = process.env.DEGOOG_BETA_STORE === "1";
 const BETA_BRANCH = "develop";
 const STALE_LOCK_FILES = ["shallow.lock", "index.lock"];
@@ -164,6 +165,23 @@ export const resolveTrackedBranch = async (repoPath: string): Promise<string> =>
     DEGOOG_BETA_STORE &&
     (await runGit(["-C", repoPath, "rev-parse", "--verify", `origin/${BETA_BRANCH}`])).exit === 0;
   return useBeta ? BETA_BRANCH : await headBranch(repoPath);
+};
+
+export const headSha = async (repoPath: string): Promise<string> =>
+  (await runGit(["-C", repoPath, "rev-parse", "HEAD"])).stdout.trim();
+
+export const marieKondo = async (repoPath: string): Promise<void> => {
+  const expire = await runGit(["-C", repoPath, "reflog", "expire", "--expire=now", "--all"]);
+  if (expire.exit !== 0) {
+    logger.warn("store:repo", `reflog expire failed: ${sanitizeGitError(expire.stderr)}`);
+    return;
+  }
+  const gc = await runGit(["-C", repoPath, "gc", "--prune=now", "--quiet"], {
+    timeoutMs: GC_TIMEOUT_MS,
+  });
+  if (gc.exit === 0) return;
+  const reason = gc.timedOut ? "timed out" : sanitizeGitError(gc.stderr);
+  logger.warn("store:repo", `git gc failed: ${reason}`);
 };
 
 export const behindCount = async (repoPath: string, remoteRef: string): Promise<number> => {
