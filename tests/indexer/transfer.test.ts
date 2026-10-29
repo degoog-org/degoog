@@ -1,10 +1,9 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { existsSync, mkdirSync, rmSync, statSync } from "fs";
+import { existsSync, mkdtempSync, rmSync, statSync } from "fs";
 import { tmpdir } from "os";
 import { dirname, join } from "path";
 
-const SHARED = join(tmpdir(), "degoog-indexer-tests");
-mkdirSync(SHARED, { recursive: true });
+const SHARED = mkdtempSync(join(tmpdir(), "degoog-indexer-tests-"));
 process.env.DEGOOG_INDEXER_DIR = SHARED;
 process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
 process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
@@ -317,6 +316,7 @@ describe("indexer chunked transfer", () => {
   });
 
   test("chunked import restores rows into a cleared index", async () => {
+    await seed();
     const path = await buildSqliteExportFile(TYPE);
     const bytes = new Uint8Array(await Bun.file(path).arrayBuffer());
 

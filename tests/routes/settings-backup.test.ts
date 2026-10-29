@@ -9,6 +9,7 @@ import {
   updateInstanceSettings,
 } from "../../src/server/utils/settings/server-settings";
 import {
+  clearDomainListsCache,
   readDomainLists,
   writeDomainList,
 } from "../../src/server/utils/filtering/domain-lists";
@@ -141,12 +142,14 @@ beforeEach(() => {
   clearServerSettingsCache();
   clearPluginSettingsCache();
   clearShortcutsSettingsCache();
+  clearDomainListsCache();
 });
 
 afterEach(() => {
   clearServerSettingsCache();
   clearPluginSettingsCache();
   clearShortcutsSettingsCache();
+  clearDomainListsCache();
   rmSync(tempDir, { recursive: true, force: true });
   for (const name of ISOLATED_ENV) {
     const value = savedEnv[name];
