@@ -2,10 +2,12 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { installClientEnv } from "../helpers/client-env";
 
 type BaseWindow = { __DEGOOG_BASE_URL__?: string };
+type UrlModule = typeof import("../../src/client/utils/net/url");
+type StateModule = typeof import("../../src/client/state");
 
 let restore: () => void;
-let buildSearchUrl: typeof import("../../src/client/utils/net/url").buildSearchUrl;
-let state: typeof import("../../src/client/state").state;
+let buildSearchUrl: UrlModule["buildSearchUrl"];
+let state: StateModule["state"];
 
 const withBase = (base: string, fn: () => void): void => {
   const g = globalThis as unknown as { window: BaseWindow };

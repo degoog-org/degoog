@@ -38,9 +38,6 @@ const MIME_TYPES: Record<string, string> = {
   ".woff2": "font/woff2",
 };
 
-const pluginsDir = getPluginsDir();
-const themesDataDir = getThemesDir();
-
 const router = new Hono();
 
 router.get("/plugins/:folder/*", async (c) => {
@@ -53,7 +50,7 @@ router.get("/plugins/:folder/*", async (c) => {
   const mime = MIME_TYPES[ext];
   if (!mime) return c.notFound();
   const source = getScriptFolderSource(folder);
-  const rootDir = source === "builtin" ? commandBuiltinsDir : pluginsDir;
+  const rootDir = source === "builtin" ? commandBuiltinsDir : getPluginsDir();
   const filePath = resolveContained(rootDir, folder, rest);
   if (!filePath) return c.notFound();
   const file = Bun.file(filePath);
@@ -88,7 +85,7 @@ router.get("/themes/:folder/*", async (c) => {
   const ext = rest.substring(rest.lastIndexOf("."));
   const mime = MIME_TYPES[ext];
   if (!mime) return c.notFound();
-  const filePath = resolveContained(themesDataDir, folder, rest);
+  const filePath = resolveContained(getThemesDir(), folder, rest);
   if (!filePath) return c.notFound();
   const file = Bun.file(filePath);
   if (!(await file.exists())) return c.notFound();

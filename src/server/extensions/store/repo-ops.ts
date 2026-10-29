@@ -17,6 +17,7 @@ import {
   cloneRepo,
   fetchRef,
   hardReset,
+  marieKondo,
   resolveTrackedBranch,
   syncBranch,
 } from "./git";
@@ -153,6 +154,7 @@ async function _refreshRepo(repo: RepoInfo): Promise<void> {
       repo.error = reset.error || `Git reset failed for ${branch}`;
       return;
     }
+    await marieKondo(repoPath);
     clearItemCachesForRepo(repoPath);
     repo.error = null;
     repo.lastFetched = new Date().toISOString();
