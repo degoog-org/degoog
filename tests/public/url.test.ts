@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { installClientEnv } from "../helpers/client-env";
 
+type BaseWindow = { __DEGOOG_BASE_URL__?: string };
 type UrlModule = typeof import("../../src/client/utils/net/url");
 type StateModule = typeof import("../../src/client/state");
 
@@ -9,7 +10,7 @@ let buildSearchUrl: UrlModule["buildSearchUrl"];
 let state: StateModule["state"];
 
 const withBase = (base: string, fn: () => void): void => {
-  const g = globalThis as unknown as { window: { __DEGOOG_BASE_URL__?: string } };
+  const g = globalThis as unknown as { window: BaseWindow };
   const prev = g.window.__DEGOOG_BASE_URL__;
   g.window.__DEGOOG_BASE_URL__ = base;
   try {
@@ -19,15 +20,15 @@ const withBase = (base: string, fn: () => void): void => {
   }
 };
 
-beforeAll(async () => {
-  restore = installClientEnv();
-  ({ buildSearchUrl } = await import("../../src/client/utils/net/url"));
-  ({ state } = await import("../../src/client/state"));
-});
-
-afterAll(() => restore());
-
 describe("public/url", () => {
+  beforeAll(async () => {
+    restore = installClientEnv();
+    ({ buildSearchUrl } = await import("../../src/client/utils/net/url"));
+    ({ state } = await import("../../src/client/state"));
+  });
+
+  afterAll(() => restore());
+
   test("buildSearchUrl includes query and engine params", () => {
     state.currentTimeFilter = "any";
     const out = buildSearchUrl("test query", { duckduckgo: true }, "all", 1);
