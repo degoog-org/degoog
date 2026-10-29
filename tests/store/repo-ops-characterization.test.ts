@@ -139,6 +139,21 @@ describe("refreshing a repo", () => {
     expect(probe.exitCode).not.toBe(0);
   });
 
+  test("a prune interrupted after the reflog expiry is retried on the next refresh", async () => {
+    const replaced = git(clone, "rev-parse", "HEAD");
+    pushNewVersion("Acme v2");
+    git(clone, "fetch", "-q", "--depth", "1", "origin", "+main:refs/remotes/origin/main");
+    git(clone, "reset", "-q", "--hard", "origin/main");
+    git(clone, "reflog", "expire", "--expire=now", "--all");
+    const marker = join(clone, ".git", "degoog-prune-pending");
+    writeFileSync(marker, "");
+    await refreshRepo(REPO_URL);
+
+    const probe = Bun.spawnSync(["git", "-C", clone, "cat-file", "-e", replaced]);
+    expect(probe.exitCode).not.toBe(0);
+    expect(existsSync(marker)).toBe(false);
+  });
+
   test("missing package fields keep the old name and description but drop the image", async () => {
     writeRepos({ repos: [repoEntry({ description: "kept", repoImage: "old.png" })] });
     writeFileSync(join(work, "package.json"), JSON.stringify({}));
