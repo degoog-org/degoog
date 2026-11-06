@@ -9,7 +9,7 @@ import { subtypeLabel } from "../store/render/labels";
 import { ExtFilterBar, extFilterIds } from "../shared/filter/ext-filter-bar";
 import { ExtNoMatch } from "../shared/filter/ext-no-match";
 import {
-  createExtFilter,
+  getExtFilter,
   createExtFilterActions,
   filterExtGroups,
   isFiltered,
@@ -71,7 +71,7 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
   const all = [...allExtensions.plugins].sort(
     (a, b) => _priority(b) - _priority(a),
   );
-  const filter = createExtFilter();
+  const filter = getExtFilter("plugins");
   const ids = extFilterIds("plugins");
   const actions = createExtFilterActions(filter, () => paint(), ids);
 

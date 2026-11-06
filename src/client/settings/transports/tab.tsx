@@ -6,7 +6,7 @@ import { ExtFilterBar, extFilterIds } from "../shared/filter/ext-filter-bar";
 import { ExtNoMatch } from "../shared/filter/ext-no-match";
 import {
   countItems,
-  createExtFilter,
+  getExtFilter,
   createExtFilterActions,
   filterExtGroups,
   settingsIsOn,
@@ -41,7 +41,7 @@ export function initTransportsTab(allExtensions: AllExtensions): void {
       items: transports.filter((transport) => BUILTIN_IDS.has(transport.id)),
     },
   ].filter((group) => group.items.length > 0);
-  const filter = createExtFilter();
+  const filter = getExtFilter("transports");
   const ids = extFilterIds("transports");
   const actions = createExtFilterActions(filter, () => paint(), ids);
 

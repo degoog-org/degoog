@@ -42,62 +42,82 @@ const _getOrCreateNoResults = (main: HTMLElement): HTMLElement => {
   return el;
 };
 
-export function initGlobalSearch(): void {
+let _index: _Result[] | null = null;
+
+const _apply = (): void => {
   const input = document.getElementById(
     "settings-global-search",
   ) as HTMLInputElement | null;
   const main = document.querySelector<HTMLElement>(".settings-page-main");
   if (!input || !main) return;
 
-  const index = _buildIndex();
+  const q = input.value.trim().toLowerCase();
+  const noResults = _getOrCreateNoResults(main);
 
-  input.addEventListener("input", () => {
-    const q = input.value.trim().toLowerCase();
-    const noResults = _getOrCreateNoResults(main);
-
-    if (!q) {
-      main.classList.remove("settings-search-active", "settings-search-empty", "settings-search-has-save");
-      noResults.hidden = true;
-      document
-        .querySelectorAll<HTMLElement>(".settings-section, .ext-card, .ext-group")
-        .forEach((el) => {
-          el.style.display = "";
-        });
-      return;
-    }
-
-    main.classList.add("settings-search-active");
-
+  if (!q) {
+    main.classList.remove("settings-search-active", "settings-search-empty", "settings-search-has-save");
+    noResults.hidden = true;
     document
-      .querySelectorAll<HTMLElement>(
-        ".settings-section, .ext-card:not(#settings-search-no-results)",
-      )
+      .querySelectorAll<HTMLElement>(".settings-section, .ext-card, .ext-group")
       .forEach((el) => {
-        el.style.display = "none";
+        el.style.display = "";
       });
+    return;
+  }
 
-    const matches = index.filter((r) => r.text.includes(q));
-    matches.forEach((r) => {
-      r.el.style.display = "";
+  main.classList.add("settings-search-active");
+
+  document
+    .querySelectorAll<HTMLElement>(
+      ".settings-section, .ext-card:not(#settings-search-no-results)",
+    )
+    .forEach((el) => {
+      el.style.display = "none";
     });
 
-    const needsSave = matches.some((r) => r.tab === "server");
-    main.classList.toggle("settings-search-has-save", needsSave);
-
-    document.querySelectorAll<HTMLElement>(".ext-group").forEach((group) => {
-      const anyVisible = Array.from(
-        group.querySelectorAll<HTMLElement>(".ext-card"),
-      ).some((c) => c.style.display !== "none");
-      group.style.display = anyVisible ? "" : "none";
-    });
-
-    if (matches.length === 0) {
-      main.classList.add("settings-search-empty");
-      noResults.textContent = t("settings-page.tab-search.no-results");
-      noResults.hidden = false;
-    } else {
-      main.classList.remove("settings-search-empty");
-      noResults.hidden = true;
-    }
+  _index ??= _buildIndex();
+  const matches = _index.filter((r) => r.text.includes(q));
+  matches.forEach((r) => {
+    r.el.style.display = "";
   });
+
+  const needsSave = matches.some((r) => r.tab === "server");
+  main.classList.toggle("settings-search-has-save", needsSave);
+
+  document.querySelectorAll<HTMLElement>(".ext-group").forEach((group) => {
+    const anyVisible = Array.from(
+      group.querySelectorAll<HTMLElement>(".ext-card"),
+    ).some((c) => c.style.display !== "none");
+    group.style.display = anyVisible ? "" : "none";
+  });
+
+  if (matches.length === 0) {
+    main.classList.add("settings-search-empty");
+    noResults.textContent = t("settings-page.tab-search.no-results");
+    noResults.hidden = false;
+  } else {
+    main.classList.remove("settings-search-empty");
+    noResults.hidden = true;
+  }
+};
+
+export function initGlobalSearch(): void {
+  const input = document.getElementById("settings-global-search");
+  const main = document.querySelector<HTMLElement>(".settings-page-main");
+  if (!input || !main) return;
+
+  input.addEventListener("input", _apply);
+
+  // Tabs re-render (save, filter paint, lazy load): drop the stale index and re-filter.
+  const noResults = _getOrCreateNoResults(main);
+  let pending = false;
+  new MutationObserver((records) => {
+    if (pending || records.every((r) => noResults.contains(r.target))) return;
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      _index = null;
+      _apply();
+    });
+  }).observe(main, { childList: true, subtree: true });
 }
