@@ -7,10 +7,13 @@ const CLONE_TIMEOUT_MS = 60_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const GC_TIMEOUT_MS = 60_000;
 const LOCAL_TIMEOUT_MS = 15_000;
-const DEGOOG_BETA_STORE = process.env.DEGOOG_BETA_STORE === "1";
 const BETA_BRANCH = "develop";
 const STALE_LOCK_FILES = ["shallow.lock", "index.lock"];
 const PRUNE_MARKER = "degoog-prune-pending";
+
+export const isGlobalBetaStore = (): boolean => process.env.DEGOOG_BETA_STORE === "1";
+
+const wantsBeta = (beta: boolean): boolean => isGlobalBetaStore() || beta;
 
 interface GitRun {
   exit: number;
@@ -88,6 +91,9 @@ const headBranch = async (repoPath: string): Promise<string> =>
   (await runGit(["-C", repoPath, "rev-parse", "--abbrev-ref", "HEAD"], { timeoutMs: LOCAL_TIMEOUT_MS }))
     .stdout.trim();
 
+export const isOnBetaBranch = async (repoPath: string): Promise<boolean> =>
+  (await headBranch(repoPath)) === BETA_BRANCH;
+
 const runFetchRef = (repoPath: string, branch: string): Promise<GitRun> =>
   runGit(
     ["-C", repoPath, "fetch", "--depth", "1", "origin", `+${branch}:refs/remotes/origin/${branch}`],
@@ -136,9 +142,9 @@ export const hardReset = async (
   return { ok: false, error: run.timedOut ? "Reset timed out" : sanitizeGitError(run.stderr) };
 };
 
-export const syncBranch = async (repoPath: string): Promise<void> => {
+export const syncBranch = async (repoPath: string, beta = false): Promise<void> => {
   const current = await headBranch(repoPath);
-  if (DEGOOG_BETA_STORE) {
+  if (wantsBeta(beta)) {
     if (current === BETA_BRANCH) return;
     const result = await switchBranch(repoPath, BETA_BRANCH);
     if (!result.ok) {
@@ -165,9 +171,12 @@ export const syncBranch = async (repoPath: string): Promise<void> => {
   }
 };
 
-export const resolveTrackedBranch = async (repoPath: string): Promise<string> => {
+export const resolveTrackedBranch = async (
+  repoPath: string,
+  beta = false,
+): Promise<string> => {
   const useBeta =
-    DEGOOG_BETA_STORE &&
+    wantsBeta(beta) &&
     (
       await runGit(["-C", repoPath, "rev-parse", "--verify", `origin/${BETA_BRANCH}`], {
         timeoutMs: LOCAL_TIMEOUT_MS,
@@ -191,10 +200,10 @@ const hasStaleCommits = async (repoPath: string): Promise<boolean> => {
   return run.stdout.split("\n").some((sha) => sha.trim() && sha.trim() !== head);
 };
 
-const dropOtherRefs = async (repoPath: string): Promise<boolean> => {
+const dropOtherRefs = async (repoPath: string, beta: boolean): Promise<boolean> => {
   const branch = await headBranch(repoPath);
   if (!branch || branch === "HEAD") return false;
-  const tracked = await resolveTrackedBranch(repoPath);
+  const tracked = await resolveTrackedBranch(repoPath, beta);
   const keep = new Set([`refs/heads/${branch}`, `refs/remotes/origin/${tracked}`]);
   const run = await runGit(
     ["-C", repoPath, "for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes"],
@@ -227,14 +236,14 @@ const isPrunePending = async (repoPath: string): Promise<boolean> =>
     () => false,
   );
 
-const needsPrune = async (repoPath: string): Promise<boolean> => {
-  const dropped = await dropOtherRefs(repoPath);
+const needsPrune = async (repoPath: string, beta: boolean): Promise<boolean> => {
+  const dropped = await dropOtherRefs(repoPath, beta);
   if (dropped || (await isPrunePending(repoPath))) return true;
   return hasStaleCommits(repoPath);
 };
 
-export const marieKondo = async (repoPath: string): Promise<void> => {
-  if (!(await needsPrune(repoPath))) return;
+export const marieKondo = async (repoPath: string, beta = false): Promise<void> => {
+  if (!(await needsPrune(repoPath, beta))) return;
   try {
     await writeFile(pruneMarker(repoPath), "");
   } catch (err) {
@@ -270,9 +279,9 @@ export const behindCount = async (repoPath: string, remoteRef: string): Promise<
   return Number.isNaN(n) ? 0 : Math.max(0, n);
 };
 
-export const cloneRepo = async (url: string, dest: string): Promise<void> => {
+export const cloneRepo = async (url: string, dest: string, beta = false): Promise<void> => {
   const useBeta =
-    DEGOOG_BETA_STORE &&
+    wantsBeta(beta) &&
     (
       await runGit(["ls-remote", "--heads", url, BETA_BRANCH], { timeoutMs: FETCH_TIMEOUT_MS })
     ).stdout.trim().length > 0;

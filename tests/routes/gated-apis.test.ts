@@ -103,6 +103,7 @@ const GATED_APIS: Array<{ method: Method; path: string; routerKey: RouterKey; bo
   { method: "POST", path: "/api/store/repos", routerKey: "store" },
   { method: "DELETE", path: "/api/store/repos", routerKey: "store" },
   { method: "POST", path: "/api/store/repos/refresh", routerKey: "store" },
+  { method: "POST", path: "/api/store/repos/beta", routerKey: "store" },
   { method: "POST", path: "/api/store/install", routerKey: "store" },
   { method: "POST", path: "/api/store/uninstall", routerKey: "store" },
   { method: "POST", path: "/api/store/update", routerKey: "store" },

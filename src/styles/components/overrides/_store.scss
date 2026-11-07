@@ -305,6 +305,11 @@
   color: var(--danger);
 }
 
+.store-icon-btn--on,
+.store-icon-btn--on:disabled {
+  color: var(--text-link);
+}
+
 .store-icon-btn:disabled {
   cursor: default;
   background: none;

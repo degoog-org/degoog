@@ -10,6 +10,7 @@ export interface RepoInfo {
   description: string;
   error: string | null;
   repoImage?: string | null;
+  beta?: boolean;
 }
 
 export interface StoreItem {

@@ -9,6 +9,7 @@ const _hashView = (): StoreView => {
 
 export const createStoreState = (): StoreState => ({
   repos: [],
+  globalBeta: false,
   items: [],
   behind: {},
   restartReasons: [],

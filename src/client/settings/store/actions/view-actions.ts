@@ -26,6 +26,7 @@ type ViewActions = Omit<
   | "refreshRepo"
   | "refreshBehind"
   | "refreshAll"
+  | "setRepoBeta"
   | "removeRepo"
   | "addRepo"
 >;

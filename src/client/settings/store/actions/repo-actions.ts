@@ -51,6 +51,33 @@ export const refreshRepo = async (
   ctx.render();
 };
 
+export const setRepoBeta = async (
+  ctx: StoreContext,
+  url: string,
+  beta: boolean,
+): Promise<void> => {
+  const { state } = ctx;
+  const repo = findRepo(state, url);
+  if (!repo || state.globalBeta) return;
+  const key = repoKey(url);
+  state.repoBusy.add(key);
+  state.repoNotes.delete(key);
+  // Optimistic value so a failed switch re-renders as a changed prop and unticks the checkbox.
+  repo.beta = beta;
+  ctx.render();
+  const res = await sendStore("/api/store/repos/beta", { url: repo.url, beta }, ctx.getToken);
+  await ctx.reload();
+  ctx.reloadStatus();
+  state.repoBusy.delete(key);
+  state.repoNotes.set(
+    key,
+    res.ok
+      ? { ok: true, text: st(beta ? "beta-on-note" : "beta-off-note") }
+      : { ok: false, text: res.error || st("beta-failed") },
+  );
+  ctx.render();
+};
+
 export const refreshBehind = (ctx: StoreContext): void => {
   ctx.state.repos
     .filter((r) => repoBehind(ctx.state, r) > 0)

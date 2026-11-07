@@ -18,8 +18,16 @@ const _get = async <T>(path: string, getToken: GetToken): Promise<T | null> => {
   return (await res.json()) as T;
 };
 
-export const fetchRepos = async (getToken: GetToken): Promise<RepoInfo[] | null> =>
-  (await _get<{ repos?: RepoInfo[] }>("/api/store/repos", getToken))?.repos ?? null;
+export const fetchRepos = async (
+  getToken: GetToken,
+): Promise<{ repos: RepoInfo[]; globalBeta: boolean } | null> => {
+  const data = await _get<{ repos?: RepoInfo[]; globalBeta?: boolean }>(
+    "/api/store/repos",
+    getToken,
+  );
+  if (!data?.repos) return null;
+  return { repos: data.repos, globalBeta: !!data.globalBeta };
+};
 
 export const fetchItems = async (getToken: GetToken): Promise<StoreItem[] | null> =>
   (await _get<{ items?: StoreItem[] }>("/api/store/items", getToken))?.items ?? null;
