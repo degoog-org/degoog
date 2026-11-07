@@ -41,7 +41,7 @@ export function initTransportsTab(allExtensions: AllExtensions): void {
       items: transports.filter((transport) => BUILTIN_IDS.has(transport.id)),
     },
   ].filter((group) => group.items.length > 0);
-  const filter = getExtFilter("transports");
+  const filter = getExtFilter("transports", groups);
   const ids = extFilterIds("transports");
   const actions = createExtFilterActions(filter, () => paint(), ids);
 

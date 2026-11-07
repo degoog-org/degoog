@@ -156,11 +156,11 @@ async function _refreshRepo(repo: RepoInfo): Promise<void> {
       repo.error = reset.error || `Git reset failed for ${branch}`;
       return;
     }
-    await marieKondo(repoPath, repo.beta);
     clearItemCachesForRepo(repoPath);
     repo.error = null;
     repo.lastFetched = new Date().toISOString();
     applyPackage(repo, await readRepoPackage(repoPath));
+    await marieKondo(repoPath, branch);
   } catch (e) {
     repo.error = e instanceof Error ? e.message : String(e);
   }
