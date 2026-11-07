@@ -13,14 +13,16 @@ export const settingsIsOn: IsOn = (ext) => ext.settings["disabled"] !== "true";
 
 const _filters = new Map<string, ExtFilter>();
 
-/** Same filter per key so a tab re-render keeps the query; type resets as its group may be gone. */
-export const getExtFilter = (key: string): ExtFilter => {
+export const getExtFilter = (
+  key: string,
+  groups: ExtFilterGroup[],
+): ExtFilter => {
   let filter = _filters.get(key);
   if (!filter) {
     filter = { q: "", type: "all", status: "all", open: false };
     _filters.set(key, filter);
   }
-  filter.type = "all";
+  if (!groups.some((group) => group.key === filter.type)) filter.type = "all";
   return filter;
 };
 

@@ -71,7 +71,7 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
   const all = [...allExtensions.plugins].sort(
     (a, b) => _priority(b) - _priority(a),
   );
-  const filter = getExtFilter("plugins");
+  const filter = getExtFilter("plugins", _groups(all));
   const ids = extFilterIds("plugins");
   const actions = createExtFilterActions(filter, () => paint(), ids);
 
@@ -99,7 +99,7 @@ export function initPluginsTab(allExtensions: AllExtensions): void {
           actions={actions}
         />
         {visible.length ? null : <ExtNoMatch filter={filter} onClear={actions.clear} />}
-        <div class="ext-group">
+        <div key="plugins" class="ext-group">
           <div class="ext-cards ext-cards--orderable">
             {visible.map((plugin) => (
               <PluginCard
