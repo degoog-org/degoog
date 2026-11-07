@@ -1,12 +1,10 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { Database } from "bun:sqlite";
-import { mkdtempSync, rmSync } from "fs";
-import { tmpdir } from "os";
+import { rmSync } from "fs";
 import { join } from "path";
+import { useIndexerDir } from "../helpers/indexer-env";
 
-const SHARED = mkdtempSync(join(tmpdir(), "degoog-sqlite-migrate-tests-"));
-process.env.DEGOOG_INDEXER_DIR = SHARED;
-process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
+const SHARED = useIndexerDir("degoog-sqlite-migrate-tests-");
 
 import { SqliteAdapter } from "../../src/server/indexer/adapters/sqlite/adapter";
 

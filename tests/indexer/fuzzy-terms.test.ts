@@ -1,13 +1,9 @@
 import { describe, test, expect, beforeAll, beforeEach } from "bun:test";
-import { mkdtempSync } from "fs";
 import { Database } from "bun:sqlite";
-import { tmpdir } from "os";
 import { join } from "path";
+import { useIndexerDir } from "../helpers/indexer-env";
 
-const SHARED = mkdtempSync(join(tmpdir(), "degoog-indexer-tests-"));
-process.env.DEGOOG_INDEXER_DIR = SHARED;
-process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
-process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
+const SHARED = useIndexerDir("degoog-indexer-tests-");
 
 import { buildFtsQuery } from "../../src/server/indexer/adapters/sqlite/fts";
 import { FUZZY_SQL } from "../../src/server/indexer/adapters/sqlite/statements";

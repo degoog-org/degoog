@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync } from "fs";
+import { mkdtempSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -27,6 +27,7 @@ describe("settings restart routes", () => {
   });
 
   afterAll(() => {
+    rmSync(SHARED, { recursive: true, force: true });
     if (savedDangerouslyNoPassword !== undefined) {
       process.env.DEGOOG_DANGEROUSLY_NO_PASSWORD = savedDangerouslyNoPassword;
     } else {

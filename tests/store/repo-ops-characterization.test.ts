@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import {
@@ -114,6 +114,19 @@ describe("refreshing a repo", () => {
     expect(readRepos().repos[0]).toMatchObject({ name: "Acme v2", error: null });
   });
 
+  test("a refresh with no upstream change leaves unreachable objects alone", async () => {
+    await refreshRepo(REPO_URL);
+    const loose = Bun.spawnSync(["git", "-C", clone, "hash-object", "-w", "--stdin"], {
+      stdin: Buffer.from("orphan"),
+    });
+    const orphan = loose.stdout.toString().trim();
+    await refreshRepo(REPO_URL);
+
+    const probe = Bun.spawnSync(["git", "-C", clone, "cat-file", "-e", orphan]);
+    expect(probe.exitCode).toBe(0);
+    expect(readRepos().repos[0]).toMatchObject({ name: "Acme v1", error: null });
+  });
+
   test("a clone advanced before pruning existed is cleaned on the next no-op refresh", async () => {
     const replaced = git(clone, "rev-parse", "HEAD");
     pushNewVersion("Acme v2");
@@ -147,11 +160,26 @@ describe("refreshing a repo", () => {
     git(clone, "reflog", "expire", "--expire=now", "--all");
     const marker = join(clone, ".git", "degoog-prune-pending");
     writeFileSync(marker, "");
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60_000);
+    utimesSync(marker, twoHoursAgo, twoHoursAgo);
     await refreshRepo(REPO_URL);
 
     const probe = Bun.spawnSync(["git", "-C", clone, "cat-file", "-e", replaced]);
     expect(probe.exitCode).not.toBe(0);
     expect(existsSync(marker)).toBe(false);
+  });
+
+  test("a prune that failed recently is not retried until the backoff passes", async () => {
+    const replaced = git(clone, "rev-parse", "HEAD");
+    const marker = join(clone, ".git", "degoog-prune-pending");
+    writeFileSync(marker, "");
+    pushNewVersion("Acme v2");
+    await refreshRepo(REPO_URL);
+
+    const probe = Bun.spawnSync(["git", "-C", clone, "cat-file", "-e", replaced]);
+    expect(probe.exitCode).toBe(0);
+    expect(existsSync(marker)).toBe(true);
+    expect(readRepos().repos[0]).toMatchObject({ name: "Acme v2", error: null });
   });
 
   test("missing package fields keep the old name and description but drop the image", async () => {

@@ -1,4 +1,5 @@
-import { access, rm, realpath, writeFile } from "fs/promises";
+import type { Subprocess } from "bun";
+import { rm, realpath, stat, writeFile } from "fs/promises";
 import { join, relative, isAbsolute } from "path";
 import { logger } from "../../utils/logger";
 import { getStoreDir } from "./persistence";
@@ -7,6 +8,8 @@ const CLONE_TIMEOUT_MS = 60_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const GC_TIMEOUT_MS = 60_000;
 const LOCAL_TIMEOUT_MS = 15_000;
+const WORKTREE_TIMEOUT_MS = 60_000;
+const PRUNE_RETRY_BACKOFF_MS = 60 * 60_000;
 const DEGOOG_BETA_STORE = process.env.DEGOOG_BETA_STORE === "1";
 const BETA_BRANCH = "develop";
 const STALE_LOCK_FILES = ["shallow.lock", "index.lock"];
@@ -19,18 +22,32 @@ interface GitRun {
   timedOut: boolean;
 }
 
+const killProcessGroup = (proc: Subprocess): void => {
+  try {
+    process.kill(-proc.pid, "SIGTERM");
+  } catch (err) {
+    logger.debug("store:repo", `could not signal git process group ${proc.pid}`, err);
+    proc.kill();
+  }
+};
+
 const runGit = async (
   args: string[],
   opts: { cwd?: string; timeoutMs?: number } = {},
 ): Promise<GitRun> => {
-  const proc = Bun.spawn(["git", ...args], { cwd: opts.cwd, stdout: "pipe", stderr: "pipe" });
+  const proc = Bun.spawn(["git", ...args], {
+    cwd: opts.cwd,
+    stdout: "pipe",
+    stderr: "pipe",
+    detached: true,
+  });
   let timedOut = false;
   const timer =
     opts.timeoutMs === undefined
       ? undefined
       : setTimeout(() => {
           timedOut = true;
-          proc.kill();
+          killProcessGroup(proc);
         }, opts.timeoutMs);
   try {
     const [exit, stdout, stderr] = await Promise.all([
@@ -122,7 +139,7 @@ const switchBranch = async (
   const fetched = await fetchRef(repoPath, branch);
   if (!fetched.ok) return { ok: false, notFound: fetched.notFound };
   const run = await runGit(["-C", repoPath, "checkout", "-B", branch, `origin/${branch}`], {
-    timeoutMs: LOCAL_TIMEOUT_MS,
+    timeoutMs: WORKTREE_TIMEOUT_MS,
   });
   return { ok: run.exit === 0, notFound: false };
 };
@@ -131,7 +148,7 @@ export const hardReset = async (
   repoPath: string,
   ref: string,
 ): Promise<{ ok: boolean; error: string }> => {
-  const run = await runGit(["-C", repoPath, "reset", "--hard", ref], { timeoutMs: LOCAL_TIMEOUT_MS });
+  const run = await runGit(["-C", repoPath, "reset", "--hard", ref], { timeoutMs: WORKTREE_TIMEOUT_MS });
   if (run.exit === 0) return { ok: true, error: "" };
   return { ok: false, error: run.timedOut ? "Reset timed out" : sanitizeGitError(run.stderr) };
 };
@@ -165,22 +182,28 @@ export const syncBranch = async (repoPath: string): Promise<void> => {
   }
 };
 
-export const resolveTrackedBranch = async (repoPath: string): Promise<string> => {
-  const useBeta =
-    DEGOOG_BETA_STORE &&
-    (
-      await runGit(["-C", repoPath, "rev-parse", "--verify", `origin/${BETA_BRANCH}`], {
-        timeoutMs: LOCAL_TIMEOUT_MS,
-      })
-    ).exit === 0;
-  return useBeta ? BETA_BRANCH : await headBranch(repoPath);
+const hasBetaBranch = async (repoPath: string): Promise<boolean> => {
+  const verify = await runGit(["-C", repoPath, "rev-parse", "--verify", `origin/${BETA_BRANCH}`], {
+    timeoutMs: LOCAL_TIMEOUT_MS,
+  });
+  if (verify.timedOut) throw new Error(`Verifying origin/${BETA_BRANCH} timed out`);
+  return verify.exit === 0;
 };
 
-const headSha = async (repoPath: string): Promise<string> =>
-  (await runGit(["-C", repoPath, "rev-parse", "HEAD"], { timeoutMs: LOCAL_TIMEOUT_MS })).stdout.trim();
+export const resolveTrackedBranch = async (repoPath: string): Promise<string> =>
+  DEGOOG_BETA_STORE && (await hasBetaBranch(repoPath)) ? BETA_BRANCH : await headBranch(repoPath);
+
+const headSha = async (repoPath: string): Promise<string | null> => {
+  const run = await runGit(["-C", repoPath, "rev-parse", "HEAD"], { timeoutMs: LOCAL_TIMEOUT_MS });
+  if (run.exit === 0) return run.stdout.trim();
+  const reason = run.timedOut ? "timed out" : sanitizeGitError(run.stderr);
+  logger.warn("store:repo", `HEAD read failed: ${reason}`);
+  return null;
+};
 
 const hasStaleCommits = async (repoPath: string): Promise<boolean> => {
   const head = await headSha(repoPath);
+  if (!head) return false;
   const run = await runGit(["-C", repoPath, "reflog", "show", "--all", "--format=%H"], {
     timeoutMs: LOCAL_TIMEOUT_MS,
   });
@@ -191,10 +214,9 @@ const hasStaleCommits = async (repoPath: string): Promise<boolean> => {
   return run.stdout.split("\n").some((sha) => sha.trim() && sha.trim() !== head);
 };
 
-const dropOtherRefs = async (repoPath: string): Promise<boolean> => {
+const dropOtherRefs = async (repoPath: string, tracked: string): Promise<boolean> => {
   const branch = await headBranch(repoPath);
   if (!branch || branch === "HEAD") return false;
-  const tracked = await resolveTrackedBranch(repoPath);
   const keep = new Set([`refs/heads/${branch}`, `refs/remotes/origin/${tracked}`]);
   const run = await runGit(
     ["-C", repoPath, "for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes"],
@@ -221,20 +243,25 @@ const dropOtherRefs = async (repoPath: string): Promise<boolean> => {
 
 const pruneMarker = (repoPath: string): string => join(repoPath, ".git", PRUNE_MARKER);
 
-const isPrunePending = async (repoPath: string): Promise<boolean> =>
-  access(pruneMarker(repoPath)).then(
-    () => true,
-    () => false,
+const lastPruneAttempt = async (repoPath: string): Promise<number | null> =>
+  stat(pruneMarker(repoPath)).then(
+    (info) => info.mtimeMs,
+    () => null,
   );
 
-const needsPrune = async (repoPath: string): Promise<boolean> => {
-  const dropped = await dropOtherRefs(repoPath);
-  if (dropped || (await isPrunePending(repoPath))) return true;
+const needsPrune = async (repoPath: string, tracked: string, pending: boolean): Promise<boolean> => {
+  const dropped = await dropOtherRefs(repoPath, tracked);
+  if (dropped || pending) return true;
   return hasStaleCommits(repoPath);
 };
 
-export const marieKondo = async (repoPath: string): Promise<void> => {
-  if (!(await needsPrune(repoPath))) return;
+const tidyRepo = async (repoPath: string, tracked: string): Promise<void> => {
+  const attemptedAt = await lastPruneAttempt(repoPath);
+  if (attemptedAt !== null && Date.now() - attemptedAt < PRUNE_RETRY_BACKOFF_MS) {
+    logger.debug("store:repo", `skipping prune of ${repoPath}, last attempt failed recently`);
+    return;
+  }
+  if (!(await needsPrune(repoPath, tracked, attemptedAt !== null))) return;
   try {
     await writeFile(pruneMarker(repoPath), "");
   } catch (err) {
@@ -261,11 +288,23 @@ export const marieKondo = async (repoPath: string): Promise<void> => {
   );
 };
 
+export const marieKondo = async (repoPath: string, tracked: string): Promise<void> => {
+  try {
+    await tidyRepo(repoPath, tracked);
+  } catch (err) {
+    logger.warn("store:repo", `housekeeping failed for ${repoPath}`, err);
+  }
+};
+
 export const behindCount = async (repoPath: string, remoteRef: string): Promise<number> => {
   const run = await runGit(["-C", repoPath, "rev-list", "--count", `HEAD..${remoteRef}`], {
     timeoutMs: LOCAL_TIMEOUT_MS,
   });
-  if (run.exit !== 0) return 0;
+  if (run.exit !== 0) {
+    const reason = run.timedOut ? "timed out" : sanitizeGitError(run.stderr);
+    logger.warn("store:repo", `behind count failed for ${remoteRef}: ${reason}`);
+    return 0;
+  }
   const n = parseInt(run.stdout.trim(), 10);
   return Number.isNaN(n) ? 0 : Math.max(0, n);
 };
