@@ -26,6 +26,7 @@ import {
   refreshBehind,
   refreshRepo,
   removeRepo,
+  setRepoBeta,
 } from "./actions/repo-actions";
 import { restartServer } from "./actions/restart";
 import { st } from "./format";
@@ -62,7 +63,10 @@ export async function initStoreTab(
         fetchItems(getToken),
         fetchRestartState(getToken),
       ]);
-      if (repos) state.repos = repos;
+      if (repos) {
+        state.repos = repos.repos;
+        state.globalBeta = repos.globalBeta;
+      }
       if (items) state.items = items;
       if (!state.updatingAll && !state.items.some(hasUpdate)) state.updatesOpen = false;
       if (restart) state.restartReasons = restart.pending ? restart.reasons : [];
@@ -102,6 +106,7 @@ export async function initStoreTab(
     refreshRepo: (url) => void refreshRepo(ctx, url),
     refreshBehind: () => refreshBehind(ctx),
     refreshAll: () => void refreshAllRepos(ctx),
+    setRepoBeta: (url, beta) => void setRepoBeta(ctx, url, beta),
     removeRepo: (url) => void removeRepo(ctx, url),
     addRepo: () => void addRepo(ctx),
   };

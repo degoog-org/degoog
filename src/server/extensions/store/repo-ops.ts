@@ -17,6 +17,8 @@ import {
   cloneRepo,
   fetchRef,
   hardReset,
+  isGlobalBetaStore,
+  isOnBetaBranch,
   marieKondo,
   resolveTrackedBranch,
   syncBranch,
@@ -142,8 +144,8 @@ async function _removeRepo(url: string): Promise<void> {
 async function _refreshRepo(repo: RepoInfo): Promise<void> {
   const repoPath = join(getStoreDir(), repo.localPath);
   try {
-    await syncBranch(repoPath);
-    const branch = await resolveTrackedBranch(repoPath);
+    await syncBranch(repoPath, repo.beta);
+    const branch = await resolveTrackedBranch(repoPath, repo.beta);
     const fetched = await fetchRef(repoPath, branch);
     if (!fetched.ok) {
       repo.error = fetched.error || `Git fetch failed for ${branch}`;
@@ -177,6 +179,43 @@ export function refreshRepo(url?: string): Promise<void> {
     }
     for (const repo of toRefresh) await _refreshRepo(repo);
     await writeReposData(data);
+  });
+}
+
+function _applyBetaFlag(repo: RepoInfo, beta: boolean): void {
+  if (beta) repo.beta = true;
+  else delete repo.beta;
+}
+
+const _betaSwitchError = (repo: RepoInfo, beta: boolean, onBeta: boolean): string | null => {
+  if (repo.error) return repo.error;
+  if (onBeta === beta) return null;
+  return beta
+    ? 'This repository has no "develop" branch.'
+    : "Could not switch this repository back to its default branch.";
+};
+
+export function setRepoBeta(url: string, beta: boolean): Promise<RepoInfo> {
+  return runStoreExclusive(async () => {
+    if (isGlobalBetaStore()) {
+      throw new Error("Beta store is enabled for every repository by DEGOOG_BETA_STORE.");
+    }
+    const data = await readReposData();
+    const repo = getRepoByUrl(data, url);
+    if (!repo) throw new Error("Repository not found.");
+    const previous = !!repo.beta;
+    _applyBetaFlag(repo, beta);
+    await _refreshRepo(repo);
+    const onBeta = await isOnBetaBranch(join(getStoreDir(), repo.localPath));
+    const failure = _betaSwitchError(repo, beta, onBeta);
+    if (failure) {
+      const moved = !!repo.error || onBeta !== previous;
+      _applyBetaFlag(repo, previous);
+      if (moved) await _refreshRepo(repo);
+    }
+    await writeReposData(data);
+    if (failure) throw new Error(failure);
+    return repo;
   });
 }
 
@@ -226,7 +265,7 @@ export function getReposStatus(): Promise<RepoStatus[]> {
     for (const repo of data.repos) {
       const repoPath = join(storeDir, repo.localPath);
       try {
-        const branch = await resolveTrackedBranch(repoPath);
+        const branch = await resolveTrackedBranch(repoPath, repo.beta);
         const fetched = await fetchRef(repoPath, branch);
         if (!fetched.ok) {
           results.push({ url: repo.url, behind: 0 });

@@ -51,6 +51,39 @@ export const refreshRepo = async (
   ctx.render();
 };
 
+export const setRepoBeta = async (
+  ctx: StoreContext,
+  url: string,
+  beta: boolean,
+): Promise<void> => {
+  const { state } = ctx;
+  const repo = findRepo(state, url);
+  if (!repo || state.globalBeta) return;
+  const key = repoKey(url);
+  const previous = !!repo.beta;
+  state.repoBusy.add(key);
+  state.repoNotes.delete(key);
+  repo.beta = beta;
+  ctx.render();
+  const res = await sendStore("/api/store/repos/beta", { url: repo.url, beta }, ctx.getToken);
+  repo.beta = res.ok ? beta : previous;
+  state.repoNotes.set(
+    key,
+    res.ok
+      ? { ok: true, text: st(beta ? "beta-on-note" : "beta-off-note") }
+      : { ok: false, text: res.error || st("beta-failed") },
+  );
+  try {
+    await ctx.reload();
+    ctx.reloadStatus();
+  } catch (err) {
+    console.debug("[store] reload after branch switch failed", err);
+  } finally {
+    state.repoBusy.delete(key);
+    ctx.render();
+  }
+};
+
 export const refreshBehind = (ctx: StoreContext): void => {
   ctx.state.repos
     .filter((r) => repoBehind(ctx.state, r) > 0)

@@ -50,6 +50,7 @@ export const RepoDetail = ({
   const busy = state.repoBusy.has(repoKey(repo.url));
   const behind = repoBehind(state, repo);
   const official = isOfficial(repo);
+  const beta = state.globalBeta || !!repo.beta;
   return (
     <div
       class="store-repo-detail"
@@ -107,6 +108,17 @@ export const RepoDetail = ({
           onClick={() => actions.refreshRepo(repo.url)}
         >
           {busy ? <Spinner /> : <FaIcon name="fa-rotate-right" />}
+        </button>
+        <button
+          type="button"
+          class={beta ? "store-icon-btn store-icon-btn--on" : "store-icon-btn"}
+          data-tooltip={state.globalBeta ? st("beta-global-note") : st("beta-label")}
+          aria-label={st("beta-aria", { name: repo.name })}
+          aria-pressed={beta ? "true" : "false"}
+          disabled={busy || state.refreshingAll || state.globalBeta}
+          onClick={() => actions.setRepoBeta(repo.url, !beta)}
+        >
+          <FaIcon name="fa-code-branch" />
         </button>
         {official ? null : (
           <button

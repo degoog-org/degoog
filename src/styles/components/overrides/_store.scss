@@ -311,6 +311,11 @@
   color: var(--text-secondary);
 }
 
+.store-icon-btn--on,
+.store-icon-btn--on:disabled {
+  color: var(--text-link);
+}
+
 .store .degoog-btn {
   display: inline-flex;
   align-items: center;

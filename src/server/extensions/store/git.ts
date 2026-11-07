@@ -10,10 +10,15 @@ const GC_TIMEOUT_MS = 60_000;
 const LOCAL_TIMEOUT_MS = 15_000;
 const WORKTREE_TIMEOUT_MS = 60_000;
 const PRUNE_RETRY_BACKOFF_MS = 60 * 60_000;
-const DEGOOG_BETA_STORE = process.env.DEGOOG_BETA_STORE === "1";
 const BETA_BRANCH = "develop";
+const FALLBACK_DEFAULT_BRANCHES = ["main", "master"];
+const SAFE_BRANCH_NAME = /^[A-Za-z0-9._/-]+$/;
 const STALE_LOCK_FILES = ["shallow.lock", "index.lock"];
 const PRUNE_MARKER = "degoog-prune-pending";
+
+export const isGlobalBetaStore = (): boolean => process.env.DEGOOG_BETA_STORE === "1";
+
+const wantsBeta = (beta: boolean): boolean => isGlobalBetaStore() || beta;
 
 interface GitRun {
   exit: number;
@@ -105,6 +110,9 @@ const headBranch = async (repoPath: string): Promise<string> =>
   (await runGit(["-C", repoPath, "rev-parse", "--abbrev-ref", "HEAD"], { timeoutMs: LOCAL_TIMEOUT_MS }))
     .stdout.trim();
 
+export const isOnBetaBranch = async (repoPath: string): Promise<boolean> =>
+  (await headBranch(repoPath)) === BETA_BRANCH;
+
 const runFetchRef = (repoPath: string, branch: string): Promise<GitRun> =>
   runGit(
     ["-C", repoPath, "fetch", "--depth", "1", "origin", `+${branch}:refs/remotes/origin/${branch}`],
@@ -153,9 +161,34 @@ export const hardReset = async (
   return { ok: false, error: run.timedOut ? "Reset timed out" : sanitizeGitError(run.stderr) };
 };
 
-export const syncBranch = async (repoPath: string): Promise<void> => {
+const isSafeBranchName = (name: string): boolean =>
+  SAFE_BRANCH_NAME.test(name) && !name.startsWith("-") && !name.includes("..");
+
+const remoteDefaultBranch = async (repoPath: string): Promise<string | null> => {
+  const run = await runGit(["-C", repoPath, "ls-remote", "--symref", "origin", "HEAD"], {
+    timeoutMs: FETCH_TIMEOUT_MS,
+  });
+  if (run.exit !== 0) {
+    const reason = run.timedOut ? "timed out" : sanitizeGitError(run.stderr);
+    logger.warn("store:branch", `could not resolve remote default branch: ${reason}`);
+    return null;
+  }
+  const name = run.stdout.match(/^ref: refs\/heads\/(\S+)\tHEAD$/m)?.[1];
+  return name && name !== BETA_BRANCH && isSafeBranchName(name) ? name : null;
+};
+
+const revertToDefaultBranch = async (repoPath: string): Promise<boolean> => {
+  const resolved = await remoteDefaultBranch(repoPath);
+  const candidates = resolved ? [resolved] : FALLBACK_DEFAULT_BRANCHES;
+  for (const branch of candidates) {
+    if ((await switchBranch(repoPath, branch)).ok) return true;
+  }
+  return false;
+};
+
+export const syncBranch = async (repoPath: string, beta = false): Promise<void> => {
   const current = await headBranch(repoPath);
-  if (DEGOOG_BETA_STORE) {
+  if (wantsBeta(beta)) {
     if (current === BETA_BRANCH) return;
     const result = await switchBranch(repoPath, BETA_BRANCH);
     if (!result.ok) {
@@ -173,12 +206,8 @@ export const syncBranch = async (repoPath: string): Promise<void> => {
     }
     return;
   }
-  if (current === BETA_BRANCH) {
-    const main = await switchBranch(repoPath, "main");
-    const reverted = main.ok || (await switchBranch(repoPath, "master")).ok;
-    if (!reverted) {
-      logger.warn("store:branch", `could not revert repo off ${BETA_BRANCH}`);
-    }
+  if (current === BETA_BRANCH && !(await revertToDefaultBranch(repoPath))) {
+    logger.warn("store:branch", `could not revert repo off ${BETA_BRANCH}`);
   }
 };
 
@@ -190,8 +219,8 @@ const hasBetaBranch = async (repoPath: string): Promise<boolean> => {
   return verify.exit === 0;
 };
 
-export const resolveTrackedBranch = async (repoPath: string): Promise<string> =>
-  DEGOOG_BETA_STORE && (await hasBetaBranch(repoPath)) ? BETA_BRANCH : await headBranch(repoPath);
+export const resolveTrackedBranch = async (repoPath: string, beta = false): Promise<string> =>
+  wantsBeta(beta) && (await hasBetaBranch(repoPath)) ? BETA_BRANCH : await headBranch(repoPath);
 
 const headSha = async (repoPath: string): Promise<string | null> => {
   const run = await runGit(["-C", repoPath, "rev-parse", "HEAD"], { timeoutMs: LOCAL_TIMEOUT_MS });
@@ -311,7 +340,7 @@ export const behindCount = async (repoPath: string, remoteRef: string): Promise<
 
 export const cloneRepo = async (url: string, dest: string): Promise<void> => {
   const useBeta =
-    DEGOOG_BETA_STORE &&
+    isGlobalBetaStore() &&
     (
       await runGit(["ls-remote", "--heads", url, BETA_BRANCH], { timeoutMs: FETCH_TIMEOUT_MS })
     ).stdout.trim().length > 0;
