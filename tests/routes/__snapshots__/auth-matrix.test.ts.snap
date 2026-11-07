@@ -225,6 +225,7 @@ exports[`what an unauthenticated caller gets from every route store unauthentica
   "GET /api/store/update-all/stream -> 401",
   "POST /api/store/install -> 401",
   "POST /api/store/repos -> 401",
+  "POST /api/store/repos/beta -> 401",
   "POST /api/store/repos/refresh -> 401",
   "POST /api/store/uninstall -> 401",
   "POST /api/store/update -> 401",
