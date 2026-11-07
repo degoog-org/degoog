@@ -11,7 +11,7 @@ import { ExtFilterBar, extFilterIds } from "../shared/filter/ext-filter-bar";
 import { ExtNoMatch } from "../shared/filter/ext-no-match";
 import {
   countItems,
-  createExtFilter,
+  getExtFilter,
   createExtFilterActions,
   filterExtGroups,
 } from "../shared/filter/ext-filter";
@@ -210,14 +210,14 @@ export async function initEnginesTab(
     void openTabOrderModal(_allTypeEntries(allExtensions.engines), token);
   };
 
-  const filter = createExtFilter();
-  const filterIds = extFilterIds("engines");
-  const isOn = (engine: ExtensionMeta): boolean => enabledMap[engine.id] !== false;
   const filterGroups: ExtFilterGroup[] = groups.map((g) => ({
     key: g.key,
     label: g.label,
     items: g.engines,
   }));
+  const filter = getExtFilter("engines", filterGroups);
+  const filterIds = extFilterIds("engines");
+  const isOn = (engine: ExtensionMeta): boolean => enabledMap[engine.id] !== false;
   const filterActions = createExtFilterActions(filter, () => paint(), filterIds);
 
   function paint(): void {
