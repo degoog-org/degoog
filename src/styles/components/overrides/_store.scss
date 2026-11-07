@@ -305,15 +305,15 @@
   color: var(--danger);
 }
 
-.store-icon-btn--on,
-.store-icon-btn--on:disabled {
-  color: var(--text-link);
-}
-
 .store-icon-btn:disabled {
   cursor: default;
   background: none;
   color: var(--text-secondary);
+}
+
+.store-icon-btn--on,
+.store-icon-btn--on:disabled {
+  color: var(--text-link);
 }
 
 .store .degoog-btn {

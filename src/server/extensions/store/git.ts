@@ -11,6 +11,8 @@ const LOCAL_TIMEOUT_MS = 15_000;
 const WORKTREE_TIMEOUT_MS = 60_000;
 const PRUNE_RETRY_BACKOFF_MS = 60 * 60_000;
 const BETA_BRANCH = "develop";
+const FALLBACK_DEFAULT_BRANCHES = ["main", "master"];
+const SAFE_BRANCH_NAME = /^[A-Za-z0-9._/-]+$/;
 const STALE_LOCK_FILES = ["shallow.lock", "index.lock"];
 const PRUNE_MARKER = "degoog-prune-pending";
 
@@ -159,6 +161,31 @@ export const hardReset = async (
   return { ok: false, error: run.timedOut ? "Reset timed out" : sanitizeGitError(run.stderr) };
 };
 
+const isSafeBranchName = (name: string): boolean =>
+  SAFE_BRANCH_NAME.test(name) && !name.startsWith("-") && !name.includes("..");
+
+const remoteDefaultBranch = async (repoPath: string): Promise<string | null> => {
+  const run = await runGit(["-C", repoPath, "ls-remote", "--symref", "origin", "HEAD"], {
+    timeoutMs: FETCH_TIMEOUT_MS,
+  });
+  if (run.exit !== 0) {
+    const reason = run.timedOut ? "timed out" : sanitizeGitError(run.stderr);
+    logger.warn("store:branch", `could not resolve remote default branch: ${reason}`);
+    return null;
+  }
+  const name = run.stdout.match(/^ref: refs\/heads\/(\S+)\tHEAD$/m)?.[1];
+  return name && name !== BETA_BRANCH && isSafeBranchName(name) ? name : null;
+};
+
+const revertToDefaultBranch = async (repoPath: string): Promise<boolean> => {
+  const resolved = await remoteDefaultBranch(repoPath);
+  const candidates = resolved ? [resolved] : FALLBACK_DEFAULT_BRANCHES;
+  for (const branch of candidates) {
+    if ((await switchBranch(repoPath, branch)).ok) return true;
+  }
+  return false;
+};
+
 export const syncBranch = async (repoPath: string, beta = false): Promise<void> => {
   const current = await headBranch(repoPath);
   if (wantsBeta(beta)) {
@@ -179,12 +206,8 @@ export const syncBranch = async (repoPath: string, beta = false): Promise<void> 
     }
     return;
   }
-  if (current === BETA_BRANCH) {
-    const main = await switchBranch(repoPath, "main");
-    const reverted = main.ok || (await switchBranch(repoPath, "master")).ok;
-    if (!reverted) {
-      logger.warn("store:branch", `could not revert repo off ${BETA_BRANCH}`);
-    }
+  if (current === BETA_BRANCH && !(await revertToDefaultBranch(repoPath))) {
+    logger.warn("store:branch", `could not revert repo off ${BETA_BRANCH}`);
   }
 };
 
@@ -315,9 +338,9 @@ export const behindCount = async (repoPath: string, remoteRef: string): Promise<
   return Number.isNaN(n) ? 0 : Math.max(0, n);
 };
 
-export const cloneRepo = async (url: string, dest: string, beta = false): Promise<void> => {
+export const cloneRepo = async (url: string, dest: string): Promise<void> => {
   const useBeta =
-    wantsBeta(beta) &&
+    isGlobalBetaStore() &&
     (
       await runGit(["ls-remote", "--heads", url, BETA_BRANCH], { timeoutMs: FETCH_TIMEOUT_MS })
     ).stdout.trim().length > 0;

@@ -182,6 +182,19 @@ export function refreshRepo(url?: string): Promise<void> {
   });
 }
 
+function _applyBetaFlag(repo: RepoInfo, beta: boolean): void {
+  if (beta) repo.beta = true;
+  else delete repo.beta;
+}
+
+const _betaSwitchError = (repo: RepoInfo, beta: boolean, onBeta: boolean): string | null => {
+  if (repo.error) return repo.error;
+  if (onBeta === beta) return null;
+  return beta
+    ? 'This repository has no "develop" branch.'
+    : "Could not switch this repository back to its default branch.";
+};
+
 export function setRepoBeta(url: string, beta: boolean): Promise<RepoInfo> {
   return runStoreExclusive(async () => {
     if (isGlobalBetaStore()) {
@@ -191,18 +204,17 @@ export function setRepoBeta(url: string, beta: boolean): Promise<RepoInfo> {
     const repo = getRepoByUrl(data, url);
     if (!repo) throw new Error("Repository not found.");
     const previous = !!repo.beta;
-    repo.beta = beta;
+    _applyBetaFlag(repo, beta);
     await _refreshRepo(repo);
-    const repoPath = join(getStoreDir(), repo.localPath);
-    if (beta && !(await isOnBetaBranch(repoPath))) {
-      const reason = repo.error ?? 'This repository has no "develop" branch.';
-      repo.beta = previous;
-      await _refreshRepo(repo);
-      await writeReposData(data);
-      throw new Error(reason);
+    const onBeta = await isOnBetaBranch(join(getStoreDir(), repo.localPath));
+    const failure = _betaSwitchError(repo, beta, onBeta);
+    if (failure) {
+      const moved = !!repo.error || onBeta !== previous;
+      _applyBetaFlag(repo, previous);
+      if (moved) await _refreshRepo(repo);
     }
-    if (!beta) delete repo.beta;
     await writeReposData(data);
+    if (failure) throw new Error(failure);
     return repo;
   });
 }

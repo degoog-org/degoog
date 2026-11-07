@@ -60,22 +60,28 @@ export const setRepoBeta = async (
   const repo = findRepo(state, url);
   if (!repo || state.globalBeta) return;
   const key = repoKey(url);
+  const previous = !!repo.beta;
   state.repoBusy.add(key);
   state.repoNotes.delete(key);
-  // Optimistic value so a failed switch re-renders as a changed prop and unticks the checkbox.
   repo.beta = beta;
   ctx.render();
   const res = await sendStore("/api/store/repos/beta", { url: repo.url, beta }, ctx.getToken);
-  await ctx.reload();
-  ctx.reloadStatus();
-  state.repoBusy.delete(key);
+  repo.beta = res.ok ? beta : previous;
   state.repoNotes.set(
     key,
     res.ok
       ? { ok: true, text: st(beta ? "beta-on-note" : "beta-off-note") }
       : { ok: false, text: res.error || st("beta-failed") },
   );
-  ctx.render();
+  try {
+    await ctx.reload();
+    ctx.reloadStatus();
+  } catch (err) {
+    console.debug("[store] reload after branch switch failed", err);
+  } finally {
+    state.repoBusy.delete(key);
+    ctx.render();
+  }
 };
 
 export const refreshBehind = (ctx: StoreContext): void => {
