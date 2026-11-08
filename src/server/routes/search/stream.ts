@@ -140,7 +140,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
           while (attempt <= (autoRetry ? maxRetries : 0)) {
             if (cancelController.signal.aborted) return;
             const isRetry = attempt > 0;
-            const { results, timing, pages } = await searchSingleEngine(
+            const { results, timing, pages, cached } = await searchSingleEngine(
               id,
               engineQuery(input, query, runInputs),
               page,
@@ -179,7 +179,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
               return;
             }
 
-            if (timing.errorReason === ENGINE_TIMEOUT_REASON) break;
+            if (!cached && timing.errorReason === ENGINE_TIMEOUT_REASON) break;
             attempt++;
             if (attempt <= (autoRetry ? maxRetries : 0)) {
               _send("engine-retry", {

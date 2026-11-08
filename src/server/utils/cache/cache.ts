@@ -196,6 +196,7 @@ export interface CachedEngineRun {
   pages?: number;
   proxyId?: string;
   carry?: Record<string, string>;
+  cached?: boolean;
 }
 
 export const engineRunCache = useCache<CachedEngineRun>(

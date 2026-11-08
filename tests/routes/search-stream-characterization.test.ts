@@ -67,6 +67,7 @@ const harness = (opts: {
   settings?: Record<string, unknown>;
   indexReturns?: string[];
   indexThrows?: boolean;
+  timeoutMs?: string;
 }): void => {
   const engines = opts.engines ?? [];
   const active = engines.map((e) => ({
@@ -96,7 +97,7 @@ const harness = (opts: {
   }));
   mock.module(PLUGIN_SETTINGS_MOD, () => ({
     ...pluginSettingsReal,
-    getSettings: async () => ({}),
+    getSettings: async () => (opts.timeoutMs ? { timeoutMs: opts.timeoutMs } : {}),
   }));
   mock.module(INTERCEPTS_MOD, () => ({
     ...interceptsReal,
@@ -378,6 +379,45 @@ describe("GET /api/search/stream auto-retry", () => {
     expect(events.filter((e) => e.event === "engine-retry")).toHaveLength(0);
     const timing = events.find((e) => e.event === "engine-result")?.data.timing as { status: string };
     expect(timing.status).toBe("timeout");
+  });
+
+  test("a real deadline beats an engine that rejects the moment it is aborted", async () => {
+    harness({
+      engines: [
+        {
+          id: "abortaware-engine",
+          instance: {
+            name: "AbortAware",
+            executeSearch: (_query, _page, _timeFilter, context) => {
+              attemptsByEngine.AbortAware = (attemptsByEngine.AbortAware ?? 0) + 1;
+              return new Promise((_resolve, reject) => {
+                context?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+              });
+            },
+          },
+        },
+      ],
+      settings: { streamingAutoRetry: true, streamingMaxRetries: "2" },
+      timeoutMs: "20",
+    });
+    const events = await readEvents(await call(uniqueQuery("deadline")));
+
+    expect(attemptsByEngine.AbortAware).toBe(1);
+    expect(events.filter((e) => e.event === "engine-retry")).toHaveLength(0);
+    const timing = events.find((e) => e.event === "engine-result")?.data.timing as { status: string };
+    expect(timing.status).toBe("timeout");
+  });
+
+  test("a cached timeout still gets one fresh attempt", async () => {
+    harness({
+      engines: [failing("Cachey", "Engine timeout")],
+      settings: { streamingAutoRetry: true, streamingMaxRetries: "2" },
+    });
+    const query = uniqueQuery("cachedtimeout");
+    await readEvents(await call(query));
+    await readEvents(await call(query));
+
+    expect(attemptsByEngine.Cachey).toBe(2);
   });
 
   test("a deadline hit on a retry attempt stops further retries", async () => {

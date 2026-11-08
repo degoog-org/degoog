@@ -59,8 +59,8 @@ const _withTimeout = <T>(
   let timer: ReturnType<typeof setTimeout>;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
-      onTimeout?.();
       reject(new Error(ENGINE_TIMEOUT_REASON));
+      onTimeout?.();
     }, ms);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
@@ -211,7 +211,7 @@ export const searchSingleEngine = async (
         `cache hit engine="${engine.name}" results=${hit.timing.resultCount} status=${hit.timing.status ?? "ok"}`,
       );
       _tellObservers(hit.timing, engineSettingsId, scope, true);
-      return _public({ ...hit, timing: { ...hit.timing, id: engineSettingsId } });
+      return { ..._public({ ...hit, timing: { ...hit.timing, id: engineSettingsId } }), cached: true };
     }
   }
 
