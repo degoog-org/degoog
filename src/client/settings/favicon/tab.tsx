@@ -86,7 +86,10 @@ async function _mountDegoogCard(container: HTMLElement): Promise<void> {
     });
     if (!res.ok) return;
     const settings = (await res.json()) as Record<string, unknown>;
-    if (!_isOn(settings.degoogIndexerEnabled, false)) return;
+    if (!_isOn(settings.degoogIndexerEnabled, false)) {
+      slot.hidden = true;
+      return;
+    }
     render(
       <div class="ext-cards">
         <DegoogFaviconCard enabled={_isOn(settings[FAVICON_STORE_SETTING], true)} />
@@ -134,7 +137,7 @@ export function initFaviconTab(allExtensions: AllExtensions): void {
   render(
     <>
       <ShapePicker active={_currentShape()} />
-      <div id={DEGOOG_SLOT_ID} class="ext-group" hidden={true} />
+      <div id={DEGOOG_SLOT_ID} class="ext-group" hidden={true} static={true} />
       {providers.length > 0 ? (
         <div class="ext-group">
           <h3 class="ext-group-label">
