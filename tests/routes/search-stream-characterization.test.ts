@@ -415,9 +415,10 @@ describe("GET /api/search/stream auto-retry", () => {
     });
     const query = uniqueQuery("cachedtimeout");
     await readEvents(await call(query));
-    await readEvents(await call(query));
+    const events = await readEvents(await call(query));
 
     expect(attemptsByEngine.Cachey).toBe(2);
+    expect(events.filter((e) => e.event === "engine-retry")).toHaveLength(1);
   });
 
   test("a deadline hit on a retry attempt stops further retries", async () => {
