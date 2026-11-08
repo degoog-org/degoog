@@ -1,4 +1,4 @@
-import { render } from "../../../shared/ui/tribute/dom";
+import { clear, render } from "../../../shared/ui/tribute/dom";
 import { FaviconCard } from "./card";
 import { EmptyState } from "./empty-state";
 import type { AllExtensions, ExtensionMeta } from "../../types/extension";
@@ -77,29 +77,34 @@ const DEGOOG_SLOT_ID = "favicon-degoog-slot";
 const _isOn = (value: unknown, fallback: boolean): boolean =>
   value === undefined || value === "" ? fallback : value === true || value === "true";
 
+let _degoogCardRequest = 0;
+
 async function _mountDegoogCard(container: HTMLElement): Promise<void> {
   const slot = container.querySelector<HTMLElement>(`#${DEGOOG_SLOT_ID}`);
   if (!slot) return;
+  const request = ++_degoogCardRequest;
+  let settings: Record<string, unknown> | null = null;
   try {
     const res = await fetch(`${getBase()}/api/settings/general`, {
       headers: authHeaders(getStoredToken),
     });
-    if (!res.ok) return;
-    const settings = (await res.json()) as Record<string, unknown>;
-    if (!_isOn(settings.degoogIndexerEnabled, false)) {
-      slot.hidden = true;
-      return;
-    }
-    render(
-      <div class="ext-cards">
-        <DegoogFaviconCard enabled={_isOn(settings[FAVICON_STORE_SETTING], true)} />
-      </div>,
-      slot,
-    );
-    slot.hidden = false;
+    if (res.ok) settings = (await res.json()) as Record<string, unknown>;
   } catch (err) {
     console.warn("[settings] degoog favicon card failed to load", err);
   }
+  if (request !== _degoogCardRequest) return;
+  if (!settings || !_isOn(settings.degoogIndexerEnabled, false)) {
+    clear(slot);
+    slot.hidden = true;
+    return;
+  }
+  render(
+    <div class="ext-cards">
+      <DegoogFaviconCard enabled={_isOn(settings[FAVICON_STORE_SETTING], true)} />
+    </div>,
+    slot,
+  );
+  slot.hidden = false;
 }
 
 const _shapeWired = new WeakSet<HTMLElement>();
