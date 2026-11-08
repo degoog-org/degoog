@@ -355,6 +355,51 @@ describe("GET /api/search/stream auto-retry", () => {
     expect((result?.data.results as ScoredResult[]).length).toBe(0);
   });
 
+  const failing = (name: string, message: string, emptyRuns = 0): EngineEntry => ({
+    id: `${name.toLowerCase()}-engine`,
+    instance: {
+      name,
+      executeSearch: async () => {
+        const attempt = (attemptsByEngine[name] = (attemptsByEngine[name] ?? 0) + 1);
+        if (attempt > emptyRuns) throw new Error(message);
+        return [];
+      },
+    },
+  });
+
+  test("an engine that hits its own deadline is not retried", async () => {
+    harness({
+      engines: [failing("Slow", "Engine timeout")],
+      settings: { streamingAutoRetry: true, streamingMaxRetries: "2" },
+    });
+    const events = await readEvents(await call(uniqueQuery("timeout")));
+
+    expect(attemptsByEngine.Slow).toBe(1);
+    expect(events.filter((e) => e.event === "engine-retry")).toHaveLength(0);
+    const timing = events.find((e) => e.event === "engine-result")?.data.timing as { status: string };
+    expect(timing.status).toBe("timeout");
+  });
+
+  test("a deadline hit on a retry attempt stops further retries", async () => {
+    harness({
+      engines: [failing("LateSlow", "Engine timeout", 1)],
+      settings: { streamingAutoRetry: true, streamingMaxRetries: "3" },
+    });
+    await readEvents(await call(uniqueQuery("latetimeout")));
+
+    expect(attemptsByEngine.LateSlow).toBe(2);
+  });
+
+  test("a transient network timeout is still retried", async () => {
+    harness({
+      engines: [failing("Flappy", "Connect Timeout Error")],
+      settings: { streamingAutoRetry: true, streamingMaxRetries: "2" },
+    });
+    await readEvents(await call(uniqueQuery("transient")));
+
+    expect(attemptsByEngine.Flappy).toBe(3);
+  });
+
   test("with auto-retry off an empty engine runs exactly once", async () => {
     harness({
       engines: [emptyThenFull("Flaky", 2)],

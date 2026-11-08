@@ -1,5 +1,5 @@
 import { Hono, type Context } from "hono";
-import { searchSingleEngine } from "../../search";
+import { ENGINE_TIMEOUT_REASON, searchSingleEngine } from "../../search";
 import { scoreResults } from "../../search/scoring";
 import {
   engineQuery,
@@ -179,6 +179,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
               return;
             }
 
+            if (timing.errorReason === ENGINE_TIMEOUT_REASON) break;
             attempt++;
             if (attempt <= (autoRetry ? maxRetries : 0)) {
               _send("engine-retry", {

@@ -49,6 +49,8 @@ import { engineRouteBase } from "../extensions/engines/engine-routes";
 const NEEDS_IMAGE = "This engine searches with an image";
 const NEEDS_TEXT = "This engine needs the image described as text";
 
+export const ENGINE_TIMEOUT_REASON = "Engine timeout";
+
 const _withTimeout = <T>(
   promise: Promise<T>,
   ms: number,
@@ -58,7 +60,7 @@ const _withTimeout = <T>(
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
       onTimeout?.();
-      reject(new Error("Engine timeout"));
+      reject(new Error(ENGINE_TIMEOUT_REASON));
     }, ms);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
