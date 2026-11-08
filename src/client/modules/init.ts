@@ -35,6 +35,7 @@ import { initKeyboardShortcuts } from "../shortcuts/keyboard-shortcuts";
 import { initShortcuts } from "../shortcuts/init";
 import { initSearchBarActions } from "../utils/search/search-bar-actions";
 import { renderPageTemplates } from "./renderer/render-page";
+import { initComicsDay } from "./comics-day";
 import { initResultActions } from "./result-actions";
 import { exposeResultsApi } from "./renderer/media/result-ranking";
 import { initHomeWizard } from "./wizard/wizard";
@@ -111,6 +112,7 @@ export async function init(): Promise<void> {
   await applyDefaults();
 
   renderPageTemplates();
+  initComicsDay();
   initPrivacyPolicyLink();
   void applyUovaStorage();
   void initHomeWizard();
