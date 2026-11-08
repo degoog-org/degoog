@@ -92,8 +92,8 @@ async function _mountDegoogCard(container: HTMLElement): Promise<void> {
   } catch (err) {
     console.warn("[settings] degoog favicon card failed to load", err);
   }
-  if (request !== _degoogCardRequest) return;
-  if (!settings || !_isOn(settings.degoogIndexerEnabled, false)) {
+  if (request !== _degoogCardRequest || !settings) return;
+  if (!_isOn(settings.degoogIndexerEnabled, false)) {
     clear(slot);
     slot.hidden = true;
     return;
