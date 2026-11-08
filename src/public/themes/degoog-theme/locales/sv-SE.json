@@ -1,0 +1,172 @@
+{
+  "app": {
+    "title": "degoog",
+    "name": "Degoog",
+    "description": "degoog är en alternativ sökmotorsaggregator."
+  },
+  "index-templates": {
+    "footer": {
+      "repo": "repo",
+      "docs": "dokumentation",
+      "privacy-policy": "integritetspolicy"
+    },
+    "header": {
+      "settings-title": "Inställningar"
+    },
+    "search": {
+      "search-button": "Sök på degoog",
+      "feeling-lucky": "Jag har tur",
+      "feeling-curious": "Jag känner mig nyfiken",
+      "feeling-adventurous": "Jag känner mig äventyrlig",
+      "feeling-playful": "Jag känner mig lekfull",
+      "feeling-stellar": "Jag känner mig som en stjärna",
+      "feeling-trendy": "Jag känner mig trendig"
+    }
+  },
+  "search-templates": {
+    "at-a-glance": {
+      "found-on": "Hittades på: {sources_text}"
+    },
+    "tabs": {
+      "web": "Webb",
+      "images": "Bilder",
+      "videos": "Videor",
+      "news": "Nyheter",
+      "options": "Alternativ",
+      "filter": "Filter",
+      "time": "Tid",
+      "any-time": "När som helst",
+      "language": "Språk",
+      "any": "Alla",
+      "any-language": "Valfritt språk",
+      "hour": "Timme",
+      "day": "24 timmar",
+      "week": "Vecka",
+      "month": "Månad",
+      "year": "År",
+      "custom": "Anpassad...",
+      "date-to": "till",
+      "apply": "Tillämpa",
+      "filter-languages": "Filtrera språk..."
+    },
+    "image-filters": {
+      "title": "Filter",
+      "default": "Standard",
+      "toggle": "Filter",
+      "close": "Stäng filter",
+      "size": "Storlek",
+      "color": "Färg",
+      "type": "Typ",
+      "layout": "Layout",
+      "nsfw": "Säkert läge",
+      "transparent": "Transparent",
+      "small": "Liten",
+      "medium": "Medel",
+      "large": "Stor",
+      "wallpaper": "Bakgrundsbild",
+      "bw": "Svartvit",
+      "photo": "Foto",
+      "clipart": "Clipart",
+      "lineart": "Linjekonst",
+      "animated": "Animerad",
+      "square": "Kvadratisk",
+      "wide": "Bred",
+      "tall": "Hög",
+      "strict": "Strikt",
+      "moderate": "Måttlig",
+      "off": "Av",
+      "red": "Röd",
+      "orange": "Orange",
+      "yellow": "Gul",
+      "green": "Grön",
+      "teal": "Blågrön",
+      "blue": "Blå",
+      "purple": "Lila",
+      "pink": "Rosa",
+      "brown": "Brun",
+      "gray": "Grå",
+      "black": "Svart",
+      "white": "Vit"
+    },
+    "no-results": "Inga resultat hittades.",
+    "search-failed": "Sökningen misslyckades. Försök igen.",
+    "rate-limited": "För många förfrågningar. Vänta en stund och försök igen.",
+    "no-engines": "Inga sökmotorer installerade. {store} för att bläddra och installera några.",
+    "no-engines-store": "Gå till butiken",
+    "sidebar": {
+      "engine-origin": "Tillhandahålls av {source}",
+      "engine-performance": "Sökmotorns prestanda",
+      "people-also-search": "Andra söker också på",
+      "info": "Info",
+      "results": "{count} resultat",
+      "from-index": "{count} från ditt index",
+      "retry": "försök igen",
+      "retrying": "försöker igen...",
+      "page-failed": "sidan {page} misslyckades",
+      "failure-reasons": {
+        "blocked": "Blockerad av sökmotorn",
+        "rate_limited": "Hastighetsbegränsad",
+        "captcha": "CAPTCHA-utmaning",
+        "parse_error": "Kunde inte läsa svaret",
+        "timeout": "Tidsgränsen överskreds",
+        "network": "Nätverksfel",
+        "interstitial": "Blockerad av en mellansida",
+        "unknown": "Inget användbart svar från den här motorn"
+      }
+    },
+    "result": {
+      "from-index": "Från ditt index",
+      "saving-to-index": "Sparas i ditt index",
+      "insecure": "Osäker",
+      "insecure-tooltip": "Den här sajten serveras över en okrypterad HTTP-anslutning.",
+      "favicon-missing": "Inget favikontillägg installerat",
+      "actions": {
+        "menu-aria": "Domänåtgärder",
+        "block": "Blockera den här domänen",
+        "block-confirm-title": "Blockera domän?",
+        "block-confirm-message": "Den här domänen tas bort från alla resultat.",
+        "replace": "Ersätt den här domänen",
+        "score": "Poängsätt den här domänen",
+        "prompt-target-title": "Ersätt domän",
+        "prompt-target": "Ersätt med vilken domän?",
+        "prompt-score-title": "Poängsätt domän",
+        "prompt-score": "Poäng för den här domänen (positivt höjer, negativt sänker):",
+        "modal-confirm": "Bekräfta",
+        "modal-cancel": "Avbryt",
+        "scored": "Poängsatt",
+        "refresh": "Uppdatera favikon",
+        "refreshed": "Favikon uppdaterad",
+        "refresh-failed": "Ingen favikon hittades"
+      }
+    },
+    "pagination": {
+      "previous": "Föregående",
+      "next": "Nästa",
+      "page": "Sida {page}",
+      "end": "Inga fler resultat."
+    },
+    "status": {
+      "streaming": "Ungefär {count} resultat (strömmar...)",
+      "done": "Ungefär {count} resultat ({time} sekunder)",
+      "page": "Ungefär {count} resultat - sida {page}",
+      "searching": "Söker...",
+      "running-command": "Kör kommando..."
+    },
+    "media-preview": {
+      "visit": "Besök sidan",
+      "watch": "Titta på videon",
+      "download": "Ladda ner"
+    }
+  },
+  "nojs": {
+    "search-label": "Sökfråga",
+    "pagination-label": "Resultatsidor",
+    "results-meta": "{count} resultat på {time} ms",
+    "no-results": "Inga resultat hittades.",
+    "rate-limited": "För många förfrågningar. Vänta en stund och försök igen.",
+    "full-app": "Fullständig version",
+    "command-unsupported": "Detta tillägg är inte gjort för att fungera i no-JS-miljön. Kontakta tilläggets utvecklare och fråga om integration är möjlig eller planerad.",
+    "command-disabled": "Detta kommando är avstängt på den här instansen.",
+    "command-failed": "Kommandot kunde inte slutföras. Försök igen."
+  }
+}
