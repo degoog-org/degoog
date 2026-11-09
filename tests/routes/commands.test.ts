@@ -40,14 +40,39 @@ describe("routes/commands", () => {
   });
 
   test("GET /api/command translates builtin output for the request locale", async () => {
-    const res = await commandsRouter.request(
-      new Request("http://localhost/api/command?q=!uuid%201", {
-        headers: { "Accept-Language": "sv-SE" },
-      }),
-    );
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.title).toBe("Genererade UUID:er");
-    expect(body.html).toContain(">Kopiera</button>");
+    const forced = process.env.DEGOOG_I18N;
+    delete process.env.DEGOOG_I18N;
+    try {
+      const res = await commandsRouter.request(
+        new Request("http://localhost/api/command?q=!uuid%201", {
+          headers: { "Accept-Language": "sv-SE" },
+        }),
+      );
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.title).toBe("Genererade UUID:er");
+      expect(body.html).toContain('data-copied="Kopierat!">Kopiera</button>');
+    } finally {
+      if (forced !== undefined) process.env.DEGOOG_I18N = forced;
+    }
+  });
+
+  test("GET /api/command keeps the ip detection script valid for translated messages", async () => {
+    const forced = process.env.DEGOOG_I18N;
+    delete process.env.DEGOOG_I18N;
+    try {
+      const res = await commandsRouter.request(
+        new Request("http://localhost/api/command?q=!ip", {
+          headers: { "Accept-Language": "fr-FR" },
+        }),
+      );
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      const script = /<script>([\s\S]*?)<\/script>/.exec(body.html)?.[1] ?? "";
+      expect(script).toContain("l'IP");
+      expect(() => new Function(script)).not.toThrow();
+    } finally {
+      if (forced !== undefined) process.env.DEGOOG_I18N = forced;
+    }
   });
 });

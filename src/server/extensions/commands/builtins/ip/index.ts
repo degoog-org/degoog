@@ -9,6 +9,9 @@ import { outgoingFetch } from "../../../../utils/net/outgoing";
 import { logger } from "../../../../utils/logger";
 import { renderDetectRoot, renderInfo, renderMessage } from "./render";
 
+const _toScriptString = (value: string): string =>
+  JSON.stringify(value).replace(/</g, "\\u003c");
+
 export const ipCommand: BangCommand = {
   name: "IP Lookup",
   get description(): string {
@@ -45,7 +48,7 @@ export const ipCommand: BangCommand = {
       }
       const detecting = this.t!("ip.detecting", undefined, locale);
       const detectFailed = this.t!("ip.detect-failed", undefined, locale);
-      const detectHtml = `${renderDetectRoot(detecting)}<script>(function(){var c=document.getElementById('ip-detect-root');if(!c)return;fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){return fetch('${getBaseUrl()}/api/command?q='+encodeURIComponent('!ip '+d.ip));}).then(function(r){return r.json();}).then(function(d){if(d&&d.html)c.innerHTML=d.html;else c.innerHTML='<p>${detectFailed}</p>';}).catch(function(){c.innerHTML='<p>${detectFailedHint}</p>';});})();<\/script>`;
+      const detectHtml = `${renderDetectRoot(detecting)}<script>(function(){var c=document.getElementById('ip-detect-root');if(!c)return;fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){return fetch('${getBaseUrl()}/api/command?q='+encodeURIComponent('!ip '+d.ip));}).then(function(r){return r.json();}).then(function(d){if(d&&d.html)c.innerHTML=d.html;else c.innerHTML='<p>'+${_toScriptString(detectFailed)}+'</p>';}).catch(function(){c.innerHTML='<p>'+${_toScriptString(detectFailedHint)}+'</p>';});})();<\/script>`;
       return {
         title: this.t!("ip.title", undefined, locale),
         html: detectHtml,
