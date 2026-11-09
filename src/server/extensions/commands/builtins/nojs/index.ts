@@ -46,28 +46,29 @@ export const nojsCommand: BangCommand = {
     args: string,
     context?: CommandContext,
   ): Promise<CommandResult> {
+    const locale = context?.locale;
     if (!(await isNojsEnabled())) {
       return {
-        title: this.t!("nojs.title"),
-        html: renderNojsMessage(String(this.t!("nojs.disabled"))),
+        title: this.t!("nojs.title", undefined, locale),
+        html: renderNojsMessage(String(this.t!("nojs.disabled", undefined, locale))),
       };
     }
 
     const url = _target(args);
     const linkLabel = args.trim()
-      ? this.t!("nojs.search-link", { query: args.trim() })
-      : this.t!("nojs.open-link");
+      ? this.t!("nojs.search-link", { query: args.trim() }, locale)
+      : this.t!("nojs.open-link", undefined, locale);
     if (context?.nojs) {
       return {
-        title: this.t!("nojs.title"),
+        title: this.t!("nojs.title", undefined, locale),
         html: renderNojsLinkPanel(url, String(linkLabel)),
       };
     }
 
     const redirect = `<script>(function(){window.location.href=${JSON.stringify(url).replace(/</g, "\\u003c")};})();<\/script>`;
     return {
-      title: this.t!("nojs.title"),
-      html: `${renderNojsRedirectPanel(String(this.t!("nojs.redirecting")), url, String(linkLabel))}${redirect}`,
+      title: this.t!("nojs.title", undefined, locale),
+      html: `${renderNojsRedirectPanel(String(this.t!("nojs.redirecting", undefined, locale)), url, String(linkLabel))}${redirect}`,
     };
   },
 };

@@ -16,11 +16,11 @@
     "search": {
       "search-button": "Sök på degoog",
       "feeling-lucky": "Jag har tur",
-      "feeling-curious": "Jag känner mig nyfiken",
-      "feeling-adventurous": "Jag känner mig äventyrlig",
-      "feeling-playful": "Jag känner mig lekfull",
-      "feeling-stellar": "Jag känner mig som en stjärna",
-      "feeling-trendy": "Jag känner mig trendig"
+      "feeling-curious": "Jag är nyfiken",
+      "feeling-adventurous": "Jag är äventyrlig",
+      "feeling-playful": "Jag är lekfull",
+      "feeling-stellar": "Jag är en stjärna",
+      "feeling-trendy": "Jag är trendig"
     }
   },
   "search-templates": {

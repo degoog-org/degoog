@@ -243,6 +243,7 @@ export interface CommandContext {
   nojs?: boolean;
   engines?: EngineConfig;
   bangs?: EngineConfig;
+  locale?: string;
 }
 
 export interface ImageQueryContext {

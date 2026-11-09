@@ -38,4 +38,16 @@ describe("routes/commands", () => {
     const res = await commandsRouter.request("http://localhost/api/command");
     expect(res.status).toBe(400);
   });
+
+  test("GET /api/command translates builtin output for the request locale", async () => {
+    const res = await commandsRouter.request(
+      new Request("http://localhost/api/command?q=!uuid%201", {
+        headers: { "Accept-Language": "sv-SE" },
+      }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.title).toBe("Genererade UUID:er");
+    expect(body.html).toContain(">Kopiera</button>");
+  });
 });

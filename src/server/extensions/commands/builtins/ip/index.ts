@@ -26,6 +26,7 @@ export const ipCommand: BangCommand = {
     args: string,
     context?: CommandContext,
   ): Promise<CommandResult> {
+    const locale = context?.locale;
     const raw = args.trim() || context?.clientIp || "";
     const ip = raw.replace(/^::ffff:/, "");
     if (
@@ -35,18 +36,18 @@ export const ipCommand: BangCommand = {
       ip === "localhost" ||
       /^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(ip)
     ) {
-      const detectFailedHint = this.t!("ip.detect-failed-hint");
+      const detectFailedHint = this.t!("ip.detect-failed-hint", undefined, locale);
       if (context?.nojs) {
         return {
-          title: this.t!("ip.title"),
+          title: this.t!("ip.title", undefined, locale),
           html: renderDetectRoot(detectFailedHint),
         };
       }
-      const detecting = this.t!("ip.detecting");
-      const detectFailed = this.t!("ip.detect-failed");
+      const detecting = this.t!("ip.detecting", undefined, locale);
+      const detectFailed = this.t!("ip.detect-failed", undefined, locale);
       const detectHtml = `${renderDetectRoot(detecting)}<script>(function(){var c=document.getElementById('ip-detect-root');if(!c)return;fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(d){return fetch('${getBaseUrl()}/api/command?q='+encodeURIComponent('!ip '+d.ip));}).then(function(r){return r.json();}).then(function(d){if(d&&d.html)c.innerHTML=d.html;else c.innerHTML='<p>${detectFailed}</p>';}).catch(function(){c.innerHTML='<p>${detectFailedHint}</p>';});})();<\/script>`;
       return {
-        title: this.t!("ip.title"),
+        title: this.t!("ip.title", undefined, locale),
         html: detectHtml,
       };
     }
@@ -57,22 +58,22 @@ export const ipCommand: BangCommand = {
       const data = await res.json();
       if (data.status === "fail") {
         return {
-          title: this.t!("ip.title"),
-          html: renderMessage(this.t!("ip.lookup-failed", { message: data.message })),
+          title: this.t!("ip.title", undefined, locale),
+          html: renderMessage(this.t!("ip.lookup-failed", { message: data.message }, locale)),
         };
       }
-      const na = this.t!("ip.na");
+      const na = this.t!("ip.na", undefined, locale);
       const fields = [
-        [this.t!("ip.label-ip"), data.query],
-        [this.t!("ip.label-city"), data.city],
-        [this.t!("ip.label-region"), data.regionName],
-        [this.t!("ip.label-country"), data.country],
-        [this.t!("ip.label-isp"), data.isp],
-        [this.t!("ip.label-org"), data.org],
-        [this.t!("ip.label-latlon"), `${data.lat}, ${data.lon}`],
+        [this.t!("ip.label-ip", undefined, locale), data.query],
+        [this.t!("ip.label-city", undefined, locale), data.city],
+        [this.t!("ip.label-region", undefined, locale), data.regionName],
+        [this.t!("ip.label-country", undefined, locale), data.country],
+        [this.t!("ip.label-isp", undefined, locale), data.isp],
+        [this.t!("ip.label-org", undefined, locale), data.org],
+        [this.t!("ip.label-latlon", undefined, locale), `${data.lat}, ${data.lon}`],
       ];
       return {
-        title: this.t!("ip.title-result", { ip: data.query }),
+        title: this.t!("ip.title-result", { ip: data.query }, locale),
         html: renderInfo(
           fields.map(([k, v]) => [String(k), String(v || na)] as [string, string]),
         ),
@@ -80,8 +81,8 @@ export const ipCommand: BangCommand = {
     } catch (err) {
       logger.warn("commands:ip", `lookup failed for ${ip}`, err);
       return {
-        title: this.t!("ip.title"),
-        html: renderMessage(this.t!("ip.fetch-failed")),
+        title: this.t!("ip.title", undefined, locale),
+        html: renderMessage(this.t!("ip.fetch-failed", undefined, locale)),
       };
     }
   },

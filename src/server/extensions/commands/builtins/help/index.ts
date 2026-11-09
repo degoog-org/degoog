@@ -37,6 +37,7 @@ export const helpCommand: BangCommand = {
     context?: CommandContext,
   ): Promise<CommandResult> {
     const nojs = context?.nojs === true;
+    const locale = context?.locale;
     const [commands, engineTypes] = await Promise.all([
       getFilteredCommandRegistry(context?.bangs),
       getCustomEngineTypes(),
@@ -44,7 +45,7 @@ export const helpCommand: BangCommand = {
 
     const groups: Record<string, typeof commands> = {};
     for (const c of commands) {
-      const cat = c.category || this.t!("help.category-other");
+      const cat = c.category || this.t!("help.category-other", undefined, locale);
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(c);
     }
@@ -57,13 +58,15 @@ export const helpCommand: BangCommand = {
     });
 
     const aliasesLabel = (aliases: string): string =>
-      this.t!("help.aliases", { aliases });
+      this.t!("help.aliases", { aliases }, locale);
 
     const prefixHint =
       engineTypes.length > 0
-        ? this.t!("help.prefix-hint", {
-            types: engineTypes.map(renderEngineTypeCode).join(", "),
-          })
+        ? this.t!(
+            "help.prefix-hint",
+            { types: engineTypes.map(renderEngineTypeCode).join(", ") },
+            locale,
+          )
         : "";
 
     if (!nojs && template) {
@@ -74,14 +77,14 @@ export const helpCommand: BangCommand = {
           renderPanels(sortedCategories, groups, nojs, aliasesLabel),
         )
         .replace("{{prefixHint}}", renderPrefixHint(prefixHint));
-      return { title: this.t!("help.title"), html };
+      return { title: this.t!("help.title", undefined, locale), html };
     }
 
     return {
-      title: this.t!("help.title"),
+      title: this.t!("help.title", undefined, locale),
       html: renderHelpContainer({
         nojs,
-        searchPlaceholder: nojs ? "" : this.t!("help.search-placeholder"),
+        searchPlaceholder: nojs ? "" : this.t!("help.search-placeholder", undefined, locale),
         prefixHint,
         categories: sortedCategories,
         groups,
