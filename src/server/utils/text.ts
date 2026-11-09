@@ -22,7 +22,14 @@ export const stripSnippetPrefix = (text: string): string => {
   return stripped || text;
 };
 
+const _DOCTYPE_HEAD_RE =
+  /^[^>"]{0,30}"[+-]\/\/[^"]*\/\/DTD\b[^"]*"(?:\s*"[^"]*")?\s*>/i;
+
+export const startsWithDoctype = (text: string): boolean =>
+  _DOCTYPE_HEAD_RE.test(text);
+
 export const looksLikeProse = (text: string): boolean => {
+  if (startsWithDoctype(text)) return false;
   if (/\{[^}]{0,500}\}/.test(text)) return false;
   const specialChars = (text.match(/[^a-zA-Z0-9\s.,!?'"()\-–-]/g) ?? []).length;
   const words = text.split(/\s+/).filter(Boolean);
