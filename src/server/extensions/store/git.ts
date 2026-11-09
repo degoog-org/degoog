@@ -215,6 +215,13 @@ export const syncBranch = async (repoPath: string, beta = false): Promise<void> 
   }
 };
 
+export const lacksBetaBranch = async (repoPath: string): Promise<boolean> => {
+  const run = await runGit(["-C", repoPath, "ls-remote", "--heads", "origin", BETA_BRANCH], {
+    timeoutMs: FETCH_TIMEOUT_MS,
+  });
+  return run.exit === 0 && !run.stdout.trim();
+};
+
 export const resolveTrackedBranch = (repoPath: string): Promise<string> => headBranch(repoPath);
 
 const headSha = async (repoPath: string): Promise<string | null> => {

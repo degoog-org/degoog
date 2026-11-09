@@ -196,7 +196,9 @@ describe("setRepoBeta", () => {
     gitc(work, "checkout", "-q", "main");
     await Bun.write(join(clone, "blocker.txt"), "untracked");
 
-    await expect(setRepoBeta(REPO_URL, true)).rejects.toThrow('no "develop" branch');
+    await expect(setRepoBeta(REPO_URL, true)).rejects.toThrow(
+      'Could not switch this repository to the "develop" branch.',
+    );
     expect(await isOnBetaBranch(clone)).toBe(false);
     expect(await Bun.file(join(clone, "package.json")).text()).toBe('{"name":"Acme"}');
     expect(await persistedBeta(dataDir)).toBeUndefined();

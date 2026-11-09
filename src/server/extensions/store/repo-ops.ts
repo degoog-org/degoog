@@ -19,6 +19,7 @@ import {
   hardReset,
   isGlobalBetaStore,
   isOnBetaBranch,
+  lacksBetaBranch,
   marieKondo,
   resolveTrackedBranch,
   syncBranch,
@@ -187,12 +188,18 @@ function _applyBetaFlag(repo: RepoInfo, beta: boolean): void {
   else delete repo.beta;
 }
 
-const _betaSwitchError = (repo: RepoInfo, beta: boolean, onBeta: boolean): string | null => {
+const _betaSwitchError = async (
+  repo: RepoInfo,
+  repoPath: string,
+  beta: boolean,
+  onBeta: boolean,
+): Promise<string | null> => {
   if (repo.error) return repo.error;
   if (onBeta === beta) return null;
-  return beta
+  if (!beta) return "Could not switch this repository back to its default branch.";
+  return (await lacksBetaBranch(repoPath))
     ? 'This repository has no "develop" branch.'
-    : "Could not switch this repository back to its default branch.";
+    : 'Could not switch this repository to the "develop" branch.';
 };
 
 export function setRepoBeta(url: string, beta: boolean): Promise<RepoInfo> {
@@ -206,8 +213,9 @@ export function setRepoBeta(url: string, beta: boolean): Promise<RepoInfo> {
     const previous = !!repo.beta;
     _applyBetaFlag(repo, beta);
     await _refreshRepo(repo);
-    const onBeta = await isOnBetaBranch(join(getStoreDir(), repo.localPath));
-    const failure = _betaSwitchError(repo, beta, onBeta);
+    const repoPath = join(getStoreDir(), repo.localPath);
+    const onBeta = await isOnBetaBranch(repoPath);
+    const failure = await _betaSwitchError(repo, repoPath, beta, onBeta);
     if (failure) {
       const moved = !!repo.error || onBeta !== previous;
       _applyBetaFlag(repo, previous);
