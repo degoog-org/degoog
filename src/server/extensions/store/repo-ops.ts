@@ -145,7 +145,7 @@ async function _refreshRepo(repo: RepoInfo): Promise<void> {
   const repoPath = join(getStoreDir(), repo.localPath);
   try {
     await syncBranch(repoPath, repo.beta);
-    const branch = await resolveTrackedBranch(repoPath, repo.beta);
+    const branch = await resolveTrackedBranch(repoPath);
     const fetched = await fetchRef(repoPath, branch);
     if (!fetched.ok) {
       repo.error = fetched.error || `Git fetch failed for ${branch}`;
@@ -265,7 +265,7 @@ export function getReposStatus(): Promise<RepoStatus[]> {
     for (const repo of data.repos) {
       const repoPath = join(storeDir, repo.localPath);
       try {
-        const branch = await resolveTrackedBranch(repoPath, repo.beta);
+        const branch = await resolveTrackedBranch(repoPath);
         const fetched = await fetchRef(repoPath, branch);
         if (!fetched.ok) {
           results.push({ url: repo.url, behind: 0 });
