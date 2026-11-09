@@ -78,10 +78,17 @@ const _isOn = (value: unknown, fallback: boolean): boolean =>
   value === undefined || value === "" ? fallback : value === true || value === "true";
 
 let _degoogCardRequest = 0;
+const _degoogSlotWired = new WeakSet<HTMLElement>();
 
 async function _mountDegoogCard(container: HTMLElement): Promise<void> {
   const slot = container.querySelector<HTMLElement>(`#${DEGOOG_SLOT_ID}`);
   if (!slot) return;
+  if (!_degoogSlotWired.has(slot)) {
+    _degoogSlotWired.add(slot);
+    slot.addEventListener("change", () => {
+      _degoogCardRequest += 1;
+    });
+  }
   const request = ++_degoogCardRequest;
   let settings: Record<string, unknown> | null = null;
   try {
