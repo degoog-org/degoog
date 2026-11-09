@@ -53,7 +53,7 @@ describe("per-repo develop branch", () => {
 
     await syncBranch(dest, true);
     expect(await isOnBetaBranch(dest)).toBe(true);
-    expect(await resolveTrackedBranch(dest, true)).toBe("develop");
+    expect(await resolveTrackedBranch(dest)).toBe("develop");
 
     await syncBranch(dest, false);
     expect(await isOnBetaBranch(dest)).toBe(false);
@@ -80,7 +80,7 @@ describe("setRepoBeta", () => {
   const setup = async (
     branches: Record<string, string>,
     beta?: boolean,
-  ): Promise<{ dataDir: string; clone: string }> => {
+  ): Promise<{ dataDir: string; clone: string; work: string }> => {
     const base = join(root, `run-${run++}`);
     const dataDir = join(base, "data");
     const work = join(base, "work");
@@ -115,7 +115,7 @@ describe("setRepoBeta", () => {
         ],
       }),
     );
-    return { dataDir, clone };
+    return { dataDir, clone, work };
   };
 
   const persistedBeta = async (dataDir: string): Promise<boolean | undefined> => {
@@ -181,6 +181,26 @@ describe("setRepoBeta", () => {
     const { dataDir, clone } = await setup({ main: '{"name":"Acme"}', develop: "not json" });
     await expect(setRepoBeta(REPO_URL, true)).rejects.toThrow();
     expect(await isOnBetaBranch(clone)).toBe(false);
+    expect(await persistedBeta(dataDir)).toBeUndefined();
+  });
+
+  test("keeps the default branch on its own code when the develop checkout fails", async () => {
+    const { dataDir, clone, work } = await setup({
+      main: '{"name":"Acme"}',
+      develop: '{"name":"Acme dev"}',
+    });
+    gitc(work, "checkout", "-q", "develop");
+    await Bun.write(join(work, "blocker.txt"), "tracked");
+    gitc(work, "add", ".");
+    gitc(work, "commit", "-qm", "blocker");
+    gitc(work, "checkout", "-q", "main");
+    await Bun.write(join(clone, "blocker.txt"), "untracked");
+
+    await expect(setRepoBeta(REPO_URL, true)).rejects.toThrow(
+      'Could not switch this repository to the "develop" branch.',
+    );
+    expect(await isOnBetaBranch(clone)).toBe(false);
+    expect(await Bun.file(join(clone, "package.json")).text()).toBe('{"name":"Acme"}');
     expect(await persistedBeta(dataDir)).toBeUndefined();
   });
 

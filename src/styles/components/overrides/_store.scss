@@ -312,6 +312,8 @@
 }
 
 .store-icon-btn--on,
+.store-icon-btn--on:hover,
+.store-icon-btn--on:focus-visible,
 .store-icon-btn--on:disabled {
   color: var(--text-link);
 }

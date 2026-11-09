@@ -34,10 +34,14 @@ export const uuidCommand: BangCommand = {
       : DEFAULT_UUID_COUNT;
     const uuids = Array.from({ length: count }, () => crypto.randomUUID());
     return {
-      title: this.t!("uuid.title"),
+      title: this.t!("uuid.title", undefined, context?.locale),
       html: context?.nojs
         ? renderUuidList(uuids)
-        : renderUuidList(uuids, this.t!("uuid.copy"), this.t!("uuid.copied")),
+        : renderUuidList(
+          uuids,
+          this.t!("uuid.copy", undefined, context?.locale),
+          this.t!("uuid.copied", undefined, context?.locale),
+        ),
     };
   },
 };

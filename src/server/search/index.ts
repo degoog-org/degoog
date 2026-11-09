@@ -49,6 +49,8 @@ import { engineRouteBase } from "../extensions/engines/engine-routes";
 const NEEDS_IMAGE = "This engine searches with an image";
 const NEEDS_TEXT = "This engine needs the image described as text";
 
+export const ENGINE_TIMEOUT_REASON = "Engine timeout";
+
 const _withTimeout = <T>(
   promise: Promise<T>,
   ms: number,
@@ -57,8 +59,8 @@ const _withTimeout = <T>(
   let timer: ReturnType<typeof setTimeout>;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
+      reject(new Error(ENGINE_TIMEOUT_REASON));
       onTimeout?.();
-      reject(new Error("Engine timeout"));
     }, ms);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
@@ -155,7 +157,7 @@ export const searchSingleEngine = async (
   signal?: AbortSignal,
   searchType?: SearchType,
   opts?: { forceFresh?: boolean; image?: SearchImage; region?: string },
-): Promise<CachedEngineRun> => {
+): Promise<CachedEngineRun & { cached?: boolean }> => {
   const engine = resolveEngine(engineName);
   if (!engine) {
     return {
@@ -209,7 +211,7 @@ export const searchSingleEngine = async (
         `cache hit engine="${engine.name}" results=${hit.timing.resultCount} status=${hit.timing.status ?? "ok"}`,
       );
       _tellObservers(hit.timing, engineSettingsId, scope, true);
-      return _public({ ...hit, timing: { ...hit.timing, id: engineSettingsId } });
+      return { ..._public({ ...hit, timing: { ...hit.timing, id: engineSettingsId } }), cached: true };
     }
   }
 

@@ -1,0 +1,15 @@
+{
+  "speedtest": {
+    "title": "Hastighetstest",
+    "description": "Kör ett hastighetstest på internet",
+    "download": "Nerladdning (Mbit/s)",
+    "upload": "Uppladdning (Mbit/s)",
+    "latency": "Latens (ms)",
+    "starting": "Startar...",
+    "testing-latency": "Testar latens...",
+    "testing-download": "Testar nerladdningshastighet...",
+    "testing-upload": "Testar uppladdningshastighet...",
+    "complete": "Klart",
+    "error": "Fel"
+  }
+}
