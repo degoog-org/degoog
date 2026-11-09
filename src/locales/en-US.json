@@ -41,6 +41,8 @@
       "inline-gif-playback": "Disable GIF animation in image results",
       "post-method": "Use POST for searches",
       "sticky-sidebar": "Pin the results sidebar while scrolling",
+      "show-logos": "Show dedoodles",
+      "show-logos-desc": "On special days, swap the degoog logo for one drawn by the community.",
       "centered-mode": "Center search results",
       "hide-url-params": "Hide query parameters in result URLs",
       "show-result-dates": "Show publication dates",
@@ -338,6 +340,17 @@
       "custom-css-heading": "Custom CSS",
       "custom-css-desc": "Injected on every page after theme and plugin styles, so it wins.",
       "custom-css-label": "Custom CSS",
+      "logos-heading": "Dedoodles",
+      "logos-desc": "Logos for special days, drawn by the community. This server checks the dedoodles repository once a day and serves today's logo itself, so visitors never contact GitHub.",
+      "logos-enable": "Enable dedoodles",
+      "logos-today-label": "Today",
+      "logos-refresh": "Check now",
+      "logos-status-ok": "{title}",
+      "logos-status-none": "No dedoodle today",
+      "logos-status-failed": "Couldn't reach the dedoodles repository",
+      "logos-status-loading": "Checking...",
+      "logos-status-unchecked": "Not checked yet, the next page load checks",
+      "logos-status-disabled": "Turned off",
       "honeypot-heading": "Bot control",
       "honeypot-desc": "Trap crawlers and ban them by IP.",
       "honeypot-enable": "Honeypot traps",
@@ -1057,5 +1070,8 @@
     "crop-reset": "Whole image",
     "crop-cancel": "Cancel",
     "crop-search": "Search"
+  },
+  "daily-logo": {
+    "credit-prefix": "Today's dedoodle by:"
   }
 }

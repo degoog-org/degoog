@@ -86,6 +86,7 @@ export const SETTINGS_SCHEMA = {
   fourgetCompatEnabled:         { kind: "boolean", default: false },
   engineOriginDisplay:          { kind: "string",  default: DEFAULT_ENGINE_ORIGIN_DISPLAY, values: ENGINE_ORIGIN_DISPLAY_VALUES },
   faviconShape:                 { kind: "string",  default: DEFAULT_FAVICON_SHAPE, values: FAVICON_SHAPE_VALUES },
+  logosEnabled:                 { kind: "boolean", default: true },
 } satisfies Record<string, SettingDef>;
 
 export type SettingKey = keyof typeof SETTINGS_SCHEMA;

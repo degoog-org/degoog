@@ -1,0 +1,35 @@
+.daily-logo {
+  margin: 0;
+  max-width: 100%;
+}
+
+.daily-logo-link {
+  @include button-reset;
+  display: block;
+  max-width: 100%;
+
+  &:focus-visible {
+    outline: 2px solid var(--text-link);
+    outline-offset: $space-1;
+  }
+}
+
+.daily-logo-image {
+  display: block;
+  width: auto;
+  max-width: min(100%, 36rem);
+  height: auto;
+  max-height: 12rem;
+}
+
+.daily-logo-credit {
+  margin: $space-1 0 0;
+  font-size: $font-size-small;
+  color: var(--text-secondary);
+}
+
+.daily-logo-mini {
+  display: block;
+  width: auto;
+  height: 2.25rem;
+}

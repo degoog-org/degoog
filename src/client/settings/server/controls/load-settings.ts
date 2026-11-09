@@ -100,6 +100,7 @@ export async function loadServerSettings(
     setToggle("domain-score-ui-enabled", data.domainScoreUiEnabled);
 
     setVal("custom-css", data.customCss);
+    setToggle("logos-enabled", data.logosEnabled ?? "true");
 
     setToggle("api-key-search-enabled", data.apiKeySearchEnabled);
     setToggle("api-key-suggest-enabled", data.apiKeySuggestEnabled);
