@@ -6,7 +6,7 @@ import { MAX_PAGE } from "../../../constants";
 import { destroyMediaObserver, setupMediaObserver } from "../../../modules/media/media-scroll";
 import { renderSidebar } from "../../../modules/renderer/sidebar/render-sidebar";
 import { attachVideoPlayers, renderPagination } from "../../../modules/renderer/render";
-import { renderImageGrid } from "../../../modules/renderer/media/render-media";
+import { streamImageGrid } from "../../../modules/renderer/media/render-media";
 import { announceSettled, RESULTS_READY } from "../../../modules/renderer/media/result-ranking";
 import { renderImgEngines } from "../../../modules/filters/image-filters";
 import { beginSearch, isCurrentSearch, state } from "../../../state";
@@ -197,9 +197,8 @@ export async function performStreamingSearch(
     }
 
     if (isImageType) {
-      if (firstResult) {
-        firstResult = false;
-        if (resultsList) {
+      if (data.results.length > 0) {
+        if (firstResult && resultsList) {
           render(
             <>
               <div class="image-grid"></div>
@@ -208,10 +207,12 @@ export async function performStreamingSearch(
             resultsList,
           );
         }
+        firstResult = false;
+        currentResults = resultsList
+          ? streamImageGrid(data.results, resultsList)
+          : data.results;
+        state.currentResults = currentResults;
       }
-      currentResults = data.results;
-      state.currentResults = currentResults;
-      if (resultsList) renderImageGrid(currentResults, resultsList);
     } else {
       currentResults = data.results;
       state.currentResults = currentResults;
