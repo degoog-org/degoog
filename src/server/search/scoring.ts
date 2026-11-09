@@ -12,7 +12,9 @@ const _readSnippet = (
   raw: string,
   given?: string,
 ): { text: string; publishedAt?: string } => {
-  const text = startsWithDoctype(raw) ? "" : stripCssBlocks(stripHtml(raw));
+  const cleaned = stripCssBlocks(stripHtml(raw));
+  const text =
+    startsWithDoctype(raw) || startsWithDoctype(cleaned) ? "" : cleaned;
   if (given && isPublishDate(given)) return { text, publishedAt: given };
   const dated = snippetDate(text);
   return dated

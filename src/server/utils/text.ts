@@ -23,7 +23,7 @@ export const stripSnippetPrefix = (text: string): string => {
 };
 
 const _DOCTYPE_HEAD_RE =
-  /^[^>"]{0,30}"[+-]\/\/[^"]*\/\/DTD\b[^"]*"(?:\s*"[^"]*")?\s*>/i;
+  /^[\s…]*(?:(?:<!doctype|!doctype|doctype|octype|ctype|type|ype|pe|e)\s+)?(?:(?:(?:html|tml|ml|l)\s+)?(?:public|ublic|blic|lic|ic|c)\s+)?["'][+-]\/\/[^"']*\/\/DTD\b/i;
 
 export const startsWithDoctype = (text: string): boolean =>
   _DOCTYPE_HEAD_RE.test(text);
