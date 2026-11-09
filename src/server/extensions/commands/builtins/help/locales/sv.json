@@ -1,0 +1,10 @@
+{
+  "help": {
+    "description": "Listar alla tillgängliga bang-kommandon",
+    "title": "Tillgängliga kommandon",
+    "search-placeholder": "Sök kommandon...",
+    "aliases": "Alias: {aliases}",
+    "prefix-hint": "Sök med ett typprefix: {types}",
+    "category-other": "Övrigt"
+  }
+}

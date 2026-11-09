@@ -118,6 +118,7 @@ const _runCommand = async (
       signProxyUrl: buildSignedProxyUrl,
       engines: search.engines,
       bangs,
+      locale: language,
     });
   } catch (err) {
     logger.error("plugin", `command ${match.commandId} failed`, err);

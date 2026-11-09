@@ -1,0 +1,10 @@
+{
+  "nojs": {
+    "title": "No-JS-sida",
+    "description": "Öppna sidan utan JavaScript, eller sök på den när du lägger till en fråga",
+    "disabled": "No-JS-sidan är avstängd på den här instansen.",
+    "redirecting": "Tar dig till no-JS-sidan...",
+    "open-link": "Öppna no-JS-sidan",
+    "search-link": "Sök \"{query}\" utan JavaScript"
+  }
+}
