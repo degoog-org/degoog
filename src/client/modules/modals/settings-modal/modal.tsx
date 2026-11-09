@@ -1,4 +1,5 @@
 import { clear, render } from "../../../../shared/ui/tribute/dom";
+import { onBackdropClick } from "../../../../shared/ui/components/overlay/shell";
 import { AdvancedSection } from "./fields/advanced-section";
 import { TestConnection } from "./fields/test-connection";
 import { renderField, syncConditionalFields } from "./modal-fields";
@@ -432,9 +433,7 @@ saveBtn?.addEventListener("click", () => {
   else void _save();
 });
 closeBtn?.addEventListener("click", closeModal);
-overlay?.addEventListener("click", (e) => {
-  if (e.target === overlay) closeModal();
-});
+if (overlay) onBackdropClick(overlay, closeModal);
 const _isShown = (el: HTMLElement): boolean => el.style.display !== "none";
 
 const _stackedOverlayOpen = (): boolean =>
