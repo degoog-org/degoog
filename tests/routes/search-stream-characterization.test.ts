@@ -419,6 +419,8 @@ describe("GET /api/search/stream auto-retry", () => {
 
     expect(attemptsByEngine.Cachey).toBe(2);
     expect(events.filter((e) => e.event === "engine-retry")).toHaveLength(1);
+    const timing = events.find((e) => e.event === "engine-result")?.data.timing as { status: string };
+    expect(timing.status).toBe("timeout");
   });
 
   test("a deadline hit on a retry attempt stops further retries", async () => {

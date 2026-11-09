@@ -157,7 +157,7 @@ export const searchSingleEngine = async (
   signal?: AbortSignal,
   searchType?: SearchType,
   opts?: { forceFresh?: boolean; image?: SearchImage; region?: string },
-): Promise<CachedEngineRun> => {
+): Promise<CachedEngineRun & { cached?: boolean }> => {
   const engine = resolveEngine(engineName);
   if (!engine) {
     return {
