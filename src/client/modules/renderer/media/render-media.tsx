@@ -30,8 +30,11 @@ const COLUMN_STEPS: ReadonlyArray<{ upTo: number; columns: number }> = [
 ];
 const COLUMN_MAX = 6;
 const RELAYOUT_DELAY_MS = 120;
+const THUMB_SELECTOR = ".image-thumb-wrap, img.image-thumb";
 
 const _cardUrls = new WeakMap<HTMLElement, string>();
+const _cardHtml = new WeakMap<HTMLElement, string>();
+const _cardThumbs = new WeakMap<HTMLElement, string>();
 
 const _getImageColumnCount = (grid: HTMLElement): number => {
   const width = grid.clientWidth || window.innerWidth;
@@ -170,6 +173,9 @@ const _imageCardUrl = (r: ScoredResult): string => {
   return r.imageUrl;
 };
 
+const _thumbOf = (r: ScoredResult): string =>
+  `${_imageCardUrl(r)}\n${r.thumbnail || ""}`;
+
 const _buildMediaContext = (r: ScoredResult): Record<string, unknown> => ({
   title: r.title,
   url: linkHref(r.url),
@@ -191,13 +197,29 @@ const _mediaCard = (
   const card = document.createElement("div");
   card.className = cardClass;
   card.dataset.idx = String(idx);
-  card.innerHTML = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
+  const html = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
+  card.innerHTML = html;
   card.addEventListener("click", () => {
     const current = Number(card.dataset.idx);
     toggleMediaPreview(state.currentResults[current], current, `.${cardClass}`);
   });
   _cardUrls.set(card, r.url);
+  _cardHtml.set(card, html);
+  _cardThumbs.set(card, _thumbOf(r));
   return card;
+};
+
+const _refreshImageCard = (card: HTMLElement, r: ScoredResult): void => {
+  const html = renderTemplate("degoog-image-card", _buildMediaContext(r)) ?? "";
+  if (_cardHtml.get(card) === html) return;
+  const thumb = _thumbOf(r);
+  const sameThumb = _cardThumbs.get(card) === thumb;
+  const kept = sameThumb ? card.querySelector(THUMB_SELECTOR) : null;
+  card.innerHTML = html;
+  if (kept) card.querySelector(THUMB_SELECTOR)?.replaceWith(kept);
+  if (!sameThumb) card.style.display = "";
+  _cardHtml.set(card, html);
+  _cardThumbs.set(card, thumb);
 };
 
 const _applyRankingIfNeeded = (results: ScoredResult[]): void => {
@@ -311,13 +333,16 @@ export const streamImageGrid = (
   state.currentResults = next;
   placedCards.forEach((card, i) => {
     card.dataset.idx = String(i);
+    _refreshImageCard(card, next[i]);
   });
   movable.forEach((card) => card.remove());
 
   const place = _columnPacker(columns, loads);
   next.slice(placedCards.length).forEach((r, offset) => {
     const idx = placedCards.length + offset;
-    const card = cardsByUrl.get(r.url) ?? _mediaCard(r, idx, "image");
+    const reused = cardsByUrl.get(r.url);
+    if (reused) _refreshImageCard(reused, r);
+    const card = reused ?? _mediaCard(r, idx, "image");
     card.dataset.idx = String(idx);
     place(card, heights.get(card) ?? estimate);
   });
