@@ -2,6 +2,8 @@ import type { Context } from "hono";
 import { getBasePath } from "../utils/net/base-url";
 import { logger } from "../utils/logger";
 import { REGION_PARAM } from "../../shared/region";
+import { asBoolean } from "../utils/settings/plugin-settings";
+import { getInstanceSettings } from "../utils/settings/server-settings";
 
 const BASE_PATH = getBasePath();
 
@@ -76,3 +78,8 @@ export const retryHref = (
 };
 
 export const fullAppHref = (): string => `${BASE_PATH}/` || "/";
+
+export const nojsFormMethod = async (): Promise<string> => {
+  const settings = await getInstanceSettings();
+  return asBoolean(settings.postMethodEnabled) ? "post" : "get";
+};
