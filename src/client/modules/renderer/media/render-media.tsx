@@ -31,6 +31,10 @@ const COLUMN_STEPS: ReadonlyArray<{ upTo: number; columns: number }> = [
 const COLUMN_MAX = 6;
 const RELAYOUT_DELAY_MS = 120;
 const THUMB_SELECTOR = ".image-thumb-wrap, img.image-thumb";
+const MEDIA_CARDS = {
+  image: { cardClass: "image-card", templateId: "degoog-image-card" },
+  video: { cardClass: "video-card", templateId: "degoog-video-card" },
+} as const;
 
 const _cardUrls = new WeakMap<HTMLElement, string>();
 const _cardHtml = new WeakMap<HTMLElement, string>();
@@ -191,9 +195,7 @@ const _mediaCard = (
   idx: number,
   type: "image" | "video",
 ): HTMLElement => {
-  const cardClass = type === "image" ? "image-card" : "video-card";
-  const templateId =
-    type === "image" ? "degoog-image-card" : "degoog-video-card";
+  const { cardClass, templateId } = MEDIA_CARDS[type];
   const card = document.createElement("div");
   card.className = cardClass;
   card.dataset.idx = String(idx);
@@ -210,7 +212,8 @@ const _mediaCard = (
 };
 
 const _refreshImageCard = (card: HTMLElement, r: ScoredResult): void => {
-  const html = renderTemplate("degoog-image-card", _buildMediaContext(r)) ?? "";
+  const { templateId } = MEDIA_CARDS.image;
+  const html = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
   if (_cardHtml.get(card) === html) return;
   const thumb = _thumbOf(r);
   const sameThumb = _cardThumbs.get(card) === thumb;
@@ -232,7 +235,7 @@ export function appendMediaCards(
   type: "image" | "video",
 ): void {
   const startIdx = grid.querySelectorAll(
-    type === "image" ? ".image-card" : ".video-card",
+    `.${MEDIA_CARDS[type].cardClass}`,
   ).length;
 
   if (type === "image") {
