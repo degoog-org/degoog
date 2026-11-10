@@ -80,6 +80,7 @@ Environment=PGID=1000
 # instance lets anyone install extensions, which runs code on the server.
 Environment=DEGOOG_SETTINGS_PASSWORDS=changeme
 # Environment=DEGOOG_PUBLIC_INSTANCE=true # Add if public
+# Environment=DEGOOG_BASE_URL=https://search.example.com # Add if behind a reverse proxy, so links such as /opensearch.xml use https
 UIDMap=+%U:@%U
 Volume=<Path to config>:/app/data:Z
 PublishPort=4444:4444

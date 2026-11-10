@@ -242,6 +242,20 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
           : []),
       ];
 
+      function _sendDone(totalTime: number, indexedUrls: string[]): void {
+        _send("done", {
+          totalTime,
+          engineTimings: allTimings,
+          indexedUrls,
+          relatedSearches: [],
+          totalPages: agreedPageTotal(allPages),
+          ...imageQueryFields(
+            { ...inputs, imageQuery: inputs.imageQuery ?? imageOutcome.query },
+            imageOutcome,
+          ),
+        });
+      }
+
       void Promise.all(enginePromises)
         .then(async () => {
         const totalTime = Math.round(performance.now() - start);
@@ -268,20 +282,11 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
           return [] as string[];
         });
 
-        _send("done", {
-          totalTime,
-          engineTimings: allTimings,
-          indexedUrls,
-          relatedSearches: [],
-          totalPages: agreedPageTotal(allPages),
-          ...imageQueryFields(
-            { ...inputs, imageQuery: inputs.imageQuery ?? imageOutcome.query },
-            imageOutcome,
-          ),
-        });
+        _sendDone(totalTime, indexedUrls);
         })
-        .catch((err) => {
-          logger.error("search-stream", "stream finalization failed", err);
+        .catch((err: unknown) => {
+          logger.error("search-stream", "stream finalization failed, sending done without indexing", err);
+          _sendDone(Math.round(performance.now() - start), []);
         })
         .finally(() => {
           if (!closed) {

@@ -1,7 +1,8 @@
-import { afterAll, beforeAll, describe, test, expect } from "bun:test";
+import { afterAll, beforeAll, describe, test, expect, spyOn } from "bun:test";
 import { Hono } from "hono";
 import { trimSlash } from "../../src/server/utils/net/trailing-slash";
 import { buildPublicUrl, getPublicUrl } from "../../src/server/utils/net/public-url";
+import { logger } from "../../src/server/utils/logger";
 
 const REQ = { url: "http://localhost:4444/opensearch.xml" };
 
@@ -43,6 +44,38 @@ describe("utils/public-url", () => {
     });
 
     expect(out).toBe("https://search.example.com");
+  });
+});
+
+describe("utils/public-url missing base url warning", () => {
+  const app = new Hono();
+  app.get("/opensearch.xml", (c) => c.text(getPublicUrl(c)));
+
+  test("warns at most once and never logs forwarded header values", async () => {
+    const saved = process.env.DEGOOG_DISTRUST_PROXY;
+    delete process.env.DEGOOG_DISTRUST_PROXY;
+    const warn = spyOn(logger, "warn");
+    try {
+      for (let i = 0; i < 3; i++) {
+        const res = await app.request("http://localhost:4444/opensearch.xml", {
+          headers: {
+            "X-Forwarded-Proto": "https",
+            "X-Forwarded-Host": "leaky-host.invalid",
+            "X-Forwarded-For": "203.0.113.7",
+          },
+        });
+        expect(await res.text()).toBe("http://localhost:4444");
+      }
+      const calls = warn.mock.calls.filter(([tag]) => tag === "public-url");
+      expect(calls.length).toBeLessThanOrEqual(1);
+      const logged = JSON.stringify(calls);
+      expect(logged).not.toContain("leaky-host.invalid");
+      expect(logged).not.toContain("203.0.113.7");
+    } finally {
+      warn.mockRestore();
+      if (saved === undefined) delete process.env.DEGOOG_DISTRUST_PROXY;
+      else process.env.DEGOOG_DISTRUST_PROXY = saved;
+    }
   });
 });
 

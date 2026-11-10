@@ -12,6 +12,7 @@ const PLUGIN_SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
 const INDEXER_MOD = "../../src/server/indexer/store/record";
 const INTERCEPTS_MOD = "../../src/server/utils/extension-support/run-interceptors";
 const OUTGOING_MOD = "../../src/server/utils/net/outgoing";
+const DOMAIN_RULES_MOD = "../../src/server/search/domain-rules";
 
 const enginesReal = { ...(await import(ENGINES_MOD)) };
 const engineSettingsReal = { ...(await import(ENGINE_SETTINGS_MOD)) };
@@ -20,6 +21,7 @@ const pluginSettingsReal = { ...(await import(PLUGIN_SETTINGS_MOD)) };
 const indexerReal = { ...(await import(INDEXER_MOD)) };
 const interceptsReal = { ...(await import(INTERCEPTS_MOD)) };
 const outgoingReal = { ...(await import(OUTGOING_MOD)) };
+const domainRulesReal = { ...(await import(DOMAIN_RULES_MOD)) };
 
 const { DEGOOG_ENGINE_NAME } = await import("../../src/shared/search-types");
 
@@ -149,6 +151,7 @@ afterEach(() => {
   mock.module(PLUGIN_SETTINGS_MOD, () => pluginSettingsReal);
   mock.module(INDEXER_MOD, () => indexerReal);
   mock.module(INTERCEPTS_MOD, () => interceptsReal);
+  mock.module(DOMAIN_RULES_MOD, () => domainRulesReal);
 });
 
 describe("GET /api/search/stream request handling", () => {
@@ -468,6 +471,26 @@ describe("GET /api/search/stream failure isolation", () => {
     const done = events.at(-1)!.data;
     expect(done.indexedUrls).toEqual([]);
     expect((done.engineTimings as unknown[]).length).toBe(2);
+    expect(done.totalPages).toBe(4);
+  });
+
+  test("a wrap-up that throws after results were streamed still ends with done", async () => {
+    harness({ engines: [makeEngine("Alpha", 2, 4)] });
+    let mergeCalls = 0;
+    mock.module(DOMAIN_RULES_MOD, () => ({
+      ...domainRulesReal,
+      applyMergedDomainRules: async (results: ScoredResult[]) => {
+        if (++mergeCalls > 1) throw new Error("domain rules went away");
+        return results;
+      },
+    }));
+    const events = await readEvents(await call(uniqueQuery("wrapup-down")));
+
+    expect(events.map((e) => e.event)).toEqual(["engine-result", "done"]);
+    expect((events[0].data.results as ScoredResult[]).length).toBe(2);
+    const done = events.at(-1)!.data;
+    expect(done.indexedUrls).toEqual([]);
+    expect((done.engineTimings as unknown[]).length).toBe(1);
     expect(done.totalPages).toBe(4);
   });
 });
