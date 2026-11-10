@@ -22,6 +22,7 @@ import {
   addClassById,
   addClassWhereClass,
   appendToId,
+  fillByClass,
   fillById,
   removeElementById,
   replaceElementById,
@@ -31,11 +32,13 @@ import {
 } from "./dom";
 import {
   fullAppHref,
+  nojsFormMethod,
   nojsHome,
   nojsSearchAction,
   searchParams,
   type NojsQuery,
 } from "./links";
+import { renderNojsDailyLogoMini } from "./daily-logo";
 import { ResultsForm } from "./results-form";
 import { buildNojsDocument, loadNojsPartial, loadNojsShell } from "./render";
 import { SLOT_CONTAINER_IDS } from "./slots";
@@ -47,11 +50,6 @@ const NEW_QUERY_DROPPED_PARAMS = new Set(["q", "page"]);
 
 const _carriedFilters = (query: NojsQuery): [string, string][] =>
   [...searchParams(query)].filter(([name]) => !NEW_QUERY_DROPPED_PARAMS.has(name));
-
-const _formMethod = async (): Promise<string> => {
-  const settings = await getInstanceSettings();
-  return asBoolean(settings.postMethodEnabled) ? "post" : "get";
-};
 
 const _searchLabel = (t: Translate, locale: string): string =>
   escapeAttribute(String(t("nojs.search-label", undefined, locale)));
@@ -80,7 +78,7 @@ export const renderNojsHomeSearch = async (
   let html = await removeElementById(template, "btn-lucky");
   html = await setAttributesById(html, "search-form-home", {
     action: escapeAttribute(nojsSearchAction(c)),
-    method: await _formMethod(),
+    method: await nojsFormMethod(),
     role: "search",
   });
   return await setAttributesById(html, "search-input", {
@@ -105,6 +103,8 @@ export const renderNojsResultsHeader = async (
   html = await setAttributesByClass(html, "results-logo", {
     href: escapeAttribute(nojsHome(c)),
   });
+  const dailyLogo = await renderNojsDailyLogoMini(locale);
+  if (dailyLogo) html = await fillByClass(html, "results-logo", dailyLogo);
   html = await removeElementById(html, "results-search-clear-btn");
   html = await setAttributesById(html, "results-search-input", {
     name: "q",
@@ -117,7 +117,7 @@ export const renderNojsResultsHeader = async (
   const form = renderHtml(
     <ResultsForm
       action={nojsSearchAction(c)}
-      method={await _formMethod()}
+      method={await nojsFormMethod()}
       hidden={_carriedFilters(query)}
     >
       {RESULTS_FORM_SLOT}
@@ -192,7 +192,7 @@ export const renderNojsTabRow = async (
     ...tools,
     ...buildTabsContext(c, tabs, query, currentType, !!tools.open),
     search_action: nojsSearchAction(c),
-    method: await _formMethod(),
+    method: await nojsFormMethod(),
   });
 };
 
