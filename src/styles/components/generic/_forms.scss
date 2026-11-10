@@ -92,6 +92,7 @@ select.degoog-input {
 }
 
 .degoog-toggle-wrap {
+  position: relative;
   display: flex;
   align-items: center;
   gap: $space-3;
@@ -101,7 +102,7 @@ select.degoog-input {
   border-radius: $radius-md;
 
   input {
-    display: none;
+    @include visually-hidden-input;
   }
 
   &--transparent {
@@ -145,6 +146,11 @@ select.degoog-input {
     &::after {
       left: 55%;
     }
+  }
+
+  input:focus-visible + & {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
   }
 }
 
@@ -215,13 +221,14 @@ select.degoog-input {
 }
 
 .degoog-checkbox-wrap {
+  position: relative;
   display: flex;
   align-items: center;
   gap: $space-3;
   cursor: pointer;
 
   input {
-    display: none;
+    @include visually-hidden-input;
   }
 }
 
@@ -252,5 +259,9 @@ select.degoog-input {
       opacity: 1;
       transform: scale(1);
     }
+  }
+  input:focus-visible + & {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
   }
 }
