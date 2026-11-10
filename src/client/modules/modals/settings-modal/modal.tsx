@@ -18,7 +18,11 @@ import type { Child } from "../../../../shared/ui/tribute/types";
 import type { ExtensionMeta } from "../../../types/extension";
 import type { SettingField } from "../../../../shared/setting-field";
 import { openExtensionDocs } from "../docs-modal/docs";
-import { focusableIn, wrapTab } from "../../../utils/dom/focus-trap";
+import {
+  FORM_FIELD_SELECTOR,
+  focusableIn,
+  wrapTab,
+} from "../../../utils/dom/focus-trap";
 
 const t = window.scopedT("core");
 
@@ -382,7 +386,7 @@ export function openModal(ext: ExtensionMeta): void {
   if (overlay) overlay.style.display = "flex";
   const fields = bodyEl ? focusableIn(bodyEl) : [];
   const first =
-    fields.find((el) => el.matches("select, input, textarea")) ??
+    fields.find((el) => el.matches(FORM_FIELD_SELECTOR)) ??
     fields[0] ??
     dialogEl;
   first?.focus();

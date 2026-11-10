@@ -1,8 +1,10 @@
-const FOCUSABLE =
+export const FOCUSABLE_SELECTOR =
   "button, [href], input, select, textarea, summary, [tabindex]";
 
+export const FORM_FIELD_SELECTOR = "select, input, textarea";
+
 export const focusableIn = (root: HTMLElement): HTMLElement[] =>
-  Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+  Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
     (el) =>
       !el.hasAttribute("disabled") &&
       el.getAttribute("tabindex") !== "-1" &&
