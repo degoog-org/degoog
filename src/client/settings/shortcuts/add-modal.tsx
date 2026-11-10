@@ -1,4 +1,5 @@
 import { clear, render } from "../../../shared/ui/tribute/dom";
+import { onBackdropClick } from "../../../shared/ui/components/overlay/shell";
 import { getBase } from "../../utils/net/base-url";
 import { authHeaders, jsonHeaders } from "../../utils/net/request";
 
@@ -124,11 +125,8 @@ export const openAddShortcutModal = async (
     modal?.classList.remove("ext-modal--wide", "shortcut-editor-modal");
     saveEl.removeEventListener("click", save);
     closeEl?.removeEventListener("click", cleanup);
-    overlay.removeEventListener("click", onOverlayClick);
+    offBackdrop();
     document.removeEventListener("keydown", onEscape);
-  };
-  const onOverlayClick = (e: MouseEvent): void => {
-    if (e.target === overlay) cleanup();
   };
   const onEscape = (e: KeyboardEvent): void => {
     if (e.key === "Escape") cleanup();
@@ -158,7 +156,7 @@ export const openAddShortcutModal = async (
     }
   };
   closeEl?.addEventListener("click", cleanup);
-  overlay.addEventListener("click", onOverlayClick);
+  const offBackdrop = onBackdropClick(overlay, cleanup);
   document.addEventListener("keydown", onEscape);
   saveEl.addEventListener("click", save);
 };

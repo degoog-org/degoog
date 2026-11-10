@@ -1,4 +1,5 @@
 import { render } from "../../../../shared/ui/tribute/dom";
+import { onBackdropClick } from "../../../../shared/ui/components/overlay/shell";
 import { RESTART_CONFIRM_CLASS, RestartNoticeModal } from "./restart-notice-modal";
 import { fetchRestartState } from "../../shared/restart-state";
 
@@ -79,9 +80,7 @@ function buildModal(reasons: string[]): {
     }
   }
 
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) close();
-  });
+  onBackdropClick(overlay, close);
   document.addEventListener("keydown", onKey);
 
   document.body.appendChild(overlay);

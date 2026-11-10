@@ -6,6 +6,7 @@ import { jsonHeaders } from "../../../utils/net/request";
 import { getBase } from "../../../utils/net/base-url";
 import {
   mountModalShell,
+  onBackdropClick,
   type MountedModal,
 } from "../../../../shared/ui/components/overlay/shell";
 
@@ -26,9 +27,7 @@ function _ensureMounted(): void {
   });
 
   shell.close.addEventListener("click", closeDocs);
-  shell.overlay.addEventListener("click", (e) => {
-    if (e.target === shell?.overlay) closeDocs();
-  });
+  onBackdropClick(shell.overlay, closeDocs);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && shell?.isOpen()) closeDocs();
   });
