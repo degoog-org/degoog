@@ -1,7 +1,10 @@
-import { DAILY_LOGO_IMAGE_ROUTE, type DailyLogo } from "../../../shared/daily-logo";
-import type { StoredLogo, TodaysLogo } from "./daily";
-
-const DEFAULT_LOCALE = "en-US";
+import {
+  DAILY_LOGO_DEFAULT_LOCALE,
+  DAILY_LOGO_IMAGE_ROUTE,
+  type DailyLogo,
+} from "../../../shared/daily-logo";
+import { basePrefix } from "../../render/theme-assets";
+import type { StoredLogo, TodaysLogo } from "../../types/logos";
 
 const _language = (locale: string): string => locale.split("-")[0].toLowerCase();
 
@@ -12,14 +15,14 @@ export const localizedLogoTitle = (title: Record<string, string>, locale?: strin
     const sameLanguage = Object.keys(title).find((key) => _language(key) === language);
     if (sameLanguage) return title[sameLanguage];
   }
-  return title[DEFAULT_LOCALE] ?? Object.values(title)[0] ?? "";
+  return title[DAILY_LOGO_DEFAULT_LOCALE] ?? Object.values(title)[0] ?? "";
 };
 
 export const logoVersion = (date: string, logo: StoredLogo): string =>
   `${logo.commit.slice(0, 12)}-${date}-${logo.id}`;
 
-export const logoImagePath = (date: string, logo: StoredLogo): string =>
-  `${DAILY_LOGO_IMAGE_ROUTE}/${date}/${logo.id}?v=${encodeURIComponent(logoVersion(date, logo))}`;
+const _logoImageSrc = (date: string, logo: StoredLogo): string =>
+  `${basePrefix()}${DAILY_LOGO_IMAGE_ROUTE}/${date}/${logo.id}?v=${encodeURIComponent(logoVersion(date, logo))}`;
 
 export const toDailyLogo = ({ date, logo }: TodaysLogo, locale?: string): DailyLogo => ({
   date,
@@ -27,5 +30,5 @@ export const toDailyLogo = ({ date, logo }: TodaysLogo, locale?: string): DailyL
   query: logo.query,
   title: localizedLogoTitle(logo.title, locale),
   authors: logo.authors,
-  image: logoImagePath(date, logo),
+  src: _logoImageSrc(date, logo),
 });

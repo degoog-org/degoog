@@ -22,14 +22,10 @@ export const readDailyLogo = async (): Promise<DailyLogo | null> => {
 };
 
 export function renderDailyLogo(logo: DailyLogo, onSearch: (query: string) => void): void {
-  const src = `${getBase()}${logo.image}`;
   const home = document.getElementById("home-logo");
   if (home) {
     clear(home);
-    render(
-      <DailyLogoBanner logo={logo} src={src} action={`${getBase()}/search`} method="get" />,
-      home,
-    );
+    render(<DailyLogoBanner logo={logo} action={`${getBase()}/search`} method="get" />, home);
     home.querySelector(".daily-logo")?.addEventListener("submit", (e) => {
       e.preventDefault();
       onSearch(logo.query);
@@ -45,6 +41,6 @@ export function renderDailyLogo(logo: DailyLogo, onSearch: (query: string) => vo
   const resultsLogo = document.querySelector(".results-logo");
   if (resultsLogo) {
     clear(resultsLogo);
-    render(<DailyLogoMini logo={logo} src={src} />, resultsLogo);
+    render(<DailyLogoMini logo={logo} />, resultsLogo);
   }
 }

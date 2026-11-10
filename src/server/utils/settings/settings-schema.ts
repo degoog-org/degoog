@@ -6,6 +6,7 @@ import {
   DEFAULT_FAVICON_SHAPE,
   FAVICON_SHAPE_VALUES,
 } from "../../../shared/favicon-shapes";
+import { asBoolean, type SettingValue } from "./plugin-settings";
 
 type SettingKind = "string" | "boolean" | "number" | "lines";
 
@@ -90,6 +91,13 @@ export const SETTINGS_SCHEMA = {
 } satisfies Record<string, SettingDef>;
 
 export type SettingKey = keyof typeof SETTINGS_SCHEMA;
+
+type BooleanSettingKey = {
+  [K in SettingKey]: (typeof SETTINGS_SCHEMA)[K]["kind"] extends "boolean" ? K : never;
+}[SettingKey];
+
+export const booleanSetting = (key: BooleanSettingKey, raw: SettingValue | undefined): boolean =>
+  raw === undefined || raw === "" ? Boolean(SETTINGS_SCHEMA[key].default) : asBoolean(raw);
 
 export const coerceSetting = (def: SettingDef, raw: string): string | boolean => {
   switch (def.kind) {

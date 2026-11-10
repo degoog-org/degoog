@@ -2,10 +2,9 @@ import { Hono } from "hono";
 import { DAILY_LOGO_IMAGE_ROUTE } from "../../shared/daily-logo";
 import { msUntilTomorrow, readLogoImage } from "../extensions/logos/daily";
 import { logoVersion } from "../extensions/logos/present";
+import { CSP_HEADER, SANDBOXED_IMAGE_CSP } from "../utils/security/content-policy";
 
 const router = new Hono();
-
-const LOGO_IMAGE_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
 
 router.get(`${DAILY_LOGO_IMAGE_ROUTE}/:date/:id`, async (c) => {
   const date = c.req.param("date");
@@ -16,15 +15,10 @@ router.get(`${DAILY_LOGO_IMAGE_ROUTE}/:date/:id`, async (c) => {
     "Cache-Control": `private, max-age=${Math.floor(msUntilTomorrow() / 1000)}`,
     ETag: etag,
     "X-Content-Type-Options": "nosniff",
-    "Content-Security-Policy": LOGO_IMAGE_CSP,
+    [CSP_HEADER]: SANDBOXED_IMAGE_CSP,
   };
-  if (c.req.header("If-None-Match") === etag) {
-    return new Response(null, { status: 304, headers });
-  }
-  return new Response(found.bytes, {
-    status: 200,
-    headers: { ...headers, "Content-Type": found.logo.contentType },
-  });
+  if (c.req.header("If-None-Match") === etag) return c.body(null, 304, headers);
+  return c.body(found.bytes, 200, { ...headers, "Content-Type": found.logo.contentType });
 });
 
 export default router;

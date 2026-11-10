@@ -3,6 +3,12 @@
   max-width: 100%;
 }
 
+.daily-logo-heading {
+  margin: 0;
+  font-size: inherit;
+  line-height: 0;
+}
+
 .daily-logo-link {
   @include button-reset;
   display: block;

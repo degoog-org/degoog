@@ -23,6 +23,8 @@ const GIF87 = _ascii("GIF87a");
 const GIF89 = _ascii("GIF89a");
 const RIFF = _ascii("RIFF");
 const WEBP = _ascii("WEBP");
+const FTYP = _ascii("ftyp");
+const AVIF_BRAND = _ascii("avi");
 
 const SIGNATURES: readonly Signature[] = [
   { contentType: "image/png", matches: (b) => _startsWith(b, PNG) },
@@ -30,10 +32,22 @@ const SIGNATURES: readonly Signature[] = [
   { contentType: "image/gif", matches: (b) => _startsWith(b, GIF87) || _startsWith(b, GIF89) },
   { contentType: "image/jpeg", matches: (b) => _startsWith(b, JPEG) },
   { contentType: "image/webp", matches: (b) => _startsWith(b, RIFF) && _startsWith(b, WEBP, 8) },
+  { contentType: "image/avif", matches: (b) => _startsWith(b, FTYP, 4) && _startsWith(b, AVIF_BRAND, 8) },
 ];
 
+const FAVICON_TYPES: ReadonlySet<string> = new Set([
+  "image/png",
+  "image/x-icon",
+  "image/gif",
+  "image/jpeg",
+  "image/webp",
+]);
+
+export const sniffImageType = (bytes: Uint8Array, allowed: ReadonlySet<string>): string | null =>
+  SIGNATURES.find((sig) => allowed.has(sig.contentType) && sig.matches(bytes))?.contentType ?? null;
+
 export const sniffFaviconType = (bytes: Uint8Array): string | null =>
-  SIGNATURES.find((sig) => sig.matches(bytes))?.contentType ?? null;
+  sniffImageType(bytes, FAVICON_TYPES);
 
 export const validateFavicon = (bytes: Uint8Array): FaviconBytes | null => {
   if (bytes.byteLength === 0 || bytes.byteLength > FAVICON_MAX_BYTES) return null;

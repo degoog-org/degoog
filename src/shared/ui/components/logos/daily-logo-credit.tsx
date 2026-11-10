@@ -1,12 +1,11 @@
 import type { DailyLogoAuthor } from "../../../daily-logo";
 
-export const DailyLogoCredit = ({
-  authors,
-  prefix,
-}: {
+export interface DailyLogoCreditProps {
   authors: DailyLogoAuthor[];
   prefix: string;
-}): JSX.Element => (
+}
+
+export const DailyLogoCredit = ({ authors, prefix }: DailyLogoCreditProps): JSX.Element => (
   <p class="daily-logo-credit">
     {`${prefix} `}
     {authors.map((author, index) => (

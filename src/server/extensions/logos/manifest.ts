@@ -1,18 +1,7 @@
-import type { DailyLogoAuthor } from "../../../shared/daily-logo";
+import { DAILY_LOGO_DEFAULT_LOCALE, type DailyLogoAuthor } from "../../../shared/daily-logo";
+import { isRecord } from "../../../shared/utils/is-record";
+import type { ManifestDay, ManifestLogo } from "../../types/logos";
 import { logger } from "../../utils/logger";
-
-export interface ManifestLogo {
-  id: string;
-  query: string;
-  title: Record<string, string>;
-  authors: DailyLogoAuthor[];
-  image: string;
-}
-
-export interface ManifestDay {
-  commit: string;
-  logos: ManifestLogo[];
-}
 
 const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/;
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -22,9 +11,6 @@ const MAX_QUERY_LENGTH = 200;
 const MAX_TITLE_LENGTH = 120;
 const MAX_NAME_LENGTH = 80;
 const MAX_AUTHORS = 10;
-
-const _isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
 
 const _text = (value: unknown, max: number): string | null =>
   typeof value === "string" && value.trim() && value.length <= max
@@ -42,19 +28,19 @@ const _httpsUrl = (value: unknown): string | undefined => {
 };
 
 const _parseTitle = (raw: unknown): Record<string, string> | null => {
-  if (!_isRecord(raw)) return null;
+  if (!isRecord(raw)) return null;
   const title: Record<string, string> = {};
   for (const [locale, text] of Object.entries(raw)) {
     const value = _text(text, MAX_TITLE_LENGTH);
     if (LOCALE_PATTERN.test(locale) && value) title[locale] = value;
   }
-  return title["en-US"] ? title : null;
+  return title[DAILY_LOGO_DEFAULT_LOCALE] ? title : null;
 };
 
 const _parseAuthors = (raw: unknown): DailyLogoAuthor[] => {
   if (!Array.isArray(raw)) return [];
   return raw.slice(0, MAX_AUTHORS).flatMap((author): DailyLogoAuthor[] => {
-    if (!_isRecord(author)) return [];
+    if (!isRecord(author)) return [];
     const name = _text(author.name, MAX_NAME_LENGTH);
     if (!name) return [];
     const url = _httpsUrl(author.url);
@@ -63,7 +49,7 @@ const _parseAuthors = (raw: unknown): DailyLogoAuthor[] => {
 };
 
 const _parseLogo = (raw: unknown, date: string): ManifestLogo | null => {
-  if (!_isRecord(raw)) return null;
+  if (!isRecord(raw)) return null;
   const id = typeof raw.id === "string" && SLUG_PATTERN.test(raw.id) ? raw.id : null;
   const query = _text(raw.query, MAX_QUERY_LENGTH);
   const title = _parseTitle(raw.title);
@@ -76,7 +62,7 @@ const _parseLogo = (raw: unknown, date: string): ManifestLogo | null => {
 };
 
 export const parseManifestDay = (raw: unknown, date: string): ManifestDay | null => {
-  if (!_isRecord(raw) || !_isRecord(raw.logos)) return null;
+  if (!isRecord(raw) || !isRecord(raw.logos)) return null;
   if (typeof raw.commit !== "string" || !COMMIT_PATTERN.test(raw.commit)) return null;
   const entries = raw.logos[date];
   if (!Array.isArray(entries)) return { commit: raw.commit, logos: [] };

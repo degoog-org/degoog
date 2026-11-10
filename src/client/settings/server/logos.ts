@@ -1,3 +1,4 @@
+import { LOGO_STATUS, type LogoStatusResponse } from "../../../shared/daily-logo";
 import { getBase } from "../../utils/net/base-url";
 import { authHeaders } from "../../utils/net/request";
 
@@ -5,15 +6,21 @@ const t = window.scopedT("core");
 
 export const LOGOS_SAVED_EVENT = "logos-saved";
 
-interface LogoStatusResponse {
-  status: string;
-  title?: string;
-}
+const _statusText = ({ status, title }: LogoStatusResponse): string =>
+  title ?? t(`settings-page.server.logos-status-${status}`);
 
-const _statusText = (data: LogoStatusResponse): string =>
-  data.status === "ok"
-    ? t("settings-page.server.logos-status-ok", { title: data.title ?? "" })
-    : t(`settings-page.server.logos-status-${data.status}`);
+const _request = async (
+  path: string,
+  getToken: () => string | null,
+  method = "GET",
+): Promise<LogoStatusResponse> => {
+  const res = await fetch(`${getBase()}/api/settings/logos${path}`, {
+    method,
+    headers: authHeaders(getToken),
+  });
+  if (!res.ok) throw new Error(`logos ${path || "status"} answered ${res.status}`);
+  return (await res.json()) as LogoStatusResponse;
+};
 
 export const initLogosControls = (getToken: () => string | null): void => {
   const status = document.getElementById("settings-logos-status");
@@ -26,10 +33,7 @@ export const initLogosControls = (getToken: () => string | null): void => {
 
   const load = async (): Promise<void> => {
     try {
-      const res = await fetch(`${getBase()}/api/settings/logos`, {
-        headers: authHeaders(getToken),
-      });
-      if (res.ok) show((await res.json()) as LogoStatusResponse);
+      show(await _request("", getToken));
     } catch (err) {
       console.warn("[settings] logo status load failed", err);
     }
@@ -38,17 +42,12 @@ export const initLogosControls = (getToken: () => string | null): void => {
   button.addEventListener("click", async () => {
     if (button.disabled) return;
     button.disabled = true;
-    status.textContent = t("settings-page.server.logos-status-loading");
+    show({ status: LOGO_STATUS.LOADING });
     try {
-      const res = await fetch(`${getBase()}/api/settings/logos/refresh`, {
-        method: "POST",
-        headers: authHeaders(getToken),
-      });
-      if (!res.ok) throw new Error(`logo refresh answered ${res.status}`);
-      show((await res.json()) as LogoStatusResponse);
+      show(await _request("/refresh", getToken, "POST"));
     } catch (err) {
       console.warn("[settings] logo refresh failed", err);
-      show({ status: "failed" });
+      show({ status: LOGO_STATUS.FAILED });
     } finally {
       button.disabled = false;
     }

@@ -26,7 +26,7 @@ export const LogosSection = (): JSX.Element => (
         dep="settings-logos-enabled"
       >
         <Button variant="secondary" id="settings-logos-refresh">
-          {t("settings-page.server.logos-refresh")}
+          {t("settings-page.update-check.check-now-button")}
         </Button>
       </SettingRow>
     </SettingGroup>

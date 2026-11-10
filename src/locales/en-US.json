@@ -344,8 +344,6 @@
       "logos-desc": "Logos for special days, drawn by the community. This server checks the dedoodles repository once a day and serves today's logo itself, so visitors never contact GitHub.",
       "logos-enable": "Enable dedoodles",
       "logos-today-label": "Today",
-      "logos-refresh": "Check now",
-      "logos-status-ok": "{title}",
       "logos-status-none": "No dedoodle today",
       "logos-status-failed": "Couldn't reach the dedoodles repository",
       "logos-status-loading": "Checking...",

@@ -7,10 +7,7 @@ import { renderHtml } from "../../shared/ui/tribute/html";
 import { todaysLogo } from "../extensions/logos/daily";
 import { toDailyLogo } from "../extensions/logos/present";
 import type { Translate } from "../types/extension";
-import { getBasePath } from "../utils/net/base-url";
 import { nojsFormMethod, nojsSearchAction } from "./links";
-
-const BASE_PATH = getBasePath();
 
 export const nojsDailyLogo = async (locale: string): Promise<DailyLogo | null> => {
   const today = await todaysLogo();
@@ -19,12 +16,7 @@ export const nojsDailyLogo = async (locale: string): Promise<DailyLogo | null> =
 
 export const renderNojsDailyLogo = async (c: Context, logo: DailyLogo): Promise<string> =>
   renderHtml(
-    <DailyLogoBanner
-      logo={logo}
-      src={`${BASE_PATH}${logo.image}`}
-      action={nojsSearchAction(c)}
-      method={await nojsFormMethod()}
-    />,
+    <DailyLogoBanner logo={logo} action={nojsSearchAction(c)} method={await nojsFormMethod()} />,
   );
 
 export const renderNojsDailyLogoCredit = (logo: DailyLogo, t: Translate, locale: string): string =>
@@ -37,6 +29,5 @@ export const renderNojsDailyLogoCredit = (logo: DailyLogo, t: Translate, locale:
 
 export const renderNojsDailyLogoMini = async (locale: string): Promise<string | null> => {
   const logo = await nojsDailyLogo(locale);
-  if (!logo) return null;
-  return renderHtml(<DailyLogoMini logo={logo} src={`${BASE_PATH}${logo.image}`} />);
+  return logo ? renderHtml(<DailyLogoMini logo={logo} />) : null;
 };

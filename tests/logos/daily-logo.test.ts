@@ -19,6 +19,7 @@ mock.module(FETCH_MOD, () => ({
   },
 }));
 
+const { LOGO_STATUS } = await import("../../src/shared/daily-logo");
 const settings = await import("../../src/server/utils/settings/server-settings");
 const { initServerKey } = await import("../../src/server/utils/security/server-key");
 const cache = await import("../../src/server/utils/cache/cache");
@@ -62,6 +63,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  manifest = async () => ({ commit: "0000000", logos: {} });
+  await settle();
+  await cache.clearByScope(cache.CACHE_SCOPE.ALL);
   await settings.setInstanceSettings({});
   settings.clearServerSettingsCache();
 });
@@ -106,12 +110,12 @@ describe("daily logo fetching", () => {
       throw new Error("offline");
     };
     expect(await loadToday()).toBeNull();
-    expect((await daily.readLogoDay())?.status).toBe(daily.LOGO_DAY_STATUS.FAILED);
+    expect((await daily.readLogoDay())?.status).toBe(LOGO_STATUS.FAILED);
     await daily.todaysLogo();
     expect(manifestCalls).toBe(1);
 
     manifest = async () => manifestWith(entry("comic-book-day"));
-    expect((await daily.refreshTodaysLogo()).status).toBe(daily.LOGO_DAY_STATUS.OK);
+    expect((await daily.refreshTodaysLogo()).status).toBe(LOGO_STATUS.OK);
     expect(manifestCalls).toBe(2);
     expect((await daily.todaysLogo())?.logo.id).toBe("comic-book-day");
   });
@@ -121,7 +125,7 @@ describe("daily logo fetching", () => {
     manifest = async () => {
       throw new Error("offline");
     };
-    expect((await daily.refreshTodaysLogo()).status).toBe(daily.LOGO_DAY_STATUS.FAILED);
+    expect((await daily.refreshTodaysLogo()).status).toBe(LOGO_STATUS.FAILED);
     expect((await daily.todaysLogo())?.logo.id).toBe("comic-book-day");
   });
 
