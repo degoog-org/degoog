@@ -121,7 +121,6 @@ export const openAddShortcutModal = async (
   ) as HTMLInputElement | null;
   if (sourceEl) _bindEditorKeys(sourceEl);
   sourceEl?.focus();
-  const offBackdrop = onBackdropClick(overlay, () => cleanup());
   const cleanup = (): void => {
     modal?.classList.remove("ext-modal--wide", "shortcut-editor-modal");
     saveEl.removeEventListener("click", save);
@@ -157,6 +156,7 @@ export const openAddShortcutModal = async (
     }
   };
   closeEl?.addEventListener("click", cleanup);
+  const offBackdrop = onBackdropClick(overlay, cleanup);
   document.addEventListener("keydown", onEscape);
   saveEl.addEventListener("click", save);
 };
