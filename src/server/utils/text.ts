@@ -11,6 +11,41 @@ const _CSS_BLOCK_RE =
 export const stripCssBlocks = (text: string): string =>
   text.replace(_CSS_BLOCK_RE, "").trim();
 
+const _NAMED_ENTITIES: Readonly<Record<string, string>> = {
+  amp: "&", AMP: "&", lt: "<", LT: "<", gt: ">", GT: ">",
+  quot: '"', QUOT: '"', apos: "'", nbsp: " ", shy: "­",
+  ensp: " ", emsp: " ", thinsp: " ",
+  zwnj: "‌", zwj: "‍", lrm: "‎", rlm: "‏",
+  middot: "·", bull: "•", hellip: "…", mdash: "—", ndash: "–",
+  lsquo: "‘", rsquo: "’", sbquo: "‚", ldquo: "“", rdquo: "”", bdquo: "„",
+  laquo: "«", raquo: "»", lsaquo: "‹", rsaquo: "›", prime: "′", Prime: "″",
+  copy: "©", COPY: "©", reg: "®", REG: "®", trade: "™",
+  deg: "°", times: "×", divide: "÷", plusmn: "±", minus: "−",
+  frac12: "½", frac14: "¼", frac34: "¾", sup2: "²", sup3: "³",
+  euro: "€", pound: "£", yen: "¥", cent: "¢", sect: "§", para: "¶",
+  iexcl: "¡", iquest: "¿", larr: "←", rarr: "→", uarr: "↑", darr: "↓",
+  harr: "↔", dagger: "†", Dagger: "‡",
+};
+
+const _ENTITY_RE = /&(?:#(\d{1,7})|#[xX]([\da-fA-F]{1,6})|([A-Za-z][A-Za-z\d]{1,31}));/g;
+
+const _fromCodePoint = (point: number): string | null =>
+  point > 0 && point <= 0x10ffff && (point < 0xd800 || point > 0xdfff)
+    ? String.fromCodePoint(point)
+    : null;
+
+export const decodeEntities = (text: string): string =>
+  text.replace(
+    _ENTITY_RE,
+    (match, dec: string | undefined, hex: string | undefined, name: string | undefined) => {
+      if (dec) return _fromCodePoint(Number.parseInt(dec, 10)) ?? match;
+      if (hex) return _fromCodePoint(Number.parseInt(hex, 16)) ?? match;
+      return name && Object.hasOwn(_NAMED_ENTITIES, name)
+        ? _NAMED_ENTITIES[name]
+        : match;
+    },
+  );
+
 const _DATE_PREFIX =
   /^(?:\d{1,2}\s+)?(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s+\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4}|\d+\s+(?:second|minute|hour|day|week|month|year)s?\s+ago/i;
 
