@@ -1,6 +1,7 @@
 import { render } from "../../../../shared/ui/tribute/dom";
 import { RESTART_CONFIRM_CLASS, RestartNoticeModal } from "./restart-notice-modal";
 import { fetchRestartState } from "../../shared/restart-state";
+import { focusableIn, wrapTab } from "../../../utils/dom/focus-trap";
 
 const DISMISSED_KEY = "store-restart-dismissed";
 
@@ -47,13 +48,6 @@ function buildModal(reasons: string[]): {
   const previouslyFocused = document.activeElement as HTMLElement | null;
   const dialog = overlay.querySelector<HTMLElement>(".ext-modal")!;
 
-  const getFocusable = (): HTMLElement[] =>
-    Array.from(
-      dialog.querySelectorAll<HTMLElement>(
-        "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])",
-      ),
-    ).filter((el) => !el.hasAttribute("disabled"));
-
   const close = (): void => {
     noticeOpen = false;
     overlay.remove();
@@ -65,18 +59,7 @@ function buildModal(reasons: string[]): {
       close();
       return;
     }
-    if (e.key !== "Tab") return;
-    const focusable = getFocusable();
-    if (focusable.length === 0) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
+    wrapTab(e, dialog);
   }
 
   overlay.addEventListener("click", (e) => {
@@ -86,7 +69,7 @@ function buildModal(reasons: string[]): {
 
   document.body.appendChild(overlay);
   noticeOpen = true;
-  getFocusable()[0]?.focus();
+  focusableIn(dialog)[0]?.focus();
   return {
     overlay,
     restartBtn: overlay.querySelector<HTMLButtonElement>(
