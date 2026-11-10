@@ -8,6 +8,7 @@ import {
   CENTERED_MODE,
   HIDE_URL_PARAMS,
   SHOW_RESULT_DATES,
+  SHOW_LOGOS,
 } from "../../constants";
 
 export const INSTANCE_DEFAULT_VALUE = "";
@@ -26,6 +27,7 @@ const KEY = "settings-page.search-options";
 export const APPEARANCE_CHECKS: PrefCheck[] = [
   { id: "settings-centered-mode", labelKey: `${KEY}.centered-mode` },
   { id: "settings-sticky-sidebar", labelKey: `${KEY}.sticky-sidebar` },
+  { id: "settings-show-logos", labelKey: `${KEY}.show-logos`, descKey: `${KEY}.show-logos-desc` },
 ];
 
 export const RESULT_CHECKS: PrefCheck[] = [
@@ -56,4 +58,5 @@ export const PREF_TOGGLES: {
   { id: "settings-centered-mode", key: CENTERED_MODE, defaultVal: false },
   { id: "settings-hide-url-params", key: HIDE_URL_PARAMS, defaultVal: false },
   { id: "settings-show-result-dates", key: SHOW_RESULT_DATES, defaultVal: true },
+  { id: "settings-show-logos", key: SHOW_LOGOS, defaultVal: true },
 ];

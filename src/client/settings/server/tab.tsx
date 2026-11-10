@@ -8,6 +8,7 @@ import { initProxyList } from "./proxies/proxy-state";
 import { el } from "./fields";
 import { scoreRowTemplate } from "./domain-score";
 import { initHoneypot } from "./honeypot";
+import { initLogosControls } from "./logos";
 import {
   bindSelectAutoSave,
   bindToggleAutoSave,
@@ -60,6 +61,7 @@ export async function initServerTab(
   await loadApiKey(getToken);
 
   initHoneypot(getToken);
+  initLogosControls(getToken);
 
   const handleButtonState: ButtonStateHandler = (
     id,

@@ -14,6 +14,7 @@ const MODULES = [
   "health",
   "honeypot",
   "indexer",
+  "logos",
   "pages",
   "plugin-assets",
   "plugin-routes",
