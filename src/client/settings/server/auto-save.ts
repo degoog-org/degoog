@@ -10,6 +10,7 @@ import { setIndexerNavVisible } from "../indexer/nav";
 import { OVERSIZED_CLASS } from "../shared/oversized";
 import { boolStr, el } from "./fields";
 import { serializeScoreRows } from "./domain-score";
+import { LOGOS_SAVED_EVENT } from "./logos";
 import { PROXY_LIST_ID, onProxiesChanged, serializeProxyRows } from "./proxies/proxy-state";
 import {
   REDIRECT_EDITOR_ID,
@@ -49,6 +50,7 @@ const TOGGLE_KEYS = [
   "searx-compat-enabled",
   "searx-api-enabled",
   "fourget-compat-enabled",
+  "logos-enabled",
 ] as const;
 
 const SELECT_IDS = ["engine-origin-display"] as const;
@@ -95,6 +97,7 @@ export const bindToggleAutoSave = (getToken: () => string | null): void => {
         if (COMPAT_TOGGLES.includes(id) || id === "degoog-indexer-enabled") {
           window.dispatchEvent(new Event("extensions-saved"));
         }
+        if (id === "logos-enabled") window.dispatchEvent(new Event(LOGOS_SAVED_EVENT));
       } catch (err) {
         console.error("[auto-save] toggle save error", { key, err });
         input.checked = !prev;
