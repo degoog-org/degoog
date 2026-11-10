@@ -4,6 +4,7 @@ import {
   stripCssBlocks,
   snippetDate,
   isPublishDate,
+  startsWithDoctype,
 } from "../utils/text";
 import { cleanUrl, normalizeUrl, urlIsGif } from "./url-normalize";
 
@@ -11,7 +12,9 @@ const _readSnippet = (
   raw: string,
   given?: string,
 ): { text: string; publishedAt?: string } => {
-  const text = stripCssBlocks(stripHtml(raw));
+  const cleaned = stripCssBlocks(stripHtml(raw));
+  const text =
+    startsWithDoctype(raw) || startsWithDoctype(cleaned) ? "" : cleaned;
   if (given && isPublishDate(given)) return { text, publishedAt: given };
   const dated = snippetDate(text);
   return dated
