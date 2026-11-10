@@ -762,6 +762,8 @@
       "installed": "Installée",
       "loads-after-restart": "chargée après redémarrage",
       "by-author": "par {author}",
+      "show-more": "Afficher plus",
+      "show-less": "Afficher moins",
       "not-in-repo": "Dans aucun dépôt",
       "needs-newer": "Nécessite degoog {min} ou plus récent. Vous utilisez {current}, certaines parties pourraient ne pas fonctionner.",
       "untracked-note": "Trouvée dans le dossier {kind}. La boutique ne peut pas la mettre à jour.",

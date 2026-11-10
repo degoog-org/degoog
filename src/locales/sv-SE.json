@@ -762,6 +762,8 @@
       "installed": "Installerad",
       "loads-after-restart": "laddas efter omstart",
       "by-author": "av {author}",
+      "show-more": "Visa mer",
+      "show-less": "Visa mindre",
       "not-in-repo": "Inte i något repo",
       "needs-newer": "Kräver degoog {min} eller nyare. Du kör {current}, så delar kanske inte fungerar.",
       "untracked-note": "Hittades i mappen {kind}. Butiken kan inte uppdatera den.",

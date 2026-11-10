@@ -762,6 +762,8 @@
       "installed": "Installiert",
       "loads-after-restart": "lädt nach einem Neustart",
       "by-author": "von {author}",
+      "show-more": "Mehr anzeigen",
+      "show-less": "Weniger anzeigen",
       "not-in-repo": "In keinem Repo",
       "needs-newer": "Benötigt degoog {min} oder neuer. Du verwendest {current}, daher funktionieren Teile womöglich nicht.",
       "untracked-note": "Im Ordner „{kind}“ gefunden. Der Store kann es nicht aktualisieren.",
