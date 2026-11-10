@@ -1,5 +1,11 @@
-import { compareScored, type ScoredResult, type SearchResult } from "../../shared/search-types";
 import {
+  compareScored,
+  DEGOOG_ENGINE_NAME,
+  type ScoredResult,
+  type SearchResult,
+} from "../../shared/search-types";
+import {
+  decodeEntities,
   stripHtml,
   stripCssBlocks,
   snippetDate,
@@ -8,11 +14,17 @@ import {
 } from "../utils/text";
 import { cleanUrl, normalizeUrl, urlIsGif } from "./url-normalize";
 
+const _cleanText = (raw: string, source: string): string =>
+  decodeEntities(
+    source === DEGOOG_ENGINE_NAME ? raw : stripCssBlocks(stripHtml(raw)),
+  );
+
 const _readSnippet = (
   raw: string,
+  source: string,
   given?: string,
 ): { text: string; publishedAt?: string } => {
-  const cleaned = stripCssBlocks(stripHtml(raw));
+  const cleaned = _cleanText(raw, source);
   const text =
     startsWithDoctype(raw) || startsWithDoctype(cleaned) ? "" : cleaned;
   if (given && isPublishDate(given)) return { text, publishedAt: given };
@@ -40,7 +52,7 @@ const _mergeIntoMap = (
       if (!existing.sources.includes(r.source)) {
         existing.sources.push(r.source);
       }
-      const incoming = _readSnippet(r.snippet, r.publishedAt);
+      const incoming = _readSnippet(r.snippet, r.source, r.publishedAt);
       if (incoming.text.length > existing.snippet.length) {
         existing.snippet = incoming.text;
       }
@@ -60,10 +72,10 @@ const _mergeIntoMap = (
       if (insecure) existing.insecure = true;
       if (visual) existing.visual = true;
     } else {
-      const fresh = _readSnippet(r.snippet, r.publishedAt);
+      const fresh = _readSnippet(r.snippet, r.source, r.publishedAt);
       urlMap.set(normalized, {
         ...r,
-        title: stripCssBlocks(stripHtml(r.title)),
+        title: _cleanText(r.title, r.source),
         snippet: fresh.text,
         publishedAt: fresh.publishedAt,
         url: cleanUrl(r.url),
