@@ -7,6 +7,7 @@ import { isFaviconHost } from "../extensions/favicon/host";
 import { resolveFaviconBytes } from "../extensions/favicon/resolve";
 import { getRandomHintlessUserAgent } from "../utils/net/user-agents";
 import { fetchWithSafeRedirects } from "../utils/security/safe-redirects";
+import { CSP_HEADER, SANDBOXED_IMAGE_CSP } from "../utils/security/content-policy";
 import { logger } from "../utils/logger";
 import { createConcurrencyGate } from "../utils/net/concurrency-gate";
 import { fetchEngineRoute, isEngineRouteUrl } from "../extensions/engines/engine-routes";
@@ -38,7 +39,6 @@ const getProxyFilename = (originalUrl: string, contentType: string): string => {
   }
 };
 
-const PROXY_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
 const PROXY_TIMEOUT_MS = 10_000;
 const MAX_CONTENT_LENGTH = 25 * 1024 * 1024;
 
@@ -182,7 +182,7 @@ router.get("/api/proxy/image", async (c) => {
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=86400",
       "X-Content-Type-Options": "nosniff",
-      "Content-Security-Policy": PROXY_CSP,
+      [CSP_HEADER]: SANDBOXED_IMAGE_CSP,
       "Content-Disposition": `inline; filename="${getProxyFilename(url, contentType)}"`,
     });
   } catch (err) {
@@ -218,7 +218,7 @@ router.get("/api/proxy/favicon", async (c) => {
       "Content-Type": icon.contentType,
       "Cache-Control": "public, max-age=86400",
       "X-Content-Type-Options": "nosniff",
-      "Content-Security-Policy": PROXY_CSP,
+      [CSP_HEADER]: SANDBOXED_IMAGE_CSP,
     });
   } finally {
     release();
