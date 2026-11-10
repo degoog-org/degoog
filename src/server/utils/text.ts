@@ -13,18 +13,18 @@ export const stripCssBlocks = (text: string): string =>
 
 const _NAMED_ENTITIES: Readonly<Record<string, string>> = {
   amp: "&", AMP: "&", lt: "<", LT: "<", gt: ">", GT: ">",
-  quot: '"', QUOT: '"', apos: "'", nbsp: " ", shy: "­",
-  ensp: " ", emsp: " ", thinsp: " ",
-  zwnj: "‌", zwj: "‍", lrm: "‎", rlm: "‏",
-  middot: "·", bull: "•", hellip: "…", mdash: "—", ndash: "–",
-  lsquo: "‘", rsquo: "’", sbquo: "‚", ldquo: "“", rdquo: "”", bdquo: "„",
-  laquo: "«", raquo: "»", lsaquo: "‹", rsaquo: "›", prime: "′", Prime: "″",
-  copy: "©", COPY: "©", reg: "®", REG: "®", trade: "™",
-  deg: "°", times: "×", divide: "÷", plusmn: "±", minus: "−",
-  frac12: "½", frac14: "¼", frac34: "¾", sup2: "²", sup3: "³",
-  euro: "€", pound: "£", yen: "¥", cent: "¢", sect: "§", para: "¶",
-  iexcl: "¡", iquest: "¿", larr: "←", rarr: "→", uarr: "↑", darr: "↓",
-  harr: "↔", dagger: "†", Dagger: "‡",
+  quot: '"', QUOT: '"', apos: "'", nbsp: "\u00a0", shy: "\u00ad",
+  ensp: "\u2002", emsp: "\u2003", thinsp: "\u2009",
+  zwnj: "\u200c", zwj: "\u200d", lrm: "\u200e", rlm: "\u200f",
+  middot: "\u00b7", bull: "\u2022", hellip: "\u2026", mdash: "\u2014", ndash: "\u2013",
+  lsquo: "\u2018", rsquo: "\u2019", sbquo: "\u201a", ldquo: "\u201c", rdquo: "\u201d", bdquo: "\u201e",
+  laquo: "\u00ab", raquo: "\u00bb", lsaquo: "\u2039", rsaquo: "\u203a", prime: "\u2032", Prime: "\u2033",
+  copy: "\u00a9", COPY: "\u00a9", reg: "\u00ae", REG: "\u00ae", trade: "\u2122",
+  deg: "\u00b0", times: "\u00d7", divide: "\u00f7", plusmn: "\u00b1", minus: "\u2212",
+  frac12: "\u00bd", frac14: "\u00bc", frac34: "\u00be", sup2: "\u00b2", sup3: "\u00b3",
+  euro: "\u20ac", pound: "\u00a3", yen: "\u00a5", cent: "\u00a2", sect: "\u00a7", para: "\u00b6",
+  iexcl: "\u00a1", iquest: "\u00bf", larr: "\u2190", rarr: "\u2192", uarr: "\u2191", darr: "\u2193",
+  harr: "\u2194", dagger: "\u2020", Dagger: "\u2021",
 };
 
 const _ENTITY_RE = /&(?:#(\d{1,7})|#[xX]([\da-fA-F]{1,6})|([A-Za-z][A-Za-z\d]{1,31}));/g;
