@@ -42,6 +42,7 @@ export type ServerSettingsData = {
   apiKeySearchEnabled?: BoolSetting;
   apiKeySuggestEnabled?: BoolSetting;
   honeypotEnabled?: BoolSetting;
+  logosEnabled?: BoolSetting;
   honeypotCssCheck?: BoolSetting;
   honeypotBanDuration?: string;
   nojsEnabled?: BoolSetting;
