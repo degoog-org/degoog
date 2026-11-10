@@ -1,5 +1,5 @@
 import { Button } from "../../../../shared/ui/components/primitives/button";
-import { mountModalShell, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
+import { mountModalShell, onBackdropClick, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
 
 type PromptOptions = {
   title: string;
@@ -72,9 +72,7 @@ function _ensureMounted(): void {
   cancelBtn?.addEventListener("click", () => _finish(null));
   shell.close.addEventListener("click", () => _finish(null));
   confirmBtn?.addEventListener("click", () => _submit());
-  shell.overlay.addEventListener("click", (e) => {
-    if (e.target === shell?.overlay) _finish(null);
-  });
+  onBackdropClick(shell.overlay, () => _finish(null));
   inputEl?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();

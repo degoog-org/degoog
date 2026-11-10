@@ -164,6 +164,10 @@
   overflow: hidden;
   width: $modal-width;
 
+  &:focus {
+    outline: none;
+  }
+
   &--wide {
     width: $settings-modal-width;
   }

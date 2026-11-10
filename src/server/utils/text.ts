@@ -59,7 +59,7 @@ export const stripSnippetPrefix = (text: string): string => {
 
 const _DOCTYPE_KEYWORDS =
   /(?:(?:<!doctype|!doctype|doctype|octype|ctype|type|ype|pe|e)\s+)?(?:(?:(?:html|tml|ml|l)\s+)?(?:public|ublic|blic|lic|ic|c)\s+)?/;
-const _PUBLIC_ID = /(["'])[+-]\/\/[^"']*\/\/DTD\b[^"']*/;
+const _PUBLIC_ID = /(["'])[+-]\/\/(?=[^"']*\/\/DTD\b)[^"']*/;
 const _SYSTEM_ID = /["'][^"']*(?:$|["']\s*(?:>|$))/;
 
 const _DOCTYPE_HEAD_RE = new RegExp(

@@ -141,12 +141,21 @@ async function _fetchWikipedia(
       query: {
         pages: Record<
           string,
-          WikiPage & { missing?: ""; pageprops?: { wikibase_item?: string } }
+          WikiPage & {
+            missing?: "";
+            pageprops?: { wikibase_item?: string; disambiguation?: "" };
+          }
         >;
       };
     };
     const raw = Object.values(data.query?.pages ?? {})[0];
-    if (!raw || raw.pageid === undefined || "missing" in raw || !raw.extract)
+    if (
+      !raw ||
+      raw.pageid === undefined ||
+      "missing" in raw ||
+      !raw.extract ||
+      raw.pageprops?.disambiguation !== undefined
+    )
       return null;
 
     const page: WikiPage = {

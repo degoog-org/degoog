@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { looksLikeProse } from "../../../src/server/utils/text";
+import { looksLikeProse, startsWithDoctype } from "../../../src/server/utils/text";
 import { scoreResults } from "../../../src/server/search/scoring";
 
 const PURILI_PAGE_SOURCE =
@@ -66,5 +66,12 @@ describe("snippets that start with a doctype", () => {
     for (const snippet of LEGIT_SNIPPETS.slice(0, 3)) {
       expect(looksLikeProse(snippet)).toBe(true);
     }
+  });
+
+  test("stays linear on a hostile public identifier", () => {
+    const hostile = `"-//${"//DTD".repeat(20_000)}" x`;
+    const started = performance.now();
+    expect(startsWithDoctype(hostile)).toBe(false);
+    expect(performance.now() - started).toBeLessThan(250);
   });
 });
