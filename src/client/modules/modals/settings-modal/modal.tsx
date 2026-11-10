@@ -19,10 +19,16 @@ import type { Child } from "../../../../shared/ui/tribute/types";
 import type { ExtensionMeta } from "../../../types/extension";
 import type { SettingField } from "../../../../shared/setting-field";
 import { openExtensionDocs } from "../docs-modal/docs";
+import {
+  FORM_FIELD_SELECTOR,
+  focusableIn,
+  wrapTab,
+} from "../../../utils/dom/focus-trap";
 
 const t = window.scopedT("core");
 
 const overlay = document.getElementById("ext-modal-overlay");
+const dialogEl = document.getElementById("ext-modal");
 const titleEl = document.getElementById("ext-modal-title");
 const bodyEl = document.getElementById("ext-modal-body");
 const saveBtn = document.getElementById(
@@ -44,6 +50,19 @@ export interface ModalBorrower {
 
 let borrower: ModalBorrower | null = null;
 let lease = 0;
+let opener: HTMLElement | null = null;
+
+const _rememberOpener = (): void => {
+  const active = document.activeElement as HTMLElement | null;
+  if (active && overlay?.contains(active)) return;
+  opener = active && active !== document.body ? active : null;
+};
+
+const _restoreOpener = (): void => {
+  const target = opener;
+  opener = null;
+  if (target?.isConnected) target.focus();
+};
 
 export const releaseModal = (): void => {
   const leaving = borrower;
@@ -53,6 +72,7 @@ export const releaseModal = (): void => {
 };
 
 export const claimModal = (): (() => boolean) => {
+  _rememberOpener();
   releaseModal();
   const mine = lease;
   return () => lease === mine;
@@ -287,6 +307,7 @@ const _renderFields = (fields: SettingField[], ext: ExtensionMeta): Child => {
 };
 
 export function openModal(ext: ExtensionMeta): void {
+  _rememberOpener();
   releaseModal();
   _resetSaveButton();
   currentExt = ext;
@@ -364,11 +385,12 @@ export function openModal(ext: ExtensionMeta): void {
   }
 
   if (overlay) overlay.style.display = "flex";
-  const firstFocusable =
-    bodyEl?.querySelector<HTMLElement>(
-      "select, input:not([type='hidden']), textarea",
-    ) ?? bodyEl?.querySelector<HTMLElement>("button");
-  firstFocusable?.focus();
+  const fields = bodyEl ? focusableIn(bodyEl) : [];
+  const first =
+    fields.find((el) => el.matches(FORM_FIELD_SELECTOR)) ??
+    fields[0] ??
+    dialogEl;
+  first?.focus();
 }
 
 export function closeModal(): void {
@@ -380,18 +402,20 @@ export function closeModal(): void {
   currentExt = null;
   _resetSaveButton();
   if (statusEl) statusEl.textContent = "";
-  document.getElementById("ext-modal")?.classList.remove("ext-modal--wide");
+  dialogEl?.classList.remove("ext-modal--wide");
   leaving?.onClose?.();
+  _restoreOpener();
 }
 
 export function openCustomModal(options: {
   title: string;
   wide?: boolean;
 }): void {
+  _rememberOpener();
   releaseModal();
   currentExt = null;
   if (options.wide) {
-    document.getElementById("ext-modal")?.classList.add("ext-modal--wide");
+    dialogEl?.classList.add("ext-modal--wide");
   }
   const docs = docsBtn;
   if (docs) docs.style.display = "none";
@@ -401,6 +425,7 @@ export function openCustomModal(options: {
   if (bodyEl) clear(bodyEl);
   if (statusEl) statusEl.textContent = "";
   if (overlay) overlay.style.display = "flex";
+  dialogEl?.focus();
 }
 
 async function _save(): Promise<void> {
@@ -442,7 +467,8 @@ const _stackedOverlayOpen = (): boolean =>
   ).some((el) => el !== overlay && _isShown(el));
 
 document.addEventListener("keydown", (e) => {
-  if (e.key !== "Escape" || e.defaultPrevented) return;
+  if (e.defaultPrevented) return;
   if (!overlay || !_isShown(overlay) || _stackedOverlayOpen()) return;
-  closeModal();
+  if (e.key === "Escape") closeModal();
+  else if (dialogEl) wrapTab(e, dialogEl);
 });
