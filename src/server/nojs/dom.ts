@@ -74,6 +74,18 @@ export const fillById = async (
     true,
   );
 
+export const fillByClass = async (
+  html: string,
+  className: string,
+  inner: string,
+): Promise<string> =>
+  _transform(
+    html,
+    _classSelector(className),
+    (element) => element.setInnerContent(inner, { html: true }),
+    "fillByClass",
+  );
+
 export const appendToId = async (
   html: string,
   id: string,

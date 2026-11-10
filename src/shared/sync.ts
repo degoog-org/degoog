@@ -14,6 +14,7 @@ export const STICKY_SIDEBAR = "sticky_sidebar";
 export const CENTERED_MODE = "centered_mode";
 export const HIDE_URL_PARAMS = "hide_url_params";
 export const SHOW_RESULT_DATES = "show_result_dates";
+export const SHOW_LOGOS = "show_logos";
 export const ENGINE_ORIGIN_DISPLAY = "engine_origin_display";
 export const REGION_KEY = "search_region";
 export const TAB_ORDER_SAVED = "tab-order-saved";
@@ -29,6 +30,7 @@ const GENERAL_SYNC_KEYS = [
   CENTERED_MODE,
   HIDE_URL_PARAMS,
   SHOW_RESULT_DATES,
+  SHOW_LOGOS,
   ENGINE_ORIGIN_DISPLAY,
   REGION_KEY,
 ] as const;
