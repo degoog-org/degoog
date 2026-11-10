@@ -22,8 +22,15 @@ export const stripSnippetPrefix = (text: string): string => {
   return stripped || text;
 };
 
-const _DOCTYPE_HEAD_RE =
-  /^[\s…]*(?:(?:<!doctype|!doctype|doctype|octype|ctype|type|ype|pe|e)\s+)?(?:(?:(?:html|tml|ml|l)\s+)?(?:public|ublic|blic|lic|ic|c)\s+)?["'][+-]\/\/[^"']*\/\/DTD\b/i;
+const _DOCTYPE_KEYWORDS =
+  /(?:(?:<!doctype|!doctype|doctype|octype|ctype|type|ype|pe|e)\s+)?(?:(?:(?:html|tml|ml|l)\s+)?(?:public|ublic|blic|lic|ic|c)\s+)?/;
+const _PUBLIC_ID = /(["'])[+-]\/\/[^"']*\/\/DTD\b[^"']*/;
+const _SYSTEM_ID = /["'][^"']*(?:$|["']\s*(?:>|$))/;
+
+const _DOCTYPE_HEAD_RE = new RegExp(
+  `^[\\s…]*${_DOCTYPE_KEYWORDS.source}${_PUBLIC_ID.source}(?:$|\\1\\s*(?:>|$|${_SYSTEM_ID.source}))`,
+  "i",
+);
 
 export const startsWithDoctype = (text: string): boolean =>
   _DOCTYPE_HEAD_RE.test(text);

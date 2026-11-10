@@ -22,6 +22,12 @@ const LEGIT_SNIPPETS = [
   'This doctype is used in an XHTML document when you are not using any framset or depreciated tags. <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http',
 ];
 
+const PROSE_OPENING_WITH_AN_IDENTIFIER = [
+  '"-//W3C//DTD XHTML 1.0 Strict//EN" is the standard public identifier for XHTML 1.0 Strict.',
+  "'-//W3C//DTD XHTML 1.0 Strict//EN' is the standard public identifier for XHTML 1.0 Strict.",
+  '"-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" are the public and system identifiers for XHTML 1.0 Strict.',
+];
+
 const PROSE_ABOUT_DOCTYPE =
   'Use <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"> to declare the document type.';
 
@@ -45,6 +51,10 @@ describe("snippets that start with a doctype", () => {
       { results: [{ title: "Floating", url: "https://example.com/a", snippet: LEGIT_SNIPPETS[0], source: "Brave" }] },
     ]);
     expect(merged.snippet).toBe(LEGIT_SNIPPETS[0]);
+  });
+
+  test.each(PROSE_OPENING_WITH_AN_IDENTIFIER)("keeps prose that opens with a quoted identifier: %s", (raw) => {
+    expect(snippetOf(raw)).toBe(raw);
   });
 
   test("keeps prose that quotes a doctype", () => {
