@@ -7,13 +7,13 @@ import {
 } from "../../../../types/extension";
 import { SlotPanelPosition } from "../../../../../shared/search-types";
 import type { SettingField } from "../../../../../shared/setting-field";
-import type { AsyncTtlCache } from "../../../../utils/cache/cache";
+import { TTL_MS, type AsyncTtlCache } from "../../../../utils/cache/cache";
 import { getSettings } from "../../../../utils/settings/plugin-settings";
 import { logger } from "../../../../utils/logger";
 import { outgoingFetch } from "../../../../utils/net/outgoing";
 const WIKI_NAMESPACE = "ext:wikipedia:page";
 const WIKI_MISSING_NAMESPACE = "ext:wikipedia:missing";
-const WIKI_TTL_MS = 60 * 60 * 1000;
+const WIKI_TTL_MS = Math.min(60 * 60 * 1000, TTL_MS);
 
 const DEFAULT_WIKI_DOMAIN = "en.wikipedia.org";
 const WIKI_DOMAIN_PATTERN = /^[a-z0-9-]+\.wikipedia\.org$/;
