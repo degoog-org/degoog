@@ -31,7 +31,7 @@ const makeSlot = (
   trigger,
   execute: async () => {
     await execute();
-    return { html: `<p>${id}</p>` };
+    return { html: id };
   },
 });
 
