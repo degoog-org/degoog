@@ -55,7 +55,7 @@ interface WikiPage {
 let _template = "";
 let _signProxyUrl: PluginContext["signProxyUrl"] | null = null;
 
-let _wikiCache!: AsyncTtlCache<WikiPage>;
+let _wikiCache!: AsyncTtlCache<WikiPage | false>;
 
 const _proxyImageUrl = (url: string): string => {
   if (!url || !_signProxyUrl) return "";
@@ -108,7 +108,7 @@ async function _fetchWikidataThumb(
 async function _fetchWikipedia(
   query: string,
   host: string,
-): Promise<WikiPage | null> {
+): Promise<WikiPage | false | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
@@ -156,7 +156,7 @@ async function _fetchWikipedia(
       !raw.extract ||
       raw.pageprops?.disambiguation !== undefined
     )
-      return null;
+      return false;
 
     const page: WikiPage = {
       title: raw.title,
@@ -183,6 +183,15 @@ async function _fetchWikipedia(
   }
 }
 
+const _lookup = async (q: string, host: string): Promise<WikiPage | false | null> => {
+  const key = `${host}:${q.toLowerCase()}`;
+  const cached = await _wikiCache.get(key);
+  if (cached !== null) return cached;
+  const fetched = await _fetchWikipedia(q, host);
+  if (fetched !== null) await _wikiCache.set(key, fetched);
+  return fetched;
+};
+
 const wikipediaSlot: SlotPlugin = {
   id: "wikipedia",
   get name(): string {
@@ -200,7 +209,7 @@ const wikipediaSlot: SlotPlugin = {
   init(ctx: PluginContext): void {
     _template = ctx.template;
     if (ctx.signProxyUrl) _signProxyUrl = ctx.signProxyUrl;
-    _wikiCache = ctx.useCache<WikiPage>(WIKI_NAMESPACE, WIKI_TTL_MS);
+    _wikiCache = ctx.useCache<WikiPage | false>(WIKI_NAMESPACE, WIKI_TTL_MS);
   },
 
   settingsSchema: [
@@ -219,17 +228,7 @@ const wikipediaSlot: SlotPlugin = {
     const q = query.trim();
     if (q.length < 2 || q.length > 100) return false;
     const host = await _wikiDomain(this.settingsId ?? "");
-    const key = `${host}:${q.toLowerCase()}`;
-    const page = await _wikiCache.get(key);
-    if (page === null) {
-      const fetched = await _fetchWikipedia(q, host);
-      if (fetched) {
-        await _wikiCache.set(key, fetched);
-        return true;
-      }
-      return false;
-    }
-    return true;
+    return !!(await _lookup(q, host));
   },
 
   async execute(query: string, ctx?: SlotPluginContext): Promise<{ title?: string; html: string }> {
@@ -237,15 +236,7 @@ const wikipediaSlot: SlotPlugin = {
     const proxy = (url: string) => (sign ? sign(url) : "");
     const q = query.trim();
     const host = await _wikiDomain(this.settingsId ?? "");
-    const key = `${host}:${q.toLowerCase()}`;
-    let page = await _wikiCache.get(key);
-    if (page === null) {
-      const fetched = await _fetchWikipedia(q, host);
-      if (fetched) {
-        await _wikiCache.set(key, fetched);
-        page = fetched;
-      }
-    }
+    const page = await _lookup(q, host);
     if (!page) return { html: "" };
 
     const sanitizePage: Record<string, string> = {
