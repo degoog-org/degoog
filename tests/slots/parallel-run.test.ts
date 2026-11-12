@@ -82,13 +82,19 @@ describe("runSlotPlugins runs plugins side by side", () => {
     expect(panels.map((panel) => panel.id)).toEqual(["first", "second"]);
   });
 
-  test("panels keep plugin order and skip plugins that do not trigger", async () => {
+  test("panels keep plugin order and skip plugins that do not trigger or that fail", async () => {
     slots = [
       makeSlot("first", () => true),
       makeSlot("quiet", () => false),
-      makeSlot("third", () => true),
+      makeSlot("broken-trigger", () => {
+        throw new Error("trigger failed");
+      }),
+      makeSlot("broken-execute", () => true, async () => {
+        throw new Error("execute failed");
+      }),
+      makeSlot("fifth", () => true),
     ];
     const panels = await runSlotPlugins("hello");
-    expect(panels.map((panel) => panel.id)).toEqual(["first", "third"]);
+    expect(panels.map((panel) => panel.id)).toEqual(["first", "fifth"]);
   });
 });

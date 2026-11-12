@@ -124,7 +124,7 @@ const _runSlot = async (
   }
 };
 
-export async function runSlotPlugins(
+export const runSlotPlugins = async (
   query: string,
   clientIp?: string,
   results?: ScoredResult[],
@@ -134,7 +134,7 @@ export async function runSlotPlugins(
     searchType?: string;
     nojs?: boolean;
   },
-): Promise<SlotPanel[]> {
+): Promise<SlotPanel[]> => {
   const run: SlotRun = {
     query,
     clientIp,
@@ -148,4 +148,4 @@ export async function runSlotPlugins(
     getSlotPlugins().map((plugin) => _runSlot(plugin, run)),
   );
   return panels.filter((panel): panel is SlotPanel => panel !== null);
-}
+};
