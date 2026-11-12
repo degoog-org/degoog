@@ -1582,7 +1582,6 @@ button.store-thumb {
 }
 
 .store-repo-opt.degoog-checkbox-wrap {
-  position: relative;
   gap: 0.625rem;
   padding: 0.375rem 0.5rem;
   border-radius: 0.375rem;
@@ -1593,21 +1592,6 @@ button.store-thumb {
 
 .store-repo-opt:hover {
   background: var(--bg);
-}
-
-.store-repo-opt.degoog-checkbox-wrap input {
-  display: block;
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.store-repo-opt input:focus-visible + .degoog-checkbox {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
 }
 
 .store-repo-opt .degoog-checkbox {
