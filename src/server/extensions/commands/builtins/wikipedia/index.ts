@@ -12,6 +12,7 @@ import { getSettings } from "../../../../utils/settings/plugin-settings";
 import { logger } from "../../../../utils/logger";
 import { outgoingFetch } from "../../../../utils/net/outgoing";
 const WIKI_NAMESPACE = "ext:wikipedia:page";
+const WIKI_MISSING_NAMESPACE = "ext:wikipedia:missing";
 const WIKI_TTL_MS = 60 * 60 * 1000;
 
 const DEFAULT_WIKI_DOMAIN = "en.wikipedia.org";
@@ -55,7 +56,8 @@ interface WikiPage {
 let _template = "";
 let _signProxyUrl: PluginContext["signProxyUrl"] | null = null;
 
-let _wikiCache!: AsyncTtlCache<WikiPage | false>;
+let _wikiCache!: AsyncTtlCache<WikiPage>;
+let _missingCache!: AsyncTtlCache<true>;
 
 const _proxyImageUrl = (url: string): string => {
   if (!url || !_signProxyUrl) return "";
@@ -149,8 +151,8 @@ async function _fetchWikipedia(
       };
     };
     const raw = Object.values(data.query?.pages ?? {})[0];
+    if (!raw) return null;
     if (
-      !raw ||
       raw.pageid === undefined ||
       "missing" in raw ||
       !raw.extract ||
@@ -185,10 +187,13 @@ async function _fetchWikipedia(
 
 const _lookup = async (q: string, host: string): Promise<WikiPage | false | null> => {
   const key = `${host}:${q.toLowerCase()}`;
-  const cached = await _wikiCache.get(key);
-  if (cached !== null) return cached;
+  const missingKey = `${host}:${q}`;
+  const page = await _wikiCache.get(key);
+  if (page) return page;
+  if (await _missingCache.get(missingKey)) return false;
   const fetched = await _fetchWikipedia(q, host);
-  if (fetched !== null) await _wikiCache.set(key, fetched);
+  if (fetched) await _wikiCache.set(key, fetched);
+  else if (fetched === false) await _missingCache.set(missingKey, true);
   return fetched;
 };
 
@@ -209,7 +214,8 @@ const wikipediaSlot: SlotPlugin = {
   init(ctx: PluginContext): void {
     _template = ctx.template;
     if (ctx.signProxyUrl) _signProxyUrl = ctx.signProxyUrl;
-    _wikiCache = ctx.useCache<WikiPage | false>(WIKI_NAMESPACE, WIKI_TTL_MS);
+    _wikiCache = ctx.useCache<WikiPage>(WIKI_NAMESPACE, WIKI_TTL_MS);
+    _missingCache = ctx.useCache<true>(WIKI_MISSING_NAMESPACE, WIKI_TTL_MS);
   },
 
   settingsSchema: [

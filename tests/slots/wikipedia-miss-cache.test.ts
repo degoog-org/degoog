@@ -6,6 +6,22 @@ const outgoingReal = { ...(await import(OUTGOING_MOD)) };
 const { useCache, createCache } = await import("../../src/server/utils/cache/cache");
 
 const FAILING_TITLE = "wikipedia is down";
+const API_ERROR_ONCE_TITLE = "Artemis program";
+
+const PAGES: Record<string, Record<string, unknown>> = {
+  "NASA Artemis": {
+    pageid: 1,
+    title: "Artemis program",
+    extract: "The Artemis program is a Moon exploration program.",
+    fullurl: "https://en.wikipedia.org/wiki/Artemis_program",
+  },
+  [API_ERROR_ONCE_TITLE]: {
+    pageid: 1,
+    title: "Artemis program",
+    extract: "The Artemis program is a Moon exploration program.",
+    fullurl: "https://en.wikipedia.org/wiki/Artemis_program",
+  },
+};
 
 const requested: string[] = [];
 let wiki: SlotPlugin;
@@ -17,10 +33,13 @@ beforeAll(async () => {
   mock.module(OUTGOING_MOD, () => ({
     ...outgoingReal,
     outgoingFetch: async (url: string) => {
-      const title = new URL(url).searchParams.get("titles")?.toLowerCase() ?? "";
+      const title = new URL(url).searchParams.get("titles") ?? "";
       requested.push(title);
       if (title === FAILING_TITLE) return new Response("", { status: 503 });
-      return Response.json({ query: { pages: { "-1": { missing: "" } } } });
+      if (title === API_ERROR_ONCE_TITLE && _requestsFor(title) === 1) {
+        return Response.json({ error: { code: "internal_api_error" } });
+      }
+      return Response.json({ query: { pages: { "1": PAGES[title] ?? { missing: "" } } } });
     },
   }));
   wiki = (await import("../../src/server/extensions/commands/builtins/wikipedia")).slot;
@@ -49,5 +68,18 @@ describe("wikipedia knowledge panel without an article", () => {
     expect(await wiki.trigger(FAILING_TITLE)).toBe(false);
     expect(await wiki.trigger(FAILING_TITLE)).toBe(false);
     expect(_requestsFor(FAILING_TITLE)).toBe(2);
+  });
+
+  test("asks again after an API error sent with a 200 status", async () => {
+    expect(await wiki.trigger(API_ERROR_ONCE_TITLE)).toBe(false);
+    expect(await wiki.trigger(API_ERROR_ONCE_TITLE)).toBe(true);
+    expect((await wiki.execute(API_ERROR_ONCE_TITLE)).html).toContain("Artemis program");
+    expect(_requestsFor(API_ERROR_ONCE_TITLE)).toBe(2);
+  });
+
+  test("a missing title does not hide the article under another capitalisation", async () => {
+    expect(await wiki.trigger("nasa Artemis")).toBe(false);
+    expect(await wiki.trigger("NASA Artemis")).toBe(true);
+    expect((await wiki.execute("NASA Artemis")).html).toContain("Artemis program");
   });
 });
