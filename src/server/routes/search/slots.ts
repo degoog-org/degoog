@@ -123,8 +123,12 @@ router.post("/api/slots/glance", publicBodyLimit, async (c) => {
     locale: getLocale(c),
     searchType: _requestedType(body.type),
   };
-  const runs = await Promise.all(getSlotPlugins().map((plugin) => _runGlanceSlot(plugin, run)));
-  const panels = runs.filter((panel): panel is SlotPanel => panel !== null && panel !== GLANCE_PENDING);
+  const runs = await Promise.all(
+    getSlotPlugins().map((plugin) => _runGlanceSlot(plugin, run)),
+  );
+  const panels = runs.filter(
+    (panel): panel is SlotPanel => panel !== null && panel !== GLANCE_PENDING,
+  );
   const pending = runs.includes(GLANCE_PENDING);
   return c.json({ panels, pending });
 });
