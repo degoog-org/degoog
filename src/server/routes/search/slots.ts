@@ -72,7 +72,7 @@ const _runGlanceSlot = async (
       "plugin",
       `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`,
     );
-    return toSlotPanel(plugin.id, plugin, out, locale, plugin.position);
+    return toSlotPanel(plugin.id, plugin, out, locale, position);
   } catch (err) {
     logger.warn("plugin", `${plugin.id} slot failed`, err);
     return null;

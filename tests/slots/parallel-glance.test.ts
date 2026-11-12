@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
-import type { SlotPlugin } from "../../src/server/types/extension";
+import { SLOT_POSITION_SETTING_KEY, type SlotPlugin } from "../../src/server/types/extension";
 import { type ScoredResult, type SlotPanel, SlotPanelPosition } from "../../src/shared/search-types";
 
 const SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
@@ -10,6 +10,7 @@ const settingsReal = { ...(await import(SETTINGS_MOD)) };
 const slotsReal = { ...(await import(SLOTS_MOD)) };
 
 let slots: SlotPlugin[] = [];
+let settingsById: Record<string, Record<string, string>> = {};
 let router: typeof import("../../src/server/routes/search/slots").default;
 
 const _gate = () => {
@@ -50,7 +51,7 @@ const _post = async (results?: ScoredResult[]): Promise<{ panels: SlotPanel[]; p
 beforeAll(async () => {
   mock.module(SETTINGS_MOD, () => ({
     ...settingsReal,
-    getSettings: async () => ({}),
+    getSettings: async (id: string) => settingsById[id] ?? {},
     isDisabled: async () => false,
   }));
   mock.module(SLOTS_MOD, () => ({
@@ -124,5 +125,17 @@ describe("glance route runs plugins side by side", () => {
     ];
     const { panels } = await _post();
     expect(panels.map((panel) => panel.id)).toEqual(["working"]);
+  });
+
+  test("a plugin moved to the glance box comes back as a glance panel", async () => {
+    settingsById = { moved: { [SLOT_POSITION_SETTING_KEY]: SlotPanelPosition.AtAGlance } };
+    slots = [{
+      ..._makeSlot("moved", () => true),
+      position: SlotPanelPosition.KnowledgePanel,
+      slotPositions: [SlotPanelPosition.KnowledgePanel, SlotPanelPosition.AtAGlance],
+    }];
+    const { panels } = await _post();
+    settingsById = {};
+    expect(panels.map((panel) => [panel.id, panel.position])).toEqual([["moved", SlotPanelPosition.AtAGlance]]);
   });
 });
