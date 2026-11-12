@@ -16,6 +16,7 @@ import { slotShowsOn } from "../../utils/extension-support/slot-types";
 import { publicBodyLimit } from "../_guards";
 import { guardApiKey } from "../../utils/security/api-key-guard";
 import { isSealedResult } from "../../utils/net/proxy-sign";
+import type { SlotPlugin } from "../../types/extension";
 
 const router = new Hono();
 
@@ -32,6 +33,51 @@ const _sealedResults = (body: SlotBody): ScoredResult[] | undefined =>
 
 const _requestedType = (raw: unknown): string =>
   typeof raw === "string" && raw.trim() ? raw.trim() : DEFAULT_SEARCH_TYPE;
+
+const GLANCE_PENDING = "pending";
+
+type GlanceRun = {
+  query: string;
+  clientIp?: string;
+  results?: ScoredResult[];
+  withResults: boolean;
+  locale?: string;
+  searchType: string;
+};
+
+const _runGlanceSlot = async (
+  plugin: SlotPlugin,
+  { query, clientIp, results, withResults, locale, searchType }: GlanceRun,
+): Promise<SlotPanel | typeof GLANCE_PENDING | null> => {
+  if (!plugin.id) {
+    logger.warn(
+      "slots",
+      `Skipping slot plugin: missing id (name="${plugin.name}")`,
+    );
+    return null;
+  }
+  try {
+    const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
+    const position = await slotPosition(plugin, slotSettingsId);
+    if (position !== SlotPanelPosition.AtAGlance) return null;
+    if (await isDisabled(slotSettingsId)) return null;
+    if (!(await slotShowsOn(plugin, slotSettingsId, searchType))) return null;
+    const ok = await Promise.resolve(plugin.trigger(query));
+    if (!ok) return null;
+    if (!withResults && plugin.waitForResults) return GLANCE_PENDING;
+    const context = slotContext(clientIp, results, locale);
+    const t0 = performance.now();
+    const out = await plugin.execute(query, context);
+    logger.debug(
+      "plugin",
+      `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`,
+    );
+    return toSlotPanel(plugin.id, plugin, out, locale, position);
+  } catch (err) {
+    logger.warn("plugin", `${plugin.id} slot failed`, err);
+    return null;
+  }
+};
 
 router.post("/api/slots", publicBodyLimit, async (c) => {
   const blocked = await _guardSlotCall(c);
@@ -69,45 +115,21 @@ router.post("/api/slots/glance", publicBodyLimit, async (c) => {
   if (withResults && !Array.isArray(body.results)) {
     return c.json({ error: "Missing query or results" }, 400);
   }
-  const clientIp = getClientIp(c);
-  const results = withResults ? _sealedResults(body) : undefined;
-  const locale = getLocale(c);
-  const searchType = _requestedType(body.type);
-  const panels: SlotPanel[] = [];
-  let pending = false;
-  for (const plugin of getSlotPlugins()) {
-    if (!plugin.id) {
-      logger.warn(
-        "slots",
-        `Skipping slot plugin: missing id (name="${plugin.name}")`,
-      );
-      continue;
-    }
-    try {
-      const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
-      const position = await slotPosition(plugin, slotSettingsId);
-      if (position !== SlotPanelPosition.AtAGlance) continue;
-      if (await isDisabled(slotSettingsId)) continue;
-      if (!(await slotShowsOn(plugin, slotSettingsId, searchType))) continue;
-      const ok = await Promise.resolve(plugin.trigger(body.query!.trim()));
-      if (!ok) continue;
-      if (!withResults && plugin.waitForResults) {
-        pending = true;
-        continue;
-      }
-      const context = slotContext(clientIp ?? undefined, results, locale);
-      const t0 = performance.now();
-      const out = await plugin.execute(body.query!.trim(), context);
-      logger.debug(
-        "plugin",
-        `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`,
-      );
-      const panel = toSlotPanel(plugin.id, plugin, out, locale, plugin.position);
-      if (panel) panels.push(panel);
-    } catch (err) {
-      logger.warn("plugin", `${plugin.id} slot failed`, err);
-    }
-  }
+  const run: GlanceRun = {
+    query: body.query.trim(),
+    clientIp: getClientIp(c) ?? undefined,
+    results: withResults ? _sealedResults(body) : undefined,
+    withResults,
+    locale: getLocale(c),
+    searchType: _requestedType(body.type),
+  };
+  const runs = await Promise.all(
+    getSlotPlugins().map((plugin) => _runGlanceSlot(plugin, run)),
+  );
+  const panels = runs.filter(
+    (panel): panel is SlotPanel => panel !== null && panel !== GLANCE_PENDING,
+  );
+  const pending = runs.includes(GLANCE_PENDING);
   return c.json({ panels, pending });
 });
 

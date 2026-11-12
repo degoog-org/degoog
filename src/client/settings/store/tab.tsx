@@ -7,6 +7,7 @@ import { createStoreState } from "./state";
 import { hasUpdate } from "./model";
 import { StoreRoot } from "./render/store-root";
 import { REPO_GRID_ID } from "./render/repos/repo-grid";
+import { syncClampedDescs } from "./render/card/card-desc";
 import { KIND_TABS_ID } from "./render/catalog/kind-tabs";
 import { revealActiveTab } from "../shared/filter/filter-tabs";
 import { REPO_FILTER_CLASS } from "./render/catalog/repo-filter";
@@ -118,11 +119,11 @@ export async function initStoreTab(
     if (cols && cols !== state.repoCols) {
       state.repoCols = cols;
       paint();
-    }
+    } else if (syncClampedDescs(container, state)) paint();
   }
 
   new ResizeObserver(() => {
-    if (_gridCols() !== state.repoCols) paint();
+    if (_gridCols() !== state.repoCols || syncClampedDescs(container, state)) paint();
   }).observe(container);
 
   document.addEventListener("keydown", (e) => {

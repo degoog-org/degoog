@@ -1,7 +1,8 @@
 export const FOCUSABLE_SELECTOR =
   "button, [href], input, select, textarea, summary, [tabindex]";
 
-export const FORM_FIELD_SELECTOR = "select, input, textarea";
+export const FORM_FIELD_SELECTOR =
+  'select, textarea, input:not([type="checkbox"]):not([type="radio"])';
 
 export const focusableIn = (root: HTMLElement): HTMLElement[] =>
   Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(

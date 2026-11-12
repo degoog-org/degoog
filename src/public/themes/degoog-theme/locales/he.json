@@ -38,6 +38,7 @@
       "any-time": "בכל זמן",
       "language": "שפה",
       "any": "הכל",
+      "any-language": "כל שפה",
       "hour": "שעה",
       "day": "24 שעות",
       "week": "שבוע",
@@ -118,6 +119,7 @@
       "saving-to-index": "נשמר לאינדקס שלך",
       "insecure": "בלתי מאובטח",
       "insecure-tooltip": "אתר זה משובץ על חיבור HTTP לא מאובטח.",
+      "favicon-missing": "לא מותקנת הרחבת favicon",
       "actions": {
         "menu-aria": "פעולות דומיין",
         "block": "חסום דומיין זה",
@@ -131,7 +133,10 @@
         "prompt-score": "ניקוד עבור דומיין זה (ערכים חיוביים מגבירים, ערכים שליליים מנקטים) :",
         "modal-confirm": "אישור",
         "modal-cancel": "ביטול",
-        "scored": "נקוד"
+        "scored": "נקוד",
+        "refresh": "רענן favicon",
+        "refreshed": "ה-favicon רוענן",
+        "refresh-failed": "לא נמצא favicon"
       }
     },
     "pagination": {
@@ -139,6 +144,29 @@
       "next": "הבא",
       "page": "עמוד {page}",
       "end": "אין תוצאות נוספות."
+    },
+    "status": {
+      "streaming": "כ-{count} תוצאות (בסטרימינג...)",
+      "done": "כ-{count} תוצאות ({time} שניות)",
+      "page": "כ-{count} תוצאות - עמוד {page}",
+      "searching": "מחפש...",
+      "running-command": "מריץ פקודה..."
+    },
+    "media-preview": {
+      "visit": "בקר בעמוד",
+      "watch": "צפה בסרטון",
+      "download": "הורד"
     }
+  },
+  "nojs": {
+    "search-label": "שאילתת חיפוש",
+    "pagination-label": "עמודי תוצאות",
+    "results-meta": "{count} תוצאות ב-{time} ms",
+    "no-results": "לא נמצאו תוצאות.",
+    "rate-limited": "יותר מדי בקשות. המתינו רגע ונסו שוב.",
+    "full-app": "הגרסה המלאה",
+    "command-unsupported": "ההרחבה הזאת לא הוגדרה לעבוד בסביבה ללא JS. פנו למפתח ההרחבה ושאלו אם שילוב אפשרי או מתוכנן.",
+    "command-disabled": "הפקודה הזאת כבויה במופע הזה.",
+    "command-failed": "לא ניתן היה להשלים את הפקודה. נסו שוב."
   }
 }

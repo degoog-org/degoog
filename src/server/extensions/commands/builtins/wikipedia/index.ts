@@ -7,12 +7,13 @@ import {
 } from "../../../../types/extension";
 import { SlotPanelPosition } from "../../../../../shared/search-types";
 import type { SettingField } from "../../../../../shared/setting-field";
-import type { AsyncTtlCache } from "../../../../utils/cache/cache";
+import { TTL_MS, type AsyncTtlCache } from "../../../../utils/cache/cache";
 import { getSettings } from "../../../../utils/settings/plugin-settings";
 import { logger } from "../../../../utils/logger";
 import { outgoingFetch } from "../../../../utils/net/outgoing";
 const WIKI_NAMESPACE = "ext:wikipedia:page";
-const WIKI_TTL_MS = 60 * 60 * 1000;
+const WIKI_MISSING_NAMESPACE = "ext:wikipedia:missing";
+const WIKI_TTL_MS = Math.min(60 * 60 * 1000, TTL_MS);
 
 const DEFAULT_WIKI_DOMAIN = "en.wikipedia.org";
 const WIKI_DOMAIN_PATTERN = /^[a-z0-9-]+\.wikipedia\.org$/;
@@ -56,6 +57,7 @@ let _template = "";
 let _signProxyUrl: PluginContext["signProxyUrl"] | null = null;
 
 let _wikiCache!: AsyncTtlCache<WikiPage>;
+let _missingCache!: AsyncTtlCache<true>;
 
 const _proxyImageUrl = (url: string): string => {
   if (!url || !_signProxyUrl) return "";
@@ -108,7 +110,7 @@ async function _fetchWikidataThumb(
 async function _fetchWikipedia(
   query: string,
   host: string,
-): Promise<WikiPage | null> {
+): Promise<WikiPage | false | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
@@ -149,14 +151,14 @@ async function _fetchWikipedia(
       };
     };
     const raw = Object.values(data.query?.pages ?? {})[0];
+    if (!raw) return null;
     if (
-      !raw ||
       raw.pageid === undefined ||
       "missing" in raw ||
       !raw.extract ||
       raw.pageprops?.disambiguation !== undefined
     )
-      return null;
+      return false;
 
     const page: WikiPage = {
       title: raw.title,
@@ -183,6 +185,18 @@ async function _fetchWikipedia(
   }
 }
 
+const _lookup = async (q: string, host: string): Promise<WikiPage | false | null> => {
+  const key = `${host}:${q.toLowerCase()}`;
+  const missingKey = `${host}:${q}`;
+  const page = await _wikiCache.get(key);
+  if (page) return page;
+  if (await _missingCache.get(missingKey)) return false;
+  const fetched = await _fetchWikipedia(q, host);
+  if (fetched) await _wikiCache.set(key, fetched);
+  else if (fetched === false) await _missingCache.set(missingKey, true);
+  return fetched;
+};
+
 const wikipediaSlot: SlotPlugin = {
   id: "wikipedia",
   get name(): string {
@@ -201,6 +215,7 @@ const wikipediaSlot: SlotPlugin = {
     _template = ctx.template;
     if (ctx.signProxyUrl) _signProxyUrl = ctx.signProxyUrl;
     _wikiCache = ctx.useCache<WikiPage>(WIKI_NAMESPACE, WIKI_TTL_MS);
+    _missingCache = ctx.useCache<true>(WIKI_MISSING_NAMESPACE, WIKI_TTL_MS);
   },
 
   settingsSchema: [
@@ -219,17 +234,7 @@ const wikipediaSlot: SlotPlugin = {
     const q = query.trim();
     if (q.length < 2 || q.length > 100) return false;
     const host = await _wikiDomain(this.settingsId ?? "");
-    const key = `${host}:${q.toLowerCase()}`;
-    const page = await _wikiCache.get(key);
-    if (page === null) {
-      const fetched = await _fetchWikipedia(q, host);
-      if (fetched) {
-        await _wikiCache.set(key, fetched);
-        return true;
-      }
-      return false;
-    }
-    return true;
+    return !!(await _lookup(q, host));
   },
 
   async execute(query: string, ctx?: SlotPluginContext): Promise<{ title?: string; html: string }> {
@@ -237,15 +242,7 @@ const wikipediaSlot: SlotPlugin = {
     const proxy = (url: string) => (sign ? sign(url) : "");
     const q = query.trim();
     const host = await _wikiDomain(this.settingsId ?? "");
-    const key = `${host}:${q.toLowerCase()}`;
-    let page = await _wikiCache.get(key);
-    if (page === null) {
-      const fetched = await _fetchWikipedia(q, host);
-      if (fetched) {
-        await _wikiCache.set(key, fetched);
-        page = fetched;
-      }
-    }
+    const page = await _lookup(q, host);
     if (!page) return { html: "" };
 
     const sanitizePage: Record<string, string> = {
