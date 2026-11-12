@@ -46,6 +46,7 @@ export const CardDesc = ({
           type="button"
           class="store-show-all store-desc-toggle"
           aria-expanded={String(open)}
+          aria-label={st(open ? "show-less-named" : "show-more-named", { name: item.name })}
           onClick={() => actions.toggleDesc(item)}
         >
           {st(open ? "show-less" : "show-more")}

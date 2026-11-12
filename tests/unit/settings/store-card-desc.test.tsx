@@ -65,6 +65,7 @@ describe("store card description", () => {
     const html = _render(_state([], [ID]));
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain("settings-page.store.show-more");
+    expect(html).toContain("settings-page.store.show-more-named");
   });
 
   test("an open description drops the clamp and offers to show less", () => {
@@ -72,6 +73,7 @@ describe("store card description", () => {
     expect(html).toContain("store-card-desc--open");
     expect(html).toContain('aria-expanded="true"');
     expect(html).toContain("settings-page.store.show-less");
+    expect(html).toContain("settings-page.store.show-less-named");
   });
 });
 

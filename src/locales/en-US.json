@@ -775,6 +775,8 @@
       "by-author": "by {author}",
       "show-more": "Show more",
       "show-less": "Show less",
+      "show-more-named": "Show more about {name}",
+      "show-less-named": "Show less about {name}",
       "not-in-repo": "Not in any repo",
       "needs-newer": "Needs degoog {min} or newer. You run {current}, so parts may not work.",
       "untracked-note": "Found in the {kind} folder. The Store can't update it.",

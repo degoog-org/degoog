@@ -38,6 +38,7 @@
       "any-time": "Qualsiasi periodo",
       "language": "Lingua",
       "any": "Qualsiasi",
+      "any-language": "Qualsiasi lingua",
       "hour": "Ultima ora",
       "day": "Ultime 24 ore",
       "week": "Settimana",
@@ -118,6 +119,7 @@
       "saving-to-index": "Salvataggio nel tuo indice",
       "insecure": "Non sicuro",
       "insecure-tooltip": "Questo sito è servito su una connessione HTTP non crittata.",
+      "favicon-missing": "Nessuna estensione favicon installata",
       "actions": {
         "menu-aria": "Azioni del dominio",
         "block": "Blocca questo dominio",
@@ -131,7 +133,10 @@
         "prompt-score": "Punteggio per questo dominio (positives boost, negative demotes) :",
         "modal-confirm": "Conferma",
         "modal-cancel": "Annulla",
-        "scored": "Punteggiato"
+        "scored": "Punteggiato",
+        "refresh": "Aggiorna favicon",
+        "refreshed": "Favicon aggiornata",
+        "refresh-failed": "Nessuna favicon trovata"
       }
     },
     "pagination": {
@@ -139,6 +144,29 @@
       "next": "Successivo",
       "page": "Pagina {page}",
       "end": "Nessun altro risultato."
+    },
+    "status": {
+      "streaming": "Circa {count} risultati (streaming...)",
+      "done": "Circa {count} risultati ({time} secondi)",
+      "page": "Circa {count} risultati - Pagina {page}",
+      "searching": "Ricerca in corso...",
+      "running-command": "Esecuzione del comando..."
+    },
+    "media-preview": {
+      "visit": "Visita la pagina",
+      "watch": "Guarda il video",
+      "download": "Scarica"
     }
+  },
+  "nojs": {
+    "search-label": "Query di ricerca",
+    "pagination-label": "Pagine dei risultati",
+    "results-meta": "{count} risultati in {time} ms",
+    "no-results": "Nessun risultato trovato.",
+    "rate-limited": "Troppe richieste. Attendi un momento e riprova.",
+    "full-app": "Versione completa",
+    "command-unsupported": "Questa estensione non è stata predisposta per funzionare nell'ambiente senza JS. Contatta lo sviluppatore dell'estensione per chiedere se l'integrazione è possibile o prevista.",
+    "command-disabled": "Questo comando è disattivato su questa istanza.",
+    "command-failed": "Impossibile completare questo comando. Riprova."
   }
 }

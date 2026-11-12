@@ -117,7 +117,7 @@
     "result": {
       "from-index": "De votre index",
       "saving-to-index": "Enregistrement dans votre index",
-      "insecure": "Insecure",
+      "insecure": "Non sécurisé",
       "insecure-tooltip": "Ce site est servi sur une connexion HTTP non chiffrée.",
       "favicon-missing": "Aucune extension de favicons installée",
       "actions": {

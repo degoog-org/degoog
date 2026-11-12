@@ -941,6 +941,7 @@ button.store-thumb {
 
 .store-card-desc--open {
   display: block;
+  -webkit-line-clamp: unset;
 }
 
 .store-desc-toggle {
