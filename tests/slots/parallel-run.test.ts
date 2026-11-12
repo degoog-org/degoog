@@ -36,6 +36,7 @@ const makeSlot = (
 });
 
 let runSlotPlugins: typeof import("../../src/server/extensions/slots/run").runSlotPlugins;
+let settleSlotPlugins: typeof import("../../src/server/extensions/slots/run").settleSlotPlugins;
 
 beforeAll(async () => {
   mock.module(SETTINGS_MOD, () => ({
@@ -47,7 +48,7 @@ beforeAll(async () => {
     ...slotsReal,
     getSlotPlugins: () => slots,
   }));
-  runSlotPlugins = (await import("../../src/server/extensions/slots/run")).runSlotPlugins;
+  ({ runSlotPlugins, settleSlotPlugins } = await import("../../src/server/extensions/slots/run"));
 });
 
 afterAll(() => {
@@ -96,5 +97,19 @@ describe("runSlotPlugins runs plugins side by side", () => {
     ];
     const panels = await runSlotPlugins("hello");
     expect(panels.map((panel) => panel.id)).toEqual(["first", "fifth"]);
+  });
+
+  test("an aborted run stops waiting on a trigger that never settles", async () => {
+    slots = [
+      makeSlot("hangs", () => new Promise<boolean>(() => {})),
+      makeSlot("fast", () => true),
+    ];
+    const controller = new AbortController();
+    const started = performance.now();
+    const run = settleSlotPlugins({ query: "hello", signal: controller.signal });
+    setTimeout(() => controller.abort(), 20);
+    const outcomes = await run;
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(outcomes.map((outcome) => (outcome && outcome !== "pending" ? outcome.id : outcome))).toEqual([null, "fast"]);
   });
 });

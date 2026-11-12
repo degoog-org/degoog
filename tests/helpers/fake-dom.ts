@@ -66,6 +66,14 @@ export class FakeElement extends FakeNode {
     }
   }
 
+  get children(): FakeElement[] {
+    return this.childNodes.filter((node): node is FakeElement => node instanceof FakeElement);
+  }
+
+  get firstElementChild(): FakeElement | null {
+    return this.children[0] ?? null;
+  }
+
   setAttribute(name: string, value: string): void {
     this.attributes.set(name, value);
   }

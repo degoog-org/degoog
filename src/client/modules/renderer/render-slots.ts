@@ -1,4 +1,5 @@
 import { type SlotPanel, SlotPanelPosition } from "../../../shared/search-types";
+import type { OrderedSlotPanel } from "../../../shared/slot-stream";
 import { append, clear } from "../../../shared/ui/tribute/dom";
 import { FullWidthSlotPanel } from "../../../shared/ui/components/search/full-width-slot-panel";
 import {
@@ -6,16 +7,18 @@ import {
   SlotPanel as SlotPanelView,
 } from "../../../shared/ui/components/search/slot-panel";
 
-const SLOT_IDS = [
-  "slot-full-width-above-results",
-  "slot-above-results",
-  "slot-below-results",
-  "slot-above-sidebar",
-  "slot-below-sidebar",
-];
+export const SLOT_ORDER_ATTR = "data-slot-order";
+
+const SLOT_CONTAINER_IDS: Partial<Record<SlotPanelPosition, string>> = {
+  [SlotPanelPosition.FullWidthAboveResults]: "slot-full-width-above-results",
+  [SlotPanelPosition.AboveResults]: "slot-above-results",
+  [SlotPanelPosition.BelowResults]: "slot-below-results",
+  [SlotPanelPosition.AboveSidebar]: "slot-above-sidebar",
+  [SlotPanelPosition.BelowSidebar]: "slot-below-sidebar",
+};
 
 export function clearSlotPanels(): void {
-  for (const id of SLOT_IDS) {
+  for (const id of Object.values(SLOT_CONTAINER_IDS)) {
     const el = document.getElementById(id);
     if (el) clear(el);
   }
@@ -23,40 +26,50 @@ export function clearSlotPanels(): void {
   if (glanceEl) clear(glanceEl);
 }
 
-export function appendSlotPanels(panels: SlotPanel[]): void {
-  if (!panels || !Array.isArray(panels) || panels.length === 0) return;
-  const byPosition: Record<SlotPanelPosition, HTMLElement | null> = {
-    [SlotPanelPosition.FullWidthAboveResults]: document.getElementById(
-      "slot-full-width-above-results",
-    ),
-    [SlotPanelPosition.AboveResults]:
-      document.getElementById("slot-above-results"),
-    [SlotPanelPosition.BelowResults]:
-      document.getElementById("slot-below-results"),
-    [SlotPanelPosition.AboveSidebar]:
-      document.getElementById("slot-above-sidebar"),
-    [SlotPanelPosition.BelowSidebar]:
-      document.getElementById("slot-below-sidebar"),
-    [SlotPanelPosition.KnowledgePanel]: null,
-    [SlotPanelPosition.AtAGlance]: document.getElementById("at-a-glance"),
-  };
-  for (const panel of panels) {
-    const container = byPosition[panel.position];
-    if (!container) continue;
-    if (panel.position === SlotPanelPosition.AtAGlance) {
-      container.innerHTML = panel.html;
-    } else if (panel.position === SlotPanelPosition.FullWidthAboveResults) {
-      append(FullWidthSlotPanel({ id: panel.id, html: panel.html }), container);
-    } else {
-      append(
-        SlotPanelView({
-          id: panel.id,
-          title: panel.title,
-          html: panel.html,
-          grid: panel.gridSize ?? DEFAULT_SLOT_GRID,
-        }),
-        container,
-      );
-    }
-  }
+const _orderOf = (el: Element): number | null => {
+  const raw = el.getAttribute(SLOT_ORDER_ATTR);
+  return raw === null ? null : Number(raw);
+};
+
+export const orderedChildren = (container: Element): Element[] =>
+  Array.from(container.children).filter((child) => _orderOf(child) !== null);
+
+export const firstUnordered = (container: Element): Element | null =>
+  Array.from(container.children).find((child) => _orderOf(child) === null) ??
+  null;
+
+export const placeByOrder = (
+  container: Element,
+  node: JSX.Element,
+  order: number,
+): Element | null => {
+  const holder = document.createElement("div");
+  append(node, holder);
+  const placed = holder.firstElementChild;
+  if (!placed) return null;
+  placed.setAttribute(SLOT_ORDER_ATTR, String(order));
+  const anchor =
+    Array.from(container.children).find((child) => {
+      const childOrder = _orderOf(child);
+      return childOrder === null || childOrder >= order;
+    }) ?? null;
+  container.insertBefore(placed, anchor);
+  if (anchor && _orderOf(anchor) === order) container.removeChild(anchor);
+  return placed;
+};
+
+const _panelView = (panel: SlotPanel): JSX.Element =>
+  panel.position === SlotPanelPosition.FullWidthAboveResults
+    ? FullWidthSlotPanel({ id: panel.id, html: panel.html })
+    : SlotPanelView({
+        id: panel.id,
+        title: panel.title,
+        html: panel.html,
+        grid: panel.gridSize ?? DEFAULT_SLOT_GRID,
+      });
+
+export function placeSlotPanel(panel: OrderedSlotPanel): void {
+  const id = SLOT_CONTAINER_IDS[panel.position];
+  const container = id ? document.getElementById(id) : null;
+  if (container) placeByOrder(container, _panelView(panel), panel.order);
 }
