@@ -41,6 +41,8 @@
       "inline-gif-playback": "Inaktivera GIF-animation i bildresultat",
       "post-method": "Använd POST för sökningar",
       "sticky-sidebar": "Fäst resultatpanelen vid skrollning",
+      "show-logos": "Visa dedoodles",
+      "show-logos-desc": "På särskilda dagar byts degoog-logotypen mot en som ritats av communityn.",
       "centered-mode": "Centrera sökresultaten",
       "hide-url-params": "Dölj sökparametrar i resultat-URL:er",
       "show-result-dates": "Visa publiceringsdatum",
@@ -338,6 +340,15 @@
       "custom-css-heading": "Egen CSS",
       "custom-css-desc": "Injiceras på varje sida efter stilar från teman och insticksprogram, så den vinner.",
       "custom-css-label": "Egen CSS",
+      "logos-heading": "Dedoodles",
+      "logos-desc": "Logotyper för särskilda dagar, ritade av communityn. Den här servern kollar dedoodle-repot en gång om dagen och serverar dagens logotyp själv, så besökare kontaktar aldrig GitHub.",
+      "logos-enable": "Aktivera dedoodles",
+      "logos-today-label": "Idag",
+      "logos-status-none": "Ingen dedoodle idag",
+      "logos-status-failed": "Kunde inte nå dedoodle-repot",
+      "logos-status-loading": "Kontrollerar...",
+      "logos-status-unchecked": "Inte kontrollerad än, nästa sidladdning kontrollerar",
+      "logos-status-disabled": "Avstängd",
       "honeypot-heading": "Botkontroll",
       "honeypot-desc": "Fånga krypare och bannlys dem per IP.",
       "honeypot-enable": "Honungsfällor",
@@ -762,6 +773,10 @@
       "installed": "Installerad",
       "loads-after-restart": "laddas efter omstart",
       "by-author": "av {author}",
+      "show-more": "Visa mer",
+      "show-less": "Visa mindre",
+      "show-more-named": "Visa mer om {name}",
+      "show-less-named": "Visa mindre om {name}",
       "not-in-repo": "Inte i något repo",
       "needs-newer": "Kräver degoog {min} eller nyare. Du kör {current}, så delar kanske inte fungerar.",
       "untracked-note": "Hittades i mappen {kind}. Butiken kan inte uppdatera den.",
@@ -1057,5 +1072,8 @@
     "crop-reset": "Hela bilden",
     "crop-cancel": "Avbryt",
     "crop-search": "Sök"
+  },
+  "daily-logo": {
+    "credit-prefix": "Dagens dedoodle av:"
   }
 }

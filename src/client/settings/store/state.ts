@@ -31,6 +31,8 @@ export const createStoreState = (): StoreState => ({
   repoNotes: new Map(),
   refreshingAll: false,
   expanded: "",
+  descOpen: new Set(),
+  descClamped: new Set(),
   restarting: false,
   adding: false,
   addDraft: "",

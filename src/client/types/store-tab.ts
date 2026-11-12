@@ -105,6 +105,8 @@ export interface StoreState {
   repoNotes: Map<string, RepoNote>;
   refreshingAll: boolean;
   expanded: string;
+  descOpen: Set<string>;
+  descClamped: Set<string>;
   restarting: boolean;
   adding: boolean;
   addDraft: string;
@@ -145,6 +147,7 @@ export interface StoreActions {
   clearRepoSel: () => void;
   toggleFilters: () => void;
   clearFilters: () => void;
+  toggleDesc: (item: StoreItem) => void;
   openLightbox: (item: StoreItem) => void;
   stepLightbox: (delta: number) => void;
   closeLightbox: () => void;

@@ -939,6 +939,17 @@ button.store-thumb {
   overflow: hidden;
 }
 
+.store-card-desc--open {
+  display: block;
+  -webkit-line-clamp: unset;
+}
+
+.store-desc-toggle {
+  width: auto;
+  align-self: flex-start;
+  padding: 0.125rem 0 0;
+}
+
 .store-note {
   margin: 0.375rem 0 0;
   font-size: 0.8125rem;
