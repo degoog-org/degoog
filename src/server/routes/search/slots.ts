@@ -1,10 +1,11 @@
 import { Hono, type Context } from "hono";
+import { accepts } from "hono/accepts";
 import {
   DEFAULT_SEARCH_TYPE,
   type ScoredResult,
   SlotPanelPosition,
 } from "../../../shared/search-types";
-import { EVENT_STREAM_MIME } from "../../../shared/event-stream";
+import { EVENT_STREAM_MIME, JSON_MIME } from "../../../shared/event-stream";
 import { SlotStreamEvent } from "../../../shared/slot-stream";
 import { getLocale, readObjectBody } from "../../utils/hono";
 import { getClientIp } from "../../utils/net/request";
@@ -51,7 +52,11 @@ const _badResults = (body: SlotBody): boolean =>
   "results" in body && !Array.isArray(body.results);
 
 const _wantsStream = (c: Context): boolean =>
-  (c.req.header("Accept") ?? "").includes(EVENT_STREAM_MIME);
+  accepts(c, {
+    header: "Accept",
+    supports: [EVENT_STREAM_MIME, JSON_MIME],
+    default: JSON_MIME,
+  }) === EVENT_STREAM_MIME;
 
 const _runInput = (
   c: Context,

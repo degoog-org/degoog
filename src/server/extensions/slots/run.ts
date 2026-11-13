@@ -128,6 +128,7 @@ const _settle = async (
   if (!_inPlace(position, run) || _waitsElsewhere(plugin, run)) return null;
   if (await isDisabled(settingsId)) return null;
   if (!(await slotShowsOn(plugin, settingsId, run.searchType))) return null;
+  if (run.signal?.aborted) return null;
   const triggered = await withTimeout(
     Promise.resolve(plugin.trigger(run.query.trim())),
     SLOT_PLUGIN_TIMEOUT_MS,

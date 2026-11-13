@@ -112,4 +112,19 @@ describe("runSlotPlugins runs plugins side by side", () => {
     expect(performance.now() - started).toBeLessThan(1000);
     expect(outcomes.map((outcome) => (outcome && outcome !== "pending" ? outcome.id : outcome))).toEqual([null, "fast"]);
   });
+
+  test("an already aborted run never starts a trigger", async () => {
+    let triggered = 0;
+    slots = [
+      makeSlot("counted", () => {
+        triggered += 1;
+        return true;
+      }),
+    ];
+    const controller = new AbortController();
+    controller.abort();
+    const outcomes = await settleSlotPlugins({ query: "hello", signal: controller.signal });
+    expect(outcomes).toEqual([null]);
+    expect(triggered).toBe(0);
+  });
 });

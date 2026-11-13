@@ -163,6 +163,15 @@ describe("POST /api/slots streamed", () => {
       ],
     });
   });
+
+  test("a caller that refuses the event stream with q=0 gets JSON", async () => {
+    slots = [_slot("only", SlotPanelPosition.BelowResults)];
+    const res = await _post("/api/slots", `application/json, ${EVENT_STREAM};q=0`);
+    expect(res.headers.get("content-type")).toContain("application/json");
+    expect(await res.json()).toEqual({
+      panels: [{ id: "only", html: "only", position: SlotPanelPosition.BelowResults }],
+    });
+  });
 });
 
 describe("POST /api/slots/glance streamed", () => {

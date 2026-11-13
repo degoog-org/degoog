@@ -51,6 +51,7 @@ export const eventStream = (
     },
     cancel() {
       cancelled = true;
+      requestSignal.removeEventListener("abort", hangUp);
       hangUp();
     },
   });
