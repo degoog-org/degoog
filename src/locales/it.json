@@ -926,6 +926,10 @@
         "label": "Timeout (ms)",
         "description": "Tempo massimo in millisecondi di attesa per questo motore prima di rinunciare. Lascia vuoto per usare il valore predefinito."
       },
+      "resolve-redirects": {
+        "label": "Risolvi i reindirizzamenti dei risultati",
+        "description": "Permette a questo motore di risolvere i link di reindirizzamento nei suoi risultati. Vengono richiesti solo i link sul sito del motore stesso, una richiesta per link. Il sito di destinazione non viene mai contattato."
+      },
       "slot-position": {
         "label": "Posizione",
         "description": "Dove appare il contenuto dello slot nella pagina."

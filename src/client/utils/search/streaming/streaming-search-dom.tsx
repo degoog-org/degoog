@@ -49,6 +49,14 @@ export function updateResults(
 
   const resultMap = new Map(results.map((r) => [r.url, r]));
 
+  // Snapshot frames can withdraw results, so drop rows missing from the latest list.
+  for (const [url, el] of existingEls) {
+    if (resultMap.has(url)) continue;
+    el.remove();
+    existingEls.delete(url);
+    renderedUrls.delete(url);
+  }
+
   for (let i = 0; i < results.length; i++) {
     const r = results[i];
     const existing = existingEls.get(r.url);

@@ -926,6 +926,10 @@
         "label": "Timeout (ms)",
         "description": "Maximum time in milliseconds to wait for this engine before giving up. Leave blank to use the default."
       },
+      "resolve-redirects": {
+        "label": "Resolve result redirects",
+        "description": "Lets this engine unwrap redirect links in its results. Only links on the engine's own site are requested, one request each. The destination site is never contacted."
+      },
       "slot-position": {
         "label": "Position",
         "description": "Where this slot renders on the page."

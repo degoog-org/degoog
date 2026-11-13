@@ -926,6 +926,10 @@
         "label": "Timeout (ms)",
         "description": "Maximal tid i millisekunder att vänta på den här motorn innan den ges upp. Lämna tom för att använda standard."
       },
+      "resolve-redirects": {
+        "label": "Lös upp omdirigeringar i resultat",
+        "description": "Låter den här motorn packa upp omdirigeringslänkar i sina resultat. Endast länkar på motorns egen webbplats hämtas, en förfrågan per länk. Målwebbplatsen kontaktas aldrig."
+      },
       "slot-position": {
         "label": "Position",
         "description": "Var den här panelen renderas på sidan."

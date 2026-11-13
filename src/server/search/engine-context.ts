@@ -36,6 +36,8 @@ import {
   SESSION_CLOSED_MESSAGE,
   type EngineSession,
 } from "./engine-session";
+import { makeRedirectResolver } from "./engine-redirects";
+import type { SearchResult } from "../../shared/search-types";
 
 const _buildRegionalAcceptLanguage = (lang: string, region: string): string =>
   lang === "en"
@@ -77,7 +79,12 @@ interface EngineContextOptions {
   engineName?: string;
   routeBase?: string;
   firstPage?: Pick<CachedEngineRun, "proxyId" | "carry"> | null;
+  onEmit?: (results: SearchResult[]) => void;
 }
+
+const _resolvesRedirects = async (engineSettingsId: string | undefined): Promise<boolean> =>
+  engineSettingsId !== undefined &&
+  _asBool(asString((await getSettings(engineSettingsId)).resolveRedirects));
 
 export interface BoxScore {
   proxyId?: string;
@@ -144,6 +151,7 @@ export const createSearchEngineContext = (
     engineName: engineLabel,
     routeBase,
     firstPage,
+    onEmit,
   } = options;
   const resolvedLang =
     lang ||
@@ -154,6 +162,8 @@ export const createSearchEngineContext = (
     undefined;
   const session = openSession(firstPage?.proxyId);
   const carried = _cleanCarry(firstPage?.carry);
+  // Hosts this run fetched; resolveRedirect only touches links on these sites.
+  const fetchedHosts = new Set<string>();
   const context: EngineContext = {
     signal,
     fetch: async (url, init) => {
@@ -182,6 +192,7 @@ export const createSearchEngineContext = (
         : baseInit;
       const target = typeof url === "string" ? url : String(url);
       const host = new URL(target).hostname;
+      fetchedHosts.add(host);
       const proxyOptions = { proxyOverrideEnabled, proxyOverrideUrls };
       const pinnedProxy = await session.batterFor(proxyOptions, host);
       if (!session.touch(transport)) throw new Error(SESSION_CLOSED_MESSAGE);
@@ -230,7 +241,14 @@ export const createSearchEngineContext = (
       if (clean) _runCarry.set(context, clean);
     },
     ...(carried ? { carried } : {}),
+    emit: (results) => {
+      if (Array.isArray(results)) onEmit?.(results);
+    },
   };
+  context.resolveRedirect = makeRedirectResolver(context.fetch, {
+    enabled: () => _resolvesRedirects(engineSettingsId),
+    fetchedHosts,
+  });
   _runSessions.set(context, session);
   return context;
 };

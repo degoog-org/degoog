@@ -42,6 +42,13 @@ const router = new Hono();
 
 const MISSING_QUERY = { error: "Missing or invalid query parameter 'q'" };
 
+interface RawRun {
+  results: SearchResult[];
+  multiplier: number;
+  name: string;
+  visual: boolean;
+}
+
 const _guard = async (c: Context): Promise<Response | null> =>
   (await _applyRateLimit(c)) ?? (await guardApiKey(c, "apiKeySearchEnabled"));
 
@@ -97,12 +104,9 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
       const encoder = new TextEncoder();
       const allTimings: EngineTiming[] = [];
       const allPages: (number | undefined)[] = [];
-      const allRawResults: {
-        results: SearchResult[];
-        multiplier: number;
-        name: string;
-        visual: boolean;
-      }[] = [];
+      const allRawResults: RawRun[] = [];
+      // Latest context.emit results per engine, replaced by the engine's final return.
+      const snapshots = new Map<string, RawRun>();
 
       function _send(event: string, data: unknown) {
         if (closed) return;
@@ -118,16 +122,50 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
         }
       }
 
-      const merged = async (): Promise<ScoredResult[]> =>
-        signResultThumbnails(
-          tagIndexRelation(await applyMergedDomainRules(scoreResults(allRawResults))),
+      const merged = async (): Promise<ScoredResult[]> => {
+        // Copy before awaiting so a run finishing mid-merge can't leak into this frame.
+        const finished = [...allRawResults];
+        const streamed = await rewriteEngineRuns([...snapshots.values()]);
+        return signResultThumbnails(
+          tagIndexRelation(
+            await applyMergedDomainRules(scoreResults([...finished, ...streamed])),
+          ),
         );
+      };
+
+      const snapshotsInFlight = new Set<string>();
+      const snapshotsDirty = new Set<string>();
+
+      // One merge per engine at a time emits during it collapse into one follow-up frame.
+      const sendSnapshot = async (engine: string): Promise<void> => {
+        if (snapshotsInFlight.has(engine)) {
+          snapshotsDirty.add(engine);
+          return;
+        }
+        snapshotsInFlight.add(engine);
+        try {
+          do {
+            snapshotsDirty.delete(engine);
+            const results = await merged();
+            if (snapshots.has(engine)) _send("engine-result", { engine, results });
+          } while (snapshotsDirty.has(engine) && snapshots.has(engine));
+        } finally {
+          snapshotsInFlight.delete(engine);
+          snapshotsDirty.delete(engine);
+        }
+      };
 
       const runEngine = async (
         { instance, score, id, input }: ActiveEngine,
         runInputs: SearchInputs,
       ): Promise<void> => {
           const engineName = instance.name;
+          const runOf = (results: SearchResult[]): RawRun => ({
+            results,
+            multiplier: score,
+            name: engineName,
+            visual: input === ENGINE_INPUT.IMAGE,
+          });
           let attempt = 0;
           let lastTiming: EngineTiming = {
             name: engineName,
@@ -151,22 +189,26 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
               imageFilter,
               cancelController.signal,
               type,
-              { forceFresh: isRetry, image: runInputs.image, region },
+              {
+                forceFresh: isRetry,
+                image: runInputs.image,
+                region,
+                onEmit: (snapshot) => {
+                  snapshots.set(engineName, runOf(snapshot));
+                  sendSnapshot(engineName).catch((err: unknown) => {
+                    logger.warn("search-stream", `${engineName} snapshot failed`, err);
+                  });
+                },
+              },
             );
             lastTiming = timing;
             lastPages = pages;
 
             if (timing.resultCount > 0) {
-              allRawResults.push(
-                ...(await rewriteEngineRuns([
-                  {
-                    results,
-                    multiplier: score,
-                    name: engineName,
-                    visual: input === ENGINE_INPUT.IMAGE,
-                  },
-                ])),
-              );
+              const rewritten = await rewriteEngineRuns([runOf(results)]);
+              // Swap snapshot for final run in the same tick so no merge sees neither.
+              snapshots.delete(engineName);
+              allRawResults.push(...rewritten);
               allTimings.push(timing);
               allPages.push(pages);
               _send("engine-result", {
@@ -178,6 +220,8 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
               });
               return;
             }
+            // A failed or empty run drops whatever the engine emitted.
+            snapshots.delete(engineName);
 
             if (!cached && timing.errorReason === ENGINE_TIMEOUT_REASON) break;
             attempt++;

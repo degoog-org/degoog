@@ -926,6 +926,10 @@
         "label": "Délai d'expiration (ms)",
         "description": "Temps maximal en millisecondes d'attente de ce moteur avant abandon. Laisser vide pour utiliser la valeur par défaut."
       },
+      "resolve-redirects": {
+        "label": "Résoudre les redirections des résultats",
+        "description": "Permet à ce moteur de déballer les liens de redirection de ses résultats. Seuls les liens du site du moteur sont demandés, une requête par lien. Le site de destination n'est jamais contacté."
+      },
       "slot-position": {
         "label": "Position",
         "description": "Où le contenu du slot apparaît sur la page."

@@ -926,6 +926,10 @@
         "label": "Timeout (ms)",
         "description": "Maximale Zeit in Millisekunden, die auf diese Suchmaschine gewartet wird, bevor aufgegeben wird. Leer lassen, um den Standard zu verwenden."
       },
+      "resolve-redirects": {
+        "label": "Weiterleitungen in Ergebnissen auflösen",
+        "description": "Erlaubt dieser Suchmaschine, Weiterleitungslinks in ihren Ergebnissen aufzulösen. Es werden nur Links auf der eigenen Website der Suchmaschine abgerufen, eine Anfrage pro Link. Die Zielseite wird nie kontaktiert."
+      },
       "slot-position": {
         "label": "Position",
         "description": "Wo der Slot-Inhalt auf der Seite erscheint."

@@ -52,6 +52,16 @@ export const PROXY_OVERRIDE_ENABLED_FIELD: SettingField = {
   advanced: true,
 };
 
+export const RESOLVE_REDIRECTS_FIELD: SettingField = {
+  key: "resolveRedirects",
+  label: "Resolve result redirects",
+  type: "toggle",
+  default: "false",
+  description:
+    "Lets this engine unwrap redirect links in its results. Only links on the engine's own site are requested, one request each. The destination site is never contacted.",
+  advanced: true,
+};
+
 export const PROXY_OVERRIDE_URLS_FIELD: SettingField = {
   key: "proxyOverrideUrls",
   label: "Proxy override list",

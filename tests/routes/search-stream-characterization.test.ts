@@ -494,3 +494,82 @@ describe("GET /api/search/stream failure isolation", () => {
     expect(done.totalPages).toBe(4);
   });
 });
+
+describe("GET /api/search/stream context.emit snapshots", () => {
+  const upTo = (name: string, n: number): SearchResult[] =>
+    Array.from({ length: n }, (_u, i) => makeResult(name, i + 1));
+
+  const engineResults = (events: SseEvent[], engine: string): SseEvent[] =>
+    events.filter((e) => e.event === "engine-result" && e.data.engine === engine);
+
+  test("snapshots stream without timing, each replaces the last, the return wins", async () => {
+    const emitter: EngineEntry = {
+      id: "emitter-engine",
+      instance: {
+        name: "Emitter",
+        executeSearch: async (_q, _p, _t, context) => {
+          context?.emit?.(upTo("Emitter", 1));
+          await Bun.sleep(10);
+          context?.emit?.(upTo("Emitter", 2));
+          await Bun.sleep(10);
+          return upTo("Emitter", 3);
+        },
+      },
+    };
+    harness({ engines: [emitter] });
+    const events = await readEvents(await call(uniqueQuery("emit")));
+    const frames = engineResults(events, "Emitter");
+
+    expect(frames.map((e) => (e.data.results as ScoredResult[]).length)).toEqual([1, 2, 3]);
+    expect(frames.map((e) => e.data.timing === undefined)).toEqual([true, true, false]);
+    expect(events.at(-1)?.event).toBe("done");
+  });
+
+  test("an engine that throws after emitting drops its snapshot", async () => {
+    const flaky: EngineEntry = {
+      id: "flaky-engine",
+      instance: {
+        name: "Flaky",
+        executeSearch: async (_q, _p, _t, context) => {
+          context?.emit?.(upTo("Flaky", 2));
+          await Bun.sleep(10);
+          throw new Error("upstream went away");
+        },
+      },
+    };
+    harness({ engines: [flaky] });
+    const events = await readEvents(await call(uniqueQuery("emit-throw")));
+    const final = engineResults(events, "Flaky").at(-1)!;
+
+    expect(final.data.timing).toBeDefined();
+    expect(final.data.results).toEqual([]);
+  });
+
+  test("an emit after the engine returned is ignored", async () => {
+    const late: EngineEntry = {
+      id: "late-emit-engine",
+      instance: {
+        name: "LateEmit",
+        executeSearch: async (_q, _p, _t, context) => {
+          setTimeout(() => context?.emit?.(upTo("LateEmit", 5)), 5);
+          return upTo("LateEmit", 1);
+        },
+      },
+    };
+    const slow: EngineEntry = {
+      id: "slow-engine",
+      instance: {
+        name: "Slow",
+        executeSearch: async () => {
+          await Bun.sleep(40);
+          return upTo("Slow", 1);
+        },
+      },
+    };
+    harness({ engines: [late, slow] });
+    const events = await readEvents(await call(uniqueQuery("emit-late")));
+
+    expect(engineResults(events, "LateEmit")).toHaveLength(1);
+    expect((engineResults(events, "Slow")[0].data.results as ScoredResult[]).length).toBe(2);
+  });
+});

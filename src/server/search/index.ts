@@ -31,6 +31,7 @@ import {
   type EngineTiming,
   type ScoredResult,
   type SearchResponse,
+  type SearchResult,
 } from "../../shared/search-types";
 
 import {
@@ -156,7 +157,12 @@ export const searchSingleEngine = async (
   imageFilter?: ImageFilter,
   signal?: AbortSignal,
   searchType?: SearchType,
-  opts?: { forceFresh?: boolean; image?: SearchImage; region?: string },
+  opts?: {
+    forceFresh?: boolean;
+    image?: SearchImage;
+    region?: string;
+    onEmit?: (results: SearchResult[]) => void;
+  },
 ): Promise<CachedEngineRun & { cached?: boolean }> => {
   const engine = resolveEngine(engineName);
   if (!engine) {
@@ -222,7 +228,12 @@ export const searchSingleEngine = async (
   }
   const pageCounter = makePageCounter();
   const firstPage = cacheable && p > 1 ? await _firstPageRun(cacheId, scope) : null;
+  // Ignore emits after the run ends so a stray emit can't revive a dropped snapshot.
+  let running = true;
   const engineContext = createSearchEngineContext(engineSettingsId, {
+    onEmit: (results) => {
+      if (running && !ac.signal.aborted) opts?.onEmit?.(results);
+    },
     firstPage,
     lang,
     region: opts?.region,
@@ -276,6 +287,7 @@ export const searchSingleEngine = async (
     await _keepRun(key, { ...run, ...(await boxScore(engineContext)) });
     return run;
   } finally {
+    running = false;
     void endRunSession(engineContext, outcome);
   }
 };

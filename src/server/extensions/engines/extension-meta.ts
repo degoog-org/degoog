@@ -32,9 +32,24 @@ import {
   OUTGOING_TRANSPORT_FIELD,
   PROXY_OVERRIDE_ENABLED_FIELD,
   PROXY_OVERRIDE_URLS_FIELD,
+  RESOLVE_REDIRECTS_FIELD,
   SCORE_FIELD,
   TIMEOUT_FIELD,
 } from "./setting-fields";
+
+const _localized = (
+  field: SettingField,
+  schemaKey: string,
+  coreT: Translate | undefined,
+): SettingField =>
+  coreT
+    ? {
+        ...field,
+        label: coreT(`settings-page.schema.${schemaKey}.label`) || field.label,
+        description:
+          coreT(`settings-page.schema.${schemaKey}.description`) || field.description,
+      }
+    : field;
 
 export const getEngineExtensionMeta = async (
   coreT?: Translate,
@@ -45,38 +60,10 @@ export const getEngineExtensionMeta = async (
   const { names: transportOptions, labels: transportLabels } =
     await transportPicks();
 
-  const baseScoreField = coreT
-    ? {
-        ...SCORE_FIELD,
-        label: coreT("settings-page.schema.score.label") || SCORE_FIELD.label,
-        description:
-          coreT("settings-page.schema.score.description") ||
-          SCORE_FIELD.description,
-      }
-    : SCORE_FIELD;
-
-  const baseTransportField = coreT
-    ? {
-        ...OUTGOING_TRANSPORT_FIELD,
-        label:
-          coreT("settings-page.schema.outgoing-transport.label") ||
-          OUTGOING_TRANSPORT_FIELD.label,
-        description:
-          coreT("settings-page.schema.outgoing-transport.description") ||
-          OUTGOING_TRANSPORT_FIELD.description,
-      }
-    : OUTGOING_TRANSPORT_FIELD;
-
-  const timeoutField = coreT
-    ? {
-        ...TIMEOUT_FIELD,
-        label:
-          coreT("settings-page.schema.timeout.label") || TIMEOUT_FIELD.label,
-        description:
-          coreT("settings-page.schema.timeout.description") ||
-          TIMEOUT_FIELD.description,
-      }
-    : TIMEOUT_FIELD;
+  const baseScoreField = _localized(SCORE_FIELD, "score", coreT);
+  const baseTransportField = _localized(OUTGOING_TRANSPORT_FIELD, "outgoing-transport", coreT);
+  const timeoutField = _localized(TIMEOUT_FIELD, "timeout", coreT);
+  const resolveRedirectsField = _localized(RESOLVE_REDIRECTS_FIELD, "resolve-redirects", coreT);
 
   const settings = await getInstanceSettings();
   const indexerOn = asBoolean(settings.degoogIndexerEnabled);
@@ -142,6 +129,7 @@ export const getEngineExtensionMeta = async (
       CUSTOM_USER_AGENTS_FIELD,
       PROXY_OVERRIDE_ENABLED_FIELD,
       PROXY_OVERRIDE_URLS_FIELD,
+      resolveRedirectsField,
       typeOverrideField,
       ...translatedEngineSchema,
     ];

@@ -1,4 +1,4 @@
-import type { EnginePagination } from "../../shared/search-types";
+import type { EnginePagination, SearchResult } from "../../shared/search-types";
 
 
 export enum ImgColor {
@@ -125,7 +125,7 @@ export type TimeFilter =
   | "custom";
 export type EngineConfig = Record<string, boolean>;
 
-type EngineFetch = (
+export type EngineFetch = (
   url: string,
   options?: {
     method?: string;
@@ -168,4 +168,6 @@ export interface EngineContext {
   carry?: (data: Record<string, string>) => void;
   carried?: Readonly<Record<string, string>>;
   signal?: AbortSignal;
+  emit?: (results: SearchResult[]) => void;
+  resolveRedirect?: (url: string) => Promise<string | null>;
 }

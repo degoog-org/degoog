@@ -56,10 +56,10 @@ const t = window.scopedT("themes/degoog");
 
 interface StreamEngineResult {
   engine: string;
-  timing: EngineTiming;
+  timing?: EngineTiming;
   results: ScoredResult[];
-  retry: boolean;
-  attempt: number;
+  retry?: boolean;
+  attempt?: number;
 }
 
 interface StreamEngineRetry {
@@ -190,13 +190,16 @@ export async function performStreamingSearch(
     if (!live()) return;
     const data = JSON.parse(e.data) as StreamEngineResult;
 
-    const existingIdx = engineTimings.findIndex(
-      (timing) => timing.name === data.engine,
-    );
-    if (existingIdx >= 0) {
-      engineTimings[existingIdx] = data.timing;
-    } else {
-      engineTimings.push(data.timing);
+    // Snapshot frames carry no timing, so the engine isn't marked finished yet.
+    if (data.timing) {
+      const existingIdx = engineTimings.findIndex(
+        (timing) => timing.name === data.engine,
+      );
+      if (existingIdx >= 0) {
+        engineTimings[existingIdx] = data.timing;
+      } else {
+        engineTimings.push(data.timing);
+      }
     }
 
     if (isImageType) {
