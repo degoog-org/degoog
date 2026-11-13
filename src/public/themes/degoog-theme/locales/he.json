@@ -102,6 +102,8 @@
       "from-index": "{count} מהאינדקס שלך",
       "retry": "נסה שוב",
       "retrying": "מנסה שוב...",
+      "emitting": "מזרים {count}/{total}",
+      "emitting-open": "מזרים {count}",
       "page-failed": "עמוד {page} נכשל",
       "failure-reasons": {
         "blocked": "נחסם על ידי המנוע",

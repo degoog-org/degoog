@@ -33,7 +33,7 @@ import {
   withSearchImage,
 } from "../../../modules/search-image/search-image";
 import { declaredPages } from "../search-helpers";
-import { infiniteScrollOn } from "./streaming-config";
+import { infiniteScrollOn, panelsMaxWaitMs } from "./streaming-config";
 import {
   armInfinite,
   teardownInfinite,
@@ -50,6 +50,7 @@ import { staysHere } from "../../dom/plain-click";
 import {
   updateEngineTimings,
   updateResults,
+  type StreamingTiming,
 } from "./streaming-search-dom";
 
 const t = window.scopedT("themes/degoog");
@@ -60,6 +61,14 @@ interface StreamEngineResult {
   results: ScoredResult[];
   retry: boolean;
   attempt: number;
+}
+
+interface StreamEnginePartial {
+  engine: string;
+  id?: string;
+  emitted: number;
+  expected?: number;
+  results: ScoredResult[];
 }
 
 interface StreamEngineRetry {
@@ -160,7 +169,7 @@ export async function performStreamingSearch(
   const resultsList = document.getElementById("results-list");
   const sidebar = document.getElementById("results-sidebar");
 
-  const engineTimings: EngineTiming[] = [];
+  const engineTimings: StreamingTiming[] = [];
   let firstResult = true;
   let currentResults: ScoredResult[] = [];
   const renderedUrls = new Set<string>();
@@ -186,21 +195,27 @@ export async function performStreamingSearch(
     { signal: _linkWatch.signal },
   );
 
-  source.addEventListener("engine-result", (e) => {
-    if (!live()) return;
-    const data = JSON.parse(e.data) as StreamEngineResult;
+  let panelsStarted = false;
+  let panelsWaitedOut = false;
+  const startPanels = (): void => {
+    if (panelsStarted) return;
+    panelsStarted = true;
+    void streamGlancePanels(query, currentResults);
+    void streamSlotPanels(query, currentResults);
+  };
 
-    const existingIdx = engineTimings.findIndex(
-      (timing) => timing.name === data.engine,
-    );
-    if (existingIdx >= 0) {
-      engineTimings[existingIdx] = data.timing;
-    } else {
-      engineTimings.push(data.timing);
-    }
+  const maxWait = panelsMaxWaitMs();
+  if (maxWait > 0 && !isImageType) {
+    window.setTimeout(() => {
+      if (panelsStarted || !live()) return;
+      panelsWaitedOut = true;
+      if (currentResults.length > 0) startPanels();
+    }, maxWait);
+  }
 
+  const showResults = (results: ScoredResult[]): void => {
     if (isImageType) {
-      if (data.results.length > 0) {
+      if (results.length > 0) {
         if (firstResult && resultsList) {
           render(
             <>
@@ -212,12 +227,12 @@ export async function performStreamingSearch(
         }
         firstResult = false;
         currentResults = resultsList
-          ? streamImageGrid(data.results, resultsList)
-          : data.results;
+          ? streamImageGrid(results, resultsList)
+          : results;
         state.currentResults = currentResults;
       }
     } else {
-      currentResults = data.results;
+      currentResults = results;
       state.currentResults = currentResults;
       if (firstResult) {
         firstResult = false;
@@ -232,6 +247,51 @@ export async function performStreamingSearch(
         count: String(currentResults.length),
       });
     }
+    if (panelsWaitedOut && currentResults.length > 0) startPanels();
+  };
+
+  source.addEventListener("results-settled", () => {
+    if (!live() || isImageType) return;
+    startPanels();
+  });
+
+  source.addEventListener("engine-partial", (e) => {
+    if (!live()) return;
+    const data = JSON.parse(e.data) as StreamEnginePartial;
+    const emitting: StreamingTiming = {
+      name: data.engine,
+      id: data.id,
+      time: 0,
+      resultCount: data.emitted,
+      emitting: { count: data.emitted, expected: data.expected },
+    };
+    const existingIdx = engineTimings.findIndex((timing) => timing.name === data.engine);
+    if (existingIdx >= 0) engineTimings[existingIdx] = emitting;
+    else engineTimings.push(emitting);
+
+    showResults(data.results);
+    if (isImageType) {
+      renderImgEngines(engineTimings);
+    } else {
+      updateEngineTimings(sidebar, engineTimings);
+    }
+    if (data.results.length > 0) _announceResults();
+  });
+
+  source.addEventListener("engine-result", (e) => {
+    if (!live()) return;
+    const data = JSON.parse(e.data) as StreamEngineResult;
+
+    const existingIdx = engineTimings.findIndex(
+      (timing) => timing.name === data.engine,
+    );
+    if (existingIdx >= 0) {
+      engineTimings[existingIdx] = data.timing;
+    } else {
+      engineTimings.push(data.timing);
+    }
+
+    showResults(data.results);
 
     if (isImageType) {
       renderImgEngines(engineTimings);
@@ -305,8 +365,7 @@ export async function performStreamingSearch(
       if (currentResults.length > 0) setupMediaObserver("images");
     } else {
       updateEngineTimings(sidebar, data.engineTimings);
-      void streamGlancePanels(query, currentResults);
-      void streamSlotPanels(query, currentResults);
+      startPanels();
       renderSidebar(searchData, (q) => onComplete(q), {
         sidebarTopPanels: currentKnowledgePanels(),
       });

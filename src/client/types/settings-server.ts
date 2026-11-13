@@ -28,6 +28,7 @@ export type ServerSettingsData = {
   infiniteScrollEnabled?: BoolSetting;
   streamingAutoRetry?: BoolSetting;
   streamingMaxRetries?: string;
+  streamingPanelsMaxWaitMs?: string;
   streamingDisabledTypes?: string;
   domainBlockEnabled?: BoolSetting;
   domainBlockList?: string;

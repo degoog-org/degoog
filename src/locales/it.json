@@ -230,6 +230,8 @@
       "streaming-enable": "Abilita risultati in streaming (sperimentale)",
       "streaming-auto-retry": "Riprova automaticamente i motori falliti",
       "streaming-max-retries-label": "Tentativi massimi per motore",
+      "streaming-panels-max-wait-label": "Attesa massima per i pannelli dei risultati",
+      "streaming-panels-max-wait-desc": "I pannelli che hanno bisogno dei risultati partono dopo questo tempo con quello che è già arrivato, anche se alcuni motori sono ancora in esecuzione. 0 aspetta tutti i motori.",
       "languages-desc": "Limita le lingue nel menu di ricerca. Spento mostra tutte le ~90 integrate.",
       "languages-toggle": "Modifica lingue di ricerca",
       "languages-codes-label": "Codici lingua (uno per riga)",

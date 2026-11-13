@@ -2,7 +2,7 @@ import { readFile } from "fs/promises";
 import { writeJsonAtomic } from "../../../utils/storage/atomic-json";
 import { Hono } from "hono";
 import { defaultEnginesFile } from "../../../utils/paths";
-import { asBoolean, asString } from "../../../utils/settings/plugin-settings";
+import { asBoolean, asString, type SettingValue } from "../../../utils/settings/plugin-settings";
 import { resolveLanguages } from "../../../utils/search";
 import { syncBlocklist } from "../../../utils/security/bot-trap";
 import { readObjectBody } from "../../../utils/hono";
@@ -38,6 +38,16 @@ import type { DefaultEngines } from "../../../types/search";
 
 const router = new Hono();
 
+const PANELS_MAX_WAIT_DEFAULT_MS = 4000;
+const PANELS_MAX_WAIT_LIMIT_MS = 60000;
+
+const _panelsMaxWait = (raw: SettingValue | undefined): number => {
+  const parsed = parseInt(asString(raw), 10);
+  return Number.isFinite(parsed) && parsed >= 0
+    ? Math.min(parsed, PANELS_MAX_WAIT_LIMIT_MS)
+    : PANELS_MAX_WAIT_DEFAULT_MS;
+};
+
 router.get("/api/settings/streaming", async (c) => {
   const settings = await getInstanceSettings();
   return c.json({
@@ -46,6 +56,7 @@ router.get("/api/settings/streaming", async (c) => {
     maxRetries: parseInt(asString(settings.streamingMaxRetries) || "2", 10),
     disabledTypes: asString(settings.streamingDisabledTypes ?? "").split("\n").map(s => s.trim()).filter(Boolean),
     infiniteScroll: asBoolean(settings.infiniteScrollEnabled),
+    panelsMaxWaitMs: _panelsMaxWait(settings.streamingPanelsMaxWaitMs),
   });
 });
 
