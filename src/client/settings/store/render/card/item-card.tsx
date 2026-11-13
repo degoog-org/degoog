@@ -1,9 +1,8 @@
-import { RawDogIt } from "../../../../../shared/ui/tribute/rawdogit";
 import { TransText } from "../../../../../shared/ui/components/primitives/trans-text";
 import type { Child } from "../../../../../shared/ui/tribute/types";
 import { linkHref } from "../../../../../shared/utils/url";
-import { renderMdInline } from "../../../../utils/dom/md";
 import { CardActions } from "./card-actions";
+import { CardDesc } from "./card-desc";
 import { CardNotes } from "./card-notes";
 import { CardState } from "./card-state";
 import { CardThumb } from "./card-thumb";
@@ -56,11 +55,7 @@ export const ItemCard = ({
     <div class="store-card-text">
       <h4 class="store-card-name">{item.name}</h4>
       <p class="store-card-meta">{_meta(item)}</p>
-      {item.description ? (
-        <p class="store-card-desc" title={item.description}>
-          <RawDogIt html={renderMdInline(item.description)} />
-        </p>
-      ) : null}
+      <CardDesc item={item} state={state} actions={actions} />
       <CardNotes item={item} state={state} />
     </div>
     <div class="store-card-foot">

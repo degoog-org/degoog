@@ -10,7 +10,9 @@ import {
   removeRepo,
   refreshRepo,
   refreshAllRepos,
+  setRepoBeta,
 } from "../../extensions/store/repo-ops";
+import { isGlobalBetaStore } from "../../extensions/store/git";
 import { listRepoItems } from "../../extensions/store/item-catalog";
 import {
   installItem,
@@ -31,49 +33,22 @@ import { settingsAuth } from "../_guards";
 import { buildSignedProxyUrl, proxyMarkdownImages } from "../../utils/net/proxy-sign";
 import type { RepoInfo } from "../../types/store";
 import { CSP_HEADER, SVG_CSP } from "../../utils/security/content-policy";
+import { eventStream, type SseSend } from "../../utils/net/event-stream";
 
 const router = new Hono();
 
-type SseSend = (event: string, data: unknown) => void;
+const STORE_STREAM_NS = "store:stream";
 
-function streamStoreProgress(
+function _reportStoreFailure(err: unknown, send: SseSend): void {
+  const message = err instanceof Error ? err.message : "Operation failed";
+  logger.warn(STORE_STREAM_NS, `store progress stream failed: ${message}`);
+  send("failed", { error: message });
+}
+
+const streamStoreProgress = (
   signal: AbortSignal,
   run: (send: SseSend) => Promise<void>,
-): Response {
-  const encoder = new TextEncoder();
-  const body = new ReadableStream({
-    async start(controller) {
-      let closed = false;
-      const send: SseSend = (event, data) => {
-        if (closed || signal.aborted) return;
-        try {
-          controller.enqueue(
-            encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
-          );
-        } catch (err) {
-          logger.debug("store:stream", "client disconnected", err);
-          closed = true;
-        }
-      };
-      try {
-        await run(send);
-      } catch (e) {
-        const message = e instanceof Error ? e.message : "Operation failed";
-        logger.warn("store:stream", `store progress stream failed: ${message}`);
-        send("failed", { error: message });
-      } finally {
-        if (!closed) controller.close();
-      }
-    },
-  });
-  return new Response(body, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
-  });
-}
+): Response => eventStream(signal, STORE_STREAM_NS, run, _reportStoreFailure);
 
 const VALID_TYPES: ExtensionStoreType[] = Object.values(ExtensionStoreType);
 
@@ -107,7 +82,7 @@ const _withProxiedImage = (repo: RepoInfo): RepoInfo =>
 
 router.get("/api/store/repos", settingsAuth(), async (c) => {
   const repos = await getRepos();
-  return c.json({ repos: repos.map(_withProxiedImage) });
+  return c.json({ repos: repos.map(_withProxiedImage), globalBeta: isGlobalBetaStore() });
 });
 
 router.get("/api/store/repos/:repoSlug/asset", settingsAuth(), async (c) => {
@@ -162,6 +137,21 @@ router.delete("/api/store/repos", settingsAuth(), async (c) => {
   } catch (e) {
     const message =
       e instanceof Error ? e.message : "Failed to remove repository";
+    return c.json({ error: message }, 400);
+  }
+});
+
+router.post("/api/store/repos/beta", settingsAuth(), async (c) => {
+  const body = await readObjectBody<{ url?: string; beta?: unknown }>(c);
+  const url = body?.url?.trim();
+  if (!url || typeof body?.beta !== "boolean") {
+    return c.json({ error: "Missing url or beta flag" }, 400);
+  }
+  try {
+    const repo = await setRepoBeta(url, body.beta);
+    return c.json(_withProxiedImage(repo));
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to switch branch";
     return c.json({ error: message }, 400);
   }
 });

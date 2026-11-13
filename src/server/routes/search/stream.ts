@@ -1,5 +1,5 @@
 import { Hono, type Context } from "hono";
-import { searchSingleEngine } from "../../search";
+import { ENGINE_TIMEOUT_REASON, searchSingleEngine } from "../../search";
 import { scoreResults } from "../../search/scoring";
 import {
   engineQuery,
@@ -140,7 +140,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
           while (attempt <= (autoRetry ? maxRetries : 0)) {
             if (cancelController.signal.aborted) return;
             const isRetry = attempt > 0;
-            const { results, timing, pages } = await searchSingleEngine(
+            const { results, timing, pages, cached } = await searchSingleEngine(
               id,
               engineQuery(input, query, runInputs),
               page,
@@ -179,6 +179,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
               return;
             }
 
+            if (!cached && timing.errorReason === ENGINE_TIMEOUT_REASON) break;
             attempt++;
             if (attempt <= (autoRetry ? maxRetries : 0)) {
               _send("engine-retry", {
@@ -241,6 +242,20 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
           : []),
       ];
 
+      function _sendDone(totalTime: number, indexedUrls: string[]): void {
+        _send("done", {
+          totalTime,
+          engineTimings: allTimings,
+          indexedUrls,
+          relatedSearches: [],
+          totalPages: agreedPageTotal(allPages),
+          ...imageQueryFields(
+            { ...inputs, imageQuery: inputs.imageQuery ?? imageOutcome.query },
+            imageOutcome,
+          ),
+        });
+      }
+
       void Promise.all(enginePromises)
         .then(async () => {
         const totalTime = Math.round(performance.now() - start);
@@ -267,20 +282,11 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
           return [] as string[];
         });
 
-        _send("done", {
-          totalTime,
-          engineTimings: allTimings,
-          indexedUrls,
-          relatedSearches: [],
-          totalPages: agreedPageTotal(allPages),
-          ...imageQueryFields(
-            { ...inputs, imageQuery: inputs.imageQuery ?? imageOutcome.query },
-            imageOutcome,
-          ),
-        });
+        _sendDone(totalTime, indexedUrls);
         })
-        .catch((err) => {
-          logger.error("search-stream", "stream finalization failed", err);
+        .catch((err: unknown) => {
+          logger.error("search-stream", "stream finalization failed, sending done without indexing", err);
+          _sendDone(Math.round(performance.now() - start), []);
         })
         .finally(() => {
           if (!closed) {

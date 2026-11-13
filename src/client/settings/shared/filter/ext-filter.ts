@@ -11,12 +11,20 @@ export type IsOn = (ext: ExtensionMeta) => boolean;
 
 export const settingsIsOn: IsOn = (ext) => ext.settings["disabled"] !== "true";
 
-export const createExtFilter = (): ExtFilter => ({
-  q: "",
-  type: "all",
-  status: "all",
-  open: false,
-});
+const _filters = new Map<string, ExtFilter>();
+
+export const getExtFilter = (
+  key: string,
+  groups: ExtFilterGroup[],
+): ExtFilter => {
+  let filter = _filters.get(key);
+  if (!filter) {
+    filter = { q: "", type: "all", status: "all", open: false };
+    _filters.set(key, filter);
+  }
+  if (!groups.some((group) => group.key === filter.type)) filter.type = "all";
+  return filter;
+};
 
 export const isFiltered = (filter: ExtFilter): boolean =>
   !!filter.q.trim() || filter.status !== "all";

@@ -26,10 +26,13 @@ beforeEach(() => {
   buckets = [];
 });
 
-const post = (path: string, body: unknown) =>
+const post = (path: string, body: unknown, accept?: string) =>
   router.request(`http://localhost${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(accept ? { Accept: accept } : {}),
+    },
     body: JSON.stringify(body),
   });
 
@@ -42,6 +45,18 @@ describe("slot routes rate limiting", () => {
     expect(buckets).toHaveLength(4);
     expect(new Set(buckets.map((b) => b.bucket))).toEqual(new Set(["slots:"]));
     for (const { scale } of buckets) expect(scale).toBe(4);
+  });
+
+  test("streamed slot calls draw from the same bucket as the JSON ones", async () => {
+    for (const path of ["/api/slots", "/api/slots/glance"]) {
+      const res = await post(path, { query: "berlin" }, "text/event-stream");
+      expect(res.status).toBe(200);
+      await res.text();
+    }
+    expect(buckets).toEqual([
+      { bucket: "slots:", scale: 4 },
+      { bucket: "slots:", scale: 4 },
+    ]);
   });
 
   test("malformed bodies still count against the limit", async () => {

@@ -6,7 +6,7 @@ import { MAX_PAGE } from "../../../constants";
 import { destroyMediaObserver, setupMediaObserver } from "../../../modules/media/media-scroll";
 import { renderSidebar } from "../../../modules/renderer/sidebar/render-sidebar";
 import { attachVideoPlayers, renderPagination } from "../../../modules/renderer/render";
-import { renderImageGrid } from "../../../modules/renderer/media/render-media";
+import { streamImageGrid } from "../../../modules/renderer/media/render-media";
 import { announceSettled, RESULTS_READY } from "../../../modules/renderer/media/result-ranking";
 import { renderImgEngines } from "../../../modules/filters/image-filters";
 import { beginSearch, isCurrentSearch, state } from "../../../state";
@@ -15,10 +15,13 @@ import {
   isImageSearchType,
   type ScoredResult,
   type SearchResponse,
-  SlotPanelPosition,
 } from "../../../../shared/search-types";
 import { getEngines } from "../engines";
-import { fetchGlancePanels, fetchSlotPanels } from "../search-utils";
+import {
+  currentKnowledgePanels,
+  streamGlancePanels,
+  streamSlotPanels,
+} from "../search-utils";
 import { buildSearchBody, buildSearchUrl } from "../../net/url";
 import { appendSearchAuthParams, searchAuthHeaders } from "../../net/request";
 import { FetchEventStream, type SearchEventSource } from "./fetch-event-stream";
@@ -197,9 +200,8 @@ export async function performStreamingSearch(
     }
 
     if (isImageType) {
-      if (firstResult) {
-        firstResult = false;
-        if (resultsList) {
+      if (data.results.length > 0) {
+        if (firstResult && resultsList) {
           render(
             <>
               <div class="image-grid"></div>
@@ -208,10 +210,12 @@ export async function performStreamingSearch(
             resultsList,
           );
         }
+        firstResult = false;
+        currentResults = resultsList
+          ? streamImageGrid(data.results, resultsList)
+          : data.results;
+        state.currentResults = currentResults;
       }
-      currentResults = data.results;
-      state.currentResults = currentResults;
-      if (resultsList) renderImageGrid(currentResults, resultsList);
     } else {
       currentResults = data.results;
       state.currentResults = currentResults;
@@ -301,17 +305,10 @@ export async function performStreamingSearch(
       if (currentResults.length > 0) setupMediaObserver("images");
     } else {
       updateEngineTimings(sidebar, data.engineTimings);
-      void fetchGlancePanels(query, currentResults);
-      void fetchSlotPanels(query, currentResults).then((panels) => {
-        if (!isCurrentSearch(seq)) return;
-        const kpPanels = panels.filter(
-          (p) => p.position === SlotPanelPosition.KnowledgePanel,
-        );
-        renderSidebar(
-          searchData,
-          (q) => onComplete(q),
-          kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
-        );
+      void streamGlancePanels(query, currentResults);
+      void streamSlotPanels(query, currentResults);
+      renderSidebar(searchData, (q) => onComplete(q), {
+        sidebarTopPanels: currentKnowledgePanels(),
       });
     }
 

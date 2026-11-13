@@ -1,14 +1,9 @@
 import { describe, test, expect, beforeAll, beforeEach } from "bun:test";
 import { Database } from "bun:sqlite";
-import { mkdirSync } from "fs";
-import { tmpdir } from "os";
 import { join } from "path";
+import { useIndexerDir } from "../helpers/indexer-env";
 
-const SHARED = join(tmpdir(), "degoog-indexer-tests");
-mkdirSync(SHARED, { recursive: true });
-process.env.DEGOOG_INDEXER_DIR = SHARED;
-process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
-process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
+const SHARED = useIndexerDir("degoog-indexer-tests-");
 
 import { clearAll } from "../../src/server/indexer/store/admin";
 import { countHits, deleteHits, listHits } from "../../src/server/indexer/store/hits";

@@ -3,6 +3,7 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import {
   type BangCommand,
+  type CommandContext,
   type CommandResult,
   TranslateFunction,
 } from "../../../../types/extension";
@@ -25,9 +26,12 @@ export const speedtestCommand: BangCommand = {
 
   t: TranslateFunction,
 
-  async execute(): Promise<CommandResult> {
+  async execute(
+    _args: string,
+    context?: CommandContext,
+  ): Promise<CommandResult> {
     return {
-      title: this.t!("speedtest.title"),
+      title: this.t!("speedtest.title", undefined, context?.locale),
       html: speedtestHtml,
     };
   },

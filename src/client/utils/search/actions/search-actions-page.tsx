@@ -12,8 +12,8 @@ import { teardownInfinite } from "../../../modules/renderer/infinite-scroll/infi
 import {
   abortGlancePanels,
   abortSlotFetch,
-  fetchGlancePanels,
-  fetchSlotPanels,
+  streamGlancePanels,
+  streamSlotPanels,
 } from "../search-utils";
 import { declaredPages, setResultsMeta } from "../search-helpers";
 
@@ -76,11 +76,11 @@ export async function goToPage(pageNum: number): Promise<void> {
     clearSlotPanels();
     const isImageType = isImageSearchType(state.currentType);
     if (state.currentPage === 1 && !isImageType) {
-      void fetchGlancePanels(state.currentQuery, data.results);
+      void streamGlancePanels(state.currentQuery, data.results);
     }
     if (!isImageType) {
       abortSlotFetch();
-      void fetchSlotPanels(state.currentQuery, state.currentResults);
+      void streamSlotPanels(state.currentQuery, state.currentResults);
     }
     renderResults(state.currentResults);
     window.scrollTo({ top: 0, behavior: "auto" });

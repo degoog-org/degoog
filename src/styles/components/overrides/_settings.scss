@@ -141,13 +141,13 @@ html:has(.settings-page-body) {
 
 .settings-nav-item {
   background: none;
-  border: none;
   border-radius: $radius-lg;
   color: var(--text-secondary);
   cursor: pointer;
   font-size: $font-size-base;
   padding: $space-3 $space-3;
   text-align: start;
+  border: 1px solid transparent;
   transition: color $transition-fast, background $transition-fast;
   display: flex;
   align-items: center;
@@ -163,7 +163,6 @@ html:has(.settings-page-body) {
     color: var(--text-primary);
     background: var(--bg-hover);
     box-shadow: $box-shadow;
-    border: 1px solid transparent;
     font-weight: 500;
   }
 }

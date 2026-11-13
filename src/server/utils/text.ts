@@ -11,6 +11,41 @@ const _CSS_BLOCK_RE =
 export const stripCssBlocks = (text: string): string =>
   text.replace(_CSS_BLOCK_RE, "").trim();
 
+const _NAMED_ENTITIES: Readonly<Record<string, string>> = {
+  amp: "&", AMP: "&", lt: "<", LT: "<", gt: ">", GT: ">",
+  quot: '"', QUOT: '"', apos: "'", nbsp: "\u00a0", shy: "\u00ad",
+  ensp: "\u2002", emsp: "\u2003", thinsp: "\u2009",
+  zwnj: "\u200c", zwj: "\u200d", lrm: "\u200e", rlm: "\u200f",
+  middot: "\u00b7", bull: "\u2022", hellip: "\u2026", mdash: "\u2014", ndash: "\u2013",
+  lsquo: "\u2018", rsquo: "\u2019", sbquo: "\u201a", ldquo: "\u201c", rdquo: "\u201d", bdquo: "\u201e",
+  laquo: "\u00ab", raquo: "\u00bb", lsaquo: "\u2039", rsaquo: "\u203a", prime: "\u2032", Prime: "\u2033",
+  copy: "\u00a9", COPY: "\u00a9", reg: "\u00ae", REG: "\u00ae", trade: "\u2122",
+  deg: "\u00b0", times: "\u00d7", divide: "\u00f7", plusmn: "\u00b1", minus: "\u2212",
+  frac12: "\u00bd", frac14: "\u00bc", frac34: "\u00be", sup2: "\u00b2", sup3: "\u00b3",
+  euro: "\u20ac", pound: "\u00a3", yen: "\u00a5", cent: "\u00a2", sect: "\u00a7", para: "\u00b6",
+  iexcl: "\u00a1", iquest: "\u00bf", larr: "\u2190", rarr: "\u2192", uarr: "\u2191", darr: "\u2193",
+  harr: "\u2194", dagger: "\u2020", Dagger: "\u2021",
+};
+
+const _ENTITY_RE = /&(?:#(\d{1,7})|#[xX]([\da-fA-F]{1,6})|([A-Za-z][A-Za-z\d]{1,31}));/g;
+
+const _fromCodePoint = (point: number): string | null =>
+  point > 0 && point <= 0x10ffff && (point < 0xd800 || point > 0xdfff)
+    ? String.fromCodePoint(point)
+    : null;
+
+export const decodeEntities = (text: string): string =>
+  text.replace(
+    _ENTITY_RE,
+    (match, dec: string | undefined, hex: string | undefined, name: string | undefined) => {
+      if (dec) return _fromCodePoint(Number.parseInt(dec, 10)) ?? match;
+      if (hex) return _fromCodePoint(Number.parseInt(hex, 16)) ?? match;
+      return name && Object.hasOwn(_NAMED_ENTITIES, name)
+        ? _NAMED_ENTITIES[name]
+        : match;
+    },
+  );
+
 const _DATE_PREFIX =
   /^(?:\d{1,2}\s+)?(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s+\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4}|\d+\s+(?:second|minute|hour|day|week|month|year)s?\s+ago/i;
 
@@ -22,7 +57,21 @@ export const stripSnippetPrefix = (text: string): string => {
   return stripped || text;
 };
 
+const _DOCTYPE_KEYWORDS =
+  /(?:(?:<!doctype|!doctype|doctype|octype|ctype|type|ype|pe|e)\s+)?(?:(?:(?:html|tml|ml|l)\s+)?(?:public|ublic|blic|lic|ic|c)\s+)?/;
+const _PUBLIC_ID = /(["'])[+-]\/\/(?=[^"']*\/\/DTD\b)[^"']*/;
+const _SYSTEM_ID = /["'][^"']*(?:$|["']\s*(?:>|$))/;
+
+const _DOCTYPE_HEAD_RE = new RegExp(
+  `^[\\s…]*${_DOCTYPE_KEYWORDS.source}${_PUBLIC_ID.source}(?:$|\\1\\s*(?:>|$|${_SYSTEM_ID.source}))`,
+  "i",
+);
+
+export const startsWithDoctype = (text: string): boolean =>
+  _DOCTYPE_HEAD_RE.test(text);
+
 export const looksLikeProse = (text: string): boolean => {
+  if (startsWithDoctype(text)) return false;
   if (/\{[^}]{0,500}\}/.test(text)) return false;
   const specialChars = (text.match(/[^a-zA-Z0-9\s.,!?'"()\-–-]/g) ?? []).length;
   const words = text.split(/\s+/).filter(Boolean);

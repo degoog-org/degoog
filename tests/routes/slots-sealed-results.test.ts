@@ -72,21 +72,33 @@ beforeEach(() => {
   instanceSettings = {};
 });
 
-const post = (path: string, results: ScoredResult[]): Promise<Response> | Response =>
-  router.request(
+const post = async (
+  path: string,
+  results: ScoredResult[],
+  accept: string,
+): Promise<Response> => {
+  const res = await router.request(
     new Request(`http://localhost${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Accept: accept },
       body: JSON.stringify({ query: "hello", results }),
     }),
   );
+  await res.clone().text();
+  return res;
+};
 
-describe.each([["/api/slots"], ["/api/slots/glance"]])("POST %s results", (path) => {
+describe.each([
+  ["/api/slots", "application/json"],
+  ["/api/slots/glance", "application/json"],
+  ["/api/slots", "text/event-stream"],
+  ["/api/slots/glance", "text/event-stream"],
+])("POST %s results as %s", (path, accept) => {
   test("only results the server sealed reach slot plugins", async () => {
     const [sealed] = signResultThumbnails([result("https://real.example/a")]);
     const forged = result("https://attacker.example/drip");
     const swapped = { ...sealed, url: "https://attacker.example/swap" };
-    const res = await post(path, [sealed, forged, swapped]);
+    const res = await post(path, [sealed, forged, swapped], accept);
     expect(res.status).toBe(200);
     expect(received).toHaveLength(1);
     expect(received[0].urls).toEqual(["https://real.example/a"]);
@@ -95,7 +107,7 @@ describe.each([["/api/slots"], ["/api/slots/glance"]])("POST %s results", (path)
   test("enforces the search API key like /api/search", async () => {
     instanceSettings = { apiKeySearchEnabled: true };
     const [sealed] = signResultThumbnails([result("https://real.example/a")]);
-    const res = await post(path, [sealed]);
+    const res = await post(path, [sealed], accept);
     expect(res.status).toBe(401);
     expect(received).toEqual([]);
   });

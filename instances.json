@@ -65,8 +65,7 @@
       "i2p": [],
       "appearance": "custom",
       "theme": "kaosearch",
-      "country": "DE",
-      "cloudflare": true
+      "country": "DE"
     }
   ]
 }

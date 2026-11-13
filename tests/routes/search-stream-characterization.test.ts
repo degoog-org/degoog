@@ -12,6 +12,7 @@ const PLUGIN_SETTINGS_MOD = "../../src/server/utils/settings/plugin-settings";
 const INDEXER_MOD = "../../src/server/indexer/store/record";
 const INTERCEPTS_MOD = "../../src/server/utils/extension-support/run-interceptors";
 const OUTGOING_MOD = "../../src/server/utils/net/outgoing";
+const DOMAIN_RULES_MOD = "../../src/server/search/domain-rules";
 
 const enginesReal = { ...(await import(ENGINES_MOD)) };
 const engineSettingsReal = { ...(await import(ENGINE_SETTINGS_MOD)) };
@@ -20,6 +21,7 @@ const pluginSettingsReal = { ...(await import(PLUGIN_SETTINGS_MOD)) };
 const indexerReal = { ...(await import(INDEXER_MOD)) };
 const interceptsReal = { ...(await import(INTERCEPTS_MOD)) };
 const outgoingReal = { ...(await import(OUTGOING_MOD)) };
+const domainRulesReal = { ...(await import(DOMAIN_RULES_MOD)) };
 
 const { DEGOOG_ENGINE_NAME } = await import("../../src/shared/search-types");
 
@@ -67,6 +69,7 @@ const harness = (opts: {
   settings?: Record<string, unknown>;
   indexReturns?: string[];
   indexThrows?: boolean;
+  timeoutMs?: string;
 }): void => {
   const engines = opts.engines ?? [];
   const active = engines.map((e) => ({
@@ -96,7 +99,7 @@ const harness = (opts: {
   }));
   mock.module(PLUGIN_SETTINGS_MOD, () => ({
     ...pluginSettingsReal,
-    getSettings: async () => ({}),
+    getSettings: async () => (opts.timeoutMs ? { timeoutMs: opts.timeoutMs } : {}),
   }));
   mock.module(INTERCEPTS_MOD, () => ({
     ...interceptsReal,
@@ -148,6 +151,7 @@ afterEach(() => {
   mock.module(PLUGIN_SETTINGS_MOD, () => pluginSettingsReal);
   mock.module(INDEXER_MOD, () => indexerReal);
   mock.module(INTERCEPTS_MOD, () => interceptsReal);
+  mock.module(DOMAIN_RULES_MOD, () => domainRulesReal);
 });
 
 describe("GET /api/search/stream request handling", () => {
@@ -355,6 +359,93 @@ describe("GET /api/search/stream auto-retry", () => {
     expect((result?.data.results as ScoredResult[]).length).toBe(0);
   });
 
+  const failing = (name: string, message: string, emptyRuns = 0): EngineEntry => ({
+    id: `${name.toLowerCase()}-engine`,
+    instance: {
+      name,
+      executeSearch: async () => {
+        const attempt = (attemptsByEngine[name] = (attemptsByEngine[name] ?? 0) + 1);
+        if (attempt > emptyRuns) throw new Error(message);
+        return [];
+      },
+    },
+  });
+
+  test("an engine that hits its own deadline is not retried", async () => {
+    harness({
+      engines: [failing("Slow", "Engine timeout")],
+      settings: { streamingAutoRetry: true, streamingMaxRetries: "2" },
+    });
+    const events = await readEvents(await call(uniqueQuery("timeout")));
+
+    expect(attemptsByEngine.Slow).toBe(1);
+    expect(events.filter((e) => e.event === "engine-retry")).toHaveLength(0);
+    const timing = events.find((e) => e.event === "engine-result")?.data.timing as { status: string };
+    expect(timing.status).toBe("timeout");
+  });
+
+  test("a real deadline beats an engine that rejects the moment it is aborted", async () => {
+    harness({
+      engines: [
+        {
+          id: "abortaware-engine",
+          instance: {
+            name: "AbortAware",
+            executeSearch: (_query, _page, _timeFilter, context) => {
+              attemptsByEngine.AbortAware = (attemptsByEngine.AbortAware ?? 0) + 1;
+              return new Promise((_resolve, reject) => {
+                context?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+              });
+            },
+          },
+        },
+      ],
+      settings: { streamingAutoRetry: true, streamingMaxRetries: "2" },
+      timeoutMs: "20",
+    });
+    const events = await readEvents(await call(uniqueQuery("deadline")));
+
+    expect(attemptsByEngine.AbortAware).toBe(1);
+    expect(events.filter((e) => e.event === "engine-retry")).toHaveLength(0);
+    const timing = events.find((e) => e.event === "engine-result")?.data.timing as { status: string };
+    expect(timing.status).toBe("timeout");
+  });
+
+  test("a cached timeout still gets one fresh attempt", async () => {
+    harness({
+      engines: [failing("Cachey", "Engine timeout")],
+      settings: { streamingAutoRetry: true, streamingMaxRetries: "2" },
+    });
+    const query = uniqueQuery("cachedtimeout");
+    await readEvents(await call(query));
+    const events = await readEvents(await call(query));
+
+    expect(attemptsByEngine.Cachey).toBe(2);
+    expect(events.filter((e) => e.event === "engine-retry")).toHaveLength(1);
+    const timing = events.find((e) => e.event === "engine-result")?.data.timing as { status: string };
+    expect(timing.status).toBe("timeout");
+  });
+
+  test("a deadline hit on a retry attempt stops further retries", async () => {
+    harness({
+      engines: [failing("LateSlow", "Engine timeout", 1)],
+      settings: { streamingAutoRetry: true, streamingMaxRetries: "3" },
+    });
+    await readEvents(await call(uniqueQuery("latetimeout")));
+
+    expect(attemptsByEngine.LateSlow).toBe(2);
+  });
+
+  test("a transient network timeout is still retried", async () => {
+    harness({
+      engines: [failing("Flappy", "Connect Timeout Error")],
+      settings: { streamingAutoRetry: true, streamingMaxRetries: "2" },
+    });
+    await readEvents(await call(uniqueQuery("transient")));
+
+    expect(attemptsByEngine.Flappy).toBe(3);
+  });
+
   test("with auto-retry off an empty engine runs exactly once", async () => {
     harness({
       engines: [emptyThenFull("Flaky", 2)],
@@ -380,6 +471,26 @@ describe("GET /api/search/stream failure isolation", () => {
     const done = events.at(-1)!.data;
     expect(done.indexedUrls).toEqual([]);
     expect((done.engineTimings as unknown[]).length).toBe(2);
+    expect(done.totalPages).toBe(4);
+  });
+
+  test("a wrap-up that throws after results were streamed still ends with done", async () => {
+    harness({ engines: [makeEngine("Alpha", 2, 4)] });
+    let mergeCalls = 0;
+    mock.module(DOMAIN_RULES_MOD, () => ({
+      ...domainRulesReal,
+      applyMergedDomainRules: async (results: ScoredResult[]) => {
+        if (++mergeCalls > 1) throw new Error("domain rules went away");
+        return results;
+      },
+    }));
+    const events = await readEvents(await call(uniqueQuery("wrapup-down")));
+
+    expect(events.map((e) => e.event)).toEqual(["engine-result", "done"]);
+    expect((events[0].data.results as ScoredResult[]).length).toBe(2);
+    const done = events.at(-1)!.data;
+    expect(done.indexedUrls).toEqual([]);
+    expect((done.engineTimings as unknown[]).length).toBe(1);
     expect(done.totalPages).toBe(4);
   });
 });

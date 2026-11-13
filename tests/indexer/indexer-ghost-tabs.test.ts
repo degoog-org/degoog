@@ -6,7 +6,7 @@ import { clearServerSettingsCache } from "../../src/server/utils/settings/server
 import { getInstalledSearchTypes } from "../../src/server/extensions/engines/catalog";
 import { allEngineEntries, initEngines } from "../../src/server/extensions/engines/loader";
 import { clearTypeCache, resolveEngineTypes } from "../../src/server/extensions/engines/search-types";
-import { setSettings } from "../../src/server/utils/settings/plugin-settings";
+import { clearPluginSettingsCache, setSettings } from "../../src/server/utils/settings/plugin-settings";
 import { DEGOOG_ENGINE_ID, type } from "../../src/server/extensions/engines/builtins/degoog";
 import { recordResults } from "../../src/server/indexer/store/record";
 import { flushQueue } from "../../src/server/indexer/queue/queue";
@@ -33,6 +33,7 @@ const withTempEngineEnv = async <T>(fn: (dir: string) => Promise<T>): Promise<T>
   process.env.DEGOOG_INDEXER_DIR = indexerDir;
 
   clearServerSettingsCache();
+  clearPluginSettingsCache();
   clearTypeCache();
 
   mkdirSync(enginesDir, { recursive: true });
@@ -57,6 +58,7 @@ const withTempEngineEnv = async <T>(fn: (dir: string) => Promise<T>): Promise<T>
     if (prev.indexerDir === undefined) delete process.env.DEGOOG_INDEXER_DIR;
     else process.env.DEGOOG_INDEXER_DIR = prev.indexerDir;
     clearServerSettingsCache();
+    clearPluginSettingsCache();
     clearTypeCache();
     await initEngines(true);
     rmSync(dir, { recursive: true, force: true });

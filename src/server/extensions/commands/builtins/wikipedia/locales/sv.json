@@ -1,0 +1,7 @@
+{
+  "wikipedia": {
+    "name": "Wikipedia",
+    "description": "Visar ett Wikipedia-sammandrag i panelen när sökfrågan matchar en artikel.",
+    "view-on-wikipedia": "Wikipedia ↗"
+  }
+}

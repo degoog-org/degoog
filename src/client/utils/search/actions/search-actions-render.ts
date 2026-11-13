@@ -9,18 +9,16 @@ import {
   syncMediaPreviewPanel,
 } from "../../../modules/media/media";
 import {
-  prependKnowledgePanels,
   renderSidebar,
   renderSidebarSuggestions,
 } from "../../../modules/renderer/sidebar/render-sidebar";
 import { clearSlotPanels } from "../../../modules/renderer/render-slots";
 import { renderResults } from "../../../modules/renderer/render";
 import { renderImgEngines } from "../../../modules/filters/image-filters";
-import { isCurrentSearch, state } from "../../../state";
+import { state } from "../../../state";
 import {
   isImageSearchType,
   type SearchResponse,
-  SlotPanelPosition,
 } from "../../../../shared/search-types";
 import { abortAcReq, hideAcDropdown } from "../../autocomplete/autocomplete";
 import { setActiveTab, showAllTabs } from "../../navigation/navigation";
@@ -33,8 +31,9 @@ import {
 import {
   abortGlancePanels,
   abortSlotPanels,
-  fetchGlancePanels,
-  fetchSlotPanels,
+  currentKnowledgePanels,
+  streamGlancePanels,
+  streamSlotPanels,
 } from "../search-utils";
 import { imgFilterRecord } from "../../net/url";
 import { getBase } from "../../net/base-url";
@@ -78,7 +77,6 @@ export const loadSidebarSuggestions = (
 
 export const prepareResultsUi = (query: string, resolvedType: string): void => {
   const isImageType = isImageSearchType(resolvedType);
-  const seq = state.searchSeq;
 
   state.currentBangQuery = "";
   teardownInfinite();
@@ -111,14 +109,8 @@ export const prepareResultsUi = (query: string, resolvedType: string): void => {
     abortGlancePanels();
     abortSlotPanels();
   } else {
-    void fetchSlotPanels(query).then((panels) => {
-      if (!isCurrentSearch(seq)) return;
-      const kp = panels.filter(
-        (p) => p.position === SlotPanelPosition.KnowledgePanel,
-      );
-      if (kp.length > 0) prependKnowledgePanels(kp);
-    });
-    void fetchGlancePanels(query);
+    void streamSlotPanels(query);
+    void streamGlancePanels(query);
   }
   const glanceEl = document.getElementById("at-a-glance");
   if (glanceEl) clear(glanceEl);
@@ -201,7 +193,6 @@ export const renderSearchResponse = (
   navigate: Navigate,
   opts: { fetchGlance: boolean; restorePage?: number },
 ): void => {
-  const seq = state.searchSeq;
   if (currentSearchImage()) noteImageQuery(query, data.imageQuery, data.imageQueryError);
   state.currentResults = data.results;
   state.currentData = data;
@@ -222,17 +213,10 @@ export const renderSearchResponse = (
     renderImgEngines(data.engineTimings ?? []);
     if (sidebar) clear(sidebar);
   } else {
-    if (opts.fetchGlance) void fetchGlancePanels(query, data.results);
-    void fetchSlotPanels(query, data.results).then((panels) => {
-      if (!isCurrentSearch(seq)) return;
-      const kpPanels = panels.filter(
-        (p) => p.position === SlotPanelPosition.KnowledgePanel,
-      );
-      renderSidebar(
-        data,
-        navigate,
-        kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
-      );
+    if (opts.fetchGlance) void streamGlancePanels(query, data.results);
+    void streamSlotPanels(query, data.results);
+    renderSidebar(data, navigate, {
+      sidebarTopPanels: currentKnowledgePanels(),
     });
   }
   const infinite = infiniteScrollOn() && !isImageType;

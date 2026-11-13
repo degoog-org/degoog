@@ -17,6 +17,7 @@ interface ListStore<K extends string> {
   readLists: () => Promise<Record<K, string>>;
   writeList: (key: K, value: string) => Promise<void>;
   isListKey: (key: string) => key is K;
+  clearCache: () => void;
 }
 
 interface ListStoreConfig<K extends string> {
@@ -112,5 +113,9 @@ export const createListStore = <K extends string>(
     await publishInvalidate(INVALIDATE_SCOPE.SERVER_SETTINGS);
   };
 
-  return { readLists, writeList, isListKey };
+  const clearCache = (): void => {
+    cache = null;
+  };
+
+  return { readLists, writeList, isListKey, clearCache };
 };
