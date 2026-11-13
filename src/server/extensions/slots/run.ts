@@ -18,6 +18,7 @@ import { applyFilter, syncVortexSignal } from "../../utils/extension-support/tra
 import { SLOT_PLUGIN_TIMEOUT_MS, withTimeout } from "../../utils/net/with-timeout";
 import { slotShowsOn } from "../../utils/extension-support/slot-types";
 import { getSlotPlugins } from "./registry";
+import type { OrderedSlotPanel } from "../../../shared/slot-stream";
 
 export const slotContext = (
   clientIp: string | undefined,
@@ -68,64 +69,163 @@ export const slotPosition = async (
     : plugin.position;
 };
 
-export async function runSlotPlugins(
+export const GLANCE_PENDING = "pending";
+
+export type SlotOutcome = SlotPanel | typeof GLANCE_PENDING | null;
+
+export type SlotSettled = (outcome: SlotOutcome, order: number) => void;
+
+export interface SlotRunOptions {
+  excludePosition?: SlotPanelPosition;
+  locale?: string;
+  searchType?: string;
+  nojs?: boolean;
+  glance?: boolean;
+  signal?: AbortSignal;
+}
+
+export interface SlotRunInput extends SlotRunOptions {
+  query: string;
+  clientIp?: string;
+  results?: ScoredResult[];
+}
+
+type SlotRun = {
+  query: string;
+  clientIp?: string;
+  results?: ScoredResult[];
+  exclude?: SlotPanelPosition;
+  locale?: string;
+  searchType: string;
+  nojs: boolean;
+  glance: boolean;
+  signal?: AbortSignal;
+};
+
+export const isSlotPanel = (outcome: SlotOutcome): outcome is SlotPanel =>
+  outcome !== null && outcome !== GLANCE_PENDING;
+
+const _executeBudgetMs = (plugin: SlotPlugin): number =>
+  typeof plugin.timeoutMs === "number" && Number.isFinite(plugin.timeoutMs)
+    ? Math.max(SLOT_PLUGIN_TIMEOUT_MS, plugin.timeoutMs)
+    : SLOT_PLUGIN_TIMEOUT_MS;
+
+const _inPlace = (position: SlotPanelPosition, run: SlotRun): boolean =>
+  run.glance
+    ? position === SlotPanelPosition.AtAGlance
+    : position !== run.exclude;
+
+const _waitsElsewhere = (plugin: SlotPlugin, run: SlotRun): boolean =>
+  !run.glance && (run.results !== undefined) !== Boolean(plugin.waitForResults);
+
+const _settle = async (
+  plugin: SlotPlugin,
+  id: string,
+  run: SlotRun,
+): Promise<SlotOutcome> => {
+  const settingsId = plugin.settingsId ?? `slot-${id}`;
+  const position = await slotPosition(plugin, settingsId);
+  if (!_inPlace(position, run) || _waitsElsewhere(plugin, run)) return null;
+  if (await isDisabled(settingsId)) return null;
+  if (!(await slotShowsOn(plugin, settingsId, run.searchType))) return null;
+  if (run.signal?.aborted) return null;
+  const triggered = await withTimeout(
+    Promise.resolve(plugin.trigger(run.query.trim())),
+    SLOT_PLUGIN_TIMEOUT_MS,
+    `slot ${id} trigger`,
+    run.signal,
+  );
+  if (!triggered) return null;
+  if (run.glance && run.results === undefined && plugin.waitForResults) {
+    return GLANCE_PENDING;
+  }
+  const context = slotContext(
+    run.clientIp,
+    run.glance || plugin.waitForResults ? run.results : undefined,
+    run.locale,
+    run.nojs,
+  );
+  const t0 = performance.now();
+  const out = await withTimeout(
+    Promise.resolve(plugin.execute(run.query, context)),
+    _executeBudgetMs(plugin),
+    `slot ${id}`,
+    run.signal,
+  );
+  logger.debug(
+    "plugin",
+    `${id} executed in ${Math.round(performance.now() - t0)}ms`,
+  );
+  return toSlotPanel(id, plugin, out, run.locale, position);
+};
+
+function _reportFailure(id: string, run: SlotRun, err: unknown): void {
+  if (run.glance && !run.signal?.aborted) {
+    logger.warn("plugin", `${id} slot failed`, err);
+  } else {
+    logger.debug("plugin", `${id} skipped`, err);
+  }
+}
+
+const _runSlot = async (
+  plugin: SlotPlugin,
+  run: SlotRun,
+): Promise<SlotOutcome> => {
+  if (!plugin.id) {
+    logger.warn(
+      "slots",
+      `Skipping slot plugin: missing id (name="${plugin.name}")`,
+    );
+    return null;
+  }
+  if (run.nojs && plugin.supportsNojs !== true) return null;
+  try {
+    return await _settle(plugin, plugin.id, run);
+  } catch (err) {
+    _reportFailure(plugin.id, run, err);
+    return null;
+  }
+};
+
+const _toRun = (input: SlotRunInput): SlotRun => ({
+  query: input.query,
+  clientIp: input.clientIp,
+  results: input.results,
+  exclude: input.excludePosition,
+  locale: input.locale,
+  searchType: input.searchType ?? DEFAULT_SEARCH_TYPE,
+  nojs: input.nojs === true,
+  glance: input.glance === true,
+  signal: input.signal,
+});
+
+export const settleSlotPlugins = (
+  input: SlotRunInput,
+  onSettled?: SlotSettled,
+): Promise<SlotOutcome[]> => {
+  const run = _toRun(input);
+  return Promise.all(
+    getSlotPlugins().map(async (plugin, order) => {
+      const outcome = await _runSlot(plugin, run);
+      onSettled?.(outcome, order);
+      return outcome;
+    }),
+  );
+};
+
+export const collectSlotPanels = async (
+  input: SlotRunInput,
+): Promise<OrderedSlotPanel[]> =>
+  (await settleSlotPlugins(input)).flatMap((outcome, order) =>
+    isSlotPanel(outcome) ? [{ ...outcome, order }] : [],
+  );
+
+export const runSlotPlugins = async (
   query: string,
   clientIp?: string,
   results?: ScoredResult[],
-  options?: {
-    excludePosition?: SlotPanelPosition;
-    locale?: string;
-    searchType?: string;
-    nojs?: boolean;
-  },
-): Promise<SlotPanel[]> {
-  const plugins = getSlotPlugins();
-  const panels: SlotPanel[] = [];
-  const exclude = options?.excludePosition;
-  const locale = options?.locale;
-  const nojs = options?.nojs === true;
-  const searchType = options?.searchType ?? DEFAULT_SEARCH_TYPE;
-  for (const plugin of plugins) {
-    if (!plugin.id) {
-      logger.warn(
-        "slots",
-        `Skipping slot plugin: missing id (name="${plugin.name}")`,
-      );
-      continue;
-    }
-    if (nojs && plugin.supportsNojs !== true) continue;
-    const slotSettingsId = plugin.settingsId ?? `slot-${plugin.id}`;
-    const definedPosition = await slotPosition(plugin, slotSettingsId);
-    if (exclude && definedPosition === exclude) continue;
-    if (!(await slotShowsOn(plugin, slotSettingsId, searchType))) continue;
-    const withResults = results !== undefined;
-    if (withResults && !plugin.waitForResults) continue;
-    if (!withResults && plugin.waitForResults) continue;
-    try {
-      if (await isDisabled(slotSettingsId)) continue;
-      const ok = await Promise.resolve(plugin.trigger(query.trim()));
-      if (!ok) continue;
-      const context = slotContext(
-        clientIp,
-        plugin.waitForResults ? results : undefined,
-        locale,
-        nojs,
-      );
-      const t0 = performance.now();
-      const out = await withTimeout(
-        Promise.resolve(plugin.execute(query, context)),
-        SLOT_PLUGIN_TIMEOUT_MS,
-        `slot ${plugin.id}`,
-      );
-      logger.debug(
-        "plugin",
-        `${plugin.id} executed in ${Math.round(performance.now() - t0)}ms`,
-      );
-      const panel = toSlotPanel(plugin.id, plugin, out, locale, definedPosition);
-      if (panel) panels.push(panel);
-    } catch (err) {
-      logger.debug("plugin", `${plugin.id} skipped`, err);
-    }
-  }
-  return panels;
-}
+  options?: SlotRunOptions,
+): Promise<SlotPanel[]> =>
+  (await settleSlotPlugins({ ...options, query, clientIp, results })).filter(
+    isSlotPanel,
+  );

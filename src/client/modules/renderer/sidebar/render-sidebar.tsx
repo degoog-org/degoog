@@ -2,6 +2,8 @@ import { EngineStatsPanel } from "./engine-stats-panel";
 import { RelatedSearches } from "./related-searches";
 import { state } from "../../../state";
 import type { SearchResponse, SlotPanel } from "../../../../shared/search-types";
+import type { OrderedSlotPanel } from "../../../../shared/slot-stream";
+import { firstUnordered, placeByOrder } from "../render-slots";
 import { clear, render } from "../../../../shared/ui/tribute/dom";
 import { raw } from "../../../../shared/ui/tribute/rawdogit";
 import { SidebarAccordion } from "../../../../shared/ui/components/layout/sidebar-accordion";
@@ -59,15 +61,12 @@ export const renderEngineStats = (
     return;
   }
   if (current) current.replaceWith(next);
-  else sidebar.prepend(next);
+  else sidebar.insertBefore(next, firstUnordered(sidebar));
   _wireSidebar(sidebar, onRelatedSearch);
 };
 
-const _wireSidebar = (
-  sidebar: HTMLElement,
-  onRelatedSearch: (q: string) => void,
-): void => {
-  sidebar
+function _wireToggles(root: Element): void {
+  root
     .querySelectorAll<HTMLElement>(".sidebar-accordion-toggle")
     .forEach((btn) => {
       if (btn.dataset.sidebarToggleWired === "true") return;
@@ -76,8 +75,17 @@ const _wireSidebar = (
         btn.closest(".sidebar-accordion")?.classList.toggle("open");
       });
     });
+}
 
-  if (window.innerWidth >= 768) {
+const _opensAccordions = (): boolean => window.innerWidth >= 768;
+
+const _wireSidebar = (
+  sidebar: HTMLElement,
+  onRelatedSearch: (q: string) => void,
+): void => {
+  _wireToggles(sidebar);
+
+  if (_opensAccordions()) {
     sidebar
       .querySelectorAll<HTMLElement>(".sidebar-accordion")
       .forEach((el) => el.classList.add("open"));
@@ -127,22 +135,21 @@ export function renderSidebarSuggestions(
   _wireSidebar(sidebar, onRelatedSearch);
 }
 
+const _knowledgePanel = (panel: SlotPanel): JSX.Element => (
+  <SidebarAccordion title={panel.title ?? t("search-templates.sidebar.info")}>
+    {raw(panel.html)}
+  </SidebarAccordion>
+);
+
 export function renderSidebar(
   data: SearchResponse,
   onRelatedSearch: (q: string) => void,
-  options?: { sidebarTopPanels?: SlotPanel[] },
+  options?: { sidebarTopPanels?: OrderedSlotPanel[] },
 ): void {
   const sidebar = document.getElementById("results-sidebar");
   if (!sidebar) return;
 
   const panels: JSX.Element[] = [];
-
-  for (const panel of options?.sidebarTopPanels ?? []) {
-    const title = panel.title ?? t("search-templates.sidebar.info");
-    panels.push(
-      <SidebarAccordion title={title}>{raw(panel.html)}</SidebarAccordion>,
-    );
-  }
 
   const stats = EngineStatsPanel({ timings: data.engineTimings ?? [] });
   if (stats) panels.push(stats);
@@ -156,25 +163,17 @@ export function renderSidebar(
 
   clear(sidebar);
   render(panels, sidebar);
+  for (const panel of options?.sidebarTopPanels ?? []) {
+    placeByOrder(sidebar, _knowledgePanel(panel), panel.order);
+  }
   _wireSidebar(sidebar, onRelatedSearch);
 }
 
-export function prependKnowledgePanels(panels: SlotPanel[]): void {
+export function placeKnowledgePanel(panel: OrderedSlotPanel): void {
   const sidebar = document.getElementById("results-sidebar");
-  if (!sidebar || !panels.length) return;
-  const wrapper = document.createElement("div");
-  render(
-    panels.map((p) => (
-      <SidebarAccordion title={p.title ?? t("search-templates.sidebar.info")}>
-        {raw(p.html)}
-      </SidebarAccordion>
-    )),
-    wrapper,
-  );
-  sidebar.prepend(...Array.from(wrapper.children));
-  if (window.innerWidth >= 768) {
-    sidebar
-      .querySelectorAll<HTMLElement>(".sidebar-accordion")
-      .forEach((el) => el.classList.add("open"));
-  }
+  if (!sidebar) return;
+  const placed = placeByOrder(sidebar, _knowledgePanel(panel), panel.order);
+  if (!placed) return;
+  _wireToggles(placed);
+  if (_opensAccordions()) placed.classList.add("open");
 }

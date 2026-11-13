@@ -10,13 +10,16 @@ import {
   isImageSearchType,
   type ScoredResult,
   type SearchResponse,
-  SlotPanelPosition,
 } from "../../../shared/search-types";
 import { hideAcDropdown } from "../../utils/autocomplete/autocomplete";
 import { setActiveTab, showAllTabs } from "../../utils/navigation/navigation";
 import { fetchStreamingConfig } from "../../utils/search/streaming/streaming-config";
 import { Pagination } from "../../utils/pagination/pagination";
-import { fetchGlancePanels, fetchSlotPanels } from "../../utils/search/search-utils";
+import {
+  currentKnowledgePanels,
+  streamGlancePanels,
+  streamSlotPanels,
+} from "../../utils/search/search-utils";
 import {
   abortStreamingSearch,
   performStreamingSearch,
@@ -28,7 +31,7 @@ import {
   syncMediaPreviewPanel,
 } from "../media/media";
 import { destroyMediaObserver, setupMediaObserver } from "../media/media-scroll";
-import { prependKnowledgePanels, renderSidebar } from "../renderer/sidebar/render-sidebar";
+import { renderSidebar } from "../renderer/sidebar/render-sidebar";
 import { clearSlotPanels } from "../renderer/render-slots";
 import {
   buildResultContext,
@@ -125,14 +128,8 @@ export async function performTabSearch(
   if (glanceEl) clear(glanceEl);
   clearSlotPanels();
   if (!isImageType) {
-    void fetchSlotPanels(query).then((panels) => {
-      if (!isCurrentSearch(seq)) return;
-      const kp = panels.filter(
-        (p) => p.position === SlotPanelPosition.KnowledgePanel,
-      );
-      if (kp.length > 0) prependKnowledgePanels(kp);
-    });
-    void fetchGlancePanels(query);
+    void streamSlotPanels(query);
+    void streamGlancePanels(query);
   }
   document.title = `${query} - degoog`;
 
@@ -232,22 +229,14 @@ export async function performTabSearch(
   const currentData = state.currentData;
   if (!currentData || isImageType) return;
 
-  void (async () => {
-    const panels = await fetchSlotPanels(query, state.currentResults);
-    if (!isCurrentSearch(seq)) return;
-    const kpPanels = panels.filter(
-      (p) => p.position === SlotPanelPosition.KnowledgePanel,
-    );
-    try {
-      renderSidebar(
-        currentData,
-        (q) => void performTabSearch(q, tabId),
-        kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
-      );
-    } catch (err) {
-      console.warn("[tab-search] sidebar render failed", err);
-    }
-  })();
+  void streamSlotPanels(query, state.currentResults);
+  try {
+    renderSidebar(currentData, (q) => void performTabSearch(q, tabId), {
+      sidebarTopPanels: currentKnowledgePanels(),
+    });
+  } catch (err) {
+    console.warn("[tab-search] sidebar render failed", err);
+  }
 }
 
 const _tabSearchUrl = (

@@ -4,7 +4,7 @@ import {
   type SlotPanel,
   SlotPanelPosition,
 } from "../../shared/search-types";
-import { runSlotPlugins } from "../extensions/slots/run";
+import { collectSlotPanels } from "../extensions/slots/run";
 import { renderHtml } from "../../shared/ui/tribute/html";
 import { FullWidthSlotPanel } from "../../shared/ui/components/search/full-width-slot-panel";
 import {
@@ -48,13 +48,15 @@ export const renderNojsSlots = async (
   locale: string,
   searchType: string,
 ): Promise<NojsSlotRender> => {
-  const options = { locale, searchType, nojs: true };
-  const instant = await runSlotPlugins(query, clientIp, undefined, options);
-  const afterResults = await runSlotPlugins(query, clientIp, results, options);
-  const panels = [...instant, ...afterResults].map((panel) => ({
-    ...panel,
-    html: proxyHtmlImages(panel.html),
-  }));
+  const input = { query, clientIp, locale, searchType, nojs: true };
+  const batches = await Promise.all([
+    collectSlotPanels(input),
+    collectSlotPanels({ ...input, results }),
+  ]);
+  const panels = batches
+    .flat()
+    .sort((a, b) => a.order - b.order)
+    .map((panel) => ({ ...panel, html: proxyHtmlImages(panel.html) }));
 
   const byContainer: Record<string, string> = {};
   const knowledgePanels: SlotPanel[] = [];

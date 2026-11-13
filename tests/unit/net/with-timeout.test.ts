@@ -15,4 +15,11 @@ describe("withTimeout", () => {
       /slow op timeout/,
     );
   });
+
+  test("rejects as soon as the signal aborts, long before the deadline", async () => {
+    const controller = new AbortController();
+    const pending = withTimeout(new Promise<string>(() => {}), 60_000, "hung op", controller.signal);
+    controller.abort();
+    await expect(pending).rejects.toThrow(/hung op aborted/);
+  });
 });

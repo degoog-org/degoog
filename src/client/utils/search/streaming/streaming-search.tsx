@@ -15,10 +15,13 @@ import {
   isImageSearchType,
   type ScoredResult,
   type SearchResponse,
-  SlotPanelPosition,
 } from "../../../../shared/search-types";
 import { getEngines } from "../engines";
-import { fetchGlancePanels, fetchSlotPanels } from "../search-utils";
+import {
+  currentKnowledgePanels,
+  streamGlancePanels,
+  streamSlotPanels,
+} from "../search-utils";
 import { buildSearchBody, buildSearchUrl } from "../../net/url";
 import { appendSearchAuthParams, searchAuthHeaders } from "../../net/request";
 import { FetchEventStream, type SearchEventSource } from "./fetch-event-stream";
@@ -302,17 +305,10 @@ export async function performStreamingSearch(
       if (currentResults.length > 0) setupMediaObserver("images");
     } else {
       updateEngineTimings(sidebar, data.engineTimings);
-      void fetchGlancePanels(query, currentResults);
-      void fetchSlotPanels(query, currentResults).then((panels) => {
-        if (!isCurrentSearch(seq)) return;
-        const kpPanels = panels.filter(
-          (p) => p.position === SlotPanelPosition.KnowledgePanel,
-        );
-        renderSidebar(
-          searchData,
-          (q) => onComplete(q),
-          kpPanels.length > 0 ? { sidebarTopPanels: kpPanels } : undefined,
-        );
+      void streamGlancePanels(query, currentResults);
+      void streamSlotPanels(query, currentResults);
+      renderSidebar(searchData, (q) => onComplete(q), {
+        sidebarTopPanels: currentKnowledgePanels(),
       });
     }
 
