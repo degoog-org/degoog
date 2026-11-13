@@ -102,6 +102,8 @@
       "from-index": "{count} från ditt index",
       "retry": "försök igen",
       "retrying": "försöker igen...",
+      "emitting": "strömmar {count}/{total}",
+      "emitting-open": "strömmar {count}",
       "page-failed": "sidan {page} misslyckades",
       "failure-reasons": {
         "blocked": "Blockerad av sökmotorn",

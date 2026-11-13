@@ -230,6 +230,8 @@
       "streaming-enable": "Stream results",
       "streaming-auto-retry": "Auto-retry failed engines",
       "streaming-max-retries-label": "Retries per engine",
+      "streaming-panels-max-wait-label": "Max wait for result panels",
+      "streaming-panels-max-wait-desc": "Panels that need search results start after this long with whatever has arrived, even if some engines are still running. 0 waits for every engine.",
       "languages-desc": "Off shows all ~90 built-in languages in the dropdown.",
       "languages-toggle": "Limit search languages",
       "languages-codes-label": "Language codes",

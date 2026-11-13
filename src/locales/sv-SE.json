@@ -230,6 +230,8 @@
       "streaming-enable": "Strömma resultat",
       "streaming-auto-retry": "Försök automatiskt igen med misslyckade sökmotorer",
       "streaming-max-retries-label": "Omförsök per sökmotor",
+      "streaming-panels-max-wait-label": "Max väntetid för resultatpaneler",
+      "streaming-panels-max-wait-desc": "Paneler som behöver sökresultat startar efter så här lång tid med det som hunnit komma, även om vissa motorer fortfarande körs. 0 väntar på alla motorer.",
       "languages-desc": "Avstängt visar alla ~90 inbyggda språk i rullmenyn.",
       "languages-toggle": "Begränsa sökspråk",
       "languages-codes-label": "Språkkoder",

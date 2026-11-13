@@ -18,6 +18,15 @@ import { PANEL_LAYOUT_BREAKPOINT } from "../../../modules/renderer/media/render-
 
 const t = window.scopedT("themes/degoog");
 
+export interface StreamingTiming extends EngineTiming {
+  emitting?: { count: number; expected?: number };
+}
+
+const _renderedFrom = new WeakMap<HTMLElement, string>();
+
+const _fingerprint = (r: ScoredResult): string =>
+  JSON.stringify([r.sources, r.snippet, r.idx ?? "", r.publishedAt ?? "", r.thumbnail ?? ""]);
+
 export function renderResultEl(
   r: ScoredResult,
   index: number,
@@ -31,6 +40,7 @@ export function renderResultEl(
   hydrateFavicons(el);
   el.dataset.resultUrl = r.url;
   el.dataset.idx = r.idx ?? "";
+  _renderedFrom.set(el, _fingerprint(r));
   return el;
 }
 
@@ -53,17 +63,7 @@ export function updateResults(
     const r = results[i];
     const existing = existingEls.get(r.url);
     if (existing) {
-      const oldSources =
-        existing.querySelector(".result-engines")?.textContent?.trim() ?? "";
-      const newSources = r.sources.join(" ");
-      const oldSnippet =
-        existing.querySelector(".result-snippet")?.textContent?.trim() ?? "";
-      const idxChanged = (existing.dataset.idx ?? "") !== (r.idx ?? "");
-      if (
-        oldSources !== newSources ||
-        oldSnippet !== r.snippet.trim() ||
-        idxChanged
-      ) {
+      if (_renderedFrom.get(existing) !== _fingerprint(r)) {
         const updated = renderResultEl(r, i);
         if (updated) {
           container.replaceChild(updated, existing);
@@ -87,24 +87,20 @@ export function updateResults(
     return sb - sa;
   });
 
-  let needsReorder = false;
   for (let i = 0; i < sorted.length; i++) {
-    if (sorted[i] !== children[i]) {
-      needsReorder = true;
-      break;
-    }
-  }
-
-  if (needsReorder) {
-    for (const el of sorted) {
-      container.appendChild(el);
-    }
+    const current = container.children[i] ?? null;
+    if (current !== sorted[i]) container.insertBefore(sorted[i], current);
   }
 }
 
+const _emittingLabel = ({ count, expected }: { count: number; expected?: number }): string =>
+  expected
+    ? t("search-templates.sidebar.emitting", { count: String(count), total: String(expected) })
+    : t("search-templates.sidebar.emitting-open", { count: String(count) });
+
 export function updateEngineTimings(
   sidebar: HTMLElement | null,
-  timings: EngineTiming[],
+  timings: StreamingTiming[],
 ): void {
   if (!sidebar || !state.displayEnginePerformance) return;
 
@@ -152,18 +148,22 @@ export function updateEngineTimings(
           <StreamingStatRow
             key={et.id ?? et.name}
             statusClass={
-              isRetrying
-                ? "engine-retrying"
-                : !isDegoog && et.resultCount === 0
-                  ? "engine-failed"
-                  : ""
+              et.emitting
+                ? "engine-emitting"
+                : isRetrying
+                  ? "engine-retrying"
+                  : !isDegoog && et.resultCount === 0
+                    ? "engine-failed"
+                    : ""
             }
             origin={originSlot(et.name, et.id)}
             name={et.name}
             meta={
-              isRetrying
-                ? `${t("search-templates.sidebar.retrying")} · ${et.time}ms`
-                : [count, ` · ${et.time}ms`]
+              et.emitting
+                ? _emittingLabel(et.emitting)
+                : isRetrying
+                  ? `${t("search-templates.sidebar.retrying")} · ${et.time}ms`
+                  : [count, ` · ${et.time}ms`]
             }
           />
         );

@@ -494,3 +494,110 @@ describe("GET /api/search/stream failure isolation", () => {
     expect(done.totalPages).toBe(4);
   });
 });
+
+const nap = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
+const sleepyEngine = (name: string, ms: number): EngineEntry => ({
+  id: `${name.toLowerCase()}-engine`,
+  instance: {
+    name,
+    executeSearch: async () => {
+      await nap(ms);
+      return [makeResult(name, 1)];
+    },
+  },
+});
+
+const emittingEngine = (name: string, emitAt: number[], returnAt: number): EngineEntry => ({
+  id: `${name.toLowerCase()}-engine`,
+  instance: {
+    name,
+    executeSearch: async (_query, _page, _timeFilter, context) => {
+      let elapsed = 0;
+      for (const [i, at] of emitAt.entries()) {
+        await nap(at - elapsed);
+        elapsed = at;
+        context?.emit?.([makeResult(name, i + 1)], { expected: emitAt.length });
+      }
+      await nap(returnAt - elapsed);
+      return [];
+    },
+  },
+});
+
+describe("GET /api/search/stream emitting engines", () => {
+  test("results-settled fires once only emitting engines are left, before they finish", async () => {
+    harness({
+      engines: [
+        emittingEngine("Emitter", [10, 120], 200),
+        sleepyEngine("Steady", 60),
+      ],
+    });
+    const events = await readEvents(await call(uniqueQuery("settled")));
+    const trail = events.map((e) => (e.data.engine ? `${e.event}:${e.data.engine}` : e.event));
+
+    expect(trail).toEqual([
+      "engine-partial:Emitter",
+      "engine-result:Steady",
+      "results-settled",
+      "engine-partial:Emitter",
+      "engine-result:Emitter",
+      "done",
+    ]);
+    const partials = events.filter((e) => e.event === "engine-partial");
+    expect(partials.map((e) => [e.data.emitted, e.data.expected])).toEqual([[1, 2], [2, 2]]);
+    expect(partials[0].data.id).toBe("emitter-engine");
+  });
+
+  test("an engine's emitted results stay in other frames while its final run is being rewritten", async () => {
+    let emitterRewrites = 0;
+    mock.module(DOMAIN_RULES_MOD, () => ({
+      ...domainRulesReal,
+      rewriteEngineRuns: async <T extends { name?: string }>(runs: T[]): Promise<T[]> => {
+        if (runs.some((run) => run.name === "Emitter") && ++emitterRewrites === 2) await nap(60);
+        return runs;
+      },
+    }));
+    harness({
+      engines: [
+        {
+          id: "emitter-engine",
+          instance: {
+            name: "Emitter",
+            executeSearch: async (_query, _page, _timeFilter, context) => {
+              await nap(10);
+              context?.emit?.([makeResult("Emitter", 1), makeResult("Emitter", 2)]);
+              await nap(20);
+              return [makeResult("Emitter", 1), makeResult("Emitter", 2)];
+            },
+          },
+        },
+        sleepyEngine("Steady", 50),
+      ],
+    });
+    const events = await readEvents(await call(uniqueQuery("swap-gap")));
+    const steady = events.find((e) => e.event === "engine-result" && e.data.engine === "Steady")!;
+    const urls = (steady.data.results as ScoredResult[]).map((r) => r.url);
+
+    expect(emitterRewrites).toBe(2);
+    expect(urls).toContain("https://emitter.test/1");
+    expect(urls).toContain("https://emitter.test/2");
+  });
+
+  test("no results-settled when the emitting engine finishes before the others", async () => {
+    harness({
+      engines: [
+        emittingEngine("Emitter", [10], 30),
+        sleepyEngine("Steady", 90),
+      ],
+    });
+    const events = await readEvents(await call(uniqueQuery("early-emitter")));
+
+    expect(events.map((e) => e.event)).toEqual([
+      "engine-partial",
+      "engine-result",
+      "engine-result",
+      "done",
+    ]);
+  });
+});

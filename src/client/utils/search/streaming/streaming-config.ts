@@ -1,16 +1,20 @@
 import { getBase } from "../../net/base-url";
 import { onWindowEvent } from "../../dom/window-event";
 
+const PANELS_MAX_WAIT_DEFAULT_MS = 4000;
+
 export interface SearchUiConfig {
   enabled: boolean;
   disabledTypes: string[];
   infiniteScroll: boolean;
+  panelsMaxWaitMs: number;
 }
 
 const FALLBACK: SearchUiConfig = {
   enabled: false,
   disabledTypes: [],
   infiniteScroll: false,
+  panelsMaxWaitMs: PANELS_MAX_WAIT_DEFAULT_MS,
 };
 
 let _config: SearchUiConfig | null = null;
@@ -29,6 +33,7 @@ export const fetchStreamingConfig = async (): Promise<SearchUiConfig> => {
         enabled: data.enabled ?? false,
         disabledTypes: data.disabledTypes ?? [],
         infiniteScroll: data.infiniteScroll ?? false,
+        panelsMaxWaitMs: data.panelsMaxWaitMs ?? PANELS_MAX_WAIT_DEFAULT_MS,
       };
       return _config;
     }
@@ -39,3 +44,6 @@ export const fetchStreamingConfig = async (): Promise<SearchUiConfig> => {
 };
 
 export const infiniteScrollOn = (): boolean => _config?.infiniteScroll ?? false;
+
+export const panelsMaxWaitMs = (): number =>
+  _config?.panelsMaxWaitMs ?? PANELS_MAX_WAIT_DEFAULT_MS;

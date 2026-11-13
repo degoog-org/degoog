@@ -1,4 +1,4 @@
-import type { EnginePagination } from "../../shared/search-types";
+import type { EnginePagination, SearchResult } from "../../shared/search-types";
 
 
 export enum ImgColor {
@@ -168,4 +168,5 @@ export interface EngineContext {
   carry?: (data: Record<string, string>) => void;
   carried?: Readonly<Record<string, string>>;
   signal?: AbortSignal;
+  emit?: (results: SearchResult[], progress?: { expected?: number }) => void;
 }

@@ -31,6 +31,7 @@ import {
   type EngineTiming,
   type ScoredResult,
   type SearchResponse,
+  type SearchResult,
 } from "../../shared/search-types";
 
 import {
@@ -41,7 +42,8 @@ import {
 import { logger } from "../utils/logger";
 import { reportEngineRun } from "../utils/extension-support/run-observers";
 import { createSearchEngineContext, endRunSession, boxScore } from "./engine-context";
-import { getEngineTimeout } from "./engine-timeout";
+import { getEngineBudget, getEngineTimeout } from "./engine-timeout";
+import { makeEngineEmitter } from "./engine-emit";
 import { scoreResults } from "./scoring";
 import { rewriteEngineRuns } from "./domain-rules";
 import { engineRouteBase } from "../extensions/engines/engine-routes";
@@ -49,22 +51,7 @@ import { engineRouteBase } from "../extensions/engines/engine-routes";
 const NEEDS_IMAGE = "This engine searches with an image";
 const NEEDS_TEXT = "This engine needs the image described as text";
 
-export const ENGINE_TIMEOUT_REASON = "Engine timeout";
-
-const _withTimeout = <T>(
-  promise: Promise<T>,
-  ms: number,
-  onTimeout?: () => void,
-): Promise<T> => {
-  let timer: ReturnType<typeof setTimeout>;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      reject(new Error(ENGINE_TIMEOUT_REASON));
-      onTimeout?.();
-    }, ms);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-};
+export { ENGINE_TIMEOUT_REASON } from "./engine-timeout";
 
 const _classifyReject = (
   err: unknown,
@@ -156,7 +143,12 @@ export const searchSingleEngine = async (
   imageFilter?: ImageFilter,
   signal?: AbortSignal,
   searchType?: SearchType,
-  opts?: { forceFresh?: boolean; image?: SearchImage; region?: string },
+  opts?: {
+    forceFresh?: boolean;
+    image?: SearchImage;
+    region?: string;
+    onPartial?: (results: SearchResult[], expected?: number) => void;
+  },
 ): Promise<CachedEngineRun & { cached?: boolean }> => {
   const engine = resolveEngine(engineName);
   if (!engine) {
@@ -221,6 +213,7 @@ export const searchSingleEngine = async (
     else signal.addEventListener("abort", () => ac.abort(), { once: true });
   }
   const pageCounter = makePageCounter();
+  const emitter = makeEngineEmitter(opts?.onPartial);
   const firstPage = cacheable && p > 1 ? await _firstPageRun(cacheId, scope) : null;
   const engineContext = createSearchEngineContext(engineSettingsId, {
     firstPage,
@@ -236,18 +229,21 @@ export const searchSingleEngine = async (
     challenges: engine.challenges,
     engineName: engine.name,
     routeBase: engineRouteBase(engineSettingsId),
+    emit: emitter.emit,
   });
   let outcome: string | undefined;
   try {
     const timeout = await getEngineTimeout(engineSettingsId);
-    const results = await _withTimeout(
+    const { results, partial, error } = await emitter.settle(
       engine.executeSearch(query, p, timeFilter, engineContext),
-      timeout,
-      () => ac.abort(),
+      { idleMs: timeout, budgetMs: opts?.onPartial ? getEngineBudget(timeout) : timeout, abort: () => ac.abort() },
     );
     const elapsed = Math.round(performance.now() - t0);
     if (signal?.aborted) return _abandonedRun(engine.name, engineSettingsId, elapsed);
     outcome = THREAT_LEVEL.OK;
+    if (partial) {
+      logger.warn("engine", `${engine.name} stopped early after ${elapsed}ms results=${results.length}, keeping what it emitted`, error);
+    }
     const run: CachedEngineRun = {
       results,
       timing: {
@@ -260,7 +256,7 @@ export const searchSingleEngine = async (
       pages: pageCounter.total(),
     };
     _tellObservers(run.timing, engineSettingsId, scope, false);
-    await _keepRun(key, { ...run, ...(await boxScore(engineContext)) });
+    if (!partial) await _keepRun(key, { ...run, ...(await boxScore(engineContext)) });
     return run;
   } catch (err) {
     const elapsed = Math.round(performance.now() - t0);

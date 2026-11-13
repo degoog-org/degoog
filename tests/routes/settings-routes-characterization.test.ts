@@ -81,7 +81,18 @@ describe("GET /api/settings/streaming reports the streaming shape", () => {
       maxRetries: 2,
       disabledTypes: [],
       infiniteScroll: false,
+      panelsMaxWaitMs: 4000,
     });
+  });
+
+  test("the panel max wait keeps 0 as off and caps runaway values", async () => {
+    await settings.updateInstanceSettings({ streamingPanelsMaxWaitMs: "0" });
+    settings.clearServerSettingsCache();
+    expect((await (await get("/api/settings/streaming")).json()).panelsMaxWaitMs).toBe(0);
+
+    await settings.updateInstanceSettings({ streamingPanelsMaxWaitMs: "999999" });
+    settings.clearServerSettingsCache();
+    expect((await (await get("/api/settings/streaming")).json()).panelsMaxWaitMs).toBe(60000);
   });
 
   test("disabled types are split, trimmed and emptied out", async () => {
