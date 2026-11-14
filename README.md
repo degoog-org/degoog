@@ -191,6 +191,8 @@ _**Note:** These have only been INITIALLY vetted, there is no way for me to keep
 
 Full customisation guide (plugins, themes, engines, transports, store, settings gate, aliases, env): **[documentation](https://degoog-org.github.io/docs)**.
 
+<img width="800" src="screenshots/locales-progress.svg" alt="Locale translation progress">
+
 ## Little shoutout
 
 This project would have never existed if the amazing [searxng](https://github.com/searxng/searxng) developers hadn't had the idea first. This is my take on a heavily customisable search aggregrator, it's meant to be a more modular lighter alternative, you can add as much as you want to it, but the core will stay as simple as it gets.
