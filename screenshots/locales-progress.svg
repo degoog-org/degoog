@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="538" viewBox="0 0 1120 538" role="img" aria-labelledby="title description">
+  <title id="title">Degoog locale translation progress</title>
+  <desc id="description">Translation coverage across 5 locales, measured against the English source.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .panel { fill: #161b22; }
+    .title { fill: #f0f6fc; font-size: 25px; font-weight: 600; }
+    .subtitle { fill: #8b949e; font-size: 14px; }
+    .name { fill: #e6edf3; font-size: 15px; font-weight: 500; }
+    .code { fill: #8b949e; font-size: 12px; }
+    .percent { fill: #c9d1d9; font-size: 14px; font-variant-numeric: tabular-nums; }
+    .track { fill: #30363d; }
+    .fill { fill: #2da44e; }
+    .rule { stroke: #30363d; }
+  </style>
+  <rect x="32" y="28" width="1056" height="482" rx="12" class="panel" />
+  <text x="70" y="82" class="title">Locale translation progress</text>
+  <text x="70" y="109" class="subtitle">Coverage against the English source · 5 locales</text>
+  <line x1="70" y1="137" x2="1050" y2="137" class="rule" />
+  
+  <g>
+    <text x="82" y="174" class="name">German (Germany)</text>
+    <text x="82" y="196" class="code">de-DE</text>
+    <rect x="610" y="159" width="380" height="12" rx="6" class="track" />
+    <rect x="610" y="159" width="357.2" height="12" rx="6" class="fill" />
+    <text x="1040" y="170" class="percent" text-anchor="end">94%</text>
+  </g>
+  <g>
+    <text x="82" y="232" class="name">French (France)</text>
+    <text x="82" y="254" class="code">fr-FR</text>
+    <rect x="610" y="217" width="380" height="12" rx="6" class="track" />
+    <rect x="610" y="217" width="361" height="12" rx="6" class="fill" />
+    <text x="1040" y="228" class="percent" text-anchor="end">95%</text>
+  </g>
+  <g>
+    <text x="82" y="290" class="name">Hebrew</text>
+    <text x="82" y="312" class="code">he</text>
+    <rect x="610" y="275" width="380" height="12" rx="6" class="track" />
+    <rect x="610" y="275" width="372.4" height="12" rx="6" class="fill" />
+    <text x="1040" y="286" class="percent" text-anchor="end">98%</text>
+  </g>
+  <g>
+    <text x="82" y="348" class="name">Italian</text>
+    <text x="82" y="370" class="code">it</text>
+    <rect x="610" y="333" width="380" height="12" rx="6" class="track" />
+    <rect x="610" y="333" width="364.8" height="12" rx="6" class="fill" />
+    <text x="1040" y="344" class="percent" text-anchor="end">96%</text>
+  </g>
+  <g>
+    <text x="82" y="406" class="name">Swedish (Sweden)</text>
+    <text x="82" y="428" class="code">sv-SE</text>
+    <rect x="610" y="391" width="380" height="12" rx="6" class="track" />
+    <rect x="610" y="391" width="368.6" height="12" rx="6" class="fill" />
+    <text x="1040" y="402" class="percent" text-anchor="end">97%</text>
+  </g>
+</svg>

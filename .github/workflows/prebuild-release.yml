@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup the best engine ever
         uses: oven-sh/setup-bun@v2
@@ -38,6 +40,31 @@ jobs:
           cp package.json bun.lock* prebuild-release/degoog/
           cd prebuild-release/degoog && bun install --frozen-lockfile --production && cd ../..
           cp -r src tsconfig.json prebuild-release/degoog/
+
+      - name: Update locale progress image in source branch
+        run: |
+          if git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            branch=main
+          elif git merge-base --is-ancestor "$GITHUB_SHA" origin/develop; then
+            branch=develop
+          else
+            echo "Release commit is not contained in main or develop; cannot safely update the image."
+            exit 1
+          fi
+
+          git checkout -B "$branch" "origin/$branch"
+          bun run scripts/generate-locale-progress.ts
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add screenshots/locales-progress.svg
+
+          if git diff --cached --quiet; then
+            echo "Locale progress image is already up to date."
+            exit 0
+          fi
+
+          git commit -m "Update locale translation progress image"
+          git push origin "HEAD:$branch"
 
       - name: Create tarball - tarball is a funny name
         run: |
