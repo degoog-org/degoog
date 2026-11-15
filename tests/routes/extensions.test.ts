@@ -58,5 +58,6 @@ describe("routes/extensions", () => {
     );
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toContain("text/css");
+    expect(res.headers.get("Cache-Control")).toBe("no-cache");
   });
 });

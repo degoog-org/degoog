@@ -456,6 +456,7 @@ router.get("/api/plugins/styles.css", async (c) => {
     if (css) parts.push(css);
   }
   c.header("Content-Type", "text/css");
+  c.header("Cache-Control", "no-cache");
   return c.body(parts.join("\n"));
 });
 
