@@ -15,9 +15,10 @@ import {
 } from "../../extensions/themes/registry";
 import type { Translate } from "../../types/extension";
 import {
-  getAllPluginCss,
+  getEnabledPluginCss,
   getPluginScriptFolders,
   getPluginSettingsIds,
+  pluginCssVersion,
 } from "../../utils/extension-support/plugin-assets";
 import { asBoolean, asString, isDisabled } from "../../utils/settings/plugin-settings";
 import {
@@ -101,8 +102,11 @@ export async function getTranslator(
 async function pluginAssetsPlaceholder(): Promise<string> {
   const v = pkg.version;
   const parts: string[] = [];
-  if (getAllPluginCss())
-    parts.push(`<link rel="stylesheet" href="/api/plugins/styles.css?v=${v}">`);
+  const css = await getEnabledPluginCss();
+  if (css)
+    parts.push(
+      `<link rel="stylesheet" href="/api/plugins/styles.css?v=${pluginCssVersion(css)}">`,
+    );
   for (const folder of getPluginScriptFolders()) {
     const settingsIds = getPluginSettingsIds(folder);
     let disabled = false;
