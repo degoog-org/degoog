@@ -601,6 +601,22 @@ describe("nojs engine breakdown", () => {
     expect(html).toContain("Blocked by the engine");
   });
 
+  test("lists answering engines fastest first and failed engines after them", async () => {
+    harness({
+      settings: enabled(),
+      results: [makeResult()],
+      engineTimings: [
+        { name: "Slowpoke", id: "slowpoke-engine", time: 900, resultCount: 2 },
+        ...timings,
+      ],
+    });
+    const html = await text("/nojs/search?q=hello");
+    const panel = html.slice(html.indexOf("engine-performance-panel"));
+    const order = ["Fake", "Slowpoke", "Broken"].map((name) => panel.indexOf(`${name}<`));
+    expect(order.every((at) => at >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
   test("is absent when no engine reported a timing", async () => {
     harness({ settings: enabled(), results: [makeResult()] });
     const html = await text("/nojs/search?q=hello");

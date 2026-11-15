@@ -106,7 +106,7 @@ describe("engine origin icons survive re-renders", () => {
     }
   });
 
-  test("the engine stats panel lists the fastest engine first when cached runs arrive out of order", async () => {
+  test("the engine stats panel lists the fastest answering engine first and sinks engines that failed or found nothing", async () => {
     const { state } = await import("../../../src/client/state");
     const { EngineStatsPanel } = await import(
       "../../../src/client/modules/renderer/sidebar/engine-stats-panel"
@@ -115,13 +115,33 @@ describe("engine origin icons survive re-renders", () => {
     state.displayEnginePerformance = true;
     try {
       const host = new FakeElement("div");
-      const timing = (name: string, time: number): EngineTiming => ({ name, id: name.toLowerCase(), time, resultCount: 1 });
+      const timing = (name: string, time: number, extra: Partial<EngineTiming> = {}): EngineTiming => ({
+        name,
+        id: name.toLowerCase(),
+        time,
+        resultCount: 1,
+        ...extra,
+      });
       render(
-        EngineStatsPanel({ timings: [timing("Brave", 7843), timing("Mwmbl", 437), timing("Google", 1279)] })!,
+        EngineStatsPanel({
+          timings: [
+            timing("Brave", 7843),
+            timing("Ghost", 0, { resultCount: 0, status: "blocked" }),
+            timing("Mwmbl", 437),
+            timing("Quiet", 90, { resultCount: 0 }),
+            timing("Google", 1279),
+          ],
+        })!,
         host as unknown as Element,
       );
 
-      expect(slots(host).map((slot) => slot.getAttribute("data-engine"))).toEqual(["Mwmbl", "Google", "Brave"]);
+      expect(slots(host).map((slot) => slot.getAttribute("data-engine"))).toEqual([
+        "Mwmbl",
+        "Google",
+        "Brave",
+        "Ghost",
+        "Quiet",
+      ]);
     } finally {
       state.displayEnginePerformance = saved;
     }

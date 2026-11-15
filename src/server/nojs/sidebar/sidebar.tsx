@@ -6,6 +6,7 @@ import {
   type EngineOrigin,
 } from "../../../shared/engine-origins";
 import {
+  compareEngineTimings,
   DEGOOG_ENGINE_NAME,
   type EngineTiming,
   type SlotPanel,
@@ -152,7 +153,7 @@ export const renderNojsSidebar = async (
       ? { byId: new Map(), byName: new Map() }
       : await _lookupOrigins();
 
-  const rows = timings.map((timing) => {
+  const rows = [...timings].sort(compareEngineTimings).map((timing) => {
     const isDegoog = timing.name === DEGOOG_ENGINE_NAME;
     const failed = !!timing.status && timing.status !== "ok";
     const count = String(timing.resultCount);
