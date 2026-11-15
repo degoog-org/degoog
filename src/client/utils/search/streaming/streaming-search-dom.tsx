@@ -25,7 +25,7 @@ export interface StreamingTiming extends EngineTiming {
 const _renderedFrom = new WeakMap<HTMLElement, string>();
 
 const _fingerprint = (r: ScoredResult): string =>
-  JSON.stringify([r.sources, r.snippet, r.idx ?? "", r.publishedAt ?? "", r.thumbnail ?? ""]);
+  JSON.stringify([r.title, r.sources, r.snippet, r.idx ?? "", r.publishedAt ?? "", r.thumbnail ?? ""]);
 
 export function renderResultEl(
   r: ScoredResult,
@@ -58,6 +58,14 @@ export function updateResults(
   });
 
   const resultMap = new Map(results.map((r) => [r.url, r]));
+
+  for (const el of Array.from(container.children) as HTMLElement[]) {
+    const url = el.dataset.resultUrl;
+    if (!url || resultMap.has(url)) continue;
+    el.remove();
+    existingEls.delete(url);
+    renderedUrls.delete(url);
+  }
 
   for (let i = 0; i < results.length; i++) {
     const r = results[i];

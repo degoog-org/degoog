@@ -601,3 +601,32 @@ describe("GET /api/search/stream emitting engines", () => {
     ]);
   });
 });
+
+describe("GET /api/search/stream engines sharing a display name", () => {
+  test("one engine settling does not drop the other's emitted results", async () => {
+    const twin = (id: string, url: string, returnAt: number): EngineEntry => ({
+      id,
+      instance: {
+        name: "Twin",
+        executeSearch: async (_query, _page, _timeFilter, context) => {
+          await nap(10);
+          context?.emit?.([{ title: id, url, snippet: "", source: "Twin" }]);
+          await nap(returnAt);
+          return [];
+        },
+      },
+    });
+    harness({
+      engines: [
+        twin("twin-slow-engine", "https://slow.test/1", 150),
+        twin("twin-fast-engine", "https://fast.test/1", 30),
+      ],
+    });
+    const events = await readEvents(await call(uniqueQuery("twins")));
+    const firstResult = events.find((e) => e.event === "engine-result")!;
+    const urls = (firstResult.data.results as ScoredResult[]).map((r) => r.url);
+
+    expect(urls).toContain("https://slow.test/1");
+    expect(urls).toContain("https://fast.test/1");
+  });
+});

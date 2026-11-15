@@ -121,14 +121,15 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
         }
       }
 
-      const merged = async (): Promise<ScoredResult[]> =>
-        signResultThumbnails(
-          tagIndexRelation(
-            await applyMergedDomainRules(
-              scoreResults([...allRawResults, ...[...partialRuns.values()].flat()]),
-            ),
-          ),
+      let mergeQueue: Promise<unknown> = Promise.resolve();
+      const merged = (): Promise<ScoredResult[]> => {
+        const scored = scoreResults([...allRawResults, ...[...partialRuns.values()].flat()]);
+        const next = mergeQueue.then(async () =>
+          signResultThumbnails(tagIndexRelation(await applyMergedDomainRules(scored))),
         );
+        mergeQueue = next.catch(() => undefined);
+        return next;
+      };
 
       let waiting = 0;
       let settledSent = false;
@@ -188,7 +189,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
               latest = null;
               const rewritten = await rewriteEngineRuns([toRun(snapshot.results)]);
               if (settled) return;
-              partialRuns.set(engineName, rewritten);
+              partialRuns.set(id, rewritten);
               const results = await merged();
               if (settled) return;
               _send("engine-partial", {
@@ -214,7 +215,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
           },
           settle: (): void => {
             settled = true;
-            partialRuns.delete(engineName);
+            partialRuns.delete(id);
           },
         };
       };

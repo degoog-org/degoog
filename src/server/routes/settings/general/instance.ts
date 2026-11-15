@@ -38,14 +38,13 @@ import type { DefaultEngines } from "../../../types/search";
 
 const router = new Hono();
 
-const PANELS_MAX_WAIT_DEFAULT_MS = 4000;
-const PANELS_MAX_WAIT_LIMIT_MS = 60000;
+const PANELS_MAX_WAIT = SETTINGS_SCHEMA.streamingPanelsMaxWaitMs;
 
 const _panelsMaxWait = (raw: SettingValue | undefined): number => {
   const parsed = parseInt(asString(raw), 10);
-  return Number.isFinite(parsed) && parsed >= 0
-    ? Math.min(parsed, PANELS_MAX_WAIT_LIMIT_MS)
-    : PANELS_MAX_WAIT_DEFAULT_MS;
+  return Number.isFinite(parsed) && parsed >= PANELS_MAX_WAIT.min
+    ? Math.min(parsed, PANELS_MAX_WAIT.max)
+    : Number(PANELS_MAX_WAIT.default);
 };
 
 router.get("/api/settings/streaming", async (c) => {

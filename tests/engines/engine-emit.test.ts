@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import type { SearchEngine } from "../../src/server/types/extension";
+import type { EngineContext } from "../../src/server/types/search";
 import type { SearchResult } from "../../src/shared/search-types";
 import { THREAT_LEVEL } from "../../src/server/utils/security/sentinel";
 import { makeEngineEmitter } from "../../src/server/search/engine-emit";
@@ -152,6 +153,17 @@ const engine: SearchEngine = {
   },
 };
 
+let syncThrows = false;
+
+const syncEngine: SearchEngine = {
+  name: "Sync Engine",
+  executeSearch: ((_query: string, _page?: number, _time?: unknown, context?: EngineContext) => {
+    context?.emit?.([hit("https://sync.test/emitted")]);
+    if (syncThrows) throw new Error("sync engine fell over");
+    return [hit("https://sync.test/returned")];
+  }) as unknown as SearchEngine["executeSearch"],
+};
+
 let saved = 0;
 let searchSingleEngine: typeof import("../../src/server/search").searchSingleEngine;
 
@@ -159,7 +171,7 @@ describe("searchSingleEngine with an emitting engine", () => {
   beforeAll(async () => {
     mock.module(REGISTRY_MOD, () => ({
       ...registryReal,
-      getEngineMap: () => ({ emitting: engine }),
+      getEngineMap: () => ({ emitting: engine, sync: syncEngine }),
       getEngineIdByInstance: () => undefined,
     }));
     mock.module(ENGINE_CACHE_MOD, () => ({
@@ -218,5 +230,19 @@ describe("searchSingleEngine with an emitting engine", () => {
     expect(plain.timing.time).toBeLessThan(80);
     expect(plain.results.length).toBeGreaterThan(0);
     expect(streamed.timing.time).toBeGreaterThanOrEqual(110);
+  });
+
+  test("an engine that returns synchronously still works, and a sync throw keeps what it emitted", async () => {
+    syncThrows = false;
+    const plain = await searchSingleEngine("sync", "plain");
+    expect(plain.timing.status).toBe(THREAT_LEVEL.OK);
+    expect(plain.results.map((r) => r.url)).toEqual(["https://sync.test/returned", "https://sync.test/emitted"]);
+
+    syncThrows = true;
+    saved = 0;
+    const thrown = await searchSingleEngine("sync", "thrown");
+    expect(thrown.timing.status).toBe(THREAT_LEVEL.OK);
+    expect(thrown.results.map((r) => r.url)).toEqual(["https://sync.test/emitted"]);
+    expect(saved).toBe(0);
   });
 });

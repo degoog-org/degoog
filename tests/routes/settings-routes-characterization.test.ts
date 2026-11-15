@@ -172,6 +172,16 @@ describe("POST /api/settings/field", () => {
     settings.clearServerSettingsCache();
     expect((await settings.getInstanceSettings()).streamingEnabled).toBe(true);
   });
+
+  test("a cleared number field stores its default instead of zero", async () => {
+    const res = await post("/api/settings/field", {
+      key: "streamingPanelsMaxWaitMs",
+      value: "",
+    });
+    expect(res.status).toBe(200);
+    settings.clearServerSettingsCache();
+    expect((await settings.getInstanceSettings()).streamingPanelsMaxWaitMs).toBe("4000");
+  });
 });
 
 describe("POST /api/settings/domain-action hostname handling", () => {

@@ -207,7 +207,7 @@ export async function performStreamingSearch(
   const maxWait = panelsMaxWaitMs();
   if (maxWait > 0 && !isImageType) {
     window.setTimeout(() => {
-      if (panelsStarted || !live()) return;
+      if (panelsStarted || _activeSource !== source || !live()) return;
       panelsWaitedOut = true;
       if (currentResults.length > 0) startPanels();
     }, maxWait);

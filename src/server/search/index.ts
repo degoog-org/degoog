@@ -235,7 +235,7 @@ export const searchSingleEngine = async (
   try {
     const timeout = await getEngineTimeout(engineSettingsId);
     const { results, partial, error } = await emitter.settle(
-      engine.executeSearch(query, p, timeFilter, engineContext),
+      Promise.resolve().then(() => engine.executeSearch(query, p, timeFilter, engineContext)),
       { idleMs: timeout, budgetMs: opts?.onPartial ? getEngineBudget(timeout) : timeout, abort: () => ac.abort() },
     );
     const elapsed = Math.round(performance.now() - t0);

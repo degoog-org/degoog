@@ -104,6 +104,7 @@ export const coerceSetting = (def: SettingDef, raw: string): string | boolean =>
   switch (def.kind) {
     case "boolean": return raw === "true";
     case "number": {
+      if (raw.trim() === "") return String(def.default);
       const n = Number(raw);
       if (!Number.isFinite(n)) return String(def.default);
       const low = def.min ?? -Infinity;
