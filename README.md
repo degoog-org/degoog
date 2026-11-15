@@ -191,7 +191,7 @@ _**Note:** These have only been INITIALLY vetted, there is no way for me to keep
 
 Full customisation guide (plugins, themes, engines, transports, store, settings gate, aliases, env): **[documentation](https://degoog-org.github.io/docs)**.
 
-<img width="800" src="screenshots/locales-progress.svg" alt="Locale translation progress">
+<img width="800" src="https://raw.githubusercontent.com/degoog-org/degoog/assets/locales-progress.svg" alt="Locale translation progress">
 
 ## Little shoutout
 

@@ -1,0 +1,63 @@
+name: Locale progress
+
+on:
+  push:
+    branches: ["develop"]
+    paths:
+      - "src/locales/**"
+      - "scripts/generate-locale-progress.ts"
+      - "scripts/locale-progress-card.tsx"
+      - ".github/workflows/locale-progress.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Count the babel fish
+    if: github.repository_owner == 'degoog-org'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Setup the best engine ever
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Count the translations - no peeking at the English
+        run: bun run scripts/generate-locale-progress.ts "$RUNNER_TEMP/locales-progress.svg"
+
+      - name: Ship it to the assets branch - history is overrated
+        env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: |
+          set -euo pipefail
+          blob=$(git hash-object -w "$RUNNER_TEMP/locales-progress.svg")
+          current=""
+          if git ls-remote --exit-code --heads origin assets > /dev/null; then
+            git fetch --depth=1 origin assets
+            current=$(git rev-parse --verify --quiet "FETCH_HEAD:locales-progress.svg" || true)
+          fi
+
+          if [ "$current" = "$blob" ]; then
+            echo "Same numbers as last time, nothing to ship."
+            exit 0
+          fi
+
+          tree=$(printf '100644 blob %s\tlocales-progress.svg\n' "$blob" | git mktree)
+          commit=$(git commit-tree "$tree" -m "Update locale translation progress image")
+          git push --force origin "$commit:refs/heads/assets"
