@@ -20,7 +20,7 @@ export const EngineStatsPanel = ({
       title={t("search-templates.sidebar.engine-performance")}
       class="engine-performance-panel"
     >
-      {timings.map((et) => {
+      {[...timings].sort((a, b) => a.time - b.time).map((et) => {
         const isDegoog = et.name === DEGOOG_ENGINE_NAME;
         const failed = !!et.status && et.status !== "ok";
         const resultsLabel = t("search-templates.sidebar.results", {
