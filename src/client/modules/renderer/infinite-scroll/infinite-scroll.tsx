@@ -16,6 +16,11 @@ import { fetchResultsPage } from "../../../utils/net/url";
 import { mergeEngineTimings } from "../../../utils/search/engine-stats/engine-stats";
 import { renderEngineStats } from "../sidebar/render-sidebar";
 import { appendResults } from "../render";
+import { canStreamPages } from "../../../utils/search/streaming/stream-request";
+import {
+  streamAppendPage,
+  type AppendedPage,
+} from "../../../utils/search/streaming/stream-append";
 
 const PULL_RATIOS = [0, 0.2, 0.4, 0.6, 0.8, 1];
 const LOAD_ROOT_MARGIN = "0px 0px 320px";
@@ -71,10 +76,31 @@ const _clearSkeleton = (): void => {
   sentinel.querySelector(`.${SKELETON_CLASS}`)?.remove();
 };
 
-const _fetchPage = async (page: number): Promise<SearchResponse | null> => {
+interface LoadedPage extends AppendedPage {
+  rendered: boolean;
+}
+
+const _jsonPage = async (page: number): Promise<LoadedPage | null> => {
   const res = await fetchResultsPage(state.currentType, page);
   if (!res.ok) return null;
-  return (await res.json()) as SearchResponse;
+  const data = (await res.json()) as SearchResponse;
+  return {
+    results: data.results ?? [],
+    fetched: data.results?.length ?? 0,
+    totalPages: data.totalPages,
+    engineTimings: data.engineTimings ?? [],
+    rendered: false,
+  };
+};
+
+const _loadPage = async (
+  page: number,
+  startIndex: number,
+  onFirstRows: () => void,
+): Promise<LoadedPage | null> => {
+  if (!canStreamPages()) return _jsonPage(page);
+  const streamed = await streamAppendPage(page, startIndex, onFirstRows);
+  return streamed ? { ...streamed, rendered: true } : null;
 };
 
 const _syncHistory = (): void => {
@@ -107,7 +133,9 @@ const _applyPage = async (
   if (showSkeleton) _showSkeleton();
 
   try {
-    const data = await _fetchPage(page);
+    const data = await _loadPage(page, startIndex, () => {
+      if (showSkeleton) _clearSkeleton();
+    });
     if (!isCurrentSearch(seq)) return false;
     const results: ScoredResult[] = data?.results ?? [];
     state.currentPage = page;
@@ -119,7 +147,7 @@ const _applyPage = async (
       );
       renderEngineStats(state.currentData.engineTimings, () => undefined);
     }
-    if (results.length === 0) {
+    if (results.length === 0 && (data?.fetched ?? 0) === 0) {
       exhausted = true;
       teardownInfinite();
       return false;
@@ -130,7 +158,7 @@ const _applyPage = async (
     const declared = declaredPages(data?.totalPages);
     if (declared !== null) state.lastPage = Math.max(declared, page);
 
-    appendResults(results, startIndex);
+    if (!data?.rendered) appendResults(results, startIndex);
     _syncHistory();
     if (!_hasMorePages()) teardownInfinite();
     return true;

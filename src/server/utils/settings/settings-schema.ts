@@ -47,6 +47,7 @@ export const SETTINGS_SCHEMA = {
   streamingAutoRetry:           { kind: "boolean", default: true },
   streamingMaxRetries:          { kind: "number",  default: "2" },
   streamingDisabledTypes:       { kind: "lines",   default: "" },
+  streamingPanelsMaxWaitMs:     { kind: "number",  default: "4000", min: 0, max: 60000 },
   postMethodEnabled:            { kind: "boolean", default: false },
   defaultTheme:                 { kind: "string",  default: "system" },
   domainBlockEnabled:           { kind: "boolean", default: false },
@@ -103,6 +104,7 @@ export const coerceSetting = (def: SettingDef, raw: string): string | boolean =>
   switch (def.kind) {
     case "boolean": return raw === "true";
     case "number": {
+      if (raw.trim() === "") return String(def.default);
       const n = Number(raw);
       if (!Number.isFinite(n)) return String(def.default);
       const low = def.min ?? -Infinity;

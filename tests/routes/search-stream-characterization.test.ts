@@ -494,3 +494,176 @@ describe("GET /api/search/stream failure isolation", () => {
     expect(done.totalPages).toBe(4);
   });
 });
+
+const nap = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
+const sleepyEngine = (name: string, ms: number): EngineEntry => ({
+  id: `${name.toLowerCase()}-engine`,
+  instance: {
+    name,
+    executeSearch: async () => {
+      await nap(ms);
+      return [makeResult(name, 1)];
+    },
+  },
+});
+
+const emittingEngine = (name: string, emitAt: number[], returnAt: number): EngineEntry => ({
+  id: `${name.toLowerCase()}-engine`,
+  instance: {
+    name,
+    executeSearch: async (_query, _page, _timeFilter, context) => {
+      let elapsed = 0;
+      for (const [i, at] of emitAt.entries()) {
+        await nap(at - elapsed);
+        elapsed = at;
+        context?.emit?.([makeResult(name, i + 1)], { expected: emitAt.length });
+      }
+      await nap(returnAt - elapsed);
+      return [];
+    },
+  },
+});
+
+describe("GET /api/search/stream emitting engines", () => {
+  test("results-settled fires once only emitting engines are left, before they finish", async () => {
+    harness({
+      engines: [
+        emittingEngine("Emitter", [10, 120], 200),
+        sleepyEngine("Steady", 60),
+      ],
+    });
+    const events = await readEvents(await call(uniqueQuery("settled")));
+    const trail = events.map((e) => (e.data.engine ? `${e.event}:${e.data.engine}` : e.event));
+
+    expect(trail).toEqual([
+      "engine-partial:Emitter",
+      "engine-result:Steady",
+      "results-settled",
+      "engine-partial:Emitter",
+      "engine-result:Emitter",
+      "done",
+    ]);
+    const partials = events.filter((e) => e.event === "engine-partial");
+    expect(partials.map((e) => [e.data.emitted, e.data.expected])).toEqual([[1, 2], [2, 2]]);
+    expect(partials[0].data.id).toBe("emitter-engine");
+  });
+
+  test("an engine's emitted results stay in other frames while its final run is being rewritten", async () => {
+    let emitterRewrites = 0;
+    mock.module(DOMAIN_RULES_MOD, () => ({
+      ...domainRulesReal,
+      rewriteEngineRuns: async <T extends { name?: string }>(runs: T[]): Promise<T[]> => {
+        if (runs.some((run) => run.name === "Emitter") && ++emitterRewrites === 2) await nap(60);
+        return runs;
+      },
+    }));
+    harness({
+      engines: [
+        {
+          id: "emitter-engine",
+          instance: {
+            name: "Emitter",
+            executeSearch: async (_query, _page, _timeFilter, context) => {
+              await nap(10);
+              context?.emit?.([makeResult("Emitter", 1), makeResult("Emitter", 2)]);
+              await nap(20);
+              return [makeResult("Emitter", 1), makeResult("Emitter", 2)];
+            },
+          },
+        },
+        sleepyEngine("Steady", 50),
+      ],
+    });
+    const events = await readEvents(await call(uniqueQuery("swap-gap")));
+    const steady = events.find((e) => e.event === "engine-result" && e.data.engine === "Steady")!;
+    const urls = (steady.data.results as ScoredResult[]).map((r) => r.url);
+
+    expect(emitterRewrites).toBe(2);
+    expect(urls).toContain("https://emitter.test/1");
+    expect(urls).toContain("https://emitter.test/2");
+  });
+
+  test("no results-settled when the emitting engine finishes before the others", async () => {
+    harness({
+      engines: [
+        emittingEngine("Emitter", [10], 30),
+        sleepyEngine("Steady", 90),
+      ],
+    });
+    const events = await readEvents(await call(uniqueQuery("early-emitter")));
+
+    expect(events.map((e) => e.event)).toEqual([
+      "engine-partial",
+      "engine-result",
+      "engine-result",
+      "done",
+    ]);
+  });
+});
+
+describe("GET /api/search/stream engines sharing a display name", () => {
+  test("one engine settling does not drop the other's emitted results", async () => {
+    const twin = (id: string, url: string, returnAt: number): EngineEntry => ({
+      id,
+      instance: {
+        name: "Twin",
+        executeSearch: async (_query, _page, _timeFilter, context) => {
+          await nap(10);
+          context?.emit?.([{ title: id, url, snippet: "", source: "Twin" }]);
+          await nap(returnAt);
+          return [];
+        },
+      },
+    });
+    harness({
+      engines: [
+        twin("twin-slow-engine", "https://slow.test/1", 150),
+        twin("twin-fast-engine", "https://fast.test/1", 30),
+      ],
+    });
+    const events = await readEvents(await call(uniqueQuery("twins")));
+    const firstResult = events.find((e) => e.event === "engine-result")!;
+    const urls = (firstResult.data.results as ScoredResult[]).map((r) => r.url);
+
+    expect(urls).toContain("https://slow.test/1");
+    expect(urls).toContain("https://fast.test/1");
+  });
+});
+
+describe("GET /api/search/stream for later pages", () => {
+  test("page 2 runs every engine on page 2 and streams the emitter's partials before done", async () => {
+    const seenPages: Record<string, number | undefined> = {};
+    const paged = (name: string, emits: boolean): EngineEntry => ({
+      id: `${name.toLowerCase()}-engine`,
+      instance: {
+        name,
+        executeSearch: async (_query, page, _timeFilter, context) => {
+          seenPages[name] = page;
+          if (emits) {
+            await nap(10);
+            context?.emit?.([makeResult(`${name}${page}`, 1)], { expected: 2 });
+            await nap(60);
+          }
+          context?.pagination?.({ total: 5 });
+          return [makeResult(`${name}${page}`, 1), makeResult(`${name}${page}`, 2)];
+        },
+      },
+    });
+    harness({ engines: [paged("Emitter", true), paged("Steady", false)] });
+    const events = await readEvents(await call(uniqueQuery("paged"), "&page=2"));
+
+    expect(seenPages).toEqual({ Emitter: 2, Steady: 2 });
+    expect(events.map((e) => e.event)).toEqual([
+      "engine-result",
+      "engine-partial",
+      "results-settled",
+      "engine-result",
+      "done",
+    ]);
+    const urls = (events.at(-2)?.data.results as ScoredResult[]).map((r) => r.url);
+    expect(urls).toContain("https://emitter2.test/1");
+    expect(urls).toContain("https://steady2.test/2");
+    expect(events.at(-1)?.data.totalPages).toBe(5);
+  });
+});

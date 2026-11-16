@@ -1,4 +1,4 @@
-import { search, searchSingleEngine } from "./index";
+import { search, searchSingleEngine, type RunOptions } from "./index";
 import { scoreResults } from "./scoring";
 import type { SearchParams } from "../types/search";
 import { signResultThumbnails } from "../utils/net/proxy-sign";
@@ -59,7 +59,7 @@ export const imageQueryFields = (
 export const indexesSearch = (indexerOn: boolean, inputs: SearchInputs): boolean =>
   indexerOn && !inputs.image;
 
-export async function handleSearch(params: SearchParams) {
+export async function handleSearch(params: SearchParams, runOpts: RunOptions = {}) {
   const {
     query: origQ,
     engines,
@@ -93,6 +93,7 @@ export async function handleSearch(params: SearchParams) {
     imageFilter,
     inputs,
     region,
+    runOpts,
   );
 
   const settings = await getInstanceSettings();
@@ -117,6 +118,7 @@ export async function handleSearch(params: SearchParams) {
 
 export async function handleRetry(
   params: SearchParams & { engineName: string },
+  runOpts: RunOptions = {},
 ) {
   const {
     query: origQ,
@@ -160,7 +162,7 @@ export async function handleRetry(
     imageFilter,
     undefined,
     type,
-    { forceFresh: true, image: inputs.image, region },
+    { forceFresh: true, image: inputs.image, region, hardTimeout: runOpts.hardTimeout },
   );
 
   const scope: RunScope = {

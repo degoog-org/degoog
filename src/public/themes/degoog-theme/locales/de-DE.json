@@ -102,6 +102,8 @@
       "from-index": "{count} aus deinem Index",
       "retry": "Wiederholen",
       "retrying": "Wiederhole...",
+      "emitting": "streamt {count}/{total}",
+      "emitting-open": "streamt {count}",
       "page-failed": "Seite {page} fehlgeschlagen",
       "failure-reasons": {
         "blocked": "Von der Suchmaschine blockiert",

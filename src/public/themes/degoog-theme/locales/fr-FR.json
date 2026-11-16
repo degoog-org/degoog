@@ -102,6 +102,8 @@
       "from-index": "{count} depuis votre index",
       "retry": "réessayer",
       "retrying": "réessai en cours...",
+      "emitting": "en réception {count}/{total}",
+      "emitting-open": "en réception {count}",
       "page-failed": "page {page} en échec",
       "failure-reasons": {
         "blocked": "Bloqué par le moteur",

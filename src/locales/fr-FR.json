@@ -230,6 +230,8 @@
       "streaming-enable": "Activer les résultats en flux (expérimental)",
       "streaming-auto-retry": "Réessayer automatiquement les moteurs en échec",
       "streaming-max-retries-label": "Nombre max. de tentatives par moteur",
+      "streaming-panels-max-wait-label": "Attente maximale des panneaux de résultats",
+      "streaming-panels-max-wait-desc": "Les panneaux qui ont besoin des résultats démarrent après ce délai avec ce qui est déjà arrivé, même si des moteurs tournent encore. 0 attend tous les moteurs.",
       "languages-desc": "Limitez les langues du menu de recherche. Désactivé, ça montre les ~90 intégrées.",
       "languages-toggle": "Modifier les langues de recherche",
       "languages-codes-label": "Codes langue (un par ligne)",

@@ -102,6 +102,8 @@
       "from-index": "{count} dal tuo indice",
       "retry": "riprova",
       "retrying": "nuovo tentativo...",
+      "emitting": "in arrivo {count}/{total}",
+      "emitting-open": "in arrivo {count}",
       "page-failed": "pagina {page} non riuscita",
       "failure-reasons": {
         "blocked": "Bloccato dal motore",

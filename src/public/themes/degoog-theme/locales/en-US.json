@@ -102,6 +102,8 @@
       "from-index": "{count} from your index",
       "retry": "retry",
       "retrying": "retrying...",
+      "emitting": "emitting {count}/{total}",
+      "emitting-open": "emitting {count}",
       "page-failed": "page {page} failed",
       "failure-reasons": {
         "blocked": "Blocked by the engine",

@@ -33,6 +33,7 @@ export const SERVER_PRESET_FIELDS: readonly ServerPresetField[] = [
   { key: "streamingEnabled", domId: "streaming-enabled", control: "toggle" },
   { key: "streamingAutoRetry", domId: "streaming-auto-retry", control: "toggle" },
   { key: "streamingMaxRetries", domId: "streaming-max-retries", control: "value" },
+  { key: "streamingPanelsMaxWaitMs", domId: "streaming-panels-max-wait", control: "value" },
   { key: "rateLimitEnabled", domId: "rate-limit-enabled", control: "toggle" },
   { key: "rateLimitBurstWindow", domId: "rate-limit-burst-window", control: "value" },
   { key: "rateLimitBurstMax", domId: "rate-limit-burst-max", control: "value" },

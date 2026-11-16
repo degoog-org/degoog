@@ -230,6 +230,8 @@
       "streaming-enable": "Gestreamte Ergebnisse aktivieren (experimentell)",
       "streaming-auto-retry": "Fehlgeschlagene Suchmaschinen automatisch wiederholen",
       "streaming-max-retries-label": "Maximale Wiederholungen pro Suchmaschine",
+      "streaming-panels-max-wait-label": "Maximale Wartezeit für Ergebnis-Panels",
+      "streaming-panels-max-wait-desc": "Panels, die Suchergebnisse brauchen, starten nach dieser Zeit mit allem, was bis dahin angekommen ist, auch wenn noch Suchmaschinen laufen. 0 wartet auf alle Suchmaschinen.",
       "languages-desc": "Ändere die Suchsprachen im Dropdown der Suchoptionen. Wenn deaktiviert, werden alle rund 90 eingebauten Sprachen angezeigt.",
       "languages-toggle": "Suchsprachen ändern",
       "languages-codes-label": "Sprachcodes (einer pro Zeile)",
