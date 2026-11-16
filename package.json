@@ -19,7 +19,7 @@
     "cheerio": "1.2.0",
     "postgres": "3.4.9",
     "dompurify": "3.4.17",
-    "hono": "4.13.11",
+    "hono": "4.13.16",
     "immutable": "5.1.9",
     "ioredis": "6.0.0",
     "marked": "18.0.9",
@@ -32,9 +32,9 @@
   "devDependencies": {
     "@types/bun": "1.4.4",
     "esbuild": "0.28.1",
-    "eslint": "10.8.1",
+    "eslint": "10.15.0",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.66.0"
+    "typescript-eslint": "8.73.0"
   },
   "resolutions": {
     "brace-expansion": "5.0.12",
