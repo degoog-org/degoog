@@ -182,5 +182,11 @@
       background: var(--bg-hover);
       opacity: 1;
     }
+
+    // Always show on touch screens, otherwise iOS needs two taps to open a result.
+    @media (hover: none), (pointer: coarse) {
+      opacity: 1;
+      transition: none;
+    }
   }
 }
