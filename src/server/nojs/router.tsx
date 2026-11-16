@@ -183,12 +183,15 @@ const _runSearch = async (
       WEB_TAB_ID,
       getDefaultEngineConfig(),
     );
-    const tabResult = await handleTabSearch({
-      ...request,
-      tabId,
-      query: query.q,
-      clientIp: getClientIp(c),
-    });
+    const tabResult = await handleTabSearch(
+      {
+        ...request,
+        tabId,
+        query: query.q,
+        clientIp: getClientIp(c),
+      },
+      NOJS_RUN,
+    );
     return tabResult && _outcome(tabResult, false);
   }
 

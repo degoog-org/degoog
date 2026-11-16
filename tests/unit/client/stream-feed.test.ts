@@ -117,6 +117,26 @@ describe("feedSearchStream", () => {
 
     expect(log).toEqual(["results:b1", "timings:Bing"]);
   });
+
+  test("engines sharing a display name keep their own rows, matched by id", () => {
+    const { source, fire } = fakeSource();
+    const { log, view } = recorder();
+    feedSearchStream(source, { progressive: true, live: () => true }, view);
+
+    fire("engine-partial", { engine: "Search", id: "one", emitted: 1, results: [result("a1")] });
+    fire("engine-partial", { engine: "Search", id: "two", emitted: 1, results: [result("a1"), result("b1")] });
+    fire("engine-result", {
+      engine: "Search",
+      timing: { ...timing("Search", 2), id: "one" },
+      results: [result("a1"), result("b1")],
+    });
+
+    expect(log.filter((line) => line.startsWith("timings:"))).toEqual([
+      "timings:Search~1",
+      "timings:Search~1,Search~1",
+      "timings:Search,Search~1",
+    ]);
+  });
 });
 
 describe("appended page rows", () => {
@@ -128,5 +148,11 @@ describe("appended page rows", () => {
       result("https://c.test/new"),
     ];
     expect(unseenRows(page, shown).map((r) => r.url)).toEqual(["https://c.test/new"]);
+  });
+
+  test("the same host on another port is a different row", () => {
+    const shown = shownKeys([result("https://a.test/x")]);
+    const page = [result("https://a.test:8443/x"), result("https://a.test/x")];
+    expect(unseenRows(page, shown).map((r) => r.url)).toEqual(["https://a.test:8443/x"]);
   });
 });

@@ -15,16 +15,24 @@ import {
 import { engineCount } from "../engine-stats/engine-failure";
 import { originSlot, paintOrigins } from "../engine-stats/engine-origins";
 import { PANEL_LAYOUT_BREAKPOINT } from "../../../modules/renderer/media/render-media";
-import type { StreamingTiming } from "./stream-feed";
+import type { StreamingTiming } from "../../../../shared/search-stream";
 
 const t = window.scopedT("themes/degoog");
-
-export type { StreamingTiming } from "./stream-feed";
 
 const _renderedFrom = new WeakMap<HTMLElement, string>();
 
 const _fingerprint = (r: ScoredResult): string =>
-  JSON.stringify([r.title, r.sources, r.snippet, r.idx ?? "", r.publishedAt ?? "", r.thumbnail ?? ""]);
+  JSON.stringify([
+    r.title,
+    r.sources,
+    r.snippet,
+    r.idx ?? "",
+    r.publishedAt ?? "",
+    r.thumbnail ?? "",
+    r.favicon ?? "",
+    r.duration ?? "",
+    !!r.insecure,
+  ]);
 
 export function renderResultEl(
   r: ScoredResult,

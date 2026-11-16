@@ -15,6 +15,13 @@ import {
   type ImageQueryProvider,
 } from "../../search/image-query";
 import { ENGINE_INPUT } from "../../../shared/engine-input";
+import type {
+  StreamDone,
+  StreamEnginePartial,
+  StreamEngineResult,
+  StreamEngineRetry,
+  StreamImageQuery,
+} from "../../../shared/search-stream";
 import { hasSearchInput, INVALID_IMAGE, rejectsImage } from "../../search/search-image";
 import type { SearchBody, SearchImage, SearchParams } from "../../types/search";
 import { readObjectBody } from "../../utils/hono";
@@ -165,7 +172,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
                 emitted: snapshot.results.length,
                 ...(snapshot.expected ? { expected: snapshot.expected } : {}),
                 results,
-              });
+              } satisfies StreamEnginePartial);
               onSent();
             }
           } finally {
@@ -248,7 +255,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
                 results: await merged(),
                 retry: isRetry,
                 attempt,
-              });
+              } satisfies StreamEngineResult);
               return;
             }
             feed.settle();
@@ -261,7 +268,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
                 attempt,
                 maxRetries,
                 timing,
-              });
+              } satisfies StreamEngineRetry);
             }
           }
 
@@ -273,7 +280,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
             results: await merged(),
             retry: false,
             attempt: 0,
-          });
+          } satisfies StreamEngineResult);
       };
 
       const runAll = (active: ActiveEngine[], runInputs: SearchInputs): Promise<void>[] =>
@@ -312,7 +319,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
         _send("image-query", {
           query: imageOutcome.query ?? null,
           error: imageOutcome.error ?? null,
-        });
+        } satisfies StreamImageQuery);
         if (!imageOutcome.query) return;
         const described = { ...inputs, imageQuery: imageOutcome.query };
         const textEngines = (
@@ -345,7 +352,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
             { ...inputs, imageQuery: inputs.imageQuery ?? imageOutcome.query },
             imageOutcome,
           ),
-        });
+        } satisfies StreamDone);
       }
 
       void Promise.all(enginePromises)

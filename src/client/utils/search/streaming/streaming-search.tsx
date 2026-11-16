@@ -56,7 +56,8 @@ import {
   updateEngineTimings,
   updateResults,
 } from "./streaming-search-dom";
-import { feedSearchStream, type StreamDone, type StreamingTiming } from "./stream-feed";
+import { feedSearchStream } from "./stream-feed";
+import type { StreamDone, StreamingTiming } from "../../../../shared/search-stream";
 import { openSearchStream, streamsProgressively } from "./stream-request";
 import {
   abortActiveStream,
@@ -112,9 +113,9 @@ export function abortStreamingSearch(): void {
 function _resetPaging(page: number): void {
   state.currentPage = page;
   state.lastPage = null;
-  state.imagePage = 1;
+  state.imagePage = page;
   state.imageLastPage = MAX_PAGE;
-  state.videoPage = 1;
+  state.videoPage = page;
   state.videoLastPage = MAX_PAGE;
 }
 

@@ -1,43 +1,13 @@
-import type { EngineTiming, ScoredResult } from "../../../../shared/search-types";
+import type { ScoredResult } from "../../../../shared/search-types";
+import type {
+  StreamDone,
+  StreamEnginePartial,
+  StreamEngineResult,
+  StreamEngineRetry,
+  StreamImageQuery,
+  StreamingTiming,
+} from "../../../../shared/search-stream";
 import type { SearchEventSource } from "./fetch-event-stream";
-
-export interface StreamingTiming extends EngineTiming {
-  emitting?: { count: number; expected?: number };
-}
-
-export interface StreamDone {
-  totalTime: number;
-  engineTimings: EngineTiming[];
-  indexedUrls?: string[];
-  relatedSearches: string[];
-  totalPages?: number;
-  imageQuery?: string;
-  imageQueryError?: string;
-}
-
-export interface StreamImageQuery {
-  query: string | null;
-  error: string | null;
-}
-
-interface StreamEngineResult {
-  engine: string;
-  timing: EngineTiming;
-  results: ScoredResult[];
-}
-
-interface StreamEnginePartial {
-  engine: string;
-  id?: string;
-  emitted: number;
-  expected?: number;
-  results: ScoredResult[];
-}
-
-interface StreamEngineRetry {
-  engine: string;
-  timing: EngineTiming;
-}
 
 export interface FeedView {
   results: (results: ScoredResult[]) => void;
@@ -54,7 +24,9 @@ export interface FeedOptions {
 }
 
 const _upsert = (rows: StreamingTiming[], row: StreamingTiming): void => {
-  const at = rows.findIndex((existing) => existing.name === row.name);
+  const at = rows.findIndex((existing) =>
+    existing.id && row.id ? existing.id === row.id : existing.name === row.name,
+  );
   if (at >= 0) rows[at] = row;
   else rows.push(row);
 };
