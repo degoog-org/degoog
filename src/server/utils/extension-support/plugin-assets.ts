@@ -47,17 +47,18 @@ export function getPluginSettingsIds(folderName: string): string[] {
   return [...(folderSettingsIds.get(folderName) ?? [])];
 }
 
-export function getAllPluginCss(): string {
-  return Array.from(pluginCss.values()).join("\n");
-}
+export const getEnabledPluginCss = async (): Promise<string> => {
+  const parts: string[] = [];
+  const entries = [...pluginCss].sort(([a], [b]) => a.localeCompare(b));
+  for (const [id, css] of entries) {
+    if (await isDisabled(id)) continue;
+    parts.push(css);
+  }
+  return parts.join("\n");
+};
 
-export function getPluginCssIds(): string[] {
-  return Array.from(pluginCss.keys());
-}
-
-export function getPluginCssById(id: string): string | undefined {
-  return pluginCss.get(id);
-}
+export const pluginCssVersion = (css: string): string =>
+  createHash("sha256").update(css).digest("hex").slice(0, 12);
 
 export function getPluginScriptFolders(): string[] {
   return Array.from(scriptFolderSource.keys());
@@ -81,6 +82,7 @@ export function getScriptFolderSource(
   return scriptFolderSource.get(folder) ?? null;
 }
 
+import { createHash } from "crypto";
 import { existsSync } from "fs";
 import { join } from "path";
 import type { PluginContext } from "../../types/extension";
@@ -91,6 +93,7 @@ import { outgoingFetch } from "../net/outgoing";
 import { buildSignedProxyUrl, signFaviconUrl } from "../net/proxy-sign";
 import {
   getSettings,
+  isDisabled,
   mergeDefaults,
   type SettingValue,
 } from "../settings/plugin-settings";

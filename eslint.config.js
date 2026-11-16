@@ -8,7 +8,6 @@ const INNER_HTML_ALLOWED = [
   "src/client/modules/modals/privacy-modal/privacy-modal.tsx",
   "src/client/modules/renderer/media/render-media.tsx",
   "src/client/modules/renderer/render-page.ts",
-  "src/client/modules/renderer/render-slots.ts",
   "src/client/modules/renderer/render.tsx",
   "src/client/modules/tabs/tab-search.tsx",
   "src/client/utils/search/actions/search-actions-perform.tsx",

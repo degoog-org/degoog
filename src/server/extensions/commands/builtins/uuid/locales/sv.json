@@ -1,0 +1,8 @@
+{
+    "uuid": {
+        "title": "Genererade UUID:er",
+        "description": "Generera slumpmässiga UUID v4 (standard 10, eller ange ett antal)",
+        "copy": "Kopiera",
+        "copied": "Kopierat!"
+    }
+}

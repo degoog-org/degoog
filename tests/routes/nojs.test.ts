@@ -6,6 +6,7 @@ import type {
   SlotPluginContext,
 } from "../../src/server/types/extension";
 import type { SearchParams } from "../../src/server/types/search";
+import type { RunOptions } from "../../src/server/search";
 import {
   type EngineTiming,
   type ScoredResult,
@@ -108,6 +109,7 @@ interface Harness {
 const searchParamsSeen: SearchParams[] = [];
 const retryParamsSeen: (SearchParams & { engineName: string })[] = [];
 const tabSearchSeen: string[] = [];
+const runOptsSeen: (RunOptions | undefined)[] = [];
 
 const harness = ({
   settings = {},
@@ -118,18 +120,21 @@ const harness = ({
   searchParamsSeen.length = 0;
   retryParamsSeen.length = 0;
   tabSearchSeen.length = 0;
+  runOptsSeen.length = 0;
   mock.module(SERVER_SETTINGS_MOD, () => ({
     ...serverSettingsReal,
     getInstanceSettings: async () => settings,
   }));
   mock.module(SEARCH_HANDLERS_MOD, () => ({
     ...searchHandlersReal,
-    handleSearch: async (params: SearchParams) => {
+    handleSearch: async (params: SearchParams, runOpts?: RunOptions) => {
       searchParamsSeen.push(params);
+      runOptsSeen.push(runOpts);
       return makeResponse(results, totalPages, engineTimings);
     },
-    handleRetry: async (params: SearchParams & { engineName: string }) => {
+    handleRetry: async (params: SearchParams & { engineName: string }, runOpts?: RunOptions) => {
       retryParamsSeen.push(params);
+      runOptsSeen.push(runOpts);
       return {
         query: params.query,
         type: params.searchType,
@@ -143,8 +148,9 @@ const harness = ({
   }));
   mock.module(TAB_SEARCH_MOD, () => ({
     ...tabSearchReal,
-    handleTabSearch: async ({ tabId }: { tabId: string }) => {
+    handleTabSearch: async ({ tabId }: { tabId: string }, runOpts?: RunOptions) => {
       tabSearchSeen.push(tabId);
+      runOptsSeen.push(runOpts);
       return {
         results,
         totalPages,
@@ -601,6 +607,22 @@ describe("nojs engine breakdown", () => {
     expect(html).toContain("Blocked by the engine");
   });
 
+  test("lists answering engines fastest first and failed engines after them", async () => {
+    harness({
+      settings: enabled(),
+      results: [makeResult()],
+      engineTimings: [
+        { name: "Slowpoke", id: "slowpoke-engine", time: 900, resultCount: 2 },
+        ...timings,
+      ],
+    });
+    const html = await text("/nojs/search?q=hello");
+    const panel = html.slice(html.indexOf("engine-performance-panel"));
+    const order = ["Fake", "Slowpoke", "Broken"].map((name) => panel.indexOf(`${name}<`));
+    expect(order.every((at) => at >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
   test("is absent when no engine reported a timing", async () => {
     harness({ settings: enabled(), results: [makeResult()] });
     const html = await text("/nojs/search?q=hello");
@@ -689,6 +711,20 @@ describe("nojs tab routing", () => {
     await text("/nojs/search?q=hello&type=tab%3Atorrents");
     expect(tabSearchSeen).toEqual(["torrents"]);
     expect(searchParamsSeen).toHaveLength(0);
+  });
+
+  test("every search path holds engines to their hard timeout", async () => {
+    for (const path of [
+      "/nojs/search?q=hello",
+      "/nojs/search?q=hello&type=engine%3Anews",
+      "/nojs/search?q=hello&type=tab%3Atorrents",
+      "/nojs/search?q=hello&retry=fake-engine",
+    ]) {
+      harness({ settings: enabled(), results: [makeResult()] });
+      await text(path);
+      expect(runOptsSeen.length).toBeGreaterThan(0);
+      expect(runOptsSeen.every((opts) => opts?.hardTimeout === true)).toBe(true);
+    }
   });
 });
 

@@ -44,3 +44,37 @@ export const mountModalShell = (props: ModalProps): MountedModal => {
   };
   return shell;
 };
+
+/**
+ * Calls `onClose` only when the press and release both land on the overlay itself.
+ * A plain `click` fires on the overlay when a drag starts or ends inside the modal.
+ */
+export const onBackdropClick = (
+  overlay: HTMLElement,
+  onClose: () => void,
+): (() => void) => {
+  let pressedOnOverlay = false;
+  let releasedOnOverlay = false;
+  const onDown = (e: MouseEvent): void => {
+    pressedOnOverlay = e.target === overlay;
+    releasedOnOverlay = false;
+  };
+  const onUp = (e: MouseEvent): void => {
+    releasedOnOverlay = e.target === overlay;
+  };
+  const onClick = (e: MouseEvent): void => {
+    const shouldClose =
+      pressedOnOverlay && releasedOnOverlay && e.target === overlay;
+    pressedOnOverlay = false;
+    releasedOnOverlay = false;
+    if (shouldClose) onClose();
+  };
+  overlay.addEventListener("mousedown", onDown);
+  overlay.addEventListener("mouseup", onUp);
+  overlay.addEventListener("click", onClick);
+  return () => {
+    overlay.removeEventListener("mousedown", onDown);
+    overlay.removeEventListener("mouseup", onUp);
+    overlay.removeEventListener("click", onClick);
+  };
+};

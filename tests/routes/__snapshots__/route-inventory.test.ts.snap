@@ -175,6 +175,12 @@ exports[`every mounted router exposes the routes it did before indexer route lis
 ]
 `;
 
+exports[`every mounted router exposes the routes it did before logos route list is unchanged 1`] = `
+[
+  "GET /api/logos/image/:date/:id",
+]
+`;
+
 exports[`every mounted router exposes the routes it did before pages route list is unchanged 1`] = `
 [
   "GET /",
@@ -261,6 +267,7 @@ exports[`every mounted router exposes the routes it did before settings route li
   "GET /api/settings/general",
   "GET /api/settings/honeypot/blocklist",
   "GET /api/settings/languages",
+  "GET /api/settings/logos",
   "GET /api/settings/restart-state",
   "GET /api/settings/shortcuts",
   "GET /api/settings/shortcuts/scaffold",
@@ -275,6 +282,7 @@ exports[`every mounted router exposes the routes it did before settings route li
   "POST /api/settings/general",
   "POST /api/settings/honeypot/ban",
   "POST /api/settings/honeypot/unban",
+  "POST /api/settings/logos/refresh",
   "POST /api/settings/proxy-ping",
   "POST /api/settings/proxy-test",
   "POST /api/settings/restart",
@@ -335,6 +343,7 @@ exports[`every mounted router exposes the routes it did before store route list 
   "GET /api/store/update-all/stream",
   "POST /api/store/install",
   "POST /api/store/repos",
+  "POST /api/store/repos/beta",
   "POST /api/store/repos/refresh",
   "POST /api/store/uninstall",
   "POST /api/store/update",
@@ -409,7 +418,7 @@ exports[`the admin path is operator-defined, not hardcoded DEGOOG_SETTINGS_PATH 
 
 exports[`route shape invariants the mounted surface totals stay put 1`] = `
 {
-  "totalHandlers": 317,
-  "unique": 254,
+  "totalHandlers": 324,
+  "unique": 258,
 }
 `;

@@ -1,7 +1,10 @@
 import { SidebarAccordion } from "../../../../shared/ui/components/layout/sidebar-accordion";
 import { SidebarStatRow } from "./sidebar-stat-row";
 import { state } from "../../../state";
-import { DEGOOG_ENGINE_NAME } from "../../../../shared/search-types";
+import {
+  compareEngineTimings,
+  DEGOOG_ENGINE_NAME,
+} from "../../../../shared/search-types";
 import { engineCount } from "../../../utils/search/engine-stats/engine-failure";
 import { originSlot } from "../../../utils/search/engine-stats/engine-origins";
 import type { EngineTimingWithPage } from "../../../utils/search/engine-stats/engine-stats";
@@ -20,7 +23,7 @@ export const EngineStatsPanel = ({
       title={t("search-templates.sidebar.engine-performance")}
       class="engine-performance-panel"
     >
-      {timings.map((et) => {
+      {[...timings].sort(compareEngineTimings).map((et) => {
         const isDegoog = et.name === DEGOOG_ENGINE_NAME;
         const failed = !!et.status && et.status !== "ok";
         const resultsLabel = t("search-templates.sidebar.results", {

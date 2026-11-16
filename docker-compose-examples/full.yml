@@ -23,6 +23,9 @@ services:
       # When "true", every admin and store action stays behind the password
       # above even on a local network.
       DEGOOG_PUBLIC_INSTANCE: "false"
+      # Behind a reverse proxy, set this to the public URL so links such as
+      # /opensearch.xml use https.
+      # DEGOOG_BASE_URL: "https://search.example.com"
       DEGOOG_VALKEY_URL: "redis://degoog-valkey:6379"
       DEGOOG_POSTGRES: "postgresql://degoog:changeme@degoog-postgres:5432/degoog"
     depends_on:

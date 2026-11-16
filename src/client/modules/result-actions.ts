@@ -45,6 +45,10 @@ const _idIndex = (prefix: string, id: string): string | null => {
 const _findResultItem = (el: HTMLElement): HTMLElement | null =>
   el.closest<HTMLElement>(".result-item");
 
+const _rowElement = (from: HTMLElement, id: string): HTMLElement | null =>
+  _findResultItem(from)?.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`) ??
+  document.getElementById(id);
+
 function _closeAllMenus(except?: HTMLElement | null): void {
   document
     .querySelectorAll<HTMLElement>('[id^="result-actions-menu-"]')
@@ -171,7 +175,7 @@ const _handleClick = async (e: MouseEvent): Promise<void> => {
     e.preventDefault();
     const idx = _idIndex(TOGGLE_PREFIX, toggle.id);
     if (!idx) return;
-    const menu = document.getElementById(`${MENU_PREFIX}${idx}`);
+    const menu = _rowElement(toggle, `${MENU_PREFIX}${idx}`);
     if (!menu) return;
     const willOpen = menu.hidden;
     _closeAllMenus(willOpen ? menu : null);
@@ -195,7 +199,7 @@ const _handleClick = async (e: MouseEvent): Promise<void> => {
   }
   if (!kind || !idx) return;
 
-  const wrap = document.getElementById(`${ACTIONS_PREFIX}${idx}`);
+  const wrap = _rowElement(item, `${ACTIONS_PREFIX}${idx}`);
   const host = wrap?.dataset.host ?? "";
   const row = wrap ? _findResultItem(wrap) : null;
   if (!host || !row || !wrap) {

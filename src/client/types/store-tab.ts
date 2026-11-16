@@ -7,6 +7,7 @@ export interface RepoInfo {
   name: string;
   error?: string;
   repoImage?: string | null;
+  beta?: boolean;
 }
 
 export type StoreItemType =
@@ -82,6 +83,7 @@ export interface StoreLightbox {
 
 export interface StoreState {
   repos: RepoInfo[];
+  globalBeta: boolean;
   items: StoreItem[];
   behind: Record<string, number>;
   restartReasons: string[];
@@ -103,6 +105,8 @@ export interface StoreState {
   repoNotes: Map<string, RepoNote>;
   refreshingAll: boolean;
   expanded: string;
+  descOpen: Set<string>;
+  descClamped: Set<string>;
   restarting: boolean;
   adding: boolean;
   addDraft: string;
@@ -124,6 +128,7 @@ export interface StoreActions {
   refreshRepo: (url: string) => void;
   refreshBehind: () => void;
   refreshAll: () => void;
+  setRepoBeta: (url: string, beta: boolean) => void;
   manageRepo: (url: string) => void;
   toggleRepo: (url: string) => void;
   browseRepo: (url: string) => void;
@@ -142,6 +147,7 @@ export interface StoreActions {
   clearRepoSel: () => void;
   toggleFilters: () => void;
   clearFilters: () => void;
+  toggleDesc: (item: StoreItem) => void;
   openLightbox: (item: StoreItem) => void;
   stepLightbox: (delta: number) => void;
   closeLightbox: () => void;

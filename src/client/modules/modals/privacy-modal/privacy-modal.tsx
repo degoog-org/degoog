@@ -1,4 +1,4 @@
-import { mountModalShell, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
+import { mountModalShell, onBackdropClick, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
 import { getBase } from "../../../utils/net/base-url";
 import { renderMdBlock } from "../../../utils/dom/md";
 
@@ -22,9 +22,7 @@ function _ensureMounted(): MountedModal {
   });
   const hide = (): void => shell?.hide();
   shell.close.addEventListener("click", hide);
-  shell.overlay.addEventListener("click", (e) => {
-    if (e.target === shell?.overlay) hide();
-  });
+  onBackdropClick(shell.overlay, hide);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && shell?.isOpen()) hide();
   });

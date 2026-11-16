@@ -97,6 +97,21 @@ export const SearchOptionsSection = (): JSX.Element => (
       >
         <SettingNum id="settings-streaming-max-retries" saveKey="streamingMaxRetries" min={1} max={5} placeholder="2" />
       </SettingRow>
+      <SettingRow
+        label={t("settings-page.server.streaming-panels-max-wait-label")}
+        desc={t("settings-page.server.streaming-panels-max-wait-desc")}
+        forId="settings-streaming-panels-max-wait"
+        dep="settings-streaming-enabled"
+      >
+        <SettingNum
+          id="settings-streaming-panels-max-wait"
+          saveKey="streamingPanelsMaxWaitMs"
+          unit="ms"
+          min={0}
+          max={60000}
+          placeholder="4000"
+        />
+      </SettingRow>
     </SettingGroup>
   </ServerSection>
 );

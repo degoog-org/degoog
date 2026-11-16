@@ -12,3 +12,4 @@ const store = createListStore<IndexerListKey>({
 export const isIndexerListKey = store.isListKey;
 export const readIndexerLists = store.readLists;
 export const writeIndexerList = store.writeList;
+export const clearIndexerListsCache = store.clearCache;

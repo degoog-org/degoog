@@ -1,0 +1,20 @@
+{
+  "ip": {
+    "title": "IP-uppslagning",
+    "description": "Slå upp information om IP-adresser",
+    "title-result": "IP-info: {ip}",
+    "detecting": "Hämtar din IP...",
+    "detect-failed": "Kunde inte hitta IP-adressen.",
+    "detect-failed-hint": "Kunde inte hitta din publika IP-adress. Prova <strong>!ip 8.8.8.8</strong>",
+    "lookup-failed": "Uppslagningen misslyckades: {message}",
+    "fetch-failed": "Kunde inte hämta IP-data. Försök igen.",
+    "label-ip": "IP",
+    "label-city": "Stad",
+    "label-region": "Region",
+    "label-country": "Land",
+    "label-isp": "Internetoperatör",
+    "label-org": "Org",
+    "label-latlon": "Lat/lon",
+    "na": "Saknas"
+  }
+}

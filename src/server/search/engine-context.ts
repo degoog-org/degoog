@@ -77,6 +77,7 @@ interface EngineContextOptions {
   engineName?: string;
   routeBase?: string;
   firstPage?: Pick<CachedEngineRun, "proxyId" | "carry"> | null;
+  emit?: EngineContext["emit"];
 }
 
 export interface BoxScore {
@@ -144,6 +145,7 @@ export const createSearchEngineContext = (
     engineName: engineLabel,
     routeBase,
     firstPage,
+    emit,
   } = options;
   const resolvedLang =
     lang ||
@@ -230,6 +232,7 @@ export const createSearchEngineContext = (
       if (clean) _runCarry.set(context, clean);
     },
     ...(carried ? { carried } : {}),
+    ...(emit ? { emit } : {}),
   };
   _runSessions.set(context, session);
   return context;

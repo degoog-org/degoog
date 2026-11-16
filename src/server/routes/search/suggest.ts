@@ -10,6 +10,9 @@ import { getInstanceSettings } from "../../utils/settings/server-settings";
 import { publicBodyLimit } from "../_guards";
 
 const SUGGEST_LIMIT_PREFIX = "suggest:";
+const OPENSEARCH_SUGGEST_HEADERS = {
+  "Content-Type": "application/x-suggestions+json",
+};
 
 async function _applySuggestRateLimit(c: Parameters<typeof getClientIp>[0]) {
   const settings = await getInstanceSettings();
@@ -70,10 +73,15 @@ router.get("/api/suggest/opensearch", async (c) => {
   const authRes = await guardApiKey(c, "apiKeySuggestEnabled");
   if (authRes) return authRes;
   const query = c.req.query("q") ?? "";
+  if (!query.trim()) {
+    return c.json([query, []], 200, OPENSEARCH_SUGGEST_HEADERS);
+  }
   const results = await getSuggestionsFromProviders(query);
-  return c.json([query, results.map((r) => r.text)], 200, {
-    "Content-Type": "application/x-suggestions+json",
-  });
+  return c.json(
+    [query, results.map((r) => r.text)],
+    200,
+    OPENSEARCH_SUGGEST_HEADERS,
+  );
 });
 
 export default router;

@@ -126,9 +126,11 @@ in
             type = str;
             default = "";
             description = ''
-              Base URL when hosting Degoog under a path.
+              Base URL when hosting Degoog under a path, or the full public URL.
 
               For example, `/degoog` when Degoog is served from `https://example.com/degoog`.
+              Behind a reverse proxy, set the full public URL, e.g. `https://search.example.com`,
+              so links such as /opensearch.xml use https.
             '';
             example = "/degoog";
           };

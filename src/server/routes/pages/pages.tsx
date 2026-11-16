@@ -36,6 +36,9 @@ import {
   subFirst,
 } from "../../render/substitute";
 import { windowGlobalScript } from "../../render/window-global-script";
+import { todaysLogo } from "../../extensions/logos/daily";
+import { toDailyLogo } from "../../extensions/logos/present";
+import { DAILY_LOGO_GLOBAL } from "../../../shared/daily-logo";
 import {
   applyPagePlaceholders,
   buildLayoutPage,
@@ -75,6 +78,14 @@ router.get("/style/v/:token", async (c) => {
   });
 });
 
+const _buildHomePage = async (locale?: string): Promise<string> => {
+  const override = await getThemeHtml("index");
+  if (!override) return buildLayoutPage("index.html", locale);
+  if (!isFullDocument(override)) return buildThemedLayoutPage(override, locale);
+  const t = await getTranslator(locale, true);
+  return applyPagePlaceholders(override, t, locale);
+};
+
 router.get("/", async (c) => {
   const q = c.req.query("q");
   if (q?.trim()) {
@@ -85,15 +96,7 @@ router.get("/", async (c) => {
     );
   }
   const locale = getLocale(c);
-  const override = await getThemeHtml("index");
-  if (override) {
-    if (isFullDocument(override)) {
-      const t = await getTranslator(locale, true);
-      return c.html(await applyPagePlaceholders(override, t, locale));
-    }
-    return c.html(await buildThemedLayoutPage(override, locale));
-  }
-  return c.html(await buildLayoutPage("index.html", locale));
+  return c.html(await _withDailyLogo(await _buildHomePage(locale), locale));
 });
 
 const _buildResultActionsScript = async (c: Context): Promise<string> => {
@@ -127,6 +130,12 @@ const _injectIntoHead = (html: string, fragment: string): string => {
   return `${fragment}\n${html}`;
 };
 
+const _withDailyLogo = async (html: string, locale?: string): Promise<string> => {
+  const today = await todaysLogo();
+  if (!today) return html;
+  return _injectIntoHead(html, windowGlobalScript(DAILY_LOGO_GLOBAL, toDailyLogo(today, locale)));
+};
+
 const _buildGateNote = (text: string): string =>
   renderHtml(<GateNote text={text} />);
 
@@ -156,7 +165,8 @@ router.get("/search", async (c) => {
   } else {
     html = await buildLayoutPage("search.html", locale, "has-results");
   }
-  return c.html(_injectIntoHead(html, `${actionsScript}\n${_buildFaviconsScript()}`));
+  const withScripts = _injectIntoHead(html, `${actionsScript}\n${_buildFaviconsScript()}`);
+  return c.html(await _withDailyLogo(withScripts, locale));
 });
 
 router.get("/settings/", (c) =>

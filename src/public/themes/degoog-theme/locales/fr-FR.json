@@ -102,6 +102,8 @@
       "from-index": "{count} depuis votre index",
       "retry": "réessayer",
       "retrying": "réessai en cours...",
+      "emitting": "en réception {count}/{total}",
+      "emitting-open": "en réception {count}",
       "page-failed": "page {page} en échec",
       "failure-reasons": {
         "blocked": "Bloqué par le moteur",
@@ -117,7 +119,7 @@
     "result": {
       "from-index": "De votre index",
       "saving-to-index": "Enregistrement dans votre index",
-      "insecure": "Insecure",
+      "insecure": "Non sécurisé",
       "insecure-tooltip": "Ce site est servi sur une connexion HTTP non chiffrée.",
       "favicon-missing": "Aucune extension de favicons installée",
       "actions": {

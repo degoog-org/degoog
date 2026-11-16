@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { FAVICON_MAX_BYTES, sniffFaviconType, validateFavicon } from "../../../src/server/utils/security/favicon-bytes";
+import { FAVICON_MAX_BYTES, sniffFaviconType, sniffImageType, validateFavicon } from "../../../src/server/utils/security/favicon-bytes";
 import {
   GIF_BYTES,
   HTML_BYTES,
@@ -29,6 +29,13 @@ describe("favicon byte validation", () => {
 
   test("a riff container that is not webp is refused", () => {
     expect(validateFavicon(new TextEncoder().encode("RIFF\u0000\u0000\u0000\u0000WAVEfmt "))).toBeNull();
+  });
+
+  test("avif is only recognised where the caller allows it", () => {
+    const avif = new TextEncoder().encode("\u0000\u0000\u0000\u001cftypavif");
+    expect(sniffFaviconType(avif)).toBeNull();
+    expect(sniffImageType(avif, new Set(["image/avif"]))).toBe("image/avif");
+    expect(sniffImageType(PNG_BYTES, new Set(["image/avif"]))).toBeNull();
   });
 
   test("empty and oversized payloads are refused", () => {

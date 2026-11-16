@@ -6,6 +6,7 @@ import { signResultThumbnails } from "../utils/net/proxy-sign";
 import { logger } from "../utils/logger";
 import { isDisabled } from "../utils/settings/plugin-settings";
 import { handleSearch } from "./handlers";
+import type { RunOptions } from "./index";
 import { scoreResults } from "./scoring";
 
 const FALLBACK_TAB_PAGES = 10;
@@ -36,12 +37,16 @@ const _runEngineType = async (
   engineType: string,
   query: string,
   request: TabSearchRequest,
+  runOpts: RunOptions,
 ): Promise<TabRun> => {
-  const response = await handleSearch({
-    ...request,
-    query,
-    searchType: engineType as SearchType,
-  });
+  const response = await handleSearch(
+    {
+      ...request,
+      query,
+      searchType: engineType as SearchType,
+    },
+    runOpts,
+  );
   return {
     results: response.results,
     engineTimings: response.engineTimings,
@@ -60,7 +65,7 @@ export async function handleTabSearch({
   query,
   clientIp,
   ...request
-}: TabSearchParams): Promise<TabSearchResult | null> {
+}: TabSearchParams, runOpts: RunOptions = {}): Promise<TabSearchResult | null> {
   let engineType: string | undefined;
   const tab = getSearchResultTabById(tabId);
   const tabDisabled = tab
@@ -79,7 +84,7 @@ export async function handleTabSearch({
   const startTime = performance.now();
   const trimmed = query.trim();
   const engineRun: TabRun = engineType
-    ? await _runEngineType(engineType, trimmed, request)
+    ? await _runEngineType(engineType, trimmed, request, runOpts)
     : { results: [], engineTimings: [] };
   const engineTimings = [...engineRun.engineTimings];
   let tabResults: ScoredResult[] = [];

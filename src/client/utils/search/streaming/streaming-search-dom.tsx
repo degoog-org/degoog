@@ -3,8 +3,8 @@ import { StreamingEnginePanel } from "./streaming-engine-panel";
 import { StreamingStatRow } from "./streaming-stat-row";
 import { state } from "../../../state";
 import {
+  compareEngineTimings,
   DEGOOG_ENGINE_NAME,
-  type EngineTiming,
   type ScoredResult,
 } from "../../../../shared/search-types";
 import { renderTemplate } from "../../dom/template";
@@ -15,8 +15,24 @@ import {
 import { engineCount } from "../engine-stats/engine-failure";
 import { originSlot, paintOrigins } from "../engine-stats/engine-origins";
 import { PANEL_LAYOUT_BREAKPOINT } from "../../../modules/renderer/media/render-media";
+import type { StreamingTiming } from "../../../../shared/search-stream";
 
 const t = window.scopedT("themes/degoog");
+
+const _renderedFrom = new WeakMap<HTMLElement, string>();
+
+const _fingerprint = (r: ScoredResult): string =>
+  JSON.stringify([
+    r.title,
+    r.sources,
+    r.snippet,
+    r.idx ?? "",
+    r.publishedAt ?? "",
+    r.thumbnail ?? "",
+    r.favicon ?? "",
+    r.duration ?? "",
+    !!r.insecure,
+  ]);
 
 export function renderResultEl(
   r: ScoredResult,
@@ -31,6 +47,7 @@ export function renderResultEl(
   hydrateFavicons(el);
   el.dataset.resultUrl = r.url;
   el.dataset.idx = r.idx ?? "";
+  _renderedFrom.set(el, _fingerprint(r));
   return el;
 }
 
@@ -49,21 +66,19 @@ export function updateResults(
 
   const resultMap = new Map(results.map((r) => [r.url, r]));
 
+  for (const el of Array.from(container.children) as HTMLElement[]) {
+    const url = el.dataset.resultUrl;
+    if (!url || resultMap.has(url)) continue;
+    el.remove();
+    existingEls.delete(url);
+    renderedUrls.delete(url);
+  }
+
   for (let i = 0; i < results.length; i++) {
     const r = results[i];
     const existing = existingEls.get(r.url);
     if (existing) {
-      const oldSources =
-        existing.querySelector(".result-engines")?.textContent?.trim() ?? "";
-      const newSources = r.sources.join(" ");
-      const oldSnippet =
-        existing.querySelector(".result-snippet")?.textContent?.trim() ?? "";
-      const idxChanged = (existing.dataset.idx ?? "") !== (r.idx ?? "");
-      if (
-        oldSources !== newSources ||
-        oldSnippet !== r.snippet.trim() ||
-        idxChanged
-      ) {
+      if (_renderedFrom.get(existing) !== _fingerprint(r)) {
         const updated = renderResultEl(r, i);
         if (updated) {
           container.replaceChild(updated, existing);
@@ -87,24 +102,69 @@ export function updateResults(
     return sb - sa;
   });
 
-  let needsReorder = false;
   for (let i = 0; i < sorted.length; i++) {
-    if (sorted[i] !== children[i]) {
-      needsReorder = true;
-      break;
-    }
-  }
-
-  if (needsReorder) {
-    for (const el of sorted) {
-      container.appendChild(el);
-    }
+    const current = container.children[i] ?? null;
+    if (current !== sorted[i]) container.insertBefore(sorted[i], current);
   }
 }
 
+const _inPageOrder = (container: HTMLElement, rows: HTMLElement[]): boolean => {
+  const tail = Array.from(container.children).slice(-rows.length);
+  return tail.length === rows.length && rows.every((row, i) => tail[i] === row);
+};
+
+export function updatePageRows(
+  container: HTMLElement | null,
+  results: ScoredResult[],
+  page: number,
+  startIndex: number,
+): void {
+  if (!container) return;
+  const tag = String(page);
+  const mine = (Array.from(container.children) as HTMLElement[]).filter(
+    (el) => el.dataset.streamPage === tag,
+  );
+  const wanted = new Set(results.map((r) => r.url));
+  const byUrl = new Map<string, HTMLElement>();
+  for (const el of mine) {
+    const url = el.dataset.resultUrl ?? "";
+    if (wanted.has(url)) byUrl.set(url, el);
+    else el.remove();
+  }
+
+  const rows: HTMLElement[] = [];
+  results.forEach((r, i) => {
+    const existing = byUrl.get(r.url);
+    if (existing && _renderedFrom.get(existing) === _fingerprint(r)) {
+      rows.push(existing);
+      return;
+    }
+    const el = renderResultEl(r, startIndex + i);
+    if (!el) return;
+    el.dataset.streamPage = tag;
+    if (existing) existing.replaceWith(el);
+    else el.classList.add("result-stream-in");
+    rows.push(el);
+  });
+
+  if (_inPageOrder(container, rows)) return;
+  for (const row of rows) container.appendChild(row);
+}
+
+export function dropEnginePanels(sidebar: HTMLElement | null, which: "final" | "live"): void {
+  sidebar
+    ?.querySelector(which === "final" ? ".engine-performance-panel" : ".streaming-engine-panel")
+    ?.remove();
+}
+
+const _emittingLabel = ({ count, expected }: { count: number; expected?: number }): string =>
+  expected
+    ? t("search-templates.sidebar.emitting", { count: String(count), total: String(expected) })
+    : t("search-templates.sidebar.emitting-open", { count: String(count) });
+
 export function updateEngineTimings(
   sidebar: HTMLElement | null,
-  timings: EngineTiming[],
+  timings: StreamingTiming[],
 ): void {
   if (!sidebar || !state.displayEnginePerformance) return;
 
@@ -137,7 +197,7 @@ export function updateEngineTimings(
 
   render(
     <>
-      {timings.map((et) => {
+      {[...timings].sort(compareEngineTimings).map((et) => {
         const isDegoog = et.name === DEGOOG_ENGINE_NAME;
         const isRetrying = et.resultCount === -1;
         const resultsLabel = t("search-templates.sidebar.results", {
@@ -152,18 +212,22 @@ export function updateEngineTimings(
           <StreamingStatRow
             key={et.id ?? et.name}
             statusClass={
-              isRetrying
-                ? "engine-retrying"
-                : !isDegoog && et.resultCount === 0
-                  ? "engine-failed"
-                  : ""
+              et.emitting
+                ? "engine-emitting"
+                : isRetrying
+                  ? "engine-retrying"
+                  : !isDegoog && et.resultCount === 0
+                    ? "engine-failed"
+                    : ""
             }
             origin={originSlot(et.name, et.id)}
             name={et.name}
             meta={
-              isRetrying
-                ? `${t("search-templates.sidebar.retrying")} · ${et.time}ms`
-                : [count, ` · ${et.time}ms`]
+              et.emitting
+                ? _emittingLabel(et.emitting)
+                : isRetrying
+                  ? `${t("search-templates.sidebar.retrying")} · ${et.time}ms`
+                  : [count, ` · ${et.time}ms`]
             }
           />
         );

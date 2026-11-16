@@ -11,6 +11,7 @@ import {
   asString,
   getSettings,
   isDisabled,
+  type SettingValue,
 } from "../../../../utils/settings/plugin-settings";
 import { useCache, type AsyncTtlCache } from "../../../../utils/cache/cache";
 import {
@@ -226,10 +227,21 @@ const _fetchExtract = async (
   }
 };
 
+const FETCH_TIMEOUT_KEY = "fetchTimeoutSeconds";
+const DEFAULT_FETCH_TIMEOUT_MS = 3_000;
+const MAX_FETCH_TIMEOUT_SECONDS = 30;
+const EXECUTE_HEADROOM_MS = 2_000;
+
+const _fetchTimeoutMs = (stored: Record<string, SettingValue>): number => {
+  const raw = parseFloat(asString(stored[FETCH_TIMEOUT_KEY]) || "3");
+  return Number.isFinite(raw)
+    ? Math.max(1, Math.min(raw, MAX_FETCH_TIMEOUT_SECONDS)) * 1000
+    : DEFAULT_FETCH_TIMEOUT_MS;
+};
+
 const _loadSettings = async (settingsId: string) => {
   const stored = await getSettings(settingsId);
   const rawLength = parseInt(asString(stored["snippetLength"]), 10);
-  const rawTimeout = parseFloat(asString(stored["fetchTimeoutSeconds"]) || "3");
   const rawParagraphs = parseInt(asString(stored["paragraphs"]) || "1", 10);
   const rawMode = asString(stored["excerptMode"]).toLowerCase();
   const excerptMode: ExcerptMode = rawMode === "strict" ? "strict" : "full";
@@ -240,9 +252,7 @@ const _loadSettings = async (settingsId: string) => {
         ? Math.max(100, rawLength)
         : 400,
     fetchContent: asString(stored["fetchContent"]) !== "false",
-    fetchTimeoutMs: Number.isFinite(rawTimeout)
-      ? Math.max(1, Math.min(rawTimeout, 30)) * 1000
-      : 3_000,
+    fetchTimeoutMs: _fetchTimeoutMs(stored),
     maxParagraphs: Number.isFinite(rawParagraphs)
       ? Math.max(1, Math.min(rawParagraphs, 5))
       : 1,
@@ -271,6 +281,10 @@ const atAGlanceSlot: SlotPlugin = {
 
   init(ctx: PluginContext): void {
     _extractCache = ctx.useCache<string>(EXTRACT_NAMESPACE, EXTRACT_TTL_MS);
+  },
+
+  configure(settings: Record<string, SettingValue>): void {
+    this.timeoutMs = _fetchTimeoutMs(settings) + EXECUTE_HEADROOM_MS;
   },
 
   trigger(): boolean {
@@ -314,7 +328,7 @@ const atAGlanceSlot: SlotPlugin = {
         "Fetch the actual page for richer content. Disable to use search snippets only (faster).",
     },
     {
-      key: "fetchTimeoutSeconds",
+      key: FETCH_TIMEOUT_KEY,
       label: "Fetch timeout (seconds)",
       type: "number",
       default: "3",

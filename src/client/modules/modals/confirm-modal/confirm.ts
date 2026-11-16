@@ -1,5 +1,5 @@
 import { Button, buttonClass } from "../../../../shared/ui/components/primitives/button";
-import { mountModalShell, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
+import { mountModalShell, onBackdropClick, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
 
 const t = window.scopedT("themes/degoog");
 
@@ -45,9 +45,7 @@ function _ensureMounted(): void {
   cancelBtn?.addEventListener("click", () => _finish(false));
   shell.close.addEventListener("click", () => _finish(false));
   confirmBtn?.addEventListener("click", () => _finish(true));
-  shell.overlay.addEventListener("click", (e) => {
-    if (e.target === shell?.overlay) _finish(false);
-  });
+  onBackdropClick(shell.overlay, () => _finish(false));
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && shell?.isOpen()) _finish(false);
   });

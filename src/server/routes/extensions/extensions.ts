@@ -4,12 +4,11 @@ import { bodyLimit } from "hono/body-limit";
 import { canBalrogPass, gandalf } from "../settings/settings-auth";
 import {
   getSettings,
-  isDisabled,
   setSettings,
   mergeSecrets,
   type SettingValue,
 } from "../../utils/settings/plugin-settings";
-import { getPluginCssIds, getPluginCssById } from "../../utils/extension-support/plugin-assets";
+import { getEnabledPluginCss } from "../../utils/extension-support/plugin-assets";
 import { getTransport } from "../../extensions/transports/registry";
 import { outgoingFetch } from "../../utils/net/outgoing";
 import { readFile } from "fs/promises";
@@ -448,15 +447,9 @@ router.get("/api/extensions/:id/readme", settingsAuth(), async (c) => {
 });
 
 router.get("/api/plugins/styles.css", async (c) => {
-  const ids = getPluginCssIds();
-  const parts: string[] = [];
-  for (const id of ids) {
-    if (await isDisabled(id)) continue;
-    const css = getPluginCssById(id);
-    if (css) parts.push(css);
-  }
   c.header("Content-Type", "text/css");
-  return c.body(parts.join("\n"));
+  c.header("Cache-Control", "no-cache");
+  return c.body(await getEnabledPluginCss());
 });
 
 export default router;

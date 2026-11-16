@@ -12,3 +12,4 @@ const store = createListStore<DomainListKey>({
 export const isDomainListKey = store.isListKey;
 export const readDomainLists = store.readLists;
 export const writeDomainList = store.writeList;
+export const clearDomainListsCache = store.clearCache;

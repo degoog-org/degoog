@@ -73,4 +73,12 @@ describe("slots registry", () => {
     const en = await slot!.execute("example domain", withLocale("en-US"));
     expect(en.html).toContain("Found on: Google CSE");
   });
+
+  test("built-in at-a-glance slot asks for more time than the page fetch an admin configured", () => {
+    const slot = getSlotPluginById(AT_A_GLANCE_ID)!;
+    expect(slot.timeoutMs).toBeGreaterThan(3_000);
+    slot.configure!({ fetchTimeoutSeconds: "30" });
+    expect(slot.timeoutMs).toBeGreaterThan(30_000);
+    slot.configure!({ fetchTimeoutSeconds: "3" });
+  });
 });

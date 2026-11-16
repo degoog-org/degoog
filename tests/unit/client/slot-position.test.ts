@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { SlotPanelPosition } from "../../../src/shared/search-types";
-import { setSettings } from "../../../src/server/utils/settings/plugin-settings";
+import { clearPluginSettingsCache, setSettings } from "../../../src/server/utils/settings/plugin-settings";
 import { slotPosition } from "../../../src/server/extensions/slots/run";
 import type { SlotPlugin } from "../../../src/server/types/extension";
 
@@ -15,11 +15,13 @@ const withSettingsFile = async <T>(fn: () => Promise<T>): Promise<T> => {
   const prev = process.env.DEGOOG_PLUGIN_SETTINGS_FILE;
   process.env.DEGOOG_PLUGIN_SETTINGS_FILE = settingsFile;
   writeFileSync(settingsFile, "{}");
+  clearPluginSettingsCache();
   try {
     return await fn();
   } finally {
     if (prev === undefined) delete process.env.DEGOOG_PLUGIN_SETTINGS_FILE;
     else process.env.DEGOOG_PLUGIN_SETTINGS_FILE = prev;
+    clearPluginSettingsCache();
     rmSync(dir, { recursive: true, force: true });
   }
 };

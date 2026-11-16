@@ -1,4 +1,4 @@
-import { repoKey } from "../model";
+import { itemId, repoKey } from "../model";
 import { screenshotUrls } from "../screenshots";
 import { SEARCH_ID } from "../render/catalog/filter-bar";
 import {
@@ -26,6 +26,7 @@ type ViewActions = Omit<
   | "refreshRepo"
   | "refreshBehind"
   | "refreshAll"
+  | "setRepoBeta"
   | "removeRepo"
   | "addRepo"
 >;
@@ -144,6 +145,11 @@ export const createViewActions = (ctx: StoreContext): ViewActions => {
         repoPopOpen: false,
         repoPopQ: "",
       });
+      ctx.render();
+    },
+    toggleDesc: (item) => {
+      const id = itemId(item);
+      if (!state.descOpen.delete(id)) state.descOpen.add(id);
       ctx.render();
     },
     openLightbox: (item) => {

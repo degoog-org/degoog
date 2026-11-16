@@ -4,7 +4,9 @@ import { resolveTransport } from "../extensions/transports/registry";
 import { parseOutgoingTransport } from "../utils/net/outgoing";
 import { asString, getSettings } from "../utils/settings/plugin-settings";
 
+export const ENGINE_TIMEOUT_REASON = "Engine timeout";
 export const ENGINE_TIMEOUT_BUFFER_MS = 5000;
+export const ENGINE_EMIT_BUDGET_FACTOR = 3;
 export const ENGINE_TIMEOUT_MIN_MS = 10;
 export const ENGINE_TIMEOUT_MAX_MS = 10 * 60 * 1000;
 
@@ -30,3 +32,6 @@ export const getEngineTimeout = async (
   }
   return clampTimeout(base);
 };
+
+export const getEngineBudget = (timeoutMs: number): number =>
+  clampTimeout(timeoutMs * ENGINE_EMIT_BUDGET_FACTOR);

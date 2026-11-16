@@ -1,6 +1,6 @@
 import { render } from "../../../../shared/ui/tribute/dom";
 import { Button } from "../../../../shared/ui/components/primitives/button";
-import { mountModalShell, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
+import { mountModalShell, onBackdropClick, type MountedModal } from "../../../../shared/ui/components/overlay/shell";
 import type { LeakItemProps } from "./leak-item";
 import { LeakList } from "./leak-list";
 import { allowLeaksForSession } from "../../../utils/app/leak-allow";
@@ -43,9 +43,7 @@ function _ensureMounted(): MountedModal {
     window.open(LEAK_REPORT_URL, "_blank", "noopener,noreferrer");
   });
   shell.close.addEventListener("click", _close);
-  shell.overlay.addEventListener("click", (e) => {
-    if (e.target === shell?.overlay) _close();
-  });
+  onBackdropClick(shell.overlay, _close);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && shell?.isOpen()) _close();
   });

@@ -214,6 +214,7 @@ export interface SlotPlugin {
   waitForResults?: boolean;
   supportsNojs?: boolean;
   gridSize?: 1 | 2 | 3 | 4;
+  timeoutMs?: number;
   execute(
     query: string,
     context?: SlotPluginContext,
@@ -243,6 +244,7 @@ export interface CommandContext {
   nojs?: boolean;
   engines?: EngineConfig;
   bangs?: EngineConfig;
+  locale?: string;
 }
 
 export interface ImageQueryContext {

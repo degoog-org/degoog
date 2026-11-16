@@ -18,6 +18,7 @@ const _parseBlock = (block: string): { event: string; data: string } | null => {
 export interface EventStreamRequest {
   body?: unknown;
   headers?: Record<string, string>;
+  signal?: AbortSignal;
 }
 
 export class FetchEventStream implements SearchEventSource {
@@ -25,6 +26,8 @@ export class FetchEventStream implements SearchEventSource {
   private readonly _abort = new AbortController();
 
   constructor(url: string, request: EventStreamRequest = {}) {
+    if (request.signal?.aborted) this.close();
+    request.signal?.addEventListener("abort", () => this.close(), { once: true });
     void this._read(url, request);
   }
 

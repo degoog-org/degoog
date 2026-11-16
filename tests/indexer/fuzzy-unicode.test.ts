@@ -1,14 +1,8 @@
 import { describe, test, expect, beforeEach, afterAll } from "bun:test";
-import { mkdirSync } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
+import { useIndexerDir } from "../helpers/indexer-env";
 import postgres from "postgres";
 
-const SHARED = join(tmpdir(), "degoog-indexer-unicode-tests");
-mkdirSync(SHARED, { recursive: true });
-process.env.DEGOOG_INDEXER_DIR = SHARED;
-process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
-process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
+useIndexerDir("degoog-indexer-unicode-tests-");
 
 import { buildFtsQuery } from "../../src/server/indexer/adapters/sqlite/fts";
 import { SQLITE_SCHEMA_DDL } from "../../src/server/indexer/adapters/sqlite/schema";

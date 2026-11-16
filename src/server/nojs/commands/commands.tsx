@@ -54,6 +54,7 @@ export const renderNojsCommand = async (
     page,
     signProxyUrl: buildSignedProxyUrl,
     nojs: true,
+    locale,
   };
   try {
     const t0 = performance.now();

@@ -1,7 +1,7 @@
 import type { Child } from "../../../../shared/ui/tribute/types";
 
 export interface StreamingStatRowProps {
-  statusClass: "" | "engine-retrying" | "engine-failed";
+  statusClass: "" | "engine-retrying" | "engine-emitting" | "engine-failed";
   origin: Child;
   name: string;
   meta: Child;

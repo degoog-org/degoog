@@ -5,6 +5,7 @@ import security from "./general/security";
 import proxyTest from "./general/proxy-test";
 import shortcuts from "./general/shortcuts";
 import updateCheck from "./general/update-check";
+import logos from "./general/logos";
 
 const router = new Hono();
 
@@ -14,5 +15,6 @@ router.route("/", security);
 router.route("/", proxyTest);
 router.route("/", shortcuts);
 router.route("/", updateCheck);
+router.route("/", logos);
 
 export default router;

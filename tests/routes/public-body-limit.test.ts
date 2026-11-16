@@ -13,12 +13,17 @@ let settings: typeof import("../../src/server/utils/settings/server-settings");
 let envBodySizeKb: (raw?: string) => number;
 let DEFAULT_BODY_SIZE_KB: number;
 
-const postSlots = (bytes: number): Promise<Response> =>
+const EVENT_STREAM = "text/event-stream";
+
+const postSlots = (bytes: number, accept?: string): Promise<Response> =>
   Promise.resolve(
     slots.request(
       new Request("http://localhost/api/slots", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(accept ? { Accept: accept } : {}),
+        },
         body: JSON.stringify({ query: "", pad: "x".repeat(bytes) }),
       }),
     ),
@@ -86,6 +91,18 @@ describe("public POST body limit", () => {
     expect(envBodySizeKb("")).toBe(DEFAULT_BODY_SIZE_KB);
     expect(envBodySizeKb("-5")).toBe(DEFAULT_BODY_SIZE_KB);
     expect(envBodySizeKb(" 512 ")).toBe(512);
+  });
+
+  test("a streamed slot call sits behind the same limit", async () => {
+    await settings.updateInstanceSettings({ requestBodyMaxKb: "8" });
+    settings.clearServerSettingsCache();
+    await withEnv(undefined, async () => {
+      expect((await postSlots(16 * 1024, EVENT_STREAM)).status).toBe(413);
+      const streamed = await postSlots(1024, EVENT_STREAM);
+      expect(streamed.status).toBe(200);
+      expect(streamed.headers.get("content-type")).toBe(EVENT_STREAM);
+      expect(await streamed.text()).toBe('event: done\ndata: {"pending":false}\n\n');
+    });
   });
 
   test("the admin setting wins over DEGOOG_BODY_SIZE", async () => {

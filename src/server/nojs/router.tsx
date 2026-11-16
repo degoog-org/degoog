@@ -14,6 +14,7 @@ import {
 import { planEngineBang } from "../search/engine-bang";
 import { build404 } from "../routes/pages/pages";
 import { handleRetry, handleSearch } from "../search/handlers";
+import type { RunOptions } from "../search";
 import { handleTabSearch } from "../search/tab-search";
 import { sanePage } from "../search/page-counter";
 import {
@@ -30,6 +31,7 @@ import { hasPinged, strike } from "../utils/security/link-token";
 import { getClientIp } from "../utils/net/request";
 import { _applyRateLimit, isValidQuery } from "../utils/search";
 import { addClassWhereClass, fillById } from "./dom";
+import { nojsDailyLogo, renderNojsDailyLogo, renderNojsDailyLogoCredit } from "./daily-logo";
 import { nojsHome, RETRY_PARAM, type NojsQuery } from "./links";
 import { buildNojsDocument, getNojsTranslator, loadNojsPartial, loadNojsShell } from "./render";
 import { renderNojsCommand } from "./commands/commands";
@@ -52,6 +54,7 @@ const router = new Hono();
 const VIDEO_SEARCH_TYPE = "videos";
 const HOME_BODY_CLASS = "nojs nojs-home";
 const NOJS_PAGE_TOTAL = 10;
+const NOJS_RUN: RunOptions = { hardTimeout: true };
 
 interface NojsOutcome {
   results: ScoredResult[];
@@ -166,6 +169,7 @@ const _runSearch = async (
         resolveBuiltinSearchType(plan.searchType) || WEB_TAB_ID,
         plan.engines,
       ),
+      NOJS_RUN,
     );
     return _outcome(response, false);
   }
@@ -179,12 +183,15 @@ const _runSearch = async (
       WEB_TAB_ID,
       getDefaultEngineConfig(),
     );
-    const tabResult = await handleTabSearch({
-      ...request,
-      tabId,
-      query: query.q,
-      clientIp: getClientIp(c),
-    });
+    const tabResult = await handleTabSearch(
+      {
+        ...request,
+        tabId,
+        query: query.q,
+        clientIp: getClientIp(c),
+      },
+      NOJS_RUN,
+    );
     return tabResult && _outcome(tabResult, false);
   }
 
@@ -197,11 +204,11 @@ const _runSearch = async (
   );
 
   if (retry) {
-    const retried = await handleRetry({ ...params, engineName: retry });
+    const retried = await handleRetry({ ...params, engineName: retry }, NOJS_RUN);
     return _outcome(retried, true);
   }
 
-  return _outcome(await handleSearch(params), true);
+  return _outcome(await handleSearch(params, NOJS_RUN), true);
 };
 
 router.get("/nojs", async (c) => {
@@ -218,21 +225,25 @@ router.get("/nojs", async (c) => {
     "header",
     (await loadNojsPartial("home-header", t, locale)) ?? "",
   );
+  const dailyLogo = await nojsDailyLogo(locale);
   content = await fillById(
     content,
     "home-logo",
-    await addClassWhereClass(
-      (await loadNojsPartial("logo", t, locale)) ?? "",
-      "logo-letter",
-      "nojs-logo-letter",
-    ),
+    dailyLogo
+      ? await renderNojsDailyLogo(c, dailyLogo)
+      : await addClassWhereClass(
+          (await loadNojsPartial("logo", t, locale)) ?? "",
+          "logo-letter",
+          "nojs-logo-letter",
+        ),
   );
   content = await fillById(
     content,
     "home-search",
     await renderNojsHomeSearch(c, t, locale),
   );
-  content = await fillById(content, "home-footer", await renderNojsFooter(t, locale));
+  const credit = dailyLogo ? renderNojsDailyLogoCredit(dailyLogo, t, locale) : "";
+  content = await fillById(content, "home-footer", `${await renderNojsFooter(t, locale)}${credit}`);
 
   const html = await buildNojsDocument(content, locale, HOME_BODY_CLASS);
   if (!html) return _notFound(c);

@@ -6,6 +6,7 @@ import { CustomCssSection } from "./sections/custom-css-section";
 import { DomainSection } from "./sections/domain-section";
 import { HoneypotSection } from "./sections/honeypot-section";
 import { IndexerSection } from "./sections/indexer-section";
+import { LogosSection } from "./sections/logos-section";
 import { NojsSection } from "./sections/nojs-section";
 import { PrivacySection } from "./sections/privacy-section";
 import { ProxySection } from "./sections/proxy-section";
@@ -23,6 +24,7 @@ export const ServerContent = (): JSX.Element => (
       <ConfigSection />
       <CacheSection />
       <CustomCssSection />
+      <LogosSection />
     </ServerGroup>
     <ServerGroup label="settings-page.server.group-search">
       <SearchOptionsSection />

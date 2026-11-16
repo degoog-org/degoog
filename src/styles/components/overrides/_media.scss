@@ -112,6 +112,7 @@
 
 .image-thumb {
   width: 100%;
+  aspect-ratio: auto 4 / 3;
   display: block;
   transition: filter $transition-fast;
 }

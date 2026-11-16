@@ -17,6 +17,10 @@ import {
   cloneRepo,
   fetchRef,
   hardReset,
+  isGlobalBetaStore,
+  isOnBetaBranch,
+  lacksBetaBranch,
+  marieKondo,
   resolveTrackedBranch,
   syncBranch,
 } from "./git";
@@ -141,7 +145,7 @@ async function _removeRepo(url: string): Promise<void> {
 async function _refreshRepo(repo: RepoInfo): Promise<void> {
   const repoPath = join(getStoreDir(), repo.localPath);
   try {
-    await syncBranch(repoPath);
+    await syncBranch(repoPath, repo.beta);
     const branch = await resolveTrackedBranch(repoPath);
     const fetched = await fetchRef(repoPath, branch);
     if (!fetched.ok) {
@@ -157,6 +161,7 @@ async function _refreshRepo(repo: RepoInfo): Promise<void> {
     repo.error = null;
     repo.lastFetched = new Date().toISOString();
     applyPackage(repo, await readRepoPackage(repoPath));
+    await marieKondo(repoPath, branch);
   } catch (e) {
     repo.error = e instanceof Error ? e.message : String(e);
   }
@@ -175,6 +180,50 @@ export function refreshRepo(url?: string): Promise<void> {
     }
     for (const repo of toRefresh) await _refreshRepo(repo);
     await writeReposData(data);
+  });
+}
+
+function _applyBetaFlag(repo: RepoInfo, beta: boolean): void {
+  if (beta) repo.beta = true;
+  else delete repo.beta;
+}
+
+const _betaSwitchError = async (
+  repo: RepoInfo,
+  repoPath: string,
+  beta: boolean,
+  onBeta: boolean,
+): Promise<string | null> => {
+  if (repo.error) return repo.error;
+  if (onBeta === beta) return null;
+  if (!beta) return "Could not switch this repository back to its default branch.";
+  return (await lacksBetaBranch(repoPath))
+    ? 'This repository has no "develop" branch.'
+    : 'Could not switch this repository to the "develop" branch.';
+};
+
+export function setRepoBeta(url: string, beta: boolean): Promise<RepoInfo> {
+  return runStoreExclusive(async () => {
+    if (isGlobalBetaStore()) {
+      throw new Error("Beta store is enabled for every repository by DEGOOG_BETA_STORE.");
+    }
+    const data = await readReposData();
+    const repo = getRepoByUrl(data, url);
+    if (!repo) throw new Error("Repository not found.");
+    const previous = !!repo.beta;
+    _applyBetaFlag(repo, beta);
+    await _refreshRepo(repo);
+    const repoPath = join(getStoreDir(), repo.localPath);
+    const onBeta = await isOnBetaBranch(repoPath);
+    const failure = await _betaSwitchError(repo, repoPath, beta, onBeta);
+    if (failure) {
+      const moved = !!repo.error || onBeta !== previous;
+      _applyBetaFlag(repo, previous);
+      if (moved) await _refreshRepo(repo);
+    }
+    await writeReposData(data);
+    if (failure) throw new Error(failure);
+    return repo;
   });
 }
 

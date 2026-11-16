@@ -73,6 +73,7 @@ export async function loadServerSettings(
     setToggle("infinite-scroll-enabled", data.infiniteScrollEnabled);
     setToggle("streaming-auto-retry", data.streamingAutoRetry);
     setVal("streaming-max-retries", data.streamingMaxRetries);
+    setVal("streaming-panels-max-wait", data.streamingPanelsMaxWaitMs);
     void initStreamingTypeChecks(data.streamingDisabledTypes ?? "", getToken);
 
     setToggle("domain-block-enabled", data.domainBlockEnabled);
@@ -100,6 +101,7 @@ export async function loadServerSettings(
     setToggle("domain-score-ui-enabled", data.domainScoreUiEnabled);
 
     setVal("custom-css", data.customCss);
+    setToggle("logos-enabled", data.logosEnabled ?? "true");
 
     setToggle("api-key-search-enabled", data.apiKeySearchEnabled);
     setToggle("api-key-suggest-enabled", data.apiKeySuggestEnabled);

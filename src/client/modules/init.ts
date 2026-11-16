@@ -35,6 +35,7 @@ import { initKeyboardShortcuts } from "../shortcuts/keyboard-shortcuts";
 import { initShortcuts } from "../shortcuts/init";
 import { initSearchBarActions } from "../utils/search/search-bar-actions";
 import { renderPageTemplates } from "./renderer/render-page";
+import { readDailyLogo, renderDailyLogo } from "./daily-logo";
 import { initResultActions } from "./result-actions";
 import { exposeResultsApi } from "./renderer/media/result-ranking";
 import { initHomeWizard } from "./wizard/wizard";
@@ -110,7 +111,9 @@ export async function init(): Promise<void> {
   initLeakWatch();
   await applyDefaults();
 
+  const dailyLogo = await readDailyLogo();
   renderPageTemplates();
+  if (dailyLogo) renderDailyLogo(dailyLogo, _search);
   initPrivacyPolicyLink();
   void applyUovaStorage();
   void initHomeWizard();

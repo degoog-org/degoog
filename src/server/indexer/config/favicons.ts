@@ -1,6 +1,6 @@
 import { asBoolean, asString } from "../../utils/settings/plugin-settings";
 import type { ServerSettingValue } from "../../utils/settings/server-settings";
-import { SETTINGS_SCHEMA } from "../../utils/settings/settings-schema";
+import { SETTINGS_SCHEMA, booleanSetting } from "../../utils/settings/settings-schema";
 
 export interface FaviconStoreConfig {
   enabled: boolean;
@@ -9,11 +9,6 @@ export interface FaviconStoreConfig {
 
 export const FAVICON_STORE_MIN_AGE_DAYS = 1;
 export const FAVICON_STORE_MAX_AGE_DAYS = 3650;
-
-const _storeToggle = (raw: ServerSettingValue | undefined): boolean =>
-  raw === undefined || raw === ""
-    ? SETTINGS_SCHEMA.degoogFaviconStoreEnabled.default
-    : asBoolean(raw);
 
 const _maxAgeDays = (raw: ServerSettingValue | undefined): number => {
   const fallback = Number(SETTINGS_SCHEMA.degoogFaviconStoreMaxAgeDays.default);
@@ -27,6 +22,6 @@ export const faviconStoreConfig = (
 ): FaviconStoreConfig => ({
   enabled:
     asBoolean(settings.degoogIndexerEnabled) &&
-    _storeToggle(settings.degoogFaviconStoreEnabled),
+    booleanSetting("degoogFaviconStoreEnabled", settings.degoogFaviconStoreEnabled),
   maxAgeDays: _maxAgeDays(settings.degoogFaviconStoreMaxAgeDays),
 });

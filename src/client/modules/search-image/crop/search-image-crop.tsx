@@ -1,4 +1,5 @@
 import { render } from "../../../../shared/ui/tribute/dom";
+import { onBackdropClick } from "../../../../shared/ui/components/overlay/shell";
 import { cropSearchDataUrl } from "../search-image-prepare";
 import { newSearchImageId, type SearchImage } from "../search-image-store";
 import {
@@ -207,9 +208,7 @@ export const cropSearchImage = (image: SearchImage): Promise<SearchImage | null>
       );
     });
 
-    dialog.addEventListener("click", (e) => {
-      if (e.target === dialog) close();
-    });
+    onBackdropClick(dialog, close);
 
     dialog.addEventListener("close", () => {
       host.remove();

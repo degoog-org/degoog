@@ -2,12 +2,20 @@ export const withTimeout = <T>(
   promise: Promise<T>,
   ms: number,
   label = "operation",
+  signal?: AbortSignal,
 ): Promise<T> => {
-  let timer: ReturnType<typeof setTimeout>;
-  const timeout = new Promise<never>((_, reject) => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let onAbort: (() => void) | undefined;
+  const cutoff = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error(`${label} timeout`)), ms);
+    onAbort = () => reject(new Error(`${label} aborted`));
+    if (signal?.aborted) onAbort();
+    else signal?.addEventListener("abort", onAbort, { once: true });
   });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+  return Promise.race([promise, cutoff]).finally(() => {
+    clearTimeout(timer);
+    if (onAbort) signal?.removeEventListener("abort", onAbort);
+  });
 };
 
 const _envInt = (name: string, fallback: number): number => {

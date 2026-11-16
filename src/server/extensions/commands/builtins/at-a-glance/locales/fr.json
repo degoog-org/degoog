@@ -1,6 +1,7 @@
 {
   "at-a-glance": {
     "found-on": "Trouvé sur : {sources_text}",
-    "description": "Aperçu rapide du premier résultat de recherche"
+    "description": "Aperçu rapide du premier résultat de recherche",
+    "title": "En un coup d'œil"
   }
 }

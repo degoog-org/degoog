@@ -9,6 +9,7 @@ export const BLOCK_CLIENT_LEAKS_KEY = "blockClientLeaks";
 const BASELINE_CSP = "object-src 'none'; base-uri 'none'; frame-ancestors 'self'";
 
 export const SVG_CSP = `${BASELINE_CSP}; script-src 'none'; sandbox`;
+export const SANDBOXED_IMAGE_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
 
 const _nojsCsp = (imgSrc: string): string =>
   `default-src 'self'; img-src ${imgSrc}; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'`;

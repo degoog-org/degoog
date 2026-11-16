@@ -1,13 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { mkdirSync } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
+import { useIndexerDir } from "../helpers/indexer-env";
 
-const SHARED = join(tmpdir(), "degoog-indexer-tests");
-mkdirSync(SHARED, { recursive: true });
-process.env.DEGOOG_INDEXER_DIR = SHARED;
-process.env.DEGOOG_INDEXER_DB = join(SHARED, "index.db");
-process.env.DEGOOG_SERVER_SETTINGS_FILE = join(SHARED, "server-settings.json");
+useIndexerDir("degoog-indexer-tests-");
 
 import router from "../../src/server/routes/indexer";
 import { clearAll } from "../../src/server/indexer/store/admin";

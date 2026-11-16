@@ -1,5 +1,5 @@
 import { Hono, type Context } from "hono";
-import { searchSingleEngine } from "../../search";
+import { ENGINE_TIMEOUT_REASON, searchSingleEngine } from "../../search";
 import { scoreResults } from "../../search/scoring";
 import {
   engineQuery,
@@ -15,6 +15,13 @@ import {
   type ImageQueryProvider,
 } from "../../search/image-query";
 import { ENGINE_INPUT } from "../../../shared/engine-input";
+import type {
+  StreamDone,
+  StreamEnginePartial,
+  StreamEngineResult,
+  StreamEngineRetry,
+  StreamImageQuery,
+} from "../../../shared/search-stream";
 import { hasSearchInput, INVALID_IMAGE, rejectsImage } from "../../search/search-image";
 import type { SearchBody, SearchImage, SearchParams } from "../../types/search";
 import { readObjectBody } from "../../utils/hono";
@@ -37,6 +44,14 @@ import { signResultThumbnails } from "../../utils/net/proxy-sign";
 import { parseSearchBody, parseSearchRequest } from "./parsers";
 import { getInstanceSettings } from "../../utils/settings/server-settings";
 import { tagIndexRelation } from "../../indexer/store/record";
+import { makeSettleWatch } from "../../search/engine-emit";
+
+interface RawEngineRun {
+  results: SearchResult[];
+  multiplier: number;
+  name: string;
+  visual: boolean;
+}
 
 const router = new Hono();
 
@@ -97,12 +112,8 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
       const encoder = new TextEncoder();
       const allTimings: EngineTiming[] = [];
       const allPages: (number | undefined)[] = [];
-      const allRawResults: {
-        results: SearchResult[];
-        multiplier: number;
-        name: string;
-        visual: boolean;
-      }[] = [];
+      const allRawResults: RawEngineRun[] = [];
+      const partialRuns = new Map<string, RawEngineRun[]>();
 
       function _send(event: string, data: unknown) {
         if (closed) return;
@@ -118,14 +129,75 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
         }
       }
 
-      const merged = async (): Promise<ScoredResult[]> =>
-        signResultThumbnails(
-          tagIndexRelation(await applyMergedDomainRules(scoreResults(allRawResults))),
+      let mergeQueue: Promise<unknown> = Promise.resolve();
+      const merged = (): Promise<ScoredResult[]> => {
+        const scored = scoreResults([...allRawResults, ...[...partialRuns.values()].flat()]);
+        const next = mergeQueue.then(async () =>
+          signResultThumbnails(tagIndexRelation(await applyMergedDomainRules(scored))),
         );
+        mergeQueue = next.catch(() => undefined);
+        return next;
+      };
+
+      const watch = makeSettleWatch(() => _send("results-settled", {}));
+
+      const partialFeed = (
+        toRun: (results: SearchResult[]) => RawEngineRun,
+        id: string,
+        onSent: () => void,
+      ): {
+        onPartial: (results: SearchResult[], expected?: number) => void;
+        settle: () => void;
+      } => {
+        let settled = false;
+        let busy = false;
+        let latest: { results: SearchResult[]; expected?: number } | null = null;
+        const engineName = toRun([]).name;
+
+        const flush = async (): Promise<void> => {
+          if (busy) return;
+          busy = true;
+          try {
+            while (latest && !settled && !closed) {
+              const snapshot = latest;
+              latest = null;
+              const rewritten = await rewriteEngineRuns([toRun(snapshot.results)]);
+              if (settled) return;
+              partialRuns.set(id, rewritten);
+              const results = await merged();
+              if (settled) return;
+              _send("engine-partial", {
+                engine: engineName,
+                id,
+                emitted: snapshot.results.length,
+                ...(snapshot.expected ? { expected: snapshot.expected } : {}),
+                results,
+              } satisfies StreamEnginePartial);
+              onSent();
+            }
+          } finally {
+            busy = false;
+          }
+        };
+
+        return {
+          onPartial: (results: SearchResult[], expected?: number): void => {
+            latest = { results, expected };
+            flush().catch((err: unknown) => {
+              logger.debug("search-stream", `${engineName} partial update failed`, err);
+            });
+          },
+          settle: (): void => {
+            settled = true;
+            partialRuns.delete(id);
+          },
+        };
+      };
 
       const runEngine = async (
         { instance, score, id, input }: ActiveEngine,
         runInputs: SearchInputs,
+        onEmitting: () => void,
       ): Promise<void> => {
           const engineName = instance.name;
           let attempt = 0;
@@ -140,7 +212,14 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
           while (attempt <= (autoRetry ? maxRetries : 0)) {
             if (cancelController.signal.aborted) return;
             const isRetry = attempt > 0;
-            const { results, timing, pages } = await searchSingleEngine(
+            const toRun = (results: SearchResult[]): RawEngineRun => ({
+              results,
+              multiplier: score,
+              name: engineName,
+              visual: input === ENGINE_INPUT.IMAGE,
+            });
+            const feed = partialFeed(toRun, id, onEmitting);
+            const { results, timing, pages, cached } = await searchSingleEngine(
               id,
               engineQuery(input, query, runInputs),
               page,
@@ -151,22 +230,23 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
               imageFilter,
               cancelController.signal,
               type,
-              { forceFresh: isRetry, image: runInputs.image, region },
-            );
+              {
+                forceFresh: isRetry,
+                image: runInputs.image,
+                region,
+                onPartial: feed.onPartial,
+              },
+            ).catch((err: unknown) => {
+              feed.settle();
+              throw err;
+            });
             lastTiming = timing;
             lastPages = pages;
 
             if (timing.resultCount > 0) {
-              allRawResults.push(
-                ...(await rewriteEngineRuns([
-                  {
-                    results,
-                    multiplier: score,
-                    name: engineName,
-                    visual: input === ENGINE_INPUT.IMAGE,
-                  },
-                ])),
-              );
+              const rewritten = await rewriteEngineRuns([toRun(results)]);
+              feed.settle();
+              allRawResults.push(...rewritten);
               allTimings.push(timing);
               allPages.push(pages);
               _send("engine-result", {
@@ -175,10 +255,12 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
                 results: await merged(),
                 retry: isRetry,
                 attempt,
-              });
+              } satisfies StreamEngineResult);
               return;
             }
+            feed.settle();
 
+            if (!cached && timing.errorReason === ENGINE_TIMEOUT_REASON) break;
             attempt++;
             if (attempt <= (autoRetry ? maxRetries : 0)) {
               _send("engine-retry", {
@@ -186,7 +268,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
                 attempt,
                 maxRetries,
                 timing,
-              });
+              } satisfies StreamEngineRetry);
             }
           }
 
@@ -198,20 +280,36 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
             results: await merged(),
             retry: false,
             attempt: 0,
-          });
+          } satisfies StreamEngineResult);
       };
 
       const runAll = (active: ActiveEngine[], runInputs: SearchInputs): Promise<void>[] =>
-        active.map((engine) =>
-          runEngine(engine, runInputs).catch((err: unknown) => {
-            logger.warn("search-stream", `${engine.instance.name} failed mid-stream`, err);
-          }),
-        );
+        active.map((engine) => {
+          const held = watch.engine(engine.id);
+          return runEngine(engine, runInputs, held.emitting)
+            .catch((err: unknown) => {
+              logger.warn("search-stream", `${engine.instance.name} failed mid-stream`, err);
+            })
+            .finally(held.done);
+        });
 
       let imageOutcome: ImageQueryOutcome = {};
       const describeThenSearch = async (
         describer: ImageQueryProvider,
         image: SearchImage,
+      ): Promise<void> => {
+        const release = watch.hold();
+        try {
+          await describeAndLaunch(describer, image, release);
+        } finally {
+          release();
+        }
+      };
+
+      const describeAndLaunch = async (
+        describer: ImageQueryProvider,
+        image: SearchImage,
+        launched: () => void,
       ): Promise<void> => {
         imageOutcome = await queryImage(describer, image, query, {
           lang: resolvedLang,
@@ -221,13 +319,15 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
         _send("image-query", {
           query: imageOutcome.query ?? null,
           error: imageOutcome.error ?? null,
-        });
+        } satisfies StreamImageQuery);
         if (!imageOutcome.query) return;
         const described = { ...inputs, imageQuery: imageOutcome.query };
         const textEngines = (
           await selectActiveEngines(type, engines, imageFilter, described)
         ).filter((e) => e.input === ENGINE_INPUT.TEXT);
-        await Promise.all(runAll(textEngines, described));
+        const running = Promise.all(runAll(textEngines, described));
+        launched();
+        await running;
       };
 
       const enginePromises = [
@@ -240,6 +340,20 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
             ]
           : []),
       ];
+
+      function _sendDone(totalTime: number, indexedUrls: string[]): void {
+        _send("done", {
+          totalTime,
+          engineTimings: allTimings,
+          indexedUrls,
+          relatedSearches: [],
+          totalPages: agreedPageTotal(allPages),
+          ...imageQueryFields(
+            { ...inputs, imageQuery: inputs.imageQuery ?? imageOutcome.query },
+            imageOutcome,
+          ),
+        } satisfies StreamDone);
+      }
 
       void Promise.all(enginePromises)
         .then(async () => {
@@ -267,20 +381,11 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
           return [] as string[];
         });
 
-        _send("done", {
-          totalTime,
-          engineTimings: allTimings,
-          indexedUrls,
-          relatedSearches: [],
-          totalPages: agreedPageTotal(allPages),
-          ...imageQueryFields(
-            { ...inputs, imageQuery: inputs.imageQuery ?? imageOutcome.query },
-            imageOutcome,
-          ),
-        });
+        _sendDone(totalTime, indexedUrls);
         })
-        .catch((err) => {
-          logger.error("search-stream", "stream finalization failed", err);
+        .catch((err: unknown) => {
+          logger.error("search-stream", "stream finalization failed, sending done without indexing", err);
+          _sendDone(Math.round(performance.now() - start), []);
         })
         .finally(() => {
           if (!closed) {

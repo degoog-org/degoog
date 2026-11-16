@@ -5,6 +5,7 @@ import { cleanHostname, linkHref } from "../../../../shared/utils/url";
 import {
   toggleMediaPreview,
   registerImageGridPanelSync,
+  remapCurrentMediaIdx,
 } from "../../media/media";
 import { registerAppendMediaCards } from "../../media/media-scroll";
 import { renderTemplate } from "../../../utils/dom/template";
@@ -15,6 +16,12 @@ import {
   RANK_HIDDEN_CLASS,
   registerRankingRelayout,
 } from "./result-ranking";
+import {
+  averageCardHeight,
+  keepPlacedOrder,
+  shortestColumn,
+  type ColumnLoad,
+} from "./image-columns";
 
 const COLUMN_STEPS: ReadonlyArray<{ upTo: number; columns: number }> = [
   { upTo: 800, columns: 3 },
@@ -23,6 +30,15 @@ const COLUMN_STEPS: ReadonlyArray<{ upTo: number; columns: number }> = [
 ];
 const COLUMN_MAX = 6;
 const RELAYOUT_DELAY_MS = 120;
+const THUMB_SELECTOR = ".image-thumb-wrap, img.image-thumb";
+const MEDIA_CARDS = {
+  image: { cardClass: "image-card", templateId: "degoog-image-card" },
+  video: { cardClass: "video-card", templateId: "degoog-video-card" },
+} as const;
+
+const _cardUrls = new WeakMap<HTMLElement, string>();
+const _cardHtml = new WeakMap<HTMLElement, string>();
+const _cardThumbs = new WeakMap<HTMLElement, string>();
 
 const _getImageColumnCount = (grid: HTMLElement): number => {
   const width = grid.clientWidth || window.innerWidth;
@@ -36,32 +52,33 @@ const _isDeadCard = (card: Element): boolean =>
 const _liveCount = (column: HTMLElement): number =>
   Array.from(column.children).filter((child) => !_isDeadCard(child)).length;
 
+const _heightInWidths = (el: HTMLElement): number => {
+  const width = el.offsetWidth;
+  return width > 0 ? el.offsetHeight / width : 0;
+};
+
+const _measureColumns = (columns: HTMLElement[]): ColumnLoad[] =>
+  columns.map((column) => ({
+    height: _heightInWidths(column),
+    cards: _liveCount(column),
+  }));
+
+const _emptyLoads = (columns: HTMLElement[]): ColumnLoad[] =>
+  columns.map(() => ({ height: 0, cards: 0 }));
+
 const _columnPacker = (
   columns: HTMLElement[],
-): ((card: HTMLElement) => void) => {
-  const counts = columns.map(_liveCount);
+  loads: ColumnLoad[],
+): ((card: HTMLElement, height: number) => void) => (card, height) => {
+  if (_isDeadCard(card)) {
+    columns[0].appendChild(card);
+    return;
+  }
 
-  return (card) => {
-    if (_isDeadCard(card)) {
-      columns[0].appendChild(card);
-      return;
-    }
-
-    let best = 0;
-    for (let i = 1; i < columns.length; i++) {
-      const height = columns[i].offsetHeight;
-      const bestHeight = columns[best].offsetHeight;
-      if (
-        height < bestHeight ||
-        (height === bestHeight && counts[i] < counts[best])
-      ) {
-        best = i;
-      }
-    }
-
-    counts[best] += 1;
-    columns[best].appendChild(card);
-  };
+  const best = shortestColumn(loads);
+  loads[best].height += height;
+  loads[best].cards += 1;
+  columns[best].appendChild(card);
 };
 
 const _imageGrid = (): HTMLElement | null =>
@@ -70,10 +87,11 @@ const _imageGrid = (): HTMLElement | null =>
 const _imageColumns = (grid: HTMLElement): HTMLElement[] =>
   Array.from(grid.querySelectorAll<HTMLElement>(".image-column"));
 
+const _byIdx = (a: HTMLElement, b: HTMLElement): number =>
+  Number(a.dataset.idx ?? 0) - Number(b.dataset.idx ?? 0);
+
 const _cardsInResultOrder = (grid: HTMLElement): HTMLElement[] =>
-  Array.from(grid.querySelectorAll<HTMLElement>(".image-card")).sort(
-    (a, b) => Number(a.dataset.idx ?? 0) - Number(b.dataset.idx ?? 0),
-  );
+  Array.from(grid.querySelectorAll<HTMLElement>(".image-card")).sort(_byIdx);
 
 function _scrollSelectedIntoView(grid: HTMLElement): void {
   grid
@@ -83,6 +101,7 @@ function _scrollSelectedIntoView(grid: HTMLElement): void {
 
 function _rebuildColumns(grid: HTMLElement, count: number): HTMLElement[] {
   const cards = _cardsInResultOrder(grid);
+  const heights = cards.map(_heightInWidths);
   const columns: HTMLElement[] = [];
 
   grid.replaceChildren();
@@ -93,8 +112,8 @@ function _rebuildColumns(grid: HTMLElement, count: number): HTMLElement[] {
     grid.appendChild(col);
   }
 
-  const place = _columnPacker(columns);
-  cards.forEach(place);
+  const place = _columnPacker(columns, _emptyLoads(columns));
+  cards.forEach((card, i) => place(card, heights[i]));
   return columns;
 }
 
@@ -143,9 +162,7 @@ const _relayoutRankedGrid = (grid: HTMLElement): void => {
     return;
   }
   const cards = Array.from(grid.children) as HTMLElement[];
-  cards
-    .sort((a, b) => Number(a.dataset.idx ?? 0) - Number(b.dataset.idx ?? 0))
-    .forEach((card) => grid.appendChild(card));
+  cards.sort(_byIdx).forEach((card) => grid.appendChild(card));
 };
 
 registerRankingRelayout(_relayoutRankedGrid);
@@ -160,6 +177,9 @@ const _imageCardUrl = (r: ScoredResult): string => {
   return r.imageUrl;
 };
 
+const _thumbOf = (r: ScoredResult): string =>
+  `${_imageCardUrl(r)}\n${r.thumbnail || ""}`;
+
 const _buildMediaContext = (r: ScoredResult): Record<string, unknown> => ({
   title: r.title,
   url: linkHref(r.url),
@@ -170,53 +190,70 @@ const _buildMediaContext = (r: ScoredResult): Record<string, unknown> => ({
   sources: r.sources,
 });
 
+const _mediaCard = (
+  r: ScoredResult,
+  idx: number,
+  type: "image" | "video",
+): HTMLElement => {
+  const { cardClass, templateId } = MEDIA_CARDS[type];
+  const card = document.createElement("div");
+  card.className = cardClass;
+  card.dataset.idx = String(idx);
+  const html = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
+  card.innerHTML = html;
+  card.addEventListener("click", () => {
+    const current = Number(card.dataset.idx);
+    toggleMediaPreview(state.currentResults[current], current, `.${cardClass}`);
+  });
+  _cardUrls.set(card, r.url);
+  _cardHtml.set(card, html);
+  _cardThumbs.set(card, _thumbOf(r));
+  return card;
+};
+
+const _refreshImageCard = (card: HTMLElement, r: ScoredResult): void => {
+  const { templateId } = MEDIA_CARDS.image;
+  const html = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
+  if (_cardHtml.get(card) === html) return;
+  const thumb = _thumbOf(r);
+  const sameThumb = _cardThumbs.get(card) === thumb;
+  const kept = sameThumb ? card.querySelector(THUMB_SELECTOR) : null;
+  card.innerHTML = html;
+  if (kept) card.querySelector(THUMB_SELECTOR)?.replaceWith(kept);
+  if (!sameThumb) card.style.display = "";
+  _cardHtml.set(card, html);
+  _cardThumbs.set(card, thumb);
+};
+
+const _applyRankingIfNeeded = (results: ScoredResult[]): void => {
+  if (hasResultRanking() || results.some((r) => r.visual)) applyResultRanking();
+};
+
 export function appendMediaCards(
   grid: HTMLElement,
   results: ScoredResult[],
   type: "image" | "video",
 ): void {
-  const cardClass = type === "image" ? "image-card" : "video-card";
-  const selector = `.${cardClass}`;
-  const startIdx = grid.querySelectorAll(`.${cardClass}`).length;
-  const templateId =
-    type === "image" ? "degoog-image-card" : "degoog-video-card";
+  const startIdx = grid.querySelectorAll(
+    `.${MEDIA_CARDS[type].cardClass}`,
+  ).length;
 
   if (type === "image") {
     const columns = _ensureImageColumns(grid);
-    const place = _columnPacker(columns);
-
-    results.forEach((r, i) => {
-      const idx = startIdx + i;
-      const card = document.createElement("div");
-      card.className = cardClass;
-      card.dataset.idx = String(idx);
-      card.innerHTML = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
-      card.addEventListener("click", () => {
-        const current = Number(card.dataset.idx);
-        toggleMediaPreview(state.currentResults[current], current, selector);
-      });
-      place(card);
-    });
-
+    const loads = _measureColumns(columns);
+    const height = averageCardHeight(loads);
+    const place = _columnPacker(columns, loads);
+    results.forEach((r, i) => place(_mediaCard(r, startIdx + i, type), height));
     _observeGridResize(grid);
   } else {
     const fragment = document.createDocumentFragment();
     results.forEach((r, i) => {
-      const idx = startIdx + i;
-      const card = document.createElement("div");
-      card.className = cardClass;
-      card.dataset.idx = String(idx);
-      card.innerHTML = renderTemplate(templateId, _buildMediaContext(r)) ?? "";
-      card.addEventListener("click", () => {
-        const current = Number(card.dataset.idx);
-        toggleMediaPreview(state.currentResults[current], current, selector);
-      });
-      fragment.appendChild(card);
+      fragment.appendChild(_mediaCard(r, startIdx + i, type));
     });
     grid.appendChild(fragment);
   }
 
-  if (hasResultRanking() || results.some((r) => r.visual)) applyResultRanking();
+  _applyRankingIfNeeded(results);
 }
 
 registerAppendMediaCards(appendMediaCards);
@@ -234,3 +271,86 @@ export function renderImageGrid(
   }
   appendMediaCards(grid, results, "image");
 }
+
+const _placedPrefix = (column: HTMLElement, fold: number): HTMLElement[] => {
+  const cards = Array.from(column.children) as HTMLElement[];
+  const cut = cards.findIndex((card) => {
+    const rect = card.getBoundingClientRect();
+    return rect.height > 0 && rect.top >= fold;
+  });
+  return cut < 0 ? cards : cards.slice(0, cut);
+};
+
+const _placedLoad = (column: HTMLElement, placed: HTMLElement[]): ColumnLoad => {
+  const last = placed.at(-1);
+  const width = column.offsetWidth;
+  if (!last || width === 0) return { height: 0, cards: 0 };
+  const bottom =
+    last.getBoundingClientRect().bottom - column.getBoundingClientRect().top;
+  return {
+    height: bottom / width,
+    cards: placed.filter((card) => !_isDeadCard(card)).length,
+  };
+};
+
+export const streamImageGrid = (
+  batch: ScoredResult[],
+  container: HTMLElement,
+): ScoredResult[] => {
+  const grid = container.querySelector<HTMLElement>(".image-grid");
+  const shown = grid ? _cardsInResultOrder(grid) : [];
+  if (!grid || shown.length === 0) {
+    state.currentResults = batch;
+    renderImageGrid(batch, container);
+    return batch;
+  }
+
+  const columns = _ensureImageColumns(grid);
+  const placedByColumn = columns.map((column) =>
+    _placedPrefix(column, window.innerHeight),
+  );
+  const loads = columns.map((column, i) =>
+    _placedLoad(column, placedByColumn[i]),
+  );
+  const placed = new Set(placedByColumn.flat());
+  const previous = state.currentResults;
+  const resultOf = (card: HTMLElement): ScoredResult | undefined =>
+    previous[Number(card.dataset.idx)];
+  const placedCards = shown.filter((card) => placed.has(card) && resultOf(card));
+  const kept = new Set(placedCards);
+  const movable = shown.filter((card) => !kept.has(card));
+  const heights = new Map(movable.map((card) => [card, _heightInWidths(card)]));
+  const estimate = averageCardHeight(loads);
+
+  const next = keepPlacedOrder(
+    placedCards.flatMap((card) => resultOf(card) ?? []),
+    batch,
+  );
+  const nextIdx = new Map(next.map((r, i) => [r.url, i]));
+  const cardsByUrl = new Map(shown.map((card) => [_cardUrls.get(card), card]));
+
+  remapCurrentMediaIdx((old) => {
+    const url = previous[old]?.url;
+    return url === undefined ? old : (nextIdx.get(url) ?? old);
+  });
+  state.currentResults = next;
+  placedCards.forEach((card, i) => {
+    card.dataset.idx = String(i);
+    _refreshImageCard(card, next[i]);
+  });
+  movable.forEach((card) => card.remove());
+
+  const place = _columnPacker(columns, loads);
+  next.slice(placedCards.length).forEach((r, offset) => {
+    const idx = placedCards.length + offset;
+    const reused = cardsByUrl.get(r.url);
+    if (reused) _refreshImageCard(reused, r);
+    const card = reused ?? _mediaCard(r, idx, "image");
+    card.dataset.idx = String(idx);
+    place(card, heights.get(card) ?? estimate);
+  });
+
+  _observeGridResize(grid);
+  _applyRankingIfNeeded(batch);
+  return state.currentResults;
+};

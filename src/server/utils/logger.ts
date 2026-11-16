@@ -8,6 +8,7 @@ const CONSOLE_LEVELS: Record<string, (...args: unknown[]) => void> = {
   info: console.info,
   log: console.log,
   debug: console.debug,
+  translation: console.log,
 };
 const CONSOLE_COLORS: Record<string, string> = {
   fatal: "\x1b[31m",

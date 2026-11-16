@@ -35,6 +35,9 @@ services:
       # When "true", every admin and store action stays behind the password
       # above even on a local network.
       DEGOOG_PUBLIC_INSTANCE: "false"
+      # Behind a reverse proxy, set this to the public URL so links such as
+      # /opensearch.xml use https.
+      # DEGOOG_BASE_URL: "https://search.example.com"
 
   degoog-mcp:
     image: ghcr.io/degoog-org/mcp:latest

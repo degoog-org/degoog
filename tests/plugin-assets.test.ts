@@ -1,12 +1,18 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+import { mkdtempSync, rmSync } from "fs";
 import { mkdtemp, mkdir, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import {
+  clearPluginSettingsCache,
+  setSettings,
+} from "../src/server/utils/settings/plugin-settings";
+import {
   loadPluginAssets,
   prunePluginAssets,
   addPluginCss,
-  getAllPluginCss,
+  getEnabledPluginCss,
+  pluginCssVersion,
   registerPluginScript,
   getPluginScriptFolders,
   getScriptFolderSource,
@@ -15,13 +21,48 @@ import {
 } from "../src/server/utils/extension-support/plugin-assets";
 import type { PluginContext } from "../src/server/types/extension";
 
+const settingsDir = mkdtempSync(join(tmpdir(), "degoog-plugin-css-"));
+const prevSettingsFile = process.env.DEGOOG_PLUGIN_SETTINGS_FILE;
+
+beforeAll(() => {
+  process.env.DEGOOG_PLUGIN_SETTINGS_FILE = join(settingsDir, "plugin-settings.json");
+  clearPluginSettingsCache();
+});
+
+afterAll(() => {
+  if (prevSettingsFile === undefined) delete process.env.DEGOOG_PLUGIN_SETTINGS_FILE;
+  else process.env.DEGOOG_PLUGIN_SETTINGS_FILE = prevSettingsFile;
+  clearPluginSettingsCache();
+  rmSync(settingsDir, { recursive: true, force: true });
+});
+
 describe("plugin-assets", () => {
-  test("addPluginCss and getAllPluginCss", () => {
+  test("addPluginCss and getEnabledPluginCss", async () => {
     addPluginCss("p1", ".p1 { color: red; }");
     addPluginCss("p2", ".p2 { color: blue; }");
-    const all = getAllPluginCss();
+    const all = await getEnabledPluginCss();
     expect(all).toContain(".p1 { color: red; }");
     expect(all).toContain(".p2 { color: blue; }");
+  });
+
+  test("plugin css order does not depend on load order", async () => {
+    addPluginCss("order-b-slot", ".order-b { color: red; }");
+    addPluginCss("order-a-slot", ".order-a { color: red; }");
+    const css = await getEnabledPluginCss();
+    expect(css.indexOf(".order-a")).toBeLessThan(css.indexOf(".order-b"));
+  });
+
+  test("stylesheet version follows plugins being added and disabled", async () => {
+    const before = pluginCssVersion(await getEnabledPluginCss());
+    addPluginCss("late-plugin-slot", ".late { color: green; }");
+    const added = await getEnabledPluginCss();
+    expect(added).toContain(".late { color: green; }");
+    expect(pluginCssVersion(added)).not.toBe(before);
+
+    await setSettings("late-plugin-slot", { disabled: true });
+    const disabled = await getEnabledPluginCss();
+    expect(disabled).not.toContain(".late { color: green; }");
+    expect(pluginCssVersion(disabled)).toBe(before);
   });
 
   test("registered script folders are listed and keep their source", () => {
@@ -50,8 +91,9 @@ describe("plugin-assets", () => {
     await rm(gone, { recursive: true, force: true });
     prunePluginAssets(root);
 
-    expect(getAllPluginCss()).toContain(".kept-css");
-    expect(getAllPluginCss()).not.toContain(".gone-css");
+    const css = await getEnabledPluginCss();
+    expect(css).toContain(".kept-css");
+    expect(css).not.toContain(".gone-css");
     expect(getScriptFolderSource("kept-plugin")).toBe("plugin");
     expect(getScriptFolderSource("gone-plugin")).toBeNull();
     expect(getScriptFolderSource("builtin-only")).toBe("builtin");
