@@ -85,6 +85,10 @@ const _public = ({ results, timing, pages }: CachedEngineRun): CachedEngineRun =
   ...(pages !== undefined ? { pages } : {}),
 });
 
+export interface RunOptions {
+  hardTimeout?: boolean;
+}
+
 const _firstPageRun = async (
   cacheId: string,
   scope: RunScope,
@@ -148,6 +152,7 @@ export const searchSingleEngine = async (
     image?: SearchImage;
     region?: string;
     onPartial?: (results: SearchResult[], expected?: number) => void;
+    hardTimeout?: boolean;
   },
 ): Promise<CachedEngineRun & { cached?: boolean }> => {
   const engine = resolveEngine(engineName);
@@ -236,7 +241,7 @@ export const searchSingleEngine = async (
     const timeout = await getEngineTimeout(engineSettingsId);
     const { results, partial, error } = await emitter.settle(
       Promise.resolve().then(() => engine.executeSearch(query, p, timeFilter, engineContext)),
-      { idleMs: timeout, budgetMs: opts?.onPartial ? getEngineBudget(timeout) : timeout, abort: () => ac.abort() },
+      { idleMs: timeout, budgetMs: opts?.hardTimeout ? timeout : getEngineBudget(timeout), abort: () => ac.abort() },
     );
     const elapsed = Math.round(performance.now() - t0);
     if (signal?.aborted) return _abandonedRun(engine.name, engineSettingsId, elapsed);
@@ -288,6 +293,7 @@ export const search = async (
   imageFilter?: ImageFilter,
   inputs: SearchInputs = {},
   region = "",
+  runOpts: RunOptions = {},
 ): Promise<SearchResponse & { indexBasis: ScoredResult[] }> => {
   const start = performance.now();
   const p = sanePage(page);
@@ -319,7 +325,7 @@ export const search = async (
         imageFilter,
         undefined,
         type,
-        { image: inputs.image, region },
+        { image: inputs.image, region, hardTimeout: runOpts.hardTimeout },
       ),
     ),
   );

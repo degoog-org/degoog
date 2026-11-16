@@ -37,6 +37,7 @@ import { signResultThumbnails } from "../../utils/net/proxy-sign";
 import { parseSearchBody, parseSearchRequest } from "./parsers";
 import { getInstanceSettings } from "../../utils/settings/server-settings";
 import { tagIndexRelation } from "../../indexer/store/record";
+import { makeSettleWatch } from "../../search/engine-emit";
 
 interface RawEngineRun {
   results: SearchResult[];
@@ -131,41 +132,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
         return next;
       };
 
-      let waiting = 0;
-      let settledSent = false;
-      const emittingNow = new Set<string>();
-
-      const checkSettled = (): void => {
-        if (settledSent || waiting > 0 || emittingNow.size === 0) return;
-        settledSent = true;
-        _send("results-settled", {});
-      };
-
-      const hold = (): (() => void) => {
-        waiting++;
-        let held = true;
-        return () => {
-          if (!held) return;
-          held = false;
-          waiting--;
-        };
-      };
-
-      const engineHold = (id: string): { emitting: () => void; done: () => void } => {
-        const release = hold();
-        return {
-          emitting: () => {
-            release();
-            emittingNow.add(id);
-            checkSettled();
-          },
-          done: () => {
-            release();
-            emittingNow.delete(id);
-            checkSettled();
-          },
-        };
-      };
+      const watch = makeSettleWatch(() => _send("results-settled", {}));
 
       const partialFeed = (
         toRun: (results: SearchResult[]) => RawEngineRun,
@@ -311,7 +278,7 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
 
       const runAll = (active: ActiveEngine[], runInputs: SearchInputs): Promise<void>[] =>
         active.map((engine) => {
-          const held = engineHold(engine.id);
+          const held = watch.engine(engine.id);
           return runEngine(engine, runInputs, held.emitting)
             .catch((err: unknown) => {
               logger.warn("search-stream", `${engine.instance.name} failed mid-stream`, err);
@@ -324,12 +291,11 @@ async function _streamSearch(params: SearchParams): Promise<Response> {
         describer: ImageQueryProvider,
         image: SearchImage,
       ): Promise<void> => {
-        const release = hold();
+        const release = watch.hold();
         try {
           await describeAndLaunch(describer, image, release);
         } finally {
           release();
-          checkSettled();
         }
       };
 

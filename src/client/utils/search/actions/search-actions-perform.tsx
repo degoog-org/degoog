@@ -57,6 +57,7 @@ import { fetchCommand, fetchSearch } from "../../net/url";
 import { getBase } from "../../net/base-url";
 import { onWindowEvent } from "../../dom/window-event";
 import { fetchStreamingConfig } from "../streaming/streaming-config";
+import { streamsProgressively } from "../streaming/stream-request";
 import {
   loadSidebarSuggestions,
   prepareResultsUi,
@@ -104,6 +105,7 @@ export async function performSearch(
   if (!query.trim() && !image) return;
   destroyMediaObserver();
   teardownInfinite();
+  abortStreamingSearch();
   const seq = beginSearch();
   beginImageQuery();
 
@@ -150,20 +152,14 @@ export async function performSearch(
 
   const streamingConfig = await fetchStreamingConfig();
   if (!isCurrentSearch(seq)) return;
-  if (
-    !naturalBangQuery &&
-    (!state.postMethodEnabled || image) &&
-    (!page || page === 1) &&
-    streamingConfig.enabled &&
-    !streamingConfig.disabledTypes.includes(resolvedType)
-  ) {
-    abortStreamingSearch();
+  if (!naturalBangQuery) {
     return performStreamingSearch(
       query,
       resolvedType,
       (q) => void performSearch(q),
       isInit,
       restorePage,
+      { page, progressive: streamsProgressively(streamingConfig, resolvedType) },
     );
   }
 

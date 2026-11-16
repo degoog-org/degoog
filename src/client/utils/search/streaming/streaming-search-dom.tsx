@@ -4,7 +4,6 @@ import { StreamingStatRow } from "./streaming-stat-row";
 import { state } from "../../../state";
 import {
   DEGOOG_ENGINE_NAME,
-  type EngineTiming,
   type ScoredResult,
 } from "../../../../shared/search-types";
 import { renderTemplate } from "../../dom/template";
@@ -15,12 +14,11 @@ import {
 import { engineCount } from "../engine-stats/engine-failure";
 import { originSlot, paintOrigins } from "../engine-stats/engine-origins";
 import { PANEL_LAYOUT_BREAKPOINT } from "../../../modules/renderer/media/render-media";
+import type { StreamingTiming } from "./stream-feed";
 
 const t = window.scopedT("themes/degoog");
 
-export interface StreamingTiming extends EngineTiming {
-  emitting?: { count: number; expected?: number };
-}
+export type { StreamingTiming } from "./stream-feed";
 
 const _renderedFrom = new WeakMap<HTMLElement, string>();
 
@@ -99,6 +97,55 @@ export function updateResults(
     const current = container.children[i] ?? null;
     if (current !== sorted[i]) container.insertBefore(sorted[i], current);
   }
+}
+
+const _inPageOrder = (container: HTMLElement, rows: HTMLElement[]): boolean => {
+  const tail = Array.from(container.children).slice(-rows.length);
+  return tail.length === rows.length && rows.every((row, i) => tail[i] === row);
+};
+
+export function updatePageRows(
+  container: HTMLElement | null,
+  results: ScoredResult[],
+  page: number,
+  startIndex: number,
+): void {
+  if (!container) return;
+  const tag = String(page);
+  const mine = (Array.from(container.children) as HTMLElement[]).filter(
+    (el) => el.dataset.streamPage === tag,
+  );
+  const wanted = new Set(results.map((r) => r.url));
+  const byUrl = new Map<string, HTMLElement>();
+  for (const el of mine) {
+    const url = el.dataset.resultUrl ?? "";
+    if (wanted.has(url)) byUrl.set(url, el);
+    else el.remove();
+  }
+
+  const rows: HTMLElement[] = [];
+  results.forEach((r, i) => {
+    const existing = byUrl.get(r.url);
+    if (existing && _renderedFrom.get(existing) === _fingerprint(r)) {
+      rows.push(existing);
+      return;
+    }
+    const el = renderResultEl(r, startIndex + i);
+    if (!el) return;
+    el.dataset.streamPage = tag;
+    if (existing) existing.replaceWith(el);
+    else el.classList.add("result-stream-in");
+    rows.push(el);
+  });
+
+  if (_inPageOrder(container, rows)) return;
+  for (const row of rows) container.appendChild(row);
+}
+
+export function dropEnginePanels(sidebar: HTMLElement | null, which: "final" | "live"): void {
+  sidebar
+    ?.querySelector(which === "final" ? ".engine-performance-panel" : ".streaming-engine-panel")
+    ?.remove();
 }
 
 const _emittingLabel = ({ count, expected }: { count: number; expected?: number }): string =>

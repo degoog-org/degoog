@@ -127,3 +127,54 @@ export const makeEngineEmitter = (
 
   return { emit, settle };
 };
+
+export interface EngineHold {
+  emitting: () => void;
+  done: () => void;
+}
+
+export interface SettleWatch {
+  hold: () => () => void;
+  engine: (id: string) => EngineHold;
+}
+
+export const makeSettleWatch = (onSettled: () => void): SettleWatch => {
+  let waiting = 0;
+  let settled = false;
+  const emittingNow = new Set<string>();
+
+  const check = (): void => {
+    if (settled || waiting > 0 || emittingNow.size === 0) return;
+    settled = true;
+    onSettled();
+  };
+
+  const hold = (): (() => void) => {
+    waiting++;
+    let held = true;
+    return () => {
+      if (!held) return;
+      held = false;
+      waiting--;
+      check();
+    };
+  };
+
+  const engine = (id: string): EngineHold => {
+    const release = hold();
+    return {
+      emitting: () => {
+        emittingNow.add(id);
+        release();
+        check();
+      },
+      done: () => {
+        emittingNow.delete(id);
+        release();
+        check();
+      },
+    };
+  };
+
+  return { hold, engine };
+};

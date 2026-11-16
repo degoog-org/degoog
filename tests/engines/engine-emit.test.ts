@@ -220,16 +220,29 @@ describe("searchSingleEngine with an emitting engine", () => {
     expect(saved).toBe(0);
   });
 
-  test("without a stream an emitting engine is cut at its normal timeout, with one it gets the full budget", async () => {
+  test("an emitting engine gets the same full budget with or without a stream", async () => {
     behaviour = "trickle";
     const plain = await searchSingleEngine("emitting", "plain");
     const streamed = await searchSingleEngine(
       "emitting", "streamed", 1, "any", undefined, undefined, undefined, undefined, undefined, undefined,
       { onPartial: () => {} },
     );
-    expect(plain.timing.time).toBeLessThan(80);
+    expect(plain.timing.time).toBeGreaterThanOrEqual(110);
     expect(plain.results.length).toBeGreaterThan(0);
     expect(streamed.timing.time).toBeGreaterThanOrEqual(110);
+  });
+
+  test("a hard timeout cuts an emitting engine at its normal timeout and keeps what it emitted", async () => {
+    behaviour = "trickle";
+    saved = 0;
+    const hard = await searchSingleEngine(
+      "emitting", "hard", 1, "any", undefined, undefined, undefined, undefined, undefined, undefined,
+      { hardTimeout: true },
+    );
+    expect(hard.timing.time).toBeLessThan(80);
+    expect(hard.results.length).toBeGreaterThan(0);
+    expect(hard.timing.status).toBe(THREAT_LEVEL.OK);
+    expect(saved).toBe(0);
   });
 
   test("an engine that returns synchronously still works, and a sync throw keeps what it emitted", async () => {

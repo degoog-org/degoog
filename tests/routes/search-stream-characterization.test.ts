@@ -630,3 +630,40 @@ describe("GET /api/search/stream engines sharing a display name", () => {
     expect(urls).toContain("https://fast.test/1");
   });
 });
+
+describe("GET /api/search/stream for later pages", () => {
+  test("page 2 runs every engine on page 2 and streams the emitter's partials before done", async () => {
+    const seenPages: Record<string, number | undefined> = {};
+    const paged = (name: string, emits: boolean): EngineEntry => ({
+      id: `${name.toLowerCase()}-engine`,
+      instance: {
+        name,
+        executeSearch: async (_query, page, _timeFilter, context) => {
+          seenPages[name] = page;
+          if (emits) {
+            await nap(10);
+            context?.emit?.([makeResult(`${name}${page}`, 1)], { expected: 2 });
+            await nap(60);
+          }
+          context?.pagination?.({ total: 5 });
+          return [makeResult(`${name}${page}`, 1), makeResult(`${name}${page}`, 2)];
+        },
+      },
+    });
+    harness({ engines: [paged("Emitter", true), paged("Steady", false)] });
+    const events = await readEvents(await call(uniqueQuery("paged"), "&page=2"));
+
+    expect(seenPages).toEqual({ Emitter: 2, Steady: 2 });
+    expect(events.map((e) => e.event)).toEqual([
+      "engine-result",
+      "engine-partial",
+      "results-settled",
+      "engine-result",
+      "done",
+    ]);
+    const urls = (events.at(-2)?.data.results as ScoredResult[]).map((r) => r.url);
+    expect(urls).toContain("https://emitter2.test/1");
+    expect(urls).toContain("https://steady2.test/2");
+    expect(events.at(-1)?.data.totalPages).toBe(5);
+  });
+});

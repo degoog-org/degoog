@@ -14,6 +14,7 @@ import {
 import { hideAcDropdown } from "../../utils/autocomplete/autocomplete";
 import { setActiveTab, showAllTabs } from "../../utils/navigation/navigation";
 import { fetchStreamingConfig } from "../../utils/search/streaming/streaming-config";
+import { streamsProgressively } from "../../utils/search/streaming/stream-request";
 import { Pagination } from "../../utils/pagination/pagination";
 import {
   currentKnowledgePanels,
@@ -72,20 +73,17 @@ export async function performTabSearch(
     : "";
   const streamingConfig = engineType ? await fetchStreamingConfig() : null;
   if (!isCurrentSearch(seq)) return;
-  if (
-    streamingConfig?.enabled &&
-    page === 1 &&
-    !state.postMethodEnabled &&
-    !streamingConfig.disabledTypes.includes(engineType)
-  ) {
-    abortStreamingSearch();
+  if (streamingConfig) {
     return performStreamingSearch(
       query,
       engineType,
       (q) => void performTabSearch(q, tabId),
       isInit,
+      1,
+      { page, progressive: streamsProgressively(streamingConfig, engineType) },
     );
   }
+  abortStreamingSearch();
 
   state.currentQuery = query;
   state.currentBangQuery = "";

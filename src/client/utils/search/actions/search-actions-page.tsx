@@ -16,6 +16,9 @@ import {
   streamSlotPanels,
 } from "../search-utils";
 import { declaredPages, setResultsMeta } from "../search-helpers";
+import { renderEngineStats } from "../../../modules/renderer/sidebar/render-sidebar";
+import { canStreamPages } from "../streaming/stream-request";
+import { streamResultsPage } from "../streaming/streaming-search";
 
 const t = window.scopedT("themes/degoog");
 
@@ -25,6 +28,9 @@ export async function goToPage(pageNum: number): Promise<void> {
     const { performBangSearch } = await import("./search-actions-perform");
     return performBangSearch(state.currentBangQuery, state.currentType, pageNum);
   }
+  const { performSearch } = await import("./search-actions-perform");
+  const navigate = (q: string): void => void performSearch(q);
+  if (canStreamPages()) return streamResultsPage(pageNum, navigate);
 
   const seq = beginSearch();
   window.scrollTo({ top: 0, behavior: "auto" });
@@ -82,6 +88,7 @@ export async function goToPage(pageNum: number): Promise<void> {
       abortSlotFetch();
       void streamSlotPanels(state.currentQuery, state.currentResults);
     }
+    renderEngineStats(data.engineTimings ?? [], navigate);
     renderResults(state.currentResults);
     window.scrollTo({ top: 0, behavior: "auto" });
   } catch (err) {

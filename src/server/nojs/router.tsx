@@ -14,6 +14,7 @@ import {
 import { planEngineBang } from "../search/engine-bang";
 import { build404 } from "../routes/pages/pages";
 import { handleRetry, handleSearch } from "../search/handlers";
+import type { RunOptions } from "../search";
 import { handleTabSearch } from "../search/tab-search";
 import { sanePage } from "../search/page-counter";
 import {
@@ -53,6 +54,7 @@ const router = new Hono();
 const VIDEO_SEARCH_TYPE = "videos";
 const HOME_BODY_CLASS = "nojs nojs-home";
 const NOJS_PAGE_TOTAL = 10;
+const NOJS_RUN: RunOptions = { hardTimeout: true };
 
 interface NojsOutcome {
   results: ScoredResult[];
@@ -167,6 +169,7 @@ const _runSearch = async (
         resolveBuiltinSearchType(plan.searchType) || WEB_TAB_ID,
         plan.engines,
       ),
+      NOJS_RUN,
     );
     return _outcome(response, false);
   }
@@ -198,11 +201,11 @@ const _runSearch = async (
   );
 
   if (retry) {
-    const retried = await handleRetry({ ...params, engineName: retry });
+    const retried = await handleRetry({ ...params, engineName: retry }, NOJS_RUN);
     return _outcome(retried, true);
   }
 
-  return _outcome(await handleSearch(params), true);
+  return _outcome(await handleSearch(params, NOJS_RUN), true);
 };
 
 router.get("/nojs", async (c) => {

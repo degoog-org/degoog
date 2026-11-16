@@ -4,36 +4,40 @@ import { NoResults } from "../../../../shared/ui/components/feedback/no-results"
 import { NoEnginesLink } from "../engine-stats/no-engines-link";
 import { MAX_PAGE } from "../../../constants";
 import { destroyMediaObserver, setupMediaObserver } from "../../../modules/media/media-scroll";
-import { renderSidebar } from "../../../modules/renderer/sidebar/render-sidebar";
+import {
+  renderEngineStats,
+  renderSidebar,
+} from "../../../modules/renderer/sidebar/render-sidebar";
 import { attachVideoPlayers, renderPagination } from "../../../modules/renderer/render";
 import { streamImageGrid } from "../../../modules/renderer/media/render-media";
 import { announceSettled, RESULTS_READY } from "../../../modules/renderer/media/result-ranking";
 import { renderImgEngines } from "../../../modules/filters/image-filters";
+import { clearSlotPanels } from "../../../modules/renderer/render-slots";
+import { SkeletonImageGrid } from "../../../animations/skeleton/skeleton-image-grid";
+import { SkeletonResults } from "../../../animations/skeleton/skeleton-results";
 import { beginSearch, isCurrentSearch, state } from "../../../state";
 import {
-  type EngineTiming,
   isImageSearchType,
   type ScoredResult,
   type SearchResponse,
 } from "../../../../shared/search-types";
 import { getEngines } from "../engines";
 import {
+  abortGlancePanels,
+  abortSlotFetch,
   currentKnowledgePanels,
   streamGlancePanels,
   streamSlotPanels,
 } from "../search-utils";
-import { buildSearchBody, buildSearchUrl } from "../../net/url";
-import { appendSearchAuthParams, searchAuthHeaders } from "../../net/request";
-import { FetchEventStream, type SearchEventSource } from "./fetch-event-stream";
+import type { SearchEventSource } from "./fetch-event-stream";
 import {
   beginImageQuery,
   currentSearchImage,
   imageQueryError,
   noteImageQuery,
-  withSearchImage,
 } from "../../../modules/search-image/search-image";
-import { declaredPages } from "../search-helpers";
-import { infiniteScrollOn, panelsMaxWaitMs } from "./streaming-config";
+import { declaredPages, setResultsMeta } from "../search-helpers";
+import { fetchStreamingConfig, infiniteScrollOn, panelsMaxWaitMs } from "./streaming-config";
 import {
   armInfinite,
   teardownInfinite,
@@ -48,52 +52,39 @@ import {
 } from "../actions/search-actions-render";
 import { staysHere } from "../../dom/plain-click";
 import {
+  dropEnginePanels,
   updateEngineTimings,
   updateResults,
-  type StreamingTiming,
 } from "./streaming-search-dom";
+import { feedSearchStream, type StreamDone, type StreamingTiming } from "./stream-feed";
+import { openSearchStream, streamsProgressively } from "./stream-request";
+import {
+  abortActiveStream,
+  claimStream,
+  isActiveStream,
+  releaseStream,
+} from "./active-stream";
 
 const t = window.scopedT("themes/degoog");
 
-interface StreamEngineResult {
-  engine: string;
-  timing: EngineTiming;
-  results: ScoredResult[];
-  retry: boolean;
-  attempt: number;
+type Navigate = (q: string) => void;
+
+interface StreamPlan {
+  seq: number;
+  query: string;
+  type: string;
+  page: number;
+  progressive: boolean;
+  navigation: boolean;
+  onComplete: Navigate;
+  restorePage: number;
 }
 
-interface StreamEnginePartial {
-  engine: string;
-  id?: string;
-  emitted: number;
-  expected?: number;
-  results: ScoredResult[];
+export interface StreamSearchOptions {
+  page?: number;
+  progressive?: boolean;
 }
 
-interface StreamEngineRetry {
-  engine: string;
-  attempt: number;
-  maxRetries: number;
-  timing: EngineTiming;
-}
-
-interface StreamImageQuery {
-  query: string | null;
-  error: string | null;
-}
-
-interface StreamDone {
-  totalTime: number;
-  engineTimings: EngineTiming[];
-  indexedUrls?: string[];
-  relatedSearches: string[];
-  totalPages?: number;
-  imageQuery?: string;
-  imageQueryError?: string;
-}
-
-let _activeSource: SearchEventSource | null = null;
 let _linkWatch: AbortController | null = null;
 
 const _streamErrorStatus = (e: MessageEvent<string>): number | undefined => {
@@ -109,79 +100,110 @@ const _announceResults = (): void => {
   window.dispatchEvent(new CustomEvent(RESULTS_READY));
 };
 
-const dropStream = (source: SearchEventSource): void => {
-  source.close();
-  if (_activeSource !== source) return;
-  _activeSource = null;
+function _endLinkWatch(): void {
   _linkWatch?.abort();
   _linkWatch = null;
-};
-
-export function abortStreamingSearch(): void {
-  if (_activeSource) dropStream(_activeSource);
 }
 
-export async function performStreamingSearch(
-  query: string,
-  type: string,
-  onComplete: (q: string) => void,
-  isInitialLoad = false,
-  restorePage = 1,
-): Promise<void> {
-  abortStreamingSearch();
-  const seq = beginSearch();
+export function abortStreamingSearch(): void {
+  abortActiveStream();
+}
 
-  state.currentQuery = query;
-  state.currentBangQuery = "";
-  state.currentType = type;
-  state.currentPage = 1;
+function _resetPaging(page: number): void {
+  state.currentPage = page;
   state.lastPage = null;
   state.imagePage = 1;
   state.imageLastPage = MAX_PAGE;
   state.videoPage = 1;
   state.videoLastPage = MAX_PAGE;
+}
+
+export async function performStreamingSearch(
+  query: string,
+  type: string,
+  onComplete: Navigate,
+  isInitialLoad = false,
+  restorePage = 1,
+  opts: StreamSearchOptions = {},
+): Promise<void> {
+  abortStreamingSearch();
+  const seq = beginSearch();
+  const page = opts.page && opts.page > 1 ? opts.page : 1;
+
+  state.currentQuery = query;
+  state.currentBangQuery = "";
+  state.currentType = type;
+  _resetPaging(page);
   destroyMediaObserver();
   teardownInfinite();
 
   const engines = await getEngines();
   if (!isCurrentSearch(seq)) return;
-  const openStream = (): SearchEventSource =>
-    currentSearchImage()
-      ? new FetchEventStream(`${getBase()}/api/search/stream`, {
-          body: withSearchImage(buildSearchBody(query, engines, type, 1)),
-          headers: searchAuthHeaders(),
-        })
-      : new FetchEventStream(
-          appendSearchAuthParams(
-            buildSearchUrl(query, engines, type, 1).replace(
-              "/api/search?",
-              "/api/search/stream?",
-            ),
-          ),
-        );
+  const progressive =
+    opts.progressive ?? streamsProgressively(await fetchStreamingConfig(), type);
+  if (!isCurrentSearch(seq)) return;
 
   prepareResultsUi(query, type);
   loadSidebarSuggestions(query, type, onComplete);
-  pushSearchHistory(query, type, 1, isInitialLoad);
+  pushSearchHistory(query, type, page, isInitialLoad);
 
+  beginImageQuery();
+  _streamInto(
+    { seq, query, type, page, progressive, navigation: false, onComplete, restorePage },
+    openSearchStream(query, engines, type, page),
+  );
+}
+
+export async function streamResultsPage(page: number, onComplete: Navigate): Promise<void> {
+  abortStreamingSearch();
+  const seq = beginSearch();
+  const { currentQuery: query, currentType: type } = state;
+  window.scrollTo({ top: 0, behavior: "auto" });
+  teardownInfinite();
+
+  const resultsList = document.getElementById("results-list");
+  if (resultsList) {
+    render(isImageSearchType(type) ? <SkeletonImageGrid /> : <SkeletonResults />, resultsList);
+  }
+  const pagination = document.getElementById("pagination");
+  if (pagination) clear(pagination);
+  abortGlancePanels();
+  abortSlotFetch();
+  clearSlotPanels();
+  dropEnginePanels(document.getElementById("results-sidebar"), "final");
+  setResultsMeta(t("search-templates.status.searching"));
+
+  const engines = await getEngines();
+  if (!isCurrentSearch(seq)) return;
+  const progressive = streamsProgressively(await fetchStreamingConfig(), type);
+  if (!isCurrentSearch(seq)) return;
+
+  state.currentPage = page;
+  pushSearchHistory(query, type, page, false);
+  _streamInto(
+    { seq, query, type, page, progressive, navigation: true, onComplete, restorePage: 1 },
+    openSearchStream(query, engines, type, page),
+  );
+}
+
+function _streamInto(plan: StreamPlan, source: SearchEventSource): void {
+  const { seq, query, type, page, progressive, navigation, onComplete, restorePage } = plan;
   const isImageType = isImageSearchType(type);
-  const resultsMeta = document.getElementById("results-meta");
   const resultsList = document.getElementById("results-list");
   const sidebar = document.getElementById("results-sidebar");
 
-  const engineTimings: StreamingTiming[] = [];
   let firstResult = true;
   let currentResults: ScoredResult[] = [];
   const renderedUrls = new Set<string>();
 
-  beginImageQuery();
-  const source = openStream();
-  _activeSource = source;
-  _linkWatch = new AbortController();
+  _endLinkWatch();
+  claimStream(source, _endLinkWatch);
+  const linkWatch = new AbortController();
+  _linkWatch = linkWatch;
 
   const live = (): boolean => {
-    if (isCurrentSearch(seq)) return true;
-    dropStream(source);
+    if (isCurrentSearch(seq) && isActiveStream(source)) return true;
+    releaseStream(source);
     return false;
   };
 
@@ -189,25 +211,25 @@ export async function performStreamingSearch(
     "click",
     (ev) => {
       const anchor = (ev.target as Element).closest("a");
-      if (!anchor || _activeSource !== source) return;
-      if (staysHere(ev, anchor)) dropStream(source);
+      if (!anchor || !isActiveStream(source)) return;
+      if (staysHere(ev, anchor)) releaseStream(source);
     },
-    { signal: _linkWatch.signal },
+    { signal: linkWatch.signal },
   );
 
   let panelsStarted = false;
   let panelsWaitedOut = false;
   const startPanels = (): void => {
-    if (panelsStarted) return;
+    if (panelsStarted || isImageType) return;
     panelsStarted = true;
-    void streamGlancePanels(query, currentResults);
+    if (!navigation || page === 1) void streamGlancePanels(query, currentResults);
     void streamSlotPanels(query, currentResults);
   };
 
   const maxWait = panelsMaxWaitMs();
-  if (maxWait > 0 && !isImageType) {
+  if (progressive && maxWait > 0 && !isImageType) {
     window.setTimeout(() => {
-      if (panelsStarted || _activeSource !== source || !live()) return;
+      if (panelsStarted || !isActiveStream(source) || !live()) return;
       panelsWaitedOut = true;
       if (currentResults.length > 0) startPanels();
     }, maxWait);
@@ -226,9 +248,7 @@ export async function performStreamingSearch(
           );
         }
         firstResult = false;
-        currentResults = resultsList
-          ? streamImageGrid(results, resultsList)
-          : results;
+        currentResults = resultsList ? streamImageGrid(results, resultsList) : results;
         state.currentResults = currentResults;
       }
     } else {
@@ -242,93 +262,20 @@ export async function performStreamingSearch(
       if (resultsList) attachVideoPlayers(resultsList);
     }
 
-    if (resultsMeta) {
-      resultsMeta.textContent = t("search-templates.status.streaming", {
-        count: String(currentResults.length),
-      });
-    }
+    setResultsMeta(
+      t("search-templates.status.streaming", { count: String(currentResults.length) }),
+    );
     if (panelsWaitedOut && currentResults.length > 0) startPanels();
+    if (results.length > 0) _announceResults();
   };
 
-  source.addEventListener("results-settled", () => {
-    if (!live() || isImageType) return;
-    startPanels();
-  });
+  const showTimings = (rows: StreamingTiming[]): void => {
+    if (isImageType) renderImgEngines(rows);
+    else updateEngineTimings(sidebar, rows);
+  };
 
-  source.addEventListener("engine-partial", (e) => {
-    if (!live()) return;
-    const data = JSON.parse(e.data) as StreamEnginePartial;
-    const emitting: StreamingTiming = {
-      name: data.engine,
-      id: data.id,
-      time: 0,
-      resultCount: data.emitted,
-      emitting: { count: data.emitted, expected: data.expected },
-    };
-    const existingIdx = engineTimings.findIndex((timing) => timing.name === data.engine);
-    if (existingIdx >= 0) engineTimings[existingIdx] = emitting;
-    else engineTimings.push(emitting);
-
-    showResults(data.results);
-    if (isImageType) {
-      renderImgEngines(engineTimings);
-    } else {
-      updateEngineTimings(sidebar, engineTimings);
-    }
-    if (data.results.length > 0) _announceResults();
-  });
-
-  source.addEventListener("engine-result", (e) => {
-    if (!live()) return;
-    const data = JSON.parse(e.data) as StreamEngineResult;
-
-    const existingIdx = engineTimings.findIndex(
-      (timing) => timing.name === data.engine,
-    );
-    if (existingIdx >= 0) {
-      engineTimings[existingIdx] = data.timing;
-    } else {
-      engineTimings.push(data.timing);
-    }
-
-    showResults(data.results);
-
-    if (isImageType) {
-      renderImgEngines(engineTimings);
-    } else {
-      updateEngineTimings(sidebar, engineTimings);
-    }
-    if (data.results.length > 0) _announceResults();
-  });
-
-  source.addEventListener("engine-retry", (e) => {
-    if (!live()) return;
-    const data = JSON.parse(e.data) as StreamEngineRetry;
-    const existingIdx = engineTimings.findIndex(
-      (timing) => timing.name === data.engine,
-    );
-    if (existingIdx >= 0) {
-      engineTimings[existingIdx] = { ...data.timing, resultCount: -1 };
-    } else {
-      engineTimings.push({ ...data.timing, resultCount: -1 });
-    }
-    if (isImageType) {
-      renderImgEngines(engineTimings);
-    } else {
-      updateEngineTimings(sidebar, engineTimings);
-    }
-  });
-
-  source.addEventListener("image-query", (e) => {
-    if (!live()) return;
-    const data = JSON.parse(e.data) as StreamImageQuery;
-    noteImageQuery(query, data.query, data.error);
-  });
-
-  source.addEventListener("done", (e) => {
-    if (!live()) return;
-    const data = JSON.parse(e.data) as StreamDone;
-    dropStream(source);
+  const finish = (data: StreamDone): void => {
+    releaseStream(source);
     if (currentSearchImage()) noteImageQuery(query, data.imageQuery, data.imageQueryError);
 
     if (!isImageType && data.indexedUrls && data.indexedUrls.length > 0) {
@@ -350,23 +297,33 @@ export async function performStreamingSearch(
     };
 
     state.currentData = searchData;
+    state.currentPage = page;
     state.lastPage = declaredPages(data.totalPages);
 
-    if (resultsMeta) {
-      resultsMeta.textContent = t("search-templates.status.done", {
-        count: String(currentResults.length),
-        time: (data.totalTime / 1000).toFixed(2),
-      });
-    }
+    setResultsMeta(
+      navigation
+        ? t("search-templates.status.page", {
+            count: String(currentResults.length),
+            page: String(page),
+          })
+        : t("search-templates.status.done", {
+            count: String(currentResults.length),
+            time: (data.totalTime / 1000).toFixed(2),
+          }),
+    );
 
     if (isImageType) {
       renderImgEngines(data.engineTimings);
       if (sidebar) clear(sidebar);
       if (currentResults.length > 0) setupMediaObserver("images");
+    } else if (navigation) {
+      startPanels();
+      renderEngineStats(data.engineTimings, onComplete);
+      dropEnginePanels(sidebar, "live");
     } else {
       updateEngineTimings(sidebar, data.engineTimings);
       startPanels();
-      renderSidebar(searchData, (q) => onComplete(q), {
+      renderSidebar(searchData, onComplete, {
         sidebarTopPanels: currentKnowledgePanels(),
       });
     }
@@ -374,7 +331,7 @@ export async function performStreamingSearch(
     if (currentResults.length === 0 && resultsList) {
       const body =
         imageQueryError() ??
-        (engineTimings.length === 0 ? (
+        (data.engineTimings.length === 0 ? (
           <TransText
             text={t("search-templates.no-engines", { store: "{store}" })}
             slots={{
@@ -399,25 +356,28 @@ export async function performStreamingSearch(
         if (paginationBox) clear(paginationBox);
         armInfinite(type, restorePage);
       } else {
-        renderPagination(
-          state.lastPage,
-          state.currentPage,
-          currentResults.length > 0,
-        );
+        renderPagination(state.lastPage, state.currentPage, currentResults.length > 0);
       }
     }
     _announceResults();
     announceSettled(seq);
-  });
+  };
 
-  source.addEventListener("error", (e) => {
-    if (_activeSource !== source || !live()) {
-      source.close();
-      return;
-    }
-    console.error("[streaming-search] stream error", e);
-    dropStream(source);
-    announceSettled(seq);
-    showSearchFailure(searchFailureMessage(_streamErrorStatus(e)));
+  feedSearchStream(source, { progressive, live }, {
+    results: showResults,
+    timings: showTimings,
+    settled: () => startPanels(),
+    imageQuery: (data) => noteImageQuery(query, data.query, data.error),
+    done: finish,
+    failed: (e) => {
+      if (!isActiveStream(source) || !live()) {
+        source.close();
+        return;
+      }
+      console.error("[streaming-search] stream error", e);
+      releaseStream(source);
+      announceSettled(seq);
+      showSearchFailure(searchFailureMessage(_streamErrorStatus(e)));
+    },
   });
 }
