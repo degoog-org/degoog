@@ -175,6 +175,10 @@
     transition: opacity $transition-fast, background $transition-fast,
       color $transition-fast;
 
+    @media (any-pointer: coarse) {
+      opacity: 1;
+    }
+
     &:hover,
     &:focus,
     &[aria-expanded="true"] {
