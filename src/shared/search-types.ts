@@ -37,6 +37,12 @@ export interface EngineTiming {
   httpStatus?: number;
 }
 
+const _answered = (timing: EngineTiming): boolean =>
+  timing.resultCount > 0 && (!timing.status || timing.status === "ok");
+
+export const compareEngineTimings = (a: EngineTiming, b: EngineTiming): number =>
+  Number(_answered(b)) - Number(_answered(a)) || a.time - b.time;
+
 export enum SlotPanelPosition {
   AboveResults = "above-results",
   BelowResults = "below-results",

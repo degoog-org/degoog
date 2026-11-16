@@ -3,6 +3,7 @@ import { StreamingEnginePanel } from "./streaming-engine-panel";
 import { StreamingStatRow } from "./streaming-stat-row";
 import { state } from "../../../state";
 import {
+  compareEngineTimings,
   DEGOOG_ENGINE_NAME,
   type ScoredResult,
 } from "../../../../shared/search-types";
@@ -188,7 +189,7 @@ export function updateEngineTimings(
 
   render(
     <>
-      {timings.map((et) => {
+      {[...timings].sort(compareEngineTimings).map((et) => {
         const isDegoog = et.name === DEGOOG_ENGINE_NAME;
         const isRetrying = et.resultCount === -1;
         const resultsLabel = t("search-templates.sidebar.results", {
