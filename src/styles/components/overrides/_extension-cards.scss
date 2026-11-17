@@ -250,15 +250,6 @@
     line-height: 1;
     white-space: nowrap;
   }
-
-  .degoog-btn--secondary {
-    background: var(--bg);
-    color: var(--text-primary);
-
-    &:hover {
-      background: $btn-secondary-hover;
-    }
-  }
 }
 
 .ext-docs-body {
