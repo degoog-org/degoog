@@ -66,6 +66,30 @@
       "appearance": "custom",
       "theme": "kaosearch",
       "country": "DE"
+    },
+    {
+      "id": "degoo-gl",
+      "name": "degoo.gl",
+      "clearnet": [
+        "https://degoo.gl"],
+      "tor": [],
+      "i2p": [],
+      "appearance": "default",
+      "theme": null,
+      "country": null,
+      "cloudflare": true
+    },
+    {
+      "id": "degoog-gl",
+      "name": "degoog.gl",
+      "clearnet": [
+        "https://degoog.gl"],
+      "tor": [],
+      "i2p": [],
+      "appearance": "default",
+      "theme": null,
+      "country": null,
+      "cloudflare": true
     }
   ]
 }
