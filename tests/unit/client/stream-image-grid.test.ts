@@ -180,6 +180,7 @@ const fakeWindow = {
 };
 
 let streamImageGrid: (batch: ScoredResult[], container: HTMLElement) => ScoredResult[];
+let syncImageGridColumns: (isOpen?: boolean) => void;
 
 beforeAll(async () => {
   template.id = "degoog-image-card";
@@ -197,7 +198,7 @@ beforeAll(async () => {
       disconnect(): void {}
     },
   });
-  ({ streamImageGrid } = await import(
+  ({ streamImageGrid, syncImageGridColumns } = await import(
     "../../../src/client/modules/renderer/media/render-media"
   ));
 });
@@ -312,5 +313,45 @@ describe("streamImageGrid", () => {
     expect(card.querySelector(".lg-result-sources")!.textContent).toBe("A|B|");
     expect(hidden.querySelector(".lg-result-sources")!.textContent).toBe("A|B|");
     expect(hidden.style.display).toBe("none");
+  });
+});
+
+describe("syncImageGridColumns", () => {
+  test("keeps the selected picture where it was when the columns change", () => {
+    body.children
+      .filter((node) => node !== template)
+      .forEach((node) => node.remove());
+    fakeWindow.innerHeight = 10_000;
+    template.innerHTML = IMAGE_CARD_TEMPLATE;
+    const container = gridContainer();
+    const grid = container.querySelector(".image-grid")!;
+    streamInto(container)(
+      ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"].map((url) =>
+        image(url, `https://cdn.example/${url}.jpg`),
+      ),
+    );
+    const selected = cardFor(container, "k")!;
+    selected.classList.add("selected");
+    const scrolls: number[] = [];
+    const frames: FrameRequestCallback[] = [];
+    const raf = globalThis.requestAnimationFrame;
+    Object.assign(fakeWindow, {
+      scrollBy: (_x: number, y: number) => scrolls.push(y),
+    });
+    Object.assign(globalThis, {
+      requestAnimationFrame: (callback: FrameRequestCallback) =>
+        frames.push(callback),
+    });
+    const before = selected.getBoundingClientRect().top;
+
+    syncImageGridColumns(true);
+    Object.defineProperty(grid, "clientWidth", { value: 700 });
+    frames.forEach((frame) => frame(0));
+    Object.assign(globalThis, { requestAnimationFrame: raf });
+
+    const moved = selected.getBoundingClientRect().top - before;
+    expect(grid.querySelectorAll(".image-column")).toHaveLength(3);
+    expect(moved).not.toBe(0);
+    expect(scrolls).toEqual([moved]);
   });
 });

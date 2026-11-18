@@ -31,6 +31,7 @@ const COLUMN_STEPS: ReadonlyArray<{ upTo: number; columns: number }> = [
 const COLUMN_MAX = 6;
 const RELAYOUT_DELAY_MS = 120;
 const THUMB_SELECTOR = ".image-thumb-wrap, img.image-thumb";
+const SELECTED_CARD_SELECTOR = ".image-card.selected";
 const MEDIA_CARDS = {
   image: { cardClass: "image-card", templateId: "degoog-image-card" },
   video: { cardClass: "video-card", templateId: "degoog-video-card" },
@@ -95,7 +96,7 @@ const _cardsInResultOrder = (grid: HTMLElement): HTMLElement[] =>
 
 function _scrollSelectedIntoView(grid: HTMLElement): void {
   grid
-    .querySelector<HTMLElement>(".image-card.selected")
+    .querySelector<HTMLElement>(SELECTED_CARD_SELECTOR)
     ?.scrollIntoView({ block: "nearest" });
 }
 
@@ -117,15 +118,24 @@ function _rebuildColumns(grid: HTMLElement, count: number): HTMLElement[] {
   return columns;
 }
 
-function _ensureImageColumns(grid: HTMLElement): HTMLElement[] {
+type GridAnchor = { card: HTMLElement; top: number };
+
+const _ensureImageColumns = (
+  grid: HTMLElement,
+  anchor?: GridAnchor,
+): HTMLElement[] => {
   const count = _getImageColumnCount(grid);
   const columns = _imageColumns(grid);
   if (columns.length === count) return columns;
 
   const rebuilt = _rebuildColumns(grid, count);
-  _scrollSelectedIntoView(grid);
+  if (anchor) {
+    window.scrollBy(0, anchor.card.getBoundingClientRect().top - anchor.top);
+  } else {
+    _scrollSelectedIntoView(grid);
+  }
   return rebuilt;
-}
+};
 
 let _resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -145,14 +155,20 @@ function _observeGridResize(grid: HTMLElement): void {
   _gridResizeObserver.observe(grid);
 }
 
-export function syncImageGridColumns(): void {
+export function syncImageGridColumns(isOpen = false): void {
   const grid = _imageGrid();
   if (!grid) return;
   if (_resizeTimer) {
     clearTimeout(_resizeTimer);
     _resizeTimer = null;
   }
-  requestAnimationFrame(() => _ensureImageColumns(grid));
+  const card = isOpen
+    ? grid.querySelector<HTMLElement>(SELECTED_CARD_SELECTOR)
+    : null;
+  const anchor = card
+    ? { card, top: card.getBoundingClientRect().top }
+    : undefined;
+  requestAnimationFrame(() => _ensureImageColumns(grid, anchor));
 }
 
 const _relayoutRankedGrid = (grid: HTMLElement): void => {

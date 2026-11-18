@@ -157,8 +157,8 @@ export function openMediaPreview(
     .querySelector<HTMLElement>(`${cardSelector}[data-idx="${idx}"]`)
     ?.classList.add("selected");
 
-  panel?.classList.add("open");
   if (!isVideo) imageGridPanelSyncRef?.(true);
+  panel?.classList.add("open");
   syncFilters(false);
 
   if (!wasOpen) {
