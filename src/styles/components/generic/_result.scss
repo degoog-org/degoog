@@ -2,9 +2,11 @@
   padding: $space-4 0;
   position: relative;
 
-  &:hover .degoog-result--actions-toggle,
-  &:focus-within .degoog-result--actions-toggle {
-    opacity: 1;
+  @media (hover: hover) {
+    &:hover .degoog-result--actions-toggle,
+    &:focus-within .degoog-result--actions-toggle {
+      opacity: 1;
+    }
   }
 
   &--inner {
@@ -53,8 +55,10 @@
       position: relative;
       cursor: pointer;
 
-      &:hover .degoog-result--video-play {
-        opacity: 1;
+      @media (hover: hover) {
+        &:hover .degoog-result--video-play {
+          opacity: 1;
+        }
       }
     }
   }
@@ -64,8 +68,11 @@
     inset: 0;
     @include flex-center;
     background: rgba(0, 0, 0, 0.3);
-    opacity: 0;
     transition: opacity $transition-fast;
+
+    @media (hover: hover) {
+      opacity: 0;
+    }
   }
 
   &--video-duration {
@@ -171,9 +178,12 @@
     color: var(--text-secondary);
     font-size: $font-size-md;
     line-height: 1;
-    opacity: 0;
     transition: opacity $transition-fast, background $transition-fast,
       color $transition-fast;
+
+    @media (hover: hover) {
+      opacity: 0;
+    }
 
     &:hover,
     &:focus,

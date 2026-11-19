@@ -29,16 +29,12 @@
 
   &--secondary {
     background: var(--bg);
-    color: var(--text-secondary);
-    border: 1px solid var(--bg);
-    border-radius: $radius-sm;
+    color: var(--text-primary);
     padding: $space-2 $space-4;
-    font-size: $font-size-small;
-    cursor: pointer;
 
     &:hover {
       color: var(--text-primary);
-      background: var(--bg);
+      background: $btn-secondary-hover;
     }
   }
 
