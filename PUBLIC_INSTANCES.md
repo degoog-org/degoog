@@ -24,3 +24,5 @@ A machine readable version of this list lives in [instances.json](./instances.js
 [https://degoog.ogservers.org](https://degoog.ogservers.org) (Custom)
 
 [https://search.coffeelover.uk](https://search.coffeelover.uk) (kaosearch)
+
+[https://search2.drinker.beer](https://search2.drinker.beer) (Catppuccin)
