@@ -90,6 +90,19 @@
       "theme": null,
       "country": null,
       "cloudflare": true
+    },
+        {
+      "id": "search2-drinker-beer",
+      "name": "drinker.beer",
+      "clearnet": [
+        "https://search2.drinker.beer"
+      ],
+      "tor": [],
+      "i2p": [],
+      "appearance": "custom",
+      "theme": "Catppuccin",
+      "country": "US",
+      "cloudflare": false
     }
   ]
 }
