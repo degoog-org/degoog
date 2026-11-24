@@ -50,13 +50,14 @@ const _persist = async (settings: ServerSettings): Promise<void> => {
   await writeJsonAtomic(serverSettingsFile(), settings);
 };
 
-const INSTANCE_ID_RE = /"instanceId"\s*:\s*"([^"\\]+)"/;
+const INSTANCE_ID_RE = /"instanceId"\s*:\s*("(?:[^"\\\u0000-\u001f]|\\.)*")/;
 
-// Pulls the old instanceId out of a broken file so Valkey keys and cross-node invalidation survive.
 const _salvageInstanceId = async (backupPath: string): Promise<string | null> => {
   try {
     const match = INSTANCE_ID_RE.exec(await readFile(backupPath, "utf-8"));
-    return match?.[1]?.trim() || null;
+    if (!match?.[1]) return null;
+    const id: unknown = JSON.parse(match[1]);
+    return typeof id === "string" && id.trim() ? id : null;
   } catch {
     return null;
   }
