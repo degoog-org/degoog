@@ -126,12 +126,11 @@ const _ensureImageColumns = (
 ): HTMLElement[] => {
   const count = _getImageColumnCount(grid);
   const columns = _imageColumns(grid);
-  if (columns.length === count) return columns;
-
-  const rebuilt = _rebuildColumns(grid, count);
+  const rebuilt =
+    columns.length === count ? columns : _rebuildColumns(grid, count);
   if (anchor) {
     window.scrollBy(0, anchor.card.getBoundingClientRect().top - anchor.top);
-  } else {
+  } else if (rebuilt !== columns) {
     _scrollSelectedIntoView(grid);
   }
   return rebuilt;
