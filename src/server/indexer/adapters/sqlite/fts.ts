@@ -6,6 +6,3 @@ export const buildFtsQuery = (queryNorm: string): string =>
   splitTerms(queryNorm)
     .map((t) => (canPrefix(t) ? `${quoteFts(t.token)}*` : quoteFts(t.token)))
     .join(" AND ");
-
-export const escapeLike = (s: string): string =>
-  s.replace(/[\\%_]/g, (ch) => `\\${ch}`);

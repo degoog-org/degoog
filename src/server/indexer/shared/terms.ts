@@ -25,6 +25,9 @@ const tokenize = (s: string): string =>
     .replace(/\s+/g, " ")
     .trim();
 
+export const escapeLike = (s: string): string =>
+  s.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+
 export const stripAccents = (s: string): string =>
   Array.from(s.normalize("NFC"), (ch) => {
     const decomposed = ch.normalize("NFKD");

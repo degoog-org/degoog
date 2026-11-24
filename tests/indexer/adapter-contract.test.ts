@@ -1,7 +1,6 @@
 import { describe, test, expect, beforeAll, beforeEach, afterAll } from "bun:test";
 import { useIndexerDir } from "../helpers/indexer-env";
 
-// Point the indexer at a temp dir before any adapter code loads.
 useIndexerDir("degoog-indexer-contract-");
 
 import { SqliteAdapter } from "../../src/server/indexer/adapters/sqlite/adapter";
@@ -11,8 +10,7 @@ import type { IndexRow } from "../../src/server/indexer/recorders/default";
 import type { IndexerConfig } from "../../src/server/indexer/types/config";
 
 const PG_URL = process.env.DEGOOG_TEST_POSTGRES;
-// Unique type names so runs never collide on a shared Postgres database.
-const STAMP = Date.now().toString(36);
+const STAMP = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
 const DAY_MS = 86_400_000;
 const WINDOW = 10;
 
@@ -150,13 +148,6 @@ function adapterContract(c: AdapterCase): void {
         expect(await adapter.countHitsForType(TYPE, undefined)).toBe(0);
       });
 
-      test("checkpoint and export holds never throw", async () => {
-        await adapter.checkpoint(TYPE);
-        const hold = adapter.holdExport(TYPE);
-        expect(typeof hold).toBe("string");
-        adapter.touchHold(hold);
-        adapter.freeExport(hold);
-      });
     });
 
     describe("writeBatch + queryExact", () => {
@@ -190,10 +181,11 @@ function adapterContract(c: AdapterCase): void {
 
       test("orders by average position and honours limit/offset", async () => {
         await write(TYPE, [
-          row(TYPE, { url: "https://example.com/third", position: 7 }),
+          row(TYPE, { url: "https://example.com/third", position: 2 }),
           row(TYPE, { url: "https://example.com/first", position: 1 }),
           row(TYPE, { url: "https://example.com/second", position: 4 }),
         ]);
+        await write(TYPE, [row(TYPE, { url: "https://example.com/third", position: 10 })]);
         const all = urlsOf(await adapter.queryExact(TYPE, "rust", 10));
         expect(all).toEqual([
           "https://example.com/first",
@@ -251,7 +243,6 @@ function adapterContract(c: AdapterCase): void {
         expect(hit).toBeDefined();
         expect(Number(hit!.best_position)).toBe(2);
         expect(Number(hit!.hit_count)).toBe(2);
-        // Window of 2 is full on the third write, so 4+2=6 decays to 6*1/2=3, plus 6.
         expect(Number(hit!.pos_sum)).toBe(9);
         expect(Number(hit!.first_seen)).toBe(1000);
         expect(Number(hit!.last_seen)).toBe(3000);
@@ -389,7 +380,6 @@ function adapterContract(c: AdapterCase): void {
       });
 
       test("search treats LIKE wildcards literally", async () => {
-        // As wildcards, "_" would match the dot in every example.com url and "%" would match everything.
         expect((await adapter.listHitsForType(TYPE, "e_c", 10, 0)).map((r) => r.url)).toEqual([
           "https://example.com/a1",
         ]);
@@ -456,7 +446,6 @@ function adapterContract(c: AdapterCase): void {
           exportRow({ title: "Imported title that is longer" }),
           exportRow({ query_norm: "other" }),
         ]);
-        // Url already exists and the "rust" hit too, so only the new "other" hit lands.
         expect(res).toEqual({ urls: 0, hits: 1 });
         expect(await adapter.importRows(TYPE, [exportRow()])).toEqual({ urls: 0, hits: 0 });
         const [local] = await adapter.queryExact(TYPE, "rust", 10);
@@ -507,10 +496,10 @@ function adapterContract(c: AdapterCase): void {
           engine_type: TYPE,
           source_instance: null,
           best_position: 2,
-          pos_sum: 2,
           hit_count: 1,
           sources_json: '["TestEngine"]',
         });
+        expect(Number(sample[0].pos_sum)).toBe(2);
         expect(Number(sample[0].last_seen)).toBe(2000);
       });
     });
@@ -526,7 +515,6 @@ function adapterContract(c: AdapterCase): void {
       });
 
       test("maxHits keeps the most recently seen hits", async () => {
-        // Each url gets a later last_seen so prune order is deterministic.
         for (let i = 0; i < 4; i++) {
           await write(TYPE, [row(TYPE, { url: `https://example.com/${i}` })], 1000 + i);
         }

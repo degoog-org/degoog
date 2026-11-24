@@ -3,9 +3,15 @@ import type { TransactionSql } from "postgres";
 import type { IndexerHitRow } from "../../../../shared/indexer";
 import type { ExportRow, UrlRow } from "../../types/adapter";
 import type { IndexRow } from "../../recorders/default";
-import { FUZZY_CANDIDATE_CAP, SUBSTRING_SCAN_WINDOW, stripAccents } from "../../shared/terms";
+import { FUZZY_CANDIDATE_CAP, SUBSTRING_SCAN_WINDOW, escapeLike, stripAccents } from "../../shared/terms";
 
 export type PgSql = ReturnType<typeof postgres>;
+
+const _searchWhere = (sql: PgSql, term: string) => sql`
+  WHERE lower(h.query_norm) LIKE ${term} ESCAPE '\\'
+     OR lower(u.url) LIKE ${term} ESCAPE '\\'
+     OR lower(u.title) LIKE ${term} ESCAPE '\\'
+`;
 
 export const foldSource = (row: { title: string; snippet: string; url: string }): string =>
   stripAccents(`${row.title ?? ""} ${row.snippet ?? ""} ${row.url ?? ""}`);
@@ -205,54 +211,33 @@ export const sumSchemaSize = async (sql: PgSql, schemas: string[]): Promise<numb
   return Number(row.total);
 };
 
-export const listHits = (
+export const listHits = async (
   sql: PgSql,
   schema: string,
   q: string | undefined,
   limit: number,
   offset: number,
-) => {
-  if (q?.trim()) {
-    const term = `%${q.trim().toLowerCase()}%`;
-    return sql<IndexerHitRow[]>`
-      SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen,
-             (h.pos_sum::float / h.hit_count) AS score
-      FROM ${sql(schema)}.query_hits h
-      JOIN ${sql(schema)}.urls u ON u.id = h.url_id
-      WHERE lower(h.query_norm) LIKE ${term}
-         OR lower(u.url) LIKE ${term}
-         OR lower(u.title) LIKE ${term}
-      ORDER BY h.query_norm ASC, score ASC
-      LIMIT ${limit} OFFSET ${offset}
-    `;
-  }
-  return sql<IndexerHitRow[]>`
+): Promise<IndexerHitRow[]> => {
+  const term = q?.trim() ? `%${escapeLike(q.trim().toLowerCase())}%` : null;
+  const rows = await sql<IndexerHitRow[]>`
     SELECT h.id, h.query_norm, h.engine_type, u.url, u.title, u.snippet, h.last_seen,
            (h.pos_sum::float / h.hit_count) AS score
     FROM ${sql(schema)}.query_hits h
     JOIN ${sql(schema)}.urls u ON u.id = h.url_id
+    ${term === null ? sql`` : _searchWhere(sql, term)}
     ORDER BY h.query_norm ASC, score ASC
     LIMIT ${limit} OFFSET ${offset}
   `;
+  return rows.map((r) => ({ ...r, id: Number(r.id), last_seen: Number(r.last_seen) }));
 };
 
 export const countHits = async (sql: PgSql, schema: string, q: string | undefined): Promise<number> => {
-  if (q?.trim()) {
-    const term = `%${q.trim().toLowerCase()}%`;
-    const [row] = await sql<{ c: number }[]>`
-      SELECT COUNT(*) AS c
-      FROM ${sql(schema)}.query_hits h
-      JOIN ${sql(schema)}.urls u ON u.id = h.url_id
-      WHERE lower(h.query_norm) LIKE ${term}
-         OR lower(u.url) LIKE ${term}
-         OR lower(u.title) LIKE ${term}
-    `;
-    return Number(row.c);
-  }
+  const term = q?.trim() ? `%${escapeLike(q.trim().toLowerCase())}%` : null;
   const [row] = await sql<{ c: number }[]>`
     SELECT COUNT(*) AS c
     FROM ${sql(schema)}.query_hits h
     JOIN ${sql(schema)}.urls u ON u.id = h.url_id
+    ${term === null ? sql`` : _searchWhere(sql, term)}
   `;
   return Number(row.c);
 };
@@ -261,7 +246,9 @@ export const selectSample = (sql: PgSql, schema: string, limit: number) =>
   sql<ExportRow[]>`
     SELECT h.query_norm, h.engine_type, u.url, u.url_norm, u.source_engine,
            u.title, u.snippet, u.thumbnail, u.image_url, u.is_gif, u.duration,
-           u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance
+           u.extras_json, h.first_seen, h.last_seen, NULL AS source_instance,
+           h.best_position, h.pos_sum, h.hit_count,
+           h.sources_json, h.filters_json, h.meta_json
     FROM ${sql(schema)}.query_hits h
     JOIN ${sql(schema)}.urls u ON u.id = h.url_id
     ORDER BY h.last_seen DESC
