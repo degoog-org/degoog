@@ -251,7 +251,6 @@
       padding-inline: $space-5;
     }
 
-    // Border spans the content box only, so the underline lines up with results and sidebar edges.
     #results-tabs {
       width: calc(100% - #{$space-5 * 2});
       max-width: $results-centered-max - $space-5 * 2;
@@ -262,8 +261,7 @@
       max-width: $results-centered-media-max;
     }
 
-    // Sidebar sits over a float spacer (height synced from JS) so results wrap below it at full width.
-    #results-layout:not(.media-mode) {
+    #results-layout:not(.media-mode):has(> #sidebar-col:not(.is-sticky)) {
       display: block;
       position: relative;
 
@@ -284,8 +282,7 @@
         display: flow-root;
       }
 
-      #sidebar-col,
-      #sidebar-col.is-sticky {
+      #sidebar-col {
         position: absolute;
         top: 0;
         right: $space-5;
