@@ -1,8 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { routeModulePath } from "../helpers/route-modules";
+import { isolateRouteEnv, routeModulePath } from "../helpers/route-modules";
 
 type Router = {
   request: (req: Request | string) => Response | Promise<Response>;
@@ -115,34 +112,17 @@ const GATED_APIS: Array<{ method: Method; path: string; routerKey: RouterKey; bo
   { method: "POST", path: "/api/theme/active", routerKey: "themes" },
 ];
 
-const ISOLATED_ENV = [
-  "DEGOOG_DATA_DIR",
-  "DEGOOG_PUBLIC_INSTANCE",
-  "DEGOOG_SETTINGS_PASSWORDS",
-  "DEGOOG_DANGEROUSLY_NO_PASSWORD",
-] as const;
-
 const routers = new Map<RouterKey, Router>();
-const savedEnv: Record<string, string | undefined> = {};
+let restoreEnv = (): void => {};
 
 beforeAll(async () => {
-  for (const key of ISOLATED_ENV) {
-    savedEnv[key] = process.env[key];
-    delete process.env[key];
-  }
-  process.env.DEGOOG_DATA_DIR = mkdtempSync(join(tmpdir(), "degoog-gated-"));
-  process.env.DEGOOG_PUBLIC_INSTANCE = "true";
+  restoreEnv = isolateRouteEnv("degoog-gated-", { DEGOOG_PUBLIC_INSTANCE: "true" });
   for (const name of ROUTER_MODULES) {
     routers.set(name, (await import(`../../src/server/routes/${routeModulePath(name)}`)).default);
   }
 });
 
-afterAll(() => {
-  for (const key of ISOLATED_ENV) {
-    if (savedEnv[key] === undefined) delete process.env[key];
-    else process.env[key] = savedEnv[key];
-  }
-});
+afterAll(() => restoreEnv());
 
 describe("gated APIs return 401 without token when DEGOOG_PUBLIC_INSTANCE is set", () => {
   for (const { method, path, routerKey, body } of GATED_APIS) {
