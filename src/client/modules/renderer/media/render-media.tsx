@@ -32,6 +32,7 @@ const COLUMN_MAX = 6;
 const RELAYOUT_DELAY_MS = 120;
 const THUMB_SELECTOR = ".image-thumb-wrap, img.image-thumb";
 const SELECTED_CARD_SELECTOR = ".image-card.selected";
+const USER_SCROLL_EVENTS = ["wheel", "touchmove", "keydown", "pointerdown"];
 const MEDIA_CARDS = {
   image: { cardClass: "image-card", templateId: "degoog-image-card" },
   video: { cardClass: "video-card", templateId: "degoog-video-card" },
@@ -154,6 +155,22 @@ function _observeGridResize(grid: HTMLElement): void {
   _gridResizeObserver.observe(grid);
 }
 
+const _watchUserScroll = (): (() => boolean) => {
+  let scrolled = false;
+  const onInput = (): void => {
+    scrolled = true;
+  };
+  USER_SCROLL_EVENTS.forEach((type) =>
+    window.addEventListener(type, onInput, { passive: true }),
+  );
+  return () => {
+    USER_SCROLL_EVENTS.forEach((type) =>
+      window.removeEventListener(type, onInput),
+    );
+    return scrolled;
+  };
+};
+
 export function syncImageGridColumns(isOpen = false): void {
   const grid = _imageGrid();
   if (!grid) return;
@@ -164,10 +181,15 @@ export function syncImageGridColumns(isOpen = false): void {
   const card = isOpen
     ? grid.querySelector<HTMLElement>(SELECTED_CARD_SELECTOR)
     : null;
-  const anchor = card
-    ? { card, top: card.getBoundingClientRect().top }
-    : undefined;
-  requestAnimationFrame(() => _ensureImageColumns(grid, anchor));
+  if (!card) {
+    requestAnimationFrame(() => _ensureImageColumns(grid));
+    return;
+  }
+  const anchor = { card, top: card.getBoundingClientRect().top };
+  const userScrolled = _watchUserScroll();
+  requestAnimationFrame(() =>
+    _ensureImageColumns(grid, userScrolled() ? undefined : anchor),
+  );
 }
 
 const _relayoutRankedGrid = (grid: HTMLElement): void => {

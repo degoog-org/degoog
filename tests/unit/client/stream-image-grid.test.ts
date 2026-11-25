@@ -171,11 +171,13 @@ const saved = {
   ResizeObserver: (globalThis as { ResizeObserver?: unknown }).ResizeObserver,
 };
 
+const windowEvents = new EventTarget();
 const fakeWindow = {
   innerHeight: 10_000,
   innerWidth: 1200,
   scopedT: () => (key: string) => key,
-  addEventListener: () => {},
+  addEventListener: windowEvents.addEventListener.bind(windowEvents),
+  removeEventListener: windowEvents.removeEventListener.bind(windowEvents),
   dispatchEvent: () => true,
 };
 
@@ -317,7 +319,7 @@ describe("streamImageGrid", () => {
 });
 
 describe("syncImageGridColumns", () => {
-  test("keeps the selected picture where it was when the columns change", () => {
+  const openPreviewWhileColumnsChange = (betweenFrames: () => void = () => {}) => {
     body.children
       .filter((node) => node !== template)
       .forEach((node) => node.remove());
@@ -346,12 +348,31 @@ describe("syncImageGridColumns", () => {
 
     syncImageGridColumns(true);
     Object.defineProperty(grid, "clientWidth", { value: 700 });
+    betweenFrames();
     frames.forEach((frame) => frame(0));
     Object.assign(globalThis, { requestAnimationFrame: raf });
 
-    const moved = selected.getBoundingClientRect().top - before;
-    expect(grid.querySelectorAll(".image-column")).toHaveLength(3);
+    return {
+      columns: grid.querySelectorAll(".image-column"),
+      moved: selected.getBoundingClientRect().top - before,
+      scrolls,
+    };
+  };
+
+  test("keeps the selected picture where it was when the columns change", () => {
+    const { columns, moved, scrolls } = openPreviewWhileColumnsChange();
+
+    expect(columns).toHaveLength(3);
     expect(moved).not.toBe(0);
     expect(scrolls).toEqual([moved]);
+  });
+
+  test("leaves the page alone when the user scrolls before the columns change", () => {
+    const { columns, scrolls } = openPreviewWhileColumnsChange(() =>
+      windowEvents.dispatchEvent(new Event("wheel")),
+    );
+
+    expect(columns).toHaveLength(3);
+    expect(scrolls).toEqual([]);
   });
 });
