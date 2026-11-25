@@ -263,6 +263,17 @@ export async function init(): Promise<void> {
       ?.classList.toggle("centered-mode", v ?? false);
   });
 
+  const sidebarCol = document.getElementById("sidebar-col");
+  const resultsMain = document.getElementById("results-main");
+  if (sidebarCol && resultsMain) {
+    new ResizeObserver(() => {
+      resultsMain.style.setProperty(
+        "--sidebar-height",
+        `${sidebarCol.offsetHeight}px`,
+      );
+    }).observe(sidebarCol);
+  }
+
   document.body.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLElement>(".uuid-copy");
     if (!btn || !btn.dataset.uuid) return;
