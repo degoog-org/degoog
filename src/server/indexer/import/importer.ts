@@ -13,6 +13,8 @@ import { join } from "path";
 import { randomBytes } from "crypto";
 import type { ExportRow } from "../types/adapter";
 import { getAdapter } from "../db/factory";
+import { mutexFor } from "../queue/queue";
+import { safeSlug } from "../shared/safe-type";
 import { parseSqlDump } from "./sql-parser";
 import { logger } from "../../utils/logger";
 
@@ -65,7 +67,9 @@ const makeBatchWriter = (type: string): BatchWriter => {
 
   const flush = async (): Promise<void> => {
     if (pending.length === 0) return;
-    const result = await adapter.importRows(type, pending);
+    const result = await mutexFor(safeSlug(type))(() =>
+      adapter.importRows(type, pending),
+    );
     urls += result.urls;
     hits += result.hits;
     pending = [];
