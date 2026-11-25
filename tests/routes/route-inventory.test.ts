@@ -1,8 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { routeModulePath } from "../helpers/route-modules";
+import { isolateRouteEnv, routeModulePath } from "../helpers/route-modules";
 
 type HonoLike = { routes?: { method: string; path: string }[] };
 
@@ -38,23 +35,11 @@ const MODULES = [
   "uovadipasqua",
 ] as const;
 
-const ISOLATED_ENV = [
-  "DEGOOG_DATA_DIR",
-  "DEGOOG_SERVER_SETTINGS_FILE",
-  "DEGOOG_INDEXER_DIR",
-  "DEGOOG_PLUGIN_SETTINGS_FILE",
-  "DEGOOG_PUBLIC_INSTANCE",
-  "DEGOOG_SETTINGS_PASSWORDS",
-  "DEGOOG_DANGEROUSLY_NO_PASSWORD",
-  "DEGOOG_SETTINGS_PATH",
-  "DEGOOG_BASE_URL",
-] as const;
-
 const ENV_SHAPED_MODULES = new Set(["pages"]);
 const BUST = "?route-inventory";
 
 const inventory = new Map<string, string[]>();
-const savedEnv: Record<string, string | undefined> = {};
+let restoreEnv = (): void => {};
 let totalHandlers = 0;
 
 const rawRoutes = (mod: unknown): { method: string; path: string }[] =>
@@ -69,12 +54,7 @@ const record = (name: string, mod: unknown): void => {
 };
 
 beforeAll(async () => {
-  for (const key of ISOLATED_ENV) {
-    savedEnv[key] = process.env[key];
-    delete process.env[key];
-  }
-  process.env.DEGOOG_DATA_DIR = mkdtempSync(join(tmpdir(), "degoog-inventory-"));
-  process.env.DEGOOG_PUBLIC_INSTANCE = "true";
+  restoreEnv = isolateRouteEnv("degoog-inventory-", { DEGOOG_PUBLIC_INSTANCE: "true" });
 
   for (const name of MODULES) {
     const spec = ENV_SHAPED_MODULES.has(name)
@@ -85,12 +65,7 @@ beforeAll(async () => {
   record("nojs", await import("../../src/server/nojs/router"));
 });
 
-afterAll(() => {
-  for (const key of ISOLATED_ENV) {
-    if (savedEnv[key] === undefined) delete process.env[key];
-    else process.env[key] = savedEnv[key];
-  }
-});
+afterAll(() => restoreEnv());
 
 describe("every mounted router exposes the routes it did before", () => {
   for (const name of [...MODULES, "nojs"]) {
