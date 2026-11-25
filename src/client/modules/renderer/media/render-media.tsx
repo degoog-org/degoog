@@ -31,6 +31,8 @@ const COLUMN_STEPS: ReadonlyArray<{ upTo: number; columns: number }> = [
 const COLUMN_MAX = 6;
 const RELAYOUT_DELAY_MS = 120;
 const THUMB_SELECTOR = ".image-thumb-wrap, img.image-thumb";
+const SELECTED_CARD_SELECTOR = ".image-card.selected";
+const USER_SCROLL_EVENTS = ["wheel", "touchmove", "keydown", "pointerdown"];
 const MEDIA_CARDS = {
   image: { cardClass: "image-card", templateId: "degoog-image-card" },
   video: { cardClass: "video-card", templateId: "degoog-video-card" },
@@ -95,7 +97,7 @@ const _cardsInResultOrder = (grid: HTMLElement): HTMLElement[] =>
 
 function _scrollSelectedIntoView(grid: HTMLElement): void {
   grid
-    .querySelector<HTMLElement>(".image-card.selected")
+    .querySelector<HTMLElement>(SELECTED_CARD_SELECTOR)
     ?.scrollIntoView({ block: "nearest" });
 }
 
@@ -117,15 +119,23 @@ function _rebuildColumns(grid: HTMLElement, count: number): HTMLElement[] {
   return columns;
 }
 
-function _ensureImageColumns(grid: HTMLElement): HTMLElement[] {
+type GridAnchor = { card: HTMLElement; top: number };
+
+const _ensureImageColumns = (
+  grid: HTMLElement,
+  anchor?: GridAnchor,
+): HTMLElement[] => {
   const count = _getImageColumnCount(grid);
   const columns = _imageColumns(grid);
-  if (columns.length === count) return columns;
-
-  const rebuilt = _rebuildColumns(grid, count);
-  _scrollSelectedIntoView(grid);
+  const rebuilt =
+    columns.length === count ? columns : _rebuildColumns(grid, count);
+  if (anchor) {
+    window.scrollBy(0, anchor.card.getBoundingClientRect().top - anchor.top);
+  } else if (rebuilt !== columns) {
+    _scrollSelectedIntoView(grid);
+  }
   return rebuilt;
-}
+};
 
 let _resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -145,14 +155,41 @@ function _observeGridResize(grid: HTMLElement): void {
   _gridResizeObserver.observe(grid);
 }
 
-export function syncImageGridColumns(): void {
+const _watchUserScroll = (): (() => boolean) => {
+  let scrolled = false;
+  const onInput = (): void => {
+    scrolled = true;
+  };
+  USER_SCROLL_EVENTS.forEach((type) =>
+    window.addEventListener(type, onInput, { passive: true }),
+  );
+  return () => {
+    USER_SCROLL_EVENTS.forEach((type) =>
+      window.removeEventListener(type, onInput),
+    );
+    return scrolled;
+  };
+};
+
+export function syncImageGridColumns(isOpen = false): void {
   const grid = _imageGrid();
   if (!grid) return;
   if (_resizeTimer) {
     clearTimeout(_resizeTimer);
     _resizeTimer = null;
   }
-  requestAnimationFrame(() => _ensureImageColumns(grid));
+  const card = isOpen
+    ? grid.querySelector<HTMLElement>(SELECTED_CARD_SELECTOR)
+    : null;
+  if (!card) {
+    requestAnimationFrame(() => _ensureImageColumns(grid));
+    return;
+  }
+  const anchor = { card, top: card.getBoundingClientRect().top };
+  const userScrolled = _watchUserScroll();
+  requestAnimationFrame(() =>
+    _ensureImageColumns(grid, userScrolled() ? undefined : anchor),
+  );
 }
 
 const _relayoutRankedGrid = (grid: HTMLElement): void => {
