@@ -17,7 +17,7 @@ let _flushTimer: ReturnType<typeof setInterval> | null = null;
 let _pruneTimer: ReturnType<typeof setInterval> | null = null;
 let _starting: Promise<void> | null = null;
 
-const mutexFor = (type: string): RunExclusive => {
+export const mutexFor = (type: string): RunExclusive => {
   let m = _mutexes.get(type);
   if (!m) {
     m = createMutex();
