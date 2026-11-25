@@ -87,15 +87,6 @@ $settings-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Liberation Mono
     text-decoration: none;
   }
 
-  .degoog-btn--secondary {
-    color: var(--text-primary);
-    border-radius: $radius-md;
-
-    &:hover {
-      background: $btn-secondary-hover;
-    }
-  }
-
   .settings-row-label {
     font-weight: 500;
     line-height: 1.4;

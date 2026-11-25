@@ -21,8 +21,8 @@ import {
 } from "./statements";
 import { EXPORT_SELECT_SQL } from "../../shared/export-select";
 import { createRowImporter, urlParams } from "./import-rows";
-import { buildFtsQuery, escapeLike } from "./fts";
-import { FUZZY_CANDIDATE_CAP, SUBSTRING_SCAN_WINDOW } from "../../shared/terms";
+import { buildFtsQuery } from "./fts";
+import { FUZZY_CANDIDATE_CAP, SUBSTRING_SCAN_WINDOW, escapeLike } from "../../shared/terms";
 import { pruneOrphans, runSqlitePrune } from "./prune";
 import { migrateHits } from "./migrate-hits";
 import { ExportHolds, setAutoCheck } from "./export-holds";

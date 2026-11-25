@@ -106,6 +106,10 @@ html:has(.settings-page-body) {
     max-height: 100vh;
     overflow-y: auto;
     margin-bottom: 0;
+
+    > * {
+      flex-shrink: 0;
+    }
   }
 }
 

@@ -57,41 +57,34 @@ export const runPgPrune = async (
   };
 
   const deleteOldHitsBatchByCount = async (limit: number): Promise<number> => {
-    const [row] = await sql.begin(async (tx) => {
-      const rows = await tx<{ hits_deleted: number }[]>`
-        WITH doomed AS (
-          SELECT id, url_id
+    return await sql.begin(async (tx) => {
+      const deletedHits = await tx<{ url_id: number }[]>`
+        DELETE FROM ${tx(schema)}.query_hits
+        WHERE id IN (
+          SELECT id
           FROM ${tx(schema)}.query_hits
           ORDER BY last_seen ASC, id ASC
           LIMIT ${limit}
-        ),
-        deleted_hits AS (
-          DELETE FROM ${tx(schema)}.query_hits h
-          USING doomed d
-          WHERE h.id = d.id
-          RETURNING h.url_id
-        ),
-        affected_urls AS (
-          SELECT DISTINCT url_id
-          FROM deleted_hits
-        ),
-        deleted_urls AS (
+        )
+        RETURNING url_id
+      `;
+
+      const urlIds = [...new Set(deletedHits.map((row) => row.url_id))];
+
+      if (urlIds.length > 0) {
+        await tx`
           DELETE FROM ${tx(schema)}.urls u
-          USING affected_urls a
-          WHERE u.id = a.url_id
+          WHERE u.id = ANY(${urlIds})
             AND NOT EXISTS (
               SELECT 1
               FROM ${tx(schema)}.query_hits h
               WHERE h.url_id = u.id
             )
-          RETURNING u.id
-        )
-        SELECT (SELECT COUNT(*) FROM deleted_hits)::int AS hits_deleted
-      `;
-      return rows;
-    });
+        `;
+      }
 
-    return Number(row?.hits_deleted ?? 0);
+      return deletedHits.length;
+    });
   };
 
   const deleteOldUrlsBatch = async (limit: number): Promise<number> => {

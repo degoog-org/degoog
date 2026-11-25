@@ -7,11 +7,11 @@ const _isMissing = (err: unknown): boolean =>
 const _stamp = (): string =>
   new Date().toISOString().replace(/[:.]/g, "-");
 
-const quarantineFile = async (
+export const quarantineFile = async (
   namespace: string,
   path: string,
   err: unknown,
-): Promise<string | null> => {
+): Promise<string> => {
   const kept = `${path}.corrupt-${_stamp()}`;
   try {
     await rename(path, kept);
@@ -33,21 +33,31 @@ const quarantineFile = async (
   }
 };
 
-export const readJsonOrQuarantine = async <T>(
+export interface QuarantineRead<T> {
+  value: T | null;
+  quarantinedAt: string | null;
+}
+
+export const readJsonOrQuarantineDetailed = async <T>(
   namespace: string,
   path: string,
-): Promise<T | null> => {
+): Promise<QuarantineRead<T>> => {
   let raw: string;
   try {
     raw = await readFile(path, "utf-8");
   } catch (err) {
-    if (_isMissing(err)) return null;
+    if (_isMissing(err)) return { value: null, quarantinedAt: null };
     throw err;
   }
   try {
-    return JSON.parse(raw) as T;
+    return { value: JSON.parse(raw) as T, quarantinedAt: null };
   } catch (err) {
-    await quarantineFile(namespace, path, err);
-    return null;
+    return { value: null, quarantinedAt: await quarantineFile(namespace, path, err) };
   }
 };
+
+export const readJsonOrQuarantine = async <T>(
+  namespace: string,
+  path: string,
+): Promise<T | null> =>
+  (await readJsonOrQuarantineDetailed<T>(namespace, path)).value;

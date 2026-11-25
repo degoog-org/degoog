@@ -334,15 +334,6 @@
   box-sizing: border-box;
 }
 
-.store .degoog-btn--secondary {
-  background: var(--bg);
-  color: var(--text-primary);
-}
-
-.store .degoog-btn--secondary:hover {
-  background: $btn-secondary-hover;
-}
-
 .store .degoog-btn--sm {
   height: 2rem;
   padding: 0 0.875rem;
@@ -1317,10 +1308,6 @@ button.store-thumb {
 .store-repo-detail-actions .degoog-btn--secondary {
   background: var(--bg-light);
   margin-inline-end: 0.25rem;
-}
-
-.store-repo-detail-actions .degoog-btn--secondary:hover {
-  background: $btn-secondary-hover;
 }
 
 .store-repo-detail .store-icon-btn:hover,

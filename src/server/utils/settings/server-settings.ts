@@ -1,9 +1,10 @@
 import { randomBytes } from "crypto";
 import { existsSync } from "fs";
+import { readFile } from "fs/promises";
 import { logger } from "../logger";
 import { serverSettingsFile } from "../paths";
 import { writeJsonAtomic } from "../storage/atomic-json";
-import { readJsonOrQuarantine } from "../storage/read-json";
+import { quarantineFile, readJsonOrQuarantineDetailed } from "../storage/read-json";
 import {
   INVALIDATE_SCOPE,
   onInvalidate,
@@ -49,17 +50,51 @@ const _persist = async (settings: ServerSettings): Promise<void> => {
   await writeJsonAtomic(serverSettingsFile(), settings);
 };
 
+const INSTANCE_ID_RE = /"instanceId"\s*:\s*("(?:[^"\\\u0000-\u001f]|\\.)*")/;
+
+const _salvageInstanceId = async (backupPath: string): Promise<string | null> => {
+  try {
+    const match = INSTANCE_ID_RE.exec(await readFile(backupPath, "utf-8"));
+    if (!match?.[1]) return null;
+    const id: unknown = JSON.parse(match[1]);
+    return typeof id === "string" && id.trim() ? id : null;
+  } catch {
+    return null;
+  }
+};
+
+const _warnInstanceIdChanged = (newId: string): void => {
+  logger.error(
+    "server-settings",
+    `instanceId was regenerated as ${newId}. Valkey cache under the previous id is orphaned and ` +
+      "this node no longer shares cache invalidation with nodes still using the previous id.",
+  );
+};
+
 export const readServerSettings = async (): Promise<ServerSettings> => {
   if (_cache) return _cache;
   const existed = existsSync(serverSettingsFile());
-  const parsed = await readJsonOrQuarantine<Partial<ServerSettings>>(
-    "server-settings",
-    serverSettingsFile(),
-  );
+  const { value: parsed, quarantinedAt } = await readJsonOrQuarantineDetailed<
+    Partial<ServerSettings>
+  >("server-settings", serverSettingsFile());
 
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
     const fresh = _defaults();
     if (existed) {
+      const backup =
+        quarantinedAt ??
+        (await quarantineFile(
+          "server-settings",
+          serverSettingsFile(),
+          new Error("server-settings.json is valid JSON but not an object"),
+        ));
+      const salvaged = await _salvageInstanceId(backup);
+      if (salvaged) {
+        fresh.instanceId = salvaged;
+        logger.warn("server-settings", `kept instanceId ${salvaged} recovered from ${backup}`);
+      } else {
+        _warnInstanceIdChanged(fresh.instanceId);
+      }
       fresh.corruptRecoveredAt = new Date().toISOString();
       logger.error(
         "server-settings",
@@ -94,7 +129,8 @@ export const readServerSettings = async (): Promise<ServerSettings> => {
       ? { corruptRecoveredAt: parsed.corruptRecoveredAt }
       : {}),
   };
-  if (!parsed.instanceId) {
+  if (merged.instanceId !== parsed.instanceId) {
+    _warnInstanceIdChanged(merged.instanceId);
     await _persist(merged).catch((err) =>
       logger.error(
         "server-settings",

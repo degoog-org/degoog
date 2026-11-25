@@ -75,14 +75,41 @@ describe("server-settings survives a corrupt file", () => {
     mod.clearServerSettingsCache();
     const settings = await mod.readServerSettings();
 
-    expect(settings.instanceId).not.toBe(original.instanceId);
+    expect(settings.instanceId).toBe(original.instanceId);
 
     const kept = await quarantined("server-settings.json");
     expect(kept).toHaveLength(1);
     const rescued = await readFile(join(dir, kept[0]), "utf-8");
     expect(rescued).toContain("the-original-instance-id");
     expect(rescued).toContain("outgoingTransport");
+
+    mod.clearServerSettingsCache();
+    expect(await mod.getInstanceId()).toBe(original.instanceId);
   });
+
+  test("garbage with no recoverable instanceId gets a fresh one", async () => {
+    await writeFile(join(dir, "server-settings.json"), CORRUPT, "utf-8");
+    const mod = await import("../../../src/server/utils/settings/server-settings");
+    mod.clearServerSettingsCache();
+    const settings = await mod.readServerSettings();
+
+    expect(settings.instanceId).toMatch(/^[0-9a-f]{32}$/);
+    expect(await quarantined("server-settings.json")).toHaveLength(1);
+  });
+
+  test.each(["null", "[]", '"a string"', "42"])(
+    "valid JSON that is not an object (%s) is moved aside, not overwritten",
+    async (body) => {
+      await writeFile(join(dir, "server-settings.json"), body, "utf-8");
+      const mod = await import("../../../src/server/utils/settings/server-settings");
+      mod.clearServerSettingsCache();
+
+      expect(await mod.didServerSettingsLoadFail()).toBe(true);
+      const kept = await quarantined("server-settings.json");
+      expect(kept).toHaveLength(1);
+      expect(await readFile(join(dir, kept[0]), "utf-8")).toBe(body);
+    },
+  );
 });
 
 describe("a corrupt server-settings.json fails closed", () => {
