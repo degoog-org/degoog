@@ -22,7 +22,7 @@ describe("commands builtins", () => {
 
   test("helpCommand keeps its tabs, search box and script without a context", async () => {
     const noContext = await helpCommand.execute("");
-    const emptyContext = await helpCommand.execute("", {});
+    const emptyContext = await helpCommand.execute("", { authenticated: false });
     expect(noContext.title).toBe("Available Commands");
     for (const html of [noContext.html, emptyContext.html]) {
       expect(html).toContain("help-container");
@@ -35,7 +35,7 @@ describe("commands builtins", () => {
   });
 
   test("helpCommand drops the tabs and search box under nojs", async () => {
-    const result = await helpCommand.execute("", { nojs: true });
+    const result = await helpCommand.execute("", { nojs: true, authenticated: false });
     expect(result.html).toContain("help-container");
     expect(result.html).toContain("!help");
     expect(result.html).not.toContain("help-search-input");
@@ -44,8 +44,8 @@ describe("commands builtins", () => {
   });
 
   test("helpCommand expands every panel under nojs", async () => {
-    const plain = await helpCommand.execute("", {});
-    const nojs = await helpCommand.execute("", { nojs: true });
+    const plain = await helpCommand.execute("", { authenticated: false });
+    const nojs = await helpCommand.execute("", { nojs: true, authenticated: false });
     const panels = (html: string): number =>
       (html.match(/class="help-panel["\s]/g) ?? []).length;
     const active = (html: string): number =>
@@ -58,7 +58,7 @@ describe("commands builtins", () => {
 
   test("ipCommand keeps its detection script without a context", async () => {
     const noContext = await ipCommand.execute("");
-    const localContext = await ipCommand.execute("", { clientIp: "127.0.0.1" });
+    const localContext = await ipCommand.execute("", { clientIp: "127.0.0.1", authenticated: false });
     for (const result of [noContext, localContext]) {
       expect(result.html).toContain("<script");
       expect(result.html).toContain("api.ipify.org");
@@ -69,6 +69,7 @@ describe("commands builtins", () => {
     const result = await ipCommand.execute("", {
       clientIp: "127.0.0.1",
       nojs: true,
+      authenticated: false,
     });
     expect(result.html).not.toContain("<script");
     expect(result.html).not.toContain("api.ipify.org");
@@ -77,7 +78,7 @@ describe("commands builtins", () => {
 
   test("uuidCommand keeps its copy button without a context", async () => {
     const noContext = await uuidCommand.execute("2");
-    const emptyContext = await uuidCommand.execute("2", {});
+    const emptyContext = await uuidCommand.execute("2", { authenticated: false });
     expect(noContext.title).toBe("Generated UUIDs");
     expect(noContext.html).toMatch(
       /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
@@ -89,7 +90,7 @@ describe("commands builtins", () => {
   });
 
   test("uuidCommand drops the copy button under nojs", async () => {
-    const result = await uuidCommand.execute("2", { nojs: true });
+    const result = await uuidCommand.execute("2", { nojs: true, authenticated: false });
     expect(result.html).not.toContain("uuid-copy");
     expect(result.html.split("uuid-value").length - 1).toBe(2);
   });

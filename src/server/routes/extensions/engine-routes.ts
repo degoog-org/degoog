@@ -8,6 +8,7 @@ import { logger } from "../../utils/logger";
 import { isDisabled } from "../../utils/settings/plugin-settings";
 import { routeSuffix } from "../../utils/net/route-path";
 import { _applyRateLimit } from "../../utils/search";
+import { openRouteGate } from "../_guards";
 
 const router = new Hono();
 
@@ -26,9 +27,11 @@ router.all(`${ENGINE_ROUTE_PREFIX}/:engineFolder/*`, async (c) => {
     const limited = await _applyRateLimit(c, `ext:${entry.id}:`);
     if (limited) return limited;
   }
+  const gate = await openRouteGate(c, route, `${method} ${ENGINE_ROUTE_PREFIX}/${folder}${suffix}`);
+  if (gate instanceof Response) return gate;
   try {
     const t0 = performance.now();
-    const res = await route.handler(c.req.raw);
+    const res = await route.handler(c.req.raw, gate);
     logger.debug(
       "engine",
       `${entry.id} ${method} ${suffix} executed in ${Math.round(performance.now() - t0)}ms`,

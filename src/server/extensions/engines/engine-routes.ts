@@ -89,12 +89,13 @@ export const fetchEngineRoute = async (
   const entry = findEngineRouteEntry(own.folder);
   if (!entry || (await isDisabled(entry.id))) return null;
   const route = findEngineRoute(entry, "get", own.suffix);
-  if (!route) return null;
+  if (!route || route.auth) return null;
   if (route.rateLimit && opts.rateLimit) {
     const limited = await opts.rateLimit(`ext:${entry.id}:`);
     if (limited) return limited;
   }
   return route.handler(
     new Request(`${INTERNAL_ORIGIN}${own.path}`, { signal: opts.signal }),
+    { authenticated: false },
   );
 };

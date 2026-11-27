@@ -47,8 +47,9 @@ export const renderNojsSlots = async (
   results: ScoredResult[],
   locale: string,
   searchType: string,
+  authenticated: boolean,
 ): Promise<NojsSlotRender> => {
-  const input = { query, clientIp, locale, searchType, nojs: true };
+  const input = { query, clientIp, locale, searchType, nojs: true, authenticated };
   const batches = await Promise.all([
     collectSlotPanels(input),
     collectSlotPanels({ ...input, results }),

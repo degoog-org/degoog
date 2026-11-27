@@ -5,6 +5,7 @@ import { getPluginSettingsIds } from "../../utils/extension-support/plugin-asset
 import { isDisabled } from "../../utils/settings/plugin-settings";
 import { routeSuffix } from "../../utils/net/route-path";
 import { _applyRateLimit } from "../../utils/search";
+import { openRouteGate } from "../_guards";
 
 const router = new Hono();
 
@@ -26,9 +27,11 @@ router.all("/api/plugin/:pluginId/*", async (c) => {
     const limited = await _applyRateLimit(c, `ext:${pluginId}:`);
     if (limited) return limited;
   }
+  const gate = await openRouteGate(c, route, `${method} /api/plugin/${pluginId}${suffix}`);
+  if (gate instanceof Response) return gate;
   try {
     const t0 = performance.now();
-    const res = await route.handler(c.req.raw);
+    const res = await route.handler(c.req.raw, gate);
 
     logger.debug(
       "plugin",

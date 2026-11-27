@@ -8,6 +8,7 @@ import { handleTabSearch, type TabSearchRequest } from "../../search/tab-search"
 import type { SearchBody } from "../../types/search";
 import { parseSearchBody, parseSearchRequest } from "./parsers";
 import { publicBodyLimit } from "../_guards";
+import { gandalfAtTheGate } from "../settings/settings-auth";
 
 type TabSearchBody = SearchBody & { tab?: string };
 
@@ -25,6 +26,7 @@ const _runTabSearch = async (
       tabId,
       query,
       clientIp: getClientIp(c),
+      authenticated: await gandalfAtTheGate(c),
     });
     if (!result) return c.json({ error: "Tab not found" }, 404);
     return c.json(result);

@@ -46,7 +46,7 @@ afterAll(() => {
 
 describe("renderNojsSlots", () => {
   test("instant and after-results panels share one registry order, like the JS page", async () => {
-    const { byContainer } = await renderNojsSlots("hello", undefined, [], "en", "web");
+    const { byContainer } = await renderNojsSlots("hello", undefined, [], "en", "web", false);
     const html = byContainer["slot-above-results"];
     const positions = ["needs-results", "instant", "also-needs-results"].map((id) =>
       html.indexOf(`<p>${id}</p>`),

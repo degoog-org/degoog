@@ -29,6 +29,7 @@ import { normalizeRegion, REGION_PARAM } from "../../shared/region";
 import { logger } from "../utils/logger";
 import { hasPinged, strike } from "../utils/security/link-token";
 import { getClientIp } from "../utils/net/request";
+import { gandalfAtTheGate } from "../routes/settings/settings-auth";
 import { _applyRateLimit, isValidQuery } from "../utils/search";
 import { addClassWhereClass, fillById } from "./dom";
 import { nojsDailyLogo, renderNojsDailyLogo, renderNojsDailyLogoCredit } from "./daily-logo";
@@ -189,6 +190,7 @@ const _runSearch = async (
         tabId,
         query: query.q,
         clientIp: getClientIp(c),
+        authenticated: await gandalfAtTheGate(c),
       },
       NOJS_RUN,
     );
@@ -264,6 +266,7 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
   if (ip && (await isNojsCssCheckOn()) && !hasPinged(ip)) {
     await strike(ip);
   }
+  const authenticated = await gandalfAtTheGate(c);
 
   const locale = getLocale(c) ?? "";
   const t = await getNojsTranslator();
@@ -277,6 +280,7 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
       locale,
       t,
       commandPageNumber,
+      authenticated,
     );
     const commandPage = await buildNojsResultsPage(
       {
@@ -333,6 +337,7 @@ router.on(["GET", "POST"], "/nojs/search", async (c) => {
     outcome.results,
     locale,
     resolveBuiltinSearchType(tabId) || WEB_TAB_ID,
+    authenticated,
   );
 
   const html = await buildNojsResultsPage(

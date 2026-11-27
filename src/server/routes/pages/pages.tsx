@@ -96,12 +96,21 @@ router.get("/", async (c) => {
     );
   }
   const locale = getLocale(c);
-  return c.html(await _withDailyLogo(await _buildHomePage(locale), locale));
+  const html = _injectIntoHead(
+    await _buildHomePage(locale),
+    _buildAuthScript(await _passedTheGate(c)),
+  );
+  return c.html(await _withDailyLogo(html, locale));
 });
 
-const _buildResultActionsScript = async (c: Context): Promise<string> => {
-  const token = canBalrogPass(c);
-  const authenticated = await gandalf(token);
+const AUTH_GLOBAL = "__DEGOOG_AUTH__";
+
+const _passedTheGate = (c: Context): Promise<boolean> => gandalf(canBalrogPass(c));
+
+const _buildAuthScript = (authenticated: boolean): string =>
+  windowGlobalScript(AUTH_GLOBAL, { authenticated });
+
+const _buildResultActionsScript = async (authenticated: boolean): Promise<string> => {
   let blockUi = false;
   let replaceUi = false;
   let scoreUi = false;
@@ -153,7 +162,8 @@ const _buildSettingsGatePage = async (locale?: string): Promise<string> => {
 router.get("/search", async (c) => {
   const locale = getLocale(c);
   const override = await getThemeHtml("search");
-  const actionsScript = await _buildResultActionsScript(c);
+  const authenticated = await _passedTheGate(c);
+  const actionsScript = await _buildResultActionsScript(authenticated);
   let html: string;
   if (override) {
     if (isFullDocument(override)) {
@@ -165,7 +175,10 @@ router.get("/search", async (c) => {
   } else {
     html = await buildLayoutPage("search.html", locale, "has-results");
   }
-  const withScripts = _injectIntoHead(html, `${actionsScript}\n${_buildFaviconsScript()}`);
+  const withScripts = _injectIntoHead(
+    html,
+    `${_buildAuthScript(authenticated)}\n${actionsScript}\n${_buildFaviconsScript()}`,
+  );
   return c.html(await _withDailyLogo(withScripts, locale));
 });
 

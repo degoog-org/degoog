@@ -17,6 +17,7 @@ type TabSearchParams = TabSearchRequest & {
   tabId: string;
   query: string;
   clientIp: string | undefined;
+  authenticated: boolean;
 };
 
 type TabSearchResult = {
@@ -64,6 +65,7 @@ export async function handleTabSearch({
   tabId,
   query,
   clientIp,
+  authenticated,
   ...request
 }: TabSearchParams, runOpts: RunOptions = {}): Promise<TabSearchResult | null> {
   let engineType: string | undefined;
@@ -95,6 +97,7 @@ export async function handleTabSearch({
     try {
       const result = await tab.executeSearch(trimmed, request.page, {
         clientIp,
+        authenticated,
       });
       const tabElapsed = Math.round(performance.now() - tabStart);
       logger.debug("plugin", `${tab.id} executed in ${tabElapsed}ms`);

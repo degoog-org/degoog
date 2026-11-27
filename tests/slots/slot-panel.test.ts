@@ -37,7 +37,7 @@ describe("slot context", () => {
   const results = [{ url: "u" }] as unknown as ScoredResult[];
 
   test("hands plugins the shared fetch, signer and caches", () => {
-    expect(slotContext("1.2.3.4", results, "de") as unknown).toEqual({
+    expect(slotContext({ clientIp: "1.2.3.4", results, locale: "de" }) as unknown).toEqual({
       clientIp: "1.2.3.4",
       results,
       fetch: outgoingFetch,
@@ -46,11 +46,17 @@ describe("slot context", () => {
       createCache,
       useCache,
       locale: "de",
+      authenticated: false,
     });
   });
 
   test("only nojs renders are flagged", () => {
-    expect(slotContext(undefined, undefined, undefined)).not.toHaveProperty("nojs");
-    expect(slotContext(undefined, undefined, undefined, true).nojs).toBe(true);
+    expect(slotContext({})).not.toHaveProperty("nojs");
+    expect(slotContext({ nojs: true }).nojs).toBe(true);
+  });
+
+  test("plugins only see a passed gate when core says so", () => {
+    expect(slotContext({}).authenticated).toBe(false);
+    expect(slotContext({ authenticated: true }).authenticated).toBe(true);
   });
 });

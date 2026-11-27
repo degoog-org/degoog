@@ -20,6 +20,7 @@ import {
   type SlotRunOptions,
 } from "../../extensions/slots/run";
 import { publicBodyLimit } from "../_guards";
+import { gandalfAtTheGate } from "../settings/settings-auth";
 import { guardApiKey } from "../../utils/security/api-key-guard";
 import { isSealedResult } from "../../utils/net/proxy-sign";
 
@@ -58,12 +59,13 @@ const _wantsStream = (c: Context): boolean =>
     default: JSON_MIME,
   }) === EVENT_STREAM_MIME;
 
-const _runInput = (
+const _runInput = async (
   c: Context,
   body: SlotBody,
   options: SlotRunOptions,
-): SlotRunInput => ({
+): Promise<SlotRunInput> => ({
   ...options,
+  authenticated: await gandalfAtTheGate(c),
   query: (body.query ?? "").trim(),
   clientIp: getClientIp(c),
   results: "results" in body ? _sealedResults(body) : undefined,
@@ -114,7 +116,7 @@ router.post("/api/slots", publicBodyLimit, async (c) => {
   if (_badResults(body)) return c.json(MISSING_RESULTS, 400);
   return _respond(
     c,
-    _runInput(c, body, { excludePosition: SlotPanelPosition.AtAGlance }),
+    await _runInput(c, body, { excludePosition: SlotPanelPosition.AtAGlance }),
     _panelsBody,
   );
 });
@@ -127,7 +129,7 @@ router.post("/api/slots/glance", publicBodyLimit, async (c) => {
   if (!_hasQuery(body) || _badResults(body)) {
     return c.json(MISSING_GLANCE_INPUT, 400);
   }
-  return _respond(c, _runInput(c, body, { glance: true }), _glanceBody);
+  return _respond(c, await _runInput(c, body, { glance: true }), _glanceBody);
 });
 
 export default router;
