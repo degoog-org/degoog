@@ -135,4 +135,9 @@ describe("pages", () => {
     expect(await _authGlobal(path)).toBe('{"authenticated":false}');
     expect(await _authGlobal(path, { cookie: `settings-token=${token}` })).toBe('{"authenticated":true}');
   });
+
+  test.each([["/"], ["/search?q=hello"]])("%s does not trust a session sent cross-site", async (path) => {
+    const headers = { cookie: `settings-token=${token}`, "sec-fetch-site": "cross-site" };
+    expect(await _authGlobal(path, headers)).toBe('{"authenticated":false}');
+  });
 });

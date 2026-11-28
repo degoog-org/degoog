@@ -2,7 +2,7 @@ import { renderHtml } from "../../../shared/ui/tribute/html";
 import { canQueryImages } from "../../search/image-query";
 import { GateNote } from "./gate-note";
 import { TakeoverResultItem } from "./takeover-result";
-import { Context, Hono } from "hono";
+import { Hono } from "hono";
 import { SETTINGS_TABS } from "../../../shared/settings-tabs";
 import {
   getDefaultEngineBangConfig,
@@ -15,11 +15,10 @@ import { getLocale } from "../../utils/hono";
 import { asBoolean } from "../../utils/settings/plugin-settings";
 import { getAdminPath, isPublicInstance } from "../../utils/public-instance";
 import {
-  canBalrogPass,
+  gandalfAtTheGate,
   hasGeneratedDefaultSettingsPassword,
   isPasswordRequired,
   shouldServeSettingsGate,
-  gandalf,
 } from "../settings/settings-auth";
 import { ping, verifyToken } from "../../utils/security/link-token";
 import { getClientIp } from "../../utils/net/request";
@@ -98,14 +97,12 @@ router.get("/", async (c) => {
   const locale = getLocale(c);
   const html = _injectIntoHead(
     await _buildHomePage(locale),
-    _buildAuthScript(await _passedTheGate(c)),
+    _buildAuthScript(await gandalfAtTheGate(c)),
   );
   return c.html(await _withDailyLogo(html, locale));
 });
 
 const AUTH_GLOBAL = "__DEGOOG_AUTH__";
-
-const _passedTheGate = (c: Context): Promise<boolean> => gandalf(canBalrogPass(c));
 
 const _buildAuthScript = (authenticated: boolean): string =>
   windowGlobalScript(AUTH_GLOBAL, { authenticated });
@@ -162,7 +159,7 @@ const _buildSettingsGatePage = async (locale?: string): Promise<string> => {
 router.get("/search", async (c) => {
   const locale = getLocale(c);
   const override = await getThemeHtml("search");
-  const authenticated = await _passedTheGate(c);
+  const authenticated = await gandalfAtTheGate(c);
   const actionsScript = await _buildResultActionsScript(authenticated);
   let html: string;
   if (override) {
