@@ -24,6 +24,7 @@ import { ENGINE_BANGS_FIELD } from "../../../shared/sync";
 import { guardApiKey } from "../../utils/security/api-key-guard";
 import { parseSearchBody, parseSearchRequest } from "../search/parsers";
 import { publicBodyLimit } from "../_guards";
+import { gandalfAtTheGate } from "../settings/settings-auth";
 import { getClientIp } from "../../utils/net/request";
 import { applyFilter, syncVortexSignal } from "../../utils/extension-support/translation-circuit";
 
@@ -119,6 +120,7 @@ const _runCommand = async (
       engines: search.engines,
       bangs,
       locale: language,
+      authenticated: await gandalfAtTheGate(c),
     });
   } catch (err) {
     logger.error("plugin", `command ${match.commandId} failed`, err);

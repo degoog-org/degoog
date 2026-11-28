@@ -36,6 +36,7 @@ export const renderNojsCommand = async (
   locale: string,
   t: Translate,
   page: number,
+  authenticated: boolean,
 ): Promise<NojsCommandRender> => {
   const notice = (key: string): NojsCommandRender => ({
     html: _notice(match.commandId, String(t(key, undefined, locale))),
@@ -55,6 +56,7 @@ export const renderNojsCommand = async (
     signProxyUrl: buildSignedProxyUrl,
     nojs: true,
     locale,
+    authenticated,
   };
   try {
     const t0 = performance.now();

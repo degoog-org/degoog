@@ -20,12 +20,21 @@ import { slotShowsOn } from "../../utils/extension-support/slot-types";
 import { getSlotPlugins } from "./registry";
 import type { OrderedSlotPanel } from "../../../shared/slot-stream";
 
-export const slotContext = (
-  clientIp: string | undefined,
-  results: ScoredResult[] | undefined,
-  locale: string | undefined,
+type SlotContextInput = {
+  clientIp?: string;
+  results?: ScoredResult[];
+  locale?: string;
+  nojs?: boolean;
+  authenticated?: boolean;
+};
+
+export const slotContext = ({
+  clientIp,
+  results,
+  locale,
   nojs = false,
-): SlotPluginContext => ({
+  authenticated = false,
+}: SlotContextInput): SlotPluginContext => ({
   clientIp,
   results,
   fetch: outgoingFetch as SlotPluginContext["fetch"],
@@ -35,6 +44,7 @@ export const slotContext = (
   useCache,
   locale,
   ...(nojs ? { nojs: true } : {}),
+  authenticated,
 });
 
 export const toSlotPanel = (
@@ -82,6 +92,7 @@ export interface SlotRunOptions {
   nojs?: boolean;
   glance?: boolean;
   signal?: AbortSignal;
+  authenticated?: boolean;
 }
 
 export interface SlotRunInput extends SlotRunOptions {
@@ -100,6 +111,7 @@ type SlotRun = {
   nojs: boolean;
   glance: boolean;
   signal?: AbortSignal;
+  authenticated: boolean;
 };
 
 export const isSlotPanel = (outcome: SlotOutcome): outcome is SlotPanel =>
@@ -139,12 +151,13 @@ const _settle = async (
   if (run.glance && run.results === undefined && plugin.waitForResults) {
     return GLANCE_PENDING;
   }
-  const context = slotContext(
-    run.clientIp,
-    run.glance || plugin.waitForResults ? run.results : undefined,
-    run.locale,
-    run.nojs,
-  );
+  const context = slotContext({
+    clientIp: run.clientIp,
+    results: run.glance || plugin.waitForResults ? run.results : undefined,
+    locale: run.locale,
+    nojs: run.nojs,
+    authenticated: run.authenticated,
+  });
   const t0 = performance.now();
   const out = await withTimeout(
     Promise.resolve(plugin.execute(run.query, context)),
@@ -197,6 +210,7 @@ const _toRun = (input: SlotRunInput): SlotRun => ({
   nojs: input.nojs === true,
   glance: input.glance === true,
   signal: input.signal,
+  authenticated: input.authenticated === true,
 });
 
 export const settleSlotPlugins = (

@@ -197,6 +197,7 @@ export interface SlotPluginContext {
   useCache: UseCache;
   locale?: string;
   nojs?: boolean;
+  authenticated: boolean;
 }
 
 export interface SlotPlugin {
@@ -245,6 +246,7 @@ export interface CommandContext {
   engines?: EngineConfig;
   bangs?: EngineConfig;
   locale?: string;
+  authenticated: boolean;
 }
 
 export interface ImageQueryContext {
@@ -276,6 +278,11 @@ export interface BangCommand {
   t?: Translate;
 }
 
+export interface SearchResultTabContext {
+  clientIp?: string;
+  authenticated: boolean;
+}
+
 export interface SearchResultTab {
   id?: string;
   name: string;
@@ -287,7 +294,7 @@ export interface SearchResultTab {
   executeSearch?(
     query: string,
     page?: number,
-    context?: { clientIp?: string },
+    context?: SearchResultTabContext,
   ): Promise<{ results: SearchResult[]; totalPages?: number }>;
   settingsSchema?: SettingField[];
   configure?(settings: Record<string, SettingValue>): void;
@@ -332,11 +339,19 @@ export interface SearchBarAction {
 
 export type PluginRouteMethod = "get" | "post" | "put" | "delete" | "patch";
 
+export interface PluginRouteContext {
+  authenticated: boolean;
+}
+
 export interface PluginRoute {
   method: PluginRouteMethod;
   path: string;
-  handler: (req: Request) => Response | Promise<Response>;
+  handler: (
+    req: Request,
+    context: PluginRouteContext,
+  ) => Response | Promise<Response>;
   rateLimit?: boolean;
+  auth?: boolean;
   t?: Translate;
 }
 

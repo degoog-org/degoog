@@ -8,7 +8,7 @@ import {
 import { logger } from "../../utils/logger";
 import { routeSuffix } from "../../utils/net/route-path";
 import { readObjectBody } from "../../utils/hono";
-import { publicBodyLimit } from "../_guards";
+import { openRouteGate, publicBodyLimit } from "../_guards";
 
 const router = new Hono();
 
@@ -46,8 +46,10 @@ router.all("/api/uovadipasqua/:id/*", async (c) => {
   const method = c.req.method.toLowerCase();
   const route = findUovadipasquaRoute(id, method, suffix);
   if (!route) return c.notFound();
+  const gate = await openRouteGate(c, route, `${method} /api/uovadipasqua/${id}${suffix}`);
+  if (gate instanceof Response) return gate;
   try {
-    const res = await route.handler(c.req.raw);
+    const res = await route.handler(c.req.raw, gate);
     return new Response(res.body, {
       status: res.status,
       statusText: res.statusText,

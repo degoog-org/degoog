@@ -1,7 +1,8 @@
-import type { MiddlewareHandler } from "hono";
+import type { Context, MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { gandalfAtTheGate } from "./settings/settings-auth";
 import { logger } from "../utils/logger";
+import type { PluginRoute, PluginRouteContext } from "../types/extension";
 import { asString } from "../utils/settings/plugin-settings";
 import { getInstanceSettings } from "../utils/settings/server-settings";
 
@@ -13,6 +14,19 @@ export const settingsAuth = (route?: string): MiddlewareHandler =>
     }
     return next();
   };
+
+export const openRouteGate = async (
+  c: Context,
+  route: PluginRoute,
+  label: string,
+): Promise<PluginRouteContext | Response> => {
+  const authenticated = await gandalfAtTheGate(c);
+  if (route.auth && !authenticated) {
+    logger.debug("settings-auth", `401 on ${label}`);
+    return c.json({ error: "You shall not pass!" }, 401);
+  }
+  return { authenticated };
+};
 
 export const DEFAULT_BODY_SIZE_KB = 3072;
 
